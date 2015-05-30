@@ -40,6 +40,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Services)
 	buildChainsCommand()
 	ErisCmd.AddCommand(Chains)
+	buildKeysCommand()
+	ErisCmd.AddCommand(Keys)
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(Version)
 }
