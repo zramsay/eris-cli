@@ -7,9 +7,9 @@ import (
 )
 
 // Primary Services Sub-Command
-var services = &cobra.Command{
+var Services = &cobra.Command{
   Use:   "services",
-  Short: "Start, Stop, and Manage Services Required for your Application",
+  Short: "Start, Stop, and Manage Services Required for your Application.",
   Long:  `The services subcommand is used to install, start, stop, and configure
 the services needed to operate your application.
 
@@ -24,16 +24,16 @@ management services are managed and operated via the [eris keys] command.`,
 
 // build the services subcommand
 func buildServicesCommand() {
-  services.AddCommand(servicesListKnown)
-  services.AddCommand(servicesInstall)
-  services.AddCommand(servicesListInstalled)
-  services.AddCommand(servicesConfig)
-  services.AddCommand(servicesStart)
-  services.AddCommand(servicesListRunning)
-  services.AddCommand(servicesLogs)
-  services.AddCommand(servicesStop)
-  services.AddCommand(servicesUpdate)
-  services.AddCommand(servicesRm)
+  Services.AddCommand(servicesListKnown)
+  Services.AddCommand(servicesInstall)
+  Services.AddCommand(servicesListInstalled)
+  Services.AddCommand(servicesConfig)
+  Services.AddCommand(servicesStart)
+  Services.AddCommand(servicesListRunning)
+  Services.AddCommand(servicesLogs)
+  Services.AddCommand(servicesStop)
+  Services.AddCommand(servicesUpdate)
+  Services.AddCommand(servicesRm)
 }
 
 // list-known lists the services which eris can automagically install
@@ -42,7 +42,7 @@ var servicesListKnown = &cobra.Command{
   Use:   "known",
   Short: "List all the services which eris can install for your platform.",
   Long:  `Lists the services which eris can install for your platform. To install
-a service, use: eris service install.
+a service, use: [eris services install].
 
 Services include all executable services supported by the Eris platform which are
 NOT blockchains. Blockchains are handled using the [eris chains] command.`,
@@ -57,7 +57,8 @@ var servicesInstall = &cobra.Command{
   Short: "Install a Known Service Locally.",
   Long:  `Install a service for your platform. By default, Eris will install the
 most recent version of a service unless another version is passed
-as an argument. To list known services use: eris service list-known.`,
+as an argument. To list known services use:
+[eris services known].`,
   Run:   func(cmd *cobra.Command, args []string) {
            srv.Install(cmd, args)
          },
@@ -68,7 +69,7 @@ var servicesListInstalled = &cobra.Command{
   Use:   "ls",
   Short: "List the installed services.",
   Long:  `Lists the installed services which eris knows about. To start a service
-use: eris service start [service].`,
+use: [eris services start service].`,
   Run:   func(cmd *cobra.Command, args []string) {
            srv.ListInstalled()
          },
@@ -98,11 +99,11 @@ var servicesStart = &cobra.Command{
   Short: "Start a service.",
   Long:  `Starts a service according to the service operational definition file which
 eris stores in the ~/.eris/services directory. To stop the service use:
-eris service kill [service].
+[eris services kill service].
 
-eris start [name] by default will put the service into the background
-so its logs will not be viewable from the command line. To view a
-service's logs use [eris logs name].`,
+[eris services start name] by default will put the service into the
+background so its logs will not be viewable from the command line.
+To view a service's logs use [eris services logs name].`,
   Run:   func(cmd *cobra.Command, args []string) {
            srv.Start(cmd, args)
          },

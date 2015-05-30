@@ -7,7 +7,7 @@ import (
 )
 
 // Primary Projects Sub-Command
-var projects = &cobra.Command{
+var Projects = &cobra.Command{
   Use:   "projects",
   Short: "Start, Stop, and Manage Projects or Applications.",
   Long:  `Start, stop, and configure projects or applications.
@@ -27,20 +27,20 @@ application or project.`,
 
 // Build the projects subcommand
 func buildProjectsCommand() {
-  projects.AddCommand(projectsGet)
-  projects.AddCommand(projectsNew)
-  projects.AddCommand(projectsAdd)
-  projects.AddCommand(projectsInstall)
-  projects.AddCommand(projectsList)
-  projects.AddCommand(projectsCheckout)
-  projects.AddCommand(projectsConfig)
-  projects.AddCommand(projectsServices)
-  projects.AddCommand(projectsStart)
-  projects.AddCommand(projectsStop)
-  projects.AddCommand(projectsRename)
-  projects.AddCommand(projectsRedefine)
-  projects.AddCommand(projectsRm)
-  projects.AddCommand(projectsClean)
+  Projects.AddCommand(projectsGet)
+  Projects.AddCommand(projectsNew)
+  Projects.AddCommand(projectsAdd)
+  Projects.AddCommand(projectsInstall)
+  Projects.AddCommand(projectsList)
+  Projects.AddCommand(projectsCheckout)
+  Projects.AddCommand(projectsConfig)
+  Projects.AddCommand(projectsServices)
+  Projects.AddCommand(projectsStart)
+  Projects.AddCommand(projectsStop)
+  Projects.AddCommand(projectsRename)
+  Projects.AddCommand(projectsRedefine)
+  Projects.AddCommand(projectsRm)
+  Projects.AddCommand(projectsClean)
 }
 
 // get a project definition file from a remote (currently limited to github.com and ipfs)

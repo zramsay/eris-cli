@@ -10,9 +10,9 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-var version = &cobra.Command{
+var Version = &cobra.Command{
 	Use:   "version",
-	Short: "Eris version",
+	Short: "Display Eris's Platform Version.",
 	Long:  `Display the versions of what your platform.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		printVersion()
