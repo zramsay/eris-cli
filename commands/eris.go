@@ -34,10 +34,12 @@ func Execute() {
 
 // Define the commands
 func AddCommands() {
+	buildProjectsCommand()
+	ErisCmd.AddCommand(projects)
 	buildServicesCommand()
-	ErisCmd.AddCommand(cmdServices)
-	ErisCmd.AddCommand(cmdConfig)
-	ErisCmd.AddCommand(cmdVersion)
+	ErisCmd.AddCommand(services)
+	ErisCmd.AddCommand(config)
+	ErisCmd.AddCommand(version)
 }
 
 // Flags that are to be used by commands
