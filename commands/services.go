@@ -1,68 +1,69 @@
 package commands
 
 import (
-  "github.com/eris-ltd/eris-cli/services"
+  srv "github.com/eris-ltd/eris-cli/services"
 
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 // Primary Services Sub-Command
-var cmdServices = &cobra.Command{
+var services = &cobra.Command{
   Use:   "service",
   Short: "Start, Stop, and Manage Services Required for your Application",
   Long:  `The services subcommand is used to install, start, stop, and configure
 the services needed to operate your application.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.ListInstalled()
+           srv.ListInstalled()
          },
 }
 
+// build the services subcommand
 func buildServicesCommand() {
-  cmdServices.AddCommand(cmdServicesListKnown)
-  cmdServices.AddCommand(cmdServicesInstall)
-  cmdServices.AddCommand(cmdServicesListInstalled)
-  cmdServices.AddCommand(cmdServicesConfig)
-  cmdServices.AddCommand(cmdServicesStart)
-  cmdServices.AddCommand(cmdServicesListRunning)
-  cmdServices.AddCommand(cmdServicesStop)
-  cmdServices.AddCommand(cmdServicesUpdate)
+  services.AddCommand(servicesListKnown)
+  services.AddCommand(servicesInstall)
+  services.AddCommand(servicesListInstalled)
+  services.AddCommand(servicesConfig)
+  services.AddCommand(servicesStart)
+  services.AddCommand(servicesListRunning)
+  services.AddCommand(servicesStop)
+  services.AddCommand(servicesUpdate)
 }
 
 // list-known lists the services which eris can automagically install
-var cmdServicesListKnown = &cobra.Command{
+var servicesListKnown = &cobra.Command{
   Use:   "known",
   Short: "List all the services which eris can install for your platform.",
   Long:  `Lists the services which eris can install for your platform. To install
 a service, use: eris service install.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.ListKnown()
+           srv.ListKnown()
          },
 }
 
 // install a service
-var cmdServicesInstall = &cobra.Command{
+var servicesInstall = &cobra.Command{
   Use:   "install",
   Short: "Install a Known Service Locally.",
   Long:  `Install a service for your platform. To list known services use:
 eris service list-known.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.Install(cmd, args)
+           srv.Install(cmd, args)
          },
 }
 
 // ls lists the services available locally
-var cmdServicesListInstalled = &cobra.Command{
+var servicesListInstalled = &cobra.Command{
   Use:   "ls",
   Short: "List the installed services.",
   Long:  `Lists the installed services which eris knows about. To start a service
 use: eris service start [service].`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.ListInstalled()
+           srv.ListInstalled()
          },
 }
 
 // configure a service definition
-var cmdServicesConfig = &cobra.Command{
+var servicesConfig = &cobra.Command{
   Use:   "config",
   Short: "Configure a service definition file.",
   Long:  `Configures a service by reading from and writing to a service definition file
@@ -74,48 +75,48 @@ start and stop a specific service. How that service is used for a specific
 project is handled from project definition files. For more information on
 project definition files please see: eris help project.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.Configure(cmd, args)
+           srv.Configure(cmd, args)
          },
 }
 
 // start a service
-var cmdServicesStart = &cobra.Command{
+var servicesStart = &cobra.Command{
   Use:   "start",
   Short: "Start a service.",
   Long:  `Starts a service according to the service operational definition file which
 eris stores in the ~/.eris/services directory. To stop the service use:
 eris service kill [service].`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.Start(cmd, args)
+           srv.Start(cmd, args)
          },
 }
 
 // ps lists the services which are currently running
-var cmdServicesListRunning = &cobra.Command{
+var servicesListRunning = &cobra.Command{
   Use:   "ps",
   Short: "Lists the running services.",
   Long:  `Lists the services which are currently running.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.ListRunning()
+           srv.ListRunning()
          },
 }
 
 // kill stops a running service
-var cmdServicesStop = &cobra.Command{
+var servicesStop = &cobra.Command{
   Use:   "kill",
   Short: "Stops a running service.",
   Long:  `Stops a services which is currently running.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.Kill(cmd, args)
+           srv.Kill(cmd, args)
          },
 }
 
 // updates an installed service
-var cmdServicesUpdate = &cobra.Command{
+var servicesUpdate = &cobra.Command{
   Use:   "update",
   Short: "Updates an installed service.",
   Long:  `Updates an installed service, or installs it if it has not been installed.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           services.Update(cmd, args)
+           srv.Update(cmd, args)
          },
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-var cmdConfig = &cobra.Command{
+var config = &cobra.Command{
 	Use:   "config [variable]",
 	Short: "Manage configuration settings for Eris",
 	Long: `Display Manage configuration settings for various components of the
