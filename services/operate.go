@@ -13,14 +13,10 @@ func Configure(cmd *cobra.Command, args []string) {
 
 }
 
+func Logs(cmd *cobra.Command, args []string) {
+
+}
+
 func Kill(cmd *cobra.Command, args []string) {
-
-}
-
-func ListRunning() {
-
-}
-
-func ListInstalled() {
 
 }

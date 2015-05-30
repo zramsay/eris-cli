@@ -19,3 +19,16 @@ func Update(cmd *cobra.Command, args []string) {
 func ListKnown() {
 
 }
+
+
+func ListRunning() {
+
+}
+
+func ListInstalled() {
+
+}
+
+func Rm(cmd *cobra.Command, args []string) {
+
+}
