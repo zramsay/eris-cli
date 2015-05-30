@@ -8,16 +8,18 @@ import (
 
 // Primary Projects Sub-Command
 var projects = &cobra.Command{
-  Use:   "project",
+  Use:   "projects",
   Short: "Start, Stop, and Manage Projects or Applications.",
-  Long:  `The projects subcommand is used to start, stop, and configure projects
-or applications. Within the Eris platform, projects are a bundle
-of services, configured to run in a specific manner. Projects may
-be defined either by a package.json file in the root of an
-application's directory or via a docker-compose.yml file in the
-root of an application's directory. Projects are given a human
-readable name so that they can Eris can checkout and operate
-the application or project.`,
+  Long:  `Start, stop, and configure projects or applications.
+
+
+Within the Eris platform, projects are a bundle of services,
+configured to run in a specific manner. Projects may be defined
+either by a package.json file in the root of an application's
+directory or via a docker-compose.yml file in the root of an
+application's directory. Projects are given a human readable
+name so that they can Eris can checkout and operate the
+application or project.`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.ListProjects()
          },
@@ -26,8 +28,9 @@ the application or project.`,
 // Build the projects subcommand
 func buildProjectsCommand() {
   projects.AddCommand(projectsGet)
-  projects.AddCommand(projectsInstall)
+  projects.AddCommand(projectsNew)
   projects.AddCommand(projectsAdd)
+  projects.AddCommand(projectsInstall)
   projects.AddCommand(projectsList)
   projects.AddCommand(projectsCheckout)
   projects.AddCommand(projectsConfig)
@@ -40,33 +43,33 @@ func buildProjectsCommand() {
   projects.AddCommand(projectsClean)
 }
 
-// get a project from a remote (currently limited to github.com)
-// flags to add: name, checkout
+// get a project definition file from a remote (currently limited to github.com and ipfs)
+// flags to add: --name, --checkout
 var projectsGet = &cobra.Command{
-  Use:   "get [github.com/USER/REPO]",
+  Use:   "get [name] [github.com/USER/REPO] || [name] [ipfs hash]",
   Short: "Get a project from Github.",
   Long:  `Retrieve a project from the internet (utilizes git clone) and install
 the project's dependencies.
 
-NOTE: This functionality is currently limited to github.com.`,
+NOTE: This functionality is currently limited to github.com and IPFS.`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.Get(cmd, args)
          },
 }
 
-// install dependencies
-// flags to add: name, checkout
-var projectsInstall = &cobra.Command{
-  Use:   "install [package-definition-file]",
-  Short: "Install a project's dependencies.",
-  Long:  `Install a project's dependencies if those dependencies are defined services.`,
+// new builds a project definition file
+// flags to add: --template, --checkout, --format
+var projectsNew = &cobra.Command{
+  Use:   "new [name]",
+  Short: "Create a new project definition file.",
+  Long:  `Create a new project definition file optionally from a template.`,
   Run:   func(cmd *cobra.Command, args []string) {
-           prj.Install(cmd, args)
+           prj.New(cmd, args)
          },
 }
 
 // add brings a project into the eris projects tree
-// flags to add: checkout
+// flags to add: --checkout
 var projectsAdd = &cobra.Command{
   Use:   "add [name] [project-definition-file]",
   Short: "Adds a project to Eris.",
@@ -78,12 +81,23 @@ in the root of an application's directory.`,
          },
 }
 
+// install dependencies
+// flags to add: --checkout
+var projectsInstall = &cobra.Command{
+  Use:   "install [name] [package-definition-file]",
+  Short: "Install a project's dependencies.",
+  Long:  `Install a project's dependencies if those dependencies are defined services.`,
+  Run:   func(cmd *cobra.Command, args []string) {
+           prj.Install(cmd, args)
+         },
+}
+
 // list known projects
 var projectsList = &cobra.Command{
   Use:   "ls",
   Short: "List projects registered with Eris.",
   Long:  `List all projects registered with Eris. To add a project use:
-eris project add [project-definition-file]`,
+[eris projects add project-definition-file]`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.ListProjects()
          },
@@ -110,7 +124,7 @@ var projectsConfig = &cobra.Command{
 }
 
 // list the services associated with the currently checked out project
-// flags to add: verbose
+// flags to add: --verbose
 var projectsServices = &cobra.Command{
   Use:   "services [name]",
   Short: "List services for a project.",
@@ -122,13 +136,13 @@ display the services for the currently checked out project.`,
 }
 
 // start a project
-// flags to add: execMethod
+// flags to add: --method (execution method)
 var projectsStart = &cobra.Command{
   Use:   "start [name]",
   Short: "Start a project registered with Eris.",
   Long:  `Start a project registered with Eris. If no [name] is give Eris
 will simply start the currently checked out project. To stop a
-project use: eris project kill [name].`,
+project use: [eris projects kill name].`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.Start(cmd, args)
          },
@@ -167,20 +181,20 @@ var projectsRedefine = &cobra.Command{
 }
 
 // remove a known projects
-// flags to add: clean
+// flags to add: --clean
 var projectsRm = &cobra.Command{
   Use:   "rm [name]",
   Short: "Remove a project registered with Eris.",
   Long:  `Remove a project registered with Eris. Will not delete the
 project's data (chains, etc.). To remove all of the project's
-data use: eris project clean [name]`,
+data use: [eris project clean name]`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.Rm(cmd, args)
          },
 }
 
 // clean a project's data from the machine
-// flags to add: force (no confirm)
+// flags to add: --force (no confirm)
 var projectsClean = &cobra.Command{
   Use:   "clean",
   Short: "Clean a project's data from the machine.",

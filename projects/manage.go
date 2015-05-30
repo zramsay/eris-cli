@@ -9,11 +9,15 @@ func Get(cmd *cobra.Command, args []string) {
 
 }
 
-func Install(cmd *cobra.Command, args []string) {
+func New(cmd *cobra.Command, args []string) {
 
 }
 
 func Add(cmd *cobra.Command, args []string) {
+
+}
+
+func Install(cmd *cobra.Command, args []string) {
 
 }
 
