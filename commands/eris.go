@@ -1,12 +1,10 @@
 package commands
 
 import (
-	// "fmt"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
-	// "strings"
 )
 
 const VERSION = "0.10.0"
@@ -27,14 +25,17 @@ Complete documentation is available at https://docs.erisindustries.com
 
 func Execute() {
 	InitializeConfig()
-	AddCommands()
 	AddGlobalFlags()
+	AddCommands()
+	AddCommandFlags()
 	ErisCmd.Execute()
 	// utils.StopOnErr(ErisCmd.Execute())
 }
 
 // Define the commands
 func AddCommands() {
+	buildServicesCommand()
+	ErisCmd.AddCommand(cmdServices)
 	ErisCmd.AddCommand(cmdConfig)
 	ErisCmd.AddCommand(cmdVersion)
 }
@@ -45,6 +46,11 @@ var Verbose bool
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+}
+
+// Add command flags
+func AddCommandFlags() {
+
 }
 
 // Properly scope the globalConfig
