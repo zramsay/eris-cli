@@ -56,7 +56,7 @@ NOTE: This functionality is currently limited to github.com and IPFS.`,
 var actionsNew = &cobra.Command{
   Use:   "new [name]",
   Short: "Create a new action definition file.",
-  Long:  `Create a new action definition file optionally from a template`,
+  Long:  `Create a new action definition file optionally from a template.`,
   Run:   func(cmd *cobra.Command, args []string) {
            act.New(cmd, args)
          },
@@ -83,7 +83,7 @@ of the currently checked out project.`,
 var actionsList = &cobra.Command{
   Use:   "ls",
   Short: "List all registered action definition files.",
-  Long:  `List all registered action definition files`,
+  Long:  `List all registered action definition files.`,
   Run:   func(cmd *cobra.Command, args []string) {
            act.ListAll()
          },
@@ -103,7 +103,7 @@ var actionsDo = &cobra.Command{
 var actionsEdit = &cobra.Command{
   Use:   "edit [name]",
   Short: "Edit an action definition file.",
-  Long:  `Edit an action definition file`,
+  Long:  `Edit an action definition file in the default editor.`,
   Run:   func(cmd *cobra.Command, args []string) {
            act.Edit(args)
          },
@@ -113,7 +113,7 @@ var actionsEdit = &cobra.Command{
 var actionsRename = &cobra.Command{
   Use:   "rename [old] [new]",
   Short: "Rename an action.",
-  Long:  `Rename an action`,
+  Long:  `Rename an action.`,
   Run:   func(cmd *cobra.Command, args []string) {
            act.Rename(args)
          },
@@ -123,7 +123,7 @@ var actionsRename = &cobra.Command{
 var actionsRemove = &cobra.Command{
   Use:   "remove [name]",
   Short: "Remove an action definition file.",
-  Long:  `Remove an action definition file`,
+  Long:  `Remove an action definition file.`,
   Run:   func(cmd *cobra.Command, args []string) {
            act.Remove(args)
          },
