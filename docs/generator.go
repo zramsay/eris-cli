@@ -131,7 +131,7 @@ func main() {
 	eris := commands.ErisCmd
 	commands.AddCommands()
 
-	MyGenMarkdownTree(eris, "./rendered/")
+	MyGenMarkdownTree(eris, "./eris-cli/")
 
 	// out := new(bytes.Buffer)
 	// cobra.MyGenMarkdown(eris, out)

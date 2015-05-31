@@ -2,22 +2,36 @@ machine:
   services:
     - docker
 
-dependencies:
-  override:
+  post:
+    - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
 
+dependencies:
+  post:
+    - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
+
 test:
   override:
-    - "cd cmd/eris && go install"
     - specs/test.sh
 
 deployment:
   master:
     branch: master
     commands:
-      - "cd docs && go run generate.go"
-      - "specs/generate.sh"
-      - "cd .. && git clone git@github.com/eris-ltd/docs.erisindustries.com"
-      - "mv docs/rendered ../docs.erisindustries.com/documentation/eris-cli"
-      - "cd ../docs.erisindustries.com && git add -A :/ && git commit -m 'epm-cli master build documentation generation' && git push origin master"
+      - mkdir -p docs/eris-cli
+      - "cd docs && go run generator.go"
+      - "cd specs && ./generate.sh"
+      - "cd ~ && git clone git@github.com:eris-ltd/docs.erisindustries.com.git"
+      - "rsync -av docs/eris-cli ~/docs.erisindustries.com/documentation/"
+      - >
+          cd ~/docs.erisindustries.com;
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "All Good!"
+          else
+            git add -A :/ &&
+            git commit -m "eris-cli build number $CIRCLE_BUILD_NUM doc generation" &&
+            git push origin master
+          fi
