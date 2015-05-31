@@ -1,8 +1,7 @@
 package services
 
 import (
-
-  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 // install
@@ -19,7 +18,6 @@ func Update(cmd *cobra.Command, args []string) {
 func ListKnown() {
 
 }
-
 
 func ListRunning() {
 

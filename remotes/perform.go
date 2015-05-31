@@ -1,7 +1,6 @@
 package remotes
 
-import (
-)
+import ()
 
 func Do(args []string) {
 

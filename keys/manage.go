@@ -1,8 +1,7 @@
 package keys
 
 import (
-
-  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 func Generate(cmd *cobra.Command, args []string) {

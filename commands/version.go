@@ -2,10 +2,10 @@ package commands
 
 import (
 	"fmt"
-  "log"
-  "strings"
+	"log"
+	"strings"
 
-  "github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/perform"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -21,9 +21,9 @@ var Version = &cobra.Command{
 
 func printVersion() {
 	fmt.Println("Eris CLI Version: " + VERSION)
-  epmVer, err := perform.NativeCommandRaw("epm", "--version")
-  if err != nil {
-    log.Fatal(err)
-  }
-  fmt.Println(strings.TrimSpace(epmVer))
+	epmVer, err := perform.NativeCommandRaw("epm", "--version")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(strings.TrimSpace(epmVer))
 }

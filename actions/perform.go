@@ -1,7 +1,6 @@
 package actions
 
-import (
-)
+import ()
 
 func Do(args []string) {
 
