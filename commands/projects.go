@@ -10,16 +10,15 @@ import (
 var Projects = &cobra.Command{
   Use:   "projects",
   Short: "Start, Stop, and Manage Projects or Applications.",
-  Long:  `Start, stop, and configure projects or applications.
-
+  Long:  `Start, stop, and manage projects or applications.
 
 Within the Eris platform, projects are a bundle of services,
-configured to run in a specific manner. Projects may be defined
-either by a package.json file in the root of an application's
-directory or via a docker-compose.yml file in the root of an
-application's directory. Projects are given a human readable
-name so that they can Eris can checkout and operate the
-application or project.`,
+and actions which are configured to run in a specific manner.
+Projects may be defined either by a package.json file in the
+root of an application's directory or via a docker-compose.yml
+file in the root of an application's directory. Projects are
+given a human readable name so that Eris can checkout and
+operate the application or project.`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.ListProjects()
          },
@@ -35,6 +34,7 @@ func buildProjectsCommand() {
   Projects.AddCommand(projectsCheckout)
   Projects.AddCommand(projectsConfig)
   Projects.AddCommand(projectsServices)
+  Projects.AddCommand(projectsActions)
   Projects.AddCommand(projectsStart)
   Projects.AddCommand(projectsStop)
   Projects.AddCommand(projectsRename)
@@ -44,12 +44,12 @@ func buildProjectsCommand() {
 }
 
 // get a project definition file from a remote (currently limited to github.com and ipfs)
-// flags to add: --name, --checkout
+// flags to add: --checkout
 var projectsGet = &cobra.Command{
   Use:   "get [name] [github.com/USER/REPO] || [name] [ipfs hash]",
-  Short: "Get a project from Github.",
-  Long:  `Retrieve a project from the internet (utilizes git clone) and install
-the project's dependencies.
+  Short: "Get a project from Github or IPFS.",
+  Long:  `Retrieve a project from the internet (utilizes git clone or ipfs)
+and install the project's dependencies.
 
 NOTE: This functionality is currently limited to github.com and IPFS.`,
   Run:   func(cmd *cobra.Command, args []string) {
@@ -72,7 +72,7 @@ var projectsNew = &cobra.Command{
 // flags to add: --checkout
 var projectsAdd = &cobra.Command{
   Use:   "add [name] [project-definition-file]",
-  Short: "Adds a project to Eris.",
+  Short: "Add a project to Eris.",
   Long:  `Projects may be defined either by a package.json file in the root
 of an application's directory or via a docker-compose.yml file
 in the root of an application's directory.`,
@@ -132,6 +132,18 @@ var projectsServices = &cobra.Command{
 display the services for the currently checked out project.`,
   Run:   func(cmd *cobra.Command, args []string) {
            prj.ListServices(cmd, args)
+         },
+}
+
+// list the actions associated with the currently checked out project
+// flags to add: --verbose
+var projectsActions = &cobra.Command{
+  Use:   "actions [name]",
+  Short: "List actions for a project.",
+  Long:  `List actions for a project. If no arguments are given, will
+display the actions for the currently checked out project.`,
+  Run:   func(cmd *cobra.Command, args []string) {
+           prj.ListActions(cmd, args)
          },
 }
 

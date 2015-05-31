@@ -17,7 +17,7 @@ the cryptographic keys for your application.`,
          },
 }
 
-// build the services subcommand
+// build the keys subcommand
 func buildKeysCommand() {
   Keys.AddCommand(keysNew)
   Keys.AddCommand(keysList)

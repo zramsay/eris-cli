@@ -29,6 +29,10 @@ func ListServices(cmd *cobra.Command, args []string) {
 
 }
 
+func ListActions(cmd *cobra.Command, args []string) {
+
+}
+
 func Rename(cmd *cobra.Command, args []string) {
 
 }

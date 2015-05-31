@@ -15,13 +15,14 @@ var Chains = &cobra.Command{
 The chains subcommand is used to start, stop, and configure blockchains.
 Within the Eris platform, blockchains are the primary method of storing
 structured data which is used by the Eris platform in combination with
-IPFS (a content addressable.`,
+IPFS (a globally-accessible content-addressable peer to peer file
+storage solution).`,
   Run:   func(cmd *cobra.Command, args []string) {
            chns.ListChains()
          },
 }
 
-// Build the projects subcommand
+// Build the chains subcommand
 func buildChainsCommand() {
   Chains.AddCommand(chainsListKnown)
   Chains.AddCommand(chainsInstall)
@@ -45,8 +46,8 @@ func buildChainsCommand() {
 // flags to add: --list-versions
 var chainsListKnown = &cobra.Command{
   Use:   "known",
-  Short: "List all the chain types which eris can install for your platform.",
-  Long:  `Lists the chain types which eris can install for your platform. To install
+  Short: "List all the blockchain types Eris can install.",
+  Long:  `Lists the blockchain types which Eris can install for your platform. To install
 a service, use: eris chains install.`,
   Run:   func(cmd *cobra.Command, args []string) {
            chns.ListKnown()
@@ -56,8 +57,8 @@ a service, use: eris chains install.`,
 // install a blockchain library for your machine
 var chainsInstall = &cobra.Command{
   Use:   "install [type] [version]",
-  Short: "Installs a chain library for your platform.",
-  Long:  `Installs a chain library for your platform.  By default, Eris will install
+  Short: "Installs a blockchain library for your platform.",
+  Long:  `Installs a blockchain library for your platform.  By default, Eris will install
 the most recent version of a service unless another version is
 passed as an argument. To list known services use:
 [eris chains known].`,
@@ -69,8 +70,8 @@ passed as an argument. To list known services use:
 // types lists the currently installed chain types
 var chainsTypes = &cobra.Command{
   Use:   "types",
-  Short: "Lists the currently installed chain types.",
-  Long:  `Lists the currently installed chain types.`,
+  Short: "Lists the currently installed blockchain types.",
+  Long:  `Lists the currently installed blockchain types.`,
   Run:   func(cmd *cobra.Command, args []string) {
            chns.ListInstalled()
          },
@@ -195,8 +196,8 @@ var chainsRename = &cobra.Command{
 // flags to add: --force (no confirm), --clean
 var chainsRemove = &cobra.Command{
   Use:   "rm [name]",
-  Short: "Remove a blockchain from Eris tree.",
-  Long:  `Remove a blockchain from Eris tree.
+  Short: "Remove a blockchain's reference from Eris tree.",
+  Long:  `Remove a blockchain's reference from Eris tree.
 
 [eris chains rm] does not remove any data, just removes
 the reference from eris' tree of blockchains. To remove
