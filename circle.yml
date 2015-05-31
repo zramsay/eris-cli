@@ -9,9 +9,15 @@ dependencies:
 
 test:
   override:
+    - "cd cmd/eris && go install"
     - specs/test.sh
 
-deploy:
-  override:
-    - "cd docs && go run generate.go"
-    # - "TOFIX: mv docs/rendered ../docs.erisindustries.com/ && cd ../docs.erisindustries.com && git add -A :/ && git commit -m 'auto generate documentation'"
+deployment:
+  master:
+    branch: master
+    commands:
+      - "cd docs && go run generate.go"
+      - "specs/generate.sh"
+      - "cd .. && git clone git@github.com/eris-ltd/docs.erisindustries.com"
+      - "mv docs/rendered ../docs.erisindustries.com/documentation/eris-cli"
+      - "cd ../docs.erisindustries.com && git add -A :/ && git commit -m 'epm-cli master build documentation generation' && git push origin master"
