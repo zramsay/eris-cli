@@ -1,10 +1,9 @@
 package main
 
 import (
-  "bytes"
-  "fmt"
-  // "io/ioutil"
-  "os"
+  // "bytes"
+  // "fmt"
+  // "os"
 
   "github.com/eris-ltd/eris-cli/commands"
 
@@ -12,28 +11,40 @@ import (
 )
 
 func main() {
-    out := new(bytes.Buffer)
     eris := commands.ErisCmd
     commands.AddCommands()
-    cobra.GenMarkdown(eris, out)
-    cobra.GenMarkdown(commands.Projects, out)
-    cobra.GenMarkdown(commands.Services, out)
-    cobra.GenMarkdown(commands.Chains, out)
-    // cobra.GenMarkdown(commands.Keys, out)
+
+    cobra.GenMarkdownTree(eris, "./rendered/")
+
+    // out := new(bytes.Buffer)
+    // cobra.GenMarkdown(eris, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Projects, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Chains, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Services, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Actions, out)
+    // _, _ = out.WriteString("\n\n")
     // cobra.GenMarkdown(commands.Remotes, out)
-    cobra.GenMarkdown(commands.Config, out)
-    cobra.GenMarkdown(commands.Version, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Keys, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Config, out)
+    // _, _ = out.WriteString("\n\n")
+    // cobra.GenMarkdown(commands.Version, out)
 
-    outFile, err := os.Create("./eris.md")
-    if err != nil {
-      fmt.Println(err)
-      os.Exit(1)
-    }
-    defer outFile.Close()
+    // outFile, err := os.Create("./eris.md")
+    // if err != nil {
+    //   fmt.Println(err)
+    //   os.Exit(1)
+    // }
+    // defer outFile.Close()
 
-    _, err = outFile.Write(out.Bytes())
-    if err != nil {
-      fmt.Println(err)
-      os.Exit(1)
-    }
+    // _, err = outFile.Write(out.Bytes())
+    // if err != nil {
+    //   fmt.Println(err)
+    //   os.Exit(1)
+    // }
 }

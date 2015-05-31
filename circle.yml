@@ -4,6 +4,14 @@ machine:
 
 dependencies:
   override:
+    - git config --global user.email "billings@erisindustries.com"
+    - git config --global user.name "Billings the Bot"
 
 test:
   override:
+    - specs/test.sh
+
+deploy:
+  override:
+    - "cd docs && go run generate.go"
+    # - "TOFIX: mv docs/rendered ../docs.erisindustries.com/ && cd ../docs.erisindustries.com && git add -A :/ && git commit -m 'auto generate documentation'"
