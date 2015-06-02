@@ -22,8 +22,7 @@ deployment:
     branch: master
     commands:
       - mkdir -p docs/eris-cli
-      - "cd docs && go run generator.go"
-      - "cd specs && ./generate.sh"
+      - go run docs/generator.go
       - "cd ~ && git clone git@github.com:eris-ltd/docs.erisindustries.com.git"
       - "rsync -av docs/eris-cli ~/docs.erisindustries.com/documentation/"
       - >

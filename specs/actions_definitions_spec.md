@@ -1,44 +1,4 @@
-# Actions Specification
-
-Display and Manage actions for various components of the Eris platform and for the platform itself.
-
-Actions are bundles of commands which rely upon a project which is currently in scope or a any set of installed services. Actions are held in yaml, toml, or json action-definition files within the action folder in the eris tree (globally scoped actions) or in a directory pointed to by the actions field of the currently checked out project (project scoped actions). Actions are a sequence of commands which operate in a similar fashion to how a circle.yml file may operate.
-
-# Managing Actions
-
-## get
-
-Retrieve an action file from the internet (utilizes git clone or ipfs). NOTE: This functionality is currently limited to github.com and IPFS.
-
-## new
-
-Create a new action definition file optionally from a template.
-
-## add
-
-Actions must be an array of executable commands which will be called according to the machine definition included in eris config. Actions may be stored in JSON, TOML, or YAML. Globally accessible actions are stored in the actions directory of the eris tree. Project accessible actions are stored in a directory pointed to by the actions field of the currently checked out project.
-
-## ls
-
-List all registered action definition files.
-
-## do
-
-Perform an action according to the action definition file.  (limit by machine definition specification)
-
-## edit
-
-Edit an action definition file in the default editor.
-
-## rename
-
-Rename an action.
-
-## remove
-
-Remove an action definition file.
-
-# Action Definition Files
+# Action Definition Files Specification
 
 Action definitions are kept in JSON, TOML, or YAML formatting. All files which are validly formatted and within the `~/.eris/actions` directory will be made available globally across all projects registered with `eris`. In addition, [project definition files](project_definition_files) may contain an `actions` field which should point to a valid directory (usually the `./actions` folder of the application) containing action definition files. When a project has been `checked out` then the actions for that project are **brought into scope** and may be used by `eris`.
 
