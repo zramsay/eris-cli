@@ -95,7 +95,7 @@ var actionsDo = &cobra.Command{
 	Short: "Perform an action.",
 	Long:  `Perform an action according to the action definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		act.Do(args)
+		act.Do(cmd, args)
 	},
 }
 

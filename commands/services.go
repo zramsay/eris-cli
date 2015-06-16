@@ -29,6 +29,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesConfig)
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesListRunning)
+	Services.AddCommand(servicesInspect)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesUpdate)
@@ -116,6 +117,21 @@ var servicesListRunning = &cobra.Command{
 	Long:  `Lists the services which are currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.ListRunning()
+	},
+}
+
+// inspect running containers
+var servicesInspect = &cobra.Command{
+	Use:   "inspect [serviceName] [key]",
+	Short: "Machine readable service operation details.",
+	Long: `Displays machine readable details about running containers.
+
+The currently supported range of [key] is:
+
+* container -- returns the service's containerID
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		srv.Inspect(cmd, args)
 	},
 }
 

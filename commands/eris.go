@@ -21,13 +21,15 @@ Made with <3 by Eris Industries.
 
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	    util.DockerConnect(cmd)
+	},
 }
 
 func Execute() {
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
-	AddCommandFlags()
 	ErisCmd.Execute()
 	// utils.StopOnErr(ErisCmd.Execute())
 }
@@ -51,17 +53,14 @@ func AddCommands() {
 	ErisCmd.AddCommand(Version)
 }
 
-// Flags that are to be used by commands
+// Global Flags
 var Verbose bool
+
+// Flags that are to be used by commands
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
-}
-
-// Add command flags
-func AddCommandFlags() {
-
 }
 
 // Properly scope the globalConfig
