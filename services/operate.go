@@ -95,5 +95,38 @@ func Logs(cmd *cobra.Command, args []string) {
 }
 
 func Kill(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Println("No Service Given. Please rerun command with a known service.")
+		os.Exit(1)
+	}
+  verbose := cmd.Flags().Lookup("verbose").Changed
 
+	var service util.Service
+	var conf = viper.New()
+
+	conf.AddConfigPath(util.ServicesPath)
+	conf.SetConfigName(args[0])
+	conf.ReadInConfig()
+
+	err := conf.Marshal(&service)
+	if err != nil {
+		// TODO: error handling
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Services must be given an image. Flame out if they do not.
+	if service.Image == "" {
+		fmt.Println("An \"image\" field is required in the service definition file.")
+		os.Exit(1)
+	}
+
+	// If no name use image name
+	if service.Name == "" {
+		if service.Image != "" {
+			service.Name = strings.Replace(service.Image, "/", "_", -1)
+		}
+	}
+
+	perform.DockerStop(&service, verbose)
 }

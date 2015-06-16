@@ -43,8 +43,6 @@ func Start(cmd *cobra.Command, args []string) {
     os.Exit(1)
   }
 
-  // running := services.ListRunningRaw()
-
   perform.DockerRun(chain.Service, cmd.Flags().Lookup("verbose").Changed)
 }
 
@@ -53,7 +51,22 @@ func Logs(cmd *cobra.Command, args []string) {
 }
 
 func Kill(cmd *cobra.Command, args []string) {
+  if len(args) == 0 {
+    fmt.Println("No ChainName Given. Please rerun command with a known chain.")
+    os.Exit(1)
+  }
 
+  chain := loadChainConf(args[0])
+
+  // If no name use image name
+  err := os.Chdir(path.Join(util.BlockchainsPath, "raw", chain.Directory))
+  if err != nil {
+    // TODO: error handling
+    fmt.Println(err)
+    os.Exit(1)
+  }
+
+  perform.DockerStop(chain.Service, cmd.Flags().Lookup("verbose").Changed)
 }
 
 func loadChainConf(name string) *util.Chain {
