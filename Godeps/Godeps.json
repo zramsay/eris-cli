@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-15",
+			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
+		},
+		{
 			"ImportPath": "github.com/BurntSushi/toml",
 			"Comment": "v0.1.0-18-g443a628",
 			"Rev": "443a628bc233f634a75bcbdd71fe5350789f1afa"
@@ -18,6 +23,10 @@
 			"ImportPath": "github.com/coreos/go-etcd/etcd",
 			"Comment": "v2.0.0-7-g73a8ef7",
 			"Rev": "73a8ef737e8ea002281a28b4cb92a1de121ad4c6"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "f95d189acbfcb8628482decdb662d30bc74913e8"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
