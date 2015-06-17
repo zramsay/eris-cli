@@ -1,7 +1,9 @@
 package util
 
 import (
+	// "os"
 	// "fmt"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
@@ -14,9 +16,9 @@ func LoadGlobalConfig(globalConfig *viper.Viper) {
 	globalConfig.AddConfigPath(UserErisDir())
 	globalConfig.SetConfigType("json")
 	globalConfig.SetConfigName("config")
-	err := globalConfig.ReadInConfig()
-	if err != nil {
-		// panic(fmt.Errorf("Fatal error config file: %s \n", err))
-		return
-	}
+	// err := globalConfig.ReadInConfig()
+	// if err != nil {
+	// 	fmt.Println("Fatal error config file ->\n  %v", err)
+	// 	os.Exit(1)
+	// }
 }

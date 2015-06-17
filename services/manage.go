@@ -16,6 +16,22 @@ func Install(cmd *cobra.Command, args []string) {
 
 }
 
+func Configure(cmd *cobra.Command, args []string) {
+
+}
+
+func Inspect(cmd *cobra.Command, args []string) {
+  imgs, _ := util.DockerClient.ListImages(docker.ListImagesOptions{All: false})
+  for _, img := range imgs {
+    fmt.Println("ID: ", img.ID)
+    fmt.Println("RepoTags: ", img.RepoTags)
+    fmt.Println("Created: ", img.Created)
+    fmt.Println("Size: ", img.Size)
+    fmt.Println("VirtualSize: ", img.VirtualSize)
+    fmt.Println("ParentId: ", img.ParentID)
+  }
+}
+
 // Updates an installed service, or installs it if it has not been installed.
 func Update(cmd *cobra.Command, args []string) {
 
@@ -31,6 +47,14 @@ func ListRunning() {
   for _, s := range services {
     fmt.Println(s)
   }
+}
+
+func ListInstalled() {
+
+}
+
+func Rm(cmd *cobra.Command, args []string) {
+
 }
 
 func ListRunningRaw() []string {
@@ -50,17 +74,14 @@ func ListRunningRaw() []string {
   return services
 }
 
-func ListInstalled() {
-
+func IsServiceRunning(service *util.Service) bool {
+  running := ListRunningRaw()
+  if len(running) != 0 {
+    for _, srv := range running {
+      if srv == service.Name {
+        return true
+      }
+    }
+  }
+  return false
 }
-
-func Rm(cmd *cobra.Command, args []string) {
-
-}
-
-// endpoint := "tcp://[ip]:[port]"
-// path := os.Getenv("DOCKER_CERT_PATH")
-// ca := fmt.Sprintf("%s/ca.pem", path)
-// cert := fmt.Sprintf("%s/cert.pem", path)
-// key := fmt.Sprintf("%s/key.pem", path)
-// client, _ := docker.NewTLSClient(endpoint, cert, key, ca)

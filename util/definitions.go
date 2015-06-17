@@ -5,11 +5,11 @@ package util
 //   https://docs.docker.com/compose/yml
 type Service struct {
   // TODO: harmonize with services_definition_spec.md
-
-  // Relatively static, stored in service definition files
   Name                 string            `json:"name" yaml:"name" toml:"name"`
   Image                string            `json:"image" yaml:"image" toml:"image"`
   Command              string            `json:"command" yaml:"command" toml:"command"`
+  ServiceDeps          []string          `json:"services", yaml:"services" toml:""services"`
+  DataContainers       []string          `json:"data_containers", yaml:"data_containers", toml:"data_containers"`
   Labels               map[string]string `json:"labels" yaml:"labels" toml:"labels"`
   Links                []string          `json:"links" yaml:"links" toml:"links"`
   Ports                []string          `json:"ports" yaml:"ports" toml:"ports"`

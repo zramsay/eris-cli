@@ -15,7 +15,15 @@ func Install(cmd *cobra.Command, args []string) {
 
 }
 
+func New(cmd *cobra.Command, args []string) {
+
+}
+
 func Add(cmd *cobra.Command, args []string) {
+
+}
+
+func Config(cmd *cobra.Command, args []string) {
 
 }
 
@@ -68,4 +76,16 @@ func Update(cmd *cobra.Command, args []string) {
 
 func Clean(cmd *cobra.Command, args []string) {
 
+}
+
+func IsChainRunning(chain *util.Chain) bool {
+  running := ListRunningRaw()
+  if len(running) != 0 {
+    for _, chn := range running {
+      if chn == chain.Name {
+        return true
+      }
+    }
+  }
+  return false
 }

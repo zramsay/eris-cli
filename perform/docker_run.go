@@ -201,13 +201,14 @@ func fixDirs(arg []string) ([]string) {
   for n, a := range arg {
     if strings.Contains(a, "$eris") {
       tmp := strings.Split(a, ":")[0]
-      keep := strings.Split(a, ":")[1]
+      keep := strings.Replace(a, tmp + ":", "", 1)
       if runtime.GOOS == "windows" {
         winTmp := strings.Split(tmp, "/")
         tmp = path.Join(winTmp...)
       }
       tmp = strings.Replace(tmp, "$eris", util.ErisRoot, 1)
       arg[n] = strings.Join([]string{tmp, keep}, ":")
+      fmt.Println(arg[n])
       continue
     }
 
