@@ -19,9 +19,6 @@ root of an application's directory or via a docker-compose.yml
 file in the root of an application's directory. Projects are
 given a human readable name so that Eris can checkout and
 operate the application or project.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		prj.ListProjects()
-	},
 }
 
 // Build the projects subcommand

@@ -15,9 +15,6 @@ various services reachable by the Eris platform.
 Actions, if configured as such, can utilize remote machines.
 To register and manage remote machines for sending of actions
 to those machines, use this command.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		rem.List()
-	},
 }
 
 // build the services subcommand

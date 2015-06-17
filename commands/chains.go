@@ -17,9 +17,6 @@ Within the Eris platform, blockchains are the primary method of storing
 structured data which is used by the Eris platform in combination with
 IPFS (a globally-accessible content-addressable peer to peer file
 storage solution).`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListChains()
-	},
 }
 
 // Build the chains subcommand
@@ -28,9 +25,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsTypes)
 	Chains.AddCommand(chainsNew)
-	Chains.AddCommand(chainsAdd)
 	Chains.AddCommand(chainsList)
-	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsConfig)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
@@ -90,17 +85,6 @@ Will use a default genesis.json unless a --genesis flag is passed.`,
 	},
 }
 
-// add
-// flags to add: --checkout
-var chainsAdd = &cobra.Command{
-	Use:   "add [name] [ref]",
-	Short: "Adds an existing blockchain to Eris' blockchain tree.",
-	Long:  `Adds an existing blockchain to Eris' blockchain tree.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Add(cmd, args)
-	},
-}
-
 // list
 // flags to add: --current, --short, --all
 var chainsList = &cobra.Command{
@@ -109,21 +93,6 @@ var chainsList = &cobra.Command{
 	Long:  `Lists all known blockchains in the Eris tree.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.ListChains()
-	},
-}
-
-// checkout
-var chainsCheckout = &cobra.Command{
-	Use:   "checkout",
-	Short: "Checks out a blockchain.",
-	Long: `Checks out a blockchain.
-
-Unless Eris is running a particular project, it will only
-operate on a single blockchain at a time; namely, it will
-operate on the currently *checked* out blockchain. This
-command is used to change the currently checked out chain.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Checkout(cmd, args)
 	},
 }
 
