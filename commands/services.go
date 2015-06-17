@@ -22,13 +22,15 @@ management services are managed via the [eris keys] command.`,
 func buildServicesCommand() {
 	Services.AddCommand(servicesListKnown)
 	Services.AddCommand(servicesInstall)
-	Services.AddCommand(servicesListInstalled)
+	Services.AddCommand(servicesNew)
+	Services.AddCommand(servicesListExisting)
 	Services.AddCommand(servicesConfig)
 	Services.AddCommand(servicesStart)
+	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
-	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesStop)
+	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
 }
@@ -61,14 +63,25 @@ as an argument. To list known services use:
 	},
 }
 
+// new
+// flags to add: --type, --genesis, --config, --checkout, --force-name
+var servicesNew = &cobra.Command{
+	Use:   "new [name]",
+	Short: "Creates a new service.",
+	Long: `Creates a new service.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		srv.New(cmd, args)
+	},
+}
+
 // ls lists the services available locally
-var servicesListInstalled = &cobra.Command{
+var servicesListExisting = &cobra.Command{
 	Use:   "ls",
 	Short: "List the installed services.",
 	Long: `Lists the installed services which eris knows about. To start a service
 use: [eris services start service].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.ListInstalled()
+		srv.ListExisting()
 	},
 }
 
@@ -143,13 +156,23 @@ var servicesLogs = &cobra.Command{
 	},
 }
 
-// kill stops a running service
+// stop stops a running service
 var servicesStop = &cobra.Command{
-	Use:   "kill [name]",
+	Use:   "stop [name]",
 	Short: "Stops a running service.",
 	Long:  `Stops a services which is currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Kill(cmd, args)
+	},
+}
+
+// renames an installed service
+var servicesRename = &cobra.Command{
+	Use:   "rename [name]",
+	Short: "Renames an installed service.",
+	Long:  `Renames an installed service.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		srv.Rename(cmd, args)
 	},
 }
 

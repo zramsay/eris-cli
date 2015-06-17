@@ -23,18 +23,17 @@ storage solution).`,
 func buildChainsCommand() {
 	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsInstall)
-	Chains.AddCommand(chainsTypes)
 	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsConfig)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
-	Chains.AddCommand(chainsKill)
+	Chains.AddCommand(chainsInspect)
+	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsRename)
-	Chains.AddCommand(chainsRemove)
-	Chains.AddCommand(chainsClean)
 	Chains.AddCommand(chainsUpdate)
+	Chains.AddCommand(chainsRemove)
 }
 
 // known lists the known chain types which eris can install
@@ -59,16 +58,6 @@ passed as an argument. To list known services use:
 [eris chains known].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Install(cmd, args)
-	},
-}
-
-// types lists the currently installed chain types
-var chainsTypes = &cobra.Command{
-	Use:   "types",
-	Short: "Lists the currently installed blockchain types.",
-	Long:  `Lists the currently installed blockchain types.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListInstalled()
 	},
 }
 
@@ -141,13 +130,28 @@ var chainsListRunning = &cobra.Command{
 	},
 }
 
-// kill
-var chainsKill = &cobra.Command{
-	Use:   "kill [name]",
+// stop
+var chainsStop = &cobra.Command{
+	Use:   "stop [name]",
 	Short: "Stop a running blockchains.",
 	Long:  `Stop a running blockchains.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Kill(cmd, args)
+	},
+}
+
+// inspect running containers
+var chainsInspect = &cobra.Command{
+	Use:   "inspect [chainName] [key]",
+	Short: "Machine readable chain operation details.",
+	Long: `Displays machine readable details about running containers.
+
+The currently supported range of [key] is:
+
+* container -- returns the chain's containerID
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		chns.Inspect(cmd, args)
 	},
 }
 
@@ -173,20 +177,6 @@ the reference from eris' tree of blockchains. To remove
 the blockchain data from the node use: [eris chains clean].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Remove(cmd, args)
-	},
-}
-
-// clean
-// flags to add: --force (no confirm)
-var chainsClean = &cobra.Command{
-	Use:   "clean [name]",
-	Short: "Clean a blockchains' data from the node.",
-	Long: `Clean a blockchains' data from the node.
-
-Clean will remove the blockchain reference as well as
-its data.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Clean(cmd, args)
 	},
 }
 

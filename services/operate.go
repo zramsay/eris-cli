@@ -9,7 +9,6 @@ import (
   "github.com/eris-ltd/eris-cli/perform"
   "github.com/eris-ltd/eris-cli/util"
 
-  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -29,9 +28,9 @@ func Kill(cmd *cobra.Command, args []string) {
 }
 
 func StartServiceRaw(servName string, verbose bool) {
-  service, started := LoadServiceDefinition(servName, true)
+  service := LoadServiceDefinition(servName)
 
-  if started {
+  if IsServiceRunning(service) {
     if verbose {
       fmt.Println("Service already started. Skipping.")
     }
@@ -41,9 +40,9 @@ func StartServiceRaw(servName string, verbose bool) {
 }
 
 func KillServiceRaw(servName string, verbose bool) {
-  service, started := LoadServiceDefinition(servName, false)
+  service := LoadServiceDefinition(servName)
 
-  if started {
+  if IsServiceRunning(service) {
     KillServiceByService(service, verbose)
   } else {
     if verbose {
@@ -66,7 +65,7 @@ func KillServiceByService(service *util.Service, verbose bool) {
   perform.DockerStop(service, verbose)
 }
 
-func LoadServiceDefinition(servName string, newOrOld bool) (*util.Service, bool) {
+func LoadServiceDefinition(servName string) (*util.Service) {
   var service util.Service
   var serviceConf = viper.New()
 
@@ -84,15 +83,7 @@ func LoadServiceDefinition(servName string, newOrOld bool) (*util.Service, bool)
   checkServiceHasImage(&service)
   checkServiceHasName(&service)
 
-  if IsServiceRunning(&service) {
-    return &service, true
-  }
-
-  if newOrOld {
-    checkServiceHasUniqueName(&service)
-  }
-
-  return &service, false
+  return &service
 }
 
 func checkServiceGiven(args []string) {
@@ -118,10 +109,7 @@ func checkServiceHasName(service *util.Service) {
       service.Name = strings.Replace(service.Image, "/", "_", -1)
     }
   }
-}
 
-func checkServiceHasUniqueName(service *util.Service) {
-  // Give name a unique identifier
   containerNumber := 1 // tmp
-  service.Name = "eris_service_" + service.Name + "_" + strings.Split(uuid.New(), "-")[0] + "_" + strconv.Itoa(containerNumber)
+  service.Name = "eris_service_" + service.Name + "_" + strconv.Itoa(containerNumber)
 }

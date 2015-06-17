@@ -3,13 +3,11 @@ package chains
 import (
   "fmt"
   "os"
-  "strings"
   "strconv"
 
   "github.com/eris-ltd/eris-cli/services"
   "github.com/eris-ltd/eris-cli/util"
 
-  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -29,9 +27,9 @@ func Kill(cmd *cobra.Command, args []string) {
 }
 
 func StartChainRaw(chainName string, verbose bool) {
-  chain, started := LoadChainDefinition(chainName, true)
+  chain := LoadChainDefinition(chainName)
 
-  if started {
+  if IsChainRunning(chain) {
     if verbose {
       fmt.Println("Chain already started. Skipping.")
     }
@@ -41,18 +39,18 @@ func StartChainRaw(chainName string, verbose bool) {
 }
 
 func KillChainRaw(chainName string, verbose bool) {
-  chain, started := LoadChainDefinition(chainName, false)
+  chain := LoadChainDefinition(chainName)
 
-  if started {
+  if IsChainRunning(chain) {
     services.KillServiceByService(chain.Service, verbose)
   } else {
     if verbose {
-      fmt.Println("Service not currently running. Skipping.")
+      fmt.Println("Chain not currently running. Skipping.")
     }
   }
 }
 
-func LoadChainDefinition(chainName string, newOrOld bool) (*util.Chain, bool) {
+func LoadChainDefinition(chainName string) (*util.Chain) {
   var chain util.Chain
   var chainConf = viper.New()
 
@@ -67,18 +65,12 @@ func LoadChainDefinition(chainName string, newOrOld bool) (*util.Chain, bool) {
     os.Exit(1)
   }
 
-  serv, _  := services.LoadServiceDefinition(chain.Type, false)
+  serv  := services.LoadServiceDefinition(chain.Type)
   mergeChainAndService(&chain, serv)
 
-  if IsChainRunning(&chain) {
-    return &chain, true
-  }
+  checkChainHasUniqueName(&chain)
 
-  if newOrOld {
-    checkChainHasUniqueName(&chain)
-  }
-
-  return &chain, false
+  return &chain
 }
 
 func mergeChainAndService(chain *util.Chain, service *util.Service) {
@@ -154,5 +146,5 @@ func checkChainGiven(args []string) {
 
 func checkChainHasUniqueName(chain *util.Chain) {
   containerNumber := 1 // tmp
-  chain.Service.Name = "eris_chain_" + chain.Name + "_" + strings.Split(uuid.New(), "-")[0] + "_" + strconv.Itoa(containerNumber)
+  chain.Service.Name = "eris_chain_" + chain.Name + "_" + strconv.Itoa(containerNumber)
 }

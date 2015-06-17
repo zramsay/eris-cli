@@ -21,41 +21,160 @@ import (
 //   Client version: 1.6.2
 //   Client API version: 1.18
 func DockerRun(srv *util.Service, verbose bool) {
+  var id string
+
   if verbose {
     fmt.Println("Starting Service: " + srv.Name)
   }
 
+  opts := configureContainer(srv)
   srv.Volumes = fixDirs(srv.Volumes)
-  startContainer(srv)
+
+  if service, exists := ContainerExists(srv); exists {
+    if verbose {
+      fmt.Println("Container already exists, am not creating.")
+    }
+    id = service.ID
+  } else {
+    if verbose {
+      fmt.Println("Container does not exist, creating.")
+    }
+    cont := createContainer(opts)
+    id = cont.ID
+  }
 
   if verbose {
-    fmt.Println(srv.Name + " Started")
+    fmt.Println("Starting Container ID: " + id)
+  }
+  startContainer(id, &opts)
+
+  if verbose {
+    fmt.Println(srv.Name + " Started.")
+  }
+}
+
+func DockerRebuild(srv *util.Service, verbose bool) {
+  var id string
+  var wasRunning bool = false
+
+  if verbose {
+    fmt.Println("Rebuilding Service: " + util.FullNameToShort(srv.Name))
+  }
+
+  if service, exists := ContainerExists(srv); exists {
+    if verbose {
+      fmt.Println("Service exists, commensing with rebuild.")
+    }
+
+    if _, running := ContainerRunning(srv); running {
+      if verbose {
+        fmt.Println("Service is running. Stopping now.")
+      }
+      wasRunning = true
+      DockerStop(srv, verbose)
+    }
+
+    if verbose {
+      fmt.Println("Removing old container.")
+    }
+    removeContainer(service.ID)
+
+  } else {
+
+    if verbose {
+      fmt.Println("Service did not previously exist. Nothing to rebuild.")
+    }
+    return
+  }
+
+  opts := configureContainer(srv)
+  srv.Volumes = fixDirs(srv.Volumes)
+
+  if verbose {
+    fmt.Println("Recreating container.")
+  }
+  cont := createContainer(opts)
+  id = cont.ID
+
+  if wasRunning {
+    if verbose {
+      fmt.Println("Restarting Container with new ID: " + id)
+    }
+    startContainer(id, &opts)
+  }
+
+  if verbose {
+    fmt.Println(util.FullNameToShort(srv.Name) + " Rebuilt.")
   }
 }
 
 func DockerStop(srv *util.Service, verbose bool) {
   // don't limit this to verbose because it takes a few seconds
-  fmt.Println("Stopping Service: " + srv.Name + ". This may take a few seconds.")
+  fmt.Println("Stopping: " + util.FullNameToShort(srv.Name) + ". This may take a few seconds.")
 
   var timeout uint = 10
-  stopContainer(srv, timeout)
+  dockerAPIContainer, running := ContainerExists(srv)
+
+  if running {
+    stopContainer(dockerAPIContainer.ID, timeout)
+  }
 
   if verbose {
-    fmt.Println(srv.Name + " Stopped")
+    fmt.Println(util.FullNameToShort(srv.Name) + " Stopped.")
   }
 }
 
-func startContainer(srv *util.Service) {
-  opts := configureContainer(srv)
+func ContainerExists(srv *util.Service) (docker.APIContainers, bool) {
+  return parseContainers(srv.Name, true)
+}
 
+func ContainerRunning(srv *util.Service) (docker.APIContainers, bool) {
+  return parseContainers(srv.Name, false)
+}
+
+func parseContainers(name string, all bool) (docker.APIContainers, bool) {
+  name = "/" + name
+  containers := listContainers(all)
+
+  if len(containers) != 0 {
+    for _, container := range containers {
+      if container.Names[0] == name {
+        return container, true
+      }
+    }
+  }
+  return docker.APIContainers{}, false
+}
+
+func listContainers(all bool) ([]docker.APIContainers) {
+  var container []docker.APIContainers
+  r := regexp.MustCompile(`\/eris_(?:service|chain)_(.+)_\d`)
+
+  contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
+  for _, con := range contns {
+    for _, c := range con.Names {
+      match := r.FindAllStringSubmatch(c, 1)
+      if len(match) != 0 {
+        container = append(container, con)
+      }
+    }
+  }
+
+  return container
+}
+
+func createContainer(opts docker.CreateContainerOptions) *docker.Container {
   dockerContainer, err := util.DockerClient.CreateContainer(opts)
   if err != nil {
     // TODO: better error handling
     fmt.Println("Failed to create container ->\n  %v", err)
     os.Exit(1)
   }
+  return dockerContainer
+}
 
-  err = util.DockerClient.StartContainer(dockerContainer.ID, opts.HostConfig)
+func startContainer(id string, opts *docker.CreateContainerOptions) {
+  err := util.DockerClient.StartContainer(id, opts.HostConfig)
   if err != nil {
     // TODO: better error handling
     fmt.Println("Failed to start container ->\n  %v", err)
@@ -63,31 +182,25 @@ func startContainer(srv *util.Service) {
   }
 }
 
-func stopContainer(srv *util.Service, timeout uint) {
-  dockerAPIContainer := srvToContainer(srv)
-
-  err := util.DockerClient.StopContainer(dockerAPIContainer.ID, timeout)
+func stopContainer(id string, timeout uint) {
+  err := util.DockerClient.StopContainer(id, timeout)
   if err != nil {
     // TODO: better error handling
     fmt.Println("Failed to stop container ->\n  %v", err)
   }
 }
 
-func srvToContainer(srv *util.Service) *docker.APIContainers {
-  var container *docker.APIContainers
-  r := regexp.MustCompile(`\/eris_(?:service|chain)_(.+)_\S+?_\d`)
-
-  contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: false})
-  for _, con := range contns {
-    for _, c := range con.Names {
-      match := r.FindAllStringSubmatch(c, 1)
-      if len(match) != 0 {
-        container = &con
-      }
-    }
+func removeContainer(id string) {
+  opts := docker.RemoveContainerOptions {
+    ID:            id,
+    RemoveVolumes: false,
+    Force:         false,
   }
-
-  return container
+  err := util.DockerClient.RemoveContainer(opts)
+  if err != nil {
+    // TODO: better error handling
+    fmt.Println("Failed to remove container ->\n  %v", err)
+  }
 }
 
 func configureContainer(srv *util.Service) docker.CreateContainerOptions {
@@ -208,7 +321,6 @@ func fixDirs(arg []string) ([]string) {
       }
       tmp = strings.Replace(tmp, "$eris", util.ErisRoot, 1)
       arg[n] = strings.Join([]string{tmp, keep}, ":")
-      fmt.Println(arg[n])
       continue
     }
 
