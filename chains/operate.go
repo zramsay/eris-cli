@@ -19,7 +19,8 @@ func Start(cmd *cobra.Command, args []string) {
 }
 
 func Logs(cmd *cobra.Command, args []string) {
-
+  checkChainGiven(args)
+  LogsChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Kill(cmd *cobra.Command, args []string) {
@@ -37,6 +38,11 @@ func StartChainRaw(chainName string, verbose bool) {
   } else {
     services.StartServiceByService(chain.Service, verbose)
   }
+}
+
+func LogsChainRaw(chainName string, verbose bool) {
+  chain := LoadChainDefinition(chainName)
+  services.LogsServiceByService(chain.Service, verbose)
 }
 
 func KillChainRaw(chainName string, verbose bool) {

@@ -155,6 +155,23 @@ func DockerRebuild(srv *util.Service, verbose bool) {
   }
 }
 
+func DockerLogs(srv *util.Service, verbose bool) {
+  if verbose {
+    fmt.Println("Getting service's logs.")
+  }
+
+  if service, exists := ContainerExists(srv); exists {
+    if verbose {
+      fmt.Println("Service ID: " + service.ID)
+    }
+    logsContainer(service.ID)
+  } else {
+    if verbose {
+      fmt.Println("Service does not exist. Cannot display logs.")
+    }
+  }
+}
+
 func DockerStop(srv *util.Service, verbose bool) {
   // don't limit this to verbose because it takes a few seconds
   fmt.Println("Stopping: " + util.FullNameToShort(srv.Name) + ". This may take a few seconds.")
@@ -224,6 +241,27 @@ func startContainer(id string, opts *docker.CreateContainerOptions) {
   if err != nil {
     // TODO: better error handling
     fmt.Println("Failed to start container ->\n  %v", err)
+    os.Exit(1)
+  }
+}
+
+func logsContainer(id string) {
+  opts := docker.LogsOptions {
+    Container:    id,
+    Follow:       false,
+    Stdout:       true,
+    Stderr:       true,
+    Timestamps:   false,
+    OutputStream: os.Stdout,
+    ErrorStream:  os.Stderr,
+    // Tail:         "",
+    // RawTerminal:  true, // Usually true when the container contains a TTY.
+  }
+
+  err := util.DockerClient.Logs(opts)
+  if err != nil {
+    // TODO: better error handling
+    fmt.Println("Failed to get container logs ->\n  %v", err)
     os.Exit(1)
   }
 }

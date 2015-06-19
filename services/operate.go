@@ -19,7 +19,8 @@ func Start(cmd *cobra.Command, args []string) {
 }
 
 func Logs(cmd *cobra.Command, args []string) {
-
+  checkServiceGiven(args)
+  LogsServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Kill(cmd *cobra.Command, args []string) {
@@ -39,6 +40,11 @@ func StartServiceRaw(servName string, verbose bool) {
   }
 }
 
+func LogsServiceRaw(servName string, verbose bool) {
+  service := LoadServiceDefinition(servName)
+  perform.DockerLogs(service, verbose)
+}
+
 func KillServiceRaw(servName string, verbose bool) {
   service := LoadServiceDefinition(servName)
 
@@ -56,6 +62,10 @@ func StartServiceByService(service *util.Service, verbose bool) {
     go StartServiceRaw(srv, verbose)
   }
   perform.DockerRun(service, verbose)
+}
+
+func LogsServiceByService(service *util.Service, verbose bool) {
+  perform.DockerLogs(service, verbose)
 }
 
 func KillServiceByService(service *util.Service, verbose bool) {
