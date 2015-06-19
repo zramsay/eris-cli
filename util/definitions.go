@@ -8,8 +8,7 @@ type Service struct {
   Name                 string            `json:"name" yaml:"name" toml:"name"`
   Image                string            `json:"image" yaml:"image" toml:"image"`
   Command              string            `json:"command" yaml:"command" toml:"command"`
-  ServiceDeps          []string          `json:"services", yaml:"services" toml:""services"`
-  DataContainers       []string          `json:"data_containers", yaml:"data_containers", toml:"data_containers"`
+  ServiceDeps          []string          `json:"services", yaml:"services" toml:"services"`
   Labels               map[string]string `json:"labels" yaml:"labels" toml:"labels"`
   Links                []string          `json:"links" yaml:"links" toml:"links"`
   Ports                []string          `json:"ports" yaml:"ports" toml:"ports"`
@@ -33,11 +32,14 @@ type Service struct {
   MemLimit             int64             `json:"memory" yaml:"memory" toml:"memory"`
 
   // Filled in dynamically prerun
-  Restart          string
-  Privileged       bool
-  Attach           bool
-  AppName          string
-  DockerHostConn   string
+  DataContainer     bool
+  DataContainerName string
+  DataContainerID   string
+  Restart           string
+  Privileged        bool
+  Attach            bool
+  AppName           string
+  DockerHostConn    string
 
   // Used internally
   lastUpdated    string

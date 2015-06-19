@@ -21,32 +21,79 @@ import (
 //   Client version: 1.6.2
 //   Client API version: 1.18
 func DockerRun(srv *util.Service, verbose bool) {
-  var id string
+  var id_main string
+  var id_data string
+  var optsServ docker.CreateContainerOptions
+  var optsData docker.CreateContainerOptions
+  var dataCont docker.APIContainers
+  var dataContCreated *docker.Container
 
   if verbose {
     fmt.Println("Starting Service: " + srv.Name)
   }
 
-  opts := configureContainer(srv)
+  // configure
+  optsServ = configureContainer(srv)
   srv.Volumes = fixDirs(srv.Volumes)
+  if srv.DataContainer {
+    fmt.Println("You've asked me to manage the data containers. I shall do so good human.")
+    optsData = configureDataContainer(srv, &optsServ)
+  }
 
-  if service, exists := ContainerExists(srv); exists {
+  // check existence || create the container
+  if servCont, exists := ContainerExists(srv); exists {
     if verbose {
-      fmt.Println("Container already exists, am not creating.")
+      fmt.Println("Service Container already exists, am not creating.")
     }
-    id = service.ID
+    if srv.DataContainer {
+      if dataCont, exists = parseContainers(srv.DataContainerName, true); exists {
+        if verbose {
+          fmt.Println("Data Container already exists, am not creating.")
+        }
+        id_data = dataCont.ID
+      } else {
+        if verbose {
+          fmt.Println("Data Container does not exist, creating.")
+        }
+        dataContCreated := createContainer(optsData)
+        id_data = dataContCreated.ID
+      }
+    }
+
+    id_main = servCont.ID
+
   } else {
     if verbose {
-      fmt.Println("Container does not exist, creating.")
+      fmt.Println("Service Container does not exist, creating.")
     }
-    cont := createContainer(opts)
-    id = cont.ID
+
+    if srv.DataContainer {
+      if dataCont, exists = parseContainers(srv.DataContainerName, true); exists {
+        if verbose {
+          fmt.Println("Data Container already exists, am not creating.")
+        }
+        id_data = dataCont.ID
+      } else {
+        if verbose {
+          fmt.Println("Data Container does not exist, creating.")
+        }
+        dataContCreated = createContainer(optsData)
+        id_data = dataContCreated.ID
+      }
+    }
+
+    servContCreated := createContainer(optsServ)
+    id_main = servContCreated.ID
   }
 
+  // start the container
   if verbose {
-    fmt.Println("Starting Container ID: " + id)
+    fmt.Println("Starting ServiceContainer ID: " + id_main)
+    if srv.DataContainer {
+      fmt.Println("with DataContainer ID: " + id_data)
+    }
   }
-  startContainer(id, &opts)
+  startContainer(id_main, &optsServ)
 
   if verbose {
     fmt.Println(srv.Name + " Started.")
@@ -135,7 +182,6 @@ func ContainerRunning(srv *util.Service) (docker.APIContainers, bool) {
 func parseContainers(name string, all bool) (docker.APIContainers, bool) {
   name = "/" + name
   containers := listContainers(all)
-
   if len(containers) != 0 {
     for _, container := range containers {
       if container.Names[0] == name {
@@ -148,7 +194,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 func listContainers(all bool) ([]docker.APIContainers) {
   var container []docker.APIContainers
-  r := regexp.MustCompile(`\/eris_(?:service|chain)_(.+)_\d`)
+  r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
 
   contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
   for _, con := range contns {
@@ -297,6 +343,28 @@ func configureContainer(srv *util.Service) docker.CreateContainerOptions {
   for _, vol := range srv.Volumes {
     opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
   }
+
+  return opts
+}
+
+func configureDataContainer(srv *util.Service, mainContOpts *docker.CreateContainerOptions) docker.CreateContainerOptions {
+  opts := docker.CreateContainerOptions{
+    Name: srv.DataContainerName,
+    Config: &docker.Config{
+      Image:           "eris/data",
+      User:            srv.User,
+      AttachStdin:     false,
+      AttachStdout:    false,
+      AttachStderr:    false,
+      Tty:             false,
+      OpenStdin:       false,
+      NetworkDisabled: true,
+    },
+    HostConfig: &docker.HostConfig{
+    },
+  }
+
+  mainContOpts.HostConfig.VolumesFrom = append(mainContOpts.HostConfig.VolumesFrom, srv.DataContainerName)
 
   return opts
 }

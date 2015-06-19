@@ -80,8 +80,14 @@ func LoadServiceDefinition(servName string) (*util.Service) {
     os.Exit(1)
   }
 
+  // toml bools don't really marshal well
+  if serviceConf.GetBool("data_container") {
+    service.DataContainer = true
+  }
+
   checkServiceHasImage(&service)
   checkServiceHasName(&service)
+  checkDataContainerHasName(&service)
 
   return &service
 }
@@ -112,4 +118,13 @@ func checkServiceHasName(service *util.Service) {
 
   containerNumber := 1 // tmp
   service.Name = "eris_service_" + service.Name + "_" + strconv.Itoa(containerNumber)
+}
+
+func checkDataContainerHasName(service *util.Service) {
+  service.DataContainerName = ""
+  if service.DataContainer {
+    dataSplit := strings.Split(service.Name, "_")
+    dataSplit[1] = "data"
+    service.DataContainerName = strings.Join(dataSplit, "_")
+  }
 }
