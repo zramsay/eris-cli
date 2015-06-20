@@ -82,7 +82,7 @@ var actionsList = &cobra.Command{
 	Short: "List all registered action definition files.",
 	Long:  `List all registered action definition files.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		act.ListAll()
+		act.ListKnown()
 	},
 }
 

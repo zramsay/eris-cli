@@ -174,6 +174,23 @@ func DockerLogs(srv *def.Service, verbose bool) {
   }
 }
 
+func DockerInspect(srv *def.Service, field string, verbose bool) {
+  if verbose {
+    fmt.Println("Inspecting service")
+  }
+
+  if service, exists := ContainerExists(srv); exists {
+    if verbose {
+      fmt.Println("Service ID: " + service.ID)
+    }
+    inspectContainer(service.ID, field)
+  } else {
+    if verbose {
+      fmt.Println("Service container does not exist. Cannot inspect.")
+    }
+  }
+}
+
 func DockerStop(srv *def.Service, verbose bool) {
   // don't limit this to verbose because it takes a few seconds
   fmt.Println("Stopping: " + util.FullNameToShort(srv.Name) + ". This may take a few seconds.")
@@ -266,6 +283,15 @@ func logsContainer(id string) {
     fmt.Println("Failed to get container logs ->\n  %v", err)
     os.Exit(1)
   }
+}
+
+func inspectContainer(id, field string) {
+  cont, err := util.DockerClient.InspectContainer(id)
+  if err != nil {
+    // TODO: better error handling
+    fmt.Println("Failed to inspect container ->\n  %v", err)
+  }
+  PrintInspectionReport(cont, field)
 }
 
 func stopContainer(id string, timeout uint) {

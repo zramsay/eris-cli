@@ -2,12 +2,16 @@ package chains
 
 import (
   "fmt"
+  "path/filepath"
   "regexp"
+  "strings"
 
   "github.com/eris-ltd/eris-cli/perform"
+  "github.com/eris-ltd/eris-cli/services"
   "github.com/eris-ltd/eris-cli/util"
 
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+  dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -30,11 +34,21 @@ func Config(cmd *cobra.Command, args []string) {
 
 
 func Inspect(cmd *cobra.Command, args []string) {
-
+  checkChainGiven(args)
+  if len(args) == 1 {
+    args = append(args, "all")
+  }
+  chain := LoadChainDefinition(args[0])
+  if IsChainExisting(chain) {
+    services.InspectServiceByService(chain.Service, args[1], cmd.Flags().Lookup("verbose").Changed)
+  }
 }
 
 func ListKnown() {
-
+  chains := ListKnownRaw()
+  for _, s := range chains {
+    fmt.Println(s)
+  }
 }
 
 func ListInstalled() {
@@ -53,6 +67,22 @@ func ListRunning() {
   for _, s := range chains {
     fmt.Println(s)
   }
+}
+
+func ListKnownRaw() []string {
+  chns := []string{}
+  fileTypes := []string{}
+  for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
+    fileTypes = append(fileTypes, filepath.Join(dir.BlockchainsPath, t))
+  }
+  for _, t := range fileTypes {
+    s, _ := filepath.Glob(t)
+    for _, s1 := range s {
+      s1 = strings.Split(filepath.Base(s1), ".")[0]
+      chns = append(chns, s1)
+    }
+  }
+  return chns
 }
 
 func Rename(cmd *cobra.Command, args []string) {
