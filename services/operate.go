@@ -7,8 +7,9 @@ import (
   "strconv"
 
   "github.com/eris-ltd/eris-cli/perform"
-  "github.com/eris-ltd/eris-cli/util"
 
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+  dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -57,29 +58,29 @@ func KillServiceRaw(servName string, verbose bool) {
   }
 }
 
-func StartServiceByService(service *util.Service, verbose bool) {
+func StartServiceByService(service *def.Service, verbose bool) {
   for _, srv := range service.ServiceDeps {
     go StartServiceRaw(srv, verbose)
   }
   perform.DockerRun(service, verbose)
 }
 
-func LogsServiceByService(service *util.Service, verbose bool) {
+func LogsServiceByService(service *def.Service, verbose bool) {
   perform.DockerLogs(service, verbose)
 }
 
-func KillServiceByService(service *util.Service, verbose bool) {
+func KillServiceByService(service *def.Service, verbose bool) {
   for _, srv := range service.ServiceDeps {
     go KillServiceRaw(srv, verbose)
   }
   perform.DockerStop(service, verbose)
 }
 
-func LoadServiceDefinition(servName string) (*util.Service) {
-  var service util.Service
+func LoadServiceDefinition(servName string) (*def.Service) {
+  var service def.Service
   var serviceConf = viper.New()
 
-  serviceConf.AddConfigPath(util.ServicesPath)
+  serviceConf.AddConfigPath(dir.ServicesPath)
   serviceConf.SetConfigName(servName)
   serviceConf.ReadInConfig()
 
@@ -110,7 +111,7 @@ func checkServiceGiven(args []string) {
   }
 }
 
-func checkServiceHasImage(service *util.Service) {
+func checkServiceHasImage(service *def.Service) {
   // Services must be given an image. Flame out if they do not.
   if service.Image == "" {
     fmt.Println("An \"image\" field is required in the service definition file.")
@@ -118,7 +119,7 @@ func checkServiceHasImage(service *util.Service) {
   }
 }
 
-func checkServiceHasName(service *util.Service) {
+func checkServiceHasName(service *def.Service) {
   // If no name use image name
   if service.Name == "" {
     if service.Image != "" {
@@ -130,7 +131,7 @@ func checkServiceHasName(service *util.Service) {
   service.Name = "eris_service_" + service.Name + "_" + strconv.Itoa(containerNumber)
 }
 
-func checkDataContainerHasName(service *util.Service) {
+func checkDataContainerHasName(service *def.Service) {
   service.DataContainerName = ""
   if service.DataContainer {
     dataSplit := strings.Split(service.Name, "_")

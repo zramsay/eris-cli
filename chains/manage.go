@@ -4,9 +4,10 @@ import (
   "fmt"
   "regexp"
 
-  "github.com/eris-ltd/eris-cli/util"
   "github.com/eris-ltd/eris-cli/perform"
+  "github.com/eris-ltd/eris-cli/util"
 
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -79,11 +80,11 @@ func ListExistingRaw() []string {
   return listChains(true)
 }
 
-func IsChainExisting(chain *util.Chain) bool {
+func IsChainExisting(chain *def.Chain) bool {
   return parseChains(util.FullNameToShort(chain.Service.Name), true)
 }
 
-func IsChainRunning(chain *util.Chain) bool {
+func IsChainRunning(chain *def.Chain) bool {
   return parseChains(util.FullNameToShort(chain.Service.Name), false)
 }
 

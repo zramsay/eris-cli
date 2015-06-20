@@ -12,6 +12,8 @@ import (
   "github.com/eris-ltd/eris-cli/util"
 
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+  dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 )
 
 // Build against Docker cli...
@@ -20,7 +22,7 @@ import (
 // Verified against ...
 //   Client version: 1.6.2
 //   Client API version: 1.18
-func DockerRun(srv *util.Service, verbose bool) {
+func DockerRun(srv *def.Service, verbose bool) {
   var id_main string
   var id_data string
   var optsServ docker.CreateContainerOptions
@@ -100,7 +102,7 @@ func DockerRun(srv *util.Service, verbose bool) {
   }
 }
 
-func DockerRebuild(srv *util.Service, verbose bool) {
+func DockerRebuild(srv *def.Service, verbose bool) {
   var id string
   var wasRunning bool = false
 
@@ -155,7 +157,7 @@ func DockerRebuild(srv *util.Service, verbose bool) {
   }
 }
 
-func DockerLogs(srv *util.Service, verbose bool) {
+func DockerLogs(srv *def.Service, verbose bool) {
   if verbose {
     fmt.Println("Getting service's logs.")
   }
@@ -172,7 +174,7 @@ func DockerLogs(srv *util.Service, verbose bool) {
   }
 }
 
-func DockerStop(srv *util.Service, verbose bool) {
+func DockerStop(srv *def.Service, verbose bool) {
   // don't limit this to verbose because it takes a few seconds
   fmt.Println("Stopping: " + util.FullNameToShort(srv.Name) + ". This may take a few seconds.")
 
@@ -188,11 +190,11 @@ func DockerStop(srv *util.Service, verbose bool) {
   }
 }
 
-func ContainerExists(srv *util.Service) (docker.APIContainers, bool) {
+func ContainerExists(srv *def.Service) (docker.APIContainers, bool) {
   return parseContainers(srv.Name, true)
 }
 
-func ContainerRunning(srv *util.Service) (docker.APIContainers, bool) {
+func ContainerRunning(srv *def.Service) (docker.APIContainers, bool) {
   return parseContainers(srv.Name, false)
 }
 
@@ -287,7 +289,7 @@ func removeContainer(id string) {
   }
 }
 
-func configureContainer(srv *util.Service) docker.CreateContainerOptions {
+func configureContainer(srv *def.Service) docker.CreateContainerOptions {
   opts := docker.CreateContainerOptions{
     Name: srv.Name,
     Config: &docker.Config{
@@ -385,7 +387,7 @@ func configureContainer(srv *util.Service) docker.CreateContainerOptions {
   return opts
 }
 
-func configureDataContainer(srv *util.Service, mainContOpts *docker.CreateContainerOptions) docker.CreateContainerOptions {
+func configureDataContainer(srv *def.Service, mainContOpts *docker.CreateContainerOptions) docker.CreateContainerOptions {
   opts := docker.CreateContainerOptions{
     Name: srv.DataContainerName,
     Config: &docker.Config{
@@ -425,7 +427,7 @@ func fixDirs(arg []string) ([]string) {
         winTmp := strings.Split(tmp, "/")
         tmp = path.Join(winTmp...)
       }
-      tmp = strings.Replace(tmp, "$eris", util.ErisRoot, 1)
+      tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
       arg[n] = strings.Join([]string{tmp, keep}, ":")
       continue
     }

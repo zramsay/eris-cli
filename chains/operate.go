@@ -7,8 +7,9 @@ import (
   "strings"
 
   "github.com/eris-ltd/eris-cli/services"
-  "github.com/eris-ltd/eris-cli/util"
 
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+  dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -57,11 +58,11 @@ func KillChainRaw(chainName string, verbose bool) {
   }
 }
 
-func LoadChainDefinition(chainName string) (*util.Chain) {
-  var chain util.Chain
+func LoadChainDefinition(chainName string) (*def.Chain) {
+  var chain def.Chain
   var chainConf = viper.New()
 
-  chainConf.AddConfigPath(util.BlockchainsPath)
+  chainConf.AddConfigPath(dir.BlockchainsPath)
   chainConf.SetConfigName(chainName)
   chainConf.ReadInConfig()
 
@@ -82,7 +83,7 @@ func LoadChainDefinition(chainName string) (*util.Chain) {
   return &chain
 }
 
-func mergeChainAndService(chain *util.Chain, service *util.Service) {
+func mergeChainAndService(chain *def.Chain, service *def.Service) {
   chain.Service.Name          = chain.Name
   chain.Service.Image         = overWriteString(chain.Service.Image, service.Image)
   chain.Service.Command       = overWriteString(chain.Service.Command, service.Command)
@@ -159,19 +160,19 @@ func checkChainGiven(args []string) {
   }
 }
 
-func checkChainHasUniqueName(chain *util.Chain) {
+func checkChainHasUniqueName(chain *def.Chain) {
   containerNumber := 1 // tmp
   chain.Service.Name = "eris_chain_" + chain.Name + "_" + strconv.Itoa(containerNumber)
 }
 
-func checkDataContainerTurnedOn(chain *util.Chain, chainConf *viper.Viper) {
+func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {
   // toml bools don't really marshal well
   if chainConf.GetBool("service.data_container") {
     chain.Service.DataContainer = true
   }
 }
 
-func checkDataContainerHasName(chain *util.Chain) {
+func checkDataContainerHasName(chain *def.Chain) {
   chain.Service.DataContainerName = ""
   if chain.Service.DataContainer {
     dataSplit := strings.Split(chain.Service.Name, "_")

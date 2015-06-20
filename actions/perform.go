@@ -9,8 +9,9 @@ import (
 
   "github.com/eris-ltd/eris-cli/chains"
   "github.com/eris-ltd/eris-cli/services"
-  "github.com/eris-ltd/eris-cli/util"
 
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+  dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -22,8 +23,8 @@ func Do(cmd *cobra.Command, args []string) {
   PerformCommand(action, actionVars, verbose)
 }
 
-func loadActionConfigAndVars(act []string) (*util.Action, []string) {
-  var action util.Action
+func loadActionConfigAndVars(act []string) (*def.Action, []string) {
+  var action def.Action
   var actionConf = viper.New()
   var actionVars []string
   var varList bool
@@ -37,7 +38,7 @@ func loadActionConfigAndVars(act []string) (*util.Action, []string) {
     }
   }
 
-  actionConf.AddConfigPath(util.ActionsPath)
+  actionConf.AddConfigPath(dir.ActionsPath)
   actionConf.SetConfigName(strings.Join(act, "_"))
   actionConf.ReadInConfig()
 
@@ -51,7 +52,7 @@ func loadActionConfigAndVars(act []string) (*util.Action, []string) {
   return &action, actionVars
 }
 
-func startServicesAndChains(cmd *cobra.Command, action *util.Action, verbose bool) {
+func startServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool) {
   // start the services and chains
   var wg sync.WaitGroup
   var skip bool
@@ -101,7 +102,7 @@ func startServicesAndChains(cmd *cobra.Command, action *util.Action, verbose boo
   wg.Wait()
 }
 
-func PerformCommand(action *util.Action, actionVars []string, verbose bool) {
+func PerformCommand(action *def.Action, actionVars []string, verbose bool) {
   dir, err := os.Getwd()
   if err != nil {
     // TODO: error handling

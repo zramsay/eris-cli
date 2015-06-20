@@ -3,11 +3,11 @@ package services
 import (
   "fmt"
   "regexp"
-  // "strings"
 
-  "github.com/eris-ltd/eris-cli/util"
   "github.com/eris-ltd/eris-cli/perform"
+  "github.com/eris-ltd/eris-cli/util"
 
+  def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -77,17 +77,29 @@ func ListExistingRaw() []string {
   return listServices(true)
 }
 
-func IsServiceExisting(service *util.Service) bool {
+func IsServiceExisting(service *def.Service) bool {
   return parseServices(util.FullNameToShort(service.Name), true)
 }
 
-func IsServiceRunning(service *util.Service) bool {
+func IsServiceRunning(service *def.Service) bool {
   return parseServices(util.FullNameToShort(service.Name), false)
 }
 
 func UpdateServiceRaw(servName string, verbose bool) {
   service := LoadServiceDefinition(servName)
   perform.DockerRebuild(service, verbose)
+}
+
+func parseServices(name string, all bool) bool {
+  running := listServices(all)
+  if len(running) != 0 {
+    for _, srv := range running {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 func listServices(running bool) []string {
@@ -105,16 +117,4 @@ func listServices(running bool) []string {
   }
 
   return services
-}
-
-func parseServices(name string, all bool) bool {
-  running := listServices(all)
-  if len(running) != 0 {
-    for _, srv := range running {
-      if srv == name {
-        return true
-      }
-    }
-  }
-  return false
 }
