@@ -1,4 +1,4 @@
-package services
+package chains
 
 import (
   "path/filepath"
@@ -11,7 +11,7 @@ import (
 
 // if given empty string for fileName will use Service
 // Definition Name
-func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName string) error {
+func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
   // writer := os.Stdout
 
   writer, err := os.Create(fileName)
@@ -21,21 +21,17 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
   }
 
   if fileName == "" {
-    fileName = serviceDef.Service.Name + ".toml"
+    fileName = chainDef.Name + ".toml"
   }
 
   switch filepath.Ext(fileName) {
     case ".toml":
       enc := toml.NewEncoder(writer)
       enc.Indent = ""
-      writer.Write([]byte("[service]\n"))
-      enc.Encode(serviceDef.Service)
-      writer.Write([]byte("\n[maintainer]\n"))
-      enc.Encode(serviceDef.Maintainer)
-      writer.Write([]byte("\n[location]\n"))
-      enc.Encode(serviceDef.Location)
-      writer.Write([]byte("\n[machine]\n"))
-      enc.Encode(serviceDef.Machine)
+      writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
+      writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
+      writer.Write([]byte("\n[service]\n"))
+      enc.Encode(chainDef.Service)
   }
   return nil
 }

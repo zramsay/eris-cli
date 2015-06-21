@@ -2,6 +2,7 @@ package chains
 
 import (
   "fmt"
+  "os"
   "path/filepath"
   "regexp"
   "strings"
@@ -24,15 +25,10 @@ func New(cmd *cobra.Command, args []string) {
 
 }
 
-func Add(cmd *cobra.Command, args []string) {
-
-}
-
 func Config(cmd *cobra.Command, args []string) {
   checkChainGiven(args)
   ConfigureRaw(args[0])
 }
-
 
 func Inspect(cmd *cobra.Command, args []string) {
   checkChainGiven(args)
@@ -87,11 +83,12 @@ func ListKnownRaw() []string {
 }
 
 func Rename(cmd *cobra.Command, args []string) {
-
-}
-
-func Remove(cmd *cobra.Command, args []string) {
-
+  checkChainGiven(args)
+  if len(args) != 2 {
+    fmt.Println("Please give me: eris services rename [oldName] [newName]")
+    return
+  }
+  RenameChainRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Update(cmd *cobra.Command, args []string) {
@@ -100,7 +97,8 @@ func Update(cmd *cobra.Command, args []string) {
 }
 
 func Rm(cmd *cobra.Command, args []string) {
-
+  checkChainGiven(args)
+  RmChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func ConfigureRaw(chainName string) {
@@ -118,16 +116,46 @@ func ListExistingRaw() []string {
 }
 
 func IsChainExisting(chain *def.Chain) bool {
-  return parseChains(util.FullNameToShort(chain.Service.Name), true)
+  return parseChains(chain.Service.Name, true)
 }
 
 func IsChainRunning(chain *def.Chain) bool {
-  return parseChains(util.FullNameToShort(chain.Service.Name), false)
+  return parseChains(chain.Service.Name, false)
+}
+
+func RenameChainRaw(oldName, newName string, verbose bool) {
+  if parseKnown(oldName) {
+    if verbose {
+      fmt.Println("Renaming chain", oldName, "to", newName)
+    }
+
+    chainDef := LoadChainDefinition(oldName)
+
+    perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newName, verbose)
+    oldFile := chainDefFileByChainName(oldName)
+    newFile := strings.Replace(oldFile, oldName, newName, 1)
+
+    chainDef.Name = newName
+    chainDef.Service.Name = ""
+    chainDef.Service.Image = ""
+    _ = WriteChainDefinitionFile(chainDef, newFile)
+
+    os.Remove(oldFile)
+  } else {
+    if verbose {
+      fmt.Println("I cannot find that chain. Please check the chain name you sent me.")
+    }
+  }
 }
 
 func UpdateChainRaw(chainName string, verbose bool) {
   chain := LoadChainDefinition(chainName)
   perform.DockerRebuild(chain.Service, chain.Operations, false, verbose)
+}
+
+func RmChainRaw(chainName string, verbose bool) {
+  oldFile := chainDefFileByChainName(chainName)
+  os.Remove(oldFile)
 }
 
 func listChains(running bool) []string {
@@ -151,6 +179,18 @@ func parseChains(name string, all bool) bool {
   running := listChains(all)
   if len(running) != 0 {
     for _, srv := range running {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+func parseKnown(name string) bool {
+  known := ListKnownRaw()
+  if len(known) != 0 {
+    for _, srv := range known {
       if srv == name {
         return true
       }

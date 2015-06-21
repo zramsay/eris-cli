@@ -28,7 +28,7 @@ func LoadChainDefinition(chainName string) (*def.Chain) {
 
   checkChainHasUniqueName(&chain)
   checkDataContainerTurnedOn(&chain, chainConf)
-  checkDataContainerHasName(&chain)
+  checkDataContainerHasName(chain.Operations)
 
   return &chain
 }
@@ -50,6 +50,11 @@ func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) {
     fmt.Println(err)
     os.Exit(1)
   }
+}
+
+func chainDefFileByChainName(chainName string) string {
+  chainConf := loadChainDefinition(chainName)
+  return chainConf.ConfigFileUsed()
 }
 
 func mergeChainAndService(chain *def.Chain, service *def.Service) {
@@ -131,21 +136,24 @@ func checkChainGiven(args []string) {
 
 func checkChainHasUniqueName(chain *def.Chain) {
   containerNumber := 1 // tmp
-  chain.Service.Name = "eris_chain_" + chain.Name + "_" + strconv.Itoa(containerNumber)
+  chain.Operations.SrvContainerName = "eris_chain_" + chain.Name + "_" + strconv.Itoa(containerNumber)
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {
   // toml bools don't really marshal well
   if chainConf.GetBool("service.data_container") {
+    chain.Service.AutoData = true
     chain.Operations.DataContainer = true
   }
 }
 
-func checkDataContainerHasName(chain *def.Chain) {
-  chain.Operations.DataContainerName = ""
-  if chain.Operations.DataContainer {
-    dataSplit := strings.Split(chain.Service.Name, "_")
-    dataSplit[1] = "data"
-    chain.Operations.DataContainerName = strings.Join(dataSplit, "_")
+func checkDataContainerHasName(ops *def.ServiceOperation) {
+  if ops.DataContainer {
+    ops.DataContainerName = ""
+    if ops.DataContainer {
+      dataSplit := strings.Split(ops.SrvContainerName, "_")
+      dataSplit[1] = "data"
+      ops.DataContainerName = strings.Join(dataSplit, "_")
+    }
   }
 }

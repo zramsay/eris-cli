@@ -176,7 +176,7 @@ var chainsRemove = &cobra.Command{
 the reference from eris' tree of blockchains. To remove
 the blockchain data from the node use: [eris chains clean].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Remove(cmd, args)
+		chns.Rm(cmd, args)
 	},
 }
 

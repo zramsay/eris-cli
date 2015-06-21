@@ -2,7 +2,7 @@ package services
 
 import (
   "fmt"
-  // "os"
+  "os"
   "path/filepath"
   "regexp"
   "strings"
@@ -77,7 +77,8 @@ func ListExisting() {
 }
 
 func Rm(cmd *cobra.Command, args []string) {
-
+  checkServiceGiven(args)
+  RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func ConfigureRaw(servName string) {
@@ -107,7 +108,7 @@ func RenameServiceByService(serviceDef *def.ServiceDefinition, oldName, newName 
   serviceDef.Service.Name = newName
   _ = WriteServiceDefinitionFile(serviceDef, newFile)
 
-  // os.Remove(oldFile)
+  os.Remove(oldFile)
 }
 
 func InspectServiceRaw(servName, field string, verbose bool) {
@@ -160,6 +161,11 @@ func IsServiceRunning(service *def.Service) bool {
 func UpdateServiceRaw(servName string, verbose bool) {
   service := LoadServiceDefinition(servName)
   perform.DockerRebuild(service.Service, service.Operations, true, verbose)
+}
+
+func RmServiceRaw(servName string, verbose bool) {
+  oldFile := servDefFileByServName(servName)
+  os.Remove(oldFile)
 }
 
 func parseServices(name string, all bool) bool {
