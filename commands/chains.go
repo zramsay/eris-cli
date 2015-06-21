@@ -25,7 +25,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
-	Chains.AddCommand(chainsConfig)
+	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
@@ -85,16 +85,13 @@ var chainsList = &cobra.Command{
 	},
 }
 
-// config
-// flags to add: --chain, --edit
-var chainsConfig = &cobra.Command{
-	Use:   "config [key]:[val]",
-	Short: "Configure a blockchain.",
-	Long: `Configure a blockchain.
-
-Multiple config options may be given at the same time.`,
+// edit
+var chainsEdit = &cobra.Command{
+	Use:   "edit [name]",
+	Short: "Edit a blockchain.",
+	Long: `Edit a blockchain definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Config(cmd, args)
+		chns.Edit(cmd, args)
 	},
 }
 

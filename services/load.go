@@ -3,11 +3,16 @@ package services
 import (
   "fmt"
   "os"
+  "regexp"
   "strings"
   "strconv"
 
+  "github.com/eris-ltd/eris-cli/util"
+
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+
+  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
@@ -37,6 +42,14 @@ func LoadService(servName string) (*def.Service) {
 func LoadServiceOperation(servName string) (*def.ServiceOperation) {
   sd := LoadServiceDefinition(servName)
   return sd.Operations
+}
+
+func IsServiceExisting(service *def.Service) bool {
+  return parseServices(service.Name, true)
+}
+
+func IsServiceRunning(service *def.Service) bool {
+  return parseServices(service.Name, false)
 }
 
 func loadServiceDefinition(servName string) *viper.Viper {
@@ -108,4 +121,45 @@ func checkDataContainerHasName(ops *def.ServiceOperation) {
       ops.DataContainerName = strings.Join(dataSplit, "_")
     }
   }
+}
+
+func parseServices(name string, all bool) bool {
+  running := listServices(all)
+  if len(running) != 0 {
+    for _, srv := range running {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+func listServices(running bool) []string {
+  services := []string{}
+  r := regexp.MustCompile(`\/eris_service_(.+)_\d`)
+
+  contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
+  for _, con := range contns {
+    for _, c := range con.Names {
+      match := r.FindAllStringSubmatch(c, 1)
+      if len(match) != 0 {
+        services = append(services, r.FindAllStringSubmatch(c, 1)[0][1])
+      }
+    }
+  }
+
+  return services
+}
+
+func parseKnown(name string) bool {
+  known := ListKnownRaw()
+  if len(known) != 0 {
+    for _, srv := range known {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
 }

@@ -4,16 +4,13 @@ import (
   "fmt"
   "os"
   "path/filepath"
-  "regexp"
   "strings"
 
   "github.com/eris-ltd/eris-cli/perform"
-  "github.com/eris-ltd/eris-cli/util"
 
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
-  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -26,9 +23,9 @@ func New(cmd *cobra.Command, args []string){
 
 }
 
-func Configure(cmd *cobra.Command, args []string) {
+func Edit(cmd *cobra.Command, args []string) {
   checkServiceGiven(args)
-  ConfigureRaw(args[0])
+  EditServiceRaw(args[0])
 }
 
 func Rename(cmd *cobra.Command, args []string) {
@@ -37,7 +34,7 @@ func Rename(cmd *cobra.Command, args []string) {
     fmt.Println("Please give me: eris services rename [oldName] [newName]")
     return
   }
-  RenameRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+  RenameServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -81,34 +78,30 @@ func Rm(cmd *cobra.Command, args []string) {
   RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
-func ConfigureRaw(servName string) {
+func EditServiceRaw(servName string) {
   dir.Editor(servDefFileByServName(servName))
 }
 
-func RenameRaw(oldName, newName string, verbose bool) {
+func RenameServiceRaw(oldName, newName string, verbose bool) {
   if parseKnown(oldName) {
     if verbose {
       fmt.Println("Renaming service", oldName, "to", newName)
     }
 
     serviceDef := LoadServiceDefinition(oldName)
-    RenameServiceByService(serviceDef, oldName, newName, verbose)
+    perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose)
+    oldFile := servDefFileByServName(oldName)
+    newFile := strings.Replace(oldFile, oldName, newName, 1)
+
+    serviceDef.Service.Name = newName
+    _ = WriteServiceDefinitionFile(serviceDef, newFile)
+
+    os.Remove(oldFile)
   } else {
     if verbose {
       fmt.Println("I cannot find that service. Please check the service name you sent me.")
     }
   }
-}
-
-func RenameServiceByService(serviceDef *def.ServiceDefinition, oldName, newName string, verbose bool) {
-  perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose)
-  oldFile := servDefFileByServName(oldName)
-  newFile := strings.Replace(oldFile, oldName, newName, 1)
-
-  serviceDef.Service.Name = newName
-  _ = WriteServiceDefinitionFile(serviceDef, newFile)
-
-  os.Remove(oldFile)
 }
 
 func InspectServiceRaw(servName, field string, verbose bool) {
@@ -124,14 +117,6 @@ func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field 
       fmt.Println("No service matching that name.")
     }
   }
-}
-
-func ListRunningRaw() []string {
-  return listServices(false)
-}
-
-func ListExistingRaw() []string {
-  return listServices(true)
 }
 
 func ListKnownRaw() []string {
@@ -150,12 +135,12 @@ func ListKnownRaw() []string {
   return srvs
 }
 
-func IsServiceExisting(service *def.Service) bool {
-  return parseServices(service.Name, true)
+func ListRunningRaw() []string {
+  return listServices(false)
 }
 
-func IsServiceRunning(service *def.Service) bool {
-  return parseServices(service.Name, false)
+func ListExistingRaw() []string {
+  return listServices(true)
 }
 
 func UpdateServiceRaw(servName string, verbose bool) {
@@ -166,45 +151,4 @@ func UpdateServiceRaw(servName string, verbose bool) {
 func RmServiceRaw(servName string, verbose bool) {
   oldFile := servDefFileByServName(servName)
   os.Remove(oldFile)
-}
-
-func parseServices(name string, all bool) bool {
-  running := listServices(all)
-  if len(running) != 0 {
-    for _, srv := range running {
-      if srv == name {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-func parseKnown(name string) bool {
-  known := ListKnownRaw()
-  if len(known) != 0 {
-    for _, srv := range known {
-      if srv == name {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-func listServices(running bool) []string {
-  services := []string{}
-  r := regexp.MustCompile(`\/eris_service_(.+)_\d`)
-
-  contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
-  for _, con := range contns {
-    for _, c := range con.Names {
-      match := r.FindAllStringSubmatch(c, 1)
-      if len(match) != 0 {
-        services = append(services, r.FindAllStringSubmatch(c, 1)[0][1])
-      }
-    }
-  }
-
-  return services
 }

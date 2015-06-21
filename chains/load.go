@@ -5,11 +5,15 @@ import (
   "os"
   "strconv"
   "strings"
+  "regexp"
 
   "github.com/eris-ltd/eris-cli/services"
+  "github.com/eris-ltd/eris-cli/util"
 
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+
+  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
@@ -31,6 +35,14 @@ func LoadChainDefinition(chainName string) (*def.Chain) {
   checkDataContainerHasName(chain.Operations)
 
   return &chain
+}
+
+func IsChainExisting(chain *def.Chain) bool {
+  return parseChains(chain.Service.Name, true)
+}
+
+func IsChainRunning(chain *def.Chain) bool {
+  return parseChains(chain.Service.Name, false)
 }
 
 func loadChainDefinition(chainName string) *viper.Viper {
@@ -156,4 +168,45 @@ func checkDataContainerHasName(ops *def.ServiceOperation) {
       ops.DataContainerName = strings.Join(dataSplit, "_")
     }
   }
+}
+
+func listChains(running bool) []string {
+  chains := []string{}
+  r := regexp.MustCompile(`\/eris_chain_(.+)_\d`)
+
+  contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
+  for _, con := range contns {
+    for _, c := range con.Names {
+      match := r.FindAllStringSubmatch(c, 1)
+      if len(match) != 0 {
+        chains = append(chains, r.FindAllStringSubmatch(c, 1)[0][1])
+      }
+    }
+  }
+
+  return chains
+}
+
+func parseChains(name string, all bool) bool {
+  running := listChains(all)
+  if len(running) != 0 {
+    for _, srv := range running {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+func parseKnown(name string) bool {
+  known := ListKnownRaw()
+  if len(known) != 0 {
+    for _, srv := range known {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
 }
