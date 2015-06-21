@@ -7,12 +7,12 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/BurntSushi/toml",
-			"Comment": "v0.1.0-18-g443a628",
-			"Rev": "443a628bc233f634a75bcbdd71fe5350789f1afa"
+			"Comment": "v0.1.0-21-g056c9bc",
+			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common",
-			"Rev": "f1ddd28cf1356d2113def011e49d9cbed2cdd5d3"
+			"Rev": "3f2ff601d044f0d3c169353b84d7654af5fbac68"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
