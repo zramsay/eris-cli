@@ -11,8 +11,9 @@ import (
 
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
   dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+
   "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+  "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 // install
@@ -25,7 +26,8 @@ func New(cmd *cobra.Command, args []string){
 }
 
 func Configure(cmd *cobra.Command, args []string) {
-
+  checkServiceGiven(args)
+  ConfigureRaw(args[0])
 }
 
 func Rename(cmd *cobra.Command, args []string) {
@@ -70,6 +72,12 @@ func ListExisting() {
 
 func Rm(cmd *cobra.Command, args []string) {
 
+}
+
+func ConfigureRaw(servName string) {
+  serviceConf := loadServiceDefinition(servName)
+  filePath := serviceConf.ConfigFileUsed()
+  dir.Editor(filePath)
 }
 
 func InspectServiceRaw(servName, field string, verbose bool) {

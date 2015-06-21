@@ -60,18 +60,8 @@ func KillChainRaw(chainName string, verbose bool) {
 
 func LoadChainDefinition(chainName string) (*def.Chain) {
   var chain def.Chain
-  var chainConf = viper.New()
-
-  chainConf.AddConfigPath(dir.BlockchainsPath)
-  chainConf.SetConfigName(chainName)
-  chainConf.ReadInConfig()
-
-  err := chainConf.Marshal(&chain)
-  if err != nil {
-    // TODO: error handling
-    fmt.Println(err)
-    os.Exit(1)
-  }
+  chainConf := loadChainDefinition(chainName)
+  marshalChain(chainConf, &chain)
 
   serv  := services.LoadServiceDefinition(chain.Type)
   mergeChainAndService(&chain, serv)
@@ -81,6 +71,25 @@ func LoadChainDefinition(chainName string) (*def.Chain) {
   checkDataContainerHasName(&chain)
 
   return &chain
+}
+
+func loadChainDefinition(chainName string) *viper.Viper {
+  var chainConf = viper.New()
+
+  chainConf.AddConfigPath(dir.BlockchainsPath)
+  chainConf.SetConfigName(chainName)
+  chainConf.ReadInConfig()
+
+  return chainConf
+}
+
+func marshalChain(chainConf *viper.Viper, chain *def.Chain) {
+  err := chainConf.Marshal(chain)
+  if err != nil {
+    // TODO: error handling
+    fmt.Println(err)
+    os.Exit(1)
+  }
 }
 
 func mergeChainAndService(chain *def.Chain, service *def.Service) {

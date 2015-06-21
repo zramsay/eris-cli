@@ -78,29 +78,34 @@ func KillServiceByService(service *def.Service, verbose bool) {
 
 func LoadServiceDefinition(servName string) (*def.Service) {
   var service def.Service
+  serviceConf := loadServiceDefinition(servName)
+  marshalService(serviceConf, &service)
+
+  checkServiceHasImage(&service)
+  checkServiceHasName(&service)
+  checkServiceHasDataContainer(serviceConf, &service)
+  checkDataContainerHasName(&service)
+
+  return &service
+}
+
+func loadServiceDefinition(servName string) *viper.Viper {
   var serviceConf = viper.New()
 
   serviceConf.AddConfigPath(dir.ServicesPath)
   serviceConf.SetConfigName(servName)
   serviceConf.ReadInConfig()
 
-  err := serviceConf.Marshal(&service)
+  return serviceConf
+}
+
+func marshalService(serviceConf *viper.Viper, service *def.Service) {
+  err := serviceConf.Marshal(service)
   if err != nil {
     // TODO: error handling
     fmt.Println(err)
     os.Exit(1)
   }
-
-  // toml bools don't really marshal well
-  if serviceConf.GetBool("data_container") {
-    service.DataContainer = true
-  }
-
-  checkServiceHasImage(&service)
-  checkServiceHasName(&service)
-  checkDataContainerHasName(&service)
-
-  return &service
 }
 
 func checkServiceGiven(args []string) {
@@ -129,6 +134,13 @@ func checkServiceHasName(service *def.Service) {
 
   containerNumber := 1 // tmp
   service.Name = "eris_service_" + service.Name + "_" + strconv.Itoa(containerNumber)
+}
+
+func checkServiceHasDataContainer(serviceConf *viper.Viper, service *def.Service) {
+  // toml bools don't really marshal well
+  if serviceConf.GetBool("data_container") {
+    service.DataContainer = true
+  }
 }
 
 func checkDataContainerHasName(service *def.Service) {

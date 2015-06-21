@@ -29,7 +29,8 @@ func Add(cmd *cobra.Command, args []string) {
 }
 
 func Config(cmd *cobra.Command, args []string) {
-
+  checkChainGiven(args)
+  ConfigureRaw(args[0])
 }
 
 
@@ -100,6 +101,12 @@ func Update(cmd *cobra.Command, args []string) {
 
 func Rm(cmd *cobra.Command, args []string) {
 
+}
+
+func ConfigureRaw(chainName string) {
+  chainConf := loadChainDefinition(chainName)
+  filePath := chainConf.ConfigFileUsed()
+  dir.Editor(filePath)
 }
 
 func ListRunningRaw() []string {
