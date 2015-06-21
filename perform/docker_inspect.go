@@ -75,7 +75,7 @@ func PrintInspectionReport(cont *docker.Container, field string) {
       fmt.Printf("Volumes\t=>\t%v\n", cont.Volumes)
       fmt.Printf("VolumesRW\t=>\t%v\n", cont.VolumesRW)
       printInspectionReportHostConfig(cont, min)
-      fmt.Printf("ExecIDs\t=>\t%v\n", cont.ExecIDs)
+      fmt.Printf("ExecIDs\t\t=>\t%v\n", cont.ExecIDs)
       fmt.Printf("AppArmorProfile\t=>\t%v\n", cont.AppArmorProfile)
   }
 }

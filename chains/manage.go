@@ -41,7 +41,7 @@ func Inspect(cmd *cobra.Command, args []string) {
   }
   chain := LoadChainDefinition(args[0])
   if IsChainExisting(chain) {
-    services.InspectServiceByService(chain.Service, args[1], cmd.Flags().Lookup("verbose").Changed)
+    services.InspectServiceByService(chain.Service, chain.Operations, args[1], cmd.Flags().Lookup("verbose").Changed)
   }
 }
 
@@ -127,7 +127,7 @@ func IsChainRunning(chain *def.Chain) bool {
 
 func UpdateChainRaw(chainName string, verbose bool) {
   chain := LoadChainDefinition(chainName)
-  perform.DockerRebuild(chain.Service, verbose)
+  perform.DockerRebuild(chain.Service, chain.Operations, false, verbose)
 }
 
 func listChains(running bool) []string {

@@ -2,6 +2,7 @@ package services
 
 import (
   "fmt"
+  // "os"
   "path/filepath"
   "regexp"
   "strings"
@@ -31,7 +32,12 @@ func Configure(cmd *cobra.Command, args []string) {
 }
 
 func Rename(cmd *cobra.Command, args []string) {
-
+  checkServiceGiven(args)
+  if len(args) != 2 {
+    fmt.Println("Please give me: eris services rename [oldName] [newName]")
+    return
+  }
+  RenameRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -75,19 +81,43 @@ func Rm(cmd *cobra.Command, args []string) {
 }
 
 func ConfigureRaw(servName string) {
-  serviceConf := loadServiceDefinition(servName)
-  filePath := serviceConf.ConfigFileUsed()
-  dir.Editor(filePath)
+  dir.Editor(servDefFileByServName(servName))
+}
+
+func RenameRaw(oldName, newName string, verbose bool) {
+  if parseKnown(oldName) {
+    if verbose {
+      fmt.Println("Renaming service", oldName, "to", newName)
+    }
+
+    serviceDef := LoadServiceDefinition(oldName)
+    RenameServiceByService(serviceDef, oldName, newName, verbose)
+  } else {
+    if verbose {
+      fmt.Println("I cannot find that service. Please check the service name you sent me.")
+    }
+  }
+}
+
+func RenameServiceByService(serviceDef *def.ServiceDefinition, oldName, newName string, verbose bool) {
+  perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose)
+  oldFile := servDefFileByServName(oldName)
+  newFile := strings.Replace(oldFile, oldName, newName, 1)
+
+  serviceDef.Service.Name = newName
+  _ = WriteServiceDefinitionFile(serviceDef, newFile)
+
+  // os.Remove(oldFile)
 }
 
 func InspectServiceRaw(servName, field string, verbose bool) {
   service := LoadServiceDefinition(servName)
-  InspectServiceByService(service, field, verbose)
+  InspectServiceByService(service.Service, service.Operations, field, verbose)
 }
 
-func InspectServiceByService(service *def.Service, field string, verbose bool) {
-  if IsServiceExisting(service) {
-    perform.DockerInspect(service, field, verbose)
+func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool) {
+  if IsServiceExisting(srv) {
+    perform.DockerInspect(srv, ops, field, verbose)
   } else {
     if verbose {
       fmt.Println("No service matching that name.")
@@ -120,22 +150,34 @@ func ListKnownRaw() []string {
 }
 
 func IsServiceExisting(service *def.Service) bool {
-  return parseServices(util.FullNameToShort(service.Name), true)
+  return parseServices(service.Name, true)
 }
 
 func IsServiceRunning(service *def.Service) bool {
-  return parseServices(util.FullNameToShort(service.Name), false)
+  return parseServices(service.Name, false)
 }
 
 func UpdateServiceRaw(servName string, verbose bool) {
   service := LoadServiceDefinition(servName)
-  perform.DockerRebuild(service, verbose)
+  perform.DockerRebuild(service.Service, service.Operations, true, verbose)
 }
 
 func parseServices(name string, all bool) bool {
   running := listServices(all)
   if len(running) != 0 {
     for _, srv := range running {
+      if srv == name {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+func parseKnown(name string) bool {
+  known := ListKnownRaw()
+  if len(known) != 0 {
+    for _, srv := range known {
       if srv == name {
         return true
       }
