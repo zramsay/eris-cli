@@ -10,16 +10,24 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadChainDefinition(chainName string) *def.Chain {
+//----------------------------------------------------------------------
+// config
+
+// viper read config file, marshal to definition struct,
+// load service, validate name and data container
+func LoadChainDefinition(chainName string) (*def.Chain, error) {
 	var chain def.Chain
-	chainConf := loadChainDefinition(chainName)
+	chainConf, err := readChainDefinition(chainName)
+	if err != nil {
+		return nil, err
+	}
 
 	// marshal chain and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
@@ -52,41 +60,47 @@ func LoadChainDefinition(chainName string) *def.Chain {
 	checkDataContainerTurnedOn(&chain, chainConf)
 	checkDataContainerHasName(chain.Operations)
 
-	return &chain
+	return &chain, nil
 }
 
 func IsChainExisting(chain *def.Chain) bool {
-	return parseChains(chain.Service.Name, true)
+	return isRunningChain(chain.Service.Name, true)
 }
 
 func IsChainRunning(chain *def.Chain) bool {
-	return parseChains(chain.Service.Name, false)
+	return isRunningChain(chain.Service.Name, false)
 }
 
-func loadChainDefinition(chainName string) *viper.Viper {
+// read the config file into viper
+func readChainDefinition(chainName string) (*viper.Viper, error) {
 	var chainConf = viper.New()
 
-	chainConf.AddConfigPath(dir.BlockchainsPath)
+	chainConf.AddConfigPath(BlockchainsPath)
 	chainConf.SetConfigName(chainName)
-	chainConf.ReadInConfig()
+	err := chainConf.ReadInConfig()
 
-	return chainConf
+	return chainConf, fmt.Errorf("error reading chain def file: %v", err)
 }
 
-func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) {
+// marshal from viper to definitions struct
+func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) error {
 	err := chainConf.Marshal(chain)
+	return fmt.Errorf("Error marshalling from viper to chain def: %v", err)
+}
+
+// get the config file's path from the chain name
+func configFileNameFromChainName(chainName string) (string, error) {
+	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
-		// TODO: error handling
-		fmt.Println(err)
-		os.Exit(1)
+		return "", err
 	}
+	return chainConf.ConfigFileUsed(), nil
 }
 
-func chainDefFileByChainName(chainName string) string {
-	chainConf := loadChainDefinition(chainName)
-	return chainConf.ConfigFileUsed()
-}
+//----------------------------------------------------------------------
+// chain defs overwrite service defs
 
+// overwrite service attributes with chain config
 func mergeChainAndService(chain *def.Chain, service *def.Service) {
 	chain.Service.Name = chain.Name
 	chain.Service.Image = overWriteString(chain.Service.Image, service.Image)
@@ -157,6 +171,9 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 	return mapTwo
 }
 
+//----------------------------------------------------------------------
+// validation funcs
+
 func checkChainGiven(args []string) {
 	if len(args) == 0 {
 		fmt.Println("No ChainName Given. Please rerun command with a known chain.")
@@ -188,6 +205,10 @@ func checkDataContainerHasName(ops *def.ServiceOperation) {
 	}
 }
 
+//----------------------------------------------------------------------
+// chain lists, lookups
+
+// list all running eris_chain docker containers
 func listChains(running bool) []string {
 	chains := []string{}
 	r := regexp.MustCompile(`\/eris_chain_(.+)_\d`)
@@ -205,19 +226,19 @@ func listChains(running bool) []string {
 	return chains
 }
 
-func parseChains(name string, all bool) bool {
+// check if given chain is running
+func isRunningChain(name string, all bool) bool {
 	running := listChains(all)
-	if len(running) != 0 {
-		for _, srv := range running {
-			if srv == name {
-				return true
-			}
+	for _, srv := range running {
+		if srv == name {
+			return true
 		}
 	}
 	return false
 }
 
-func parseKnown(name string) bool {
+// check if given chain is known
+func isKnownChain(name string) bool {
 	known := ListKnownRaw()
 	if len(known) != 0 {
 		for _, srv := range known {

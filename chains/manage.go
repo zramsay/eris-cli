@@ -10,9 +10,11 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
+
+//----------------------------------------------------------------------
 
 func Install(cmd *cobra.Command, args []string) {
 
@@ -24,7 +26,7 @@ func New(cmd *cobra.Command, args []string) {
 
 func Edit(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	EditChainRaw(args[0])
+	IfExit(EditChainRaw(args[0]))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -32,7 +34,8 @@ func Inspect(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
-	chain := LoadChainDefinition(args[0])
+	chain, err := LoadChainDefinition(args[0])
+	IfExit(err)
 	if IsChainExisting(chain) {
 		services.InspectServiceByService(chain.Service, chain.Operations, args[1], cmd.Flags().Lookup("verbose").Changed)
 	}
@@ -63,22 +66,6 @@ func ListRunning() {
 	}
 }
 
-func ListKnownRaw() []string {
-	chns := []string{}
-	fileTypes := []string{}
-	for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
-		fileTypes = append(fileTypes, filepath.Join(dir.BlockchainsPath, t))
-	}
-	for _, t := range fileTypes {
-		s, _ := filepath.Glob(t)
-		for _, s1 := range s {
-			s1 = strings.Split(filepath.Base(s1), ".")[0]
-			chns = append(chns, s1)
-		}
-	}
-	return chns
-}
-
 func Rename(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
 	if len(args) != 2 {
@@ -98,10 +85,32 @@ func Rm(cmd *cobra.Command, args []string) {
 	RmChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
-func EditChainRaw(chainName string) {
-	chainConf := loadChainDefinition(chainName)
+//----------------------------------------------------------------------
+
+func EditChainRaw(chainName string) error {
+	chainConf, err := readChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 	filePath := chainConf.ConfigFileUsed()
-	dir.Editor(filePath)
+	Editor(filePath)
+	return nil
+}
+
+func ListKnownRaw() []string {
+	chns := []string{}
+	fileTypes := []string{}
+	for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
+		fileTypes = append(fileTypes, filepath.Join(BlockchainsPath, t))
+	}
+	for _, t := range fileTypes {
+		s, _ := filepath.Glob(t)
+		for _, s1 := range s {
+			s1 = strings.Split(filepath.Base(s1), ".")[0]
+			chns = append(chns, s1)
+		}
+	}
+	return chns
 }
 
 func ListRunningRaw() []string {
@@ -112,16 +121,22 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
-func RenameChainRaw(oldName, newName string, verbose bool) {
-	if parseKnown(oldName) {
+func RenameChainRaw(oldName, newName string, verbose bool) error {
+	if isKnownChain(oldName) {
 		if verbose {
 			fmt.Println("Renaming chain", oldName, "to", newName)
 		}
 
-		chainDef := LoadChainDefinition(oldName)
+		chainDef, err := LoadChainDefinition(oldName)
+		if err != nil {
+			return err
+		}
 
 		perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newName, verbose)
-		oldFile := chainDefFileByChainName(oldName)
+		oldFile, err := configFileNameFromChainName(oldName)
+		if err != nil {
+			return err
+		}
 		newFile := strings.Replace(oldFile, oldName, newName, 1)
 
 		chainDef.Name = newName
@@ -137,16 +152,30 @@ func RenameChainRaw(oldName, newName string, verbose bool) {
 			fmt.Println("I cannot find that chain. Please check the chain name you sent me.")
 		}
 	}
+	return nil
 }
 
-func UpdateChainRaw(chainName string, verbose bool) {
-	chain := LoadChainDefinition(chainName)
+func UpdateChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 	perform.DockerRebuild(chain.Service, chain.Operations, false, verbose)
+	return nil
 }
 
-func RmChainRaw(chainName string, verbose bool) {
-	chain := LoadChainDefinition(chainName)
+func RmChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 	perform.DockerRemove(chain.Service, chain.Operations, verbose)
-	// oldFile := chainDefFileByChainName(chainName)
-	// os.Remove(oldFile)
+	/*
+	   oldFile, err := configFileNameFromChainName(chainName)
+	   if err != nil{
+	   		return err
+	   }
+	   os.Remove(oldFile)
+	*/
+	return nil
 }

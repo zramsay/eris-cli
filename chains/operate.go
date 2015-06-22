@@ -5,27 +5,34 @@ import (
 
 	"github.com/eris-ltd/eris-cli/services"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
+//----------------------------------------------------------------------
+
 func Start(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	StartChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	IfExit(StartChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	LogsChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	IfExit(LogsChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	KillChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	IfExit(KillChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
 }
 
-func StartChainRaw(chainName string, verbose bool) {
-	chain := LoadChainDefinition(chainName)
+//----------------------------------------------------------------------
 
+func StartChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 	if IsChainRunning(chain) {
 		if verbose {
 			fmt.Println("Chain already started. Skipping.")
@@ -33,15 +40,23 @@ func StartChainRaw(chainName string, verbose bool) {
 	} else {
 		services.StartServiceByService(chain.Service, chain.Operations, verbose)
 	}
+	return nil
 }
 
-func LogsChainRaw(chainName string, verbose bool) {
-	chain := LoadChainDefinition(chainName)
+func LogsChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 	services.LogsServiceByService(chain.Service, chain.Operations, verbose)
+	return nil
 }
 
-func KillChainRaw(chainName string, verbose bool) {
-	chain := LoadChainDefinition(chainName)
+func KillChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
 
 	if IsChainRunning(chain) {
 		services.KillServiceByService(chain.Service, chain.Operations, verbose)
@@ -50,4 +65,5 @@ func KillChainRaw(chainName string, verbose bool) {
 			fmt.Println("Chain not currently running. Skipping.")
 		}
 	}
+	return nil
 }
