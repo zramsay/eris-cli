@@ -19,7 +19,7 @@ func ListKnown(cmd *cobra.Command, args []string) {
 }
 
 func Rename(cmd *cobra.Command, args []string) {
-  checkServiceGiven(args)
+	checkServiceGiven(args)
 	if len(args) != 2 {
 		fmt.Println("Please give me: eris data rename [oldName] [newName]")
 		return
@@ -28,15 +28,15 @@ func Rename(cmd *cobra.Command, args []string) {
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
-  checkServiceGiven(args)
-  if len(args) == 1 {
-    args = append(args, "all")
-  }
-  InspectDataRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+	checkServiceGiven(args)
+	if len(args) == 1 {
+		args = append(args, "all")
+	}
+	InspectDataRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func Rm(cmd *cobra.Command, args []string) {
-  checkServiceGiven(args)
+	checkServiceGiven(args)
 	RmDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
@@ -63,7 +63,7 @@ func RenameDataRaw(oldName, newName string, verbose bool) {
 			fmt.Println("Renaming data container", oldName, "to", newName)
 		}
 
-    srv, ops := mockService(oldName)
+		srv, ops := mockService(oldName)
 		perform.DockerRename(srv, ops, oldName, newName, verbose)
 	} else {
 		if verbose {
@@ -73,18 +73,18 @@ func RenameDataRaw(oldName, newName string, verbose bool) {
 }
 
 func InspectDataRaw(name, field string, verbose bool) {
-  if parseKnown(name) {
-    if verbose {
-      fmt.Println("Inspecting data container", name)
-    }
+	if parseKnown(name) {
+		if verbose {
+			fmt.Println("Inspecting data container", name)
+		}
 
-    srv, ops := mockService(name)
-    perform.DockerInspect(srv, ops, field, verbose)
-  } else {
-    if verbose {
-      fmt.Println("I cannot find that data container. Please check the data container name you sent me.")
-    }
-  }
+		srv, ops := mockService(name)
+		perform.DockerInspect(srv, ops, field, verbose)
+	} else {
+		if verbose {
+			fmt.Println("I cannot find that data container. Please check the data container name you sent me.")
+		}
+	}
 }
 
 func RmDataRaw(name string, verbose bool) {
@@ -93,7 +93,7 @@ func RmDataRaw(name string, verbose bool) {
 			fmt.Println("Removing data container", name)
 		}
 
-    srv, ops := mockService(name)
+		srv, ops := mockService(name)
 		perform.DockerRemove(srv, ops, verbose)
 	} else {
 		if verbose {

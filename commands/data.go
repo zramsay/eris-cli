@@ -20,27 +20,27 @@ func buildDataCommand() {
 	Data.AddCommand(dataImport)
 	Data.AddCommand(dataList)
 	Data.AddCommand(dataRename)
-  Data.AddCommand(dataInspect)
+	Data.AddCommand(dataInspect)
 	Data.AddCommand(dataExport)
 	Data.AddCommand(dataRm)
 }
 
 var dataImport = &cobra.Command{
-  Use:   "import [name] [folder]",
-  Short: "Import a folder to a named data container",
-  Long:  `Import a folder to a named data container`,
-  Run: func(cmd *cobra.Command, args []string) {
-    data.Import(cmd, args)
-  },
+	Use:   "import [name] [folder]",
+	Short: "Import a folder to a named data container",
+	Long:  `Import a folder to a named data container`,
+	Run: func(cmd *cobra.Command, args []string) {
+		data.Import(cmd, args)
+	},
 }
 
 var dataList = &cobra.Command{
-  Use:   "ls",
-  Short: "List the data containers",
-  Long:  `List the data containers`,
-  Run: func(cmd *cobra.Command, args []string) {
-    data.ListKnown(cmd, args)
-  },
+	Use:   "ls",
+	Short: "List the data containers",
+	Long:  `List the data containers`,
+	Run: func(cmd *cobra.Command, args []string) {
+		data.ListKnown(cmd, args)
+	},
 }
 
 var dataRename = &cobra.Command{
@@ -53,28 +53,28 @@ var dataRename = &cobra.Command{
 }
 
 var dataInspect = &cobra.Command{
-  Use:   "inspect [name] [key]",
-  Short: "Machine readable details.",
-  Long: `Displays machine readable details about running containers.`,
-  Run: func(cmd *cobra.Command, args []string) {
-    data.Inspect(cmd, args)
-  },
+	Use:   "inspect [name] [key]",
+	Short: "Machine readable details.",
+	Long:  `Displays machine readable details about running containers.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		data.Inspect(cmd, args)
+	},
 }
 
 var dataExport = &cobra.Command{
-  Use:   "export [name] [folder]",
-  Short: "Import a named data container to a folder",
-  Long:  `Import a named data container to a folder`,
-  Run: func(cmd *cobra.Command, args []string) {
-    data.Export(cmd, args)
-  },
+	Use:   "export [name] [folder]",
+	Short: "Import a named data container to a folder",
+	Long:  `Import a named data container to a folder`,
+	Run: func(cmd *cobra.Command, args []string) {
+		data.Export(cmd, args)
+	},
 }
 
 var dataRm = &cobra.Command{
-  Use:   "rm [name]",
-  Short: "Remove a data container",
-  Long:  `Remove a data container`,
-  Run: func(cmd *cobra.Command, args []string) {
-    data.Rm(cmd, args)
-  },
+	Use:   "rm [name]",
+	Short: "Remove a data container",
+	Long:  `Remove a data container`,
+	Run: func(cmd *cobra.Command, args []string) {
+		data.Rm(cmd, args)
+	},
 }
