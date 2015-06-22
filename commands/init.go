@@ -22,7 +22,7 @@ var Init = &cobra.Command{
 				os.Exit(1)
 			}
 		} else {
-			fmt.Printf("Root eris directory (%s) already exists\n", common.ErisRoot)
+			fmt.Printf("Root eris directory (%s) already exists. Please type `eris` to see the help.\n", common.ErisRoot)
 			os.Exit(0)
 		}
 

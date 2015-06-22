@@ -31,7 +31,15 @@ func Install(cmd *cobra.Command, args []string) {
 }
 
 func New(cmd *cobra.Command, args []string) {
-
+	checkServiceGiven(args)
+	if len(args) != 2 {
+		fmt.Println("Please give me: eris new [name] [containerImage]")
+		return
+	}
+	err := NewServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func Edit(cmd *cobra.Command, args []string) {
@@ -125,6 +133,25 @@ func InstallServiceRaw(servName, servPath string, verbose bool) error {
 	}
 
 	fmt.Println("I do not know how to get that file. Sorry.")
+	return nil
+}
+
+func NewServiceRaw(servName, imageName string, verbose bool) error {
+	srv := &def.Service{
+		Name:  servName,
+		Image: imageName,
+	}
+	srvDef := &def.ServiceDefinition{
+		Service:    srv,
+		Maintainer: &def.Maintainer{},
+		Location:   &def.Location{},
+		Machine:    &def.Machine{},
+	}
+
+	err := WriteServiceDefinitionFile(srvDef, "")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
