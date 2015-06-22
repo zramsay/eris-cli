@@ -1,7 +1,7 @@
 package archive
 
 import (
-	"github.com/docker/docker/pkg/system"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/system"
 )
 
 func statDifferent(oldStat *system.Stat_t, newStat *system.Stat_t) bool {

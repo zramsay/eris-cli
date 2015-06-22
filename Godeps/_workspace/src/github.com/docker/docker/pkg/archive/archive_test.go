@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/docker/docker/pkg/system"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/system"
 )
 
 func TestIsArchiveNilHeader(t *testing.T) {

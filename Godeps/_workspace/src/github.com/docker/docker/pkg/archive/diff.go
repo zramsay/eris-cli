@@ -10,8 +10,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/docker/docker/pkg/pools"
-	"github.com/docker/docker/pkg/system"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/pools"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/system"
 )
 
 func UnpackLayer(dest string, layer ArchiveReader) (size int64, err error) {

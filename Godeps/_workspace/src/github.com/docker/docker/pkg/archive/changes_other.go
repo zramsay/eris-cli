@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/docker/docker/pkg/system"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/system"
 )
 
 func collectFileInfoForChanges(oldDir, newDir string) (*FileInfo, *FileInfo, error) {
