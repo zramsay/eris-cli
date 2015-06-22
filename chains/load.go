@@ -28,7 +28,11 @@ func LoadChainDefinition(chainName string) *def.Chain {
 	chain.Operations = &def.ServiceOperation{}
 
 	serv := services.LoadService(chain.Type)
-	mergeChainAndService(&chain, serv)
+  if chain.Service == nil {
+    chain.Service = serv
+  } else {
+  	mergeChainAndService(&chain, serv)
+  }
 
 	checkChainHasUniqueName(&chain)
 	checkDataContainerTurnedOn(&chain, chainConf)

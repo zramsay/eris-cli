@@ -17,7 +17,12 @@ import (
 
 // install
 func Install(cmd *cobra.Command, args []string) {
-
+  checkServiceGiven(args)
+  if len(args) != 2 {
+    fmt.Println("Please give me: eris services install [name] [location]")
+    return
+  }
+  InstallServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func New(cmd *cobra.Command, args []string) {
@@ -77,6 +82,13 @@ func ListExisting() {
 func Rm(cmd *cobra.Command, args []string) {
 	checkServiceGiven(args)
 	RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+}
+
+func InstallServiceRaw(servName, servPath string, verbose bool) {
+
+  // is it ipfs
+  // is it https
+  // cannot find fail
 }
 
 func EditServiceRaw(servName string) {
