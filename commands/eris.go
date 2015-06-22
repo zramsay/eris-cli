@@ -31,19 +31,20 @@ func Execute() {
 	AddGlobalFlags()
 	AddCommands()
 	ErisCmd.Execute()
-	// utils.StopOnErr(ErisCmd.Execute())
 }
 
 // Define the commands
 func AddCommands() {
 	buildProjectsCommand()
 	ErisCmd.AddCommand(Projects)
-	buildChainsCommand()
-	ErisCmd.AddCommand(Chains)
 	buildServicesCommand()
 	ErisCmd.AddCommand(Services)
+	buildChainsCommand()
+	ErisCmd.AddCommand(Chains)
 	buildActionsCommand()
 	ErisCmd.AddCommand(Actions)
+	buildDataCommand()
+	ErisCmd.AddCommand(Data)
 	buildRemotesCommand()
 	ErisCmd.AddCommand(Remotes)
 	buildKeysCommand()

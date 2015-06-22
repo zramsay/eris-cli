@@ -17,6 +17,7 @@ Within the Eris platform, blockchains are the primary method of storing
 structured data which is used by the Eris platform in combination with
 IPFS (a globally-accessible content-addressable peer to peer file
 storage solution).`,
+	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
 // Build the chains subcommand

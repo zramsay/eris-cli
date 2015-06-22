@@ -21,6 +21,7 @@ pointed to by the actions field of the currently checked
 out project (project scoped actions). Actions are a
 sequence of commands which operate in a similar fashion
 to how a circle.yml file may operate.`,
+	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
 // build the services subcommand

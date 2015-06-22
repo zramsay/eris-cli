@@ -18,6 +18,7 @@ or projects which are managed by the Eris platform. To configure
 blockchains use [eris chains config]; to configure services
 use [eris services config]; to configure projects use
 [eris projects config].`,
+	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
 // build the config subcommand

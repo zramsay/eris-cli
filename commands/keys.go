@@ -12,6 +12,7 @@ var Keys = &cobra.Command{
 	Short: "Manage Keys for your Application.",
 	Long: `The keys subcommand is used to generate, import, export, and use
 the cryptographic keys for your application.`,
+	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
 // build the keys subcommand
