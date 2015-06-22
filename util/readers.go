@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -16,14 +15,8 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 
 func GetFromIPFS(hash, fileName string, w io.Writer) error {
 	url := IPFSBaseUrl() + hash
-	w.Write([]byte("GETing file from IPFS. Hash -> " + hash))
+	w.Write([]byte("GETing file from IPFS. Hash -> " + hash + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
-}
-
-func SendToIPFS(fileName string, w io.Writer) error {
-	url := IPFSBaseUrl()
-	w.Write([]byte("POSTing file to IPFS. File -> " + fileName))
-	return UploadFromFileToUrl(url, fileName, w)
 }
 
 func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
@@ -31,7 +24,7 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 	if fileName == "" {
 		fileName = tokens[len(tokens)-1]
 	}
-	w.Write([]byte("Downloading " + url + " to " + fileName))
+	w.Write([]byte("Downloading " + url + " to " + fileName + "\n"))
 
 	output, err := os.Create(fileName)
 	if err != nil {
@@ -45,41 +38,7 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 	}
 	defer response.Body.Close()
 
-	n, err := io.Copy(output, response.Body)
-	if err != nil {
-		return err
-	}
-
-	w.Write([]byte(string(n) + " bytes downloaded."))
-	return nil
-}
-
-func UploadFromFileToUrl(url, fileName string, w io.Writer) error {
-	if url == "" {
-		return fmt.Errorf("To upload from a file to a url, I need a URL.")
-	}
-	w.Write([]byte("Uploading " + url + " to " + fileName))
-
-	input, err := os.Open(fileName)
-	if err != nil {
-		return err
-	}
-	defer input.Close()
-
-	request, err := http.NewRequest("POST", url, input)
-	if err != nil {
-		return err
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	_, err = io.Copy(w, response.Body)
+	_, err = io.Copy(output, response.Body)
 	if err != nil {
 		return err
 	}

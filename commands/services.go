@@ -30,6 +30,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
@@ -142,6 +143,19 @@ The currently supported range of [key] is:
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Inspect(cmd, args)
+	},
+}
+
+// export a service definition file to ipfs
+var servicesExport = &cobra.Command {
+	Use:   "export [serviceName]",
+	Short: "Export a service definition file to IPFS.",
+	Long:  `Export a service definition file to IPFS.
+
+Command will return a machine readable version of the IPFS hash
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		srv.Export(cmd, args)
 	},
 }
 
