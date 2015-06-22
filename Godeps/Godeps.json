@@ -51,6 +51,10 @@
 			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
 		},
 		{
+			"ImportPath": "github.com/ebuchman/go-shell-pipes",
+			"Rev": "83e1324808622485314bff0fd97b8b944200a7a4"
+		},
+		{
 			"ImportPath": "github.com/eris-ltd/common",
 			"Rev": "b17e672fecf2740a2a2f4c981f0c34e4618007af"
 		},

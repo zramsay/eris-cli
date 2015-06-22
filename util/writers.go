@@ -12,6 +12,6 @@ func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
   return archive.Tar(path, compression)
 }
 
-func Untar(reader io.Reader, dest string) error {
-  return archive.Untar(reader, dest, nil)
+func Untar(reader io.Reader, name, dest string) error {
+  return archive.Untar(reader, dest, &archive.TarOptions{NoLchown: true, Name: name,})
 }

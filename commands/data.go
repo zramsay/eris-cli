@@ -20,6 +20,7 @@ func buildDataCommand() {
 	Data.AddCommand(dataImport)
 	Data.AddCommand(dataList)
 	Data.AddCommand(dataRename)
+  Data.AddCommand(dataInspect)
 	Data.AddCommand(dataExport)
 	Data.AddCommand(dataRm)
 }
@@ -49,6 +50,15 @@ var dataRename = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		data.Rename(cmd, args)
 	},
+}
+
+var dataInspect = &cobra.Command{
+  Use:   "inspect [name] [key]",
+  Short: "Machine readable details.",
+  Long: `Displays machine readable details about running containers.`,
+  Run: func(cmd *cobra.Command, args []string) {
+    data.Inspect(cmd, args)
+  },
 }
 
 var dataExport = &cobra.Command{
