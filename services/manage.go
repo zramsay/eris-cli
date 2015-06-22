@@ -166,6 +166,6 @@ func UpdateServiceRaw(servName string, verbose bool) {
 func RmServiceRaw(servName string, verbose bool) {
 	service := LoadServiceDefinition(servName)
 	perform.DockerRemove(service.Service, service.Operations, verbose)
-	oldFile := servDefFileByServName(servName)
-	os.Remove(oldFile)
+	// oldFile := servDefFileByServName(servName)
+	// os.Remove(oldFile)
 }

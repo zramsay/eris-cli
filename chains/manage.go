@@ -147,6 +147,6 @@ func UpdateChainRaw(chainName string, verbose bool) {
 func RmChainRaw(chainName string, verbose bool) {
 	chain := LoadChainDefinition(chainName)
 	perform.DockerRemove(chain.Service, chain.Operations, verbose)
-	oldFile := chainDefFileByChainName(chainName)
-	os.Remove(oldFile)
+	// oldFile := chainDefFileByChainName(chainName)
+	// os.Remove(oldFile)
 }
