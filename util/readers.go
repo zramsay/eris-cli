@@ -36,10 +36,10 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 
 	// adding manual timeouts as IPFS hangs for a while
 	transport := http.Transport{
-	    Dial: dialTimeout,
+		Dial: dialTimeout,
 	}
 	client := http.Client{
-	    Transport: &transport,
+		Transport: &transport,
 	}
 	response, err := client.Get(url)
 	if err != nil {
@@ -66,5 +66,5 @@ func IPFSBaseUrl() string {
 var timeout = time.Duration(10 * time.Second)
 
 func dialTimeout(network, addr string) (net.Conn, error) {
-  return net.DialTimeout(network, addr, timeout)
+	return net.DialTimeout(network, addr, timeout)
 }

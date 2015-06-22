@@ -1,7 +1,7 @@
 package services
 
 import (
-  "bytes"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/perform"
-  "github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
@@ -57,11 +57,11 @@ func Inspect(cmd *cobra.Command, args []string) {
 }
 
 func Export(cmd *cobra.Command, args []string) {
-  checkServiceGiven(args)
-  err := ExportServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
-  if err != nil {
-    fmt.Println(err)
-  }
+	checkServiceGiven(args)
+	err := ExportServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // Updates an installed service, or installs it if it has not been installed.
@@ -94,116 +94,116 @@ func ListExisting() {
 
 func Rm(cmd *cobra.Command, args []string) {
 	checkServiceGiven(args)
-  RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
 func InstallServiceRaw(servName, servPath string, verbose bool) error {
-  fileName := filepath.Join(ServicesPath, servName)
-  if filepath.Ext(fileName) == "" {
-    fileName = fileName + ".toml"
-  }
+	fileName := filepath.Join(ServicesPath, servName)
+	if filepath.Ext(fileName) == "" {
+		fileName = fileName + ".toml"
+	}
 
-  s := strings.Split(servPath, ":")
-  if s[0] == "ipfs" {
+	s := strings.Split(servPath, ":")
+	if s[0] == "ipfs" {
 
-    var err error
-    if verbose {
-      err = util.GetFromIPFS(s[1], fileName, os.Stdout)
-    } else {
-      err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
-    }
+		var err error
+		if verbose {
+			err = util.GetFromIPFS(s[1], fileName, os.Stdout)
+		} else {
+			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
+		}
 
-    if err != nil {
-      return err
-    }
-    return nil
-  }
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 
-  if strings.Contains(s[0], "github") {
-    fmt.Println("Will get code from Github when shitheads build it.")
-    return nil
-  }
+	if strings.Contains(s[0], "github") {
+		fmt.Println("https://twitter.com/ryaneshea/status/595957712040628224")
+		return nil
+	}
 
-  fmt.Println("I do not know how to get that file. Sorry.")
-  return nil
+	fmt.Println("I do not know how to get that file. Sorry.")
+	return nil
 }
 
 func EditServiceRaw(servName string) {
-  Editor(servDefFileByServName(servName))
+	Editor(servDefFileByServName(servName))
 }
 
 func RenameServiceRaw(oldName, newName string, verbose bool) {
-  if parseKnown(oldName) {
-    if verbose {
-      fmt.Println("Renaming service", oldName, "to", newName)
-    }
+	if parseKnown(oldName) {
+		if verbose {
+			fmt.Println("Renaming service", oldName, "to", newName)
+		}
 
-    serviceDef := LoadServiceDefinition(oldName)
-    perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose)
-    oldFile := servDefFileByServName(oldName)
-    newFile := strings.Replace(oldFile, oldName, newName, 1)
+		serviceDef := LoadServiceDefinition(oldName)
+		perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose)
+		oldFile := servDefFileByServName(oldName)
+		newFile := strings.Replace(oldFile, oldName, newName, 1)
 
-    serviceDef.Service.Name = newName
-    _ = WriteServiceDefinitionFile(serviceDef, newFile)
+		serviceDef.Service.Name = newName
+		_ = WriteServiceDefinitionFile(serviceDef, newFile)
 
-    data.RenameDataRaw(oldName, newName, verbose)
+		data.RenameDataRaw(oldName, newName, verbose)
 
-    os.Remove(oldFile)
-  } else {
-    if verbose {
-      fmt.Println("I cannot find that service. Please check the service name you sent me.")
-    }
-  }
+		os.Remove(oldFile)
+	} else {
+		if verbose {
+			fmt.Println("I cannot find that service. Please check the service name you sent me.")
+		}
+	}
 }
 
 func InspectServiceRaw(servName, field string, verbose bool) {
-  service := LoadServiceDefinition(servName)
-  InspectServiceByService(service.Service, service.Operations, field, verbose)
+	service := LoadServiceDefinition(servName)
+	InspectServiceByService(service.Service, service.Operations, field, verbose)
 }
 
 func ExportServiceRaw(servName string, verbose bool) error {
-  if parseKnown(servName) {
-    ipfsService := LoadServiceDefinition("ipfs")
+	if parseKnown(servName) {
+		ipfsService := LoadServiceDefinition("ipfs")
 
-    if IsServiceRunning(ipfsService.Service) {
-      if verbose {
-        fmt.Println("IPFS is running. Adding now.")
-      }
+		if IsServiceRunning(ipfsService.Service) {
+			if verbose {
+				fmt.Println("IPFS is running. Adding now.")
+			}
 
-      hash, err := exportFile(servName, verbose)
-      if err != nil {
-        return err
-      }
-      fmt.Println(hash)
-    } else {
-      if verbose {
-        fmt.Println("IPFS is not running. Starting now.")
-      }
-      StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
+			hash, err := exportFile(servName, verbose)
+			if err != nil {
+				return err
+			}
+			fmt.Println(hash)
+		} else {
+			if verbose {
+				fmt.Println("IPFS is not running. Starting now.")
+			}
+			StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
 
-      hash, err := exportFile(servName, verbose)
-      if err != nil {
-        return err
-      }
-      fmt.Println(hash)
-    }
+			hash, err := exportFile(servName, verbose)
+			if err != nil {
+				return err
+			}
+			fmt.Println(hash)
+		}
 
-  } else {
-    return fmt.Errorf(`I don't known of that service.
+	} else {
+		return fmt.Errorf(`I don't known of that service.
 Please retry with a known service.
 To find known services use: eris services known`)
-  }
-  return nil
+	}
+	return nil
 }
 
 func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool) {
-  if IsServiceExisting(srv) {
-    perform.DockerInspect(srv, ops, field, verbose)
-  } else {
-    if verbose {
-      fmt.Println("No service matching that name.")
-    }
-  }
+	if IsServiceExisting(srv) {
+		perform.DockerInspect(srv, ops, field, verbose)
+	} else {
+		if verbose {
+			fmt.Println("No service matching that name.")
+		}
+	}
 }
 
 func ListKnownRaw() []string {
@@ -243,19 +243,19 @@ func RmServiceRaw(servName string, verbose bool) {
 }
 
 func exportFile(servName string, verbose bool) (string, error) {
-  fileName := servDefFileByServName(servName)
+	fileName := servDefFileByServName(servName)
 
-  var err error
-  var hash string
-  if verbose {
-    hash, err = util.SendToIPFS(fileName, os.Stdout)
-  } else {
-    hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
-  }
+	var err error
+	var hash string
+	if verbose {
+		hash, err = util.SendToIPFS(fileName, os.Stdout)
+	} else {
+		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+	}
 
-  if err != nil {
-    return "", err
-  }
+	if err != nil {
+		return "", err
+	}
 
-  return hash, nil
+	return hash, nil
 }
