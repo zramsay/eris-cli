@@ -24,10 +24,24 @@ func LoadChainDefinition(chainName string) *def.Chain {
 	// marshal chain and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
 	// have occured in the interim they are caught.
-	marshalChainDefinition(chainConf, &chain)
-	chain.Operations = &def.ServiceOperation{}
+  marshalChainDefinition(chainConf, &chain)
+  chain.Operations = &def.ServiceOperation{}
 
-	serv := services.LoadService(chain.Type)
+  var serv *def.Service
+  if chain.Type != "" {
+  	serv = services.LoadService(chain.Type)
+  } else {
+    serv = services.LoadService(chainName)
+    chain.Name = serv.Name
+    chain.Type = serv.Name
+  }
+
+  if serv == nil {
+    // TODO: handle errors better
+    fmt.Println("I do not have the service definition file available for that chain type.")
+    os.Exit(1)
+  }
+
   if chain.Service == nil {
     chain.Service = serv
   } else {
