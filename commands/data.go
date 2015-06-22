@@ -65,6 +65,6 @@ var dataRm = &cobra.Command{
 	Short: "Remove a data container",
 	Long:  `Remove a data container`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Rm(args)
+		data.Rm(cmd, args)
 	},
 }

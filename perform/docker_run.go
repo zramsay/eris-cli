@@ -315,7 +315,7 @@ func pullImage(name string, writer io.Writer) {
 	err := util.DockerClient.PullImage(opts, auth)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to create container ->\n  %v", err)
+		fmt.Printf("Failed to create container ->\n  %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -357,7 +357,7 @@ func createContainer(opts docker.CreateContainerOptions) *docker.Container {
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to create container ->\n  %v", err)
+		fmt.Printf("Failed to create container ->\n  %v\n", err)
 		os.Exit(1)
 	}
 	return dockerContainer
@@ -367,7 +367,7 @@ func startContainer(id string, opts *docker.CreateContainerOptions) {
 	err := util.DockerClient.StartContainer(id, opts.HostConfig)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to start container ->\n  %v", err)
+		fmt.Printf("Failed to start container ->\n  %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -388,7 +388,7 @@ func logsContainer(id string) {
 	err := util.DockerClient.Logs(opts)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to get container logs ->\n  %v", err)
+		fmt.Printf("Failed to get container logs ->\n  %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -397,7 +397,7 @@ func inspectContainer(id, field string) {
 	cont, err := util.DockerClient.InspectContainer(id)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to inspect container ->\n  %v", err)
+		fmt.Printf("Failed to inspect container ->\n  %v\n", err)
 	}
 	PrintInspectionReport(cont, field)
 }
@@ -406,7 +406,7 @@ func stopContainer(id string, timeout uint) {
 	err := util.DockerClient.StopContainer(id, timeout)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to stop container ->\n  %v", err)
+		fmt.Printf("Failed to stop container ->\n  %v\n", err)
 	}
 }
 
@@ -418,7 +418,7 @@ func renameContainer(id, newName string) {
 	err := util.DockerClient.RenameContainer(opts)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to rename container ->\n  %v", err)
+		fmt.Printf("Failed to rename container ->\n  %v\n", err)
 	}
 }
 
@@ -431,7 +431,7 @@ func removeContainer(id string) {
 	err := util.DockerClient.RemoveContainer(opts)
 	if err != nil {
 		// TODO: better error handling
-		fmt.Println("Failed to remove container ->\n  %v", err)
+		fmt.Printf("Failed to remove container ->\n  %v\n", err)
 	}
 }
 

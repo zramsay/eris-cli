@@ -37,7 +37,7 @@ func Export(args []string) {
 
 }
 
-func Rm(args []string) {
+func Rm(cmd *cobra.Command, args []string) {
 	RmDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
 }
 
