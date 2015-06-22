@@ -34,7 +34,7 @@ var dataImport = &cobra.Command{
 }
 
 var dataList = &cobra.Command{
-  Use:   "list",
+  Use:   "ls",
   Short: "List the data containers",
   Long:  `List the data containers`,
   Run: func(cmd *cobra.Command, args []string) {
@@ -47,7 +47,7 @@ var dataRename = &cobra.Command{
   Short: "Rename a data container",
   Long:  `Rename a data container`,
   Run: func(cmd *cobra.Command, args []string) {
-    data.Rename(args)
+    data.Rename(cmd, args)
   },
 }
 

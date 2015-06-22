@@ -41,7 +41,9 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
   optsServ = configureContainer(srv, ops)
   srv.Volumes = fixDirs(srv.Volumes)
   if ops.DataContainer {
-    fmt.Println("You've asked me to manage the data containers. I shall do so good human.")
+    if verbose {
+      fmt.Println("You've asked me to manage the data containers. I shall do so good human.")
+    }
     optsData = configureDataContainer(srv, ops, &optsServ)
   }
 
@@ -253,6 +255,19 @@ func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName 
     }
     newName = strings.Replace(service.Names[0], oldName, newName, 1)
     renameContainer(service.ID, newName)
+  } else {
+    if verbose {
+      fmt.Println("Service container does not exist. Cannot rename.")
+    }
+  }
+}
+
+func DockerRemove(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+  if service, exists := ContainerExists(ops); exists {
+    if verbose {
+      fmt.Println("Service ID: " + service.ID)
+    }
+    removeContainer(service.ID)
   } else {
     if verbose {
       fmt.Println("Service container does not exist. Cannot rename.")

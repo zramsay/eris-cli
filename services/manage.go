@@ -6,6 +6,7 @@ import (
   "path/filepath"
   "strings"
 
+  "github.com/eris-ltd/eris-cli/data"
   "github.com/eris-ltd/eris-cli/perform"
 
   def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
@@ -96,6 +97,8 @@ func RenameServiceRaw(oldName, newName string, verbose bool) {
     serviceDef.Service.Name = newName
     _ = WriteServiceDefinitionFile(serviceDef, newFile)
 
+    data.RenameDataRaw(oldName, newName, verbose)
+
     os.Remove(oldFile)
   } else {
     if verbose {
@@ -149,6 +152,8 @@ func UpdateServiceRaw(servName string, verbose bool) {
 }
 
 func RmServiceRaw(servName string, verbose bool) {
+  service := LoadServiceDefinition(servName)
+  perform.DockerRemove(service.Service, service.Operations, verbose)
   oldFile := servDefFileByServName(servName)
   os.Remove(oldFile)
 }

@@ -6,6 +6,7 @@ import (
   "path/filepath"
   "strings"
 
+  "github.com/eris-ltd/eris-cli/data"
   "github.com/eris-ltd/eris-cli/perform"
   "github.com/eris-ltd/eris-cli/services"
 
@@ -128,6 +129,8 @@ func RenameChainRaw(oldName, newName string, verbose bool) {
     chainDef.Service.Image = ""
     _ = WriteChainDefinitionFile(chainDef, newFile)
 
+    data.RenameDataRaw(oldName, newName, verbose)
+
     os.Remove(oldFile)
   } else {
     if verbose {
@@ -142,6 +145,8 @@ func UpdateChainRaw(chainName string, verbose bool) {
 }
 
 func RmChainRaw(chainName string, verbose bool) {
+  chain := LoadChainDefinition(chainName)
+  perform.DockerRemove(chain.Service, chain.Operations, verbose)
   oldFile := chainDefFileByChainName(chainName)
   os.Remove(oldFile)
 }
