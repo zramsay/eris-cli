@@ -9,8 +9,10 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -26,7 +28,12 @@ func New(cmd *cobra.Command, args []string) {
 
 func Edit(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	IfExit(EditChainRaw(args[0]))
+	name := args[0]
+	var configVals []string
+	if len(args) > 0 {
+		configVals = args[1:]
+	}
+	IfExit(EditChainRaw(name, configVals))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -87,14 +94,17 @@ func Rm(cmd *cobra.Command, args []string) {
 
 //----------------------------------------------------------------------
 
-func EditChainRaw(chainName string) error {
+func EditChainRaw(chainName string, configVals []string) error {
 	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	filePath := chainConf.ConfigFileUsed()
-	Editor(filePath)
-	return nil
+	if err := util.EditRaw(chainConf, configVals); err != nil {
+		return err
+	}
+	var chain def.Chain
+	marshalChainDefinition(chainConf, &chain)
+	return WriteChainDefinitionFile(&chain, chainConf.ConfigFileUsed())
 }
 
 func ListKnownRaw() []string {

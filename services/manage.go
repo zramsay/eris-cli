@@ -17,15 +17,15 @@ import (
 
 // install
 func Install(cmd *cobra.Command, args []string) {
-  checkServiceGiven(args)
-  if len(args) != 2 {
-    fmt.Println("Please give me: eris services install [name] [location]")
-    return
-  }
-  err := InstallServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
-  if err != nil {
-    fmt.Println(err)
-  }
+	checkServiceGiven(args)
+	if len(args) != 2 {
+		fmt.Println("Please give me: eris services install [name] [location]")
+		return
+	}
+	err := InstallServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func New(cmd *cobra.Command, args []string) {
@@ -88,17 +88,17 @@ func Rm(cmd *cobra.Command, args []string) {
 }
 
 func InstallServiceRaw(servName, servPath string, verbose bool) error {
-  s := strings.Split(servPath, ":")
-  if s[0] == "ipfs" {
-    fmt.Println("Will get code from IPFS when shitheads build it.")
-    return nil
-  }
-  if strings.Contains(s[0], "github") {
-    fmt.Println("Will get code from Github when shitheads build it.")
-    return nil
-  }
-  fmt.Println("I do not know how to get that file. Sorry.")
-  return nil
+	s := strings.Split(servPath, ":")
+	if s[0] == "ipfs" {
+		fmt.Println("Will get code from IPFS when shitheads build it.")
+		return nil
+	}
+	if strings.Contains(s[0], "github") {
+		fmt.Println("Will get code from Github when shitheads build it.")
+		return nil
+	}
+	fmt.Println("I do not know how to get that file. Sorry.")
+	return nil
 }
 
 func EditServiceRaw(servName string) {

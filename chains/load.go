@@ -32,29 +32,29 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 	// marshal chain and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
 	// have occured in the interim they are caught.
-  marshalChainDefinition(chainConf, &chain)
-  chain.Operations = &def.ServiceOperation{}
+	marshalChainDefinition(chainConf, &chain)
+	chain.Operations = &def.ServiceOperation{}
 
-  var serv *def.Service
-  if chain.Type != "" {
-  	serv = services.LoadService(chain.Type)
-  } else {
-    serv = services.LoadService(chainName)
-    chain.Name = serv.Name
-    chain.Type = serv.Name
-  }
+	var serv *def.Service
+	if chain.Type != "" {
+		serv = services.LoadService(chain.Type)
+	} else {
+		serv = services.LoadService(chainName)
+		chain.Name = serv.Name
+		chain.Type = serv.Name
+	}
 
-  if serv == nil {
-    // TODO: handle errors better
-    fmt.Println("I do not have the service definition file available for that chain type.")
-    os.Exit(1)
-  }
+	if serv == nil {
+		// TODO: handle errors better
+		fmt.Println("I do not have the service definition file available for that chain type.")
+		os.Exit(1)
+	}
 
-  if chain.Service == nil {
-    chain.Service = serv
-  } else {
-  	mergeChainAndService(&chain, serv)
-  }
+	if chain.Service == nil {
+		chain.Service = serv
+	} else {
+		mergeChainAndService(&chain, serv)
+	}
 
 	checkChainHasUniqueName(&chain)
 	checkDataContainerTurnedOn(&chain, chainConf)
@@ -78,8 +78,11 @@ func readChainDefinition(chainName string) (*viper.Viper, error) {
 	chainConf.AddConfigPath(BlockchainsPath)
 	chainConf.SetConfigName(chainName)
 	err := chainConf.ReadInConfig()
+	if err != nil {
+		return nil, err
+	}
 
-	return chainConf, fmt.Errorf("error reading chain def file: %v", err)
+	return chainConf, nil
 }
 
 // marshal from viper to definitions struct
