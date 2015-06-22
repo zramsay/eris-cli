@@ -52,6 +52,7 @@ func AddCommands() {
 	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(Version)
+	ErisCmd.AddCommand(Init)
 }
 
 // Global Flags
