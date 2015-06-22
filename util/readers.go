@@ -2,9 +2,11 @@ package util
 
 import (
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error {
@@ -32,7 +34,14 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 	}
 	defer output.Close()
 
-	response, err := http.Get(url)
+	// adding manual timeouts as IPFS hangs for a while
+	transport := http.Transport{
+	    Dial: dialTimeout,
+	}
+	client := http.Client{
+	    Transport: &transport,
+	}
+	response, err := client.Get(url)
 	if err != nil {
 		return err
 	}
@@ -52,4 +61,10 @@ func IPFSBaseUrl() string {
 		host = "http://ipfs:8080"
 	}
 	return host + "/ipfs/"
+}
+
+var timeout = time.Duration(10 * time.Second)
+
+func dialTimeout(network, addr string) (net.Conn, error) {
+  return net.DialTimeout(network, addr, timeout)
 }

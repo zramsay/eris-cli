@@ -163,20 +163,35 @@ func InspectServiceRaw(servName, field string, verbose bool) {
 
 func ExportServiceRaw(servName string, verbose bool) error {
   if parseKnown(servName) {
-    fileName := servDefFileByServName(servName)
+    ipfsService := LoadServiceDefinition("ipfs")
 
-    var err error
-    var hash string
-    if verbose {
-      hash, err = util.SendToIPFS(fileName, os.Stdout)
+    if IsServiceRunning(ipfsService.Service) {
+      if verbose {
+        fmt.Println("IPFS is running. Adding now.")
+      }
+
+      hash, err := exportFile(servName, verbose)
+      if err != nil {
+        return err
+      }
+      fmt.Println(hash)
     } else {
-      hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+      if verbose {
+        fmt.Println("IPFS is not running. Starting now.")
+      }
+      StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
+
+      hash, err := exportFile(servName, verbose)
+      if err != nil {
+        return err
+      }
+      fmt.Println(hash)
     }
 
-    if err != nil {
-      return err
-    }
-    fmt.Println(hash)
+  } else {
+    return fmt.Errorf(`I don't known of that service.
+Please retry with a known service.
+To find known services use: eris services known`)
   }
   return nil
 }
@@ -225,4 +240,22 @@ func RmServiceRaw(servName string, verbose bool) {
 	perform.DockerRemove(service.Service, service.Operations, verbose)
 	// oldFile := servDefFileByServName(servName)
 	// os.Remove(oldFile)
+}
+
+func exportFile(servName string, verbose bool) (string, error) {
+  fileName := servDefFileByServName(servName)
+
+  var err error
+  var hash string
+  if verbose {
+    hash, err = util.SendToIPFS(fileName, os.Stdout)
+  } else {
+    hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+  }
+
+  if err != nil {
+    return "", err
+  }
+
+  return hash, nil
 }
