@@ -22,7 +22,7 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	    util.DockerConnect(cmd)
+		util.DockerConnect(cmd)
 	},
 }
 

@@ -44,12 +44,12 @@ and to set the config for a service use [eris services config].`,
 
 // show
 var configPlop = &cobra.Command{
-		Use:   "show",
-		Short: "Display the config for the Eris Platform CLI.",
-		Long: `Display the config for the Eris Platform CLI.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			config.PlopEntireConfig(globalConfig, args)
-		},
+	Use:   "show",
+	Short: "Display the config for the Eris Platform CLI.",
+	Long:  `Display the config for the Eris Platform CLI.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		config.PlopEntireConfig(globalConfig, args)
+	},
 }
 
 // edit

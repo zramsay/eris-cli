@@ -1,11 +1,11 @@
 package actions
 
 import (
-  "fmt"
-  "path/filepath"
-  "strings"
+	"fmt"
+	"path/filepath"
+	"strings"
 
-  dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -30,10 +30,10 @@ func ListProject() {
 }
 
 func ListKnown() {
-  actions := ListKnownRaw()
-  for _, s := range actions {
-    fmt.Println(strings.Replace(s, "_", " ", -1))
-  }
+	actions := ListKnownRaw()
+	for _, s := range actions {
+		fmt.Println(strings.Replace(s, "_", " ", -1))
+	}
 }
 
 func Edit(args []string) {
@@ -49,17 +49,17 @@ func Remove(args []string) {
 }
 
 func ListKnownRaw() []string {
-  acts := []string{}
-  fileTypes := []string{}
-  for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
-    fileTypes = append(fileTypes, filepath.Join(dir.ActionsPath, t))
-  }
-  for _, t := range fileTypes {
-    s, _ := filepath.Glob(t)
-    for _, s1 := range s {
-      s1 = strings.Split(filepath.Base(s1), ".")[0]
-      acts = append(acts, s1)
-    }
-  }
-  return acts
+	acts := []string{}
+	fileTypes := []string{}
+	for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
+		fileTypes = append(fileTypes, filepath.Join(dir.ActionsPath, t))
+	}
+	for _, t := range fileTypes {
+		s, _ := filepath.Glob(t)
+		for _, s1 := range s {
+			s1 = strings.Split(filepath.Base(s1), ".")[0]
+			acts = append(acts, s1)
+		}
+	}
+	return acts
 }

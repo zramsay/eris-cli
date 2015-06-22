@@ -69,7 +69,7 @@ as an argument. To list known services use:
 var servicesNew = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Creates a new service.",
-	Long: `Creates a new service.`,
+	Long:  `Creates a new service.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.New(cmd, args)
 	},

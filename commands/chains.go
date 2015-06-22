@@ -90,7 +90,7 @@ var chainsList = &cobra.Command{
 var chainsEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit a blockchain.",
-	Long: `Edit a blockchain definition file.`,
+	Long:  `Edit a blockchain definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Edit(cmd, args)
 	},

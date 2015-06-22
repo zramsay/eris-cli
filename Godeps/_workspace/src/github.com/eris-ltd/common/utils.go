@@ -20,10 +20,10 @@ import (
 
 var (
 	// Convenience Directories
-	GoPath          = os.Getenv("GOPATH")
-	ErisLtd         = path.Join(GoPath, "src", "github.com", "eris-ltd")
-	usr, _          = user.Current() // error?!
-	ErisRoot        = ResolveErisRoot()
+	GoPath   = os.Getenv("GOPATH")
+	ErisLtd  = path.Join(GoPath, "src", "github.com", "eris-ltd")
+	usr, _   = user.Current() // error?!
+	ErisRoot = ResolveErisRoot()
 
 	// Major Directories
 	ActionsPath        = path.Join(ErisRoot, "actions")
@@ -43,8 +43,8 @@ var (
 	SerpScratchPath = path.Join(ScratchPath, "ser")
 
 	// Blockchains stuff
-	HEAD            = path.Join(BlockchainsPath, "HEAD")
-	Refs            = path.Join(BlockchainsPath, "refs")
+	HEAD = path.Join(BlockchainsPath, "HEAD")
+	Refs = path.Join(BlockchainsPath, "refs")
 )
 
 var MajorDirs = []string{
