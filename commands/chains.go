@@ -48,70 +48,85 @@ func addChainsFlags() {
 // flags to add: --list-versions
 var chainsListKnown = &cobra.Command{
 	Use:   "known",
-	Short: "List all the blockchain types Eris can install.",
-	Long: `Lists the blockchain types which Eris can install for your platform. To install
-a service, use: eris chains install.`,
+	Short: "List all the blockchains Eris knows about.",
+	Long: `Lists the blockchains which Eris has installed for you.
+
+To has a new blockchain from a chain definition file, use: [eris chains new].
+To install a new blockchain from a chain definition file, use: [eris chains install].
+To install a new chain definition file, use: [eris chains import].
+
+Services include all executable chains supported by the Eris platform which are
+NOT blockchains or key managers.
+
+Services are handled using the [eris services] command.
+
+Key management is handled using hte [eris keys] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.ListKnown()
 	},
 }
 
-// install a blockchain library for your machine
 var chainsInstall = &cobra.Command{
-	Use:   "install [type] [version]",
-	Short: "Installs a blockchain library for your platform.",
-	Long: `Installs a blockchain library for your platform.  By default, Eris will install
-the most recent version of a service unless another version is
-passed as an argument. To list known services use:
-[eris chains known].`,
+	Use:   "install [chainID]",
+	Short: "Install a blockchain.",
+	Long: `Install a blockchain.
+
+Still a WIP.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Install(cmd, args)
 	},
 }
 
-// new
 // flags to add: --type, --genesis, --config, --checkout, --force-name
 var chainsNew = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Hashes a new blockchain.",
 	Long: `Hashes a new blockchain.
 
-Will use a default genesis.json unless a --genesis flag is passed.`,
+Will use a default genesis.json unless a --genesis flag is passed.
+Still a WIP.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.New(cmd, args)
 	},
 }
 
-// install a service
 var chainsImport = &cobra.Command{
 	Use:   "import [name] [location]",
-	Short: "Import a Known Service Locally.",
+	Short: "Import a chain definition file from Github or IPFS.",
 	Long: `Import a chain definition for your platform.
-By default, Eris will install the most recent version of a
-chain definition unless another version is passed
-as an argument. To list known chains use:
-[eris chains known].`,
+
+By default, Eris will import from ipfs.
+
+To list known chains use: [eris chains known].`,
+	Example: "  eris chains 2gather ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Import(cmd, args)
 	},
 }
 
-// list
 // flags to add: --current, --short, --all
 var chainsList = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists all known blockchains in the Eris tree.",
-	Long:  `Lists all known blockchains in the Eris tree.`,
+	Long:  `Lists all known blockchains in the Eris tree.
+
+To list the known chains: [eris chains known]
+To list the running chains: [eris chains ps]
+To start a chain use: [eris chains start chainName].
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.ListChains()
 	},
 }
 
-// edit
 var chainsEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit a blockchain.",
-	Long:  `Edit a blockchain definition file.`,
+	Long:  `Edit a blockchain definition file.
+
+
+Edit will utilize your default editor.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Edit(cmd, args)
 	},
@@ -122,7 +137,14 @@ var chainsEdit = &cobra.Command{
 var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
-	Long:  `Start a blockchain.`,
+	Long:  `Start a blockchain.
+
+[eris chains start name] by default will put the chain into the
+background so its logs will not be viewable from the command line.
+
+To stop the chain use:      [eris chains stop chainName].
+To view a chain's logs use: [eris chains logs chainName].
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Start(cmd, args)
 	},
@@ -133,7 +155,7 @@ var chainsStart = &cobra.Command{
 var chainsLogs = &cobra.Command{
 	Use:   "logs",
 	Short: "Display the logs of a blockchain.",
-	Long:  `Display the logs of a running blockchain.`,
+	Long:  `Display the logs of a blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Logs(cmd, args)
 	},
@@ -152,8 +174,8 @@ var chainsListRunning = &cobra.Command{
 // stop
 var chainsStop = &cobra.Command{
 	Use:   "stop [name]",
-	Short: "Stop a running blockchains.",
-	Long:  `Stop a running blockchains.`,
+	Short: "Stop a running blockchain.",
+	Long:  `Stop a running blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Kill(cmd, args)
 	},
@@ -165,10 +187,12 @@ var chainsInspect = &cobra.Command{
 	Short: "Machine readable chain operation details.",
 	Long: `Displays machine readable details about running containers.
 
-The currently supported range of [key] is:
-
-* container -- returns the chain's containerID
-`,
+Information available to the inspect command is provided by the
+Docker API. For more information about return values,
+see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
+	Example: `  eris chains inspect 2gather -> will display the entire information about 2gather containers
+  eris chains inspect 2gather name -> will display the name in machine readable format
+  eris chains inspect 2gather host_config.binds -> will display only that value`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Inspect(cmd, args)
 	},
@@ -187,7 +211,6 @@ Command will return a machine readable version of the IPFS hash
 	},
 }
 
-// rename
 var chainsRename = &cobra.Command{
 	Use:   "rename [old] [new]",
 	Short: "Rename a blockchain.",
@@ -197,26 +220,35 @@ var chainsRename = &cobra.Command{
 	},
 }
 
-// rm
-// flags to add: --force (no confirm), --clean
 var chainsRemove = &cobra.Command{
 	Use:   "rm [name]",
-	Short: "Remove a blockchain's reference from Eris tree.",
-	Long: `Remove a blockchain's reference from Eris tree.
+	Short: "Removes an installed chain.",
+	Long:  `Removes an installed chain.
 
-[eris chains rm] does not remove any data, just removes
-the reference from eris' tree of blockchains. To remove
-the blockchain data from the node use: [eris chains clean].`,
+Command will remove the chain's container but will not
+remove the chain definition file.
+
+Use the --force flag to also remove the chain definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Rm(cmd, args)
 	},
 }
 
-// update
 var chainsUpdate = &cobra.Command{
-	Use:   "update [type]",
-	Short: "Update a blockchain library.",
-	Long:  `Update a blockchain library.`,
+	Use:   "update [name]",
+		Short: "Updates an installed chain.",
+		Long:  `Updates an installed chain, or installs it if it has not been installed.
+
+Functionally this command will perform the following sequence:
+
+1. Stop the chain (if it is running)
+2. Remove the container which ran the chain
+3. Pull the image the container uses from a hub
+4. Rebuild the container from the updated image
+5. Restart the chain (if it was previously running)
+
+**NOTE**: If the chain uses data containers those will not be affected
+by the update command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Update(cmd, args)
 	},

@@ -46,12 +46,17 @@ func addServicesFlags() {
 // flags to add: --list-versions
 var servicesListKnown = &cobra.Command{
 	Use:   "known",
-	Short: "List all the services which Eris can install.",
-	Long: `Lists the services which eris can install for your platform. To install
-a service, use: [eris services install].
+	Short: "List all the services Eris knows about.",
+	Long: `Lists the services which Eris has installed for you.
+
+To install a new service, use: [eris services import].
 
 Services include all executable services supported by the Eris platform which are
-NOT blockchains. Blockchains are handled using the [eris chains] command.`,
+NOT blockchains or key managers.
+
+Blockchains are handled using the [eris chains] command.
+
+Key management is handled using hte [eris keys] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.ListKnown()
 	},
@@ -60,11 +65,13 @@ NOT blockchains. Blockchains are handled using the [eris chains] command.`,
 // install a service
 var servicesImport = &cobra.Command{
 	Use:   "import [name] [location]",
-	Short: "Import a Known Service Locally.",
-	Long: `Import a service for your platform. By default, Eris will install the
-most recent version of a service unless another version is passed
-as an argument. To list known services use:
-[eris services known].`,
+	Short: "Import a service definition file from Github or IPFS.",
+	Long: `Import a service for your platform.
+
+By default, Eris will import from ipfs.
+
+To list known services use: [eris services known].`,
+	Example: "  eris services import eth ipfs:QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Import(cmd, args)
 	},
@@ -73,9 +80,14 @@ as an argument. To list known services use:
 // new
 // flags to add: --type, --genesis, --config, --checkout, --force-name
 var servicesNew = &cobra.Command{
-	Use:   "new [name]",
+	Use:   "new [name] [image]",
 	Short: "Creates a new service.",
-	Long:  `Creates a new service.`,
+	Long:  `Creates a new service.
+
+Command must be given a name and a Container Image using standard
+docker format of [repository/organization/image].`,
+	Example: `  eris new eth eris/eth
+  eris new mint tutum.co/tendermint/tendermint`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.New(cmd, args)
 	},
@@ -84,48 +96,54 @@ var servicesNew = &cobra.Command{
 // ls lists the services available locally
 var servicesListExisting = &cobra.Command{
 	Use:   "ls",
-	Short: "List the installed services.",
-	Long: `Lists the installed services which eris knows about. To start a service
-use: [eris services start service].`,
+	Short: "List the installed and built services.",
+	Long: `Lists the installed and built services which Eris knows about.
+
+To list the known services: [eris services known]
+To list the running services: [eris services ps]
+To start a service use: [eris services start serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.ListExisting()
 	},
 }
 
-// configure a service definition
 var servicesEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit a service.",
-	Long: `Edit a service which is kept in ~/.eris/services.
+	Long: `Edit a service definition file which is kept in ~/.eris/services.
+
+Edit will utilize your default editor.
 
 NOTE: Do not use this command for configuring a *specific* service. This
 command will only operate on *service configuration file* which tell Eris
-how to start and stop a specific service. How that service is used for a
-specific project is handled from project definition files. For more
-information on project definition files please see: [eris help projects].`,
+how to start and stop a specific service.
+
+How that service is used for a specific project is handled from project
+definition files.
+
+For more information on project definition files please see: [eris help projects].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Edit(cmd, args)
 	},
 }
 
-// start a service
 // flags to add: --identity (alias for --key), --foreground
 var servicesStart = &cobra.Command{
 	Use:   "start [name]",
 	Short: "Start a service.",
-	Long: `Starts a service according to the service operational definition file which
-eris stores in the ~/.eris/services directory. To stop the service use:
-[eris services kill service].
+	Long: `Starts a service according to the service definition file which
+eris stores in the ~/.eris/services directory.
 
 [eris services start name] by default will put the service into the
 background so its logs will not be viewable from the command line.
-To view a service's logs use [eris services logs name].`,
+
+To stop the service use:      [eris services stop serviceName].
+To view a service's logs use: [eris services logs serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Start(cmd, args)
 	},
 }
 
-// ps lists the services which are currently running
 // flags to add: --all (list installed)
 var servicesListRunning = &cobra.Command{
 	Use:   "ps",
@@ -136,22 +154,22 @@ var servicesListRunning = &cobra.Command{
 	},
 }
 
-// inspect running containers
 var servicesInspect = &cobra.Command{
 	Use:   "inspect [serviceName] [key]",
 	Short: "Machine readable service operation details.",
 	Long: `Displays machine readable details about running containers.
 
-The currently supported range of [key] is:
-
-* container -- returns the service's containerID
-`,
+Information available to the inspect command is provided by the
+Docker API. For more information about return values,
+see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
+	Example: `  eris services inspect ipfs -> will display the entire information about ipfs containers
+  eris services inspect ipfs name -> will display the name in machine readable format
+  eris services inspect ipfs host_config.binds -> will display only that value`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Inspect(cmd, args)
 	},
 }
 
-// export a service definition file to ipfs
 var servicesExport = &cobra.Command{
 	Use:   "export [serviceName]",
 	Short: "Export a service definition file to IPFS.",
@@ -164,7 +182,6 @@ Command will return a machine readable version of the IPFS hash
 	},
 }
 
-// logs [name] displays the logs of a running service
 // flags to add: --tail
 var servicesLogs = &cobra.Command{
 	Use:   "logs [name]",
@@ -179,7 +196,7 @@ var servicesLogs = &cobra.Command{
 var servicesStop = &cobra.Command{
 	Use:   "stop [name]",
 	Short: "Stops a running service.",
-	Long:  `Stops a services which is currently running.`,
+	Long:  `Stops a service which is currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Kill(cmd, args)
 	},
@@ -187,7 +204,7 @@ var servicesStop = &cobra.Command{
 
 // renames an installed service
 var servicesRename = &cobra.Command{
-	Use:   "rename [name]",
+	Use:   "rename [oldName] [newName]",
 	Short: "Renames an installed service.",
 	Long:  `Renames an installed service.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -196,21 +213,38 @@ var servicesRename = &cobra.Command{
 }
 
 // updates an installed service
+// falts to add: --no-pull
 var servicesUpdate = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Updates an installed service.",
-	Long:  `Updates an installed service, or installs it if it has not been installed.`,
+	Long:  `Updates an installed service, or installs it if it has not been installed.
+
+Functionally this command will perform the following sequence:
+
+1. Stop the service (if it is running)
+2. Remove the container which ran the service
+3. Pull the image the container uses from a hub
+4. Rebuild the container from the updated image
+5. Restart the service (if it was previously running)
+
+**NOTE**: If the service uses data containers those will not be affected
+by the update command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Update(cmd, args)
 	},
 }
 
 // rm [name] removes a service
-// flags to add: --all (?), --force (no confirm)
+// flags to add: --force (includes the service definition file)
 var servicesRm = &cobra.Command{
 	Use:   "rm [name]",
 	Short: "Removes an installed service.",
-	Long:  `Removes an installed service.`,
+	Long:  `Removes an installed service.
+
+Command will remove the service's container but will not
+remove the service definition file.
+
+Use the --force flag to also remove the service definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Rm(cmd, args)
 	},

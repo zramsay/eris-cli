@@ -56,7 +56,7 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 }
 
 func IPFSBaseUrl() string {
-	host := "http://localhost:8080"
+	host := "http://0.0.0.0:8080"
 	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
 		host = "http://ipfs:8080"
 	}
