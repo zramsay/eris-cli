@@ -28,12 +28,16 @@ to how a circle.yml file may operate.`,
 func buildActionsCommand() {
 	Actions.AddCommand(actionsGet)
 	Actions.AddCommand(actionsNew)
-	Actions.AddCommand(actionsAdd)
 	Actions.AddCommand(actionsList)
 	Actions.AddCommand(actionsDo)
 	Actions.AddCommand(actionsEdit)
 	Actions.AddCommand(actionsRename)
 	Actions.AddCommand(actionsRemove)
+	addActionsFlags()
+}
+
+func addActionsFlags() {
+	actionsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 }
 
 // get an actions definition file from a remote (currently limited to github.com and ipfs)
@@ -45,7 +49,7 @@ or ipfs).
 
 NOTE: This functionality is currently limited to github.com and IPFS.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		act.Get(args)
+		act.Get(cmd, args)
 	},
 }
 
@@ -57,22 +61,6 @@ var actionsNew = &cobra.Command{
 	Long:  `Create a new action definition file optionally from a template.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		act.New(cmd, args)
-	},
-}
-
-// add
-var actionsAdd = &cobra.Command{
-	Use:   "add [name] [action-definition-file]",
-	Short: "Adds an action to Eris.",
-	Long: `Actions must be an array of executable commands which will be
-called according to the machine definition included in
-eris config. Actions may be stored in JSON, TOML, or YAML.
-Globally accessible actions are stored in the actions
-directory of the eris tree. Project accessible actions
-are stored in a directory pointed to by the actions field
-of the currently checked out project.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		act.Add(args)
 	},
 }
 
@@ -113,7 +101,7 @@ var actionsRename = &cobra.Command{
 	Short: "Rename an action.",
 	Long:  `Rename an action.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		act.Rename(args)
+		act.Rename(cmd, args)
 	},
 }
 
@@ -123,6 +111,6 @@ var actionsRemove = &cobra.Command{
 	Short: "Remove an action definition file.",
 	Long:  `Remove an action definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		act.Remove(args)
+		act.Rm(cmd, args)
 	},
 }

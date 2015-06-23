@@ -8,6 +8,8 @@ type Action struct {
   Steps       []string          `json:"steps" yaml:"steps" toml:"steps"`
   Environment map[string]string `json:"environment,omitempty" yaml:"environment,omitempty" toml:"environment,omitempty"`
 
-  // Used internally
-  lastRan    string
+  Maintainer  *Maintainer       `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
+  Location    *Location         `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+  Machine     *Machine          `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
+  Operations  *ServiceOperation `json:"operations" yaml:"operations" toml:"operations"`
 }

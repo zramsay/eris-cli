@@ -10,51 +10,22 @@ import (
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/services"
 
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
 func Do(cmd *cobra.Command, args []string) {
 	verbose := cmd.Flags().Lookup("verbose").Changed
-	action, actionVars := loadActionConfigAndVars(args)
-	startServicesAndChains(cmd, action, verbose)
-	PerformCommand(action, actionVars, verbose)
-}
-
-func loadActionConfigAndVars(act []string) (*def.Action, []string) {
-	var action def.Action
-	var actionConf = viper.New()
-	var actionVars []string
-	var varList bool
-
-	for n, a := range act {
-		if strings.Contains(a, ":") {
-			actionVars = append(actionVars, strings.Replace(a, ":", "=", 1))
-			if varList {
-				continue
-			}
-			act = append(act[:n])
-			varList = true
-		}
-	}
-
-	actionConf.AddConfigPath(dir.ActionsPath)
-	actionConf.SetConfigName(strings.Join(act, "_"))
-	actionConf.ReadInConfig()
-
-	err := actionConf.Marshal(&action)
+	action, actionVars, err := LoadActionDefinition(args)
 	if err != nil {
-		// TODO: error handling
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	return &action, actionVars
+	StartServicesAndChains(cmd, action, verbose)
+	PerformCommand(action, actionVars, verbose)
 }
 
-func startServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool) {
+func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool) {
 	// start the services and chains
 	var wg sync.WaitGroup
 	var skip bool
