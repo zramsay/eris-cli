@@ -2,8 +2,11 @@ package chains
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -20,14 +23,36 @@ import (
 
 //----------------------------------------------------------------------
 
+// fetch and install a chain
 func Install(cmd *cobra.Command, args []string) {
+	checkChainGiven(args)
+	chainID := args[0]
+
+	chainType := cmd.Flags().Lookup("type").Value.String()
+	config := cmd.Flags().Lookup("config").Value.String()
+	dir := cmd.Flags().Lookup("dir").Value.String()
+
+	if err := InstallChainRaw(chainType, chainID, config, dir); err != nil {
+		fmt.Println(err)
+	}
 
 }
 
+// create a new chain
+// TODO: interactive option for building genesis?
 func New(cmd *cobra.Command, args []string) {
+	chainType := cmd.Flags().Lookup("type").Value.String()
+	genesis := cmd.Flags().Lookup("genesis").Value.String()
+	config := cmd.Flags().Lookup("config").Value.String()
+	dir := cmd.Flags().Lookup("dir").Value.String()
+
+	if err := NewChainRaw(chainType, genesis, config, dir); err != nil {
+		fmt.Println(err)
+	}
 
 }
 
+// import a chain definition file
 func Import(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	if len(args) != 2 {
@@ -37,6 +62,7 @@ func Import(cmd *cobra.Command, args []string) {
 	IfExit(ImportChainRaw(args[0], args[1]))
 }
 
+// edit a chain definition file
 func Edit(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	name := args[0]
@@ -109,6 +135,111 @@ func Rm(cmd *cobra.Command, args []string) {
 }
 
 //----------------------------------------------------------------------
+
+func getChainIDFromGenesis(genesis, dir string) (string, error) {
+	var hasChainID = struct {
+		ChainID string `json:"chain_id"`
+	}{}
+
+	if genesis == "" {
+		genesis = path.Join(dir, "genesis.json")
+		if _, err := os.Stat(genesis); err != nil {
+			// (if no genesis, we'll have to
+			// copy into a random "scratch" location,
+			// start the node so it lays a genesis, read the chainid
+			// from that, and then copy to appropriate destination, sigh)
+			return "", fmt.Errorf("Please provide a genesis.json explicitly or in a specified directory")
+		}
+	}
+
+	b, err := ioutil.ReadFile(genesis)
+	if err != nil {
+		return "", fmt.Errorf("Error reading genesis file: %v", err)
+	}
+
+	if err = json.Unmarshal(b, &hasChainID); err != nil {
+		return "", fmt.Errorf("Error reading chain id from genesis file: %v", err)
+	}
+
+	chainID := hasChainID.ChainID
+	if chainID == "" {
+		return "", fmt.Errorf("Genesis file must contain chain_id field")
+	}
+	return chainID, nil
+}
+
+func NewChainRaw(chainType, genesis, config, dir string) error {
+	if chainType == "" {
+		return fmt.Errorf("Please specify a chain type with the --type flag")
+	}
+
+	// read chainID from genesis. genesis may be in dir
+	chainID, err := getChainIDFromGenesis(genesis, dir)
+	if err != nil {
+		return err
+	}
+
+	// setup data container and service container
+	chain, err := LoadChainDefinition(chainType)
+	if err != nil {
+		return err
+	}
+
+	// run containers and exit (creates data container)
+	chain.Service.Command = fmt.Sprintf("echo \"Creating new %s containers with chainID %s\"", chainType, chainID)
+	if err := perform.DockerCreateDataContainer(chainID); err != nil {
+		return fmt.Errorf("Error creating data container %v", err)
+	}
+
+	// copy dir, genesis, config into container
+	dst := path.Join(DataContainersPath, chainID, "blockchains", chainType, chainID)
+	if err := os.MkdirAll(dst, 0700); err != nil {
+		return fmt.Errorf("Error making data directory: %v", err)
+	}
+
+	if dir != "" {
+		if err := Copy(dir, dst); err != nil {
+			return err
+		}
+	}
+	if genesis != "" {
+		if err := Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
+			return err
+		}
+	}
+	if config != "" {
+		if err := Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
+			return err
+		}
+	}
+
+	// copy from host to container
+	if err := data.ImportDataRaw(chainID); err != nil {
+		return err
+	}
+
+	// run "new" cmd in chains definition
+	// typically this should parse the genesis and write
+	// a genesis state to the db. we might also have it
+	// post the new chain's id and other info to an etcb, etc. (pun intended)
+	chain.Service.Command = chain.Manage.NewCmd
+	containerNumber := 1
+	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", chainID, containerNumber)
+	chain.Operations.Remove = true
+	services.StartServiceByService(chain.Service, chain.Operations)
+	return nil
+}
+
+func InstallChainRaw(chainType, chainID, config, dir string) error {
+	// check known chain type, or if empty default to mint
+
+	// setup data container and service container
+
+	// create dir, possibly copy in config and dir if present
+
+	// run "fetch" cmd in chains definition
+	return nil
+}
 
 func ImportChainRaw(chainName, path string) error {
 	fileName := filepath.Join(BlockchainsPath, chainName)

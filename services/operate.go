@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/perform"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/perform"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
@@ -83,8 +83,7 @@ func KillServiceRaw(servName string) error {
 	}
 
 	if IsServiceRunning(service.Service) {
-		err := KillServiceByService(service.Service, service.Operations)
-		if err != nil {
+		if err := KillServiceByService(service.Service, service.Operations); err != nil {
 			return err
 		}
 	} else {

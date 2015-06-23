@@ -25,13 +25,13 @@ import (
 //   Client version: 1.6.2
 //   Client API version: 1.18
 func DockerCreateDataContainer(srvName string) error {
-	logger.Infoln("Starting Service: " + srvName)
+	logger.Infoln("Starting Data Container for Service: " + srvName)
 
 	srv := def.Service{}
 	ops := def.ServiceOperation{}
 	containerNumber := 1
 	ops.DataContainerName = "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
-	optsData, err := configureDataContainer(&srv, &ops, &docker.CreateContainerOptions{})
+	optsData, err := configureDataContainer(&srv, &ops, nil)
 	if err != nil {
 		return err
 	}
@@ -93,25 +93,26 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 }
 
 func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
-	var id_main string
-	var id_data string
+	var id_main, id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
 	var dataContCreated *docker.Container
 
 	logger.Infoln("Starting Service: " + srv.Name)
 
-	// configure
+	// copy service config into docker client config
 	optsServ, err := configureContainer(srv, ops)
 	if err != nil {
 		return err
 	}
 
+	// fix volume paths
 	srv.Volumes, err = fixDirs(srv.Volumes)
 	if err != nil {
 		return err
 	}
 
+	// setup data container
 	if ops.DataContainer {
 		logger.Infoln("You've asked me to manage the data containers. I shall do so good human.")
 		optsData, err = configureDataContainer(srv, ops, &optsServ)

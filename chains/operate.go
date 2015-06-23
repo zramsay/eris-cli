@@ -47,8 +47,8 @@ func StartChainRaw(chainName string) error {
 	if IsChainRunning(chain) {
 		logger.Infoln("Chain already started. Skipping.")
 	} else {
-		err := services.StartServiceByService(chain.Service, chain.Operations)
-		if err != nil {
+		chain.Service.Command = chain.Manage.RunCmd
+		if err := services.StartServiceByService(chain.Service, chain.Operations); err != nil {
 			return err
 		}
 	}
