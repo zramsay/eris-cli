@@ -48,7 +48,7 @@ var configPlop = &cobra.Command{
 	Short: "Display the config for the Eris Platform CLI.",
 	Long:  `Display the config for the Eris Platform CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.PlopEntireConfig(globalConfig, args)
+		// config.PlopEntireConfig(globalConfig, args)
 	},
 }
 

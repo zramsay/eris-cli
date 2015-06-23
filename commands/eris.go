@@ -4,7 +4,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	// "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
 const VERSION = "0.10.0"
@@ -69,9 +69,8 @@ func AddGlobalFlags() {
 }
 
 // Properly scope the globalConfig
-var globalConfig *viper.Viper
+// var globalConfig *viper.Viper
 
 func InitializeConfig() {
-	globalConfig = viper.New()
-	util.LoadGlobalConfig(globalConfig)
+	// globalConfig = util.LoadGlobalConfig()
 }

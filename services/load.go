@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,36 +15,43 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadServiceDefinition(servName string) *def.ServiceDefinition {
+func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
 	var service def.ServiceDefinition
 	serviceConf := loadServiceDefinition(servName)
 
 	// marshal service and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
 	// have occured in the interim they are caught.
-	marshalServiceDefinition(serviceConf, &service)
 	service.Operations = &def.ServiceOperation{}
-
-	if service.Service == nil {
-		return &service
+	err := marshalServiceDefinition(serviceConf, &service)
+	if err != nil {
+		return &def.ServiceDefinition{}, err
 	}
 
-	checkServiceHasImage(service.Service)
+	if service.Service == nil {
+		return &service, fmt.Errorf("No service given.")
+	}
+
+	err = checkServiceHasImage(service.Service)
+	if err != nil {
+		return &def.ServiceDefinition{}, err
+	}
+
 	checkServiceHasName(service.Service, service.Operations)
 	checkServiceHasDataContainer(serviceConf, service.Service, service.Operations)
 	checkDataContainerHasName(service.Operations)
 
-	return &service
+	return &service, nil
 }
 
-func LoadService(servName string) *def.Service {
-	sd := LoadServiceDefinition(servName)
-	return sd.Service
+func LoadService(servName string) (*def.Service, error) {
+	sd, err := LoadServiceDefinition(servName)
+	return sd.Service, err
 }
 
-func LoadServiceOperation(servName string) *def.ServiceOperation {
-	sd := LoadServiceDefinition(servName)
-	return sd.Operations
+func LoadServiceOperation(servName string) (*def.ServiceOperation, error) {
+	sd, err := LoadServiceDefinition(servName)
+	return sd.Operations, err
 }
 
 func IsServiceExisting(service *def.Service) bool {
@@ -71,29 +77,30 @@ func servDefFileByServName(servName string) string {
 	return serviceConf.ConfigFileUsed()
 }
 
-func marshalServiceDefinition(serviceConf *viper.Viper, service *def.ServiceDefinition) {
+func marshalServiceDefinition(serviceConf *viper.Viper, service *def.ServiceDefinition) error {
 	err := serviceConf.Marshal(service)
 	if err != nil {
-		// TODO: error handling
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
 }
 
-func checkServiceGiven(args []string) {
+func checkServiceGiven(args []string) error {
 	if len(args) == 0 {
-		// TODO: betterly error handling
-		fmt.Println("No Service Given. Please rerun command with a known service.")
-		os.Exit(1)
+		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
 	}
+
+	return nil
 }
 
-func checkServiceHasImage(service *def.Service) {
-	// Services must be given an image. Flame out if they do not.
+// Services must be given an image. Flame out if they do not.
+func checkServiceHasImage(service *def.Service) error {
 	if service.Image == "" {
-		fmt.Println("An \"image\" field is required in the service definition file.")
-		os.Exit(1)
+		return fmt.Errorf("An \"image\" field is required in the service definition file.")
 	}
+
+	return nil
 }
 
 func checkServiceHasName(service *def.Service, ops *def.ServiceOperation) {

@@ -10,27 +10,27 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/ebuchman/go-shell-pipes"
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 func Import(cmd *cobra.Command, args []string) {
-	checkServiceGiven(args)
-	ImportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	common.IfExit(checkServiceGiven(args))
+	common.IfExit(ImportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
 }
 
 func Export(cmd *cobra.Command, args []string) {
-	checkServiceGiven(args)
-	ExportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	common.IfExit(checkServiceGiven(args))
+	common.IfExit(ExportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
 }
 
-func ImportDataRaw(name string, verbose bool) {
+func ImportDataRaw(name string, verbose bool, w io.Writer) error {
 	if parseKnown(name) {
 
 		containerName := nameToContainerName(name)
-		importPath := filepath.Join(dir.DataContainersPath, name)
+		importPath := filepath.Join(common.DataContainersPath, name)
 
 		// temp until docker cp works both ways.
 		os.Chdir(importPath)
@@ -38,41 +38,39 @@ func ImportDataRaw(name string, verbose bool) {
 
 		s, err := pipes.RunString(cmd)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
 		if verbose {
-			fmt.Println(s)
+			w.Write([]byte(s))
 		}
 	} else {
-		fmt.Println("I cannot find that data container. Please check the data container name you sent me.")
+		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+
+	return nil
 }
 
-func ExportDataRaw(name string, verbose bool) {
+func ExportDataRaw(name string, verbose bool, w io.Writer) error {
 	if parseKnown(name) {
 		if verbose {
-			fmt.Println("Exporting data container", name)
+			w.Write([]byte("Exporting data container" + name))
 		}
 
-		exportPath := filepath.Join(dir.DataContainersPath, name)
+		exportPath := filepath.Join(common.DataContainersPath, name)
 		_, ops := mockService(name)
 		service, exists := perform.ContainerExists(ops)
 
 		if !exists {
-			fmt.Println("There is no data container for that service.")
-			os.Exit(0)
+			return fmt.Errorf("There is no data container for that service.")
 		}
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
 
 		cont, err := util.DockerClient.InspectContainer(service.ID)
 		if err != nil {
-			// TODO: better error handling
-			fmt.Printf("Failed to inspect container (%s) ->\n  %v\n", service.ID, err)
-			os.Exit(1)
+			return err
 		}
 
 		var dest string
@@ -92,36 +90,36 @@ func ExportDataRaw(name string, verbose bool) {
 		}
 
 		go func() {
-			err := util.DockerClient.CopyFromContainer(opts)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			common.IfExit(util.DockerClient.CopyFromContainer(opts))
 			writer.Close()
 		}()
-		_ = util.Untar(reader, name, exportPath)
+
+		err = util.Untar(reader, name, exportPath)
+		if err != nil {
+			return err
+		}
 
 		var toMove []string
 		os.Chdir(exportPath)
 		toMove, err = filepath.Glob(filepath.Join(dest, "*"))
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
 		for _, f := range toMove {
 			err = os.Rename(f, filepath.Join(exportPath, filepath.Base(f)))
 			if err != nil {
-				// TODO: better errors
-				fmt.Println(err)
-				continue
+				return err
 			}
 		}
 		err = os.RemoveAll(dest)
+		if err != nil {
+			return err
+		}
 
 	} else {
-		if verbose {
-			fmt.Println("I cannot find that data container. Please check the data container name you sent me.")
-		}
+		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+
+	return nil
 }

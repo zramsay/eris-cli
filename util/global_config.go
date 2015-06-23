@@ -3,23 +3,50 @@ package util
 import (
 	// "os"
 	// "fmt"
+	"io"
 
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func SetDefaultSettings(globalConfig *viper.Viper) {
-	globalConfig.SetDefault("1234", false)
+type ErisCli struct {
+	Writer         *io.Writer
+	ErrorWriter    *io.Writer
+	Config         *ErisConfig
 }
 
-func LoadGlobalConfig(globalConfig *viper.Viper) {
-	SetDefaultSettings(globalConfig)
+type ErisConfig struct {
+	IpfsHost       string        `json:"," yaml:"," toml:","`
+	DockerHost     string        `json:"," yaml:"," toml:","`
+	DockerCertPath string        `json:"," yaml:"," toml:","`
+	CompilersHost  string        `json:"," yaml:"," toml:","`
+
+	Verbose        bool
+}
+
+func SetGlobalObject(globalConfig *viper.Viper, writer, errorWriter *io.Writer) (*ErisCli, error) {
+	e := &ErisCli{
+		Writer:      writer,
+		ErrorWriter: errorWriter,
+		// Config:      LoadGlobalConfig(),
+	}
+
+	return e, nil
+}
+
+func LoadGlobalConfig() error {
+	// SetDefaultSettings(globalConfig)
+	globalConfig := viper.New()
 	globalConfig.AddConfigPath(dir.ErisRoot)
-	globalConfig.SetConfigType("json")
 	globalConfig.SetConfigName("config")
 	// err := globalConfig.ReadInConfig()
 	// if err != nil {
-	// 	fmt.Println("Fatal error config file ->\n  %v", err)
-	// 	os.Exit(1)
+	// 	return err
 	// }
+	return nil
+}
+
+func SetDefaultSettings(globalConfig *viper.Viper) {
+	// globalConfig.SetDefault("1234", false)
+
 }

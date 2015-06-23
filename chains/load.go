@@ -37,9 +37,15 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 
 	var serv *def.Service
 	if chain.Type != "" {
-		serv = services.LoadService(chain.Type)
+		serv, err = services.LoadService(chain.Type)
+		if err != nil {
+			return &def.Chain{}, err
+		}
 	} else {
-		serv = services.LoadService(chainName)
+		serv, err = services.LoadService(chainName)
+		if err != nil {
+			return &def.Chain{}, err
+		}
 		chain.Name = serv.Name
 		chain.Type = serv.Name
 	}
@@ -177,11 +183,11 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 //----------------------------------------------------------------------
 // validation funcs
 
-func checkChainGiven(args []string) {
+func checkChainGiven(args []string) error {
 	if len(args) == 0 {
-		fmt.Println("No ChainName Given. Please rerun command with a known chain.")
-		os.Exit(1)
+		return fmt.Errorf("No ChainName Given. Please rerun command with a known chain.")
 	}
+	return nil
 }
 
 func checkChainHasUniqueName(chain *def.Chain) {

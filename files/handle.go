@@ -37,7 +37,10 @@ func Put(cmd *cobra.Command, args []string) {
 }
 
 func GetFilesRaw(hash, fileName string, verbose bool, w io.Writer) error {
-  ipfsService := services.LoadServiceDefinition("ipfs")
+  ipfsService, err := services.LoadServiceDefinition("ipfs")
+  if err != nil {
+    return err
+  }
 
   if services.IsServiceRunning(ipfsService.Service) {
     if verbose {
@@ -53,9 +56,12 @@ func GetFilesRaw(hash, fileName string, verbose bool, w io.Writer) error {
     if verbose {
       w.Write([]byte("IPFS is not running. Starting now."))
     }
-    services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
+    err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
+    if err != nil {
+      return err
+    }
 
-    err := importFile(hash, fileName, verbose, w)
+    err = importFile(hash, fileName, verbose, w)
     if err != nil {
       return err
     }
@@ -64,7 +70,10 @@ func GetFilesRaw(hash, fileName string, verbose bool, w io.Writer) error {
 }
 
 func PutFilesRaw(fileName string, verbose bool, w io.Writer) error {
-  ipfsService := services.LoadServiceDefinition("ipfs")
+  ipfsService, err := services.LoadServiceDefinition("ipfs")
+  if err != nil {
+    return err
+  }
 
   if services.IsServiceRunning(ipfsService.Service) {
     if verbose {
@@ -80,9 +89,12 @@ func PutFilesRaw(fileName string, verbose bool, w io.Writer) error {
     if verbose {
       w.Write([]byte("IPFS is not running. Starting now."))
     }
-    services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
+    err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
+    if err != nil {
+      return err
+    }
 
-    err := exportFile(fileName, verbose, w)
+    err = exportFile(fileName, verbose, w)
     if err != nil {
       return err
     }

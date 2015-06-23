@@ -2,6 +2,8 @@ package chains
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/eris-ltd/eris-cli/services"
 
@@ -12,58 +14,65 @@ import (
 //----------------------------------------------------------------------
 
 func Start(cmd *cobra.Command, args []string) {
-	checkChainGiven(args)
-	IfExit(StartChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
+	IfExit(checkChainGiven(args))
+	IfExit(StartChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
-	checkChainGiven(args)
-	IfExit(LogsChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
+	IfExit(checkChainGiven(args))
+	IfExit(LogsChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
-	checkChainGiven(args)
-	IfExit(KillChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed))
+	IfExit(checkChainGiven(args))
+	IfExit(KillChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
 }
 
 //----------------------------------------------------------------------
 
-func StartChainRaw(chainName string, verbose bool) error {
+func StartChainRaw(chainName string, verbose bool, w io.Writer) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
 	if IsChainRunning(chain) {
 		if verbose {
-			fmt.Println("Chain already started. Skipping.")
+			w.Write([]byte("Chain already started. Skipping."))
 		}
 	} else {
-		services.StartServiceByService(chain.Service, chain.Operations, verbose)
+		err := services.StartServiceByService(chain.Service, chain.Operations, verbose, w)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func LogsChainRaw(chainName string, verbose bool) error {
+func LogsChainRaw(chainName string, verbose bool, w io.Writer) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	services.LogsServiceByService(chain.Service, chain.Operations, verbose)
+	err = services.LogsServiceByService(chain.Service, chain.Operations, verbose, w)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func KillChainRaw(chainName string, verbose bool) error {
+func KillChainRaw(chainName string, verbose bool, w io.Writer) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
 
 	if IsChainRunning(chain) {
-		services.KillServiceByService(chain.Service, chain.Operations, verbose)
-	} else {
-		if verbose {
-			fmt.Println("Chain not currently running. Skipping.")
+		err := services.KillServiceByService(chain.Service, chain.Operations, verbose, w)
+		if err != nil {
+			return err
 		}
+	} else {
+		return fmt.Errorf("Chain not currently running. Skipping.")
 	}
 	return nil
 }

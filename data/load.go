@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
@@ -20,16 +19,15 @@ func nameToContainerName(name string) string {
 	return "eris_data_" + name + "_" + strconv.Itoa(containerNumber)
 }
 
-func checkServiceGiven(args []string) {
+func checkServiceGiven(args []string) error {
 	if len(args) == 0 {
-		// TODO: betterly error handling
-		fmt.Println("No Data Container Given. Please rerun command with a known data container.")
-		os.Exit(1)
+		return fmt.Errorf("No Data Container Given. Please rerun command with a known data container.")
 	}
+	return nil
 }
 
 func parseKnown(name string) bool {
-	known := ListKnownRaw()
+	known, _ := ListKnownRaw()
 	if len(known) != 0 {
 		for _, srv := range known {
 			if srv == name {

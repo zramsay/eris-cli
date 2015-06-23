@@ -1,7 +1,6 @@
 package perform
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -25,44 +24,82 @@ import (
 // Verified against ...
 //   Client version: 1.6.2
 //   Client API version: 1.18
-func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+func DockerCreateDataContainer(srvName string, verbose bool, w io.Writer) error {
+	if verbose {
+		w.Write([]byte("Starting Service: " + srvName))
+	}
+
+	srv := def.Service{}
+	ops := def.ServiceOperation{}
+	containerNumber := 1
+	ops.DataContainerName = "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
+	optsData, err := configureDataContainer(&srv, &ops, &docker.CreateContainerOptions{})
+	if err != nil {
+		return err
+	}
+
+	cont, err := createContainer(optsData)
+	if err != nil {
+		return err
+	}
+
+	if verbose {
+		w.Write([]byte("Data Container ID: " + cont.ID))
+	}
+	return nil
+}
+
+func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
 	var id_main string
 	var id_data string
-	var optsServ docker.CreateContainerOptions
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
 	var dataContCreated *docker.Container
 
 	if verbose {
-		fmt.Println("Starting Service: " + srv.Name)
+		w.Write([]byte("Starting Service: " + srv.Name))
 	}
 
 	// configure
-	optsServ = configureContainer(srv, ops)
-	srv.Volumes = fixDirs(srv.Volumes)
+	optsServ, err := configureContainer(srv, ops)
+	if err != nil {
+		return err
+	}
+
+	srv.Volumes, err = fixDirs(srv.Volumes)
+	if err != nil {
+		return err
+	}
+
 	if ops.DataContainer {
 		if verbose {
-			fmt.Println("You've asked me to manage the data containers. I shall do so good human.")
+			w.Write([]byte("You've asked me to manage the data containers. I shall do so good human."))
 		}
-		optsData = configureDataContainer(srv, ops, &optsServ)
+		optsData, err = configureDataContainer(srv, ops, &optsServ)
+		if err != nil {
+			return err
+		}
 	}
 
 	// check existence || create the container
 	if servCont, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service Container already exists, am not creating.")
+			w.Write([]byte("Service Container already exists, am not creating."))
 		}
 		if ops.DataContainer {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
 				if verbose {
-					fmt.Println("Data Container already exists, am not creating.")
+					w.Write([]byte("Data Container already exists, am not creating."))
 				}
 				id_data = dataCont.ID
 			} else {
 				if verbose {
-					fmt.Println("Data Container does not exist, creating.")
+					w.Write([]byte("Data Container does not exist, creating."))
 				}
-				dataContCreated := createContainer(optsData)
+				dataContCreated, err := createContainer(optsData)
+				if err != nil {
+					return err
+				}
 				id_data = dataContCreated.ID
 			}
 		}
@@ -71,208 +108,275 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
 
 	} else {
 		if verbose {
-			fmt.Println("Service Container does not exist, creating.")
+			w.Write([]byte("Service Container does not exist, creating."))
 		}
 
 		if ops.DataContainer {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
 				if verbose {
-					fmt.Println("Data Container already exists, am not creating.")
+					w.Write([]byte("Data Container already exists, am not creating."))
 				}
 				id_data = dataCont.ID
 			} else {
 				if verbose {
-					fmt.Println("Data Container does not exist, creating.")
+					w.Write([]byte("Data Container does not exist, creating."))
 				}
-				dataContCreated = createContainer(optsData)
+				dataContCreated, err = createContainer(optsData)
+				if err != nil {
+					return err
+				}
 				id_data = dataContCreated.ID
 			}
 		}
 
-		servContCreated := createContainer(optsServ)
+		servContCreated, err := createContainer(optsServ)
+		if err != nil {
+			return err
+		}
 		id_main = servContCreated.ID
 	}
 
 	// start the container
 	if verbose {
-		fmt.Println("Starting ServiceContainer ID: " + id_main)
+		w.Write([]byte("Starting ServiceContainer ID: " + id_main))
 		if ops.DataContainer {
-			fmt.Println("with DataContainer ID: " + id_data)
+			w.Write([]byte("with DataContainer ID: " + id_data))
 		}
 	}
-	startContainer(id_main, &optsServ)
+
+	err = startContainer(id_main, &optsServ)
+	if err != nil {
+		return err
+	}
 
 	if verbose {
-		fmt.Println(srv.Name + " Started.")
+		w.Write([]byte(srv.Name + " Started."))
 	}
+	return nil
 }
 
-func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bool) {
+func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bool, w io.Writer) error {
 	var id string
 	var wasRunning bool = false
 
 	if verbose {
-		fmt.Println("Rebuilding Service: " + srv.Name)
+		w.Write([]byte("Rebuilding Service: " + srv.Name))
 	}
 
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service exists, commensing with rebuild.")
+			w.Write([]byte("Service exists, commensing with rebuild."))
 		}
 
 		if _, running := ContainerRunning(ops); running {
 			if verbose {
-				fmt.Println("Service is running. Stopping now.")
+				w.Write([]byte("Service is running. Stopping now."))
 			}
 			wasRunning = true
-			DockerStop(srv, ops, verbose)
+			err := DockerStop(srv, ops, verbose, w)
+			if err != nil {
+				return err
+			}
 		}
 
 		if verbose {
-			fmt.Println("Removing old container.")
+			w.Write([]byte("Removing old container."))
 		}
-		removeContainer(service.ID)
+		err := removeContainer(service.ID)
+		if err != nil {
+			return err
+		}
 
 	} else {
 
 		if verbose {
-			fmt.Println("Service did not previously exist. Nothing to rebuild.")
+			w.Write([]byte("Service did not previously exist. Nothing to rebuild."))
 		}
-		return
+		return nil
 	}
 
 	if pull {
-		DockerPull(srv, ops, verbose)
+		err := DockerPull(srv, ops, verbose, w)
+		if err != nil {
+			return err
+		}
 	}
 
-	opts := configureContainer(srv, ops)
-	srv.Volumes = fixDirs(srv.Volumes)
+	opts, err := configureContainer(srv, ops)
+	if err != nil {
+		return err
+	}
+	srv.Volumes, err = fixDirs(srv.Volumes)
+	if err != nil {
+		return err
+	}
 
 	if verbose {
-		fmt.Println("Recreating container.")
+		w.Write([]byte("Recreating container."))
 	}
-	cont := createContainer(opts)
+	cont, err := createContainer(opts)
+	if err != nil {
+		return err
+	}
 	id = cont.ID
 
 	if wasRunning {
 		if verbose {
-			fmt.Println("Restarting Container with new ID: " + id)
+			w.Write([]byte("Restarting Container with new ID: " + id))
 		}
-		startContainer(id, &opts)
+		err := startContainer(id, &opts)
+		if err != nil {
+			return err
+		}
 	}
 
 	if verbose {
-		fmt.Println(srv.Name + " Rebuilt.")
+		w.Write([]byte(srv.Name + " Rebuilt."))
 	}
+
+	return nil
 }
 
-func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
 	if verbose {
-		fmt.Println("Pulling an image for the service.")
+		w.Write([]byte("Pulling an image for the service."))
 	}
 
 	var wasRunning bool = false
-	var w io.Writer
 
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			DockerStop(srv, ops, verbose)
+			err := DockerStop(srv, ops, verbose, w)
+			if err != nil {
+				return err
+			}
 		}
-		removeContainer(service.ID)
+		err := removeContainer(service.ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	if verbose {
-		w = os.Stdout
+		err := pullImage(srv.Image, w)
+		if err != nil {
+			return err
+		}
 	} else {
-		var buf bytes.Buffer
-		w = bufio.NewWriter(&buf)
+		err := pullImage(srv.Image, bytes.NewBuffer([]byte{}))
+		if err != nil {
+			return err
+		}
 	}
-	pullImage(srv.Image, w)
+
 
 	if wasRunning {
-		DockerRun(srv, ops, verbose)
+		err := DockerRun(srv, ops, verbose, w)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func DockerLogs(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+func DockerLogs(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
 	if verbose {
-		fmt.Println("Getting service's logs.")
+		w.Write([]byte("Getting service's logs."))
 	}
 
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
-		logsContainer(service.ID)
+		err := logsContainer(service.ID)
+		if err != nil {
+			return err
+		}
 	} else {
 		if verbose {
-			fmt.Println("Service does not exist. Cannot display logs.")
+			w.Write([]byte("Service does not exist. Cannot display logs."))
 		}
 	}
+
+	return nil
 }
 
-func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool) {
+func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool, w io.Writer) error {
 	if verbose {
-		fmt.Println("Inspecting service")
+		w.Write([]byte("Inspecting service"))
 	}
 
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
-		inspectContainer(service.ID, field)
+		err := inspectContainer(service.ID, field)
+		if err != nil {
+			return err
+		}
 	} else {
-		if verbose {
-			fmt.Println("Service container does not exist. Cannot inspect.")
-		}
+		return fmt.Errorf("Service container does not exist. Cannot inspect.")
 	}
+	return nil
 }
 
-func DockerStop(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+func DockerStop(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
 	// don't limit this to verbose because it takes a few seconds
-	fmt.Println("Stopping: " + srv.Name + ". This may take a few seconds.")
+	w.Write([]byte("Stopping: " + srv.Name + ". This may take a few seconds."))
 
 	var timeout uint = 10
 	dockerAPIContainer, running := ContainerExists(ops)
 
 	if running {
-		stopContainer(dockerAPIContainer.ID, timeout)
+		err := stopContainer(dockerAPIContainer.ID, timeout)
+		if err != nil {
+			return err
+		}
 	}
 
 	if verbose {
-		fmt.Println(srv.Name + " Stopped.")
+		w.Write([]byte(srv.Name + " Stopped."))
 	}
+
+	return nil
 }
 
-func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string, verbose bool) {
+func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string, verbose bool, w io.Writer) error {
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
 		newName = strings.Replace(service.Names[0], oldName, newName, 1)
-		renameContainer(service.ID, newName)
-	} else {
-		if verbose {
-			fmt.Println("Service container does not exist. Cannot rename.")
+		err := renameContainer(service.ID, newName)
+		if err != nil {
+			return err
 		}
+	} else {
+		return fmt.Errorf("Service container does not exist. Cannot rename.")
 	}
+
+	return nil
 }
 
-func DockerRemove(srv *def.Service, ops *def.ServiceOperation, verbose bool) {
+func DockerRemove(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
 	if service, exists := ContainerExists(ops); exists {
 		if verbose {
-			fmt.Println("Service ID: " + service.ID)
+			w.Write([]byte("Service ID: " + service.ID))
 		}
-		removeContainer(service.ID)
+		err := removeContainer(service.ID)
+		if err != nil {
+			return err
+		}
 	} else {
-		if verbose {
-			fmt.Println("Service container does not exist. Cannot rename.")
-		}
+		return fmt.Errorf("Service container does not exist. Cannot remove.")
 	}
+
+	return nil
 }
 
 func ContainerExists(ops *def.ServiceOperation) (docker.APIContainers, bool) {
@@ -286,7 +390,7 @@ func ContainerRunning(ops *def.ServiceOperation) (docker.APIContainers, bool) {
 // ----------------------------------------------------------------------------
 // ---------------------    Images Core    ------------------------------------
 // ----------------------------------------------------------------------------
-func pullImage(name string, writer io.Writer) {
+func pullImage(name string, writer io.Writer) error {
 	var tag string = "latest"
 	var reg string = ""
 
@@ -314,10 +418,10 @@ func pullImage(name string, writer io.Writer) {
 
 	err := util.DockerClient.PullImage(opts, auth)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to create container (%s) ->\n  %v\n", name, err)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
 }
 
 // ----------------------------------------------------------------------------
@@ -353,7 +457,7 @@ func listContainers(all bool) []docker.APIContainers {
 	return container
 }
 
-func createContainer(opts docker.CreateContainerOptions) *docker.Container {
+func createContainer(opts docker.CreateContainerOptions) (*docker.Container, error) {
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		// TODO: better error handling
@@ -362,27 +466,24 @@ func createContainer(opts docker.CreateContainerOptions) *docker.Container {
 			pullImage(opts.Config.Image, nil)
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
 			if err != nil {
-				fmt.Printf("Failed to create container (%s) ->\n  %v\n", opts.Config.Image, err)
-				os.Exit(1)
+				return nil, err
 			}
 		} else {
-			fmt.Printf("Failed to create container (%s) ->\n  %v\n", opts.Config.Image, err)
-			os.Exit(1)
+			return nil, err
 		}
 	}
-	return dockerContainer
+	return dockerContainer, nil
 }
 
-func startContainer(id string, opts *docker.CreateContainerOptions) {
+func startContainer(id string, opts *docker.CreateContainerOptions) error {
 	err := util.DockerClient.StartContainer(id, opts.HostConfig)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to start container (%s) ->\n  %v\n", opts.Config.Image, err)
-		os.Exit(1)
+		return err
 	}
+	return nil
 }
 
-func logsContainer(id string) {
+func logsContainer(id string) error {
 	opts := docker.LogsOptions{
 		Container:    id,
 		Follow:       false,
@@ -397,55 +498,60 @@ func logsContainer(id string) {
 
 	err := util.DockerClient.Logs(opts)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to get container logs (%s) ->\n  %v\n", id, err)
-		os.Exit(1)
+		return err
 	}
+
+	return nil
 }
 
-func inspectContainer(id, field string) {
+func inspectContainer(id, field string) error {
 	cont, err := util.DockerClient.InspectContainer(id)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to inspect container (%s) ->\n  %v\n", id, err)
+		return err
 	}
 	PrintInspectionReport(cont, field)
+
+	return nil
 }
 
-func stopContainer(id string, timeout uint) {
+func stopContainer(id string, timeout uint) error {
 	err := util.DockerClient.StopContainer(id, timeout)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to stop container (%s) ->\n  %v\n", id, err)
+		return err
 	}
+	return nil
 }
 
-func renameContainer(id, newName string) {
+func renameContainer(id, newName string) error {
 	opts := docker.RenameContainerOptions{
 		ID:   id,
 		Name: newName,
 	}
+
 	err := util.DockerClient.RenameContainer(opts)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to rename container (%s) ->\n  %v\n", id, err)
+		return err
 	}
+
+	return nil
 }
 
-func removeContainer(id string) {
+func removeContainer(id string) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            id,
 		RemoveVolumes: false,
 		Force:         false,
 	}
+
 	err := util.DockerClient.RemoveContainer(opts)
 	if err != nil {
-		// TODO: better error handling
-		fmt.Printf("Failed to remove container (%s) ->\n  %v\n", id, err)
+		return err
 	}
+
+	return nil
 }
 
-func configureContainer(srv *def.Service, ops *def.ServiceOperation) docker.CreateContainerOptions {
+func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.CreateContainerOptions, error) {
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,
 		Config: &docker.Config{
@@ -496,9 +602,7 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) docker.Crea
 	} else if strings.Contains(ops.Restart, "max") {
 		times, err := strconv.Atoi(strings.Split(ops.Restart, ":")[1])
 		if err != nil {
-			// TODO: better error handling
-			fmt.Println(err)
-			os.Exit(1)
+			return docker.CreateContainerOptions{}, err
 		}
 		opts.HostConfig.RestartPolicy = docker.RestartOnFailure(times)
 	}
@@ -540,10 +644,10 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) docker.Crea
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
-	return opts
+	return opts, nil
 }
 
-func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainContOpts *docker.CreateContainerOptions) docker.CreateContainerOptions {
+func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
 	opts := docker.CreateContainerOptions{
 		Name: ops.DataContainerName,
 		Config: &docker.Config{
@@ -559,19 +663,19 @@ func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainCon
 		HostConfig: &docker.HostConfig{},
 	}
 
-	mainContOpts.HostConfig.VolumesFrom = append(mainContOpts.HostConfig.VolumesFrom, ops.DataContainerName)
+	if mainContOpts != nil {
+		mainContOpts.HostConfig.VolumesFrom = append(mainContOpts.HostConfig.VolumesFrom, ops.DataContainerName)
+	}
 
-	return opts
+	return opts, nil
 }
 
 // $(pwd) doesn't execute properly in golangs subshells; replace it
 // use $eris as a shortcut
-func fixDirs(arg []string) []string {
+func fixDirs(arg []string) ([]string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
-		// TODO: error handling
-		fmt.Println(err)
-		os.Exit(1)
+		return []string{}, err
 	}
 
 	for n, a := range arg {
@@ -592,5 +696,5 @@ func fixDirs(arg []string) []string {
 		}
 	}
 
-	return arg
+	return arg, nil
 }

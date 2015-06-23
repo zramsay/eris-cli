@@ -1,5 +1,3 @@
-// parts of this file were abstracted from: https://github.com/mindreframer/golang-stuff/blob/master/github.com/dotcloud/docker/archive.go
-
 package util
 
 import (
