@@ -22,19 +22,26 @@ storage solution).`,
 
 // Build the chains subcommand
 func buildChainsCommand() {
-	Chains.AddCommand(chainsListKnown)
-	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsNew)
+	Chains.AddCommand(chainsInstall)
+	Chains.AddCommand(chainsImport)
+	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsInspect)
+	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
+	addChainsFlags()
+}
+
+func addChainsFlags() {
+	chainsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 }
 
 // known lists the known chain types which eris can install
@@ -72,6 +79,20 @@ var chainsNew = &cobra.Command{
 Will use a default genesis.json unless a --genesis flag is passed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.New(cmd, args)
+	},
+}
+
+// install a service
+var chainsImport = &cobra.Command{
+	Use:   "import [name] [location]",
+	Short: "Import a Known Service Locally.",
+	Long: `Import a chain definition for your platform.
+By default, Eris will install the most recent version of a
+chain definition unless another version is passed
+as an argument. To list known chains use:
+[eris chains known].`,
+	Run: func(cmd *cobra.Command, args []string) {
+		chns.Import(cmd, args)
 	},
 }
 
@@ -150,6 +171,19 @@ The currently supported range of [key] is:
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.Inspect(cmd, args)
+	},
+}
+
+// export running containers
+var chainsExport = &cobra.Command{
+	Use:   "export [chainName]",
+	Short: "Export a chain definition file to IPFS.",
+	Long: `Export a chain definition file to IPFS.
+
+Command will return a machine readable version of the IPFS hash
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		chns.Export(cmd, args)
 	},
 }
 

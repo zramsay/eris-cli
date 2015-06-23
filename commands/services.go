@@ -21,9 +21,9 @@ management services are managed via the [eris keys] command.`,
 
 // build the services subcommand
 func buildServicesCommand() {
-	Services.AddCommand(servicesListKnown)
-	Services.AddCommand(servicesInstall)
 	Services.AddCommand(servicesNew)
+	Services.AddCommand(servicesImport)
+	Services.AddCommand(servicesListKnown)
 	Services.AddCommand(servicesListExisting)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
@@ -35,6 +35,11 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
+	addServicesFlags()
+}
+
+func addServicesFlags() {
+	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 }
 
 // list-known lists the services which eris can automagically install
@@ -53,15 +58,15 @@ NOT blockchains. Blockchains are handled using the [eris chains] command.`,
 }
 
 // install a service
-var servicesInstall = &cobra.Command{
-	Use:   "install [name] [version]",
-	Short: "Install a Known Service Locally.",
-	Long: `Install a service for your platform. By default, Eris will install the
+var servicesImport = &cobra.Command{
+	Use:   "import [name] [location]",
+	Short: "Import a Known Service Locally.",
+	Long: `Import a service for your platform. By default, Eris will install the
 most recent version of a service unless another version is passed
 as an argument. To list known services use:
 [eris services known].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Install(cmd, args)
+		srv.Import(cmd, args)
 	},
 }
 

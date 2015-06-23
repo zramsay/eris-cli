@@ -18,13 +18,13 @@ import (
 )
 
 // install
-func Install(cmd *cobra.Command, args []string) {
+func Import(cmd *cobra.Command, args []string) {
 	checkServiceGiven(args)
 	if len(args) != 2 {
 		fmt.Println("Please give me: eris services install [name] [location]")
 		return
 	}
-	err := InstallServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+	err := ImportServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -102,10 +102,10 @@ func ListExisting() {
 
 func Rm(cmd *cobra.Command, args []string) {
 	checkServiceGiven(args)
-	RmServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	RmServiceRaw(args[0], cmd.Flags().Lookup("force").Changed, cmd.Flags().Lookup("verbose").Changed)
 }
 
-func InstallServiceRaw(servName, servPath string, verbose bool) error {
+func ImportServiceRaw(servName, servPath string, verbose bool) error {
 	fileName := filepath.Join(ServicesPath, servName)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -262,11 +262,13 @@ func UpdateServiceRaw(servName string, verbose bool) {
 	perform.DockerRebuild(service.Service, service.Operations, true, verbose)
 }
 
-func RmServiceRaw(servName string, verbose bool) {
+func RmServiceRaw(servName string, force, verbose bool) {
 	service := LoadServiceDefinition(servName)
 	perform.DockerRemove(service.Service, service.Operations, verbose)
-	// oldFile := servDefFileByServName(servName)
-	// os.Remove(oldFile)
+	if force {
+		oldFile := servDefFileByServName(servName)
+		os.Remove(oldFile)
+	}
 }
 
 func exportFile(servName string, verbose bool) (string, error) {

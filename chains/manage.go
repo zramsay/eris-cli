@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,6 +27,18 @@ func New(cmd *cobra.Command, args []string) {
 
 }
 
+func Import(cmd *cobra.Command, args []string) {
+	checkChainGiven(args)
+	if len(args) != 2 {
+		fmt.Println("Please give me: eris chains import [name] [location]")
+		return
+	}
+	err := ImportChainRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func Edit(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
 	name := args[0]
@@ -45,6 +58,14 @@ func Inspect(cmd *cobra.Command, args []string) {
 	IfExit(err)
 	if IsChainExisting(chain) {
 		services.InspectServiceByService(chain.Service, chain.Operations, args[1], cmd.Flags().Lookup("verbose").Changed)
+	}
+}
+
+func Export(cmd *cobra.Command, args []string) {
+	checkChainGiven(args)
+	err := ExportChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -89,10 +110,80 @@ func Update(cmd *cobra.Command, args []string) {
 
 func Rm(cmd *cobra.Command, args []string) {
 	checkChainGiven(args)
-	RmChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed)
+	RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed, cmd.Flags().Lookup("verbose").Changed)
 }
 
 //----------------------------------------------------------------------
+
+func ImportChainRaw(chainName, path string, verbose bool) error {
+	fileName := filepath.Join(BlockchainsPath, chainName)
+	if filepath.Ext(fileName) == "" {
+		fileName = fileName + ".toml"
+	}
+
+	s := strings.Split(path, ":")
+	if s[0] == "ipfs" {
+
+		var err error
+		if verbose {
+			err = util.GetFromIPFS(s[1], fileName, os.Stdout)
+		} else {
+			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
+		}
+
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if strings.Contains(s[0], "github") {
+		fmt.Println("https://twitter.com/ryaneshea/status/595957712040628224")
+		return nil
+	}
+
+	fmt.Println("I do not know how to get that file. Sorry.")
+	return nil
+}
+
+func ExportChainRaw(chainName string, verbose bool) error {
+	chain, err := LoadChainDefinition(chainName)
+	if err != nil {
+		return err
+	}
+	if IsChainExisting(chain) {
+		ipfsService := services.LoadServiceDefinition("ipfs")
+
+		if services.IsServiceRunning(ipfsService.Service) {
+			if verbose {
+				fmt.Println("IPFS is running. Adding now.")
+			}
+
+			hash, err := exportFile(chainName, verbose)
+			if err != nil {
+				return err
+			}
+			fmt.Println(hash)
+		} else {
+			if verbose {
+				fmt.Println("IPFS is not running. Starting now.")
+			}
+			services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose)
+
+			hash, err := exportFile(chainName, verbose)
+			if err != nil {
+				return err
+			}
+			fmt.Println(hash)
+		}
+
+	} else {
+		return fmt.Errorf(`I don't known of that chain.
+Please retry with a known chain.
+To find known chains use: eris chains known`)
+	}
+	return nil
+}
 
 func EditChainRaw(chainName string, configVals []string) error {
 	chainConf, err := readChainDefinition(chainName)
@@ -174,18 +265,39 @@ func UpdateChainRaw(chainName string, verbose bool) error {
 	return nil
 }
 
-func RmChainRaw(chainName string, verbose bool) error {
+func RmChainRaw(chainName string, force, verbose bool) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
 	perform.DockerRemove(chain.Service, chain.Operations, verbose)
-	/*
-	   oldFile, err := configFileNameFromChainName(chainName)
-	   if err != nil{
-	   		return err
-	   }
-	   os.Remove(oldFile)
-	*/
+
+	if force {
+		oldFile, err := configFileNameFromChainName(chainName)
+		if err != nil {
+			return err
+		}
+		os.Remove(oldFile)
+	}
 	return nil
+}
+
+func exportFile(chainName string, verbose bool) (string, error) {
+	fileName, err := configFileNameFromChainName(chainName)
+	if err != nil {
+		return "", err
+	}
+
+	var hash string
+	if verbose {
+		hash, err = util.SendToIPFS(fileName, os.Stdout)
+	} else {
+		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }

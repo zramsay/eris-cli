@@ -59,6 +59,7 @@ func AddCommands() {
 var Verbose bool
 
 // Flags that are to be used by commands
+var Force bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

@@ -26,6 +26,10 @@ func LoadServiceDefinition(servName string) *def.ServiceDefinition {
 	marshalServiceDefinition(serviceConf, &service)
 	service.Operations = &def.ServiceOperation{}
 
+	if service.Service == nil {
+		return &service
+	}
+
 	checkServiceHasImage(service.Service)
 	checkServiceHasName(service.Service, service.Operations)
 	checkServiceHasDataContainer(serviceConf, service.Service, service.Operations)
