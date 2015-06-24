@@ -15,6 +15,11 @@ data into containers for use by your application.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
+// flags
+var (
+	Interactive bool
+)
+
 // build the data subcommand
 func buildDataCommand() {
 	Data.AddCommand(dataImport)
@@ -22,6 +27,8 @@ func buildDataCommand() {
 	Data.AddCommand(dataRename)
 	Data.AddCommand(dataInspect)
 	Data.AddCommand(dataExport)
+	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+	Data.AddCommand(dataExec)
 	Data.AddCommand(dataRm)
 }
 
@@ -40,6 +47,15 @@ var dataList = &cobra.Command{
 	Long:  `List the data containers`,
 	Run: func(cmd *cobra.Command, args []string) {
 		data.ListKnown(cmd, args)
+	},
+}
+
+var dataExec = &cobra.Command{
+	Use:   "exec",
+	Short: "Run a command or interactive shell in in data container",
+	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Run: func(cmd *cobra.Command, args []string) {
+		data.Exec(cmd, args)
 	},
 }
 

@@ -45,6 +45,40 @@ func DockerCreateDataContainer(srvName string) error {
 	return nil
 }
 
+// create a container with volumes-from the srvName data container
+// and either attach interactively or execute a command
+// container should be destroyed on exit
+func DockerRunVolumesFromContainer(srvName string, interactive bool, args []string) error {
+	// create an eris/base container with volumes from the given
+	// srvName's data container
+	containerNumber := 1
+	volumesFrom := "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
+	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
+	cont, err := createContainer(opts)
+	if err != nil {
+		return err
+	}
+	id_main := cont.ID
+	logger.Infoln("Data Container ID: " + id_main)
+
+	// start the container (either interactive or one off command)
+	if err := startContainer(id_main, &opts); err != nil {
+		return err
+	}
+
+	logger.Infof("Waiting for %s to exit so we can remove the container\n", id_main)
+	if err := waitContainer(id_main); err != nil {
+		return err
+	}
+
+	// TODO: we may want to get the logs out first
+	logger.Infof("Removing container %s\n", id_main)
+	if err := removeContainer(id_main); err != nil {
+		return err
+	}
+	return nil
+}
+
 func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	var id_main string
 	var id_data string
@@ -426,6 +460,8 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 			return nil, err
 		}
 	}
+	// .... ?!
+	dockerContainer.Config = opts.Config
 	return dockerContainer, nil
 }
 
@@ -601,6 +637,32 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 	}
 
 	return opts, nil
+}
+
+func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string) docker.CreateContainerOptions {
+	opts := docker.CreateContainerOptions{
+		Name: "eris_exec_" + volumesFrom,
+		Config: &docker.Config{
+			Image:           "eris/base",
+			User:            "root",
+			AttachStdout:    true,
+			AttachStderr:    true,
+			Tty:             true,
+			NetworkDisabled: true,
+		},
+		HostConfig: &docker.HostConfig{
+			VolumesFrom: []string{volumesFrom},
+		},
+	}
+	if interactive {
+		opts.Config.AttachStdin = true
+		opts.Config.OpenStdin = true
+		opts.Config.Cmd = []string{"/bin/bash"}
+	} else {
+		opts.Config.Cmd = args
+	}
+
+	return opts
 }
 
 func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
