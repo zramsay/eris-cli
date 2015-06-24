@@ -8,7 +8,7 @@ import (
 
 func PlopEntireConfig(globalConfig *viper.Viper, args []string) {
 	// for _, arg := range args {
-		// fmt.Printf("%s -> %s\n", arg, globalConfig.GetString(arg))
+	// fmt.Printf("%s -> %s\n", arg, globalConfig.GetString(arg))
 	// }
 }
 

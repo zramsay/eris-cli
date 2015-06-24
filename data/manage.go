@@ -1,8 +1,8 @@
 package data
 
 import (
-	"io"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 

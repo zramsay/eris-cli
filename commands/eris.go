@@ -1,10 +1,13 @@
 package commands
 
 import (
+	"fmt"
+	"io"
+	"os"
+
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
-	// "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
 const VERSION = "0.10.0"
@@ -24,6 +27,12 @@ Complete documentation is available at https://docs.erisindustries.com
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		util.DockerConnect(cmd)
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		err := util.SaveGlobalConfig(GlobalConfig.Config)
+		if err != nil {
+
+		}
+	},
 }
 
 func Execute() {
@@ -35,8 +44,8 @@ func Execute() {
 
 // Define the commands
 func AddCommands() {
-	buildProjectsCommand()
-	ErisCmd.AddCommand(Projects)
+	// buildProjectsCommand()
+	// ErisCmd.AddCommand(Projects)
 	buildServicesCommand()
 	ErisCmd.AddCommand(Services)
 	buildChainsCommand()
@@ -69,8 +78,36 @@ func AddGlobalFlags() {
 }
 
 // Properly scope the globalConfig
-// var globalConfig *viper.Viper
+var GlobalConfig *util.ErisCli
 
 func InitializeConfig() {
-	// globalConfig = util.LoadGlobalConfig()
+	var err error
+	var out io.Writer
+	var erw io.Writer
+
+	if os.Getenv("ERIS_CLI_WRITER") != "" {
+		out, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
+		if err != nil {
+			fmt.Printf("Could not open: %s\n", err)
+			return
+		}
+	} else {
+		out = os.Stdout
+	}
+
+	if os.Getenv("ERIS_CLI_ERROR_WRITER") != "" {
+		erw, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
+		if err != nil {
+			fmt.Printf("Could not open: %s\n", err)
+			return
+		}
+	} else {
+		erw = os.Stderr
+	}
+
+	GlobalConfig, err = util.SetGlobalObject(out, erw)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

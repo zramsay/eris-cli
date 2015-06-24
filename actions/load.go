@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -76,10 +75,9 @@ func configFileNameFromActionName(actionName string) (string, error) {
 	return actionConf.ConfigFileUsed(), nil
 }
 
-func checkActionGiven(args []string) {
+func checkActionGiven(args []string) error {
 	if len(args) == 0 {
-		// TODO: betterly error handling
-		fmt.Println("No Service Given. Please rerun command with a known service.")
-		os.Exit(1)
+		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
 	}
+	return nil
 }

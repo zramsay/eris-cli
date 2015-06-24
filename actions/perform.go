@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -9,23 +10,39 @@ import (
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-func Do(cmd *cobra.Command, args []string) {
-	verbose := cmd.Flags().Lookup("verbose").Changed
+func Do(config *util.ErisCli, cmd *cobra.Command, args []string) {
 	action, actionVars, err := LoadActionDefinition(args)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fmt.Fprintln(config.ErrorWriter, err)
+		return
 	}
-	StartServicesAndChains(cmd, action, verbose)
-	PerformCommand(action, actionVars, verbose)
+	err = DoRaw(action, actionVars, cmd.Flags().Lookup("verbose").Changed, config.Writer, config.ErrorWriter)
+	if err != nil {
+		fmt.Fprintln(config.ErrorWriter, err)
+		return
+	}
 }
 
-func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool) {
+func DoRaw(action *def.Action, actionVars []string, verbose bool, w, ew io.Writer) error {
+	err := StartServicesAndChains(action, verbose, w, ew)
+	if err != nil {
+		return err
+	}
+
+	err = PerformCommand(action, actionVars, verbose, w)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func StartServicesAndChains(action *def.Action, verbose bool, w, ew io.Writer) error {
 	// start the services and chains
 	var wg sync.WaitGroup
 	var skip bool
@@ -37,7 +54,7 @@ func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool
 		for _, run := range running {
 			if srv == run {
 				if verbose {
-					fmt.Println("Service already started, Skipping: ", srv)
+					fmt.Fprintln(w, "Service already started, Skipping: ", srv)
 				}
 				skip = true
 			}
@@ -47,10 +64,13 @@ func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool
 		}
 
 		wg.Add(1)
-		go func(service string) {
+		go func() {
 			defer wg.Done()
-			services.Start(cmd, []string{service})
-		}(srv)
+			err := services.StartServiceRaw(srv, verbose, w)
+			if err != nil {
+				fmt.Fprintln(w, "Service already started, Skipping: ", srv)
+			}
+		}()
 	}
 
 	running = chains.ListRunningRaw()
@@ -60,7 +80,7 @@ func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool
 		for _, run := range running {
 			if chn == run {
 				if verbose {
-					fmt.Println("Chain already started, Skipping: ", chn)
+					fmt.Fprintln(w, "Chain already started, Skipping: ", chn)
 				}
 				skip = true
 			}
@@ -70,25 +90,27 @@ func StartServicesAndChains(cmd *cobra.Command, action *def.Action, verbose bool
 		}
 
 		wg.Add(1)
-		go func(chain string) {
+		go func() {
 			defer wg.Done()
-			chains.Start(cmd, []string{chain})
-		}(chn)
+			err := chains.StartChainRaw(chn, verbose, w)
+			if err != nil {
+				fmt.Fprintln(w, "Chain already started, Skipping: ", chn)
+			}
+		}()
 	}
 
 	wg.Wait()
+	return nil
 }
 
-func PerformCommand(action *def.Action, actionVars []string, verbose bool) {
+func PerformCommand(action *def.Action, actionVars []string, verbose bool, w io.Writer) error {
 	dir, err := os.Getwd()
 	if err != nil {
-		// TODO: error handling
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 	actionVars = append(os.Environ(), actionVars...)
 
-	fmt.Println("Performing Action: " + action.Name)
+	fmt.Fprintln(w, "Performing Action: ", action.Name)
 
 	for n, step := range action.Steps {
 		cmd := exec.Command("sh", "-c", step)
@@ -97,13 +119,11 @@ func PerformCommand(action *def.Action, actionVars []string, verbose bool) {
 
 		prev, err := cmd.Output()
 		if err != nil {
-			// TODO: error handling
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 
 		if verbose {
-			fmt.Println(strings.TrimSpace(string(prev)))
+			fmt.Fprintln(w, strings.TrimSpace(string(prev)))
 		}
 
 		if n != 0 {
@@ -112,5 +132,6 @@ func PerformCommand(action *def.Action, actionVars []string, verbose bool) {
 		actionVars = append(actionVars, ("prev=" + strings.TrimSpace(string(prev))))
 	}
 
-	fmt.Println("Action performed")
+	fmt.Fprintln(w, "Action performed")
+	return nil
 }

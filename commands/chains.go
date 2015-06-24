@@ -108,7 +108,7 @@ To list known chains use: [eris chains known].`,
 var chainsList = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists all known blockchains in the Eris tree.",
-	Long:  `Lists all known blockchains in the Eris tree.
+	Long: `Lists all known blockchains in the Eris tree.
 
 To list the known chains: [eris chains known]
 To list the running chains: [eris chains ps]
@@ -122,7 +122,7 @@ To start a chain use: [eris chains start chainName].
 var chainsEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit a blockchain.",
-	Long:  `Edit a blockchain definition file.
+	Long: `Edit a blockchain definition file.
 
 
 Edit will utilize your default editor.
@@ -137,7 +137,7 @@ Edit will utilize your default editor.
 var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
-	Long:  `Start a blockchain.
+	Long: `Start a blockchain.
 
 [eris chains start name] by default will put the chain into the
 background so its logs will not be viewable from the command line.
@@ -223,7 +223,7 @@ var chainsRename = &cobra.Command{
 var chainsRemove = &cobra.Command{
 	Use:   "rm [name]",
 	Short: "Removes an installed chain.",
-	Long:  `Removes an installed chain.
+	Long: `Removes an installed chain.
 
 Command will remove the chain's container but will not
 remove the chain definition file.
@@ -236,8 +236,8 @@ Use the --force flag to also remove the chain definition file.`,
 
 var chainsUpdate = &cobra.Command{
 	Use:   "update [name]",
-		Short: "Updates an installed chain.",
-		Long:  `Updates an installed chain, or installs it if it has not been installed.
+	Short: "Updates an installed chain.",
+	Long: `Updates an installed chain, or installs it if it has not been installed.
 
 Functionally this command will perform the following sequence:
 

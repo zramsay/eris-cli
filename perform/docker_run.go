@@ -273,7 +273,6 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.
 		}
 	}
 
-
 	if wasRunning {
 		err := DockerRun(srv, ops, verbose, w)
 		if err != nil {

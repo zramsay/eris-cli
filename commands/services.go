@@ -82,7 +82,7 @@ To list known services use: [eris services known].`,
 var servicesNew = &cobra.Command{
 	Use:   "new [name] [image]",
 	Short: "Creates a new service.",
-	Long:  `Creates a new service.
+	Long: `Creates a new service.
 
 Command must be given a name and a Container Image using standard
 docker format of [repository/organization/image].`,
@@ -217,7 +217,7 @@ var servicesRename = &cobra.Command{
 var servicesUpdate = &cobra.Command{
 	Use:   "update [name]",
 	Short: "Updates an installed service.",
-	Long:  `Updates an installed service, or installs it if it has not been installed.
+	Long: `Updates an installed service, or installs it if it has not been installed.
 
 Functionally this command will perform the following sequence:
 
@@ -239,7 +239,7 @@ by the update command.`,
 var servicesRm = &cobra.Command{
 	Use:   "rm [name]",
 	Short: "Removes an installed service.",
-	Long:  `Removes an installed service.
+	Long: `Removes an installed service.
 
 Command will remove the service's container but will not
 remove the service definition file.
