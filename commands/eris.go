@@ -7,6 +7,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/util"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -25,12 +26,13 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		common.InitErisDir()
 		util.DockerConnect(cmd)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := util.SaveGlobalConfig(GlobalConfig.Config)
 		if err != nil {
-
+			fmt.Fprintln(GlobalConfig.ErrorWriter, err)
 		}
 	},
 }
