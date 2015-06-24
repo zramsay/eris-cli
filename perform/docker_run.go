@@ -122,12 +122,27 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 		logger.Infoln("with DataContainer ID: " + id_data)
 	}
 
-	err = startContainer(id_main, &optsServ)
-	if err != nil {
+	if err := startContainer(id_main, &optsServ); err != nil {
 		return err
 	}
 
-	logger.Infoln(srv.Name + " Started.")
+	// XXX: setting Remove causes us to block here!
+	if ops.Remove {
+		logger.Infof("Waiting for %s to exit so we can remove the container\n", id_main)
+		if err := waitContainer(id_main); err != nil {
+			return err
+		}
+
+		// TODO: we may want to get the logs out first
+		logger.Infof("Removing container %s\n", id_main)
+		if err := removeContainer(id_main); err != nil {
+			return err
+		}
+
+	} else {
+		logger.Infoln(srv.Name + " Started.")
+	}
+
 	return nil
 }
 
@@ -415,11 +430,18 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 }
 
 func startContainer(id string, opts *docker.CreateContainerOptions) error {
-	err := util.DockerClient.StartContainer(id, opts.HostConfig)
-	if err != nil {
-		return err
+	return util.DockerClient.StartContainer(id, opts.HostConfig)
+}
+
+func waitContainer(id string) error {
+	exitCode, err := util.DockerClient.WaitContainer(id)
+	if exitCode != 0 {
+		err1 := fmt.Errorf("Container %s exited with status %d")
+		if err != nil {
+			err = fmt.Errorf("%s. Error: %v", err1.Error(), err)
+		}
 	}
-	return nil
+	return err
 }
 
 func logsContainer(id string) error {
@@ -435,12 +457,7 @@ func logsContainer(id string) error {
 		// RawTerminal:  true, // Usually true when the container contains a TTY.
 	}
 
-	err := util.DockerClient.Logs(opts)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return util.DockerClient.Logs(opts)
 }
 
 func inspectContainer(id, field string) error {
