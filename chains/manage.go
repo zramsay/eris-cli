@@ -3,7 +3,6 @@ package chains
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,10 +30,10 @@ func New(cmd *cobra.Command, args []string) {
 func Import(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	if len(args) != 2 {
-		fmt.Println("Please give me: eris chains import [name] [location]")
+		logger.Println("Please give me: eris chains import [name] [location]")
 		return
 	}
-	IfExit(ImportChainRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(ImportChainRaw(args[0], args[1]))
 }
 
 func Edit(cmd *cobra.Command, args []string) {
@@ -55,13 +54,13 @@ func Inspect(cmd *cobra.Command, args []string) {
 	chain, err := LoadChainDefinition(args[0])
 	IfExit(err)
 	if IsChainExisting(chain) {
-		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, args[1]))
 	}
 }
 
 func Export(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(ExportChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(ExportChainRaw(args[0]))
 }
 
 func ListKnown() {
@@ -95,22 +94,22 @@ func Rename(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris services rename [oldName] [newName]")
 		return
 	}
-	IfExit(RenameChainRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RenameChainRaw(args[0], args[1]))
 }
 
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(UpdateChainRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(UpdateChainRaw(args[0]))
 }
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed, cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed))
 }
 
 //----------------------------------------------------------------------
 
-func ImportChainRaw(chainName, path string, verbose bool, w io.Writer) error {
+func ImportChainRaw(chainName, path string) error {
 	fileName := filepath.Join(BlockchainsPath, chainName)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -120,8 +119,8 @@ func ImportChainRaw(chainName, path string, verbose bool, w io.Writer) error {
 	if s[0] == "ipfs" {
 
 		var err error
-		if verbose {
-			err = util.GetFromIPFS(s[1], fileName, os.Stdout)
+		if logger.Level > 0 {
+			err = util.GetFromIPFS(s[1], fileName, logger.Writer)
 		} else {
 			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
 		}
@@ -133,14 +132,14 @@ func ImportChainRaw(chainName, path string, verbose bool, w io.Writer) error {
 	}
 
 	if strings.Contains(s[0], "github") {
-		w.Write([]byte("https://twitter.com/ryaneshea/status/595957712040628224"))
+		logger.Println("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
 
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func ExportChainRaw(chainName string, verbose bool, w io.Writer) error {
+func ExportChainRaw(chainName string) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
@@ -152,29 +151,25 @@ func ExportChainRaw(chainName string, verbose bool, w io.Writer) error {
 		}
 
 		if services.IsServiceRunning(ipfsService.Service) {
-			if verbose {
-				w.Write([]byte("IPFS is running. Adding now."))
-			}
+			logger.Infoln("IPFS is running. Adding now.")
 
-			hash, err := exportFile(chainName, verbose)
+			hash, err := exportFile(chainName)
 			if err != nil {
 				return err
 			}
-			w.Write([]byte(hash))
+			logger.Println(hash)
 		} else {
-			if verbose {
-				w.Write([]byte("IPFS is not running. Starting now."))
-			}
-			err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
+			logger.Infoln("IPFS is not running. Starting now.")
+			err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
 			if err != nil {
 				return err
 			}
 
-			hash, err := exportFile(chainName, verbose)
+			hash, err := exportFile(chainName)
 			if err != nil {
 				return err
 			}
-			w.Write([]byte(hash))
+			logger.Println(hash)
 		}
 
 	} else {
@@ -222,18 +217,16 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
-func RenameChainRaw(oldName, newName string, verbose bool, w io.Writer) error {
+func RenameChainRaw(oldName, newName string) error {
 	if isKnownChain(oldName) {
-		if verbose {
-			w.Write([]byte("Renaming chain" + oldName + "to" + newName))
-		}
+		logger.Infoln("Renaming chain" + oldName + "to" + newName)
 
 		chainDef, err := LoadChainDefinition(oldName)
 		if err != nil {
 			return err
 		}
 
-		err = perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newName, verbose, w)
+		err = perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -253,7 +246,7 @@ func RenameChainRaw(oldName, newName string, verbose bool, w io.Writer) error {
 			return err
 		}
 
-		err = data.RenameDataRaw(oldName, newName, verbose, w)
+		err = data.RenameDataRaw(oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -265,24 +258,24 @@ func RenameChainRaw(oldName, newName string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func UpdateChainRaw(chainName string, verbose bool, w io.Writer) error {
+func UpdateChainRaw(chainName string) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRebuild(chain.Service, chain.Operations, false, verbose, w)
+	err = perform.DockerRebuild(chain.Service, chain.Operations, false)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func RmChainRaw(chainName string, force, verbose bool, w io.Writer) error {
+func RmChainRaw(chainName string, force bool) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRemove(chain.Service, chain.Operations, verbose, w)
+	err = perform.DockerRemove(chain.Service, chain.Operations)
 	if err != nil {
 		return err
 	}
@@ -297,15 +290,15 @@ func RmChainRaw(chainName string, force, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func exportFile(chainName string, verbose bool) (string, error) {
+func exportFile(chainName string) (string, error) {
 	fileName, err := configFileNameFromChainName(chainName)
 	if err != nil {
 		return "", err
 	}
 
 	var hash string
-	if verbose {
-		hash, err = util.SendToIPFS(fileName, os.Stdout)
+	if logger.Level > 0 {
+		hash, err = util.SendToIPFS(fileName, logger.Writer)
 	} else {
 		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
 	}

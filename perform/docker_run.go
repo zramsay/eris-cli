@@ -24,10 +24,8 @@ import (
 // Verified against ...
 //   Client version: 1.6.2
 //   Client API version: 1.18
-func DockerCreateDataContainer(srvName string, verbose bool, w io.Writer) error {
-	if verbose {
-		w.Write([]byte("Starting Service: " + srvName))
-	}
+func DockerCreateDataContainer(srvName string) error {
+	logger.Infoln("Starting Service: " + srvName)
 
 	srv := def.Service{}
 	ops := def.ServiceOperation{}
@@ -43,22 +41,18 @@ func DockerCreateDataContainer(srvName string, verbose bool, w io.Writer) error 
 		return err
 	}
 
-	if verbose {
-		w.Write([]byte("Data Container ID: " + cont.ID))
-	}
+	logger.Infoln("Data Container ID: " + cont.ID)
 	return nil
 }
 
-func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
+func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	var id_main string
 	var id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
 	var dataContCreated *docker.Container
 
-	if verbose {
-		w.Write([]byte("Starting Service: " + srv.Name))
-	}
+	logger.Infoln("Starting Service: " + srv.Name)
 
 	// configure
 	optsServ, err := configureContainer(srv, ops)
@@ -72,9 +66,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.W
 	}
 
 	if ops.DataContainer {
-		if verbose {
-			w.Write([]byte("You've asked me to manage the data containers. I shall do so good human."))
-		}
+		logger.Infoln("You've asked me to manage the data containers. I shall do so good human.")
 		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
 			return err
@@ -83,19 +75,13 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.W
 
 	// check existence || create the container
 	if servCont, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service Container already exists, am not creating."))
-		}
+		logger.Infoln("Service Container already exists, am not creating.")
 		if ops.DataContainer {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
-				if verbose {
-					w.Write([]byte("Data Container already exists, am not creating."))
-				}
+				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
 			} else {
-				if verbose {
-					w.Write([]byte("Data Container does not exist, creating."))
-				}
+				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err := createContainer(optsData)
 				if err != nil {
 					return err
@@ -107,20 +93,14 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.W
 		id_main = servCont.ID
 
 	} else {
-		if verbose {
-			w.Write([]byte("Service Container does not exist, creating."))
-		}
+		logger.Infoln("Service Container does not exist, creating.")
 
 		if ops.DataContainer {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
-				if verbose {
-					w.Write([]byte("Data Container already exists, am not creating."))
-				}
+				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
 			} else {
-				if verbose {
-					w.Write([]byte("Data Container does not exist, creating."))
-				}
+				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err = createContainer(optsData)
 				if err != nil {
 					return err
@@ -137,11 +117,9 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.W
 	}
 
 	// start the container
-	if verbose {
-		w.Write([]byte("Starting ServiceContainer ID: " + id_main))
-		if ops.DataContainer {
-			w.Write([]byte("with DataContainer ID: " + id_data))
-		}
+	logger.Infoln("Starting ServiceContainer ID: " + id_main)
+	if ops.DataContainer {
+		logger.Infoln("with DataContainer ID: " + id_data)
 	}
 
 	err = startContainer(id_main, &optsServ)
@@ -149,39 +127,29 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.W
 		return err
 	}
 
-	if verbose {
-		w.Write([]byte(srv.Name + " Started."))
-	}
+	logger.Infoln(srv.Name + " Started.")
 	return nil
 }
 
-func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bool, w io.Writer) error {
+func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull bool) error {
 	var id string
 	var wasRunning bool = false
 
-	if verbose {
-		w.Write([]byte("Rebuilding Service: " + srv.Name))
-	}
+	logger.Infoln("Rebuilding Service: " + srv.Name)
 
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service exists, commensing with rebuild."))
-		}
+		logger.Infoln("Service exists, commensing with rebuild.")
 
 		if _, running := ContainerRunning(ops); running {
-			if verbose {
-				w.Write([]byte("Service is running. Stopping now."))
-			}
+			logger.Infoln("Service is running. Stopping now.")
 			wasRunning = true
-			err := DockerStop(srv, ops, verbose, w)
+			err := DockerStop(srv, ops)
 			if err != nil {
 				return err
 			}
 		}
 
-		if verbose {
-			w.Write([]byte("Removing old container."))
-		}
+		logger.Infoln("Removing old container.")
 		err := removeContainer(service.ID)
 		if err != nil {
 			return err
@@ -189,14 +157,12 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bo
 
 	} else {
 
-		if verbose {
-			w.Write([]byte("Service did not previously exist. Nothing to rebuild."))
-		}
+		logger.Infoln("Service did not previously exist. Nothing to rebuild.")
 		return nil
 	}
 
 	if pull {
-		err := DockerPull(srv, ops, verbose, w)
+		err := DockerPull(srv, ops)
 		if err != nil {
 			return err
 		}
@@ -211,9 +177,7 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bo
 		return err
 	}
 
-	if verbose {
-		w.Write([]byte("Recreating container."))
-	}
+	logger.Infoln("Recreating container.")
 	cont, err := createContainer(opts)
 	if err != nil {
 		return err
@@ -221,36 +185,28 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull, verbose bo
 	id = cont.ID
 
 	if wasRunning {
-		if verbose {
-			w.Write([]byte("Restarting Container with new ID: " + id))
-		}
+		logger.Infoln("Restarting Container with new ID: " + id)
 		err := startContainer(id, &opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	if verbose {
-		w.Write([]byte(srv.Name + " Rebuilt."))
-	}
+	logger.Infoln(srv.Name + " Rebuilt.")
 
 	return nil
 }
 
-func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
-	if verbose {
-		w.Write([]byte("Pulling an image for the service."))
-	}
+func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
+	logger.Infoln("Pulling an image for the service.")
 
 	var wasRunning bool = false
 
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			err := DockerStop(srv, ops, verbose, w)
+			err := DockerStop(srv, ops)
 			if err != nil {
 				return err
 			}
@@ -261,8 +217,8 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.
 		}
 	}
 
-	if verbose {
-		err := pullImage(srv.Image, w)
+	if logger.Level > 0 {
+		err := pullImage(srv.Image, logger.Writer)
 		if err != nil {
 			return err
 		}
@@ -274,7 +230,7 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.
 	}
 
 	if wasRunning {
-		err := DockerRun(srv, ops, verbose, w)
+		err := DockerRun(srv, ops)
 		if err != nil {
 			return err
 		}
@@ -283,37 +239,27 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.
 	return nil
 }
 
-func DockerLogs(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
-	if verbose {
-		w.Write([]byte("Getting service's logs."))
-	}
+func DockerLogs(srv *def.Service, ops *def.ServiceOperation) error {
+	logger.Infoln("Getting service's logs.")
 
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 		err := logsContainer(service.ID)
 		if err != nil {
 			return err
 		}
 	} else {
-		if verbose {
-			w.Write([]byte("Service does not exist. Cannot display logs."))
-		}
+		logger.Infoln("Service does not exist. Cannot display logs.")
 	}
 
 	return nil
 }
 
-func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool, w io.Writer) error {
-	if verbose {
-		w.Write([]byte("Inspecting service"))
-	}
+func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string) error {
+	logger.Infoln("Inspecting service")
 
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 		err := inspectContainer(service.ID, field)
 		if err != nil {
 			return err
@@ -324,9 +270,9 @@ func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string, ve
 	return nil
 }
 
-func DockerStop(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
+func DockerStop(srv *def.Service, ops *def.ServiceOperation) error {
 	// don't limit this to verbose because it takes a few seconds
-	w.Write([]byte("Stopping: " + srv.Name + ". This may take a few seconds."))
+	logger.Println("Stopping: " + srv.Name + ". This may take a few seconds.")
 
 	var timeout uint = 10
 	dockerAPIContainer, running := ContainerExists(ops)
@@ -338,18 +284,14 @@ func DockerStop(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.
 		}
 	}
 
-	if verbose {
-		w.Write([]byte(srv.Name + " Stopped."))
-	}
+	logger.Infoln(srv.Name + " Stopped.")
 
 	return nil
 }
 
-func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string, verbose bool, w io.Writer) error {
+func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string) error {
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 		newName = strings.Replace(service.Names[0], oldName, newName, 1)
 		err := renameContainer(service.ID, newName)
 		if err != nil {
@@ -362,11 +304,9 @@ func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName 
 	return nil
 }
 
-func DockerRemove(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
+func DockerRemove(srv *def.Service, ops *def.ServiceOperation) error {
 	if service, exists := ContainerExists(ops); exists {
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 		err := removeContainer(service.ID)
 		if err != nil {
 			return err

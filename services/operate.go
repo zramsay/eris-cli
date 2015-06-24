@@ -1,10 +1,6 @@
 package services
 
 import (
-	"fmt"
-	"io"
-	"os"
-
 	"github.com/eris-ltd/eris-cli/perform"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -15,31 +11,29 @@ import (
 
 func Start(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(StartServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(StartServiceRaw(args[0]))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(LogsServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(LogsServiceRaw(args[0]))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(KillServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(KillServiceRaw(args[0]))
 }
 
-func StartServiceRaw(servName string, verbose bool, w io.Writer) error {
+func StartServiceRaw(servName string) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
 
 	if IsServiceRunning(service.Service) {
-		if verbose {
-			w.Write([]byte("Service already started. Skipping."))
-		}
+		logger.Infoln("Service already started. Skipping.")
 	} else {
-		err := StartServiceByService(service.Service, service.Operations, verbose, w)
+		err := StartServiceByService(service.Service, service.Operations)
 		if err != nil {
 			return err
 		}
@@ -48,61 +42,59 @@ func StartServiceRaw(servName string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func LogsServiceRaw(servName string, verbose bool, w io.Writer) error {
+func LogsServiceRaw(servName string) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	err = LogsServiceByService(service.Service, service.Operations, verbose, w)
+	err = LogsServiceByService(service.Service, service.Operations)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func KillServiceRaw(servName string, verbose bool, w io.Writer) error {
+func KillServiceRaw(servName string) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
 
 	if IsServiceRunning(service.Service) {
-		err := KillServiceByService(service.Service, service.Operations, verbose, w)
+		err := KillServiceByService(service.Service, service.Operations)
 		if err != nil {
 			return err
 		}
 	} else {
-		if verbose {
-			fmt.Println("Service not currently running. Skipping.")
-		}
+		logger.Infoln("Service not currently running. Skipping.")
 	}
 	return nil
 }
 
-func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
-	err := perform.DockerLogs(srv, ops, verbose, w)
+func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation) error {
+	err := perform.DockerLogs(srv, ops)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
+func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
 	for _, srv := range srvMain.ServiceDeps {
-		go StartServiceRaw(srv, verbose, w)
+		go StartServiceRaw(srv)
 	}
-	err := perform.DockerRun(srvMain, ops, verbose, w)
+	err := perform.DockerRun(srvMain, ops)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func KillServiceByService(srvMain *def.Service, ops *def.ServiceOperation, verbose bool, w io.Writer) error {
+func KillServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
 	for _, srv := range srvMain.ServiceDeps {
-		go KillServiceRaw(srv, verbose, w)
+		go KillServiceRaw(srv)
 	}
-	err := perform.DockerStop(srvMain, ops, verbose, w)
+	err := perform.DockerStop(srvMain, ops)
 	if err != nil {
 		return err
 	}

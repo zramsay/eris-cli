@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -28,12 +29,23 @@ Complete documentation is available at https://docs.erisindustries.com
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		common.InitErisDir()
 		util.DockerConnect(cmd)
+
+		verbose := cmd.Flags().Lookup("verbose").Changed
+		debug := cmd.Flags().Lookup("debug").Changed
+		var logLevel int
+		if verbose {
+			logLevel = 1
+		} else if debug {
+			logLevel = 2
+		}
+		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		err := util.SaveGlobalConfig(GlobalConfig.Config)
+		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
 		if err != nil {
-			fmt.Fprintln(GlobalConfig.ErrorWriter, err)
+			logger.Errorln(err)
 		}
+		log.Flush()
 	},
 }
 
@@ -70,6 +82,7 @@ func AddCommands() {
 
 // Global Flags
 var Verbose bool
+var Debug bool
 
 // Flags that are to be used by commands
 var Force bool
@@ -77,10 +90,8 @@ var Force bool
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
+	ErisCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "debug level output")
 }
-
-// Properly scope the globalConfig
-var GlobalConfig *util.ErisCli
 
 func InitializeConfig() {
 	var err error
@@ -107,7 +118,7 @@ func InitializeConfig() {
 		erw = os.Stderr
 	}
 
-	GlobalConfig, err = util.SetGlobalObject(out, erw)
+	util.GlobalConfig, err = util.SetGlobalObject(out, erw)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

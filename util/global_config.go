@@ -11,6 +11,9 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
+// Properly scope the globalConfig
+var GlobalConfig *ErisCli
+
 type ErisCli struct {
 	Writer      io.Writer
 	ErrorWriter io.Writer

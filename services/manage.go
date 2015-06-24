@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +24,7 @@ func Import(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris services install [name] [location]")
 		return
 	}
-	IfExit(ImportServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(ImportServiceRaw(args[0], args[1]))
 }
 
 func New(cmd *cobra.Command, args []string) {
@@ -34,7 +33,7 @@ func New(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris new [name] [containerImage]")
 		return
 	}
-	IfExit(NewServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(NewServiceRaw(args[0], args[1]))
 }
 
 func Edit(cmd *cobra.Command, args []string) {
@@ -48,7 +47,7 @@ func Rename(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris services rename [oldName] [newName]")
 		return
 	}
-	IfExit(RenameServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RenameServiceRaw(args[0], args[1]))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -56,18 +55,18 @@ func Inspect(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
-	IfExit(InspectServiceRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(InspectServiceRaw(args[0], args[1]))
 }
 
 func Export(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(ExportServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(ExportServiceRaw(args[0]))
 }
 
 // Updates an installed service, or installs it if it has not been installed.
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(UpdateServiceRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(UpdateServiceRaw(args[0]))
 }
 
 // list known
@@ -94,10 +93,10 @@ func ListExisting() {
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(RmServiceRaw(args[0], cmd.Flags().Lookup("force").Changed, cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RmServiceRaw(args[0], cmd.Flags().Lookup("force").Changed))
 }
 
-func ImportServiceRaw(servName, servPath string, verbose bool, w io.Writer) error {
+func ImportServiceRaw(servName, servPath string) error {
 	fileName := filepath.Join(ServicesPath, servName)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -107,8 +106,8 @@ func ImportServiceRaw(servName, servPath string, verbose bool, w io.Writer) erro
 	if s[0] == "ipfs" {
 
 		var err error
-		if verbose {
-			err = util.GetFromIPFS(s[1], fileName, w)
+		if logger.Level > 0 {
+			err = util.GetFromIPFS(s[1], fileName, logger.Writer)
 		} else {
 			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
 		}
@@ -120,14 +119,14 @@ func ImportServiceRaw(servName, servPath string, verbose bool, w io.Writer) erro
 	}
 
 	if strings.Contains(s[0], "github") {
-		w.Write([]byte("https://twitter.com/ryaneshea/status/595957712040628224"))
+		logger.Errorln("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
 
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func NewServiceRaw(servName, imageName string, verbose bool, w io.Writer) error {
+func NewServiceRaw(servName, imageName string) error {
 	srv := &def.Service{
 		Name:  servName,
 		Image: imageName,
@@ -150,17 +149,15 @@ func EditServiceRaw(servName string) {
 	Editor(servDefFileByServName(servName))
 }
 
-func RenameServiceRaw(oldName, newName string, verbose bool, w io.Writer) error {
+func RenameServiceRaw(oldName, newName string) error {
 	if parseKnown(oldName) {
-		if verbose {
-			fmt.Println("Renaming service", oldName, "to", newName)
-		}
+		logger.Infoln("Renaming service", oldName, "to", newName)
 
 		serviceDef, err := LoadServiceDefinition(oldName)
 		if err != nil {
 			return err
 		}
-		err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName, verbose, w)
+		err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -173,7 +170,7 @@ func RenameServiceRaw(oldName, newName string, verbose bool, w io.Writer) error 
 			return err
 		}
 
-		err = data.RenameDataRaw(oldName, newName, verbose, w)
+		err = data.RenameDataRaw(oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -186,19 +183,19 @@ func RenameServiceRaw(oldName, newName string, verbose bool, w io.Writer) error 
 	return nil
 }
 
-func InspectServiceRaw(servName, field string, verbose bool, w io.Writer) error {
+func InspectServiceRaw(servName, field string) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	err = InspectServiceByService(service.Service, service.Operations, field, verbose, w)
+	err = InspectServiceByService(service.Service, service.Operations, field)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ExportServiceRaw(servName string, verbose bool, w io.Writer) error {
+func ExportServiceRaw(servName string) error {
 	if parseKnown(servName) {
 		ipfsService, err := LoadServiceDefinition("ipfs")
 		if err != nil {
@@ -206,31 +203,27 @@ func ExportServiceRaw(servName string, verbose bool, w io.Writer) error {
 		}
 
 		if IsServiceRunning(ipfsService.Service) {
-			if verbose {
-				w.Write([]byte("IPFS is running. Adding now."))
-			}
+			logger.Infoln("IPFS is running. Adding now.")
 
-			hash, err := exportFile(servName, verbose, w)
+			hash, err := exportFile(servName)
 			if err != nil {
 				return err
 			}
 
-			w.Write([]byte(hash))
+			logger.Errorln(hash)
 		} else {
-			if verbose {
-				w.Write([]byte("IPFS is not running. Starting now."))
-			}
-			err := StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
+			logger.Infoln("IPFS is not running. Starting now.")
+			err := StartServiceByService(ipfsService.Service, ipfsService.Operations)
 			if err != nil {
 				return err
 			}
 
-			hash, err := exportFile(servName, verbose, w)
+			hash, err := exportFile(servName)
 			if err != nil {
 				return err
 			}
 
-			w.Write([]byte(hash))
+			logger.Errorln(hash)
 		}
 
 	} else {
@@ -241,9 +234,9 @@ To find known services use: eris services known`)
 	return nil
 }
 
-func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string, verbose bool, w io.Writer) error {
+func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string) error {
 	if IsServiceExisting(srv) {
-		err := perform.DockerInspect(srv, ops, field, verbose, w)
+		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
 			return err
 		}
@@ -277,24 +270,24 @@ func ListExistingRaw() []string {
 	return listServices(true)
 }
 
-func UpdateServiceRaw(servName string, verbose bool, w io.Writer) error {
+func UpdateServiceRaw(servName string) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRebuild(service.Service, service.Operations, true, verbose, w)
+	err = perform.DockerRebuild(service.Service, service.Operations, true)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func RmServiceRaw(servName string, force, verbose bool, w io.Writer) error {
+func RmServiceRaw(servName string, force bool) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRemove(service.Service, service.Operations, verbose, w)
+	err = perform.DockerRemove(service.Service, service.Operations)
 	if err != nil {
 		return err
 	}
@@ -305,13 +298,13 @@ func RmServiceRaw(servName string, force, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func exportFile(servName string, verbose bool, w io.Writer) (string, error) {
+func exportFile(servName string) (string, error) {
 	fileName := servDefFileByServName(servName)
 
 	var err error
 	var hash string
-	if verbose {
-		hash, err = util.SendToIPFS(fileName, os.Stdout)
+	if logger.Level > 0 {
+		hash, err = util.SendToIPFS(fileName, logger.Writer)
 	} else {
 		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
 	}

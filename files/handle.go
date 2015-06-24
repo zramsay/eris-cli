@@ -3,7 +3,6 @@ package files
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/eris-ltd/eris-cli/services"
@@ -17,7 +16,7 @@ func Get(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris files get ipfsHASH fileName")
 		os.Exit(1)
 	}
-	err := GetFilesRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout)
+	err := GetFilesRaw(args[0], args[1])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -29,39 +28,35 @@ func Put(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris files put fileName")
 		os.Exit(1)
 	}
-	err := PutFilesRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout)
+	err := PutFilesRaw(args[0])
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-func GetFilesRaw(hash, fileName string, verbose bool, w io.Writer) error {
+func GetFilesRaw(hash, fileName string) error {
 	ipfsService, err := services.LoadServiceDefinition("ipfs")
 	if err != nil {
 		return err
 	}
 
 	if services.IsServiceRunning(ipfsService.Service) {
-		if verbose {
-			w.Write([]byte("IPFS is running. Adding now."))
-		}
+		logger.Infoln("IPFS is running. Adding now.")
 
-		err := importFile(hash, fileName, verbose, w)
+		err := importFile(hash, fileName)
 		if err != nil {
 			return err
 		}
 
 	} else {
-		if verbose {
-			w.Write([]byte("IPFS is not running. Starting now."))
-		}
-		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
+		logger.Infoln("IPFS is not running. Starting now.")
+		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
 		if err != nil {
 			return err
 		}
 
-		err = importFile(hash, fileName, verbose, w)
+		err = importFile(hash, fileName)
 		if err != nil {
 			return err
 		}
@@ -69,43 +64,37 @@ func GetFilesRaw(hash, fileName string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func PutFilesRaw(fileName string, verbose bool, w io.Writer) error {
+func PutFilesRaw(fileName string) error {
 	ipfsService, err := services.LoadServiceDefinition("ipfs")
 	if err != nil {
 		return err
 	}
 
 	if services.IsServiceRunning(ipfsService.Service) {
-		if verbose {
-			w.Write([]byte("IPFS is running. Adding now."))
-		}
+		logger.Infoln("IPFS is running. Adding now.")
 
-		err := exportFile(fileName, verbose, w)
+		err := exportFile(fileName)
 		if err != nil {
 			return err
 		}
 
 	} else {
-		if verbose {
-			w.Write([]byte("IPFS is not running. Starting now."))
-		}
-		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, verbose, w)
-		if err != nil {
+		logger.Infoln("IPFS is not running. Starting now.")
+		if err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations); err != nil {
 			return err
 		}
 
-		err = exportFile(fileName, verbose, w)
-		if err != nil {
+		if err := exportFile(fileName); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func importFile(hash, fileName string, verbose bool, w io.Writer) error {
+func importFile(hash, fileName string) error {
 	var err error
-	if verbose {
-		err = util.GetFromIPFS(hash, fileName, w)
+	if logger.Level > 0 {
+		err = util.GetFromIPFS(hash, fileName, logger.Writer)
 	} else {
 		err = util.GetFromIPFS(hash, fileName, bytes.NewBuffer([]byte{}))
 	}
@@ -116,12 +105,12 @@ func importFile(hash, fileName string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func exportFile(fileName string, verbose bool, w io.Writer) error {
+func exportFile(fileName string) error {
 	var hash string
 	var err error
 
-	if verbose {
-		hash, err = util.SendToIPFS(fileName, w)
+	if logger.Level > 0 {
+		hash, err = util.SendToIPFS(fileName, logger.Writer)
 	} else {
 		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
 	}
@@ -129,6 +118,6 @@ func exportFile(fileName string, verbose bool, w io.Writer) error {
 		return err
 	}
 
-	w.Write([]byte(hash + "\n"))
+	logger.Println(hash)
 	return nil
 }

@@ -18,15 +18,15 @@ import (
 
 func Import(cmd *cobra.Command, args []string) {
 	common.IfExit(checkServiceGiven(args))
-	common.IfExit(ImportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	common.IfExit(ImportDataRaw(args[0]))
 }
 
 func Export(cmd *cobra.Command, args []string) {
 	common.IfExit(checkServiceGiven(args))
-	common.IfExit(ExportDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	common.IfExit(ExportDataRaw(args[0]))
 }
 
-func ImportDataRaw(name string, verbose bool, w io.Writer) error {
+func ImportDataRaw(name string) error {
 	if parseKnown(name) {
 
 		containerName := nameToContainerName(name)
@@ -41,9 +41,7 @@ func ImportDataRaw(name string, verbose bool, w io.Writer) error {
 			return err
 		}
 
-		if verbose {
-			w.Write([]byte(s))
-		}
+		logger.Infoln(s)
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
@@ -51,11 +49,9 @@ func ImportDataRaw(name string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func ExportDataRaw(name string, verbose bool, w io.Writer) error {
+func ExportDataRaw(name string) error {
 	if parseKnown(name) {
-		if verbose {
-			w.Write([]byte("Exporting data container" + name))
-		}
+		logger.Infoln("Exporting data container" + name)
 
 		exportPath := filepath.Join(common.DataContainersPath, name)
 		_, ops := mockService(name)
@@ -64,9 +60,7 @@ func ExportDataRaw(name string, verbose bool, w io.Writer) error {
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
 		}
-		if verbose {
-			w.Write([]byte("Service ID: " + service.ID))
-		}
+		logger.Infoln("Service ID: " + service.ID)
 
 		cont, err := util.DockerClient.InspectContainer(service.ID)
 		if err != nil {

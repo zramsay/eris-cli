@@ -3,7 +3,6 @@ package actions
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,34 +13,32 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-func Get(config *util.ErisCli, cmd *cobra.Command, args []string) {
-	err := checkActionGiven(args)
-	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+func Get(cmd *cobra.Command, args []string) {
+	if err := checkActionGiven(args); err != nil {
+		logger.Errorln(err)
 		return
 	}
 	if len(args) != 2 {
-		fmt.Fprintln(config.Writer, "Please give me: eris actions get [name] [location]")
+		logger.Println("Please give me: eris actions get [name] [location]")
 		return
 	}
 
-	err = ImportActionRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, config.Writer)
-	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+	if err := ImportActionRaw(args[0], args[1]); err != nil {
+		logger.Errorln(err)
 		return
 	}
 }
 
-func New(config *util.ErisCli, cmd *cobra.Command, args []string) {
+func New(cmd *cobra.Command, args []string) {
 	err := checkActionGiven(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 
 	err = EditActionRaw(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 }
@@ -54,60 +51,60 @@ func ListProject() {
 
 }
 
-func ListKnown(config *util.ErisCli) {
+func ListKnown() {
 	actions := ListKnownRaw()
 	for _, s := range actions {
-		fmt.Fprintln(config.Writer, strings.Replace(s, "_", " ", -1))
+		logger.Println(strings.Replace(s, "_", " ", -1))
 	}
 }
 
-func Edit(config *util.ErisCli, args []string) {
+func Edit(args []string) {
 	err := checkActionGiven(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 
 	err = EditActionRaw(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 }
 
-func Rename(config *util.ErisCli, cmd *cobra.Command, args []string) {
+func Rename(cmd *cobra.Command, args []string) {
 	err := checkActionGiven(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 	if len(args) != 2 {
-		fmt.Fprintln(config.Writer, "Please give me: eris actions rename \"old action name\" \"new action name\"")
+		logger.Println("Please give me: eris actions rename \"old action name\" \"new action name\"")
 		return
 	}
 
-	err = RenameActionRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, config.Writer)
+	err = RenameActionRaw(args[0], args[1])
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 }
 
-func Rm(config *util.ErisCli, cmd *cobra.Command, args []string) {
+func Rm(cmd *cobra.Command, args []string) {
 	err := checkActionGiven(args)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 
-	err = RmActionRaw(args, cmd.Flags().Lookup("force").Changed, cmd.Flags().Lookup("verbose").Changed, config.Writer)
+	err = RmActionRaw(args, cmd.Flags().Lookup("force").Changed)
 	if err != nil {
-		fmt.Fprintln(config.ErrorWriter, err)
+		logger.Errorln(err)
 		return
 	}
 }
 
-func ImportActionRaw(actionName, servPath string, verbose bool, w io.Writer) error {
+func ImportActionRaw(actionName, servPath string) error {
 	fileName := filepath.Join(ActionsPath, actionName)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -117,8 +114,8 @@ func ImportActionRaw(actionName, servPath string, verbose bool, w io.Writer) err
 	if s[0] == "ipfs" {
 
 		var err error
-		if verbose {
-			err = util.GetFromIPFS(s[1], fileName, os.Stdout)
+		if logger.Level > 0 {
+			err = util.GetFromIPFS(s[1], fileName, logger.Writer)
 		} else {
 			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
 		}
@@ -130,7 +127,7 @@ func ImportActionRaw(actionName, servPath string, verbose bool, w io.Writer) err
 	}
 
 	if strings.Contains(s[0], "github") {
-		w.Write([]byte("https://twitter.com/ryaneshea/status/595957712040628224"))
+		logger.Println("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
 
@@ -149,7 +146,7 @@ func EditActionRaw(actionName []string) error {
 	return nil
 }
 
-func RenameActionRaw(oldName, newName string, verbose bool, w io.Writer) error {
+func RenameActionRaw(oldName, newName string) error {
 	oldAction := strings.Split(oldName, " ")
 	act, _, err := LoadActionDefinition(oldAction)
 	if err != nil {
@@ -190,7 +187,7 @@ func ListKnownRaw() []string {
 	return acts
 }
 
-func RmActionRaw(act []string, force, verbose bool, w io.Writer) error {
+func RmActionRaw(act []string, force bool) error {
 	if force {
 		actName := strings.Join(act, "_")
 		oldFile, err := configFileNameFromActionName(actName)

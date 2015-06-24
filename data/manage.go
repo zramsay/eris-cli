@@ -2,7 +2,6 @@ package data
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"regexp"
 
@@ -32,7 +31,7 @@ func Rename(cmd *cobra.Command, args []string) {
 		fmt.Println("Please give me: eris data rename [oldName] [newName]")
 		return
 	}
-	IfExit(RenameDataRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RenameDataRaw(args[0], args[1]))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
@@ -40,12 +39,12 @@ func Inspect(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
-	IfExit(InspectDataRaw(args[0], args[1], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(InspectDataRaw(args[0], args[1]))
 }
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(RmDataRaw(args[0], cmd.Flags().Lookup("verbose").Changed, os.Stdout))
+	IfExit(RmDataRaw(args[0]))
 }
 
 func ListKnownRaw() ([]string, error) {
@@ -65,14 +64,12 @@ func ListKnownRaw() ([]string, error) {
 	return dataCont, nil
 }
 
-func RenameDataRaw(oldName, newName string, verbose bool, w io.Writer) error {
+func RenameDataRaw(oldName, newName string) error {
 	if parseKnown(oldName) {
-		if verbose {
-			w.Write([]byte("Renaming data container" + oldName + "to" + newName))
-		}
+		logger.Infoln("Renaming data container" + oldName + "to" + newName)
 
 		srv, ops := mockService(oldName)
-		err := perform.DockerRename(srv, ops, oldName, newName, verbose, w)
+		err := perform.DockerRename(srv, ops, oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -82,14 +79,12 @@ func RenameDataRaw(oldName, newName string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func InspectDataRaw(name, field string, verbose bool, w io.Writer) error {
+func InspectDataRaw(name, field string) error {
 	if parseKnown(name) {
-		if verbose {
-			w.Write([]byte("Inspecting data container" + name))
-		}
+		logger.Infoln("Inspecting data container" + name)
 
 		srv, ops := mockService(name)
-		err := perform.DockerInspect(srv, ops, field, verbose, w)
+		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
 			return err
 		}
@@ -99,14 +94,12 @@ func InspectDataRaw(name, field string, verbose bool, w io.Writer) error {
 	return nil
 }
 
-func RmDataRaw(name string, verbose bool, w io.Writer) error {
+func RmDataRaw(name string) error {
 	if parseKnown(name) {
-		if verbose {
-			w.Write([]byte("Removing data container" + name))
-		}
+		logger.Infoln("Removing data container" + name)
 
 		srv, ops := mockService(name)
-		err := perform.DockerRemove(srv, ops, verbose, w)
+		err := perform.DockerRemove(srv, ops)
 		if err != nil {
 			return err
 		}
