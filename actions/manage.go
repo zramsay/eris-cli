@@ -147,19 +147,38 @@ func EditActionRaw(actionName []string) error {
 }
 
 func RenameActionRaw(oldName, newName string) error {
+	if oldName == newName {
+		return fmt.Errorf("Cannot rename to same name")
+	}
+
 	oldAction := strings.Split(oldName, " ")
 	act, _, err := LoadActionDefinition(oldAction)
 	if err != nil {
 		return err
 	}
-	act.Name = newName
+
 	oldName = strings.Replace(oldName, " ", "_", -1)
 	oldFile, err := configFileNameFromActionName(oldName)
 	if err != nil {
 		return err
 	}
-	newFile := strings.Replace(oldFile, oldName, newName, 1)
-	newFile = strings.Replace(newFile, " ", "_", -1)
+
+	var newFile string
+	newNameBase := strings.Replace(strings.Replace(newName, " ", "_", -1), filepath.Ext(newName), "", 1)
+
+	if newNameBase == oldName {
+		newFile = strings.Replace(oldFile, filepath.Ext(oldFile), filepath.Ext(newName), 1)
+	} else {
+		newFile = strings.Replace(oldFile, oldName, newName, 1)
+		newFile = strings.Replace(newFile, " ", "_", -1)
+	}
+
+	if newFile == oldFile {
+		logger.Infoln("Those are the same file. Not renaming")
+		return nil
+	}
+
+	act.Name = strings.Replace(newNameBase, "_", " ", -1)
 
 	err = WriteActionDefinitionFile(act, newFile)
 	if err != nil {

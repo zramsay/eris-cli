@@ -1,12 +1,14 @@
 package chains
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
 
 // if given empty string for fileName will use Service
@@ -14,24 +16,40 @@ import (
 func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 	// writer := os.Stdout
 
+	if filepath.Ext(fileName) == "" {
+		fileName = chainDef.Name + ".toml"
+	}
+
 	writer, err := os.Create(fileName)
 	defer writer.Close()
 	if err != nil {
 		return err
 	}
 
-	if fileName == "" {
-		fileName = chainDef.Name + ".toml"
-	}
-
 	switch filepath.Ext(fileName) {
-	case ".toml":
-		enc := toml.NewEncoder(writer)
-		enc.Indent = ""
-		writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
-		writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
-		writer.Write([]byte("\n[service]\n"))
-		enc.Encode(chainDef.Service)
+		case ".json":
+			mar, err := json.MarshalIndent(chainDef, "", "  ")
+			if err != nil {
+			   return err
+			}
+			mar = append(mar, '\n')
+			writer.Write(mar)
+		case ".yaml":
+			mar, err := yaml.Marshal(chainDef)
+			if err != nil {
+			   return err
+			}
+			mar = append(mar, '\n')
+			writer.Write(mar)
+		default:
+			enc := toml.NewEncoder(writer)
+			enc.Indent = ""
+			writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
+			writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
+			// writer.Write([]byte("\n[manage]\n"))
+			// enc.Encode(chainDef.Manage)
+			writer.Write([]byte("\n[service]\n"))
+			enc.Encode(chainDef.Service)
 	}
 	return nil
 }

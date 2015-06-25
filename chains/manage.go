@@ -11,9 +11,10 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -91,7 +92,7 @@ func ListRunning() {
 func Rename(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	if len(args) != 2 {
-		fmt.Println("Please give me: eris services rename [oldName] [newName]")
+		fmt.Println("Please give me: eris chains rename [oldName] [newName]")
 		return
 	}
 	IfExit(RenameChainRaw(args[0], args[1]))
@@ -218,37 +219,58 @@ func ListExistingRaw() []string {
 }
 
 func RenameChainRaw(oldName, newName string) error {
+	if oldName == newName {
+		return fmt.Errorf("Cannot rename to same name")
+	}
+
+	newNameBase := strings.Replace(newName, filepath.Ext(newName), "", 1)
+	transformOnly := newNameBase == oldName
+
 	if isKnownChain(oldName) {
-		logger.Infoln("Renaming chain" + oldName + "to" + newName)
+		logger.Infoln("Renaming chain", oldName, "to", newNameBase)
 
 		chainDef, err := LoadChainDefinition(oldName)
 		if err != nil {
 			return err
 		}
 
-		err = perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newName)
-		if err != nil {
-			return err
+		if !transformOnly {
+			err = perform.DockerRename(chainDef.Service, chainDef.Operations, oldName, newNameBase)
+			if err != nil {
+				return err
+			}
 		}
 
 		oldFile, err := configFileNameFromChainName(oldName)
 		if err != nil {
 			return err
 		}
-		newFile := strings.Replace(oldFile, oldName, newName, 1)
 
-		chainDef.Name = newName
+		if filepath.Base(oldFile) == newName {
+			logger.Infoln("Those are the same file. Not renaming")
+			return nil
+		}
+
+		var newFile string
+		if filepath.Ext(newName) == "" {
+			newFile = strings.Replace(oldFile, oldName, newName, 1)
+		} else {
+			newFile = filepath.Join(BlockchainsPath, newName)
+		}
+
+		chainDef.Name = newNameBase
 		chainDef.Service.Name = ""
 		chainDef.Service.Image = ""
-
 		err = WriteChainDefinitionFile(chainDef, newFile)
 		if err != nil {
 			return err
 		}
 
-		err = data.RenameDataRaw(oldName, newName)
-		if err != nil {
-			return err
+		if !transformOnly {
+			err = data.RenameDataRaw(oldName, newNameBase)
+			if err != nil {
+				return err
+			}
 		}
 
 		os.Remove(oldFile)

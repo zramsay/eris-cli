@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/util"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 

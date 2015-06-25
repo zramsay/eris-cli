@@ -10,9 +10,9 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -150,6 +150,13 @@ func EditServiceRaw(servName string) {
 }
 
 func RenameServiceRaw(oldName, newName string) error {
+	if oldName == newName {
+		return fmt.Errorf("Cannot rename to same name")
+	}
+
+	newNameBase := strings.Replace(newName, filepath.Ext(newName), "", 1)
+	transformOnly := newNameBase == oldName
+
 	if parseKnown(oldName) {
 		logger.Infoln("Renaming service", oldName, "to", newName)
 
@@ -157,22 +164,39 @@ func RenameServiceRaw(oldName, newName string) error {
 		if err != nil {
 			return err
 		}
-		err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName)
-		if err != nil {
-			return err
-		}
-		oldFile := servDefFileByServName(oldName)
-		newFile := strings.Replace(oldFile, oldName, newName, 1)
 
-		serviceDef.Service.Name = newName
+		if !transformOnly {
+			err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName)
+			if err != nil {
+				return err
+			}
+		}
+
+		oldFile := servDefFileByServName(oldName)
+
+		if filepath.Base(oldFile) == newName {
+			logger.Infoln("Those are the same file. Not renaming")
+			return nil
+		}
+
+		var newFile string
+		if filepath.Ext(newName) == "" {
+			newFile = strings.Replace(oldFile, oldName, newName, 1)
+		} else {
+			newFile = filepath.Join(ServicesPath, newName)
+		}
+
+		serviceDef.Service.Name = strings.Replace(newName, filepath.Ext(newName), "", 1)
 		err = WriteServiceDefinitionFile(serviceDef, newFile)
 		if err != nil {
 			return err
 		}
 
-		err = data.RenameDataRaw(oldName, newName)
-		if err != nil {
-			return err
+		if !transformOnly {
+			err = data.RenameDataRaw(oldName, newName)
+			if err != nil {
+				return err
+			}
 		}
 
 		os.Remove(oldFile)

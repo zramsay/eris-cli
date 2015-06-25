@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
+	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
 func mockService(name string) (*def.Service, *def.ServiceOperation) {

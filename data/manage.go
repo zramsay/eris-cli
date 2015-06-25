@@ -66,7 +66,7 @@ func ListKnownRaw() ([]string, error) {
 
 func RenameDataRaw(oldName, newName string) error {
 	if parseKnown(oldName) {
-		logger.Infoln("Renaming data container" + oldName + "to" + newName)
+		logger.Infoln("Renaming data container", oldName, "to", newName)
 
 		srv, ops := mockService(oldName)
 		err := perform.DockerRename(srv, ops, oldName, newName)

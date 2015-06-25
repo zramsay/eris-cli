@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/eris-ltd/eris-cli/perform"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 

@@ -2,16 +2,15 @@ package chains
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	def "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
@@ -51,9 +50,7 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 	}
 
 	if serv == nil {
-		// TODO: handle errors better
-		fmt.Println("I do not have the service definition file available for that chain type.")
-		os.Exit(1)
+		return nil, fmt.Errorf("I do not have the chain definition file available for that chain type.")
 	}
 
 	if chain.Service == nil {
