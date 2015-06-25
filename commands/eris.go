@@ -87,11 +87,13 @@ var Debug bool
 // Flags that are to be used by commands
 var Force bool
 var Interactive bool
+var Pull bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "debug level output")
+	Init.Flags().BoolVarP(&Pull, "pull", "p", false, "skip the pulling feature; for when git is not installed")
 }
 
 func InitializeConfig() {
