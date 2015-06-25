@@ -255,7 +255,11 @@ func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error
 	// typically this should parse the genesis and write
 	// a genesis state to the db. we might also have it
 	// post the new chain's id and other info to an etcb, etc. (pun intended)
-	chain.Service.Command = chain.Manager[cmd]
+	var ok bool
+	chain.Service.Command, ok = chain.Manager[cmd]
+	if !ok {
+		return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, cmd)
+	}
 	containerNumber := 1
 	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
 	chain.Operations.Remove = true
