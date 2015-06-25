@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -36,19 +35,19 @@ func LoadChainDefinition(chainType, chainID string) (*def.Chain, error) {
 	marshalChainDefinition(chainConf, &chain)
 	chain.Operations = &def.ServiceOperation{}
 
-	var serv *def.Service
+	var serv *def.ServiceDefinition
 	if chain.Type != "" {
-		serv, err = services.LoadService(chain.Type)
+		serv, err = services.LoadServiceDefinition(chain.Type)
 		if err != nil {
-			return &def.Chain{}, err
+			return nil, err
 		}
 	} else {
-		serv, err = services.LoadService(chainType)
+		serv, err = services.LoadServiceDefinition(chainType)
 		if err != nil {
-			return &def.Chain{}, err
+			return nil, err
 		}
-		chain.Name = serv.Name
-		chain.Type = serv.Name
+		chain.Name = chainID
+		chain.Type = chainType
 	}
 
 	if serv == nil {
@@ -56,10 +55,12 @@ func LoadChainDefinition(chainType, chainID string) (*def.Chain, error) {
 	}
 
 	if chain.Service == nil {
-		chain.Service = serv
+		chain.Service = serv.Service
 	} else {
-		mergeChainAndService(&chain, serv)
+		mergeChainAndService(&chain, serv.Service)
 	}
+
+	chain.Manager = serv.Manager
 
 	checkChainHasUniqueName(&chain)
 	checkDataContainerTurnedOn(&chain, chainConf)
@@ -191,7 +192,7 @@ func checkChainGiven(args []string) error {
 
 func checkChainHasUniqueName(chain *def.Chain) {
 	containerNumber := 1 // tmp
-	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%s_%d", chain.Type, chain.Name, strconv.Itoa(containerNumber))
+	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%s_%d", chain.Type, chain.Name, containerNumber)
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {

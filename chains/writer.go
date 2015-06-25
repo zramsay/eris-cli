@@ -27,29 +27,29 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 	}
 
 	switch filepath.Ext(fileName) {
-		case ".json":
-			mar, err := json.MarshalIndent(chainDef, "", "  ")
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		case ".yaml":
-			mar, err := yaml.Marshal(chainDef)
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		default:
-			enc := toml.NewEncoder(writer)
-			enc.Indent = ""
-			writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
-			writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
-			// writer.Write([]byte("\n[manage]\n"))
-			// enc.Encode(chainDef.Manage)
-			writer.Write([]byte("\n[service]\n"))
-			enc.Encode(chainDef.Service)
+	case ".json":
+		mar, err := json.MarshalIndent(chainDef, "", "  ")
+		if err != nil {
+			return err
+		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	case ".yaml":
+		mar, err := yaml.Marshal(chainDef)
+		if err != nil {
+			return err
+		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	default:
+		enc := toml.NewEncoder(writer)
+		enc.Indent = ""
+		writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
+		writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
+		writer.Write([]byte("\n[service]\n"))
+		enc.Encode(chainDef.Service)
+		writer.Write([]byte("\n[manager]\n"))
+		enc.Encode(chainDef.Manager)
 	}
 	return nil
 }

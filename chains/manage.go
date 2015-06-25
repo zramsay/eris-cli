@@ -25,7 +25,9 @@ import (
 
 // fetch and install a chain
 func Install(cmd *cobra.Command, args []string) {
-	checkChainGiven(args)
+	if len(args) == 0 {
+		Exit(fmt.Errorf("Please enter a chainID to fetch and install"))
+	}
 	chainID := args[0]
 
 	chainType := cmd.Flags().Lookup("type").Value.String()
@@ -176,6 +178,91 @@ func getChainIDFromGenesis(genesis, dir string) (string, error) {
 	return chainID, nil
 }
 
+func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error) {
+	containerName := chainType + "_" + chainID
+
+	// run containers and exit (creates data container)
+	if err := perform.DockerCreateDataContainer(containerName); err != nil {
+		return fmt.Errorf("Error creating data container %v", err)
+	}
+
+	// if something goes wrong, cleanup
+	defer func() {
+		if err != nil {
+			if err2 := data.RmDataRaw(containerName); err2 != nil {
+				err = fmt.Errorf("Tragic! Error removing data container after initial error (%v): %v", err, err2)
+			}
+		}
+	}()
+
+	// copy dir, genesis, config into container
+	dst := path.Join(DataContainersPath, containerName, "blockchains", chainType, chainID)
+	if err = os.MkdirAll(dst, 0700); err != nil {
+		err = fmt.Errorf("Error making data directory: %v", err)
+		return
+	}
+
+	if dir != "" {
+		if err = Copy(dir, dst); err != nil {
+			return err
+		}
+	}
+	if genesis != "" {
+		if err = Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
+			return err
+		}
+	}
+	if config != "" {
+		if err = Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
+			return err
+		}
+	}
+
+	// copy from host to container
+	if err = data.ImportDataRaw(containerName); err != nil {
+		return err
+	}
+
+	chain := &def.Chain{
+		Name:    chainID,
+		Type:    chainType,
+		Service: &def.Service{},
+		Manager: make(map[string]string),
+	}
+
+	// write the chain definition file ...
+	fileName := filepath.Join(BlockchainsPath, chainType, chainID) + ".toml"
+	d := path.Dir(fileName)
+	if _, err = os.Stat(d); err != nil {
+		if err = os.MkdirAll(d, 0700); err != nil {
+			err = fmt.Errorf("Error making directory (%s): %v", d, err)
+			return
+		}
+
+	}
+
+	if err = WriteChainDefinitionFile(chain, fileName); err != nil {
+		err = fmt.Errorf("error writing chain definition to file: %v", err)
+		return
+	}
+
+	chain, err = LoadChainDefinition(chainType, chainID)
+	if err != nil {
+		return err
+	}
+
+	// run "new" cmd in chains definition
+	// typically this should parse the genesis and write
+	// a genesis state to the db. we might also have it
+	// post the new chain's id and other info to an etcb, etc. (pun intended)
+	chain.Service.Command = chain.Manager[cmd]
+	containerNumber := 1
+	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
+	chain.Operations.Remove = true
+	err = services.StartServiceByService(chain.Service, chain.Operations)
+	return
+}
+
 func NewChainRaw(chainType, genesis, config, dir string) error {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
@@ -187,68 +274,15 @@ func NewChainRaw(chainType, genesis, config, dir string) error {
 		return err
 	}
 
-	// setup data container and service container
-	chain, err := LoadChainDefinition(chainType, chainID)
-	if err != nil {
-		return err
-	}
-
-	containerName := chainType + "_" + chainID
-
-	// run containers and exit (creates data container)
-	chain.Service.Command = fmt.Sprintf("echo \"Creating new %s containers with chainID %s\"", chainType, chainID)
-	if err := perform.DockerCreateDataContainer(containerName); err != nil {
-		return fmt.Errorf("Error creating data container %v", err)
-	}
-
-	// copy dir, genesis, config into container
-	dst := path.Join(DataContainersPath, containerName, "blockchains", chainType, chainID)
-	if err := os.MkdirAll(dst, 0700); err != nil {
-		return fmt.Errorf("Error making data directory: %v", err)
-	}
-
-	if dir != "" {
-		if err := Copy(dir, dst); err != nil {
-			return err
-		}
-	}
-	if genesis != "" {
-		if err := Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
-			return err
-		}
-	}
-	if config != "" {
-		if err := Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
-			return err
-		}
-	}
-
-	// copy from host to container
-	if err := data.ImportDataRaw(containerName); err != nil {
-		return err
-	}
-
-	// run "new" cmd in chains definition
-	// typically this should parse the genesis and write
-	// a genesis state to the db. we might also have it
-	// post the new chain's id and other info to an etcb, etc. (pun intended)
-	chain.Service.Command = chain.Manage.NewCmd
-	containerNumber := 1
-	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
-	chain.Operations.Remove = true
-	services.StartServiceByService(chain.Service, chain.Operations)
-	return nil
+	return setupChain(chainType, chainID, "new", dir, genesis, config)
 }
 
 func InstallChainRaw(chainType, chainID, config, dir string) error {
-	// check known chain type, or if empty default to mint
+	if chainType == "" {
+		return fmt.Errorf("Please specify a chain type with the --type flag")
+	}
 
-	// setup data container and service container
-
-	// create dir, possibly copy in config and dir if present
-
-	// run "fetch" cmd in chains definition
-	return nil
+	return setupChain(chainType, chainID, "fetch", dir, "", config)
 }
 
 func ImportChainRaw(chainType, chainID, path string) error {
