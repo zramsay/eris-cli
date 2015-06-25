@@ -48,11 +48,11 @@ func DockerCreateDataContainer(srvName string) error {
 // create a container with volumes-from the srvName data container
 // and either attach interactively or execute a command
 // container should be destroyed on exit
-func DockerRunVolumesFromContainer(srvName string, interactive bool, args []string) error {
+func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) error {
 	// create an eris/base container with volumes from the given
 	// srvName's data container
-	containerNumber := 1
-	volumesFrom := "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
+	// containerNumber := 1
+	// volumesFrom := "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
 	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
 	cont, err := createContainer(opts)
 	if err != nil {

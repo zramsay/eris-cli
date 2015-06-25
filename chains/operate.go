@@ -2,6 +2,7 @@ package chains
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/perform"
@@ -75,6 +76,8 @@ func LogsChainRaw(chainName string) error {
 
 func ExecChainRaw(name string, interactive bool, args []string) error {
 	if isKnownChain(name) {
+		containerNumber := 1
+		name = "eris_chain_" + name + "_" + strconv.Itoa(containerNumber)
 		logger.Infoln("Running exec on container with volumes from data container for " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err

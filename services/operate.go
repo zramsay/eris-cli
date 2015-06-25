@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/eris-ltd/eris-cli/perform"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -75,6 +76,8 @@ func LogsServiceRaw(servName string) error {
 func ExecServiceRaw(name string, interactive bool, args []string) error {
 	if parseKnown(name) {
 		logger.Infoln("Running exec on container with volumes from data container for " + name)
+		containerNumber := 1
+		name = "eris_service_" + name + "_" + strconv.Itoa(containerNumber)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err
 		}

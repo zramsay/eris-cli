@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -71,6 +72,8 @@ func ImportDataRaw(name string) error {
 
 func ExecDataRaw(name string, interactive bool, args []string) error {
 	if parseKnown(name) {
+		containerNumber := 1
+		name = "eris_data_" + name + "_" + strconv.Itoa(containerNumber)
 		logger.Infoln("Running exec on container with volumes from data container for " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err
