@@ -72,8 +72,6 @@ func AddCommands() {
 	ErisCmd.AddCommand(Files)
 	// buildRemotesCommand()
 	// ErisCmd.AddCommand(Remotes)
-	buildKeysCommand()
-	ErisCmd.AddCommand(Keys)
 	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(Version)

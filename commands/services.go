@@ -13,9 +13,8 @@ var Services = &cobra.Command{
 	Long: `Start, Stop, and Manage Services Required for your Application.
 
 Services are all services known and used by the Eris platform with the
-exception of blockchain services and key management services. Blockchain
-services are managed and operated via the [eris chain] command while key
-management services are managed via the [eris keys] command.`,
+exception of blockchain services. Blockchain services are managed and
+operated via the [eris chain] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
