@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/eris-ltd/eris-cli/perform"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -17,6 +19,22 @@ func Start(cmd *cobra.Command, args []string) {
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
 	IfExit(LogsServiceRaw(args[0]))
+}
+
+func Exec(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	srv := args[0]
+
+	// if interactive, we ignore args. if not, run args as command
+	interactive := cmd.Flags().Lookup("interactive").Changed
+	if !interactive {
+		if len(args) < 2 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+		args = args[1:]
+	}
+
+	IfExit(ExecServiceRaw(srv, interactive, args))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
@@ -50,6 +68,18 @@ func LogsServiceRaw(servName string) error {
 	err = LogsServiceByService(service.Service, service.Operations)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func ExecServiceRaw(name string, interactive bool, args []string) error {
+	if parseKnown(name) {
+		logger.Infoln("Running exec on container with volumes from data container for " + name)
+		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
 	return nil
 }

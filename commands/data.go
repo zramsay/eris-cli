@@ -15,11 +15,6 @@ data into containers for use by your application.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// flags
-var (
-	Interactive bool
-)
-
 // build the data subcommand
 func buildDataCommand() {
 	Data.AddCommand(dataImport)

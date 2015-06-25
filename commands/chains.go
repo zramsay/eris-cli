@@ -32,6 +32,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsInspect)
+	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsRename)
@@ -42,6 +43,7 @@ func buildChainsCommand() {
 
 func addChainsFlags() {
 	chainsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
+	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 }
 
 // known lists the known chain types which eris can install
@@ -132,7 +134,6 @@ Edit will utilize your default editor.
 	},
 }
 
-// start
 // flags to add: --commit, --multi, --foreground, --config, --chain
 var chainsStart = &cobra.Command{
 	Use:   "start",
@@ -150,7 +151,6 @@ To view a chain's logs use: [eris chains logs chainName].
 	},
 }
 
-// logs
 // flags to add: --tail
 var chainsLogs = &cobra.Command{
 	Use:   "logs",
@@ -161,7 +161,15 @@ var chainsLogs = &cobra.Command{
 	},
 }
 
-// ps
+var chainsExec = &cobra.Command{
+	Use:   "exec [serviceName]",
+	Short: "Run a command or interactive shell",
+	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Run: func(cmd *cobra.Command, args []string) {
+		chns.Exec(cmd, args)
+	},
+}
+
 var chainsListRunning = &cobra.Command{
 	Use:   "ps",
 	Short: "List the running blockchains.",

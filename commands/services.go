@@ -30,6 +30,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesRename)
@@ -40,6 +41,7 @@ func buildServicesCommand() {
 
 func addServicesFlags() {
 	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "force action")
+	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 }
 
 // list-known lists the services which eris can automagically install
@@ -167,6 +169,15 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
   eris services inspect ipfs host_config.binds -> will display only that value`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.Inspect(cmd, args)
+	},
+}
+
+var servicesExec = &cobra.Command{
+	Use:   "exec [serviceName]",
+	Short: "Run a command or interactive shell",
+	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Run: func(cmd *cobra.Command, args []string) {
+		srv.Exec(cmd, args)
 	},
 }
 

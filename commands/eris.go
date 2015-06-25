@@ -86,6 +86,7 @@ var Debug bool
 
 // Flags that are to be used by commands
 var Force bool
+var Interactive bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
