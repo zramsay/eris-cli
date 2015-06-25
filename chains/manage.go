@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
@@ -55,39 +55,47 @@ func New(cmd *cobra.Command, args []string) {
 // import a chain definition file
 func Import(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	if len(args) != 2 {
-		logger.Println("Please give me: eris chains import [name] [location]")
+	if len(args) != 3 {
+		logger.Println("Please give me: eris chains import [type] [name] [location]")
 		return
 	}
-	IfExit(ImportChainRaw(args[0], args[1]))
+	IfExit(ImportChainRaw(args[0], args[1], args[2]))
 }
 
 // edit a chain definition file
 func Edit(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	name := args[0]
+	chainType, chainID := args[0], args[1]
 	var configVals []string
-	if len(args) > 0 {
-		configVals = args[1:]
+	if len(args) > 2 {
+		configVals = args[2:]
 	}
-	IfExit(EditChainRaw(name, configVals))
+	IfExit(EditChainRaw(chainType, chainID, configVals))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	if len(args) == 1 {
-		args = append(args, "all")
+	chainType, chainID := args[0], args[1]
+	var field string
+	if len(args) == 2 {
+		field = "all"
+	} else {
+		field = args[2]
 	}
-	chain, err := LoadChainDefinition(args[0])
+	chain, err := LoadChainDefinition(chainType, chainID)
 	IfExit(err)
 	if IsChainExisting(chain) {
-		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, args[1]))
+		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, field))
 	}
 }
 
 func Export(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(ExportChainRaw(args[0]))
+	IfExit(ExportChainRaw(args[0], args[1]))
+}
+
+func Rename(cmd *cobra.Command, args []string) {
+	// TODO: on hold until we have refs system
 }
 
 func ListKnown() {
@@ -126,12 +134,12 @@ func Rename(cmd *cobra.Command, args []string) {
 
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(UpdateChainRaw(args[0]))
+	IfExit(UpdateChainRaw(args[0], args[1]))
 }
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed))
+	IfExit(RmChainRaw(args[0], args[1], cmd.Flags().Lookup("force").Changed))
 }
 
 //----------------------------------------------------------------------
@@ -180,19 +188,21 @@ func NewChainRaw(chainType, genesis, config, dir string) error {
 	}
 
 	// setup data container and service container
-	chain, err := LoadChainDefinition(chainType)
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
 
+	containerName := chainType + "_" + chainID
+
 	// run containers and exit (creates data container)
 	chain.Service.Command = fmt.Sprintf("echo \"Creating new %s containers with chainID %s\"", chainType, chainID)
-	if err := perform.DockerCreateDataContainer(chainID); err != nil {
+	if err := perform.DockerCreateDataContainer(containerName); err != nil {
 		return fmt.Errorf("Error creating data container %v", err)
 	}
 
 	// copy dir, genesis, config into container
-	dst := path.Join(DataContainersPath, chainID, "blockchains", chainType, chainID)
+	dst := path.Join(DataContainersPath, containerName, "blockchains", chainType, chainID)
 	if err := os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
@@ -214,7 +224,7 @@ func NewChainRaw(chainType, genesis, config, dir string) error {
 	}
 
 	// copy from host to container
-	if err := data.ImportDataRaw(chainID); err != nil {
+	if err := data.ImportDataRaw(containerName); err != nil {
 		return err
 	}
 
@@ -224,7 +234,7 @@ func NewChainRaw(chainType, genesis, config, dir string) error {
 	// post the new chain's id and other info to an etcb, etc. (pun intended)
 	chain.Service.Command = chain.Manage.NewCmd
 	containerNumber := 1
-	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", chainID, containerNumber)
+	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
 	chain.Operations.Remove = true
 	services.StartServiceByService(chain.Service, chain.Operations)
 	return nil
@@ -241,8 +251,8 @@ func InstallChainRaw(chainType, chainID, config, dir string) error {
 	return nil
 }
 
-func ImportChainRaw(chainName, path string) error {
-	fileName := filepath.Join(BlockchainsPath, chainName)
+func ImportChainRaw(chainType, chainID, path string) error {
+	fileName := filepath.Join(BlockchainsPath, chainType, chainID)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -271,8 +281,8 @@ func ImportChainRaw(chainName, path string) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func ExportChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func ExportChainRaw(chainType, chainID string) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -285,7 +295,7 @@ func ExportChainRaw(chainName string) error {
 		if services.IsServiceRunning(ipfsService.Service) {
 			logger.Infoln("IPFS is running. Adding now.")
 
-			hash, err := exportFile(chainName)
+			hash, err := exportFile(chainType, chainID)
 			if err != nil {
 				return err
 			}
@@ -297,7 +307,7 @@ func ExportChainRaw(chainName string) error {
 				return err
 			}
 
-			hash, err := exportFile(chainName)
+			hash, err := exportFile(chainType, chainID)
 			if err != nil {
 				return err
 			}
@@ -312,8 +322,8 @@ To find known chains use: eris chains known`)
 	return nil
 }
 
-func EditChainRaw(chainName string, configVals []string) error {
-	chainConf, err := readChainDefinition(chainName)
+func EditChainRaw(chainType, chainID string, configVals []string) error {
+	chainConf, err := readChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -349,6 +359,8 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
+/* // suspended until we have a ref system in place for chains
+// right now a chain's name is chainType/chainID and that's that
 func RenameChainRaw(oldName, newName string) error {
 	if oldName == newName {
 		return fmt.Errorf("Cannot rename to same name")
@@ -410,9 +422,10 @@ func RenameChainRaw(oldName, newName string) error {
 	}
 	return nil
 }
+*/
 
-func UpdateChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func UpdateChainRaw(chainType, chainID string) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -423,8 +436,8 @@ func UpdateChainRaw(chainName string) error {
 	return nil
 }
 
-func RmChainRaw(chainName string, force bool) error {
-	chain, err := LoadChainDefinition(chainName)
+func RmChainRaw(chainType, chainID string, force bool) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -434,7 +447,7 @@ func RmChainRaw(chainName string, force bool) error {
 	}
 
 	if force {
-		oldFile, err := configFileNameFromChainName(chainName)
+		oldFile, err := configFileNameFromChainName(chainType, chainID)
 		if err != nil {
 			return err
 		}
@@ -443,8 +456,8 @@ func RmChainRaw(chainName string, force bool) error {
 	return nil
 }
 
-func exportFile(chainName string) (string, error) {
-	fileName, err := configFileNameFromChainName(chainName)
+func exportFile(chainType, chainID string) (string, error) {
+	fileName, err := configFileNameFromChainName(chainType, chainID)
 	if err != nil {
 		return "", err
 	}

@@ -2,13 +2,15 @@ package chains
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
 
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
@@ -21,9 +23,9 @@ import (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainName string) (*def.Chain, error) {
+func LoadChainDefinition(chainType, chainID string) (*def.Chain, error) {
 	var chain def.Chain
-	chainConf, err := readChainDefinition(chainName)
+	chainConf, err := readChainDefinition(chainType, chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +43,7 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 			return &def.Chain{}, err
 		}
 	} else {
-		serv, err = services.LoadService(chainName)
+		serv, err = services.LoadService(chainType)
 		if err != nil {
 			return &def.Chain{}, err
 		}
@@ -75,11 +77,11 @@ func IsChainRunning(chain *def.Chain) bool {
 }
 
 // read the config file into viper
-func readChainDefinition(chainName string) (*viper.Viper, error) {
+func readChainDefinition(chainType, chainID string) (*viper.Viper, error) {
 	var chainConf = viper.New()
 
-	chainConf.AddConfigPath(BlockchainsPath)
-	chainConf.SetConfigName(chainName)
+	chainConf.AddConfigPath(path.Join(BlockchainsPath, chainType))
+	chainConf.SetConfigName(chainID)
 	err := chainConf.ReadInConfig()
 	if err != nil {
 		return nil, err
@@ -95,8 +97,8 @@ func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) error {
 }
 
 // get the config file's path from the chain name
-func configFileNameFromChainName(chainName string) (string, error) {
-	chainConf, err := readChainDefinition(chainName)
+func configFileNameFromChainName(chainType, chainID string) (string, error) {
+	chainConf, err := readChainDefinition(chainType, chainID)
 	if err != nil {
 		return "", err
 	}
@@ -181,15 +183,15 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 // validation funcs
 
 func checkChainGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No ChainName Given. Please rerun command with a known chain.")
+	if len(args) != 2 {
+		return fmt.Errorf("Please provide a chain type and id (eg `eris chains start mint etcb_testnet`)")
 	}
 	return nil
 }
 
 func checkChainHasUniqueName(chain *def.Chain) {
 	containerNumber := 1 // tmp
-	chain.Operations.SrvContainerName = "eris_chain_" + chain.Name + "_" + strconv.Itoa(containerNumber)
+	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%s_%d", chain.Type, chain.Name, strconv.Itoa(containerNumber))
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {

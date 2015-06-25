@@ -2,9 +2,8 @@ package chains
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/eris-ltd/eris-cli/services"
+	"strings"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -14,12 +13,14 @@ import (
 
 func Start(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(StartChainRaw(args[0]))
+	chainType, chainID := args[0], args[1]
+	IfExit(StartChainRaw(chainType, chainID))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(LogsChainRaw(args[0]))
+	chainType, chainID := args[0], args[1]
+	IfExit(LogsChainRaw(chainType, chainID))
 }
 
 func Exec(cmd *cobra.Command, args []string) {
@@ -34,13 +35,14 @@ func Exec(cmd *cobra.Command, args []string) {
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(KillChainRaw(args[0]))
+	chainType, chainID := args[0], args[1]
+	IfExit(KillChainRaw(chainType, chainID))
 }
 
 //----------------------------------------------------------------------
 
-func StartChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func StartChainRaw(chainType, chainID string) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -55,8 +57,8 @@ func StartChainRaw(chainName string) error {
 	return nil
 }
 
-func LogsChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func LogsChainRaw(chainType, chainID string) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
@@ -83,8 +85,8 @@ func ExecChainRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func KillChainRaw(chainType, chainID string) error {
+	chain, err := LoadChainDefinition(chainType, chainID)
 	if err != nil {
 		return err
 	}
