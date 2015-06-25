@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/util"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/util"
 
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -59,6 +60,20 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		return err
 	}
 	id_main := cont.ID
+
+	// trap signals so we can kill the container
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		<-c
+		logger.Infof("Caught signal. Stopping and removing container %s\n", id_main)
+		if err := stopContainer(id_main, 5); err != nil {
+			logger.Errorln("Tragic! Error stopping data container after executing: %v", err)
+		}
+		if err := removeContainer(id_main); err != nil {
+			logger.Errorln("Tragic! Error removing data container after executing: %v", err)
+		}
+	}()
 
 	defer func() {
 		logger.Infof("Removing container %s\n", id_main)
@@ -512,16 +527,16 @@ func startContainer(id string, opts *docker.CreateContainerOptions) error {
 
 func attachContainer(id string) error {
 	opts := docker.AttachToContainerOptions{
-    Container:    id,
-    InputStream:  os.Stdin,
-    OutputStream: os.Stdout,
-    ErrorStream:  os.Stderr,
-    Logs:         true,
-    Stream:       true,
-    Stdin:        true,
-    Stdout:       true,
-    Stderr:       true,
-    RawTerminal:  true,
+		Container:    id,
+		InputStream:  os.Stdin,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr,
+		Logs:         true,
+		Stream:       true,
+		Stdin:        true,
+		Stdout:       true,
+		Stderr:       true,
+		RawTerminal:  true,
 	}
 
 	return util.DockerClient.AttachToContainer(opts)
@@ -539,9 +554,10 @@ func waitContainer(id string) error {
 }
 
 func logsContainer(id string, tail bool) error {
+	//writer, errWriter := new(bytes.Buffer), new(bytes.Buffer)
 	opts := docker.LogsOptions{
 		Container:    id,
-		Follow:       false,
+		Follow:       true,
 		Stdout:       true,
 		Stderr:       true,
 		Timestamps:   false,
@@ -551,11 +567,20 @@ func logsContainer(id string, tail bool) error {
 	}
 
 	if tail {
-		opts.Tail   = "all"
+		opts.Tail = "all"
 		opts.Follow = true
 	}
 
-	return util.DockerClient.Logs(opts)
+	if err := util.DockerClient.Logs(opts); err != nil {
+		return err
+	}
+	/*
+		n, err := os.Stdout.Write(writer.Bytes())
+		fmt.Println(n, err)
+		n, err = os.Stderr.Write(errWriter.Bytes())
+		fmt.Println(n, err)
+	*/
+	return nil
 }
 
 func inspectContainer(id, field string) error {
