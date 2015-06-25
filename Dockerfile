@@ -1,9 +1,10 @@
-FROM golang:1.4
+FROM eris/base:latest
 MAINTAINER Eris Industries <support@erisindustries.com>
 
-# User Creation
-ENV user eris
-RUN groupadd --system $user && useradd --system --create-home --gid $user $user
-RUN mkdir --parents /home/$user/.eris
-RUN chown --recursive $user /home/$user/.eris
-# USER eris
+ENV source $GOPATH/src/github.com/eris-ltd/eris-cli
+COPY . $source
+WORKDIR $source/cmd/eris
+RUN go install
+
+USER $USER
+WORKDIR /home/$USER
