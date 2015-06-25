@@ -22,14 +22,7 @@ storage solution).`,
 
 // Build the chains subcommand
 func buildChainsCommand() {
-	chainsNew.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
-	chainsNew.PersistentFlags().StringVarP(&GenesisFile, "genesis", "g", "", "genesis.json file")
-	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	Chains.AddCommand(chainsNew)
-	chainsInstall.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
-	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListKnown)
@@ -49,7 +42,19 @@ func buildChainsCommand() {
 }
 
 func addChainsFlags() {
+	chainsNew.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
+	chainsNew.PersistentFlags().StringVarP(&ChainName, "name", "n", "", "name the chain for future reference")
+	chainsNew.PersistentFlags().StringVarP(&GenesisFile, "genesis", "g", "", "genesis.json file")
+	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+
+	chainsInstall.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
+	chainsInstall.PersistentFlags().StringVarP(&ChainName, "name", "n", "", "name the chain for future reference")
+	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+
 	chainsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
+
 	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 }
 
@@ -89,6 +94,7 @@ Still a WIP.`,
 // flags to add: --type, --genesis, --config, --checkout, --force-name
 var (
 	ChainType   string
+	ChainName   string
 	GenesisFile string
 	ConfigFile  string
 	DirToCopy   string

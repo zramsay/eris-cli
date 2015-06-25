@@ -46,6 +46,7 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
 		writer.Write([]byte("type = \"" + chainDef.Type + "\"\n"))
+		writer.Write([]byte("chain_id = \"" + chainDef.ChainID + "\"\n"))
 		writer.Write([]byte("\n[service]\n"))
 		enc.Encode(chainDef.Service)
 		writer.Write([]byte("\n[manager]\n"))

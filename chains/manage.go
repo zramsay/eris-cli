@@ -92,10 +92,6 @@ func Export(cmd *cobra.Command, args []string) {
 	IfExit(ExportChainRaw(args[0]))
 }
 
-func Rename(cmd *cobra.Command, args []string) {
-	// TODO: on hold until we have refs system
-}
-
 func ListKnown() {
 	chains := ListKnownRaw()
 	for _, s := range chains {
@@ -224,8 +220,8 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string)
 
 	chain := &def.Chain{
 		Name:    containerName,
-		ID:      chainID,
 		Type:    chainType,
+		ChainID: chainID,
 		Service: &def.Service{},
 		Manager: make(map[string]string),
 	}

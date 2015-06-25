@@ -2,7 +2,6 @@ package chains
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"regexp"
 	"strings"

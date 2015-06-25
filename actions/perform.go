@@ -9,7 +9,6 @@ import (
 	"github.com/eris-ltd/eris-cli/chains"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -73,11 +72,6 @@ func StartServicesAndChains(action *def.Action) error {
 	for _, chn := range action.Chains {
 		skip = false
 
-		chainType, chainName, err := util.SplitChainTypeID(chn)
-		if err != nil {
-			return err
-		}
-
 		for _, run := range running {
 			if chn == run {
 				logger.Infoln("Chain already started, Skipping: ", chn)
@@ -91,7 +85,7 @@ func StartServicesAndChains(action *def.Action) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			err := chains.StartChainRaw(chainType, chainName)
+			err := chains.StartChainRaw(chn)
 			if err != nil {
 				logger.Println("Chain already started, Skipping: ", chn)
 			}
