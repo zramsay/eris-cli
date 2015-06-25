@@ -64,7 +64,7 @@ func LoadGlobalConfig() (*viper.Viper, error) {
 
 func SetDefaults() (*viper.Viper, error) {
 	var globalConfig = viper.New()
-	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
+	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0:8080")
 	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
 	return globalConfig, nil
 }
@@ -83,6 +83,22 @@ func SaveGlobalConfig(config *ErisConfig) error {
 		return err
 	}
 	return nil
+}
+
+// config values will be coerced into strings...
+func GetConfigValue(key string) string {
+	switch key {
+		case "IpfsHost":
+			return GlobalConfig.Config.IpfsHost
+		case "CompilersHost":
+			return GlobalConfig.Config.CompilersHost
+		case "DockerHost":
+			return GlobalConfig.Config.DockerHost
+		case "DockerCertPath":
+			return GlobalConfig.Config.DockerCertPath
+		default:
+			return ""
+	}
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
