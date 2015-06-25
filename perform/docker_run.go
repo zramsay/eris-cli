@@ -59,6 +59,14 @@ func DockerRunVolumesFromContainer(srvName string, interactive bool, args []stri
 		return err
 	}
 	id_main := cont.ID
+
+	defer func() {
+		logger.Infof("Removing container %s\n", id_main)
+		if err2 := removeContainer(id_main); err2 != nil {
+			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+		}
+	}()
+
 	logger.Infoln("Data Container ID: " + id_main)
 
 	// start the container (either interactive or one off command)
@@ -66,16 +74,21 @@ func DockerRunVolumesFromContainer(srvName string, interactive bool, args []stri
 		return err
 	}
 
+	if interactive {
+		if err := attachContainer(id_main); err != nil {
+			return err
+		}
+	} else {
+		if err := logsContainer(id_main, false); err != nil {
+			return err
+		}
+	}
+
 	logger.Infof("Waiting for %s to exit so we can remove the container\n", id_main)
 	if err := waitContainer(id_main); err != nil {
 		return err
 	}
 
-	// TODO: we may want to get the logs out first
-	logger.Infof("Removing container %s\n", id_main)
-	if err := removeContainer(id_main); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -293,7 +306,7 @@ func DockerLogs(srv *def.Service, ops *def.ServiceOperation) error {
 
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Service ID: " + service.ID)
-		err := logsContainer(service.ID)
+		err := logsContainer(service.ID, false)
 		if err != nil {
 			return err
 		}
@@ -469,6 +482,23 @@ func startContainer(id string, opts *docker.CreateContainerOptions) error {
 	return util.DockerClient.StartContainer(id, opts.HostConfig)
 }
 
+func attachContainer(id string) error {
+	opts := docker.AttachToContainerOptions{
+    Container:    id,
+    InputStream:  os.Stdin,
+    OutputStream: os.Stdout,
+    ErrorStream:  os.Stderr,
+    Logs:         true,
+    Stream:       true,
+    Stdin:        true,
+    Stdout:       true,
+    Stderr:       true,
+    RawTerminal:  true,
+	}
+
+	return util.DockerClient.AttachToContainer(opts)
+}
+
 func waitContainer(id string) error {
 	exitCode, err := util.DockerClient.WaitContainer(id)
 	if exitCode != 0 {
@@ -480,7 +510,7 @@ func waitContainer(id string) error {
 	return err
 }
 
-func logsContainer(id string) error {
+func logsContainer(id string, tail bool) error {
 	opts := docker.LogsOptions{
 		Container:    id,
 		Follow:       false,
@@ -489,8 +519,12 @@ func logsContainer(id string) error {
 		Timestamps:   false,
 		OutputStream: os.Stdout,
 		ErrorStream:  os.Stderr,
-		// Tail:         "",
-		// RawTerminal:  true, // Usually true when the container contains a TTY.
+		RawTerminal:  true, // Usually true when the container contains a TTY.
+	}
+
+	if tail {
+		opts.Tail   = "all"
+		opts.Follow = true
 	}
 
 	return util.DockerClient.Logs(opts)
@@ -648,6 +682,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 			AttachStdout:    true,
 			AttachStderr:    true,
 			Tty:             true,
+			StdinOnce:       true,
 			NetworkDisabled: true,
 		},
 		HostConfig: &docker.HostConfig{
