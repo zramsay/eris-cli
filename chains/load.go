@@ -22,9 +22,9 @@ import (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainType, chainID string) (*def.Chain, error) {
+func LoadChainDefinition(chainName string) (*def.Chain, error) {
 	var chain def.Chain
-	chainConf, err := readChainDefinition(chainType, chainID)
+	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
 		return nil, err
 	}
@@ -36,18 +36,14 @@ func LoadChainDefinition(chainType, chainID string) (*def.Chain, error) {
 	chain.Operations = &def.ServiceOperation{}
 
 	var serv *def.ServiceDefinition
-	if chain.Type != "" {
-		serv, err = services.LoadServiceDefinition(chain.Type)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		serv, err = services.LoadServiceDefinition(chainType)
-		if err != nil {
-			return nil, err
-		}
-		chain.Name = chainID
-		chain.Type = chainType
+	if chain.Type == "" {
+		// TODO: relieve this if it overwrites the service image
+		return nil, fmt.Errorf("Chain definition must specify chain type")
+	}
+
+	serv, err = services.LoadServiceDefinition(chain.Type)
+	if err != nil {
+		return nil, err
 	}
 
 	if serv == nil {
@@ -78,11 +74,11 @@ func IsChainRunning(chain *def.Chain) bool {
 }
 
 // read the config file into viper
-func readChainDefinition(chainType, chainID string) (*viper.Viper, error) {
+func readChainDefinition(chainName string) (*viper.Viper, error) {
 	var chainConf = viper.New()
 
-	chainConf.AddConfigPath(path.Join(BlockchainsPath, chainType))
-	chainConf.SetConfigName(chainID)
+	chainConf.AddConfigPath(path.Join(BlockchainsPath))
+	chainConf.SetConfigName(chainName)
 	err := chainConf.ReadInConfig()
 	if err != nil {
 		return nil, err
@@ -98,8 +94,8 @@ func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) error {
 }
 
 // get the config file's path from the chain name
-func configFileNameFromChainName(chainType, chainID string) (string, error) {
-	chainConf, err := readChainDefinition(chainType, chainID)
+func configFileNameFromChainName(chainName string) (string, error) {
+	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
 		return "", err
 	}
@@ -184,15 +180,15 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 // validation funcs
 
 func checkChainGiven(args []string) error {
-	if len(args) != 2 {
-		return fmt.Errorf("Please provide a chain type and id (eg `eris chains start mint etcb_testnet`)")
+	if len(args) != 1 {
+		return fmt.Errorf("Please provide a chain")
 	}
 	return nil
 }
 
 func checkChainHasUniqueName(chain *def.Chain) {
 	containerNumber := 1 // tmp
-	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%s_%d", chain.Type, chain.Name, containerNumber)
+	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%d", chain.Name, containerNumber)
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {

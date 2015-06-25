@@ -13,36 +13,41 @@ import (
 
 func Start(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	chainType, chainID := args[0], args[1]
-	IfExit(StartChainRaw(chainType, chainID))
+	IfExit(StartChainRaw(args[0]))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	chainType, chainID := args[0], args[1]
-	IfExit(LogsChainRaw(chainType, chainID))
+	IfExit(LogsChainRaw(args[0]))
 }
 
 func Exec(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	srv := args[0]
-	args = args[1:]
+	// if interactive, we ignore args. if not, run args as command
+	interactive := cmd.Flags().Lookup("interactive").Changed
+	if !interactive {
+		if len(args) < 2 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+		args = args[1:]
+	}
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
-	IfExit(ExecChainRaw(srv, args, cmd.Flags().Lookup("interactive").Changed))
+
+	IfExit(ExecChainRaw(srv, args, interactive))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	chainType, chainID := args[0], args[1]
-	IfExit(KillChainRaw(chainType, chainID))
+	IfExit(KillChainRaw(args[0]))
 }
 
 //----------------------------------------------------------------------
 
-func StartChainRaw(chainType, chainID string) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func StartChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -52,7 +57,7 @@ func StartChainRaw(chainType, chainID string) error {
 		var ok bool
 		chain.Service.Command, ok = chain.Manager["start"]
 		if !ok {
-			return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, "start")
+			return fmt.Errorf("%s service definition must include '%s' command under Manager", chain.Type, "start")
 		}
 		if err := services.StartServiceByService(chain.Service, chain.Operations); err != nil {
 			return err
@@ -61,8 +66,8 @@ func StartChainRaw(chainType, chainID string) error {
 	return nil
 }
 
-func LogsChainRaw(chainType, chainID string) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func LogsChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -89,8 +94,8 @@ func ExecChainRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillChainRaw(chainType, chainID string) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func KillChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}

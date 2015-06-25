@@ -25,16 +25,13 @@ import (
 
 // fetch and install a chain
 func Install(cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		Exit(fmt.Errorf("Please enter a chainID to fetch and install"))
-	}
-	chainID := args[0]
-
 	chainType := cmd.Flags().Lookup("type").Value.String()
+	chainID := cmd.Flags().Lookup("id").Value.String()
+	chainName := cmd.Flags().Lookup("name").Value.String()
 	config := cmd.Flags().Lookup("config").Value.String()
 	dir := cmd.Flags().Lookup("dir").Value.String()
 
-	if err := InstallChainRaw(chainType, chainID, config, dir); err != nil {
+	if err := InstallChainRaw(chainType, chainID, chainName, config, dir); err != nil {
 		fmt.Println(err)
 	}
 
@@ -47,44 +44,43 @@ func New(cmd *cobra.Command, args []string) {
 	genesis := cmd.Flags().Lookup("genesis").Value.String()
 	config := cmd.Flags().Lookup("config").Value.String()
 	dir := cmd.Flags().Lookup("dir").Value.String()
+	name := cmd.Flags().Lookup("name").Value.String()
 
-	if err := NewChainRaw(chainType, genesis, config, dir); err != nil {
+	if err := NewChainRaw(chainType, name, genesis, config, dir); err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 // import a chain definition file
 func Import(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	if len(args) != 3 {
-		logger.Println("Please give me: eris chains import [type] [name] [location]")
+	if len(args) != 2 {
+		logger.Println("Please give me: eris chains import [name] [location]")
 		return
 	}
-	IfExit(ImportChainRaw(args[0], args[1], args[2]))
+	IfExit(ImportChainRaw(args[0], args[1]))
 }
 
 // edit a chain definition file
 func Edit(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	chainType, chainID := args[0], args[1]
 	var configVals []string
-	if len(args) > 2 {
-		configVals = args[2:]
+	if len(args) > 1 {
+		configVals = args[1:]
 	}
-	IfExit(EditChainRaw(chainType, chainID, configVals))
+	IfExit(EditChainRaw(args[0], configVals))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	chainType, chainID := args[0], args[1]
+	chainName := args[0]
 	var field string
-	if len(args) == 2 {
+	if len(args) == 1 {
 		field = "all"
 	} else {
-		field = args[2]
+		field = args[1]
 	}
-	chain, err := LoadChainDefinition(chainType, chainID)
+	chain, err := LoadChainDefinition(chainName)
 	IfExit(err)
 	if IsChainExisting(chain) {
 		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, field))
@@ -93,7 +89,7 @@ func Inspect(cmd *cobra.Command, args []string) {
 
 func Export(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(ExportChainRaw(args[0], args[1]))
+	IfExit(ExportChainRaw(args[0]))
 }
 
 func Rename(cmd *cobra.Command, args []string) {
@@ -136,12 +132,12 @@ func Rename(cmd *cobra.Command, args []string) {
 
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(UpdateChainRaw(args[0], args[1]))
+	IfExit(UpdateChainRaw(args[0]))
 }
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(RmChainRaw(args[0], args[1], cmd.Flags().Lookup("force").Changed))
+	IfExit(RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed))
 }
 
 //----------------------------------------------------------------------
@@ -178,8 +174,11 @@ func getChainIDFromGenesis(genesis, dir string) (string, error) {
 	return chainID, nil
 }
 
-func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error) {
+func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string) (err error) {
 	containerName := chainType + "_" + chainID
+	if chainName != "" {
+		containerName = chainName
+	}
 
 	// run containers and exit (creates data container)
 	if err := perform.DockerCreateDataContainer(containerName); err != nil {
@@ -196,7 +195,7 @@ func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error
 	}()
 
 	// copy dir, genesis, config into container
-	dst := path.Join(DataContainersPath, containerName, "blockchains", chainType, chainID)
+	dst := path.Join(DataContainersPath, containerName, "blockchains", containerName)
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		err = fmt.Errorf("Error making data directory: %v", err)
 		return
@@ -224,14 +223,15 @@ func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error
 	}
 
 	chain := &def.Chain{
-		Name:    chainID,
+		Name:    containerName,
+		ID:      chainID,
 		Type:    chainType,
 		Service: &def.Service{},
 		Manager: make(map[string]string),
 	}
 
 	// write the chain definition file ...
-	fileName := filepath.Join(BlockchainsPath, chainType, chainID) + ".toml"
+	fileName := filepath.Join(BlockchainsPath, containerName) + ".toml"
 	d := path.Dir(fileName)
 	if _, err = os.Stat(d); err != nil {
 		if err = os.MkdirAll(d, 0700); err != nil {
@@ -246,7 +246,7 @@ func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error
 		return
 	}
 
-	chain, err = LoadChainDefinition(chainType, chainID)
+	chain, err = LoadChainDefinition(containerName)
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func setupChain(chainType, chainID, cmd, dir, genesis, config string) (err error
 	return
 }
 
-func NewChainRaw(chainType, genesis, config, dir string) error {
+func NewChainRaw(chainType, name, genesis, config, dir string) error {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
 	}
@@ -278,19 +278,19 @@ func NewChainRaw(chainType, genesis, config, dir string) error {
 		return err
 	}
 
-	return setupChain(chainType, chainID, "new", dir, genesis, config)
+	return setupChain(chainType, chainID, name, "new", dir, genesis, config)
 }
 
-func InstallChainRaw(chainType, chainID, config, dir string) error {
+func InstallChainRaw(chainType, chainID, chainName, config, dir string) error {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
 	}
 
-	return setupChain(chainType, chainID, "fetch", dir, "", config)
+	return setupChain(chainType, chainID, chainName, "fetch", dir, "", config)
 }
 
-func ImportChainRaw(chainType, chainID, path string) error {
-	fileName := filepath.Join(BlockchainsPath, chainType, chainID)
+func ImportChainRaw(chainName, path string) error {
+	fileName := filepath.Join(BlockchainsPath, chainName)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -319,8 +319,8 @@ func ImportChainRaw(chainType, chainID, path string) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func ExportChainRaw(chainType, chainID string) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func ExportChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func ExportChainRaw(chainType, chainID string) error {
 		if services.IsServiceRunning(ipfsService.Service) {
 			logger.Infoln("IPFS is running. Adding now.")
 
-			hash, err := exportFile(chainType, chainID)
+			hash, err := exportFile(chainName)
 			if err != nil {
 				return err
 			}
@@ -345,7 +345,7 @@ func ExportChainRaw(chainType, chainID string) error {
 				return err
 			}
 
-			hash, err := exportFile(chainType, chainID)
+			hash, err := exportFile(chainName)
 			if err != nil {
 				return err
 			}
@@ -360,8 +360,8 @@ To find known chains use: eris chains known`)
 	return nil
 }
 
-func EditChainRaw(chainType, chainID string, configVals []string) error {
-	chainConf, err := readChainDefinition(chainType, chainID)
+func EditChainRaw(chainName string, configVals []string) error {
+	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -397,7 +397,6 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
-/* // suspended until we have a ref system in place for chains
 // right now a chain's name is chainType/chainID and that's that
 func RenameChainRaw(oldName, newName string) error {
 	if oldName == newName {
@@ -460,10 +459,9 @@ func RenameChainRaw(oldName, newName string) error {
 	}
 	return nil
 }
-*/
 
-func UpdateChainRaw(chainType, chainID string) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func UpdateChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -474,8 +472,8 @@ func UpdateChainRaw(chainType, chainID string) error {
 	return nil
 }
 
-func RmChainRaw(chainType, chainID string, force bool) error {
-	chain, err := LoadChainDefinition(chainType, chainID)
+func RmChainRaw(chainName string, force bool) error {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
@@ -485,7 +483,7 @@ func RmChainRaw(chainType, chainID string, force bool) error {
 	}
 
 	if force {
-		oldFile, err := configFileNameFromChainName(chainType, chainID)
+		oldFile, err := configFileNameFromChainName(chainName)
 		if err != nil {
 			return err
 		}
@@ -494,8 +492,8 @@ func RmChainRaw(chainType, chainID string, force bool) error {
 	return nil
 }
 
-func exportFile(chainType, chainID string) (string, error) {
-	fileName, err := configFileNameFromChainName(chainType, chainID)
+func exportFile(chainName string) (string, error) {
+	fileName, err := configFileNameFromChainName(chainName)
 	if err != nil {
 		return "", err
 	}
