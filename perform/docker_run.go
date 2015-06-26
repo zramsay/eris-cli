@@ -50,10 +50,6 @@ func DockerCreateDataContainer(srvName string) error {
 // and either attach interactively or execute a command
 // container should be destroyed on exit
 func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) error {
-	// create an eris/base container with volumes from the given
-	// srvName's data container
-	// containerNumber := 1
-	// volumesFrom := "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
 	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
 	cont, err := createContainer(opts)
 	if err != nil {
@@ -635,6 +631,10 @@ func removeContainer(id string) error {
 }
 
 func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.CreateContainerOptions, error) {
+	if ops.ContainerNumber == 0 {
+		ops.ContainerNumber = 1
+	}
+
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,
 		Config: &docker.Config{
@@ -727,6 +727,13 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
+	for _, depServ := range srv.ServiceDeps {
+		name := depServ
+		depServ = nameToContainerName("service", depServ, ops.ContainerNumber)
+		newLink := depServ + ":" + name
+		opts.HostConfig.Links = append(opts.HostConfig.Links, newLink)
+	}
+
 	return opts, nil
 }
 
@@ -814,6 +821,11 @@ func startExec(id string) error {
 	return util.DockerClient.StartExec(id, opts)
 }
 
+
+// ----------------------------------------------------------------------------
+// ---------------------    Util Funcs ----------------------------------------
+// ----------------------------------------------------------------------------
+
 // $(pwd) doesn't execute properly in golangs subshells; replace it
 // use $eris as a shortcut
 func fixDirs(arg []string) ([]string, error) {
@@ -841,4 +853,8 @@ func fixDirs(arg []string) ([]string, error) {
 	}
 
 	return arg, nil
+}
+
+func nameToContainerName(contType, name string, num int) string {
+	return "eris_" + contType + "_" + name + "_" + fmt.Sprintf("%v", num)
 }
