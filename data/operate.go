@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -40,6 +41,9 @@ func Exec(cmd *cobra.Command, args []string) {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
 		args = args[1:]
+		if len(args) == 1 {
+			args = strings.Split(args[0], " ")
+		}
 	}
 
 	IfExit(ExecDataRaw(srv, interactive, args))
