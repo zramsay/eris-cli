@@ -7,6 +7,7 @@ package docker
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,6 +16,10 @@ import (
 	"strings"
 	"time"
 )
+
+// ErrContainerAlreadyExists is the error returned by CreateContainer when the
+// container already exists.
+var ErrContainerAlreadyExists = errors.New("container already exists")
 
 // ListContainersOptions specify parameters to the ListContainers function.
 //
@@ -206,6 +211,14 @@ type LogConfig struct {
 	Config map[string]string `json:"Config,omitempty" yaml:"Config,omitempty"`
 }
 
+// ULimit defines system-wide resource limitations
+// This can help a lot in system administration, e.g. when a user starts too many processes and therefore makes the system unresponsive for other users.
+type ULimit struct {
+	Name string `json:"Name,omitempty" yaml:"Name,omitempty"`
+	Soft int64  `json:"Soft,omitempty" yaml:"Soft,omitempty"`
+	Hard int64  `json:"Hard,omitempty" yaml:"Hard,omitempty"`
+}
+
 // SwarmNode containers information about which Swarm node the container is on
 type SwarmNode struct {
 	ID     string            `json:"ID,omitempty" yaml:"ID,omitempty"`
@@ -246,6 +259,8 @@ type Container struct {
 	VolumesRW  map[string]bool   `json:"VolumesRW,omitempty" yaml:"VolumesRW,omitempty"`
 	HostConfig *HostConfig       `json:"HostConfig,omitempty" yaml:"HostConfig,omitempty"`
 	ExecIDs    []string          `json:"ExecIDs,omitempty" yaml:"ExecIDs,omitempty"`
+
+	RestartCount int `json:"RestartCount,omitempty" yaml:"RestartCount,omitempty"`
 
 	AppArmorProfile string `json:"AppArmorProfile,omitempty" yaml:"AppArmorProfile,omitempty"`
 }
@@ -341,6 +356,9 @@ func (c *Client) CreateContainer(opts CreateContainerOptions) (*Container, error
 	if status == http.StatusNotFound {
 		return nil, ErrNoSuchImage
 	}
+	if status == http.StatusConflict {
+		return nil, ErrContainerAlreadyExists
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -432,6 +450,7 @@ type HostConfig struct {
 	CPUSet          string                 `json:"Cpuset,omitempty" yaml:"Cpuset,omitempty"`
 	CPUQuota        int64                  `json:"CpuQuota,omitempty" yaml:"CpuQuota,omitempty"`
 	CPUPeriod       int64                  `json:"CpuPeriod,omitempty" yaml:"CpuPeriod,omitempty"`
+	Ulimits         []ULimit               `json:"Ulimits,omitempty" yaml:"Ulimits,omitempty"`
 }
 
 // StartContainer starts a container, returning an error in case of failure.
@@ -640,8 +659,9 @@ type BlkioStatsEntry struct {
 //
 // See http://goo.gl/DFMiYD for more details.
 type StatsOptions struct {
-	ID    string
-	Stats chan<- *Stats
+	ID     string
+	Stats  chan<- *Stats
+	Stream bool
 }
 
 // Stats sends container statistics for the given container to the given channel.
@@ -667,9 +687,10 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 	}()
 
 	go func() {
-		err := c.stream("GET", fmt.Sprintf("/containers/%s/stats", opts.ID), streamOptions{
-			rawJSONStream: true,
-			stdout:        writeCloser,
+		err := c.stream("GET", fmt.Sprintf("/containers/%s/stats?stream=%v", opts.ID, opts.Stream), streamOptions{
+			rawJSONStream:  true,
+			useJSONDecoder: true,
+			stdout:         writeCloser,
 		})
 		if err != nil {
 			dockerError, ok := err.(*Error)

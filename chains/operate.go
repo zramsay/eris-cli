@@ -2,10 +2,9 @@ package chains
 
 import (
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/perform"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -26,17 +25,11 @@ func Logs(cmd *cobra.Command, args []string) {
 func Exec(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
 	srv := args[0]
-
-	// if interactive, we ignore args. if not, run args as command
-	interactive := cmd.Flags().Lookup("interactive").Changed
-	if !interactive {
-		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
-		}
-		args = args[1:]
+	args = args[1:]
+	if len(args) == 1 {
+		args = strings.Split(args[0], " ")
 	}
-
-	IfExit(ExecChainRaw(srv, interactive, args))
+	IfExit(ExecChainRaw(srv, args, cmd.Flags().Lookup("interactive").Changed))
 }
 
 func Kill(cmd *cobra.Command, args []string) {
@@ -74,17 +67,19 @@ func LogsChainRaw(chainName string) error {
 	return nil
 }
 
-func ExecChainRaw(name string, interactive bool, args []string) error {
-	if isKnownChain(name) {
-		containerNumber := 1
-		name = "eris_chain_" + name + "_" + strconv.Itoa(containerNumber)
-		logger.Infoln("Running exec on container with volumes from data container for " + name)
-		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+func ExecChainRaw(name string, args []string, attach bool) error {
+	chain, err := LoadChainDefinition(name)
+	if err != nil {
+		return err
 	}
+
+	if IsChainExisting(chain) {
+		logger.Infoln("Chain exists.")
+		return services.ExecServiceByService(chain.Service, chain.Operations, args, attach)
+	} else {
+		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", name)
+	}
+
 	return nil
 }
 

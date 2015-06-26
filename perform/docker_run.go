@@ -193,6 +193,33 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
+func DockerExec(srv *def.Service, ops *def.ServiceOperation, cmd []string, interactive bool) error {
+	logger.Infoln("Starting Execution: " + srv.Name)
+
+	// check existence || create the container
+	servCont, exists := ContainerExists(ops)
+	if exists {
+		logger.Infoln("Service Container exists.")
+	} else {
+		return fmt.Errorf("Cannot exec a service which is not created. Please start the service: %s.\n", srv.Name)
+	}
+
+	if !interactive {
+		// Create the execution
+		logger.Infoln("Creating Service Execution:", strings.Join(cmd, " "))
+
+		exec, err := createExec(servCont.ID, cmd, srv)
+		if err != nil {
+			return err
+		}
+
+		return startExec(exec.ID)
+	} else {
+		logger.Infoln("Attaching to Container", srv.Name)
+		return attachContainer(servCont.ID)
+	}
+}
+
 func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull bool) error {
 	var id string
 	var wasRunning bool = false
@@ -721,6 +748,40 @@ func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainCon
 	}
 
 	return opts, nil
+}
+
+// ----------------------------------------------------------------------------
+// ---------------------    Exec Core -----------------------------------------
+// ----------------------------------------------------------------------------
+func createExec(container string, cmd []string, srv *def.Service) (*docker.Exec, error) {
+	opts := docker.CreateExecOptions{
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          true,
+		Cmd:          cmd,
+		Container:    container,
+		User:         srv.User,
+	}
+
+	if srv.User == "" {
+		opts.User = "eris"
+	}
+
+	return util.DockerClient.CreateExec(opts)
+}
+
+func startExec(id string) error {
+	opts := docker.StartExecOptions{
+		Detach:       false,
+		Tty:          true,
+		InputStream:  os.Stdin,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr,
+		RawTerminal:  true,
+	}
+
+	return util.DockerClient.StartExec(id, opts)
 }
 
 // $(pwd) doesn't execute properly in golangs subshells; replace it

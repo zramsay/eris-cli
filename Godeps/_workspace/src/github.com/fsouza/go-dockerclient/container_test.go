@@ -182,6 +182,9 @@ func TestInspectContainer(t *testing.T) {
                      "VolumesFrom": "",
                      "SecurityOpt": [
                          "label:user:USER"
+                      ],
+                      "Ulimits": [
+                          { "Name": "nofile", "Soft": 1024, "Hard": 2048 }
                       ]
              },
              "State": {
@@ -470,6 +473,18 @@ func TestCreateContainerImageNotFound(t *testing.T) {
 	}
 	if !reflect.DeepEqual(err, ErrNoSuchImage) {
 		t.Errorf("CreateContainer: Wrong error type. Want %#v. Got %#v.", ErrNoSuchImage, err)
+	}
+}
+
+func TestCreateContainerDuplicateName(t *testing.T) {
+	client := newTestClient(&FakeRoundTripper{message: "No such image", status: http.StatusConflict})
+	config := Config{AttachStdout: true, AttachStdin: true}
+	container, err := client.CreateContainer(CreateContainerOptions{Config: &config})
+	if container != nil {
+		t.Errorf("CreateContainer: expected <nil> container, got %#v.", container)
+	}
+	if err != ErrContainerAlreadyExists {
+		t.Errorf("CreateContainer: Wrong error type. Want %#v. Got %#v.", ErrContainerAlreadyExists, err)
 	}
 }
 
@@ -1796,7 +1811,7 @@ func TestStats(t *testing.T) {
 	errC := make(chan error, 1)
 	statsC := make(chan *Stats)
 	go func() {
-		errC <- client.Stats(StatsOptions{id, statsC})
+		errC <- client.Stats(StatsOptions{id, statsC, true})
 		close(errC)
 	}()
 	var resultStats []*Stats
@@ -1832,7 +1847,7 @@ func TestStats(t *testing.T) {
 func TestStatsContainerNotFound(t *testing.T) {
 	client := newTestClient(&FakeRoundTripper{message: "no such container", status: http.StatusNotFound})
 	statsC := make(chan *Stats)
-	err := client.Stats(StatsOptions{"abef348", statsC})
+	err := client.Stats(StatsOptions{"abef348", statsC, true})
 	expected := &NoSuchContainer{ID: "abef348"}
 	if !reflect.DeepEqual(err, expected) {
 		t.Errorf("Stats: Wrong error returned. Want %#v. Got %#v.", expected, err)
