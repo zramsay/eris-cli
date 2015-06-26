@@ -40,47 +40,15 @@ func DoRaw(action *def.Action, actionVars []string) error {
 	return nil
 }
 
-// start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
-func groupStarter(ch chan error, wg *sync.WaitGroup, group, running []string, name string, start func(string) error) {
-	var skip bool
-	for _, srv := range group {
-		if srv == "" {
-			continue
-		}
-
-		skip = false
-		for _, run := range running {
-			if srv == run {
-				logger.Infof("%s already started, skipping: %s\n", name, srv)
-				skip = true
-			}
-		}
-		if skip {
-			continue
-		}
-
-		wg.Add(1)
-		go func() {
-			logger.Debugln("starting service", srv)
-			if err := start(srv); err != nil {
-				logger.Debugln("error starting service", srv, err)
-				ch <- err
-			}
-			wg.Done()
-		}()
-	}
-}
-
 func StartServicesAndChains(action *def.Action) error {
 	// start the services and chains
-	wg := new(sync.WaitGroup)
-	ch := make(chan error, 1)
+	wg, ch := new(sync.WaitGroup), make(chan error, 1)
 
 	runningServices := services.ListRunningRaw()
-	groupStarter(ch, wg, action.Services, runningServices, "service", services.StartServiceRaw)
+	services.StartGroup(ch, wg, action.Services, runningServices, "service", services.StartServiceRaw)
 
 	runningChains := chains.ListRunningRaw()
-	groupStarter(ch, wg, action.Chains, runningChains, "chain", chains.StartChainRaw)
+	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", chains.StartChainRaw)
 
 	go func() {
 		wg.Wait()

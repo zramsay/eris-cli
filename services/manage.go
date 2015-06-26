@@ -93,7 +93,7 @@ func ListExisting() {
 
 func Rm(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(RmServiceRaw(args[0], cmd.Flags().Lookup("force").Changed))
+	IfExit(RmServiceRaw(args, cmd.Flags().Lookup("force").Changed))
 }
 
 func ImportServiceRaw(servName, servPath string) error {
@@ -313,22 +313,24 @@ func UpdateServiceRaw(servName string) error {
 	return nil
 }
 
-func RmServiceRaw(servName string, force bool) error {
-	service, err := LoadServiceDefinition(servName)
-	if err != nil {
-		return err
-	}
-	err = perform.DockerRemove(service.Service, service.Operations)
-	if err != nil {
-		return err
-	}
-	if force {
-		oldFile, err := servDefFileByServName(servName)
+func RmServiceRaw(servNames []string, force bool) error {
+	for _, servName := range servNames {
+		service, err := LoadServiceDefinition(servName)
 		if err != nil {
 			return err
 		}
-		if err := os.Remove(oldFile); err != nil {
+		err = perform.DockerRemove(service.Service, service.Operations)
+		if err != nil {
 			return err
+		}
+		if force {
+			oldFile, err := servDefFileByServName(servName)
+			if err != nil {
+				return err
+			}
+			if err := os.Remove(oldFile); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

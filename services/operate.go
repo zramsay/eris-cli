@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
@@ -34,7 +35,7 @@ func Exec(cmd *cobra.Command, args []string) {
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(KillServiceRaw(args[0]))
+	IfExit(KillServiceRaw(args...))
 }
 
 func StartServiceRaw(servName string) error {
@@ -44,7 +45,7 @@ func StartServiceRaw(servName string) error {
 	}
 
 	if IsServiceRunning(service.Service) {
-		logger.Infoln("Service already started. Skipping.")
+		logger.Infoln("Service already started. Skipping", servName)
 	} else {
 		return StartServiceByService(service.Service, service.Operations)
 	}
@@ -76,18 +77,20 @@ func ExecServiceRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillServiceRaw(servName string) error {
-	service, err := LoadServiceDefinition(servName)
-	if err != nil {
-		return err
-	}
-
-	if IsServiceRunning(service.Service) {
-		if err := KillServiceByService(service.Service, service.Operations); err != nil {
+func KillServiceRaw(servNames ...string) error {
+	for _, servName := range servNames {
+		service, err := LoadServiceDefinition(servName)
+		if err != nil {
 			return err
 		}
-	} else {
-		logger.Infoln("Service not currently running. Skipping.")
+
+		if IsServiceRunning(service.Service) {
+			if err := KillServiceByService(service.Service, service.Operations); err != nil {
+				return err
+			}
+		} else {
+			logger.Infoln("Service not currently running. Skipping.")
+		}
 	}
 	return nil
 }
@@ -96,9 +99,48 @@ func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation) error {
 	return perform.DockerLogs(srv, ops)
 }
 
+// start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
+func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, start func(string) error) {
+	var skip bool
+	for _, srv := range group {
+
+		if srv == "" {
+			continue
+		}
+
+		skip = false
+		// XXX: is this redundant with what happens in StartServiceRaw ?
+		for _, run := range running {
+			if srv == run {
+				logger.Infof("%s already started, skipping: %s\n", name, srv)
+				skip = true
+			}
+		}
+		if skip {
+			continue
+		}
+
+		wg.Add(1)
+		go func(s string) {
+			logger.Debugln("starting service", s)
+			if err := start(s); err != nil {
+				logger.Debugln("error starting service", s, err)
+				ch <- err
+			}
+			wg.Done()
+		}(srv)
+	}
+}
+
 func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
-	for _, srv := range srvMain.ServiceDeps {
-		go StartServiceRaw(srv)
+	wg, ch := new(sync.WaitGroup), make(chan error, 1)
+	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", StartServiceRaw)
+	go func() {
+		wg.Wait()
+		ch <- nil
+	}()
+	if err := <-ch; err != nil {
+		return err
 	}
 	return perform.DockerRun(srvMain, ops)
 }
