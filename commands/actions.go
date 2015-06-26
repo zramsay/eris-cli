@@ -38,6 +38,7 @@ func buildActionsCommand() {
 
 func addActionsFlags() {
 	actionsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
+	actionsDo.Flags().BoolVarP(&Quiet, "quiet", "q", false, "suppress action output")
 }
 
 // get an actions definition file from a remote (currently limited to github.com and ipfs)

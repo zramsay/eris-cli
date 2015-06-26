@@ -20,20 +20,20 @@ func Do(cmd *cobra.Command, args []string) {
 		logger.Errorln(err)
 		return
 	}
-	err = DoRaw(action, actionVars)
+	err = DoRaw(action, actionVars, cmd.Flags().Lookup("quiet").Changed)
 	if err != nil {
 		logger.Errorln(err)
 		return
 	}
 }
 
-func DoRaw(action *def.Action, actionVars []string) error {
+func DoRaw(action *def.Action, actionVars []string, noOutput bool) error {
 	err := StartServicesAndChains(action)
 	if err != nil {
 		return err
 	}
 
-	err = PerformCommand(action, actionVars)
+	err = PerformCommand(action, actionVars, noOutput)
 	if err != nil {
 		return err
 	}
@@ -58,14 +58,14 @@ func StartServicesAndChains(action *def.Action) error {
 	return <-ch
 }
 
-func PerformCommand(action *def.Action, actionVars []string) error {
+func PerformCommand(action *def.Action, actionVars []string, noOutput bool) error {
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 	actionVars = append(os.Environ(), actionVars...)
 
-	logger.Println("Performing Action: ", action.Name)
+	logger.Infoln("Performing Action: ", action.Name)
 
 	for n, step := range action.Steps {
 		cmd := exec.Command("sh", "-c", step)
@@ -77,7 +77,11 @@ func PerformCommand(action *def.Action, actionVars []string) error {
 			return fmt.Errorf("error running command (%v): %s", err, prev)
 		}
 
-		logger.Infoln(strings.TrimSpace(string(prev)))
+		if noOutput {
+			logger.Infoln(strings.TrimSpace(string(prev)))
+		} else {
+			logger.Println(strings.TrimSpace(string(prev)))
+		}
 
 		if n != 0 {
 			actionVars = actionVars[:len(actionVars)-1]
@@ -85,6 +89,6 @@ func PerformCommand(action *def.Action, actionVars []string) error {
 		actionVars = append(actionVars, ("prev=" + strings.TrimSpace(string(prev))))
 	}
 
-	logger.Println("Action performed")
+	logger.Infoln("Action performed")
 	return nil
 }
