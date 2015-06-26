@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -39,18 +40,18 @@ func DoRaw(action *def.Action, actionVars []string) error {
 	return nil
 }
 
-func StartServicesAndChains(action *def.Action) error {
-	// start the services and chains
-	var wg sync.WaitGroup
+// start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
+func groupStarter(ch chan error, wg *sync.WaitGroup, group, running []string, name string, start func(string) error) {
 	var skip bool
+	for _, srv := range group {
+		if srv == "" {
+			continue
+		}
 
-	running := services.ListRunningRaw()
-	for _, srv := range action.Services {
 		skip = false
-
 		for _, run := range running {
 			if srv == run {
-				logger.Infoln("Service already started, Skipping: ", srv)
+				logger.Infof("%s already started, skipping: %s\n", name, srv)
 				skip = true
 			}
 		}
@@ -60,40 +61,33 @@ func StartServicesAndChains(action *def.Action) error {
 
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
-			err := services.StartServiceRaw(srv)
-			if err != nil {
-				logger.Println("Service already started, Skipping: ", srv)
+			logger.Debugln("starting service", srv)
+			if err := start(srv); err != nil {
+				logger.Debugln("error starting service", srv, err)
+				ch <- err
 			}
+			wg.Done()
 		}()
 	}
+}
 
-	running = chains.ListRunningRaw()
-	for _, chn := range action.Chains {
-		skip = false
+func StartServicesAndChains(action *def.Action) error {
+	// start the services and chains
+	wg := new(sync.WaitGroup)
+	ch := make(chan error, 1)
 
-		for _, run := range running {
-			if chn == run {
-				logger.Infoln("Chain already started, Skipping: ", chn)
-				skip = true
-			}
-		}
-		if skip {
-			continue
-		}
+	runningServices := services.ListRunningRaw()
+	groupStarter(ch, wg, action.Services, runningServices, "service", services.StartServiceRaw)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := chains.StartChainRaw(chn)
-			if err != nil {
-				logger.Println("Chain already started, Skipping: ", chn)
-			}
-		}()
-	}
+	runningChains := chains.ListRunningRaw()
+	groupStarter(ch, wg, action.Chains, runningChains, "chain", chains.StartChainRaw)
 
-	wg.Wait()
-	return nil
+	go func() {
+		wg.Wait()
+		ch <- nil
+	}()
+
+	return <-ch
 }
 
 func PerformCommand(action *def.Action, actionVars []string) error {
@@ -112,7 +106,7 @@ func PerformCommand(action *def.Action, actionVars []string) error {
 
 		prev, err := cmd.Output()
 		if err != nil {
-			return err
+			return fmt.Errorf("error running command (%v): %s", err, prev)
 		}
 
 		logger.Infoln(strings.TrimSpace(string(prev)))

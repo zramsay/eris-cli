@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-	def "github.com/eris-ltd/eris-cli/definitions"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
@@ -38,7 +38,7 @@ func New(cmd *cobra.Command, args []string) {
 
 func Edit(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	EditServiceRaw(args[0])
+	IfExit(EditServiceRaw(args[0]))
 }
 
 func Rename(cmd *cobra.Command, args []string) {
@@ -145,8 +145,12 @@ func NewServiceRaw(servName, imageName string) error {
 	return nil
 }
 
-func EditServiceRaw(servName string) {
-	Editor(servDefFileByServName(servName))
+func EditServiceRaw(servName string) error {
+	servDefFile, err := servDefFileByServName(servName)
+	if err != nil {
+		return err
+	}
+	return Editor(servDefFile)
 }
 
 func RenameServiceRaw(oldName, newName string) error {
@@ -172,7 +176,10 @@ func RenameServiceRaw(oldName, newName string) error {
 			}
 		}
 
-		oldFile := servDefFileByServName(oldName)
+		oldFile, err := servDefFileByServName(oldName)
+		if err != nil {
+			return err
+		}
 
 		if filepath.Base(oldFile) == newName {
 			logger.Infoln("Those are the same file. Not renaming")
@@ -316,16 +323,23 @@ func RmServiceRaw(servName string, force bool) error {
 		return err
 	}
 	if force {
-		oldFile := servDefFileByServName(servName)
-		os.Remove(oldFile)
+		oldFile, err := servDefFileByServName(servName)
+		if err != nil {
+			return err
+		}
+		if err := os.Remove(oldFile); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func exportFile(servName string) (string, error) {
-	fileName := servDefFileByServName(servName)
+	fileName, err := servDefFileByServName(servName)
+	if err != nil {
+		return "", err
+	}
 
-	var err error
 	var hash string
 	if logger.Level > 0 {
 		hash, err = util.SendToIPFS(fileName, logger.Writer)

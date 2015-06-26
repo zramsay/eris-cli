@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/util"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/util"
 
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
@@ -17,14 +17,16 @@ import (
 
 func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
 	var service def.ServiceDefinition
-	serviceConf := loadServiceDefinition(servName)
+	serviceConf, err := loadServiceDefinition(servName)
+	if err != nil {
+		return nil, err
+	}
 
 	// marshal service and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
 	// have occured in the interim they are caught.
 	service.Operations = &def.ServiceOperation{}
-	err := marshalServiceDefinition(serviceConf, &service)
-	if err != nil {
+	if err = marshalServiceDefinition(serviceConf, &service); err != nil {
 		return &def.ServiceDefinition{}, err
 	}
 
@@ -62,19 +64,24 @@ func IsServiceRunning(service *def.Service) bool {
 	return parseServices(service.Name, false)
 }
 
-func loadServiceDefinition(servName string) *viper.Viper {
+func loadServiceDefinition(servName string) (*viper.Viper, error) {
 	var serviceConf = viper.New()
 
 	serviceConf.AddConfigPath(dir.ServicesPath)
 	serviceConf.SetConfigName(servName)
-	serviceConf.ReadInConfig()
+	if err := serviceConf.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error loading service definition for %s: %v", servName, err)
+	}
 
-	return serviceConf
+	return serviceConf, nil
 }
 
-func servDefFileByServName(servName string) string {
-	serviceConf := loadServiceDefinition(servName)
-	return serviceConf.ConfigFileUsed()
+func servDefFileByServName(servName string) (string, error) {
+	serviceConf, err := loadServiceDefinition(servName)
+	if err != nil {
+		return "", err
+	}
+	return serviceConf.ConfigFileUsed(), nil
 }
 
 func marshalServiceDefinition(serviceConf *viper.Viper, service *def.ServiceDefinition) error {
