@@ -56,6 +56,8 @@ func addChainsFlags() {
 	chainsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 
 	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+
+	chainsUpdate.Flags().BoolVarP(&Pull, "pull", "p", false, "pull an updated version of the chain's image from docker hub")
 }
 
 // known lists the known chain types which eris can install
@@ -72,9 +74,7 @@ To install a new chain definition file, use: [eris chains import].
 Services include all executable chains supported by the Eris platform which are
 NOT blockchains or key managers.
 
-Services are handled using the [eris services] command.
-
-Key management is handled using hte [eris keys] command.`,
+Services are handled using the [eris services] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		chns.ListKnown()
 	},

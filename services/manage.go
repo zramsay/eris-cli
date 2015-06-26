@@ -66,7 +66,7 @@ func Export(cmd *cobra.Command, args []string) {
 // Updates an installed service, or installs it if it has not been installed.
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(UpdateServiceRaw(args[0]))
+	IfExit(UpdateServiceRaw(args[0], cmd.Flags().Lookup("skip-pull").Changed))
 }
 
 // list known
@@ -260,7 +260,8 @@ func ExportServiceRaw(servName string) error {
 	} else {
 		return fmt.Errorf(`I don't known of that service.
 Please retry with a known service.
-To find known services use: eris services known`)
+To find known services use: eris services known
+`)
 	}
 	return nil
 }
@@ -272,7 +273,7 @@ func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field 
 			return err
 		}
 	} else {
-		return fmt.Errorf("No service matching that name.")
+		return fmt.Errorf("No service matching that name.\n")
 	}
 	return nil
 }
@@ -301,12 +302,12 @@ func ListExistingRaw() []string {
 	return listServices(true)
 }
 
-func UpdateServiceRaw(servName string) error {
+func UpdateServiceRaw(servName string, skipPull bool) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRebuild(service.Service, service.Operations, true)
+	err = perform.DockerRebuild(service.Service, service.Operations, skipPull)
 	if err != nil {
 		return err
 	}

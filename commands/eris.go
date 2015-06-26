@@ -86,6 +86,7 @@ var Debug bool
 var Force bool
 var Interactive bool
 var Pull bool
+var SkipPull bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

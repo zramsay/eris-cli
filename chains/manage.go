@@ -128,7 +128,7 @@ func Rename(cmd *cobra.Command, args []string) {
 
 func Update(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(UpdateChainRaw(args[0]))
+	IfExit(UpdateChainRaw(args[0], cmd.Flags().Lookup("pull").Changed))
 }
 
 func Rm(cmd *cobra.Command, args []string) {
@@ -456,12 +456,23 @@ func RenameChainRaw(oldName, newName string) error {
 	return nil
 }
 
-func UpdateChainRaw(chainName string) error {
+func UpdateChainRaw(chainName string, pull bool) error {
+	// DockerRebuild is built for services, adding false to the final
+	//   variable will mean it pulls. But we want the opposite default
+	//   behaviour for chains as we do for services in this regard
+	//   so we flip the variable.
+	var skipPull bool
+	if pull {
+		skipPull = false
+	} else {
+		skipPull = true
+	}
+
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRebuild(chain.Service, chain.Operations, false)
+	err = perform.DockerRebuild(chain.Service, chain.Operations, skipPull)
 	if err != nil {
 		return err
 	}

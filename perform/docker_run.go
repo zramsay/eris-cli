@@ -240,7 +240,7 @@ func DockerExec(srv *def.Service, ops *def.ServiceOperation, cmd []string, inter
 	}
 }
 
-func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull bool) error {
+func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, skipPull bool) error {
 	var id string
 	var wasRunning bool = false
 
@@ -270,7 +270,7 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, pull bool) error
 		return nil
 	}
 
-	if pull {
+	if !skipPull {
 		err := DockerPull(srv, ops)
 		if err != nil {
 			return err

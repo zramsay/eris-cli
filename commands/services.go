@@ -41,6 +41,7 @@ func buildServicesCommand() {
 func addServicesFlags() {
 	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+	servicesUpdate.Flags().BoolVarP(&SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 }
 
 // list-known lists the services which eris can automagically install
@@ -55,9 +56,7 @@ To install a new service, use: [eris services import].
 Services include all executable services supported by the Eris platform which are
 NOT blockchains or key managers.
 
-Blockchains are handled using the [eris chains] command.
-
-Key management is handled using hte [eris keys] command.`,
+Blockchains are handled using the [eris chains] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv.ListKnown()
 	},
