@@ -88,6 +88,7 @@ var Interactive bool
 var Pull bool
 var SkipPull bool
 var Quiet bool
+var All bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

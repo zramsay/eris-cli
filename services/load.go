@@ -156,12 +156,25 @@ func parseServices(name string, all bool) bool {
 
 func listServices(running bool) []string {
 	services := []string{}
-	r := regexp.MustCompile(`\/eris_service_(.+)_\d`)
+	r := regexp.MustCompile(`\/eris_service_(.+?)_\d`)
+	// docker has this weird thing where it returns links as individual
+	// container (as in there is the container of two linked services and
+	// the linkage between them is actually its own containers). this explains
+	// the leading hash on containers. the q regexp is to filer out these
+	// links from the return list as they are irrelevant to the information
+	// desired by this function. and frankly they give false answers to
+	// IsServiceRunning and ls,ps,known functions.
+	q := regexp.MustCompile(`\A\/eris_service_(.+?)_\d/(.+?)\z`)
 
+	running = false
 	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
 	for _, con := range contns {
 		for _, c := range con.Names {
 			match := r.FindAllStringSubmatch(c, 1)
+			m2 := q.FindAllStringSubmatch(c, 1)
+			if len(m2) != 0 {
+				continue
+			}
 			if len(match) != 0 {
 				services = append(services, r.FindAllStringSubmatch(c, 1)[0][1])
 			}

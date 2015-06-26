@@ -101,7 +101,7 @@ func KillChainRaw(chainName string) error {
 	}
 
 	if IsChainRunning(chain) {
-		err := services.KillServiceByService(chain.Service, chain.Operations)
+		err := services.KillServiceByService(true, chain.Service, chain.Operations)
 		if err != nil {
 			return err
 		}

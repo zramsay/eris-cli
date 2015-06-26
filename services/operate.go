@@ -35,7 +35,7 @@ func Exec(cmd *cobra.Command, args []string) {
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(KillServiceRaw(args...))
+	IfExit(KillServiceRaw(cmd.Flags().Lookup("all").Changed, args...))
 }
 
 func StartServiceRaw(servName string) error {
@@ -77,7 +77,7 @@ func ExecServiceRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillServiceRaw(servNames ...string) error {
+func KillServiceRaw(all bool, servNames ...string) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName)
 		if err != nil {
@@ -85,7 +85,7 @@ func KillServiceRaw(servNames ...string) error {
 		}
 
 		if IsServiceRunning(service.Service) {
-			if err := KillServiceByService(service.Service, service.Operations); err != nil {
+			if err := KillServiceByService(all, service.Service, service.Operations); err != nil {
 				return err
 			}
 		} else {
@@ -149,9 +149,11 @@ func ExecServiceByService(srvMain *def.Service, ops *def.ServiceOperation, cmd [
 	return perform.DockerExec(srvMain, ops, cmd, attach)
 }
 
-func KillServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
-	for _, srv := range srvMain.ServiceDeps {
-		go KillServiceRaw(srv)
+func KillServiceByService(all bool, srvMain *def.Service, ops *def.ServiceOperation) error {
+	if all {
+		for _, srv := range srvMain.ServiceDeps {
+			go KillServiceRaw(all, srv)
+		}
 	}
 	return perform.DockerStop(srvMain, ops)
 }

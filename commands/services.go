@@ -42,6 +42,7 @@ func addServicesFlags() {
 	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 	servicesUpdate.Flags().BoolVarP(&SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
+	servicesStop.Flags().BoolVarP(&All, "all", "a", false, "stop the primary service and its dependent services")
 }
 
 // list-known lists the services which eris can automagically install
