@@ -49,6 +49,7 @@ type ServiceOperation struct {
 	SrvContainerID    string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DataContainerName string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DataContainerID   string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+  ContainerNumber   int    `json:",omitempty,omitzero" yaml:",omitempty" toml:",omitempty,omitzero"`
 	Restart           string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Remove            bool   `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Privileged        bool   `json:",omitempty" yaml:",omitempty" toml:",omitempty"`

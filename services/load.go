@@ -34,6 +34,7 @@ func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
 		return &service, fmt.Errorf("No service given.")
 	}
 
+
 	err = checkServiceHasImage(service.Service)
 	if err != nil {
 		return &def.ServiceDefinition{}, err
