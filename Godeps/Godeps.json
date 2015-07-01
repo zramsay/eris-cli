@@ -56,7 +56,7 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common",
-			"Rev": "e8ab985c3196fd49b860c9f82daeae02fb10de0d"
+			"Rev": "888f1fe0a03c7bbed6f47cc671e645919a462011"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",

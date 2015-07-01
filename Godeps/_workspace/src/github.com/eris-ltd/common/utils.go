@@ -28,7 +28,6 @@ var (
 	// Major Directories
 	ActionsPath        = path.Join(ErisRoot, "actions")
 	BlockchainsPath    = path.Join(ErisRoot, "blockchains")
-	ChainsTypesPath    = path.Join(BlockchainsPath, "types")
 	DataContainersPath = path.Join(ErisRoot, "data")
 	DappsPath          = path.Join(ErisRoot, "dapps")
 	FilesPath          = path.Join(ErisRoot, "files")
@@ -49,7 +48,7 @@ var (
 )
 
 var MajorDirs = []string{
-	ErisRoot, ActionsPath, BlockchainsPath, ChainsTypesPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
+	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
 }
 
 //---------------------------------------------
