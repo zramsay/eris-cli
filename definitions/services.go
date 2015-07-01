@@ -16,7 +16,7 @@ type Service struct {
 	// TODO: harmonize with services_definition_spec.md
 	Name        string            `json:"name,omitempty" yaml:"name,omitempty" toml:"name,omitempty"`
 	Image       string            `json:"image,omitempty" yaml:"image,omitempty" toml:"image,omitempty"`
-	AutoData    bool              `json:"data_container" yaml:"data_container" toml:"data_container`
+	AutoData    bool              `json:"data_container" yaml:"data_container" toml:"data_container"`
 	Command     string            `json:"command,omitempty" yaml:"command,omitempty" toml:"command,omitempty"`
 	ServiceDeps []string          `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty" yaml:"labels,omitempty" toml:"labels,omitempty"`

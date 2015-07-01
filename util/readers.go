@@ -56,11 +56,17 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 }
 
 func IPFSBaseUrl() string {
-	host := GetConfigValue("IpfsHost")
+	var host string
 	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
-		host = "http://ipfs:8080"
+		host = "http://ipfs"
+	} else {
+		if os.Getenv("ERIS_IPFS_HOST") != "" {
+			host = os.Getenv("ERIS_IPFS_HOST")
+		} else {
+			host = GetConfigValue("IpfsHost")
+		}
 	}
-	return host + "/ipfs/"
+	return host + ":8080/ipfs/"
 }
 
 var timeout = time.Duration(10 * time.Second)

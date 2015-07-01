@@ -57,12 +57,12 @@ func ipfsDef() error {
   if err != nil {
     return err
   }
-  ipfsD := `
-[service]
+  ipfsD := `[service]
 name = "ipfs"
 image = "eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001", "8080:8080"]
+user = "root"
 
 [maintainer]
 name = "Eris Industries"
