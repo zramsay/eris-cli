@@ -152,8 +152,9 @@ func ImportServiceRaw(servName, servPath string) error {
 
 func NewServiceRaw(servName, imageName string) error {
 	srv := &def.Service{
-		Name:  servName,
-		Image: imageName,
+		Name:     servName,
+		Image:    imageName,
+		AutoData: true,
 	}
 	srvDef := &def.ServiceDefinition{
 		Service:    srv,
@@ -268,8 +269,8 @@ func ExportServiceRaw(servName string) error {
 			logger.Errorln(hash)
 		} else {
 			logger.Infoln("IPFS is not running. Starting now.")
-			err := StartServiceByService(ipfsService.Service, ipfsService.Operations)
-			if err != nil {
+
+			if err := StartServiceByService(ipfsService.Service, ipfsService.Operations); err != nil {
 				return err
 			}
 
@@ -284,8 +285,7 @@ func ExportServiceRaw(servName string) error {
 	} else {
 		return fmt.Errorf(`I don't known of that service.
 Please retry with a known service.
-To find known services use: eris services known
-`)
+To find known services use: eris services known`)
 	}
 	return nil
 }
