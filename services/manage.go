@@ -19,39 +19,54 @@ import (
 
 // install
 func Import(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	if len(args) != 2 {
-		fmt.Println("Please give me: eris services install [name] [location]")
+		cmd.Help()
 		return
 	}
 	IfExit(ImportServiceRaw(args[0], args[1]))
 }
 
 func New(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	if len(args) != 2 {
-		fmt.Println("Please give me: eris new [name] [containerImage]")
+		cmd.Help()
 		return
 	}
 	IfExit(NewServiceRaw(args[0], args[1]))
 }
 
 func Edit(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(EditServiceRaw(args[0]))
 }
 
 func Rename(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	if len(args) != 2 {
-		fmt.Println("Please give me: eris services rename [oldName] [newName]")
+		cmd.Help()
 		return
 	}
 	IfExit(RenameServiceRaw(args[0], args[1]))
 }
 
 func Inspect(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
@@ -59,13 +74,19 @@ func Inspect(cmd *cobra.Command, args []string) {
 }
 
 func Export(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(ExportServiceRaw(args[0]))
 }
 
 // Updates an installed service, or installs it if it has not been installed.
 func Update(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(UpdateServiceRaw(args[0], cmd.Flags().Lookup("skip-pull").Changed))
 }
 
@@ -92,7 +113,10 @@ func ListExisting() {
 }
 
 func Rm(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(RmServiceRaw(args, cmd.Flags().Lookup("force").Changed))
 }
 

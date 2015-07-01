@@ -14,18 +14,26 @@ import (
 )
 
 func Start(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(StartServiceRaw(args[0]))
 }
 
 func Logs(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	lines, _ := cmd.Flags().GetInt("lines")
-	IfExit(LogsServiceRaw(args[0], cmd.Flags().Lookup("tail").Changed, lines))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(LogsServiceRaw(args[0], cmd.Flags().Lookup("tail").Changed))
 }
 
 func Exec(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	srv := args[0]
 	args = args[1:]
 	if len(args) == 1 {
@@ -35,7 +43,10 @@ func Exec(cmd *cobra.Command, args []string) {
 }
 
 func Kill(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
 	IfExit(KillServiceRaw(cmd.Flags().Lookup("all").Changed, cmd.Flags().Lookup("rm").Changed, args...))
 }
 
@@ -54,7 +65,7 @@ func StartServiceRaw(servName string) error {
 	return nil
 }
 
-func LogsServiceRaw(servName string, follow bool, lines int) error {
+func LogsServiceRaw(servName string, follow bool) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err

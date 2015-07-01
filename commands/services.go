@@ -40,7 +40,6 @@ func buildServicesCommand() {
 
 func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&Follow, "tail", "t", false, "follow logs, like tail -f")
-	servicesLogs.Flags().IntVarP(&Lines, "lines", "n", 50, "number of lines to display")
 
 	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 
@@ -49,7 +48,7 @@ func addServicesFlags() {
 	servicesStop.Flags().BoolVarP(&All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
 
-	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "force action")
+	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "remove service definition file from eris library")
 }
 
 // list-known lists the services which eris can automagically install
