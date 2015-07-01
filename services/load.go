@@ -3,7 +3,6 @@ package services
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -15,7 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
+func LoadServiceDefinition(servName string, containerNumber int) (*def.ServiceDefinition, error) {
 	var service def.ServiceDefinition
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
@@ -34,12 +33,13 @@ func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
 		return &service, fmt.Errorf("No service given.")
 	}
 
-
 	err = checkServiceHasImage(service.Service)
 	if err != nil {
 		return &def.ServiceDefinition{}, err
 	}
 
+	// set container number and format names
+	service.Operations.ContainerNumber = containerNumber
 	checkServiceHasName(service.Service, service.Operations)
 	checkServiceHasDataContainer(serviceConf, service.Service, service.Operations)
 	checkDataContainerHasName(service.Operations)
@@ -47,8 +47,9 @@ func LoadServiceDefinition(servName string) (*def.ServiceDefinition, error) {
 	return &service, nil
 }
 
+// not currently used by anything
 func LoadService(servName string) (*def.Service, error) {
-	sd, err := LoadServiceDefinition(servName)
+	sd, err := LoadServiceDefinition(servName, 1)
 	return sd.Service, err
 }
 
@@ -89,14 +90,6 @@ func marshalServiceDefinition(serviceConf *viper.Viper, service *def.ServiceDefi
 	return nil
 }
 
-func checkServiceGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
-	}
-
-	return nil
-}
-
 // Services must be given an image. Flame out if they do not.
 func checkServiceHasImage(service *def.Service) error {
 	if service.Image == "" {
@@ -113,9 +106,7 @@ func checkServiceHasName(service *def.Service, ops *def.ServiceOperation) {
 			service.Name = strings.Replace(service.Image, "/", "_", -1)
 		}
 	}
-
-	containerNumber := 1 // tmp
-	ops.SrvContainerName = "eris_service_" + service.Name + "_" + strconv.Itoa(containerNumber)
+	ops.SrvContainerName = fmt.Sprintf("eris_service_%s_%d", service.Name, ops.ContainerNumber)
 }
 
 func checkServiceHasDataContainer(serviceConf *viper.Viper, service *def.Service, ops *def.ServiceOperation) {

@@ -30,7 +30,7 @@ func DockerCreateDataContainer(srvName string) error {
 
 	srv := def.Service{}
 	ops := def.ServiceOperation{}
-	containerNumber := 1
+	containerNumber := util.NextContainerNumber("data", srvName)
 	ops.DataContainerName = "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
 	optsData, err := configureDataContainer(&srv, &ops, nil)
 	if err != nil {
@@ -814,7 +814,6 @@ func startExec(id string) error {
 
 	return util.DockerClient.StartExec(id, opts)
 }
-
 
 // ----------------------------------------------------------------------------
 // ---------------------    Util Funcs ----------------------------------------

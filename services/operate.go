@@ -2,56 +2,14 @@ package services
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 
-	"github.com/eris-ltd/eris-cli/perform"
 	def "github.com/eris-ltd/eris-cli/definitions"
-
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/eris-ltd/eris-cli/perform"
 )
 
-func Start(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(StartServiceRaw(args[0]))
-}
-
-func Logs(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(LogsServiceRaw(args[0], cmd.Flags().Lookup("tail").Changed))
-}
-
-func Exec(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	srv := args[0]
-	args = args[1:]
-	if len(args) == 1 {
-		args = strings.Split(args[0], " ")
-	}
-	IfExit(ExecServiceRaw(srv, args, cmd.Flags().Lookup("interactive").Changed))
-}
-
-func Kill(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(KillServiceRaw(cmd.Flags().Lookup("all").Changed, cmd.Flags().Lookup("rm").Changed, args...))
-}
-
-func StartServiceRaw(servName string) error {
-	service, err := LoadServiceDefinition(servName)
+func StartServiceRaw(servName string, containerNumber int) error {
+	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -65,16 +23,16 @@ func StartServiceRaw(servName string) error {
 	return nil
 }
 
-func LogsServiceRaw(servName string, follow bool) error {
-	service, err := LoadServiceDefinition(servName)
+func LogsServiceRaw(servName string, follow bool, containerNumber int) error {
+	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
 	return LogsServiceByService(service.Service, service.Operations, follow)
 }
 
-func ExecServiceRaw(name string, args []string, attach bool) error {
-	service, err := LoadServiceDefinition(name)
+func ExecServiceRaw(name string, args []string, attach bool, containerNumber int) error {
+	service, err := LoadServiceDefinition(name, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -91,7 +49,7 @@ func ExecServiceRaw(name string, args []string, attach bool) error {
 
 func KillServiceRaw(all, rm bool, servNames ...string) error {
 	for _, servName := range servNames {
-		service, err := LoadServiceDefinition(servName)
+		service, err := LoadServiceDefinition(servName, 1) // TODO
 		if err != nil {
 			return err
 		}
@@ -120,7 +78,7 @@ func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bo
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
-func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, start func(string) error) {
+func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, num int, start func(string, int) error) {
 	var skip bool
 	for _, srv := range group {
 
@@ -143,7 +101,7 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 		wg.Add(1)
 		go func(s string) {
 			logger.Debugln("starting service", s)
-			if err := start(s); err != nil {
+			if err := start(s, num); err != nil {
 				logger.Debugln("error starting service", s, err)
 				ch <- err
 			}
@@ -154,7 +112,7 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 
 func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
-	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", StartServiceRaw)
+	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", ops.ContainerNumber, StartServiceRaw)
 	go func() {
 		wg.Wait()
 		ch <- nil

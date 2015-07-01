@@ -13,112 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
-
-// install
-func Import(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
-	IfExit(ImportServiceRaw(args[0], args[1]))
-}
-
-func New(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
-	IfExit(NewServiceRaw(args[0], args[1]))
-}
-
-func Edit(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(EditServiceRaw(args[0]))
-}
-
-func Rename(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
-	IfExit(RenameServiceRaw(args[0], args[1]))
-}
-
-func Inspect(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) == 1 {
-		args = append(args, "all")
-	}
-	IfExit(InspectServiceRaw(args[0], args[1]))
-}
-
-func Export(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(ExportServiceRaw(args[0]))
-}
-
-// Updates an installed service, or installs it if it has not been installed.
-func Update(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(UpdateServiceRaw(args[0], cmd.Flags().Lookup("skip-pull").Changed))
-}
-
-// list known
-func ListKnown() {
-	services := ListKnownRaw()
-	for _, s := range services {
-		fmt.Println(s)
-	}
-}
-
-func ListRunning() {
-	services := ListRunningRaw()
-	for _, s := range services {
-		fmt.Println(s)
-	}
-}
-
-func ListExisting() {
-	services := ListExistingRaw()
-	for _, s := range services {
-		fmt.Println(s)
-	}
-}
-
-func Rm(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	IfExit(RmServiceRaw(args, cmd.Flags().Lookup("force").Changed))
-}
 
 func ImportServiceRaw(servName, servPath string) error {
 	fileName := filepath.Join(ServicesPath, servName)
@@ -178,7 +73,7 @@ func EditServiceRaw(servName string) error {
 	return Editor(servDefFile)
 }
 
-func RenameServiceRaw(oldName, newName string) error {
+func RenameServiceRaw(oldName, newName string, containerNumber int) error {
 	if oldName == newName {
 		return fmt.Errorf("Cannot rename to same name")
 	}
@@ -189,7 +84,7 @@ func RenameServiceRaw(oldName, newName string) error {
 	if parseKnown(oldName) {
 		logger.Infoln("Renaming service", oldName, "to", newName)
 
-		serviceDef, err := LoadServiceDefinition(oldName)
+		serviceDef, err := LoadServiceDefinition(oldName, containerNumber)
 		if err != nil {
 			return err
 		}
@@ -225,7 +120,7 @@ func RenameServiceRaw(oldName, newName string) error {
 		}
 
 		if !transformOnly {
-			err = data.RenameDataRaw(oldName, newName)
+			err = data.RenameDataRaw(oldName, newName, containerNumber)
 			if err != nil {
 				return err
 			}
@@ -239,8 +134,8 @@ func RenameServiceRaw(oldName, newName string) error {
 	return nil
 }
 
-func InspectServiceRaw(servName, field string) error {
-	service, err := LoadServiceDefinition(servName)
+func InspectServiceRaw(servName string, field string, containerNumber int) error {
+	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -253,7 +148,7 @@ func InspectServiceRaw(servName, field string) error {
 
 func ExportServiceRaw(servName string) error {
 	if parseKnown(servName) {
-		ipfsService, err := LoadServiceDefinition("ipfs")
+		ipfsService, err := LoadServiceDefinition("ipfs", 1)
 		if err != nil {
 			return err
 		}
@@ -326,8 +221,8 @@ func ListExistingRaw() []string {
 	return listServices(true)
 }
 
-func UpdateServiceRaw(servName string, skipPull bool) error {
-	service, err := LoadServiceDefinition(servName)
+func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error {
+	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -340,7 +235,7 @@ func UpdateServiceRaw(servName string, skipPull bool) error {
 
 func RmServiceRaw(servNames []string, force bool) error {
 	for _, servName := range servNames {
-		service, err := LoadServiceDefinition(servName)
+		service, err := LoadServiceDefinition(servName, 1) // TODO
 		if err != nil {
 			return err
 		}

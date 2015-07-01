@@ -3,52 +3,10 @@ package chains
 import (
 	"fmt"
 	"github.com/eris-ltd/eris-cli/services"
-	"strings"
-
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-//----------------------------------------------------------------------
-
-func Start(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	IfExit(StartChainRaw(args[0]))
-}
-
-func Logs(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	lines, _ := cmd.Flags().GetInt("lines")
-	IfExit(LogsChainRaw(args[0], cmd.Flags().Lookup("tail").Changed, lines))
-}
-
-func Exec(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	srv := args[0]
-	// if interactive, we ignore args. if not, run args as command
-	interactive := cmd.Flags().Lookup("interactive").Changed
-	if !interactive {
-		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
-		}
-		args = args[1:]
-	}
-	if len(args) == 1 {
-		args = strings.Split(args[0], " ")
-	}
-
-	IfExit(ExecChainRaw(srv, args, interactive))
-}
-
-func Kill(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	IfExit(KillChainRaw(args[0], cmd.Flags().Lookup("rm").Changed))
-}
-
-//----------------------------------------------------------------------
-
-func StartChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+func StartChainRaw(chainName string, containerNumber int) error {
+	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -67,8 +25,8 @@ func StartChainRaw(chainName string) error {
 	return nil
 }
 
-func LogsChainRaw(chainName string, follow bool, lines int) error {
-	chain, err := LoadChainDefinition(chainName)
+func LogsChainRaw(chainName string, follow bool, lines, containerNumber int) error {
+	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -79,8 +37,8 @@ func LogsChainRaw(chainName string, follow bool, lines int) error {
 	return nil
 }
 
-func ExecChainRaw(name string, args []string, attach bool) error {
-	chain, err := LoadChainDefinition(name)
+func ExecChainRaw(name string, args []string, attach bool, containerNumber int) error {
+	chain, err := LoadChainDefinition(name, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -95,8 +53,8 @@ func ExecChainRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillChainRaw(chainName string, rm bool) error {
-	chain, err := LoadChainDefinition(chainName)
+func KillChainRaw(chainName string, rm bool, containerNumber int) error {
+	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}

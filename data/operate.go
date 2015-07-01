@@ -5,8 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -15,46 +13,12 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-//----------------------------------------------------
-
-func Import(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	IfExit(ImportDataRaw(args[0]))
-}
-
-func Export(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	IfExit(ExportDataRaw(args[0]))
-}
-
-func Exec(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	srv := args[0]
-
-	// if interactive, we ignore args. if not, run args as command
-	interactive := cmd.Flags().Lookup("interactive").Changed
-	if !interactive {
-		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
-		}
-		args = args[1:]
-		if len(args) == 1 {
-			args = strings.Split(args[0], " ")
-		}
-	}
-
-	IfExit(ExecDataRaw(srv, interactive, args))
-}
-
-//----------------------------------------------------
-
-func ImportDataRaw(name string) error {
+func ImportDataRaw(name string, containerNumber int) error {
 	if parseKnown(name) {
 
-		containerName := nameToContainerName(name)
+		containerName := nameToContainerName(name, containerNumber)
 		importPath := filepath.Join(DataContainersPath, name)
 
 		// temp until docker cp works both ways.
@@ -74,10 +38,9 @@ func ImportDataRaw(name string) error {
 	return nil
 }
 
-func ExecDataRaw(name string, interactive bool, args []string) error {
+func ExecDataRaw(name string, containerNumber int, interactive bool, args []string) error {
 	if parseKnown(name) {
-		containerNumber := 1
-		name = "eris_data_" + name + "_" + strconv.Itoa(containerNumber)
+		name = nameToContainerName(name, containerNumber)
 		logger.Infoln("Running exec on container with volumes from data container for " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err
@@ -88,12 +51,12 @@ func ExecDataRaw(name string, interactive bool, args []string) error {
 	return nil
 }
 
-func ExportDataRaw(name string) error {
+func ExportDataRaw(name string, containerNumber int) error {
 	if parseKnown(name) {
 		logger.Infoln("Exporting data container" + name)
 
-		exportPath := filepath.Join(DataContainersPath, name)
-		_, ops := mockService(name)
+		exportPath := filepath.Join(DataContainersPath, name) // TODO: containerNumber ?
+		_, ops := mockService(name, containerNumber)
 		service, exists := perform.ContainerExists(ops)
 
 		if !exists {

@@ -1,10 +1,76 @@
 package commands
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/eris-ltd/eris-cli/data"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
+
+//----------------------------------------------------
+
+func ListKnownData(cmd *cobra.Command, args []string) {
+	dataCont, err := data.ListKnownRaw()
+	IfExit(err)
+	for _, s := range dataCont {
+		fmt.Println(s)
+	}
+}
+
+func RenameData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	if len(args) != 2 {
+		fmt.Println("Please give me: eris data rename [oldName] [newName]")
+		return
+	}
+	IfExit(data.RenameDataRaw(args[0], args[1], ContainerNumber))
+}
+
+func InspectData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	if len(args) == 1 {
+		args = append(args, "all")
+	}
+	IfExit(data.InspectDataRaw(args[0], args[1], ContainerNumber))
+}
+
+func RmData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	IfExit(data.RmDataRaw(args[0], ContainerNumber))
+}
+
+func ImportData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	IfExit(data.ImportDataRaw(args[0], ContainerNumber))
+}
+
+func ExportData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	IfExit(data.ExportDataRaw(args[0], ContainerNumber))
+}
+
+func ExecData(cmd *cobra.Command, args []string) {
+	IfExit(checkServiceGiven(args))
+	srv := args[0]
+
+	// if interactive, we ignore args. if not, run args as command
+	if !Interactive {
+		if len(args) < 2 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+		args = args[1:]
+		if len(args) == 1 {
+			args = strings.Split(args[0], " ")
+		}
+	}
+
+	IfExit(data.ExecDataRaw(srv, ContainerNumber, Interactive, args))
+}
+
+//----------------------------------------------------
 
 // Primary Data Sub-Command
 var Data = &cobra.Command{
@@ -32,7 +98,7 @@ var dataImport = &cobra.Command{
 	Short: "Import a folder to a named data container",
 	Long:  `Import a folder to a named data container`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Import(cmd, args)
+		ImportData(cmd, args)
 	},
 }
 
@@ -41,7 +107,7 @@ var dataList = &cobra.Command{
 	Short: "List the data containers",
 	Long:  `List the data containers`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.ListKnown(cmd, args)
+		ListKnownData(cmd, args)
 	},
 }
 
@@ -50,7 +116,7 @@ var dataExec = &cobra.Command{
 	Short: "Run a command or interactive shell in in data container",
 	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Exec(cmd, args)
+		ExecData(cmd, args)
 	},
 }
 
@@ -59,7 +125,7 @@ var dataRename = &cobra.Command{
 	Short: "Rename a data container",
 	Long:  `Rename a data container`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Rename(cmd, args)
+		RenameData(cmd, args)
 	},
 }
 
@@ -68,7 +134,7 @@ var dataInspect = &cobra.Command{
 	Short: "Machine readable details.",
 	Long:  `Displays machine readable details about running containers.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Inspect(cmd, args)
+		InspectData(cmd, args)
 	},
 }
 
@@ -77,7 +143,7 @@ var dataExport = &cobra.Command{
 	Short: "Import a named data container to a folder",
 	Long:  `Import a named data container to a folder`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Export(cmd, args)
+		ExportData(cmd, args)
 	},
 }
 
@@ -86,6 +152,6 @@ var dataRm = &cobra.Command{
 	Short: "Remove a data container",
 	Long:  `Remove a data container`,
 	Run: func(cmd *cobra.Command, args []string) {
-		data.Rm(cmd, args)
+		RmData(cmd, args)
 	},
 }

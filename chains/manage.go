@@ -17,126 +17,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
-
-//----------------------------------------------------------------------
-
-// fetch and install a chain
-func Install(cmd *cobra.Command, args []string) {
-	chainType := cmd.Flags().Lookup("type").Value.String()
-	chainID := cmd.Flags().Lookup("id").Value.String()
-	chainName := cmd.Flags().Lookup("name").Value.String()
-	config := cmd.Flags().Lookup("config").Value.String()
-	dir := cmd.Flags().Lookup("dir").Value.String()
-
-	if err := InstallChainRaw(chainType, chainID, chainName, config, dir); err != nil {
-		fmt.Println(err)
-	}
-
-}
-
-// create a new chain
-// TODO: interactive option for building genesis?
-func New(cmd *cobra.Command, args []string) {
-	chainType := cmd.Flags().Lookup("type").Value.String()
-	genesis := cmd.Flags().Lookup("genesis").Value.String()
-	config := cmd.Flags().Lookup("config").Value.String()
-	dir := cmd.Flags().Lookup("dir").Value.String()
-	name := cmd.Flags().Lookup("name").Value.String()
-
-	if err := NewChainRaw(chainType, name, genesis, config, dir); err != nil {
-		fmt.Println(err)
-	}
-}
-
-// import a chain definition file
-func Import(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	if len(args) != 2 {
-		logger.Println("Please give me: eris chains import [name] [location]")
-		return
-	}
-	IfExit(ImportChainRaw(args[0], args[1]))
-}
-
-// edit a chain definition file
-func Edit(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	var configVals []string
-	if len(args) > 1 {
-		configVals = args[1:]
-	}
-	IfExit(EditChainRaw(args[0], configVals))
-}
-
-func Inspect(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	chainName := args[0]
-	var field string
-	if len(args) == 1 {
-		field = "all"
-	} else {
-		field = args[1]
-	}
-	chain, err := LoadChainDefinition(chainName)
-	IfExit(err)
-	if IsChainExisting(chain) {
-		IfExit(services.InspectServiceByService(chain.Service, chain.Operations, field))
-	}
-}
-
-func Export(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	IfExit(ExportChainRaw(args[0]))
-}
-
-func ListKnown() {
-	chains := ListKnownRaw()
-	for _, s := range chains {
-		fmt.Println(s)
-	}
-}
-
-func ListInstalled() {
-	listChains(true)
-}
-
-func ListChains() {
-	chains := ListExistingRaw()
-	for _, s := range chains {
-		fmt.Println(s)
-	}
-}
-
-func ListRunning() {
-	chains := ListRunningRaw()
-	for _, s := range chains {
-		fmt.Println(s)
-	}
-}
-
-func Rename(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	if len(args) != 2 {
-		fmt.Println("Please give me: eris chains rename [oldName] [newName]")
-		return
-	}
-	IfExit(RenameChainRaw(args[0], args[1]))
-}
-
-func Update(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	IfExit(UpdateChainRaw(args[0], cmd.Flags().Lookup("pull").Changed))
-}
-
-func Rm(cmd *cobra.Command, args []string) {
-	IfExit(checkChainGiven(args))
-	IfExit(RmChainRaw(args[0], cmd.Flags().Lookup("force").Changed))
-}
-
-//----------------------------------------------------------------------
 
 func getChainIDFromGenesis(genesis, dir string) (string, error) {
 	var hasChainID = struct {
@@ -170,7 +51,7 @@ func getChainIDFromGenesis(genesis, dir string) (string, error) {
 	return chainID, nil
 }
 
-func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string) (err error) {
+func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string, containerNumber int) (err error) {
 	containerName := chainType + "_" + chainID
 	if chainName != "" {
 		containerName = chainName
@@ -184,7 +65,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string)
 	// if something goes wrong, cleanup
 	defer func() {
 		if err != nil {
-			if err2 := data.RmDataRaw(containerName); err2 != nil {
+			if err2 := data.RmDataRaw(containerName, containerNumber); err2 != nil {
 				err = fmt.Errorf("Tragic! Error removing data container after initial error (%v): %v", err, err2)
 			}
 		}
@@ -214,7 +95,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string)
 	}
 
 	// copy from host to container
-	if err = data.ImportDataRaw(containerName); err != nil {
+	if err = data.ImportDataRaw(containerName, containerNumber); err != nil {
 		return err
 	}
 
@@ -242,7 +123,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string)
 		return
 	}
 
-	chain, err = LoadChainDefinition(containerName)
+	chain, err = LoadChainDefinition(containerName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -256,14 +137,13 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string)
 	if !ok {
 		return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, cmd)
 	}
-	containerNumber := 1
 	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
 	chain.Operations.Remove = true
 	err = services.StartServiceByService(chain.Service, chain.Operations)
 	return
 }
 
-func NewChainRaw(chainType, name, genesis, config, dir string) error {
+func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber int) error {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
 	}
@@ -274,15 +154,15 @@ func NewChainRaw(chainType, name, genesis, config, dir string) error {
 		return err
 	}
 
-	return setupChain(chainType, chainID, name, "new", dir, genesis, config)
+	return setupChain(chainType, chainID, name, "new", dir, genesis, config, containerNumber)
 }
 
-func InstallChainRaw(chainType, chainID, chainName, config, dir string) error {
+func InstallChainRaw(chainType, chainID, chainName, config, dir string, containerNumber int) error {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
 	}
 
-	return setupChain(chainType, chainID, chainName, "fetch", dir, "", config)
+	return setupChain(chainType, chainID, chainName, "fetch", dir, "", config, containerNumber)
 }
 
 func ImportChainRaw(chainName, path string) error {
@@ -316,12 +196,12 @@ func ImportChainRaw(chainName, path string) error {
 }
 
 func ExportChainRaw(chainName string) error {
-	chain, err := LoadChainDefinition(chainName)
+	chain, err := LoadChainDefinition(chainName, 1) //TODO:CNUM
 	if err != nil {
 		return err
 	}
 	if IsChainExisting(chain) {
-		ipfsService, err := services.LoadServiceDefinition("ipfs")
+		ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
 		if err != nil {
 			return err
 		}
@@ -393,7 +273,6 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
-// right now a chain's name is chainType/chainID and that's that
 func RenameChainRaw(oldName, newName string) error {
 	if oldName == newName {
 		return fmt.Errorf("Cannot rename to same name")
@@ -405,7 +284,7 @@ func RenameChainRaw(oldName, newName string) error {
 	if isKnownChain(oldName) {
 		logger.Infoln("Renaming chain", oldName, "to", newNameBase)
 
-		chainDef, err := LoadChainDefinition(oldName)
+		chainDef, err := LoadChainDefinition(oldName, 1) // TODO:CNUM
 		if err != nil {
 			return err
 		}
@@ -443,7 +322,7 @@ func RenameChainRaw(oldName, newName string) error {
 		}
 
 		if !transformOnly {
-			err = data.RenameDataRaw(oldName, newNameBase)
+			err = data.RenameDataRaw(oldName, newNameBase, 1) // TODO:CNUM
 			if err != nil {
 				return err
 			}
@@ -456,7 +335,7 @@ func RenameChainRaw(oldName, newName string) error {
 	return nil
 }
 
-func UpdateChainRaw(chainName string, pull bool) error {
+func UpdateChainRaw(chainName string, pull bool, containerNumber int) error {
 	// DockerRebuild is built for services, adding false to the final
 	//   variable will mean it pulls. But we want the opposite default
 	//   behaviour for chains as we do for services in this regard
@@ -468,7 +347,7 @@ func UpdateChainRaw(chainName string, pull bool) error {
 		skipPull = true
 	}
 
-	chain, err := LoadChainDefinition(chainName)
+	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
@@ -479,8 +358,8 @@ func UpdateChainRaw(chainName string, pull bool) error {
 	return nil
 }
 
-func RmChainRaw(chainName string, force bool) error {
-	chain, err := LoadChainDefinition(chainName)
+func RmChainRaw(chainName string, force bool, containerNumber int) error {
+	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}

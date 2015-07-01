@@ -21,7 +21,7 @@ import (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainName string) (*def.Chain, error) {
+func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, error) {
 	var chain def.Chain
 	chainConf, err := readChainDefinition(chainName)
 	if err != nil {
@@ -40,7 +40,7 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 		return nil, fmt.Errorf("Chain definition must specify chain type")
 	}
 
-	serv, err = services.LoadServiceDefinition(chain.Type)
+	serv, err = services.LoadServiceDefinition(chain.Type, containerNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +57,7 @@ func LoadChainDefinition(chainName string) (*def.Chain, error) {
 
 	chain.Manager = serv.Manager
 
+	chain.Operations.ContainerNumber = containerNumber
 	checkChainHasUniqueName(&chain)
 	checkDataContainerTurnedOn(&chain, chainConf)
 	checkDataContainerHasName(chain.Operations)
@@ -178,16 +179,8 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 //----------------------------------------------------------------------
 // validation funcs
 
-func checkChainGiven(args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("Please provide a chain")
-	}
-	return nil
-}
-
 func checkChainHasUniqueName(chain *def.Chain) {
-	containerNumber := 1 // tmp
-	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%d", chain.Name, containerNumber)
+	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%d", chain.Name, chain.Operations.ContainerNumber)
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {

@@ -2,21 +2,19 @@ package data
 
 import (
 	"fmt"
-	"strconv"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
-func mockService(name string) (*def.Service, *def.ServiceOperation) {
+func mockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
 	srv := &def.Service{}
 	ops := &def.ServiceOperation{}
-	ops.SrvContainerName = nameToContainerName(name)
+	ops.SrvContainerName = nameToContainerName(name, containerNumber)
 	return srv, ops
 }
 
-func nameToContainerName(name string) string {
-	containerNumber := 1 // tmp
-	return "eris_data_" + name + "_" + strconv.Itoa(containerNumber)
+func nameToContainerName(name string, containerNumber int) string {
+	return fmt.Sprintf("eris_data_%s_%d", name, containerNumber)
 }
 
 func checkServiceGiven(args []string) error {

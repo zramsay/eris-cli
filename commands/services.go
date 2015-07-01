@@ -1,10 +1,168 @@
 package commands
 
 import (
+	"fmt"
+	"strings"
+
 	srv "github.com/eris-ltd/eris-cli/services"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
+
+//----------------------------------------------------------------------
+// cli command wrappers
+
+func checkServiceGiven(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
+	}
+	return nil
+}
+
+func StartService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.StartServiceRaw(args[0], ContainerNumber))
+}
+
+func LogService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.LogsServiceRaw(args[0], Follow, ContainerNumber))
+}
+
+func ExecService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	service := args[0]
+	args = args[1:]
+	if len(args) == 1 {
+		args = strings.Split(args[0], " ")
+	}
+	IfExit(srv.ExecServiceRaw(service, args, Interactive, ContainerNumber))
+}
+
+// TODO: how to specify container numbers ...
+func KillService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.KillServiceRaw(All, Rm, args...))
+}
+
+// install
+func ImportService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) != 2 {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.ImportServiceRaw(args[0], args[1]))
+}
+
+func NewService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) != 2 {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.NewServiceRaw(args[0], args[1]))
+}
+
+func EditService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.EditServiceRaw(args[0]))
+}
+
+func RenameService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) != 2 {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.RenameServiceRaw(args[0], args[1], ContainerNumber))
+}
+
+func InspectService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) == 1 {
+		args = append(args, "all")
+	}
+	IfExit(srv.InspectServiceRaw(args[0], args[1], ContainerNumber))
+}
+
+func ExportService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.ExportServiceRaw(args[0]))
+}
+
+// Updates an installed service, or installs it if it has not been installed.
+func UpdateService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.UpdateServiceRaw(args[0], SkipPull, ContainerNumber))
+}
+
+// list known
+func ListKnownServices() {
+	services := srv.ListKnownRaw()
+	for _, s := range services {
+		fmt.Println(s)
+	}
+}
+
+func ListRunningServices() {
+	services := srv.ListRunningRaw()
+	for _, s := range services {
+		fmt.Println(s)
+	}
+}
+
+func ListExistingServices() {
+	services := srv.ListExistingRaw()
+	for _, s := range services {
+		fmt.Println(s)
+	}
+}
+
+func RmService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.RmServiceRaw(args, cmd.Flags().Lookup("force").Changed))
+}
+
+//----------------------------------------------------------------------
+// cli definition
 
 // Primary Services Sub-Command
 var Services = &cobra.Command{
@@ -65,7 +223,7 @@ NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.ListKnown()
+		ListKnownServices()
 	},
 }
 
@@ -80,7 +238,7 @@ By default, Eris will import from ipfs.
 To list known services use: [eris services known].`,
 	Example: "  eris services import eth ipfs:QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Import(cmd, args)
+		ImportService(cmd, args)
 	},
 }
 
@@ -96,7 +254,7 @@ docker format of [repository/organization/image].`,
 	Example: `  eris new eth eris/eth
   eris new mint tutum.co/tendermint/tendermint`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.New(cmd, args)
+		NewService(cmd, args)
 	},
 }
 
@@ -110,7 +268,7 @@ To list the known services: [eris services known]
 To list the running services: [eris services ps]
 To start a service use: [eris services start serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.ListExisting()
+		ListExistingServices()
 	},
 }
 
@@ -130,7 +288,7 @@ definition files.
 
 For more information on project definition files please see: [eris help projects].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Edit(cmd, args)
+		EditService(cmd, args)
 	},
 }
 
@@ -147,7 +305,7 @@ background so its logs will not be viewable from the command line.
 To stop the service use:      [eris services stop serviceName].
 To view a service's logs use: [eris services logs serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Start(cmd, args)
+		StartService(cmd, args)
 	},
 }
 
@@ -157,7 +315,7 @@ var servicesListRunning = &cobra.Command{
 	Short: "Lists the running services.",
 	Long:  `Lists the services which are currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.ListRunning()
+		ListRunningServices()
 	},
 }
 
@@ -173,7 +331,7 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
   eris services inspect ipfs name -> will display the name in machine readable format
   eris services inspect ipfs host_config.binds -> will display only that value`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Inspect(cmd, args)
+		InspectService(cmd, args)
 	},
 }
 
@@ -182,7 +340,7 @@ var servicesExec = &cobra.Command{
 	Short: "Run a command or interactive shell",
 	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Exec(cmd, args)
+		ExecService(cmd, args)
 	},
 }
 
@@ -194,7 +352,7 @@ var servicesExport = &cobra.Command{
 Command will return a machine readable version of the IPFS hash
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Export(cmd, args)
+		ExportService(cmd, args)
 	},
 }
 
@@ -204,7 +362,7 @@ var servicesLogs = &cobra.Command{
 	Short: "Displays the logs of a running service.",
 	Long:  `Displays the logs of a running service.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Logs(cmd, args)
+		LogService(cmd, args)
 	},
 }
 
@@ -214,7 +372,7 @@ var servicesStop = &cobra.Command{
 	Short: "Stops a running service.",
 	Long:  `Stops a service which is currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Kill(cmd, args)
+		KillService(cmd, args)
 	},
 }
 
@@ -224,7 +382,7 @@ var servicesRename = &cobra.Command{
 	Short: "Renames an installed service.",
 	Long:  `Renames an installed service.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Rename(cmd, args)
+		RenameService(cmd, args)
 	},
 }
 
@@ -246,7 +404,7 @@ Functionally this command will perform the following sequence:
 **NOTE**: If the service uses data containers those will not be affected
 by the update command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Update(cmd, args)
+		UpdateService(cmd, args)
 	},
 }
 
@@ -262,6 +420,6 @@ remove the service definition file.
 
 Use the --force flag to also remove the service definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv.Rm(cmd, args)
+		RmService(cmd, args)
 	},
 }

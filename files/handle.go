@@ -36,7 +36,7 @@ func Put(cmd *cobra.Command, args []string) {
 }
 
 func GetFilesRaw(hash, fileName string) error {
-	ipfsService, err := services.LoadServiceDefinition("ipfs")
+	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func GetFilesRaw(hash, fileName string) error {
 }
 
 func PutFilesRaw(fileName string) error {
-	ipfsService, err := services.LoadServiceDefinition("ipfs")
+	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
 		return err
 	}

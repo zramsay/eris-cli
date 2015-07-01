@@ -53,3 +53,7 @@ func DockerConnect(verbose bool) {
 		}
 	}
 }
+
+func NextContainerNumber(typ, name string) int {
+	return 1
+}

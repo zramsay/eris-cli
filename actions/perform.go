@@ -45,10 +45,10 @@ func StartServicesAndChains(action *def.Action) error {
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
 
 	runningServices := services.ListRunningRaw()
-	services.StartGroup(ch, wg, action.Services, runningServices, "service", services.StartServiceRaw)
+	services.StartGroup(ch, wg, action.Services, runningServices, "service", 1, services.StartServiceRaw) // TODO:CNUM
 
 	runningChains := chains.ListRunningRaw()
-	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", chains.StartChainRaw)
+	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", 1, chains.StartChainRaw)
 
 	go func() {
 		wg.Wait()

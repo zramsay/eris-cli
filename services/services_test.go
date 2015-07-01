@@ -23,11 +23,11 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 
-	e1 := data.RmDataRaw("keys")
+	e1 := data.RmDataRaw("keys", 1)
 	if e1 != nil {
 		fmt.Println(e1)
 	}
-	e2 := data.RmDataRaw("ipfs")
+	e2 := data.RmDataRaw("ipfs", 1)
 	if e2 != nil {
 		fmt.Println(e2)
 	}
@@ -87,10 +87,10 @@ func TestKnownRaw(t *testing.T) {
 
 func TestLoadServiceDefinition(t *testing.T) {
 	var e error
-	srv, e = LoadServiceDefinition(servName)
+	srv, e = LoadServiceDefinition(servName, 1)
 	if e != nil {
 		fmt.Println(e)
-		t.FailNow() // do you want tests to keep running?
+		t.FailNow()
 	}
 
 	if srv.Service.Name != servName {
@@ -123,7 +123,7 @@ func TestLoadService(t *testing.T) {
 }
 
 func TestStartServiceRaw(t *testing.T) {
-	e := StartServiceRaw(servName)
+	e := StartServiceRaw(servName, 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -133,13 +133,13 @@ func TestStartServiceRaw(t *testing.T) {
 }
 
 func TestInspectRaw(t *testing.T) {
-	e := InspectServiceRaw(servName, "name")
+	e := InspectServiceRaw(servName, "name", 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	e = InspectServiceRaw(servName, "config.user")
+	e = InspectServiceRaw(servName, "config.user", 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -147,7 +147,7 @@ func TestInspectRaw(t *testing.T) {
 }
 
 func TestLogsRaw(t *testing.T) {
-	e := LogsServiceRaw(servName, false)
+	e := LogsServiceRaw(servName, false, 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -160,7 +160,7 @@ func TestExecRaw(t *testing.T) {
 		return
 	}
 	cmd := strings.Fields("ls -la /root/")
-	e := ExecServiceRaw(servName, cmd, false)
+	e := ExecServiceRaw(servName, cmd, false, 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -209,7 +209,7 @@ func TestUpdateRaw(t *testing.T) {
 		return
 	}
 
-	e := UpdateServiceRaw(servName, true)
+	e := UpdateServiceRaw(servName, true, 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -251,7 +251,7 @@ func TestNewRaw(t *testing.T) {
 		t.FailNow()
 	}
 
-	e = StartServiceRaw("keys")
+	e = StartServiceRaw("keys", 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -261,16 +261,18 @@ func TestNewRaw(t *testing.T) {
 }
 
 func TestRenameRaw(t *testing.T) {
-	e := RenameServiceRaw("keys", "syek")
+	e := RenameServiceRaw("keys", "syek", 1)
 	if e != nil {
-		t.Fatal(e)
+		fmt.Println(e)
+		t.Fail()
 	}
 
 	testRunAndExist(t, "syek", true, true)
 
-	e = RenameServiceRaw("syek", "keys")
+	e = RenameServiceRaw("syek", "keys", 1)
 	if e != nil {
-		t.Fatal(e)
+		fmt.Println(e)
+		t.Fail()
 	}
 
 	testRunAndExist(t, "keys", true, true)
@@ -311,17 +313,21 @@ func testRunAndExist(t *testing.T, servName string, toExist, toRun bool) {
 
 	if toRun != run {
 		if toRun {
-			t.Fatal("Could not find a running instance of ipfs")
+			fmt.Println("Could not find a running instance of ipfs")
+			t.Fail()
 		} else {
-			t.Fatal("Found a running instance of ipfs when I shouldn't have")
+			fmt.Println("Found a running instance of ipfs when I shouldn't have")
+			t.Fail()
 		}
 	}
 
 	if toExist != exist {
 		if toExist {
-			t.Fatal("Could not find an existing instance of ipfs")
+			fmt.Println("Could not find an existing instance of ipfs")
+			t.Fail()
 		} else {
-			t.Fatal("Found an existing instance of ipfs when I shouldn't have")
+			fmt.Println("Found an existing instance of ipfs when I shouldn't have")
+			t.Fail()
 		}
 	}
 }
