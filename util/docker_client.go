@@ -6,15 +6,13 @@ import (
 	"runtime"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 // Docker Client initialization
 var DockerClient *docker.Client
 
-func DockerConnect(cmd *cobra.Command) {
+func DockerConnect(verbose bool) {
 	var err error
-	verbose := cmd.Flags().Lookup("verbose").Changed
 
 	if runtime.GOOS == "linux" {
 		endpoint := "unix:///var/run/docker.sock"

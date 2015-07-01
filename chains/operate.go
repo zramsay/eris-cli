@@ -18,7 +18,8 @@ func Start(cmd *cobra.Command, args []string) {
 
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(LogsChainRaw(args[0]))
+	lines, _ := cmd.Flags().GetInt("lines")
+	IfExit(LogsChainRaw(args[0], cmd.Flags().Lookup("tail").Changed, lines))
 }
 
 func Exec(cmd *cobra.Command, args []string) {
@@ -41,7 +42,7 @@ func Exec(cmd *cobra.Command, args []string) {
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(KillChainRaw(args[0]))
+	IfExit(KillChainRaw(args[0], cmd.Flags().Lookup("rm").Changed))
 }
 
 //----------------------------------------------------------------------
@@ -66,12 +67,12 @@ func StartChainRaw(chainName string) error {
 	return nil
 }
 
-func LogsChainRaw(chainName string) error {
+func LogsChainRaw(chainName string, follow bool, lines int) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
-	err = services.LogsServiceByService(chain.Service, chain.Operations)
+	err = services.LogsServiceByService(chain.Service, chain.Operations, follow)
 	if err != nil {
 		return err
 	}
@@ -94,14 +95,14 @@ func ExecChainRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillChainRaw(chainName string) error {
+func KillChainRaw(chainName string, rm bool) error {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}
 
 	if IsChainRunning(chain) {
-		err := services.KillServiceByService(true, chain.Service, chain.Operations)
+		err := services.KillServiceByService(true, rm, chain.Service, chain.Operations)
 		if err != nil {
 			return err
 		}

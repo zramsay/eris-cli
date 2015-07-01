@@ -52,11 +52,6 @@ func LoadService(servName string) (*def.Service, error) {
 	return sd.Service, err
 }
 
-func LoadServiceOperation(servName string) (*def.ServiceOperation, error) {
-	sd, err := LoadServiceDefinition(servName)
-	return sd.Operations, err
-}
-
 func IsServiceExisting(service *def.Service) bool {
 	return parseServices(service.Name, true)
 }
@@ -166,8 +161,11 @@ func listServices(running bool) []string {
 	// IsServiceRunning and ls,ps,known functions.
 	q := regexp.MustCompile(`\A\/eris_service_(.+?)_\d/(.+?)\z`)
 
-	running = false
-	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
+	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
+	if len(contns) == 0 || err != nil {
+		logger.Infoln("There are no containers.")
+		return services
+	}
 	for _, con := range contns {
 		for _, c := range con.Names {
 			match := r.FindAllStringSubmatch(c, 1)

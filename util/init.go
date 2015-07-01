@@ -43,10 +43,15 @@ func Initialize(toPull, verbose bool) {
     }
   }
 
-  fmt.Printf("Initialized eris root directory (%s) with default actions and service files\n", common.ErisRoot)
+  if verbose {
+    fmt.Printf("Initialized eris root directory (%s) with default actions and service files\n", common.ErisRoot)
+  }
 }
 
 func ipfsDef() error {
+  if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
+    return err
+  }
   writer, err := os.Create(filepath.Join(common.ServicesPath, "ipfs.toml"))
   defer writer.Close()
   if err != nil {
@@ -58,7 +63,6 @@ name = "ipfs"
 image = "eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001", "8080:8080"]
-volumes = ["$eris/files/staging:/export:ro"]
 
 [maintainer]
 name = "Eris Industries"

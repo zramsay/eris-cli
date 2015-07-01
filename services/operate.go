@@ -20,7 +20,8 @@ func Start(cmd *cobra.Command, args []string) {
 
 func Logs(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(LogsServiceRaw(args[0]))
+	lines, _ := cmd.Flags().GetInt("lines")
+	IfExit(LogsServiceRaw(args[0], cmd.Flags().Lookup("tail").Changed, lines))
 }
 
 func Exec(cmd *cobra.Command, args []string) {
@@ -35,7 +36,7 @@ func Exec(cmd *cobra.Command, args []string) {
 
 func Kill(cmd *cobra.Command, args []string) {
 	IfExit(checkServiceGiven(args))
-	IfExit(KillServiceRaw(cmd.Flags().Lookup("all").Changed, args...))
+	IfExit(KillServiceRaw(cmd.Flags().Lookup("all").Changed, cmd.Flags().Lookup("rm").Changed, args...))
 }
 
 func StartServiceRaw(servName string) error {
@@ -53,12 +54,12 @@ func StartServiceRaw(servName string) error {
 	return nil
 }
 
-func LogsServiceRaw(servName string) error {
+func LogsServiceRaw(servName string, follow bool, lines int) error {
 	service, err := LoadServiceDefinition(servName)
 	if err != nil {
 		return err
 	}
-	return LogsServiceByService(service.Service, service.Operations)
+	return LogsServiceByService(service.Service, service.Operations, follow)
 }
 
 func ExecServiceRaw(name string, args []string, attach bool) error {
@@ -77,7 +78,7 @@ func ExecServiceRaw(name string, args []string, attach bool) error {
 	return nil
 }
 
-func KillServiceRaw(all bool, servNames ...string) error {
+func KillServiceRaw(all, rm bool, servNames ...string) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName)
 		if err != nil {
@@ -85,18 +86,26 @@ func KillServiceRaw(all bool, servNames ...string) error {
 		}
 
 		if IsServiceRunning(service.Service) {
-			if err := KillServiceByService(all, service.Service, service.Operations); err != nil {
+			if err := KillServiceByService(all, rm, service.Service, service.Operations); err != nil {
 				return err
 			}
+
 		} else {
 			logger.Infoln("Service not currently running. Skipping.")
 		}
 	}
+
+	if rm {
+		if err := RmServiceRaw(servNames, false); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation) error {
-	return perform.DockerLogs(srv, ops)
+func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bool) error {
+	return perform.DockerLogs(srv, ops, follow)
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
@@ -149,10 +158,10 @@ func ExecServiceByService(srvMain *def.Service, ops *def.ServiceOperation, cmd [
 	return perform.DockerExec(srvMain, ops, cmd, attach)
 }
 
-func KillServiceByService(all bool, srvMain *def.Service, ops *def.ServiceOperation) error {
+func KillServiceByService(all, rm bool, srvMain *def.Service, ops *def.ServiceOperation) error {
 	if all {
 		for _, srv := range srvMain.ServiceDeps {
-			go KillServiceRaw(all, srv)
+			go KillServiceRaw(all, rm, srv)
 		}
 	}
 	return perform.DockerStop(srvMain, ops)

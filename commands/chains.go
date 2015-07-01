@@ -53,11 +53,16 @@ func addChainsFlags() {
 	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 
+	chainsLogs.Flags().BoolVarP(&Follow, "tail", "t", false, "follow logs, like tail -f")
+	chainsLogs.Flags().IntVarP(&Lines, "lines", "n", 50, "number of lines to display")
+
 	chainsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action")
 
 	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 
 	chainsUpdate.Flags().BoolVarP(&Pull, "pull", "p", false, "pull an updated version of the chain's image from docker hub")
+
+	chainsStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
 }
 
 // known lists the known chain types which eris can install

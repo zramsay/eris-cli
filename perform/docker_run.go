@@ -344,12 +344,12 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
-func DockerLogs(srv *def.Service, ops *def.ServiceOperation) error {
+func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool) error {
 	logger.Infoln("Getting service's logs.")
 
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Service ID: " + service.ID)
-		err := logsContainer(service.ID, false)
+		err := logsContainer(service.ID, follow)
 		if err != nil {
 			return err
 		}
@@ -554,10 +554,9 @@ func waitContainer(id string) error {
 }
 
 func logsContainer(id string, tail bool) error {
-	//writer, errWriter := new(bytes.Buffer), new(bytes.Buffer)
 	opts := docker.LogsOptions{
 		Container:    id,
-		Follow:       true,
+		Follow:       false,
 		Stdout:       true,
 		Stderr:       true,
 		Timestamps:   false,
@@ -574,12 +573,7 @@ func logsContainer(id string, tail bool) error {
 	if err := util.DockerClient.Logs(opts); err != nil {
 		return err
 	}
-	/*
-		n, err := os.Stdout.Write(writer.Bytes())
-		fmt.Println(n, err)
-		n, err = os.Stderr.Write(errWriter.Bytes())
-		fmt.Println(n, err)
-	*/
+
 	return nil
 }
 

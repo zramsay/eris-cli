@@ -27,11 +27,12 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		common.InitErisDir()
-		util.DockerConnect(cmd)
-
 		verbose := cmd.Flags().Lookup("verbose").Changed
 		debug := cmd.Flags().Lookup("debug").Changed
+
+		common.InitErisDir()
+		util.DockerConnect(verbose)
+
 		var logLevel int
 		if verbose {
 			logLevel = 1
@@ -89,6 +90,9 @@ var Pull bool
 var SkipPull bool
 var Quiet bool
 var All bool
+var Follow bool
+var Rm bool
+var Lines int
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

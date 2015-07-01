@@ -56,11 +56,11 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common",
-			"Rev": "b44489d24ac2d4545f82ba66afabab6522044fe2"
+			"Rev": "e8ab985c3196fd49b860c9f82daeae02fb10de0d"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "b4c54554c99a08bf55cfd1d5c7a623a5b00f0983"
+			"Rev": "bacc91d0d732390df132783988dc17c611881047"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
