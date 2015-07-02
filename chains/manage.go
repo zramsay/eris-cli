@@ -58,6 +58,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	}
 
 	// run containers and exit (creates data container)
+	logger.Infof("Creating data container for %s\n", containerName)
 	if err := perform.DockerCreateDataContainer(containerName, containerNumber); err != nil {
 		return fmt.Errorf("Error creating data container %v", err)
 	}
@@ -65,8 +66,8 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	// if something goes wrong, cleanup
 	defer func() {
 		if err != nil {
-			if err2 := data.RmDataRaw(containerName, containerNumber); err2 != nil {
-				err = fmt.Errorf("Tragic! Error removing data container after initial error (%v): %v", err, err2)
+			if err2 := services.RmServiceRaw([]string{containerName}, containerNumber, false, true); err2 != nil {
+				err = fmt.Errorf("Tragic! We encountered an error during setupChain (%v), and failed to cleanup after ourselves (remove containers) due to another error: %v", err, err2)
 			}
 		}
 	}()
@@ -353,7 +354,7 @@ func UpdateChainRaw(chainName string, pull bool, containerNumber int) error {
 	return nil
 }
 
-func RmChainRaw(chainName string, force bool, containerNumber int) error {
+func RmChainRaw(chainName string, rmData bool, force bool, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
@@ -361,6 +362,14 @@ func RmChainRaw(chainName string, force bool, containerNumber int) error {
 	err = perform.DockerRemove(chain.Service, chain.Operations)
 	if err != nil {
 		return err
+	}
+
+	if rmData {
+		mockServ, mockOp := data.MockService(chainName, containerNumber)
+		err = perform.DockerRemove(mockServ, mockOp)
+		if err != nil {
+			return err
+		}
 	}
 
 	if force {

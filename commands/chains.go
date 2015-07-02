@@ -281,6 +281,7 @@ func addChainsFlags() {
 	chainsLogs.Flags().BoolVarP(&Follow, "tail", "t", false, "follow logs, like tail -f")
 
 	chainsRemove.Flags().BoolVarP(&Force, "file", "f", false, "remove chain definition file as well as chain container")
+	chainsRemove.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers also")
 
 	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 
@@ -462,7 +463,7 @@ func RmChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.RmChainRaw(args[0], Force, ContainerNumber))
+	IfExit(chns.RmChainRaw(args[0], RmD, Force, ContainerNumber))
 }
 
 func checkChainGiven(args []string) error {

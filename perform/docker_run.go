@@ -173,7 +173,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	}
 
 	// start the container
-	logger.Infoln("Starting ServiceContainer ID: " + id_main)
+	logger.Infoln("Starting Service Container ID: " + id_main)
 	if ops.DataContainer {
 		logger.Infoln("with DataContainer ID: " + id_data)
 	}
