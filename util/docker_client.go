@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"runtime"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -56,4 +57,42 @@ func DockerConnect(verbose bool) {
 
 func NameAndNumber(name string, number int) string {
 	return fmt.Sprintf("%s_%d", name, number)
+}
+
+func ParseContainerNames(typ string, running bool) []string {
+	containers := []string{}
+	r := regexp.MustCompile(fmt.Sprintf(`\/eris_%s_(.+?)_(.+?)`, typ))
+	// docker has this weird thing where it returns links as individual
+	// container (as in there is the container of two linked services and
+	// the linkage between them is actually its own containers). this explains
+	// the leading hash on containers. the q regexp is to filer out these
+	// links from the return list as they are irrelevant to the information
+	// desired by this function. and frankly they give false answers to
+	// IsServiceRunning and ls,ps,known functions.
+	q := regexp.MustCompile(`\A\/eris_service_(.+?)_\d/(.+?)\z`)
+
+	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: running})
+	if len(contns) == 0 || err != nil {
+		logger.Infoln("There are no containers.")
+		return nil
+	}
+	for _, con := range contns {
+		for _, c := range con.Names {
+			match := r.FindAllStringSubmatch(c, 1)
+			if typ == "service" {
+				m2 := q.FindAllStringSubmatch(c, 1)
+				if len(m2) != 0 {
+					continue
+				}
+			}
+			if len(match) != 0 {
+				m := r.FindAllStringSubmatch(c, 1)[0]
+				cNameNum := fmt.Sprintf("%s_%s", m[1], m[2])
+				containers = append(containers, cNameNum)
+			}
+		}
+	}
+
+	return containers
+
 }

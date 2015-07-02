@@ -195,6 +195,7 @@ func ImportChainRaw(chainName, path string) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
+// export a chain definition file
 func ExportChainRaw(chainName string) error {
 	chain, err := LoadChainDefinition(chainName, 1) //TODO:CNUM
 	if err != nil {
@@ -273,6 +274,7 @@ func ListExistingRaw() []string {
 	return listChains(true)
 }
 
+// XXX: What's going on here?
 func RenameChainRaw(oldName, newName string) error {
 	if oldName == newName {
 		return fmt.Errorf("Cannot rename to same name")
@@ -340,12 +342,7 @@ func UpdateChainRaw(chainName string, pull bool, containerNumber int) error {
 	//   variable will mean it pulls. But we want the opposite default
 	//   behaviour for chains as we do for services in this regard
 	//   so we flip the variable.
-	var skipPull bool
-	if pull {
-		skipPull = false
-	} else {
-		skipPull = true
-	}
+	skipPull := !pull
 
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {

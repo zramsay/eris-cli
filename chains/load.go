@@ -180,7 +180,7 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 // validation funcs
 
 func checkChainHasUniqueName(chain *def.Chain) {
-	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s_%d", chain.Name, chain.Operations.ContainerNumber)
+	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s", util.NameAndNumber(chain.Name, chain.Operations.ContainerNumber))
 }
 
 func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/util"
 )
 
 func MockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
@@ -24,7 +25,8 @@ func checkServiceGiven(args []string) error {
 	return nil
 }
 
-func parseKnown(name string) bool {
+func parseKnown(name string, num int) bool {
+	name = util.NameAndNumber(name, num)
 	known, _ := ListKnownRaw()
 	if len(known) != 0 {
 		for _, srv := range known {

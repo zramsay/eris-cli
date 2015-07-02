@@ -16,7 +16,7 @@ import (
 )
 
 func ImportDataRaw(name string, containerNumber int) error {
-	if parseKnown(name) {
+	if parseKnown(name, containerNumber) {
 
 		containerName := nameToContainerName(name, containerNumber)
 		importPath := filepath.Join(DataContainersPath, name)
@@ -39,7 +39,7 @@ func ImportDataRaw(name string, containerNumber int) error {
 }
 
 func ExecDataRaw(name string, containerNumber int, interactive bool, args []string) error {
-	if parseKnown(name) {
+	if parseKnown(name, containerNumber) {
 		name = nameToContainerName(name, containerNumber)
 		logger.Infoln("Running exec on container with volumes from data container for " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
@@ -52,7 +52,7 @@ func ExecDataRaw(name string, containerNumber int, interactive bool, args []stri
 }
 
 func ExportDataRaw(name string, containerNumber int) error {
-	if parseKnown(name) {
+	if parseKnown(name, containerNumber) {
 		logger.Infoln("Exporting data container" + name)
 
 		exportPath := filepath.Join(DataContainersPath, name) // TODO: containerNumber ?

@@ -2,16 +2,13 @@ package data
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 func RenameDataRaw(oldName, newName string, containerNumber int) error {
-	if parseKnown(oldName) {
+	if parseKnown(oldName, containerNumber) {
 		logger.Infoln("Renaming data container", oldName, "to", newName)
 		srv, ops := MockService(oldName, containerNumber)
 		err := perform.DockerRename(srv, ops, oldName, newName)
@@ -25,7 +22,7 @@ func RenameDataRaw(oldName, newName string, containerNumber int) error {
 }
 
 func InspectDataRaw(name, field string, containerNumber int) error {
-	if parseKnown(name) {
+	if parseKnown(name, containerNumber) {
 		logger.Infoln("Inspecting data container" + name)
 
 		srv, ops := MockService(name, containerNumber)
@@ -40,7 +37,7 @@ func InspectDataRaw(name, field string, containerNumber int) error {
 }
 
 func RmDataRaw(name string, containerNumber int) error {
-	if parseKnown(name) {
+	if parseKnown(name, containerNumber) {
 		logger.Infoln("Removing data container " + name)
 
 		srv, ops := MockService(name, containerNumber)
@@ -56,18 +53,5 @@ func RmDataRaw(name string, containerNumber int) error {
 }
 
 func ListKnownRaw() ([]string, error) {
-	dataCont := []string{}
-	r := regexp.MustCompile(`\/eris_data_(.+)_\d`)
-
-	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
-	for _, con := range contns {
-		for _, c := range con.Names {
-			match := r.FindAllStringSubmatch(c, 1)
-			if len(match) != 0 {
-				dataCont = append(dataCont, r.FindAllStringSubmatch(c, 1)[0][1])
-			}
-		}
-	}
-
-	return dataCont, nil
+	return util.ParseContainerNames("data", true), nil
 }
