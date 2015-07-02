@@ -30,31 +30,31 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 	}
 
 	switch filepath.Ext(fileName) {
-		case ".json":
-			mar, err := json.MarshalIndent(serviceDef, "", "  ")
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		case ".yaml":
-			mar, err := yaml.Marshal(serviceDef)
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		default:
-			enc := toml.NewEncoder(writer)
-			enc.Indent = ""
-			writer.Write([]byte("[service]\n"))
-			enc.Encode(serviceDef.Service)
-			writer.Write([]byte("\n[maintainer]\n"))
-			enc.Encode(serviceDef.Maintainer)
-			writer.Write([]byte("\n[location]\n"))
-			enc.Encode(serviceDef.Location)
-			writer.Write([]byte("\n[machine]\n"))
-			enc.Encode(serviceDef.Machine)
+	case ".json":
+		mar, err := json.MarshalIndent(serviceDef, "", "  ")
+		if err != nil {
+			return err
+		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	case ".yaml":
+		mar, err := yaml.Marshal(serviceDef)
+		if err != nil {
+			return err
+		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	default:
+		enc := toml.NewEncoder(writer)
+		enc.Indent = ""
+		writer.Write([]byte("[service]\n"))
+		enc.Encode(serviceDef.Service)
+		writer.Write([]byte("\n[maintainer]\n"))
+		enc.Encode(serviceDef.Maintainer)
+		writer.Write([]byte("\n[location]\n"))
+		enc.Encode(serviceDef.Location)
+		writer.Write([]byte("\n[machine]\n"))
+		enc.Encode(serviceDef.Machine)
 	}
 	return nil
 }

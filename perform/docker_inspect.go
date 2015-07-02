@@ -290,7 +290,7 @@ func printInspectionReportHostConfig(cont *docker.Container, field string) {
 		fmt.Printf("HostConfig\t=>\tLxcConf\t=>\t%v\n", cont.HostConfig.LxcConf)
 		fmt.Printf("HostConfig\t=>\tPrivileged\t=>\t%v\n", cont.HostConfig.Privileged)
 		fmt.Printf("HostConfig\t=>\tPortBindings\t=>\t%v\n", cont.HostConfig.PortBindings)
-		fmt.Printf("HostConfig\t=>\tLinks\t=>\t%v\n",cont.HostConfig.Links)
+		fmt.Printf("HostConfig\t=>\tLinks\t=>\t%v\n", cont.HostConfig.Links)
 		fmt.Printf("HostConfig\t=>\tPublishAllPorts\t=>\t%v\n", cont.HostConfig.PublishAllPorts)
 		fmt.Printf("HostConfig\t=>\tDNS\t=>\t%v\n", cont.HostConfig.DNS)
 		fmt.Printf("HostConfig\t=>\tDNSSearch\t=>\t%v\n", cont.HostConfig.DNSSearch)

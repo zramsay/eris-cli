@@ -32,42 +32,42 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 	}
 
 	switch filepath.Ext(fileName) {
-		case ".json":
-			mar, err := json.MarshalIndent(actDef, "", "  ")
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		case ".yaml":
-			mar, err := yaml.Marshal(actDef)
-			if err != nil {
-			   return err
-			}
-			mar = append(mar, '\n')
-			writer.Write(mar)
-		default:
-			enc := toml.NewEncoder(writer)
-			enc.Indent = ""
-			writer.Write([]byte("name = \"" + actDef.Name + "\"\n"))
-			writer.Write([]byte("services = [ \"" + strings.Join(actDef.Services, "\",\"") + "\" ]\n"))
-			writer.Write([]byte("chains = [ \"" + strings.Join(actDef.Chains, "\",\"") + "\" ]\n"))
-			writer.Write([]byte("steps = [ \n"))
-			for _, s := range actDef.Steps {
-				if strings.Contains(s, "\"") {
-					s = strings.Replace(s, "\"", "\\\"", -1)
-				}
-				writer.Write([]byte("  \"" + s + "\",\n"))
-			}
-			writer.Write([]byte("] \n"))
-			writer.Write([]byte("\n[environment]\n"))
-			enc.Encode(actDef.Environment)
-			writer.Write([]byte("\n[maintainer]\n"))
-			enc.Encode(actDef.Maintainer)
-			writer.Write([]byte("\n[location]\n"))
-			enc.Encode(actDef.Location)
-			writer.Write([]byte("\n[machine]\n"))
-			enc.Encode(actDef.Machine)
+	case ".json":
+		mar, err := json.MarshalIndent(actDef, "", "  ")
+		if err != nil {
+			return err
 		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	case ".yaml":
+		mar, err := yaml.Marshal(actDef)
+		if err != nil {
+			return err
+		}
+		mar = append(mar, '\n')
+		writer.Write(mar)
+	default:
+		enc := toml.NewEncoder(writer)
+		enc.Indent = ""
+		writer.Write([]byte("name = \"" + actDef.Name + "\"\n"))
+		writer.Write([]byte("services = [ \"" + strings.Join(actDef.Services, "\",\"") + "\" ]\n"))
+		writer.Write([]byte("chains = [ \"" + strings.Join(actDef.Chains, "\",\"") + "\" ]\n"))
+		writer.Write([]byte("steps = [ \n"))
+		for _, s := range actDef.Steps {
+			if strings.Contains(s, "\"") {
+				s = strings.Replace(s, "\"", "\\\"", -1)
+			}
+			writer.Write([]byte("  \"" + s + "\",\n"))
+		}
+		writer.Write([]byte("] \n"))
+		writer.Write([]byte("\n[environment]\n"))
+		enc.Encode(actDef.Environment)
+		writer.Write([]byte("\n[maintainer]\n"))
+		enc.Encode(actDef.Maintainer)
+		writer.Write([]byte("\n[location]\n"))
+		enc.Encode(actDef.Location)
+		writer.Write([]byte("\n[machine]\n"))
+		enc.Encode(actDef.Machine)
+	}
 	return nil
 }

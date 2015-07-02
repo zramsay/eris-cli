@@ -88,16 +88,16 @@ func SaveGlobalConfig(config *ErisConfig) error {
 // config values will be coerced into strings...
 func GetConfigValue(key string) string {
 	switch key {
-		case "IpfsHost":
-			return GlobalConfig.Config.IpfsHost
-		case "CompilersHost":
-			return GlobalConfig.Config.CompilersHost
-		case "DockerHost":
-			return GlobalConfig.Config.DockerHost
-		case "DockerCertPath":
-			return GlobalConfig.Config.DockerCertPath
-		default:
-			return ""
+	case "IpfsHost":
+		return GlobalConfig.Config.IpfsHost
+	case "CompilersHost":
+		return GlobalConfig.Config.CompilersHost
+	case "DockerHost":
+		return GlobalConfig.Config.DockerHost
+	case "DockerCertPath":
+		return GlobalConfig.Config.DockerCertPath
+	default:
+		return ""
 	}
 }
 
