@@ -57,28 +57,21 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	}
 	id_main := cont.ID
 
-	var attemptRemove bool
 	// trap signals so we can kill the container
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
 		<-c
-		logger.Infof("Caught signal. Stopping and removing container %s\n", id_main)
+		logger.Infof("Caught signal. Stopping container %s\n", id_main)
 		if err = stopContainer(id_main, 5); err != nil {
-			logger.Errorf("Error stopping data container: %v\n", err)
-		}
-		attemptRemove = true
-		if err = removeContainer(id_main); err != nil {
-			logger.Errorf("Error removing data container: %v\n", err)
+			logger.Errorf("Error stopping container: %v\n", err)
 		}
 	}()
 
 	defer func() {
-		if !attemptRemove {
-			logger.Infof("Removing container %s\n", id_main)
-			if err2 := removeContainer(id_main); err2 != nil {
-				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
-			}
+		logger.Infof("Removing container %s\n", id_main)
+		if err2 := removeContainer(id_main); err2 != nil {
+			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 		}
 	}()
 
