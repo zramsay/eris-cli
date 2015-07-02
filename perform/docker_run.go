@@ -184,12 +184,19 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 
 	// XXX: setting Remove causes us to block here!
 	if ops.Remove {
+
+		// dump the logs (TODO: options about this)
+		go func() {
+			if err := logsContainer(id_main, true); err != nil {
+				logger.Errorf("Unable to follow logs for %s\n", id_main)
+			}
+		}()
+
 		logger.Infof("Waiting for %s to exit so we can remove the container\n", id_main)
 		if err := waitContainer(id_main); err != nil {
 			return err
 		}
 
-		// TODO: we may want to get the logs out first
 		logger.Infof("Removing container %s\n", id_main)
 		if err := removeContainer(id_main); err != nil {
 			return err

@@ -101,7 +101,10 @@ func checkServiceHasName(service *def.Service, ops *def.ServiceOperation) {
 	// If no name use image name
 	if service.Name == "" {
 		if service.Image != "" {
+			logger.Debugln("Service definition has no name. Defaulting to image name")
 			service.Name = strings.Replace(service.Image, "/", "_", -1)
+		} else {
+			panic("service.Image should have been set before reaching checkServiceHasName")
 		}
 	}
 	ops.SrvContainerName = fmt.Sprintf("eris_service_%s", util.NameAndNumber(service.Name, ops.ContainerNumber))
