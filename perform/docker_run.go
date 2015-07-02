@@ -25,12 +25,12 @@ import (
 // Verified against ...
 //   Client version: 1.6.2
 //   Client API version: 1.18
-func DockerCreateDataContainer(srvName string) error {
+func DockerCreateDataContainer(srvName string, containerNumber int) error {
 	logger.Infoln("Starting Data Container for Service: " + srvName)
 
 	srv := def.Service{}
 	ops := def.ServiceOperation{}
-	srvName = util.NameAndNumber(srvName, 1) // TODO:CNUM
+	srvName = util.NameAndNumber(srvName, containerNumber)
 	ops.DataContainerName = fmt.Sprintf("eris_data_%s", srvName)
 	optsData, err := configureDataContainer(&srv, &ops, nil)
 	if err != nil {

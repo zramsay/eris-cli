@@ -58,7 +58,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	}
 
 	// run containers and exit (creates data container)
-	if err := perform.DockerCreateDataContainer(containerName); err != nil {
+	if err := perform.DockerCreateDataContainer(containerName, containerNumber); err != nil {
 		return fmt.Errorf("Error creating data container %v", err)
 	}
 
