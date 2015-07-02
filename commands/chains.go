@@ -307,8 +307,7 @@ func LogChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	lines, _ := cmd.Flags().GetInt("lines")
-	IfExit(chns.LogsChainRaw(args[0], Follow, lines, ContainerNumber))
+	IfExit(chns.LogsChainRaw(args[0], Follow, ContainerNumber))
 }
 
 func ExecChain(cmd *cobra.Command, args []string) {

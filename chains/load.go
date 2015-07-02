@@ -37,7 +37,7 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	var serv *def.ServiceDefinition
 	if chain.Type == "" {
 		// TODO: relieve this if it overwrites the service image
-		return nil, fmt.Errorf("Chain definition must specify chain type")
+		return nil, fmt.Errorf("Chain definition must specify chain type.\n")
 	}
 
 	serv, err = services.LoadServiceDefinition(chain.Type, containerNumber)
@@ -46,7 +46,7 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	}
 
 	if serv == nil {
-		return nil, fmt.Errorf("I do not have the chain definition file available for that chain type.")
+		return nil, fmt.Errorf("I do not have the chain definition file available for that chain type.\n")
 	}
 
 	if chain.Service == nil {

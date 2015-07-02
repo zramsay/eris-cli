@@ -69,7 +69,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 			logger.Infof("\nError on setupChain: %v\n", err)
 			logger.Infoln("Cleaning up...")
 			if err2 := RmChainRaw(containerName, true, false, containerNumber); err2 != nil {
-				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nClearnup error: %v", containerName, err, err2)
+				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nCleanup error: %v", containerName, err, err2)
 			}
 		}
 	}()
@@ -109,16 +109,10 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		Manager: make(map[string]string),
 	}
 
+	chain.Service.AutoData = true
+
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, containerName) + ".toml"
-	d := path.Dir(fileName)
-	if _, err = os.Stat(d); err != nil {
-		if err = os.MkdirAll(d, 0700); err != nil {
-			err = fmt.Errorf("Error making directory (%s): %v", d, err)
-			return
-		}
-	}
-
 	if err = WriteChainDefinitionFile(chain, fileName); err != nil {
 		err = fmt.Errorf("error writing chain definition to file: %v", err)
 		return
@@ -138,9 +132,13 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	if !ok {
 		return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, cmd)
 	}
+
 	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
-	chain.Operations.Remove = true
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		chain.Operations.Remove = true
+	}
 	err = services.StartServiceByService(chain.Service, chain.Operations)
+
 	return
 }
 
@@ -356,7 +354,7 @@ func UpdateChainRaw(chainName string, pull bool, containerNumber int) error {
 	return nil
 }
 
-func RmChainRaw(chainName string, rmData bool, force bool, containerNumber int) error {
+func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
@@ -374,7 +372,7 @@ func RmChainRaw(chainName string, rmData bool, force bool, containerNumber int) 
 		}
 	}
 
-	if force {
+	if file {
 		oldFile, err := configFileNameFromChainName(chainName)
 		if err != nil {
 			return err

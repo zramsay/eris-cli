@@ -149,15 +149,16 @@ requires = [""]
 
 func defEdb() string {
 	return `[service]
-name        = "erisdb"
-image       = "eris/mint"
-ports       = [ "46656:46656", "46657:46657" ]
-environment = [ "TMROOT=/data/tendermint" ]
+name           = "erisdb"
+image          = "eris/mint"
+ports          = [ "46656:46656", "46657:46657" ]
+environment    = [ "TMROOT=/home/eris/.eris/blockchains/tendermint" ]
+data_container = true
 
 [manager]
-fetch = "./build/tendermint node --fast_sync" # we'd like this to stop when caught up!
-start = "./build/tendermint node"
-new = "./build/tendermint node && last_pid=$! && sleep(1) && kill -KILL $last_pid"
+fetch = "tendermint node --fast_sync" # we'd like this to stop when caught up!
+start = "tendermint node"
+new   = "tendermint node && last_pid=$! && sleep(1) && kill -KILL $last_pid"
 
 [maintainer]
 name  = "Eris Industries"

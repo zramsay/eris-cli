@@ -26,7 +26,7 @@ func StartChainRaw(chainName string, containerNumber int) error {
 	return nil
 }
 
-func LogsChainRaw(chainName string, follow bool, lines, containerNumber int) error {
+func LogsChainRaw(chainName string, follow bool, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err

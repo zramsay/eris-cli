@@ -24,14 +24,17 @@ func ImportDataRaw(name string, containerNumber int) error {
 		// temp until docker cp works both ways.
 		os.Chdir(importPath)
 		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " eris/data tar xf - -C /home/eris/.eris"
-		fmt.Println(cmd)
-
 		s, err := pipes.RunString(cmd)
 		if err != nil {
-			return err
+			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " eris/data tar xf - -C /home/eris/.eris"
+			s2, e2 := pipes.RunString(cmd)
+			if e2 != nil {
+				return fmt.Errorf("Could not import the data container.\n\nTried with docker --rm: %v.\n Tried without docker --rm: %v.\n", err, e2)
+			}
+			logger.Infoln(s2)
+		} else {
+			logger.Infoln(s)
 		}
-
-		logger.Infoln(s)
 	} else {
 		if err := perform.DockerCreateDataContainer(name, containerNumber); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
