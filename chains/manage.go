@@ -74,8 +74,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	// copy dir, genesis, config into container
 	dst := path.Join(DataContainersPath, containerName, "blockchains", containerName)
 	if err = os.MkdirAll(dst, 0700); err != nil {
-		err = fmt.Errorf("Error making data directory: %v", err)
-		return
+		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
 	if dir != "" {
@@ -115,7 +114,6 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 			err = fmt.Errorf("Error making directory (%s): %v", d, err)
 			return
 		}
-
 	}
 
 	if err = WriteChainDefinitionFile(chain, fileName); err != nil {

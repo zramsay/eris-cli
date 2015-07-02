@@ -20,68 +20,51 @@ var servName string = "ipfs"
 var hash string
 
 func TestMain(m *testing.M) {
+	if err := testsInit(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	exitCode := m.Run()
 
-	e1 := data.RmDataRaw("keys", 1)
-	if e1 != nil {
-		fmt.Println(e1)
+	var e1, e2 error
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		e1 = data.RmDataRaw("keys", 1)
+		if e1 != nil {
+			fmt.Println(e1)
+		}
+		e2 = data.RmDataRaw("ipfs", 1)
+		if e2 != nil {
+			fmt.Println(e2)
+		}
 	}
-	e2 := data.RmDataRaw("ipfs", 1)
-	if e2 != nil {
-		fmt.Println(e2)
-	}
-	e3 := TearDown()
+
+	e3 := testsTearDown()
 	if e3 != nil {
 		fmt.Println(e3)
 	}
+
 	if e1 != nil || e2 != nil || e3 != nil {
 		os.Exit(1)
 	}
 	os.Exit(exitCode)
 }
 
-func TestInit(t *testing.T) {
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	common.ErisRoot = erisDir
-	common.ServicesPath = path.Join(common.ErisRoot, "services")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	util.Initialize(false, false)
-
-	// init dockerClient
-	util.DockerConnect(false)
-
-	// set ipfs endpoint
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
-
-	// make sure ipfs not running
-	for _, r := range ListRunningRaw() {
-		if r == "ipfs" {
-			t.Fatal("IPFS service is running. Please stop it with eris services stop ipfs.")
-		}
-	}
-
-	// make sure ipfs container does not exist
-	for _, r := range ListExistingRaw() {
-		if r == "ipfs" {
-			t.Fatal("IPFS service exists. Please remove it with eris services rm ipfs.")
-		}
-	}
-}
-
 func TestKnownRaw(t *testing.T) {
 	k := ListKnownRaw()
-	if len(k) != 1 {
-		t.Fatal("More than one service definition found. Something is wrong.\n")
+
+	if len(k) != 2 {
+		fmt.Printf("More than two service definitions found. Something is wrong.\n")
+		t.Fail()
+		testsTearDown()
+		os.Exit(1)
 	}
 
-	if k[0] != "ipfs" {
-		t.Fatal("Could not find ipfs service definition.\n")
+	if k[1] != "ipfs" {
+		fmt.Printf("Could not find ipfs service definition.\n")
+		t.Fail()
+		testsTearDown()
+		os.Exit(1)
 	}
 }
 
@@ -294,7 +277,44 @@ func TestKillRawPostNew(t *testing.T) {
 	testRunAndExist(t, "keys", 1, false, false)
 }
 
-func TearDown() error {
+func testsInit() error {
+	// common is initialized on import so
+	// we have to manually override these
+	// variables to ensure that the tests
+	// run correctly.
+	common.ErisRoot = erisDir
+	common.ServicesPath = path.Join(common.ErisRoot, "services")
+
+	// this dumps the ipfs service def into the temp dir which
+	// has been set as the erisRoot
+	if err := util.Initialize(false, false); err != nil {
+		return fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err)
+	}
+
+	// init dockerClient
+	util.DockerConnect(false)
+
+	// set ipfs endpoint
+	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+
+	// make sure ipfs not running
+	for _, r := range ListRunningRaw() {
+		if r == "ipfs" {
+			return fmt.Errorf("IPFS service is running. Please stop it with eris services stop ipfs.")
+		}
+	}
+
+	// make sure ipfs container does not exist
+	for _, r := range ListExistingRaw() {
+		if r == "ipfs" {
+			return fmt.Errorf("IPFS service exists. Please remove it with eris services rm ipfs.")
+		}
+	}
+
+	return nil
+}
+
+func testsTearDown() error {
 	return os.RemoveAll(erisDir)
 }
 
@@ -314,20 +334,20 @@ func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist
 
 	if toRun != run {
 		if toRun {
-			fmt.Println("Could not find a running instance of ipfs")
+			fmt.Printf("Could not find a running instance of %s\n", servName)
 			t.Fail()
 		} else {
-			fmt.Println("Found a running instance of ipfs when I shouldn't have")
+			fmt.Printf("Found a running instance of %s when I shouldn't have\n", servName)
 			t.Fail()
 		}
 	}
 
 	if toExist != exist {
 		if toExist {
-			fmt.Println("Could not find an existing instance of ipfs")
+			fmt.Printf("Could not find an existing instance of %s\n", servName)
 			t.Fail()
 		} else {
-			fmt.Println("Found an existing instance of ipfs when I shouldn't have")
+			fmt.Printf("Found an existing instance of %s when I shouldn't have\n", servName)
 			t.Fail()
 		}
 	}
