@@ -54,6 +54,6 @@ func DockerConnect(verbose bool) {
 	}
 }
 
-func NextContainerNumber(typ, name string) int {
-	return 1
+func NameAndNumber(name string, number int) string {
+	return fmt.Sprintf("%s_%d", name, number)
 }

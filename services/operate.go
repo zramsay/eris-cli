@@ -14,7 +14,7 @@ func StartServiceRaw(servName string, containerNumber int) error {
 		return err
 	}
 
-	if IsServiceRunning(service.Service) {
+	if IsServiceRunning(service.Service, service.Operations) {
 		logger.Infoln("Service already started. Skipping", servName)
 	} else {
 		return StartServiceByService(service.Service, service.Operations)
@@ -37,7 +37,7 @@ func ExecServiceRaw(name string, args []string, attach bool, containerNumber int
 		return err
 	}
 
-	if IsServiceExisting(service.Service) {
+	if IsServiceExisting(service.Service, service.Operations) {
 		logger.Infoln("Service exists.")
 		return ExecServiceByService(service.Service, service.Operations, args, attach)
 	} else {
@@ -47,14 +47,14 @@ func ExecServiceRaw(name string, args []string, attach bool, containerNumber int
 	return nil
 }
 
-func KillServiceRaw(all, rm bool, servNames ...string) error {
+func KillServiceRaw(all, rm bool, containerNumber int, servNames ...string) error {
 	for _, servName := range servNames {
-		service, err := LoadServiceDefinition(servName, 1) // TODO
+		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
 			return err
 		}
 
-		if IsServiceRunning(service.Service) {
+		if IsServiceRunning(service.Service, service.Operations) {
 			if err := KillServiceByService(all, rm, service.Service, service.Operations); err != nil {
 				return err
 			}
@@ -65,7 +65,7 @@ func KillServiceRaw(all, rm bool, servNames ...string) error {
 	}
 
 	if rm {
-		if err := RmServiceRaw(servNames, false); err != nil {
+		if err := RmServiceRaw(servNames, containerNumber, false); err != nil {
 			return err
 		}
 	}
@@ -130,7 +130,7 @@ func ExecServiceByService(srvMain *def.Service, ops *def.ServiceOperation, cmd [
 func KillServiceByService(all, rm bool, srvMain *def.Service, ops *def.ServiceOperation) error {
 	if all {
 		for _, srv := range srvMain.ServiceDeps {
-			go KillServiceRaw(all, rm, srv)
+			go KillServiceRaw(all, rm, ops.ContainerNumber, srv)
 		}
 	}
 	return perform.DockerStop(srvMain, ops)

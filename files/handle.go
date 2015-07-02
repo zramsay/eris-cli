@@ -41,7 +41,7 @@ func GetFilesRaw(hash, fileName string) error {
 		return err
 	}
 
-	if services.IsServiceRunning(ipfsService.Service) {
+	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 		logger.Infoln("IPFS is running. Adding now.")
 
 		err := importFile(hash, fileName)
@@ -70,7 +70,7 @@ func PutFilesRaw(fileName string) error {
 		return err
 	}
 
-	if services.IsServiceRunning(ipfsService.Service) {
+	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 		logger.Infoln("IPFS is running. Adding now.")
 
 		err := exportFile(fileName)

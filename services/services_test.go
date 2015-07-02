@@ -129,7 +129,7 @@ func TestStartServiceRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, true, true)
+	testRunAndExist(t, servName, 1, true, true)
 }
 
 func TestInspectRaw(t *testing.T) {
@@ -215,17 +215,17 @@ func TestUpdateRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, true, true)
+	testRunAndExist(t, servName, 1, true, true)
 }
 
 func TestKillRaw(t *testing.T) {
-	e := KillServiceRaw(true, false, servName)
+	e := KillServiceRaw(true, false, 1, servName)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, true, false)
+	testRunAndExist(t, servName, 1, true, false)
 }
 
 func TestRmRaw(t *testing.T) {
@@ -235,13 +235,13 @@ func TestRmRaw(t *testing.T) {
 	}
 
 	s := []string{servName}
-	e := RmServiceRaw(s, false)
+	e := RmServiceRaw(s, 1, false)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, false, false)
+	testRunAndExist(t, servName, 1, false, false)
 }
 
 func TestNewRaw(t *testing.T) {
@@ -257,7 +257,7 @@ func TestNewRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", true, true)
+	testRunAndExist(t, "keys", 1, true, true)
 }
 
 func TestRenameRaw(t *testing.T) {
@@ -267,7 +267,7 @@ func TestRenameRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, "syek", true, true)
+	testRunAndExist(t, "syek", 1, true, true)
 
 	e = RenameServiceRaw("syek", "keys", 1)
 	if e != nil {
@@ -275,7 +275,7 @@ func TestRenameRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", true, true)
+	testRunAndExist(t, "keys", 1, true, true)
 }
 
 // tests remove+kill
@@ -285,21 +285,22 @@ func TestKillRawPostNew(t *testing.T) {
 		return
 	}
 
-	e := KillServiceRaw(true, true, "keys")
+	e := KillServiceRaw(true, true, 1, "keys")
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", false, false)
+	testRunAndExist(t, "keys", 1, false, false)
 }
 
 func TearDown() error {
 	return os.RemoveAll(erisDir)
 }
 
-func testRunAndExist(t *testing.T, servName string, toExist, toRun bool) {
+func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
 	var exist, run bool
+	servName = util.NameAndNumber(servName, containerNumber)
 	for _, r := range ListExistingRaw() {
 		if r == servName {
 			exist = true

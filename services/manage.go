@@ -153,7 +153,7 @@ func ExportServiceRaw(servName string) error {
 			return err
 		}
 
-		if IsServiceRunning(ipfsService.Service) {
+		if IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 			logger.Infoln("IPFS is running. Adding now.")
 
 			hash, err := exportFile(servName)
@@ -186,7 +186,7 @@ To find known services use: eris services known`)
 }
 
 func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string) error {
-	if IsServiceExisting(srv) {
+	if IsServiceExisting(srv, ops) {
 		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
 			return err
@@ -233,9 +233,11 @@ func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error
 	return nil
 }
 
-func RmServiceRaw(servNames []string, force bool) error {
+// TODO: we should enable removing the data container here too
+// also not sure why this deletes the service def ....
+func RmServiceRaw(servNames []string, containerNumber int, force bool) error {
 	for _, servName := range servNames {
-		service, err := LoadServiceDefinition(servName, 1) // TODO
+		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
 			return err
 		}

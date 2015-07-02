@@ -53,12 +53,12 @@ func LoadService(servName string) (*def.Service, error) {
 	return sd.Service, err
 }
 
-func IsServiceExisting(service *def.Service) bool {
-	return parseServices(service.Name, true)
+func IsServiceExisting(service *def.Service, ops *def.ServiceOperation) bool {
+	return parseServices(service.Name, ops.ContainerNumber, true)
 }
 
-func IsServiceRunning(service *def.Service) bool {
-	return parseServices(service.Name, false)
+func IsServiceRunning(service *def.Service, ops *def.ServiceOperation) bool {
+	return parseServices(service.Name, ops.ContainerNumber, false)
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
@@ -106,7 +106,7 @@ func checkServiceHasName(service *def.Service, ops *def.ServiceOperation) {
 			service.Name = strings.Replace(service.Image, "/", "_", -1)
 		}
 	}
-	ops.SrvContainerName = fmt.Sprintf("eris_service_%s_%d", service.Name, ops.ContainerNumber)
+	ops.SrvContainerName = fmt.Sprintf("eris_service_%s", util.NameAndNumber(service.Name, ops.ContainerNumber))
 }
 
 func checkServiceHasDataContainer(serviceConf *viper.Viper, service *def.Service, ops *def.ServiceOperation) {
@@ -128,7 +128,8 @@ func checkDataContainerHasName(ops *def.ServiceOperation) {
 	}
 }
 
-func parseServices(name string, all bool) bool {
+func parseServices(name string, number int, all bool) bool {
+	name = util.NameAndNumber(name, number)
 	running := listServices(all)
 	if len(running) != 0 {
 		for _, srv := range running {
@@ -142,7 +143,7 @@ func parseServices(name string, all bool) bool {
 
 func listServices(running bool) []string {
 	services := []string{}
-	r := regexp.MustCompile(`\/eris_service_(.+?)_\d`)
+	r := regexp.MustCompile(`\/eris_service_(.+?)_(.+?)`)
 	// docker has this weird thing where it returns links as individual
 	// container (as in there is the container of two linked services and
 	// the linkage between them is actually its own containers). this explains
@@ -165,7 +166,9 @@ func listServices(running bool) []string {
 				continue
 			}
 			if len(match) != 0 {
-				services = append(services, r.FindAllStringSubmatch(c, 1)[0][1])
+				m := r.FindAllStringSubmatch(c, 1)[0]
+				servNameNum := fmt.Sprintf("%s_%s", m[1], m[2])
+				services = append(services, servNameNum)
 			}
 		}
 	}

@@ -30,8 +30,8 @@ func DockerCreateDataContainer(srvName string) error {
 
 	srv := def.Service{}
 	ops := def.ServiceOperation{}
-	containerNumber := util.NextContainerNumber("data", srvName)
-	ops.DataContainerName = "eris_data_" + srvName + "_" + strconv.Itoa(containerNumber)
+	srvName = util.NameAndNumber(srvName, 1) // TODO:CNUM
+	ops.DataContainerName = fmt.Sprintf("eris_data_%s", srvName)
 	optsData, err := configureDataContainer(&srv, &ops, nil)
 	if err != nil {
 		return err

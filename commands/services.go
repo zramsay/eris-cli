@@ -55,7 +55,7 @@ func KillService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.KillServiceRaw(All, Rm, args...))
+	IfExit(srv.KillServiceRaw(All, Rm, ContainerNumber, args...))
 }
 
 // install
@@ -158,7 +158,7 @@ func RmService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.RmServiceRaw(args, cmd.Flags().Lookup("force").Changed))
+	IfExit(srv.RmServiceRaw(args, ContainerNumber, Force))
 }
 
 //----------------------------------------------------------------------

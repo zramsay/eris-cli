@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/eris-ltd/eris-cli/commands/flags"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -100,7 +99,7 @@ var Lines int
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "debug level output")
-	ErisCmd.PersistentFlags().IntVarP(&flags.ContainerNumber, "num", "n", 1, "container number")
+	ErisCmd.PersistentFlags().IntVarP(&ContainerNumber, "num", "n", 1, "container number")
 	Init.Flags().BoolVarP(&Pull, "pull", "p", false, "skip the pulling feature; for when git is not installed")
 }
 
