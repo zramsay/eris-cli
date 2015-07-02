@@ -301,7 +301,7 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
 	var wasRunning bool = false
 
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service ID: " + service.ID)
+		logger.Infoln("Found Service ID: " + service.ID)
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
 			err := DockerStop(srv, ops)
@@ -338,10 +338,8 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
 }
 
 func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool) error {
-	logger.Infoln("Getting service's logs.")
-
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service ID: " + service.ID)
+		logger.Infoln("Logging Service ID: " + service.ID)
 		err := logsContainer(service.ID, follow)
 		if err != nil {
 			return err
@@ -354,10 +352,8 @@ func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool) error 
 }
 
 func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string) error {
-	logger.Infoln("Inspecting service")
-
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service ID: " + service.ID)
+		logger.Infoln("Inspecting Service ID: " + service.ID)
 		err := inspectContainer(service.ID, field)
 		if err != nil {
 			return err
@@ -389,7 +385,7 @@ func DockerStop(srv *def.Service, ops *def.ServiceOperation) error {
 
 func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string) error {
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service ID: " + service.ID)
+		logger.Infoln("Renaming Service ID: " + service.ID)
 		newName = strings.Replace(service.Names[0], oldName, newName, 1)
 		err := renameContainer(service.ID, newName)
 		if err != nil {
@@ -404,7 +400,7 @@ func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName 
 
 func DockerRemove(srv *def.Service, ops *def.ServiceOperation) error {
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service ID: " + service.ID)
+		logger.Infoln("Removing Service ID: " + service.ID)
 		err := removeContainer(service.ID)
 		if err != nil {
 			return err

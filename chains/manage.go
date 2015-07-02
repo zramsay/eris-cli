@@ -66,8 +66,10 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	// if something goes wrong, cleanup
 	defer func() {
 		if err != nil {
-			if err2 := services.RmServiceRaw([]string{containerName}, containerNumber, false, true); err2 != nil {
-				err = fmt.Errorf("Tragic! We encountered an error during setupChain (%v), and failed to cleanup after ourselves (remove containers) due to another error: %v", err, err2)
+			logger.Infof("\nError on setupChain: %v\n", err)
+			logger.Infoln("Cleaning up...")
+			if err2 := RmChainRaw(containerName, true, false, containerNumber); err2 != nil {
+				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nClearnup error: %v", containerName, err, err2)
 			}
 		}
 	}()
