@@ -59,17 +59,25 @@ func NameAndNumber(name string, number int) string {
 	return fmt.Sprintf("%s_%d", name, number)
 }
 
+func erisRegExp(typ string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`\/eris_%s_(.+)_(\d+)`, typ))
+}
+
+// docker has this weird thing where it returns links as individual
+// container (as in there is the container of two linked services and
+// the linkage between them is actually its own containers). this explains
+// the leading hash on containers. the q regexp is to filer out these
+// links from the return list as they are irrelevant to the information
+// desired by this function. and frankly they give false answers to
+// IsServiceRunning and ls,ps,known functions.
+func erisRegExpLinks() *regexp.Regexp {
+	return regexp.MustCompile(`\A\/eris_service_(.+?)_\d/(.+?)\z`)
+}
+
 func ParseContainerNames(typ string, running bool) []string {
 	containers := []string{}
-	r := regexp.MustCompile(fmt.Sprintf(`\/eris_%s_(.+?)_(.+?)`, typ))
-	// docker has this weird thing where it returns links as individual
-	// container (as in there is the container of two linked services and
-	// the linkage between them is actually its own containers). this explains
-	// the leading hash on containers. the q regexp is to filer out these
-	// links from the return list as they are irrelevant to the information
-	// desired by this function. and frankly they give false answers to
-	// IsServiceRunning and ls,ps,known functions.
-	q := regexp.MustCompile(`\A\/eris_service_(.+?)_\d/(.+?)\z`)
+	r := erisRegExp(typ)   // eris containers
+	q := erisRegExpLinks() // skip past these
 
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: running})
 	if len(contns) == 0 || err != nil {
