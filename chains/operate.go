@@ -53,14 +53,14 @@ func ExecChainRaw(name string, args []string, attach bool, containerNumber int) 
 	return nil
 }
 
-func KillChainRaw(chainName string, rm bool, containerNumber int) error {
+func KillChainRaw(chainName string, rm, data bool, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
 
 	if IsChainRunning(chain) {
-		err := services.KillServiceByService(true, rm, chain.Service, chain.Operations)
+		err := services.KillServiceByService(true, rm, data, chain.Service, chain.Operations)
 		if err != nil {
 			return err
 		}

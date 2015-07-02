@@ -47,7 +47,7 @@ func ExecServiceRaw(name string, args []string, attach bool, containerNumber int
 	return nil
 }
 
-func KillServiceRaw(all, rm bool, containerNumber int, servNames ...string) error {
+func KillServiceRaw(all, rm, data bool, containerNumber int, servNames ...string) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
@@ -55,7 +55,7 @@ func KillServiceRaw(all, rm bool, containerNumber int, servNames ...string) erro
 		}
 
 		if IsServiceRunning(service.Service, service.Operations) {
-			if err := KillServiceByService(all, rm, service.Service, service.Operations); err != nil {
+			if err := KillServiceByService(all, rm, data, service.Service, service.Operations); err != nil {
 				return err
 			}
 
@@ -65,7 +65,7 @@ func KillServiceRaw(all, rm bool, containerNumber int, servNames ...string) erro
 	}
 
 	if rm {
-		if err := RmServiceRaw(servNames, containerNumber, false); err != nil {
+		if err := RmServiceRaw(servNames, containerNumber, false, data); err != nil {
 			return err
 		}
 	}
@@ -127,10 +127,10 @@ func ExecServiceByService(srvMain *def.Service, ops *def.ServiceOperation, cmd [
 	return perform.DockerExec(srvMain, ops, cmd, attach)
 }
 
-func KillServiceByService(all, rm bool, srvMain *def.Service, ops *def.ServiceOperation) error {
+func KillServiceByService(all, rm, data bool, srvMain *def.Service, ops *def.ServiceOperation) error {
 	if all {
 		for _, srv := range srvMain.ServiceDeps {
-			go KillServiceRaw(all, rm, ops.ContainerNumber, srv)
+			go KillServiceRaw(all, rm, data, ops.ContainerNumber, srv)
 		}
 	}
 	return perform.DockerStop(srvMain, ops)

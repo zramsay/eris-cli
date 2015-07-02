@@ -93,6 +93,7 @@ var Quiet bool
 var All bool
 var Follow bool
 var Rm bool
+var RmD bool
 var Lines int
 
 // Define the persistent commands (globals)

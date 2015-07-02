@@ -55,7 +55,7 @@ func KillService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.KillServiceRaw(All, Rm, ContainerNumber, args...))
+	IfExit(srv.KillServiceRaw(All, Rm, RmD, ContainerNumber, args...))
 }
 
 // install
@@ -158,7 +158,7 @@ func RmService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.RmServiceRaw(args, ContainerNumber, Force))
+	IfExit(srv.RmServiceRaw(args, ContainerNumber, Force, RmD))
 }
 
 //----------------------------------------------------------------------
@@ -205,8 +205,10 @@ func addServicesFlags() {
 
 	servicesStop.Flags().BoolVarP(&All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
+	servicesStop.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers after stopping")
 
 	servicesRm.Flags().BoolVarP(&Force, "force", "f", false, "remove service definition file from eris library")
+	servicesRm.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers as well")
 }
 
 // list-known lists the services which eris can automagically install

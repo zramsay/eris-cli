@@ -219,7 +219,7 @@ func TestUpdateRaw(t *testing.T) {
 }
 
 func TestKillRaw(t *testing.T) {
-	e := KillServiceRaw(true, false, 1, servName)
+	e := KillServiceRaw(true, false, false, 1, servName)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -235,7 +235,7 @@ func TestRmRaw(t *testing.T) {
 	}
 
 	s := []string{servName}
-	e := RmServiceRaw(s, 1, false)
+	e := RmServiceRaw(s, 1, false, false)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -285,7 +285,7 @@ func TestKillRawPostNew(t *testing.T) {
 		return
 	}
 
-	e := KillServiceRaw(true, true, 1, "keys")
+	e := KillServiceRaw(true, true, false, 1, "keys")
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()

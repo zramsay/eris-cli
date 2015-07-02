@@ -13,7 +13,7 @@ import (
 func RenameDataRaw(oldName, newName string, containerNumber int) error {
 	if parseKnown(oldName) {
 		logger.Infoln("Renaming data container", oldName, "to", newName)
-		srv, ops := mockService(oldName, containerNumber)
+		srv, ops := MockService(oldName, containerNumber)
 		err := perform.DockerRename(srv, ops, oldName, newName)
 		if err != nil {
 			return err
@@ -28,7 +28,7 @@ func InspectDataRaw(name, field string, containerNumber int) error {
 	if parseKnown(name) {
 		logger.Infoln("Inspecting data container" + name)
 
-		srv, ops := mockService(name, containerNumber)
+		srv, ops := MockService(name, containerNumber)
 		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
 			return err
@@ -41,9 +41,9 @@ func InspectDataRaw(name, field string, containerNumber int) error {
 
 func RmDataRaw(name string, containerNumber int) error {
 	if parseKnown(name) {
-		logger.Infoln("Removing data container" + name)
+		logger.Infoln("Removing data container " + name)
 
-		srv, ops := mockService(name, containerNumber)
+		srv, ops := MockService(name, containerNumber)
 		err := perform.DockerRemove(srv, ops)
 		if err != nil {
 			return err

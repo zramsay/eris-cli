@@ -52,7 +52,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 
 func KillChain(cmd *cobra.Command, args []string) {
 	IfExit(checkChainGiven(args))
-	IfExit(chns.KillChainRaw(args[0], Rm, ContainerNumber))
+	IfExit(chns.KillChainRaw(args[0], Rm, RmD, ContainerNumber))
 }
 
 // fetch and install a chain
@@ -216,6 +216,7 @@ func addChainsFlags() {
 	chainsUpdate.Flags().BoolVarP(&Pull, "pull", "p", false, "pull an updated version of the chain's image from docker hub")
 
 	chainsStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
+	chainsStop.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers after stopping")
 }
 
 // known lists the known chain types which eris can install

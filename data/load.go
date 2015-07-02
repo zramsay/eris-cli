@@ -6,7 +6,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
-func mockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
+func MockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
 	srv := &def.Service{}
 	ops := &def.ServiceOperation{}
 	ops.SrvContainerName = nameToContainerName(name, containerNumber)

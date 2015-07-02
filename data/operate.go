@@ -56,7 +56,7 @@ func ExportDataRaw(name string, containerNumber int) error {
 		logger.Infoln("Exporting data container" + name)
 
 		exportPath := filepath.Join(DataContainersPath, name) // TODO: containerNumber ?
-		_, ops := mockService(name, containerNumber)
+		_, ops := MockService(name, containerNumber)
 		service, exists := perform.ContainerExists(ops)
 
 		if !exists {

@@ -233,9 +233,8 @@ func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error
 	return nil
 }
 
-// TODO: we should enable removing the data container here too
-// also not sure why this deletes the service def ....
-func RmServiceRaw(servNames []string, containerNumber int, force bool) error {
+// TODO: not sure why this deletes the service def (?)
+func RmServiceRaw(servNames []string, containerNumber int, force, rmData bool) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
@@ -245,6 +244,15 @@ func RmServiceRaw(servNames []string, containerNumber int, force bool) error {
 		if err != nil {
 			return err
 		}
+
+		if rmData {
+			mockServ, mockOp := data.MockService(servName, containerNumber)
+			err = perform.DockerRemove(mockServ, mockOp)
+			if err != nil {
+				return err
+			}
+		}
+
 		if force {
 			oldFile, err := servDefFileByServName(servName)
 			if err != nil {
