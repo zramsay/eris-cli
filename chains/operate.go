@@ -2,6 +2,7 @@ package chains
 
 import (
 	"fmt"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 )
 
@@ -67,5 +68,16 @@ func KillChainRaw(chainName string, rm, data bool, containerNumber int) error {
 	} else {
 		return fmt.Errorf("Chain not currently running. Skipping.")
 	}
+
+	if rm {
+		if err := perform.DockerRemove(chain.Service, chain.Operations); err != nil {
+			return err
+		}
+	}
+
+	if data {
+		// TODO: data container from chain container
+	}
+
 	return nil
 }
