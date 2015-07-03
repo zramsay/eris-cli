@@ -75,7 +75,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		}
 	}()
 
-	logger.Infoln("Data Container ID: " + id_main)
+	logger.Infoln("Exec Container ID: " + id_main)
 
 	// start the container (either interactive or one off command)
 	if err := startContainer(id_main, &opts); err != nil {
@@ -206,9 +206,9 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 		<-doneLogs
 
 		logger.Infof("Removing container %s\n", id_main)
-		/*if err := removeContainer(id_main); err != nil {
+		if err := removeContainer(id_main); err != nil {
 			return err
-		}*/
+		}
 
 	} else {
 		logger.Infoln(srv.Name + " Started.")
@@ -520,8 +520,6 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 			return nil, err
 		}
 	}
-	// .... ?!
-	dockerContainer.Config = opts.Config
 	return dockerContainer, nil
 }
 

@@ -346,17 +346,22 @@ func InstallChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.InstallChainRaw(ChainType, ChainID, args[0], ConfigFile, DirToCopy, ContainerNumber))
+	// the idea here is you will either specify a chainName as the arg and that will
+	// double as the chainID, or you want a local reference name for the chain, so you specify
+	// the chainID with a flag and give your local reference name as the arg
+	chainName := args[0]
+	IfExit(chns.InstallChainRaw(ChainType, ChainID, chainName, ConfigFile, DirToCopy, ContainerNumber))
 }
 
 // create a new chain
-// TODO: interactive option for building genesis?
+// genesis is either given or a simple single-validator genesis will be laid for you
 func NewChain(cmd *cobra.Command, args []string) {
 	if err := checkChainGiven(args); err != nil {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.NewChainRaw(ChainType, args[0], GenesisFile, ConfigFile, DirToCopy, ContainerNumber))
+	chainName := args[0]
+	IfExit(chns.NewChainRaw(ChainType, chainName, GenesisFile, ConfigFile, DirToCopy, ContainerNumber))
 }
 
 // import a chain definition file

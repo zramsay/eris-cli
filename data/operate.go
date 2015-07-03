@@ -48,7 +48,7 @@ func ImportDataRaw(name string, containerNumber int) error {
 func ExecDataRaw(name string, containerNumber int, interactive bool, args []string) error {
 	if parseKnown(name, containerNumber) {
 		name = nameToContainerName(name, containerNumber)
-		logger.Infoln("Running exec on container with volumes from data container for " + name)
+		logger.Infoln("Running exec on container with volumes from data container " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err
 		}

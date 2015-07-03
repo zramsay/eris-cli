@@ -19,6 +19,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
+// genesis file either given directly, in dir, or not found (empty)
 func resolveGenesisFile(genesis, dir string) string {
 	if genesis == "" {
 		genesis = path.Join(dir, "genesis.json")
@@ -29,7 +30,9 @@ func resolveGenesisFile(genesis, dir string) string {
 	return genesis
 }
 
-func getChainIDFromGenesis(genesis string) (string, error) {
+// "chain_id" should be in the genesis.json
+// or else is set to name
+func getChainIDFromGenesis(genesis, name string) (string, error) {
 	var hasChainID = struct {
 		ChainID string `json:"chain_id"`
 	}{}
@@ -45,21 +48,27 @@ func getChainIDFromGenesis(genesis string) (string, error) {
 
 	chainID := hasChainID.ChainID
 	if chainID == "" {
-		return "", fmt.Errorf("Genesis file must contain chain_id field")
+		chainID = name
 	}
 	return chainID, nil
 }
 
+// the main function for setting up a chain container
+// handles both "new" and "fetch" - most of the differentiating logic is in the container
 func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string, containerNumber int) (err error) {
-	containerName := chainType + "_" + chainID
-	if chainName != "" {
-		containerName = chainName
+	// chainName is mandatory
+	if chainName == "" {
+		return fmt.Errorf("setupChain requires a chainName")
+	}
+	containerName := util.NameAndNumber(chainName, containerNumber)
+	if chainID == "" {
+		chainID = chainName
 	}
 
 	// TODO: check if data container already exists
 	// run containers and exit (creates data container)
-	logger.Infof("Creating data container for %s\n", containerName)
-	if err := perform.DockerCreateDataContainer(containerName, containerNumber); err != nil {
+	logger.Infof("Creating data container for %s\n", chainName)
+	if err := perform.DockerCreateDataContainer(chainName, containerNumber); err != nil {
 		return fmt.Errorf("Error creating data container %v", err)
 	}
 
@@ -68,14 +77,18 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		if err != nil {
 			logger.Infof("\nError on setupChain: %v\n", err)
 			logger.Infoln("Cleaning up...")
-			if err2 := RmChainRaw(containerName, true, false, containerNumber); err2 != nil {
+			if err2 := RmChainRaw(chainName, true, false, containerNumber); err2 != nil {
 				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nCleanup error: %v", containerName, err, err2)
 			}
 		}
 	}()
 
 	// copy dir, genesis, config into container
-	dst := path.Join(DataContainersPath, containerName, "blockchains", containerName)
+	containerDst := path.Join("blockchains", chainName)           // path in container
+	dst := path.Join(DataContainersPath, chainName, containerDst) // path on host
+	// TODO: deal with containerNumbers ....!
+	// we probably need to update Import
+
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
@@ -100,12 +113,12 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	}
 
 	// copy from host to container
-	if err = data.ImportDataRaw(containerName, containerNumber); err != nil {
+	if err = data.ImportDataRaw(chainName, containerNumber); err != nil {
 		return err
 	}
 
 	chain := &def.Chain{
-		Name:    containerName,
+		Name:    chainName,
 		Type:    chainType,
 		ChainID: chainID,
 		Service: &def.Service{},
@@ -115,28 +128,32 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	chain.Service.AutoData = true
 
 	// write the chain definition file ...
-	fileName := filepath.Join(BlockchainsPath, containerName) + ".toml"
+	fileName := filepath.Join(BlockchainsPath, chainName) + ".toml"
 	if err = WriteChainDefinitionFile(chain, fileName); err != nil {
 		err = fmt.Errorf("error writing chain definition to file: %v", err)
 		return
 	}
 
-	chain, err = LoadChainDefinition(containerName, containerNumber)
+	chain, err = LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
 
-	// run cmd from chainDef.manager
-	var ok bool
-	chain.Service.Command, ok = chain.Manager[cmd]
-	if !ok {
-		return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, cmd)
+	// cmd should "new" or "fetch"
+	// TODO: rename fetch/install
+	chain.Service.Command = cmd
+
+	// set chainid and other vars
+	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
+	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
+	chain.Service.Environment = append(chain.Service.Environment, "RUN=false") // TODO new should take a run flag
+	// TODO mint vs. erisdb
+	// chain.Service.Environment = append(chain.Service.Environment, "CHAIN_TYPE=mint")
+	if genesis == "" {
+		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
 	}
 
-	// set chainid
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
-
-	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
+	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s", util.NameAndNumber(chainName, containerNumber))
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		chain.Operations.Remove = true
 	}
@@ -151,12 +168,12 @@ func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber i
 	}
 
 	// read chainID from genesis. genesis may be in dir
+	// if no genesis or no genesis.chain_id, chainID = name
 	var chainID string
 	if genesis = resolveGenesisFile(genesis, dir); genesis == "" {
-		// return fmt.Errorf("Please provide a genesis.json explicitly or in a specified directory")
 		chainID = name
 	} else {
-		chainID, err = getChainIDFromGenesis(genesis)
+		chainID, err = getChainIDFromGenesis(genesis, name)
 		if err != nil {
 			return err
 		}
