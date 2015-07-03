@@ -19,21 +19,20 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func getChainIDFromGenesis(genesis, dir string) (string, error) {
-	var hasChainID = struct {
-		ChainID string `json:"chain_id"`
-	}{}
-
+func resolveGenesisFile(genesis, dir string) string {
 	if genesis == "" {
 		genesis = path.Join(dir, "genesis.json")
 		if _, err := os.Stat(genesis); err != nil {
-			// (if no genesis, we'll have to
-			// copy into a random "scratch" location,
-			// start the node so it lays a genesis, read the chainid
-			// from that, and then copy to appropriate destination, sigh)
-			return "", fmt.Errorf("Please provide a genesis.json explicitly or in a specified directory")
+			return ""
 		}
 	}
+	return genesis
+}
+
+func getChainIDFromGenesis(genesis string) (string, error) {
+	var hasChainID = struct {
+		ChainID string `json:"chain_id"`
+	}{}
 
 	b, err := ioutil.ReadFile(genesis)
 	if err != nil {
@@ -57,6 +56,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		containerName = chainName
 	}
 
+	// TODO: check if data container already exists
 	// run containers and exit (creates data container)
 	logger.Infof("Creating data container for %s\n", containerName)
 	if err := perform.DockerCreateDataContainer(containerName, containerNumber); err != nil {
@@ -89,7 +89,10 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		if err = Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
 			return err
 		}
+	} else {
+		// TODO: run mintgen and open the genesis in editor
 	}
+
 	if config != "" {
 		if err = Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
 			return err
@@ -123,15 +126,15 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		return err
 	}
 
-	// run "new" cmd in chains definition
-	// typically this should parse the genesis and write
-	// a genesis state to the db. we might also have it
-	// post the new chain's id and other info to an etcb, etc. (pun intended)
+	// run cmd from chainDef.manager
 	var ok bool
 	chain.Service.Command, ok = chain.Manager[cmd]
 	if !ok {
 		return fmt.Errorf("%s service definition must include '%s' command under Manager", chainType, cmd)
 	}
+
+	// set chainid
+	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
 
 	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s_%d", containerName, containerNumber)
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
@@ -142,15 +145,21 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	return
 }
 
-func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber int) error {
+func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber int) (err error) {
 	if chainType == "" {
 		return fmt.Errorf("Please specify a chain type with the --type flag")
 	}
 
 	// read chainID from genesis. genesis may be in dir
-	chainID, err := getChainIDFromGenesis(genesis, dir)
-	if err != nil {
-		return err
+	var chainID string
+	if genesis = resolveGenesisFile(genesis, dir); genesis == "" {
+		// return fmt.Errorf("Please provide a genesis.json explicitly or in a specified directory")
+		chainID = name
+	} else {
+		chainID, err = getChainIDFromGenesis(genesis)
+		if err != nil {
+			return err
+		}
 	}
 
 	return setupChain(chainType, chainID, name, "new", dir, genesis, config, containerNumber)
