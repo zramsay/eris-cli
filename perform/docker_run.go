@@ -57,7 +57,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	}
 	id_main := cont.ID
 
-	// trap signals so we can kill the container
+	// trap signals so we can drop out of the container
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
@@ -87,7 +87,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 			return err
 		}
 	} else {
-		if err := logsContainer(id_main, false); err != nil {
+		if err := logsContainer(id_main, true); err != nil {
 			return err
 		}
 	}
