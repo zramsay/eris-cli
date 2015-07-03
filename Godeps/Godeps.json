@@ -60,7 +60,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "bacc91d0d732390df132783988dc17c611881047"
+			"Rev": "c1fc6e9dba75bab70215e99e597675edcd5a1ba9"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
@@ -90,7 +90,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/cobra",
-			"Rev": "66816bcd0378e248c613e3c443c020f544c28804"
+			"Rev": "385fc87e4343efec233811d3d933509e8975d11a"
 		},
 		{
 			"ImportPath": "github.com/spf13/jwalterweatherman",
@@ -102,7 +102,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/viper",
-			"Rev": "be5ff3e4840cf692388bde7a057595a474ef379e"
+			"Rev": "db7ff930a189b98d602179d9001d33345f42b8c7"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
