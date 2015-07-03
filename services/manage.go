@@ -161,7 +161,7 @@ func ExportServiceRaw(servName string) error {
 				return err
 			}
 
-			logger.Errorln(hash)
+			logger.Println(hash)
 		} else {
 			logger.Infoln("IPFS is not running. Starting now.")
 
@@ -174,7 +174,7 @@ func ExportServiceRaw(servName string) error {
 				return err
 			}
 
-			logger.Errorln(hash)
+			logger.Println(hash)
 		}
 
 	} else {
