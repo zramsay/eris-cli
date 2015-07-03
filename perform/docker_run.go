@@ -186,10 +186,14 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	if ops.Remove {
 
 		// dump the logs (TODO: options about this)
+		doneLogs := make(chan struct{}, 1)
 		go func() {
+			logger.Debugln("following logs")
 			if err := logsContainer(id_main, true); err != nil {
 				logger.Errorf("Unable to follow logs for %s\n", id_main)
 			}
+			logger.Debugln("done following logs")
+			doneLogs <- struct{}{}
 		}()
 
 		logger.Infof("Waiting for %s to exit so we can remove the container\n", id_main)
@@ -197,10 +201,14 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 			return err
 		}
 
+		logger.Debugln("waiting for logs to finish")
+		// let the logs finish
+		<-doneLogs
+
 		logger.Infof("Removing container %s\n", id_main)
-		if err := removeContainer(id_main); err != nil {
+		/*if err := removeContainer(id_main); err != nil {
 			return err
-		}
+		}*/
 
 	} else {
 		logger.Infoln(srv.Name + " Started.")
