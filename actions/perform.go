@@ -63,8 +63,16 @@ func PerformCommand(action *def.Action, actionVars []string, noOutput bool) erro
 	if err != nil {
 		return err
 	}
-	actionVars = append(os.Environ(), actionVars...)
 
+	// pull actionVars (first given from command line) and
+	// combine with the environment variables (given in the
+	// action definition files) and finally combine with
+	// the hosts os.Environ() to provide the full set of
+	// variables to be consumed during the steps phase.
+	for k, v := range action.Environment {
+		actionVars = append(actionVars, fmt.Sprintf("%s=%s", k, v))
+	}
+	actionVars = append(os.Environ(), actionVars...)
 	logger.Infoln("Performing Action: ", action.Name)
 
 	for n, step := range action.Steps {

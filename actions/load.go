@@ -24,7 +24,6 @@ func LoadActionDefinition(act []string) (*def.Action, []string, error) {
 	if err != nil {
 		return &action, actionVars, err
 	}
-
 	return &action, actionVars, nil
 }
 
