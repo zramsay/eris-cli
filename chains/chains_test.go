@@ -9,7 +9,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -21,13 +20,10 @@ var chainName string = "testchain"
 var hash string
 
 func TestMain(m *testing.M) {
-	var err error
-	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	log.SetLoggers(2, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
+	logger.Level = 0
+	// logger.Level = 1
+	// logger.Level = 2
+
 	if err := testsInit(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -39,14 +35,14 @@ func TestMain(m *testing.M) {
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e1 = data.RmDataRaw(chainName, 1)
 		if e1 != nil {
-			fmt.Println(e1)
+			logger.Errorln(e1)
 		}
 	}
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e3 = testsTearDown()
 		if e3 != nil {
-			fmt.Println(e3)
+			logger.Errorln(e3)
 		}
 	}
 
@@ -86,23 +82,23 @@ func TestLoadChainDefinition(t *testing.T) {
 	var e error
 	chn, e := LoadChainDefinition(chainName, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.FailNow()
 	}
 
 	if chn.Service.Name != chainName {
-		fmt.Printf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", chainName, chn.Service.Name)
+		logger.Errorln("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", chainName, chn.Service.Name)
 		t.FailNow()
 	}
 
 	if !chn.Operations.DataContainer {
 		fmt.Println(chn.Operations)
-		fmt.Printf("FAILURE: data_container not properly read on LOAD.\n")
+		logger.Errorln("FAILURE: data_container not properly read on LOAD.\n")
 		t.FailNow()
 	}
 
 	if chn.Operations.DataContainerName == "" {
-		fmt.Printf("FAILURE: data_container_name not set.\n")
+		logger.Errorln("FAILURE: data_container_name not set.\n")
 		t.Fail()
 	}
 }
@@ -110,7 +106,7 @@ func TestLoadChainDefinition(t *testing.T) {
 func TestStartChainRaw(t *testing.T) {
 	e := StartChainRaw(chainName, 1, new(def.ServiceOperation))
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -120,33 +116,33 @@ func TestStartChainRaw(t *testing.T) {
 func TestLogsChainRaw(t *testing.T) {
 	e := LogsChainRaw(chainName, false, "all", 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
 func TestExecChainRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
 	}
 	cmd := strings.Fields("ls -la /home/eris/.eris/blockchains")
 	e := ExecChainRaw(chainName, cmd, false, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
 func TestUpdateChainRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
 	}
 
 	e := UpdateChainRaw(chainName, true, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -157,7 +153,7 @@ func TestUpdateChainRaw(t *testing.T) {
 func TestRenameChainRaw(t *testing.T) {
 	e := RenameChainRaw(chainName, "niahctset")
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -165,7 +161,7 @@ func TestRenameChainRaw(t *testing.T) {
 
 	e = RenameChainRaw("niahctset", chainName)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -177,7 +173,7 @@ func TestKillChainRaw(t *testing.T) {
 
 	e := KillChainRaw(chainName, false, false, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -186,13 +182,13 @@ func TestKillChainRaw(t *testing.T) {
 
 func TestRmChainRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
 	}
 
 	e := RmChainRaw(chainName, false, false, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -255,21 +251,19 @@ func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 
 	if toRun != run {
 		if toRun {
-			fmt.Printf("Could not find a running instance of %s\n", chainName)
-			t.Fail()
+			logger.Errorln("Could not find a running instance of %s.", chainName)
 		} else {
-			fmt.Printf("Found a running instance of %s when I shouldn't have\n", chainName)
-			t.Fail()
+			logger.Errorln("Found a running instance of %s when I shouldn't have.", chainName)
 		}
+		t.Fail()
 	}
 
 	if toExist != exist {
 		if toExist {
-			fmt.Printf("Could not find an existing instance of %s\n", chainName)
-			t.Fail()
+			logger.Errorln("Could not find an existing instance of %s.", chainName)
 		} else {
-			fmt.Printf("Found an existing instance of %s when I shouldn't have\n", chainName)
-			t.Fail()
+			logger.Errorln("Found an existing instance of %s when I shouldn't have.", chainName)
 		}
+		t.Fail()
 	}
 }

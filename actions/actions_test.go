@@ -17,8 +17,12 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
+	logger.Level = 0
+	// logger.Level = 1
+	// logger.Level = 2
+
 	if err := testsInit(); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		os.Exit(1)
 	}
 
@@ -26,7 +30,7 @@ func TestMain(m *testing.M) {
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		if err := testsTearDown(); err != nil {
-			fmt.Println(err)
+			logger.Errorln(err)
 			os.Exit(1)
 		}
 	}
@@ -38,14 +42,14 @@ func TestListActionsRaw(t *testing.T) {
 	k := ListKnownRaw()
 
 	if len(k) != 1 {
-		fmt.Printf("The wrong number of action definitions have been found. Something is wrong.\n")
+		logger.Errorf("The wrong number of action definitions have been found. Something is wrong.\n")
 		t.Fail()
 		testsTearDown()
 		os.Exit(1)
 	}
 
 	if k[0] != "do_not_use" {
-		fmt.Printf("Could not find \"do not use\" action definition.\n")
+		logger.Errorf("Could not find \"do not use\" action definition.\n")
 		t.Fail()
 		testsTearDown()
 		os.Exit(1)
@@ -57,12 +61,12 @@ func TestLoadActionDefinition(t *testing.T) {
 	action := strings.Split(actionName, " ")
 	act, _, e := LoadActionDefinition(action)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.FailNow()
 	}
 
 	if act.Name != actionName {
-		fmt.Printf("FAILURE: improper action name on LOAD. expected: %s\tgot: %s\n", actionName, act.Name)
+		logger.Errorf("FAILURE: improper action name on LOAD. expected: %s\tgot: %s\n", actionName, act.Name)
 		t.Fail()
 	}
 }
@@ -71,12 +75,12 @@ func TestDoActionRaw(t *testing.T) {
 	act := strings.Split(actionName, " ")
 	action, actionVars, err := LoadActionDefinition(act)
 	if err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.FailNow()
 	}
 
 	if err := DoRaw(action, actionVars, true); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.Fail()
 	}
 }
@@ -84,7 +88,7 @@ func TestDoActionRaw(t *testing.T) {
 func TestNewActionRaw(t *testing.T) {
 	act := strings.Fields(oldName)
 	if err := NewActionRaw(act); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.Fail()
 	}
 	testExist(t, oldName, true)
@@ -95,14 +99,14 @@ func TestRenameActionRaw(t *testing.T) {
 	testExist(t, oldName, true)
 
 	if err := RenameActionRaw(oldName, newName); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.Fail()
 	}
 	testExist(t, newName, true)
 	testExist(t, oldName, false)
 
 	if err := RenameActionRaw(newName, oldName); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.Fail()
 	}
 	testExist(t, newName, false)
@@ -112,7 +116,7 @@ func TestRenameActionRaw(t *testing.T) {
 func TestRemoveActionRaw(t *testing.T) {
 	act := strings.Fields(oldName)
 	if err := RmActionRaw(act, true); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.Fail()
 	}
 	testExist(t, oldName, false)
@@ -156,11 +160,10 @@ func testExist(t *testing.T, actionName string, toExist bool) {
 
 	if toExist != exist {
 		if toExist {
-			fmt.Printf("Could not find an existing instance of %s\n", actionName)
-			t.Fail()
+			logger.Errorf("Could not find an existing instance of %s\n", actionName)
 		} else {
-			fmt.Printf("Found an existing instance of %s when I shouldn't have\n", actionName)
-			t.Fail()
+			logger.Errorf("Found an existing instance of %s when I shouldn't have\n", actionName)
 		}
+		t.Fail()
 	}
 }

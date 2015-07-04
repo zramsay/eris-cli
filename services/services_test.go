@@ -18,8 +18,12 @@ var servName string = "ipfs"
 var hash string
 
 func TestMain(m *testing.M) {
+	logger.Level = 0
+	// logger.Level = 1
+	// logger.Level = 2
+
 	if err := testsInit(); err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		os.Exit(1)
 	}
 
@@ -29,18 +33,18 @@ func TestMain(m *testing.M) {
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e1 = data.RmDataRaw("keys", 1)
 		if e1 != nil {
-			fmt.Println(e1)
+			logger.Errorln(e1)
 		}
 		e2 = data.RmDataRaw("ipfs", 1)
 		if e2 != nil {
-			fmt.Println(e2)
+			logger.Errorln(e2)
 		}
 	}
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e3 = testsTearDown()
 		if e3 != nil {
-			fmt.Println(e3)
+			logger.Errorln(e3)
 		}
 	}
 
@@ -54,14 +58,14 @@ func TestKnownServiceRaw(t *testing.T) {
 	k := ListKnownRaw()
 
 	if len(k) != 2 {
-		fmt.Printf("More than two service definitions found. Something is wrong.\n")
+		logger.Errorf("More than two service definitions found. Something is wrong.\n")
 		t.Fail()
 		testsTearDown()
 		os.Exit(1)
 	}
 
 	if k[1] != "ipfs" {
-		fmt.Printf("Could not find ipfs service definition.\n")
+		logger.Errorf("Could not find ipfs service definition.\n")
 		t.Fail()
 		testsTearDown()
 		os.Exit(1)
@@ -72,43 +76,43 @@ func TestLoadServiceDefinition(t *testing.T) {
 	var e error
 	srv, e = LoadServiceDefinition(servName, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.FailNow()
 	}
 
 	if srv.Service.Name != servName {
-		fmt.Printf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
+		logger.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
 		t.FailNow()
 	}
 
 	if !srv.Operations.DataContainer {
-		fmt.Printf("FAILURE: data_container not properly read on LOAD.\n")
+		logger.Errorf("FAILURE: data_container not properly read on LOAD.\n")
 		t.FailNow()
 	}
 
 	if srv.Operations.DataContainerName == "" {
-		fmt.Printf("FAILURe: data_container_name not set.\n")
-		t.FailNow()
+		logger.Errorf("FAILURe: data_container_name not set.\n")
+		t.Fail()
 	}
 }
 
 func TestLoadService(t *testing.T) {
 	s, e := LoadService(servName)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.FailNow()
 	}
 
 	if s.Name != servName {
-		fmt.Printf("FAILURE: improper service name on LOAD_SERVICE. expected: %s\tgot: %s\n", servName, s.Name)
-		t.FailNow()
+		logger.Errorf("FAILURE: improper service name on LOAD_SERVICE. expected: %s\tgot: %s\n", servName, s.Name)
+		t.Fail()
 	}
 }
 
 func TestStartServiceRaw(t *testing.T) {
 	e := StartServiceRaw(servName, 1, new(def.ServiceOperation))
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -118,13 +122,13 @@ func TestStartServiceRaw(t *testing.T) {
 func TestInspectServiceRaw(t *testing.T) {
 	e := InspectServiceRaw(servName, "name", 1)
 	if e != nil {
-		fmt.Println(e)
-		t.Fail()
+		logger.Errorln(e)
+		t.FailNow()
 	}
 
 	e = InspectServiceRaw(servName, "config.user", 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 }
@@ -132,33 +136,33 @@ func TestInspectServiceRaw(t *testing.T) {
 func TestLogsServiceRaw(t *testing.T) {
 	e := LogsServiceRaw(servName, false, "all", 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
 func TestExecServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
 	}
 	cmd := strings.Fields("ls -la /root/")
 	e := ExecServiceRaw(servName, cmd, false, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
 func TestUpdateServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
 	}
 
 	e := UpdateServiceRaw(servName, true, 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -168,7 +172,7 @@ func TestUpdateServiceRaw(t *testing.T) {
 func TestKillServiceRaw(t *testing.T) {
 	e := KillServiceRaw(true, false, false, 1, servName)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -177,14 +181,14 @@ func TestKillServiceRaw(t *testing.T) {
 
 func TestRmServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
 	}
 
 	s := []string{servName}
 	e := RmServiceRaw(s, 1, false, false)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -194,13 +198,13 @@ func TestRmServiceRaw(t *testing.T) {
 func TestNewServiceRaw(t *testing.T) {
 	e := NewServiceRaw("keys", "eris/keys")
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.FailNow()
 	}
 
 	e = StartServiceRaw("keys", 1, new(def.ServiceOperation))
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -210,7 +214,7 @@ func TestNewServiceRaw(t *testing.T) {
 func TestRenameServiceRaw(t *testing.T) {
 	e := RenameServiceRaw("keys", "syek", 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -218,7 +222,7 @@ func TestRenameServiceRaw(t *testing.T) {
 
 	e = RenameServiceRaw("syek", "keys", 1)
 	if e != nil {
-		fmt.Println(e)
+		logger.Errorln(e)
 		t.Fail()
 	}
 
@@ -228,7 +232,7 @@ func TestRenameServiceRaw(t *testing.T) {
 // tests remove+kill
 func TestKillServiceRawPostNew(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
 	}
 
@@ -297,21 +301,19 @@ func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist
 
 	if toRun != run {
 		if toRun {
-			fmt.Printf("Could not find a running instance of %s\n", servName)
-			t.Fail()
+			logger.Errorf("Could not find a running instance of %s\n", servName)
 		} else {
-			fmt.Printf("Found a running instance of %s when I shouldn't have\n", servName)
-			t.Fail()
+			logger.Errorf("Found a running instance of %s when I shouldn't have\n", servName)
 		}
+		t.Fail()
 	}
 
 	if toExist != exist {
 		if toExist {
-			fmt.Printf("Could not find an existing instance of %s\n", servName)
-			t.Fail()
+			logger.Errorf("Could not find an existing instance of %s\n", servName)
 		} else {
-			fmt.Printf("Found an existing instance of %s when I shouldn't have\n", servName)
-			t.Fail()
+			logger.Errorf("Found an existing instance of %s when I shouldn't have\n", servName)
 		}
+		t.Fail()
 	}
 }

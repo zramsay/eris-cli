@@ -17,6 +17,8 @@ var content string = "test content\n"
 var hash string
 
 func TestMain(m *testing.M) {
+	logger.Level = 0
+	// logger.Level = 1
 	// logger.Level = 2
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {

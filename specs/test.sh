@@ -28,7 +28,5 @@ cd ../data && go test -v
 passed Data
 cd ../files && go test -v
 passed Files
-cd ../init && go test -v
-passed Init
 cd ../config && go test -v
 passed Config
