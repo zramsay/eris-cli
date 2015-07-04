@@ -309,6 +309,7 @@ func RenameChainRaw(oldName, newName string) error {
 
 	newNameBase := strings.Replace(newName, filepath.Ext(newName), "", 1)
 	transformOnly := newNameBase == oldName
+	fmt.Println("old, new, newBase, transformonly:", oldName, newName, newNameBase, transformOnly)
 
 	if isKnownChain(oldName) {
 		logger.Infoln("Renaming chain", oldName, "to", newNameBase)

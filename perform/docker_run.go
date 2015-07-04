@@ -311,7 +311,7 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, skipPull bool) e
 }
 
 func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
-	logger.Infoln("Pulling an image for the service.")
+	logger.Infof("Pulling an image (%s) for the service (%s)\n", srv.Image, srv.Name)
 
 	var wasRunning bool = false
 
@@ -449,6 +449,7 @@ func pullImage(name string, writer io.Writer) error {
 	if len(nameSplit) == 3 {
 		tag = nameSplit[2]
 	}
+	name = nameSplit[0]
 
 	repoSplit := strings.Split(nameSplit[0], "/")
 	if len(repoSplit) > 2 {
@@ -510,7 +511,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	if err != nil {
 		// TODO: better error handling
 		if fmt.Sprintf("%v", err) == "no such image" {
-			fmt.Printf("Pulling image from repository. This could take a second.\n")
+			fmt.Printf("Pulling image (%s) from repository. This could take a second.\n", opts.Config.Image)
 			pullImage(opts.Config.Image, nil)
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
 			if err != nil {

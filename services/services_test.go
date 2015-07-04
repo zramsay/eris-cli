@@ -8,13 +8,11 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/definitions"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-var srv *definitions.ServiceDefinition
+var srv *def.ServiceDefinition
 var erisDir string = path.Join(os.TempDir(), "eris")
 var servName string = "ipfs"
 var hash string
@@ -108,7 +106,7 @@ func TestLoadService(t *testing.T) {
 }
 
 func TestStartServiceRaw(t *testing.T) {
-	e := StartServiceRaw(servName, 1)
+	e := StartServiceRaw(servName, 1, new(def.ServiceOperation))
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -132,7 +130,7 @@ func TestInspectServiceRaw(t *testing.T) {
 }
 
 func TestLogsServiceRaw(t *testing.T) {
-	e := LogsServiceRaw(servName, false, 1)
+	e := LogsServiceRaw(servName, false, "all", 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -200,7 +198,7 @@ func TestNewServiceRaw(t *testing.T) {
 		t.FailNow()
 	}
 
-	e = StartServiceRaw("keys", 1)
+	e = StartServiceRaw("keys", 1, new(def.ServiceOperation))
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()

@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/data"
+	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -19,6 +21,13 @@ var chainName string = "testchain"
 var hash string
 
 func TestMain(m *testing.M) {
+	var err error
+	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	log.SetLoggers(2, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
 	if err := testsInit(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -66,7 +75,7 @@ func TestKnownChainRaw(t *testing.T) {
 
 func TestNewChainRaw(t *testing.T) {
 	genFile := path.Join(common.BlockchainsPath, "genesis", "default.json")
-	e := NewChainRaw("erisdb", chainName, genFile, "", "", 1) // configFile and dir are not needed for the tests.
+	e := NewChainRaw(chainName, genFile, "", "", 1) // configFile and dir are not needed for the tests.
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -99,7 +108,7 @@ func TestLoadChainDefinition(t *testing.T) {
 }
 
 func TestStartChainRaw(t *testing.T) {
-	e := StartChainRaw(chainName, 1)
+	e := StartChainRaw(chainName, 1, new(def.ServiceOperation))
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -109,7 +118,7 @@ func TestStartChainRaw(t *testing.T) {
 }
 
 func TestLogsChainRaw(t *testing.T) {
-	e := LogsChainRaw(chainName, false, 1)
+	e := LogsChainRaw(chainName, false, "all", 1)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -144,6 +153,7 @@ func TestUpdateChainRaw(t *testing.T) {
 	testRunAndExist(t, chainName, true, true)
 }
 
+//
 func TestRenameChainRaw(t *testing.T) {
 	e := RenameChainRaw(chainName, "niahctset")
 	if e != nil {

@@ -27,16 +27,13 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		verbose := cmd.Flags().Lookup("verbose").Changed
-		debug := cmd.Flags().Lookup("debug").Changed
-
 		common.InitErisDir()
-		util.DockerConnect(verbose)
+		util.DockerConnect(Verbose)
 
 		var logLevel int
-		if verbose {
+		if Verbose {
 			logLevel = 1
-		} else if debug {
+		} else if Debug {
 			logLevel = 2
 		}
 		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)

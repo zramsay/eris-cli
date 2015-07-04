@@ -164,7 +164,7 @@ requires = [""]
 func defEdb() string {
 	return `[service]
 name           = "erisdb"
-image          = "eris/erisdb:0.10"
+image          = "eris/erisdb:develop"
 ports          = [ "46656:46656", "46657:46657" ]
 environment    = [ "TMROOT=/home/eris/.eris/blockchains/tendermint" ]
 data_container = true

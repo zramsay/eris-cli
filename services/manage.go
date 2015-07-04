@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -58,7 +59,7 @@ func NewServiceRaw(servName, imageName string) error {
 		Machine:    &def.Machine{},
 	}
 
-	err := WriteServiceDefinitionFile(srvDef, "")
+	err := WriteServiceDefinitionFile(srvDef, path.Join(ServicesPath, servName+".toml"))
 	if err != nil {
 		return err
 	}
