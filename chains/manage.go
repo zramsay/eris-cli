@@ -261,7 +261,7 @@ To find known chains use: eris chains known`)
 }
 
 func EditChainRaw(chainName string, configVals []string) error {
-	chainConf, err := readChainDefinition(chainName)
+	chainConf, err := loadChainDefinition(chainName)
 	if err != nil {
 		return err
 	}

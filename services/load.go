@@ -60,15 +60,7 @@ func IsServiceRunning(service *def.Service, ops *def.ServiceOperation) bool {
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	var serviceConf = viper.New()
-
-	serviceConf.AddConfigPath(dir.ServicesPath)
-	serviceConf.SetConfigName(servName)
-	if err := serviceConf.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error loading service definition for %s: %v", servName, err)
-	}
-
-	return serviceConf, nil
+	return util.LoadViperConfig(dir.ServicesPath, servName, "service")
 }
 
 func servDefFileByServName(servName string) (string, error) {

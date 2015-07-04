@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -48,6 +49,19 @@ func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
 		return &e, err
 	}
 	return &e, nil
+}
+
+func LoadViperConfig(configPath, configName, typ string) (*viper.Viper, error) {
+	var conf = viper.New()
+
+	conf.AddConfigPath(configPath)
+	conf.SetConfigName(configName)
+	err := conf.ReadInConfig()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to load %s config for %s in %s. Viper error: %v", typ, configName, configPath, err)
+	}
+
+	return conf, nil
 }
 
 func LoadGlobalConfig() (*viper.Viper, error) {

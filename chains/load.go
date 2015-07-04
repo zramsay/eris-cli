@@ -23,7 +23,7 @@ import (
 // load service, validate name and data container
 func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, error) {
 	var chain def.Chain
-	chainConf, err := readChainDefinition(chainName)
+	chainConf, err := loadChainDefinition(chainName)
 	if err != nil {
 		return nil, err
 	}
@@ -71,17 +71,8 @@ func IsChainRunning(chain *def.Chain) bool {
 }
 
 // read the config file into viper
-func readChainDefinition(chainName string) (*viper.Viper, error) {
-	var chainConf = viper.New()
-
-	chainConf.AddConfigPath(path.Join(BlockchainsPath))
-	chainConf.SetConfigName(chainName)
-	err := chainConf.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return chainConf, nil
+func loadChainDefinition(chainName string) (*viper.Viper, error) {
+	return util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
 }
 
 // marshal from viper to definitions struct
@@ -92,7 +83,7 @@ func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) error {
 
 // get the config file's path from the chain name
 func configFileNameFromChainName(chainName string) (string, error) {
-	chainConf, err := readChainDefinition(chainName)
+	chainConf, err := loadChainDefinition(chainName)
 	if err != nil {
 		return "", err
 	}
