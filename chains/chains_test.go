@@ -129,42 +129,6 @@ func TestExecChainRaw(t *testing.T) {
 	}
 }
 
-// export is not currently working
-// consistently getting the following error
-// no matter what I do:
-//
-// Post http://0.0.0.0:8080/ipfs/: read tcp 127.0.0.1:8080: connection reset by peer
-//
-// I have no idea why it keeps rerouting 0.0.0.0 -> 127.0.0.1
-// works fine outside of test environment
-// func TestExportRaw(t *testing.T) {
-//   e := ExportServiceRaw(servName)
-//   if e != nil {
-//     fmt.Println(e)
-//     t.Fail()
-//   }
-
-//   // need to grab the hash
-//   hash, e = exportFile(servName)
-//   if e != nil {
-//     fmt.Println(e)
-//     t.Fail()
-//   }
-// }
-
-// import is also not currently working
-//
-// Get http://0.0.0.0:8080/ipfs/Qma8GzJ7dHezN8GfrNzuq9JD199WgbQC7Qz29wwMX7JHf3: net/http: transport closed before response was received
-//
-// suspect this is related to the above testing error
-// func TestImportRaw(t *testing.T) {
-//   e := ImportServiceRaw("sfpi", "ipfs:Qma8GzJ7dHezN8GfrNzuq9JD199WgbQC7Qz29wwMX7JHf3")
-//   if e != nil {
-//     fmt.Println(e)
-//     t.Fail()
-//   }
-// }
-
 func TestUpdateChainRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
@@ -181,7 +145,7 @@ func TestUpdateChainRaw(t *testing.T) {
 }
 
 func TestRenameChainRaw(t *testing.T) {
-	e := RenameChainRaw("testchain", "niahctset")
+	e := RenameChainRaw(chainName, "niahctset")
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -189,16 +153,18 @@ func TestRenameChainRaw(t *testing.T) {
 
 	testRunAndExist(t, "niahctset", true, true)
 
-	e = RenameChainRaw("niahctset", "testchain")
+	e = RenameChainRaw("niahctset", chainName)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "testchain", true, true)
+	testRunAndExist(t, chainName, true, true)
 }
 
 func TestKillChainRaw(t *testing.T) {
+	testRunAndExist(t, chainName, true, true)
+
 	e := KillChainRaw(chainName, false, false, 1)
 	if e != nil {
 		fmt.Println(e)
