@@ -96,6 +96,7 @@ var Tail string
 var Rm bool
 var RmD bool
 var Lines int
+var PublishAllPorts bool
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

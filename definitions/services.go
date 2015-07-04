@@ -55,4 +55,5 @@ type ServiceOperation struct {
 	Attach            bool   `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	AppName           string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DockerHostConn    string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	PublishAllPorts   bool   `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 }

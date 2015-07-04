@@ -653,7 +653,7 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 		HostConfig: &docker.HostConfig{
 			Binds:           srv.Volumes,
 			Links:           srv.Links,
-			PublishAllPorts: false,
+			PublishAllPorts: ops.PublishAllPorts,
 			Privileged:      ops.Privileged,
 			ReadonlyRootfs:  false,
 			DNS:             srv.DNS,

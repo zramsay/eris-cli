@@ -6,9 +6,10 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/util"
 )
 
-func StartServiceRaw(servName string, containerNumber int) error {
+func StartServiceRaw(servName string, containerNumber int, ops *def.ServiceOperation) error {
 	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
@@ -17,6 +18,7 @@ func StartServiceRaw(servName string, containerNumber int) error {
 	if IsServiceRunning(service.Service, service.Operations) {
 		logger.Infoln("Service already started. Skipping", servName)
 	} else {
+		util.OverwriteOps(service.Operations, ops)
 		return StartServiceByService(service.Service, service.Operations)
 	}
 
@@ -78,7 +80,8 @@ func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bo
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
-func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, num int, start func(string, int) error) {
+func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, ops *def.ServiceOperation, start func(string, int, *def.ServiceOperation) error) {
+	num := ops.ContainerNumber
 	var skip bool
 	for _, srv := range group {
 
@@ -103,7 +106,7 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 		go func(s string) {
 			logger.Debugln("starting service", s)
 
-			if err := start(s, num); err != nil {
+			if err := start(s, num, ops); err != nil {
 				logger.Debugln("error starting service", s, err)
 				ch <- err
 			}
@@ -116,7 +119,7 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 
 func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
-	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", ops.ContainerNumber, StartServiceRaw)
+	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", ops, StartServiceRaw)
 	go func() {
 		wg.Wait()
 		ch <- nil

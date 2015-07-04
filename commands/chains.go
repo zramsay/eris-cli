@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -281,9 +282,12 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 
+	chainsStart.PersistentFlags().BoolVarP(&PublishAllPorts, "publish", "p", false, "publish all ports")
+
 	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&ChainID, "id", "", "", "id of the chain to fetch")
+	chainsInstall.PersistentFlags().BoolVarP(&PublishAllPorts, "publish", "p", false, "publish all ports")
 
 	chainsLogs.Flags().BoolVarP(&Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&Tail, "tail", "t", "all", "number of lines to show from end of logs")
@@ -307,7 +311,7 @@ func StartChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.StartChainRaw(args[0], ContainerNumber))
+	IfExit(chns.StartChainRaw(args[0], ContainerNumber, &def.ServiceOperation{PublishAllPorts: PublishAllPorts}))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
@@ -358,7 +362,7 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	// double as the chainID, or you want a local reference name for the chain, so you specify
 	// the chainID with a flag and give your local reference name as the arg
 	chainName := args[0]
-	IfExit(chns.InstallChainRaw(ChainID, chainName, ConfigFile, DirToCopy, ContainerNumber))
+	IfExit(chns.InstallChainRaw(ChainID, chainName, ConfigFile, DirToCopy, PublishAllPorts, ContainerNumber))
 }
 
 // create a new chain

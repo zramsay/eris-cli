@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -274,7 +275,7 @@ func StartService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.StartServiceRaw(args[0], ContainerNumber))
+	IfExit(srv.StartServiceRaw(args[0], ContainerNumber, &def.ServiceOperation{}))
 }
 
 func LogService(cmd *cobra.Command, args []string) {

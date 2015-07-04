@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"runtime"
 
+	def "github.com/eris-ltd/eris-cli/definitions"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
@@ -103,4 +105,11 @@ func ParseContainerNames(typ string, running bool) []string {
 
 	return containers
 
+}
+
+// need to be alot smarter with this
+func OverwriteOps(opsBase, opsOver *def.ServiceOperation) {
+	if opsOver.PublishAllPorts {
+		opsBase.PublishAllPorts = true
+	}
 }

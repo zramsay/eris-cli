@@ -3,11 +3,13 @@ package chains
 import (
 	"fmt"
 	"github.com/eris-ltd/eris-cli/data"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 )
 
-func StartChainRaw(chainName string, containerNumber int) error {
+func StartChainRaw(chainName string, containerNumber int, ops *def.ServiceOperation) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
@@ -16,6 +18,7 @@ func StartChainRaw(chainName string, containerNumber int) error {
 		logger.Infoln("Chain already started. Skipping.")
 	} else {
 		chain.Service.Command = ErisChainStart
+		util.OverwriteOps(chain.Operations, ops)
 		chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 		if err := services.StartServiceByService(chain.Service, chain.Operations); err != nil {
 			return err

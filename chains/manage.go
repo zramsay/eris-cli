@@ -64,7 +64,7 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int) (err error) {
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
 	// chainName is mandatory
 	if chainName == "" {
 		return fmt.Errorf("setupChain requires a chainName")
@@ -148,6 +148,8 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 		return err
 	}
 
+	chain.Operations.PublishAllPorts = publishAllPorts
+
 	// cmd should be "new" or "install"
 	chain.Service.Command = cmd
 
@@ -183,11 +185,11 @@ func NewChainRaw(name, genesis, config, dir string, containerNumber int) (err er
 		}
 	}
 
-	return setupChain(chainID, name, ErisChainNew, dir, genesis, config, containerNumber)
+	return setupChain(chainID, name, ErisChainNew, dir, genesis, config, containerNumber, false)
 }
 
-func InstallChainRaw(chainID, chainName, config, dir string, containerNumber int) error {
-	return setupChain(chainID, chainName, ErisChainInstall, dir, "", config, containerNumber)
+func InstallChainRaw(chainID, chainName, config, dir string, publishAllPorts bool, containerNumber int) error {
+	return setupChain(chainID, chainName, ErisChainInstall, dir, "", config, containerNumber, publishAllPorts)
 }
 
 func ImportChainRaw(chainName, path string) error {
