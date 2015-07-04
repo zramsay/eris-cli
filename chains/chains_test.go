@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 
-	var e1, e2 error
+	var e1, e2, e3 error
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e1 = data.RmDataRaw(chainName, 1)
 		if e1 != nil {
@@ -34,9 +34,11 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	e3 := testsTearDown()
-	if e3 != nil {
-		fmt.Println(e3)
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		e3 = testsTearDown()
+		if e3 != nil {
+			fmt.Println(e3)
+		}
 	}
 
 	if e1 != nil || e2 != nil || e3 != nil {

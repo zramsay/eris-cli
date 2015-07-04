@@ -13,7 +13,7 @@ dependencies:
     - sudo service docker start
     - docker pull eris/ipfs
     - docker pull eris/keys
-    - docker pull eris/mint
+    - docker pull eris/erisdb:0.10
 
   override:
     - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"

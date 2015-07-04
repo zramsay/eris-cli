@@ -24,9 +24,11 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 
-	if err := testsTearDown(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		if err := testsTearDown(); err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 
 	os.Exit(exitCode)
