@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestKnownRaw(t *testing.T) {
+func TestKnownServiceRaw(t *testing.T) {
 	k := ListKnownRaw()
 
 	if len(k) != 2 {
@@ -115,7 +115,7 @@ func TestStartServiceRaw(t *testing.T) {
 	testRunAndExist(t, servName, 1, true, true)
 }
 
-func TestInspectRaw(t *testing.T) {
+func TestInspectServiceRaw(t *testing.T) {
 	e := InspectServiceRaw(servName, "name", 1)
 	if e != nil {
 		fmt.Println(e)
@@ -129,7 +129,7 @@ func TestInspectRaw(t *testing.T) {
 	}
 }
 
-func TestLogsRaw(t *testing.T) {
+func TestLogsServiceRaw(t *testing.T) {
 	e := LogsServiceRaw(servName, false, 1)
 	if e != nil {
 		fmt.Println(e)
@@ -137,7 +137,7 @@ func TestLogsRaw(t *testing.T) {
 	}
 }
 
-func TestExecRaw(t *testing.T) {
+func TestExecServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		fmt.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
@@ -158,7 +158,7 @@ func TestExecRaw(t *testing.T) {
 //
 // I have no idea why it keeps rerouting 0.0.0.0 -> 127.0.0.1
 // works fine outside of test environment
-// func TestExportRaw(t *testing.T) {
+// func TestExportServiceRaw(t *testing.T) {
 //   e := ExportServiceRaw(servName)
 //   if e != nil {
 //     fmt.Println(e)
@@ -178,7 +178,7 @@ func TestExecRaw(t *testing.T) {
 // Get http://0.0.0.0:8080/ipfs/Qma8GzJ7dHezN8GfrNzuq9JD199WgbQC7Qz29wwMX7JHf3: net/http: transport closed before response was received
 //
 // suspect this is related to the above testing error
-// func TestImportRaw(t *testing.T) {
+// func TestImportServiceRaw(t *testing.T) {
 //   e := ImportServiceRaw("sfpi", "ipfs:Qma8GzJ7dHezN8GfrNzuq9JD199WgbQC7Qz29wwMX7JHf3")
 //   if e != nil {
 //     fmt.Println(e)
@@ -186,7 +186,7 @@ func TestExecRaw(t *testing.T) {
 //   }
 // }
 
-func TestUpdateRaw(t *testing.T) {
+func TestUpdateServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -201,7 +201,7 @@ func TestUpdateRaw(t *testing.T) {
 	testRunAndExist(t, servName, 1, true, true)
 }
 
-func TestKillRaw(t *testing.T) {
+func TestKillServiceRaw(t *testing.T) {
 	e := KillServiceRaw(true, false, false, 1, servName)
 	if e != nil {
 		fmt.Println(e)
@@ -211,7 +211,7 @@ func TestKillRaw(t *testing.T) {
 	testRunAndExist(t, servName, 1, true, false)
 }
 
-func TestRmRaw(t *testing.T) {
+func TestRmServiceRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -227,7 +227,7 @@ func TestRmRaw(t *testing.T) {
 	testRunAndExist(t, servName, 1, false, false)
 }
 
-func TestNewRaw(t *testing.T) {
+func TestNewServiceRaw(t *testing.T) {
 	e := NewServiceRaw("keys", "eris/keys")
 	if e != nil {
 		fmt.Println(e)
@@ -243,7 +243,7 @@ func TestNewRaw(t *testing.T) {
 	testRunAndExist(t, "keys", 1, true, true)
 }
 
-func TestRenameRaw(t *testing.T) {
+func TestRenameServiceRaw(t *testing.T) {
 	e := RenameServiceRaw("keys", "syek", 1)
 	if e != nil {
 		fmt.Println(e)
@@ -262,7 +262,7 @@ func TestRenameRaw(t *testing.T) {
 }
 
 // tests remove+kill
-func TestKillRawPostNew(t *testing.T) {
+func TestKillServiceRawPostNew(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		fmt.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -282,11 +282,7 @@ func testsInit() error {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		common.ErisRoot = erisDir
-		common.ServicesPath = path.Join(common.ErisRoot, "services")
-		common.BlockchainsPath = path.Join(common.ErisRoot, "blockchains")
-	}
+	util.ChangeErisDir(erisDir)
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot

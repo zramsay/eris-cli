@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -99,6 +100,31 @@ func GetConfigValue(key string) string {
 	default:
 		return ""
 	}
+}
+
+func ChangeErisDir(erisDir string) {
+	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		return
+	}
+
+	dir.ErisRoot = erisDir
+
+	// Major Directories
+	dir.ActionsPath = path.Join(dir.ErisRoot, "actions")
+	dir.BlockchainsPath = path.Join(dir.ErisRoot, "blockchains")
+	dir.DataContainersPath = path.Join(dir.ErisRoot, "data")
+	dir.DappsPath = path.Join(dir.ErisRoot, "dapps")
+	dir.FilesPath = path.Join(dir.ErisRoot, "files")
+	dir.KeysPath = path.Join(dir.ErisRoot, "keys")
+	dir.LanguagesPath = path.Join(dir.ErisRoot, "languages")
+	dir.ServicesPath = path.Join(dir.ErisRoot, "services")
+	dir.ScratchPath = path.Join(dir.ErisRoot, "scratch")
+
+	// Scratch Directories (globally coordinated)
+	dir.EpmScratchPath = path.Join(dir.ScratchPath, "epm")
+	dir.LllcScratchPath = path.Join(dir.ScratchPath, "lllc")
+	dir.SolcScratchPath = path.Join(dir.ScratchPath, "sol")
+	dir.SerpScratchPath = path.Join(dir.ScratchPath, "ser")
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {

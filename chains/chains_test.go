@@ -226,11 +226,7 @@ func testsInit() error {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		common.ErisRoot = erisDir
-		common.ServicesPath = path.Join(common.ErisRoot, "services")
-		common.BlockchainsPath = path.Join(common.ErisRoot, "blockchains")
-	}
+	util.ChangeErisDir(erisDir)
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot

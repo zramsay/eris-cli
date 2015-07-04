@@ -2,7 +2,8 @@
 set -e
 
 export TEST_IN_CIRCLE=true
-cd services && go test -v
+cd actions && go test -v
 cd ../chains && go test -v
+cd ../services && go test -v
 
 cd ../util && go test -v

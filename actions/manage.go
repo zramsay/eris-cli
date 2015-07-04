@@ -7,105 +7,24 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-func Get(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		logger.Errorln(err)
-		return
+func NewActionRaw(actionName []string) error {
+	name := strings.Join(actionName, "_")
+	path := filepath.Join(ActionsPath, name)
+	act := MockAction(name)
+	if err := WriteActionDefinitionFile(act, path); err != nil {
+		return err
 	}
-	if len(args) != 2 {
-		logger.Println("Please give me: eris actions get [name] [location]")
-		return
-	}
-
-	if err := ImportActionRaw(args[0], args[1]); err != nil {
-		logger.Errorln(err)
-		return
-	}
+	return nil
 }
 
-func New(cmd *cobra.Command, args []string) {
-	err := checkActionGiven(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-
-	err = EditActionRaw(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-}
-
-func ListGlobal() {
-
-}
-
-func ListProject() {
-
-}
-
-func ListKnown() {
-	actions := ListKnownRaw()
-	for _, s := range actions {
-		logger.Println(strings.Replace(s, "_", " ", -1))
-	}
-}
-
-func Edit(args []string) {
-	err := checkActionGiven(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-
-	err = EditActionRaw(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-}
-
-func Rename(cmd *cobra.Command, args []string) {
-	err := checkActionGiven(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-	if len(args) != 2 {
-		logger.Println("Please give me: eris actions rename \"old action name\" \"new action name\"")
-		return
-	}
-
-	err = RenameActionRaw(args[0], args[1])
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-}
-
-func Rm(cmd *cobra.Command, args []string) {
-	err := checkActionGiven(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-
-	err = RmActionRaw(args, cmd.Flags().Lookup("force").Changed)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-}
-
-func ImportActionRaw(actionName, servPath string) error {
-	fileName := filepath.Join(ActionsPath, actionName)
+func ImportActionRaw(actionName string, servPath string) error {
+	fileName := filepath.Join(ActionsPath, strings.Replace(actionName, " ", "_", -1))
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -135,7 +54,39 @@ func ImportActionRaw(actionName, servPath string) error {
 	return nil
 }
 
-func NewActionRaw(actionName []string) error {
+func ExportActionRaw(actionName []string) error {
+	action := strings.Join(actionName, "_")
+	_, _, err := LoadActionDefinition(actionName)
+	if err != nil {
+		return err
+	}
+
+	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
+	if err != nil {
+		return err
+	}
+
+	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
+		logger.Infoln("IPFS is running. Adding now.")
+
+		hash, err := exportFile(action)
+		if err != nil {
+			return err
+		}
+		logger.Println(hash)
+	} else {
+		logger.Infoln("IPFS is not running. Starting now.")
+		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
+		if err != nil {
+			return err
+		}
+
+		hash, err := exportFile(action)
+		if err != nil {
+			return err
+		}
+		logger.Println(hash)
+	}
 	return nil
 }
 
@@ -207,6 +158,7 @@ func ListKnownRaw() []string {
 }
 
 func RmActionRaw(act []string, force bool) error {
+	// TODO: add interactive check if no force flag
 	if force {
 		actName := strings.Join(act, "_")
 		oldFile, err := configFileNameFromActionName(actName)
@@ -217,4 +169,24 @@ func RmActionRaw(act []string, force bool) error {
 		os.Remove(oldFile)
 	}
 	return nil
+}
+
+func exportFile(actionName string) (string, error) {
+	fileName, err := configFileNameFromActionName(actionName)
+	if err != nil {
+		return "", err
+	}
+
+	var hash string
+	if logger.Level > 0 {
+		hash, err = util.SendToIPFS(fileName, logger.Writer)
+	} else {
+		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }

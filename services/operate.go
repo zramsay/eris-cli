@@ -86,8 +86,8 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 			continue
 		}
 
-		skip = false
 		// XXX: is this redundant with what happens in StartServiceRaw ?
+		skip = false
 		for _, run := range running {
 			if srv == run {
 				logger.Infof("%s already started, skipping: %s\n", name, srv)
@@ -99,13 +99,17 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 		}
 
 		wg.Add(1)
+
 		go func(s string) {
 			logger.Debugln("starting service", s)
+
 			if err := start(s, num); err != nil {
 				logger.Debugln("error starting service", s, err)
 				ch <- err
 			}
+
 			wg.Done()
+
 		}(srv)
 	}
 }

@@ -45,6 +45,7 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		mar = append(mar, '\n')
 		writer.Write(mar)
 	default:
+		writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("[service]\n"))

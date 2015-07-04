@@ -8,6 +8,8 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
@@ -17,12 +19,13 @@ import (
 func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 	// writer := os.Stdout
 
-	if filepath.Ext(fileName) == "" {
-		fileName = strings.Replace(actDef.Name, " ", "_", -1) + ".toml"
-	}
-
 	if strings.Contains(fileName, " ") {
 		fileName = strings.Replace(actDef.Name, " ", "_", -1)
+	}
+
+	if filepath.Ext(fileName) == "" {
+		fileName = actDef.Name + ".toml"
+		fileName = filepath.Join(ActionsPath, fileName)
 	}
 
 	writer, err := os.Create(fileName)
@@ -47,6 +50,7 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 		mar = append(mar, '\n')
 		writer.Write(mar)
 	default:
+		writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + actDef.Name + "\"\n"))

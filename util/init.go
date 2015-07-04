@@ -11,10 +11,8 @@ import (
 
 func Initialize(toPull, verbose bool) error {
 	if _, err := os.Stat(common.ErisRoot); err != nil {
-		err := common.InitErisDir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		if err := common.InitErisDir(); err != nil {
+			return fmt.Errorf("Could not Initialize the Eris Root Directory.\n%s\n", err)
 		}
 	} else {
 		if verbose {
@@ -23,7 +21,7 @@ func Initialize(toPull, verbose bool) error {
 	}
 
 	if err := InitDefaultServices(toPull, verbose); err != nil {
-		return fmt.Errorf("Could not instantiate default services: %s\n", err)
+		return fmt.Errorf("Could not instantiate default services.\n%s\n", err)
 	}
 
 	if verbose {
@@ -40,31 +38,17 @@ func InitDefaultServices(toPull, verbose bool) error {
 			if verbose {
 				fmt.Println("Using default defs.")
 			}
-
-			if e3 := ipfsDef(); e3 != nil {
-				return fmt.Errorf("Cannot pull: %s. Cannot add ipfs: %s.\n", err, e3)
+			if err2 := dropDefaults(); err2 != nil {
+				return fmt.Errorf("Cannot pull: %s. %s.\n", err, err2)
 			}
-			if e4 := edbDef(); e4 != nil {
-				return fmt.Errorf("Cannot pull: %s. Cannot add erisdb: %s.\n", err, e4)
-			}
-			if e5 := genDef(); e5 != nil {
-				return fmt.Errorf("Cannot pull: %s. Cannot add default genesis: %s.\n", err, e5)
-			}
-
 		} else {
 			if err2 := pullRepo("eris-actions", common.ActionsPath, verbose); err2 != nil {
 				return fmt.Errorf("Cannot pull actions: %s.\n", err2)
 			}
 		}
 	} else {
-		if err := ipfsDef(); err != nil {
-			return fmt.Errorf("Cannot add ipfs: %s.\n", err)
-		}
-		if err := edbDef(); err != nil {
-			return fmt.Errorf("Cannot add erisdb: %s.\n", err)
-		}
-		if err := genDef(); err != nil {
-			return fmt.Errorf("Cannot add default genesis: %s.\n", err)
+		if err := dropDefaults(); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -79,6 +63,22 @@ func pullRepo(name, location string, verbose bool) error {
 	}
 	if err := c.Run(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func dropDefaults() error {
+	if err := ipfsDef(); err != nil {
+		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
+	}
+	if err := edbDef(); err != nil {
+		return fmt.Errorf("Cannot add erisdb: %s.\n", err)
+	}
+	if err := genDef(); err != nil {
+		return fmt.Errorf("Cannot add default genesis: %s.\n", err)
+	}
+	if err := actDef(); err != nil {
+		return fmt.Errorf("Cannot add default action: %s.\n", err)
 	}
 	return nil
 }
@@ -126,6 +126,20 @@ func genDef() error {
 	return nil
 }
 
+func actDef() error {
+	if err := os.MkdirAll(common.ActionsPath, 0777); err != nil {
+		return err
+	}
+	writer, err := os.Create(filepath.Join(common.ActionsPath, "do_not_use.toml"))
+	defer writer.Close()
+	if err != nil {
+		return err
+	}
+	act := defAct()
+	writer.Write([]byte(act))
+	return nil
+}
+
 func defIpfs() string {
 	return `[service]
 name = "ipfs"
@@ -150,7 +164,7 @@ requires = [""]
 func defEdb() string {
 	return `[service]
 name           = "erisdb"
-image          = "eris/mint"
+image          = "eris/erisdb:0.10"
 ports          = [ "46656:46656", "46657:46657" ]
 environment    = [ "TMROOT=/home/eris/.eris/blockchains/tendermint" ]
 data_container = true
@@ -287,5 +301,35 @@ func defGen() string {
     }
   ]
 }
+`
+}
+
+func defAct() string {
+	return `name = "do not use"
+services = [ "ipfs" ]
+chains = [ "" ]
+steps = [
+  "printenv",
+  "eris services export ipfs",
+  "eris services -v import 1234 ipfs:$prev",
+  "eris services known",
+  "eris services ls",
+  "eris services ps",
+  "printenv"
+]
+
+[environment]
+HELLO = "WORLD"
+
+[maintainer]
+name = "Eris Industries"
+email = "support@erisindustries.com"
+
+[location]
+repository = "github.com/eris-ltd/eris-cli"
+
+[machine]
+include = ["docker"]
+requires = [""]
 `
 }

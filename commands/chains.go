@@ -41,8 +41,8 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsInspect)
 	Chains.AddCommand(chainsExec)
-	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsStop)
+	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
@@ -99,7 +99,7 @@ var chainsImport = &cobra.Command{
 By default, Eris will import from ipfs.
 
 To list known chains use: [eris chains known].`,
-	Example: "  eris chains 2gather ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+	Example: "  eris chains import 2gather ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run: func(cmd *cobra.Command, args []string) {
 		ImportChain(cmd, args)
 	},
@@ -471,7 +471,7 @@ func RmChain(cmd *cobra.Command, args []string) {
 }
 
 func checkChainGiven(args []string) error {
-	if len(args) != 1 {
+	if len(args) == 0 {
 		return fmt.Errorf("Please provide a chain")
 	}
 	return nil

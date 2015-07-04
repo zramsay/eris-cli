@@ -7,6 +7,8 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
@@ -18,6 +20,7 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 
 	if filepath.Ext(fileName) == "" {
 		fileName = chainDef.Name + ".toml"
+		fileName = filepath.Join(BlockchainsPath, fileName)
 	}
 
 	writer, err := os.Create(fileName)
@@ -42,6 +45,7 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 		mar = append(mar, '\n')
 		writer.Write(mar)
 	default:
+		writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))

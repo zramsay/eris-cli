@@ -27,6 +27,16 @@ func LoadActionDefinition(act []string) (*def.Action, []string, error) {
 	return &action, actionVars, nil
 }
 
+func MockAction(actionName string) *def.Action {
+	return &def.Action{
+		Name:       actionName,
+		Maintainer: &def.Maintainer{},
+		Location:   &def.Location{},
+		Machine:    &def.Machine{},
+		Operations: &def.ServiceOperation{},
+	}
+}
+
 func fixVars(act []string) ([]string, []string) {
 	var actionVars []string
 	var varList bool
@@ -50,9 +60,6 @@ func readActionDefinition(actionName string) (*viper.Viper, error) {
 	actionConf.AddConfigPath(dir.ActionsPath)
 	actionConf.SetConfigName(actionName)
 	actionConf.ReadInConfig()
-	// if err != nil {
-	//   return nil, err
-	// }
 
 	return actionConf, nil
 }
@@ -73,11 +80,4 @@ func configFileNameFromActionName(actionName string) (string, error) {
 		return "", err
 	}
 	return actionConf.ConfigFileUsed(), nil
-}
-
-func checkActionGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
-	}
-	return nil
 }

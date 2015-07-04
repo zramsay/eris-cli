@@ -10,22 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/chains"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
-
-func Do(cmd *cobra.Command, args []string) {
-	action, actionVars, err := LoadActionDefinition(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-	err = DoRaw(action, actionVars, cmd.Flags().Lookup("quiet").Changed)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-}
 
 func DoRaw(action *def.Action, actionVars []string, noOutput bool) error {
 	err := StartServicesAndChains(action)
@@ -48,7 +33,7 @@ func StartServicesAndChains(action *def.Action) error {
 	services.StartGroup(ch, wg, action.Services, runningServices, "service", 1, services.StartServiceRaw) // TODO:CNUM
 
 	runningChains := chains.ListRunningRaw()
-	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", 1, chains.StartChainRaw)
+	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", 1, chains.StartChainRaw) // TODO:CNUM
 
 	go func() {
 		wg.Wait()
