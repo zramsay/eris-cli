@@ -65,7 +65,7 @@ func LoadGlobalConfig() (*viper.Viper, error) {
 
 func SetDefaults() (*viper.Viper, error) {
 	var globalConfig = viper.New()
-	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0:8080")
+	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
 	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
 	return globalConfig, nil
 }
