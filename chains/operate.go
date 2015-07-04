@@ -24,12 +24,12 @@ func StartChainRaw(chainName string, containerNumber int) error {
 	return nil
 }
 
-func LogsChainRaw(chainName string, follow bool, containerNumber int) error {
+func LogsChainRaw(chainName string, follow bool, tail string, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
-	err = services.LogsServiceByService(chain.Service, chain.Operations, follow)
+	err = services.LogsServiceByService(chain.Service, chain.Operations, follow, tail)
 	if err != nil {
 		return err
 	}

@@ -92,6 +92,7 @@ var SkipPull bool
 var Quiet bool
 var All bool
 var Follow bool
+var Tail string
 var Rm bool
 var RmD bool
 var Lines int

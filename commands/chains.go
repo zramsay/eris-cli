@@ -285,7 +285,8 @@ func addChainsFlags() {
 	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&ChainID, "id", "", "", "id of the chain to fetch")
 
-	chainsLogs.Flags().BoolVarP(&Follow, "tail", "t", false, "follow logs, like tail -f")
+	chainsLogs.Flags().BoolVarP(&Follow, "follow", "f", false, "follow logs, like tail -f")
+	chainsLogs.Flags().StringVarP(&Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
 	chainsRemove.Flags().BoolVarP(&Force, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers also")
@@ -314,7 +315,7 @@ func LogChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.LogsChainRaw(args[0], Follow, ContainerNumber))
+	IfExit(chns.LogsChainRaw(args[0], Follow, Tail, ContainerNumber))
 }
 
 func ExecChain(cmd *cobra.Command, args []string) {

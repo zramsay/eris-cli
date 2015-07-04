@@ -87,7 +87,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 			return err
 		}
 	} else {
-		if err := logsContainer(id_main, true); err != nil {
+		if err := logsContainer(id_main, true, "all"); err != nil {
 			return err
 		}
 	}
@@ -189,7 +189,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 		doneLogs := make(chan struct{}, 1)
 		go func() {
 			logger.Debugln("following logs")
-			if err := logsContainer(id_main, true); err != nil {
+			if err := logsContainer(id_main, true, "all"); err != nil {
 				logger.Errorf("Unable to follow logs for %s\n", id_main)
 			}
 			logger.Debugln("done following logs")
@@ -352,10 +352,10 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
-func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool) error {
+func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool, tail string) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Logging Service ID: " + service.ID)
-		err := logsContainer(service.ID, follow)
+		err := logsContainer(service.ID, follow, tail)
 		if err != nil {
 			return err
 		}
@@ -555,21 +555,17 @@ func waitContainer(id string) error {
 	return err
 }
 
-func logsContainer(id string, tail bool) error {
+func logsContainer(id string, follow bool, tail string) error {
 	opts := docker.LogsOptions{
 		Container:    id,
-		Follow:       false,
+		Follow:       follow,
+		Tail:         tail,
 		Stdout:       true,
 		Stderr:       true,
 		Timestamps:   false,
 		OutputStream: os.Stdout,
 		ErrorStream:  os.Stderr,
 		RawTerminal:  true, // Usually true when the container contains a TTY.
-	}
-
-	if tail {
-		opts.Tail = "all"
-		opts.Follow = true
 	}
 
 	if err := util.DockerClient.Logs(opts); err != nil {

@@ -23,12 +23,12 @@ func StartServiceRaw(servName string, containerNumber int) error {
 	return nil
 }
 
-func LogsServiceRaw(servName string, follow bool, containerNumber int) error {
+func LogsServiceRaw(servName string, follow bool, tail string, containerNumber int) error {
 	service, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
-	return LogsServiceByService(service.Service, service.Operations, follow)
+	return LogsServiceByService(service.Service, service.Operations, follow, tail)
 }
 
 func ExecServiceRaw(name string, args []string, attach bool, containerNumber int) error {
@@ -73,8 +73,8 @@ func KillServiceRaw(all, rm, rmData bool, containerNumber int, servNames ...stri
 	return nil
 }
 
-func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bool) error {
-	return perform.DockerLogs(srv, ops, follow)
+func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bool, tail string) error {
+	return perform.DockerLogs(srv, ops, follow, tail)
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong

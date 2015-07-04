@@ -251,7 +251,8 @@ Use the --force flag to also remove the service definition file.`,
 // cli flags
 
 func addServicesFlags() {
-	servicesLogs.Flags().BoolVarP(&Follow, "tail", "t", false, "follow logs, like tail -f")
+	servicesLogs.Flags().BoolVarP(&Follow, "follow", "f", false, "follow logs")
+	servicesLogs.Flags().StringVarP(&Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
 	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 
@@ -281,7 +282,7 @@ func LogService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.LogsServiceRaw(args[0], Follow, ContainerNumber))
+	IfExit(srv.LogsServiceRaw(args[0], Follow, Tail, ContainerNumber))
 }
 
 func ExecService(cmd *cobra.Command, args []string) {
