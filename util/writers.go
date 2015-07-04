@@ -20,38 +20,41 @@ func Untar(reader io.Reader, name, dest string) error {
 func SendToIPFS(fileName string, w io.Writer) (string, error) {
 	url := IPFSBaseUrl()
 	w.Write([]byte("POSTing file to IPFS. File -> " + fileName + "\n"))
-	return UploadFromFileToUrl(url, fileName, w)
+	head, err := UploadFromFileToUrl(url, fileName, w)
+	if err != nil {
+		return "", err
+	}
+	hash, ok := head["Ipfs-Hash"]
+	if !ok || hash[0] == "" {
+		return "", fmt.Errorf("No hash returned")
+	}
+	return hash[0], nil
 }
 
-func UploadFromFileToUrl(url, fileName string, w io.Writer) (string, error) {
+func UploadFromFileToUrl(url, fileName string, w io.Writer) (http.Header, error) {
 	if url == "" {
-		return "", fmt.Errorf("To upload from a file to a url, I need a URL.")
+		return http.Header{}, fmt.Errorf("To upload from a file to a url, I need a URL.")
 	}
 	w.Write([]byte("Uploading " + fileName + " to " + url + "\n"))
 
 	input, err := os.Open(fileName)
 	if err != nil {
-		return "", err
+		return http.Header{}, err
 	}
 	defer input.Close()
 
 	request, err := http.NewRequest("POST", url, input)
 	if err != nil {
-		return "", err
+		return http.Header{}, err
 	}
 	request.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		return "", err
+		return http.Header{}, err
 	}
 	defer response.Body.Close()
 
-	hash, ok := response.Header["Ipfs-Hash"]
-	if !ok || hash[0] == "" {
-		return "", fmt.Errorf("No hash returned")
-	}
-
-	return hash[0], nil
+	return response.Header, nil
 }
