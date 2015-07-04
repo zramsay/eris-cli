@@ -46,6 +46,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
+	Chains.AddCommand(chainsGraduate)
 	addChainsFlags()
 }
 
@@ -252,6 +253,15 @@ Functionally this command will perform the following sequence:
 by the update command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		UpdateChain(cmd, args)
+	},
+}
+
+var chainsGraduate = &cobra.Command{
+	Use:   "graduate",
+	Short: "Graduates a chain to a service.",
+	Long:  `Graduates a chain to a service by laying a service definition file with the chain_id`,
+	Run: func(cmd *cobra.Command, args []string) {
+		GraduateChain(cmd, args)
 	},
 }
 
@@ -465,6 +475,14 @@ func RmChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	IfExit(chns.RmChainRaw(args[0], RmD, Force, ContainerNumber))
+}
+
+func GraduateChain(cmd *cobra.Command, args []string) {
+	if err := checkChainGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(chns.GraduateChainRaw(args[0]))
 }
 
 func checkChainGiven(args []string) error {

@@ -406,6 +406,39 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 	return nil
 }
 
+func ServiceDefFromChain(chain *def.Chain) *def.ServiceDefinition {
+	chainID := chain.ChainID
+	srv := chain.Service
+
+	srv.Name = chainID
+	// set the main command
+	srv.Command = ErisChainInstall
+	// TODO mint vs. erisdb (in terms of rpc)
+	// chain.Service.Environment = append(chain.Service.Environment, "CHAIN_TYPE=mint")
+	srv.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
+	return &def.ServiceDefinition{
+		Service:    srv,
+		Maintainer: chain.Maintainer,
+		Location:   chain.Location, // TODO
+		Machine:    chain.Machine,
+	}
+}
+
+func GraduateChainRaw(chainName string) error {
+	chain, err := LoadChainDefinition(chainName, 1)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(chain)
+	serv := ServiceDefFromChain(chain)
+	fmt.Println(serv)
+	if err := services.WriteServiceDefinitionFile(serv, path.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
+		return err
+	}
+	return nil
+}
+
 func exportFile(chainName string) (string, error) {
 	fileName, err := configFileNameFromChainName(chainName)
 	if err != nil {

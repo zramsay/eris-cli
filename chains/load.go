@@ -50,6 +50,10 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 		mergeChainAndService(&chain, serv.Service)
 	}
 
+	chain.Maintainer = serv.Maintainer
+	chain.Location = serv.Location
+	chain.Machine = serv.Machine
+
 	chain.Operations.ContainerNumber = containerNumber
 	checkChainHasUniqueName(&chain)
 	checkDataContainerTurnedOn(&chain, chainConf)

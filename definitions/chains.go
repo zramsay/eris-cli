@@ -8,5 +8,6 @@ type Chain struct {
 	Service    *Service          `json:"service,omitempty" yaml:"service,omitempty" toml:"service,omitempty"`
 	Maintainer *Maintainer       `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
 	Location   *Location         `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+	Machine    *Machine          `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
 	Operations *ServiceOperation `json:"operations" yaml:"operations" toml:"operations"`
 }
