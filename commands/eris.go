@@ -27,9 +27,6 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		common.InitErisDir()
-		util.DockerConnect(Verbose)
-
 		var logLevel int
 		if Verbose {
 			logLevel = 1
@@ -37,6 +34,9 @@ Complete documentation is available at https://docs.erisindustries.com
 			logLevel = 2
 		}
 		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
+
+		common.InitErisDir()
+		util.DockerConnect(Verbose)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := util.SaveGlobalConfig(util.GlobalConfig.Config)

@@ -7,6 +7,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
+// XXX: should this be moved into utils? also we have actions.MockAction(actionName string)
+//   which should probably be treated similarly.
 func MockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
 	srv := &def.Service{}
 	ops := &def.ServiceOperation{}

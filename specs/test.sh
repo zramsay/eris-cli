@@ -14,6 +14,8 @@ cd actions && go test -v
 passed Actions
 cd ../chains && go test -v
 passed Chains
+cd ../data && go test -v
+passed Data
 cd ../services && go test -v
 passed Services
 

@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"runtime"
 
@@ -20,9 +21,7 @@ func DockerConnect(verbose bool) {
 	if runtime.GOOS == "linux" {
 		endpoint := "unix:///var/run/docker.sock"
 
-		if verbose {
-			fmt.Println("Connecting to the Docker Client via:", endpoint)
-		}
+		logger.Debugln("Connecting to the Docker Client via:", endpoint)
 
 		DockerClient, err = docker.NewClient(endpoint)
 		if err != nil {
@@ -31,19 +30,16 @@ func DockerConnect(verbose bool) {
 			os.Exit(1)
 		}
 
-		if verbose {
-			fmt.Println("Successfully connected to Docker daemon")
-		}
+		logger.Debugln("Successfully connected to Docker daemon.")
 
 	} else {
 
-		path := os.Getenv("DOCKER_CERT_PATH")
+		dockerCertPath := os.Getenv("DOCKER_CERT_PATH")
 
-		if verbose {
-			fmt.Println("Connecting to the Docker Client via:", os.Getenv("DOCKER_HOST"))
-		}
+		logger.Debugln("Connecting to the Docker Client via:", os.Getenv("DOCKER_HOST"))
+		logger.Debugln("Docker Certificate Path:", dockerCertPath)
 
-		DockerClient, err = docker.NewTLSClient(os.Getenv("DOCKER_HOST"), fmt.Sprintf("%s/cert.pem", path), fmt.Sprintf("%s/key.pem", path), fmt.Sprintf("%s/ca.pem", path))
+		DockerClient, err = docker.NewTLSClient(os.Getenv("DOCKER_HOST"), path.Join(dockerCertPath, "cert.pem"), path.Join(dockerCertPath, "key.pem"), path.Join(dockerCertPath, "ca.pem"))
 
 		if err != nil {
 			// TODO: better error handling
@@ -51,9 +47,7 @@ func DockerConnect(verbose bool) {
 			os.Exit(1)
 		}
 
-		if verbose {
-			fmt.Println("Successfully connected to Docker daemon")
-		}
+		logger.Debugln("Successfully connected to Docker daemon")
 	}
 }
 
