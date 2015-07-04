@@ -2,6 +2,7 @@ package chains
 
 import (
 	"fmt"
+	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 )
@@ -51,15 +52,16 @@ func ExecChainRaw(name string, args []string, attach bool, containerNumber int) 
 	return nil
 }
 
-func KillChainRaw(chainName string, rm, data bool, containerNumber int) error {
+func KillChainRaw(chainName string, rm, rmData bool, containerNumber int) error {
 	chain, err := LoadChainDefinition(chainName, containerNumber)
 	if err != nil {
 		return err
 	}
 
 	if IsChainRunning(chain) {
-		err := services.KillServiceByService(true, rm, data, chain.Service, chain.Operations)
-		if err != nil {
+		// this won't kank the data for the chain (only it's dependent services)
+		// TODO: refactor service/chain loading so this problem goes away
+		if err := services.KillServiceByService(true, rm, rmData, chain.Service, chain.Operations); err != nil {
 			return err
 		}
 	} else {
@@ -72,9 +74,10 @@ func KillChainRaw(chainName string, rm, data bool, containerNumber int) error {
 		}
 	}
 
-	if data {
-		// TODO: data container from chain container
+	if rmData {
+		if err := data.RmDataRaw(chainName, containerNumber); err != nil {
+			return err
+		}
 	}
-
 	return nil
 }
