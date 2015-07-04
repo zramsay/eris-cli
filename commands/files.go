@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/files"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -26,7 +27,7 @@ var filesImport = &cobra.Command{
 	Short: "Pull a file from IPFS via its hash and save it locally.",
 	Long:  `Pull a file from IPFS via its hash and save it locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		files.Get(cmd, args)
+		Get(cmd, args)
 	},
 }
 
@@ -35,6 +36,24 @@ var filesExport = &cobra.Command{
 	Short: "Post a file to IPFS.",
 	Long:  `Post a file to IPFS.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		files.Put(cmd, args)
+		Put(cmd, args)
 	},
+}
+
+func Get(cmd *cobra.Command, args []string) {
+	if len(args) != 2 {
+		cmd.Help()
+		return
+	}
+	IfExit(files.GetFilesRaw(args[0], args[1]))
+}
+
+func Put(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	hash, err := files.PutFilesRaw(args[0])
+	IfExit(err)
+	logger.Println(hash)
 }

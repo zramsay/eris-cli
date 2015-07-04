@@ -10,16 +10,25 @@ passed() {
 }
 
 export TEST_IN_CIRCLE=true
-cd actions && go test -v
-passed Actions
-cd ../chains && go test -v
-passed Chains
-cd ../data && go test -v
-passed Data
-cd ../services && go test -v
-passed Services
-
-cd ../config && go test -v
-passed Config
+cd perform && go test -v
+passed Perform
 cd ../util && go test -v
 passed Util
+cd ../services && go test -v
+passed Services
+cd ../chains && go test -v
+passed Chains
+cd ../actions && go test -v
+passed Actions
+cd ../projects && go test -v
+passed Projects
+cd ../remotes && go test -v
+passed Remotes
+cd ../data && go test -v
+passed Data
+cd ../files && go test -v
+passed Files
+cd ../init && go test -v
+passed Init
+cd ../config && go test -v
+passed Config

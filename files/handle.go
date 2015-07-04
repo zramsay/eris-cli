@@ -2,38 +2,10 @@ package files
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
-
-func Get(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		fmt.Println("Please give me: eris files get ipfsHASH fileName")
-		os.Exit(1)
-	}
-	err := GetFilesRaw(args[0], args[1])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func Put(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		fmt.Println("Please give me: eris files put fileName")
-		os.Exit(1)
-	}
-	err := PutFilesRaw(args[0])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
 
 func GetFilesRaw(hash, fileName string) error {
 	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
@@ -64,31 +36,35 @@ func GetFilesRaw(hash, fileName string) error {
 	return nil
 }
 
-func PutFilesRaw(fileName string) error {
+func PutFilesRaw(fileName string) (string, error) {
+	var hash string
+	var err error
+
 	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 		logger.Infoln("IPFS is running. Adding now.")
 
-		err := exportFile(fileName)
+		hash, err = exportFile(fileName)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 	} else {
 		logger.Infoln("IPFS is not running. Starting now.")
 		if err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations); err != nil {
-			return err
+			return "", err
 		}
 
-		if err := exportFile(fileName); err != nil {
-			return err
+		hash, err = exportFile(fileName)
+		if err != nil {
+			return "", err
 		}
 	}
-	return nil
+	return hash, nil
 }
 
 func importFile(hash, fileName string) error {
@@ -105,7 +81,7 @@ func importFile(hash, fileName string) error {
 	return nil
 }
 
-func exportFile(fileName string) error {
+func exportFile(fileName string) (string, error) {
 	var hash string
 	var err error
 
@@ -115,9 +91,8 @@ func exportFile(fileName string) error {
 		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	logger.Println(hash)
-	return nil
+	return hash, nil
 }

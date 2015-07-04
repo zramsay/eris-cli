@@ -166,7 +166,7 @@ func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
 	actions := act.ListKnownRaw()
 	for _, s := range actions {
-		fmt.Println(strings.Replace(s, "_", " ", -1))
+		logger.Println(strings.Replace(s, "_", " ", -1))
 	}
 }
 
@@ -182,7 +182,7 @@ func EditAction(cmd *cobra.Command, args []string) {
 func DoAction(cmd *cobra.Command, args []string) {
 	action, actionVars, err := act.LoadActionDefinition(args)
 	if err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		return
 	}
 	IfExit(act.DoRaw(action, actionVars, cmd.Flags().Lookup("quiet").Changed))
