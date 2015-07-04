@@ -547,9 +547,11 @@ func attachContainer(id string) error {
 func waitContainer(id string) error {
 	exitCode, err := util.DockerClient.WaitContainer(id)
 	if exitCode != 0 {
-		err1 := fmt.Errorf("Container %s exited with status %d")
+		err1 := fmt.Errorf("Container %s exited with status %d", id, exitCode)
 		if err != nil {
 			err = fmt.Errorf("%s. Error: %v", err1.Error(), err)
+		} else {
+			err = err1
 		}
 	}
 	return err
