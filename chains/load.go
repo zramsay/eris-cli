@@ -40,7 +40,7 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 		return nil, fmt.Errorf("Chain definition must specify chain type.\n")
 	}
 
-	serv, err = services.LoadServiceDefinition(chain.Type, containerNumber)
+	serv, err = services.LoadServiceDefinition(ErisChainType, containerNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,6 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	} else {
 		mergeChainAndService(&chain, serv.Service)
 	}
-
-	chain.Manager = serv.Manager
 
 	chain.Operations.ContainerNumber = containerNumber
 	checkChainHasUniqueName(&chain)

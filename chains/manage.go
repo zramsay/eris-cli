@@ -19,6 +19,15 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
+const (
+	ErisChainType    = "erisdb"
+	ErisChainStart   = "run"
+	ErisChainInstall = "install"
+	ErisChainNew     = "new"
+)
+
+//------------------------------------------------------------------------
+
 // genesis file either given directly, in dir, or not found (empty)
 func resolveGenesisFile(genesis, dir string) string {
 	if genesis == "" {
@@ -55,7 +64,7 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string, containerNumber int) (err error) {
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int) (err error) {
 	// chainName is mandatory
 	if chainName == "" {
 		return fmt.Errorf("setupChain requires a chainName")
@@ -119,10 +128,8 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 
 	chain := &def.Chain{
 		Name:    chainName,
-		Type:    chainType,
 		ChainID: chainID,
 		Service: &def.Service{},
-		Manager: make(map[string]string),
 	}
 
 	chain.Service.AutoData = true
@@ -139,15 +146,14 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 		return err
 	}
 
-	// cmd should "new" or "fetch"
-	// TODO: rename fetch/install
+	// cmd should "new" or "install"
 	chain.Service.Command = cmd
 
 	// set chainid and other vars
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
 	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
 	chain.Service.Environment = append(chain.Service.Environment, "RUN=false") // TODO new should take a run flag
-	// TODO mint vs. erisdb
+	// TODO mint vs. erisdb (in terms of rpc)
 	// chain.Service.Environment = append(chain.Service.Environment, "CHAIN_TYPE=mint")
 	if genesis == "" {
 		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
@@ -162,11 +168,7 @@ func setupChain(chainType, chainID, chainName, cmd, dir, genesis, config string,
 	return
 }
 
-func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber int) (err error) {
-	if chainType == "" {
-		return fmt.Errorf("Please specify a chain type with the --type flag")
-	}
-
+func NewChainRaw(name, genesis, config, dir string, containerNumber int) (err error) {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
 	var chainID string
@@ -179,15 +181,11 @@ func NewChainRaw(chainType, name, genesis, config, dir string, containerNumber i
 		}
 	}
 
-	return setupChain(chainType, chainID, name, "new", dir, genesis, config, containerNumber)
+	return setupChain(chainID, name, ErisChainNew, dir, genesis, config, containerNumber)
 }
 
-func InstallChainRaw(chainType, chainID, chainName, config, dir string, containerNumber int) error {
-	if chainType == "" {
-		return fmt.Errorf("Please specify a chain type with the --type flag")
-	}
-
-	return setupChain(chainType, chainID, chainName, "fetch", dir, "", config, containerNumber)
+func InstallChainRaw(chainID, chainName, config, dir string, containerNumber int) error {
+	return setupChain(chainID, chainName, ErisChainInstall, dir, "", config, containerNumber)
 }
 
 func ImportChainRaw(chainName, path string) error {

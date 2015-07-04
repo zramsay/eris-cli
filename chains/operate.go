@@ -14,11 +14,7 @@ func StartChainRaw(chainName string, containerNumber int) error {
 	if IsChainRunning(chain) {
 		logger.Infoln("Chain already started. Skipping.")
 	} else {
-		var ok bool
-		chain.Service.Command, ok = chain.Manager["start"]
-		if !ok {
-			return fmt.Errorf("%s service definition must include '%s' command under Manager", chain.Type, "start")
-		}
+		chain.Service.Command = ErisChainStart
 		if err := services.StartServiceByService(chain.Service, chain.Operations); err != nil {
 			return err
 		}

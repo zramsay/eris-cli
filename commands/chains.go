@@ -259,7 +259,6 @@ by the update command.`,
 // cli flags
 
 var (
-	ChainType   string
 	ChainName   string
 	GenesisFile string
 	ConfigFile  string
@@ -268,12 +267,10 @@ var (
 )
 
 func addChainsFlags() {
-	chainsNew.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
 	chainsNew.PersistentFlags().StringVarP(&GenesisFile, "genesis", "g", "", "genesis.json file")
 	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 
-	chainsInstall.PersistentFlags().StringVarP(&ChainType, "type", "t", "", "type of chain (service definition file to read from)")
 	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&ChainID, "id", "", "", "id of the chain to fetch")
@@ -350,7 +347,7 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	// double as the chainID, or you want a local reference name for the chain, so you specify
 	// the chainID with a flag and give your local reference name as the arg
 	chainName := args[0]
-	IfExit(chns.InstallChainRaw(ChainType, ChainID, chainName, ConfigFile, DirToCopy, ContainerNumber))
+	IfExit(chns.InstallChainRaw(ChainID, chainName, ConfigFile, DirToCopy, ContainerNumber))
 }
 
 // create a new chain
@@ -361,7 +358,7 @@ func NewChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	chainName := args[0]
-	IfExit(chns.NewChainRaw(ChainType, chainName, GenesisFile, ConfigFile, DirToCopy, ContainerNumber))
+	IfExit(chns.NewChainRaw(chainName, GenesisFile, ConfigFile, DirToCopy, ContainerNumber))
 }
 
 // import a chain definition file

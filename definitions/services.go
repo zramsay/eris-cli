@@ -2,7 +2,6 @@ package definitions
 
 type ServiceDefinition struct {
 	Service    *Service          `json:"service" yaml:"service" toml:"service"`
-	Manager    Manager           `json:"manager,omitempty" yaml:"manager,omitempty" toml:"manager,omitempty"`
 	Maintainer *Maintainer       `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
 	Location   *Location         `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
 	Machine    *Machine          `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
@@ -57,5 +56,3 @@ type ServiceOperation struct {
 	AppName           string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DockerHostConn    string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 }
-
-type Manager map[string]string
