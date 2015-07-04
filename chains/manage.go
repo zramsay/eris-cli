@@ -136,9 +136,11 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, chainName) + ".toml"
-	if err = WriteChainDefinitionFile(chain, fileName); err != nil {
-		err = fmt.Errorf("error writing chain definition to file: %v", err)
-		return
+	if _, err = os.Stat(fileName); err != nil {
+		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
+			err = fmt.Errorf("error writing chain definition to file: %v", err)
+			return
+		}
 	}
 
 	chain, err = LoadChainDefinition(chainName, containerNumber)
