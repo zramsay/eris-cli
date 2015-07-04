@@ -35,11 +35,6 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	chain.Operations = &def.ServiceOperation{}
 
 	var serv *def.ServiceDefinition
-	if chain.Type == "" {
-		// TODO: relieve this if it overwrites the service image
-		return nil, fmt.Errorf("Chain definition must specify chain type.\n")
-	}
-
 	serv, err = services.LoadServiceDefinition(ErisChainType, containerNumber)
 	if err != nil {
 		return nil, err

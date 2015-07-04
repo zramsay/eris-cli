@@ -21,9 +21,9 @@ import (
 
 const (
 	ErisChainType    = "erisdb"
-	ErisChainStart   = "run"
-	ErisChainInstall = "install"
-	ErisChainNew     = "new"
+	ErisChainStart   = "erisdb-wrapper run"
+	ErisChainInstall = "erisdb-wrapper install"
+	ErisChainNew     = "erisdb-wrapper new"
 )
 
 //------------------------------------------------------------------------
@@ -146,7 +146,7 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 		return err
 	}
 
-	// cmd should "new" or "install"
+	// cmd should be "new" or "install"
 	chain.Service.Command = cmd
 
 	// set chainid and other vars

@@ -15,6 +15,7 @@ func StartChainRaw(chainName string, containerNumber int) error {
 		logger.Infoln("Chain already started. Skipping.")
 	} else {
 		chain.Service.Command = ErisChainStart
+		chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 		if err := services.StartServiceByService(chain.Service, chain.Operations); err != nil {
 			return err
 		}
