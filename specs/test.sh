@@ -18,6 +18,8 @@ passed Chains
 cd ../services && go test -v
 passed Services
 
+cd ../config && go test -v
+passed Config
 cd ../util && go test -v
 passed Util
 

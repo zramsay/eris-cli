@@ -11,46 +11,6 @@
 			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
 		},
 		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.2-12-g2a0a9a1",
-			"Rev": "2a0a9a12ae2892ccfa9ab59c1222e9dcd29f9367"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/archive",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/fileutils",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/ioutils",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/pools",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/promise",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/system",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
-			"ImportPath": "github.com/docker/docker/pkg/units",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
-		},
-		{
 			"ImportPath": "github.com/ebuchman/go-shell-pipes",
 			"Rev": "83e1324808622485314bff0fd97b8b944200a7a4"
 		},
