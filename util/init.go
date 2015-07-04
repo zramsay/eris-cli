@@ -310,12 +310,8 @@ services = [ "ipfs" ]
 chains = [ "" ]
 steps = [
   "printenv",
-  "eris services export ipfs",
-  "eris services -v import 1234 ipfs:$prev",
-  "eris services known",
-  "eris services ls",
-  "eris services ps",
-  "printenv"
+  "echo hello",
+  "echo goodbye"
 ]
 
 [environment]
