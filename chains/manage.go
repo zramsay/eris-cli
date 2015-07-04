@@ -26,152 +26,6 @@ const (
 	ErisChainNew     = "erisdb-wrapper new"
 )
 
-//------------------------------------------------------------------------
-
-// genesis file either given directly, in dir, or not found (empty)
-func resolveGenesisFile(genesis, dir string) string {
-	if genesis == "" {
-		genesis = path.Join(dir, "genesis.json")
-		if _, err := os.Stat(genesis); err != nil {
-			return ""
-		}
-	}
-	return genesis
-}
-
-// "chain_id" should be in the genesis.json
-// or else is set to name
-func getChainIDFromGenesis(genesis, name string) (string, error) {
-	var hasChainID = struct {
-		ChainID string `json:"chain_id"`
-	}{}
-
-	b, err := ioutil.ReadFile(genesis)
-	if err != nil {
-		return "", fmt.Errorf("Error reading genesis file: %v", err)
-	}
-
-	if err = json.Unmarshal(b, &hasChainID); err != nil {
-		return "", fmt.Errorf("Error reading chain id from genesis file: %v", err)
-	}
-
-	chainID := hasChainID.ChainID
-	if chainID == "" {
-		chainID = name
-	}
-	return chainID, nil
-}
-
-// the main function for setting up a chain container
-// handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
-	// chainName is mandatory
-	if chainName == "" {
-		return fmt.Errorf("setupChain requires a chainName")
-	}
-	containerName := util.NameAndNumber(chainName, containerNumber)
-	if chainID == "" {
-		chainID = chainName
-	}
-
-	// TODO: check if data container already exists
-	// run containers and exit (creates data container)
-	logger.Infof("Creating data container for %s\n", chainName)
-	if err := perform.DockerCreateDataContainer(chainName, containerNumber); err != nil {
-		return fmt.Errorf("Error creating data container %v", err)
-	}
-
-	// if something goes wrong, cleanup
-	defer func() {
-		if err != nil {
-			logger.Infof("\nError on setupChain: %v\n", err)
-			logger.Infoln("Cleaning up...")
-			if err2 := RmChainRaw(chainName, true, false, containerNumber); err2 != nil {
-				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nCleanup error: %v", containerName, err, err2)
-			}
-		}
-	}()
-
-	// copy dir, genesis, config into container
-	containerDst := path.Join("blockchains", chainName)           // path in container
-	dst := path.Join(DataContainersPath, chainName, containerDst) // path on host
-	// TODO: deal with containerNumbers ....!
-	// we probably need to update Import
-
-	if err = os.MkdirAll(dst, 0700); err != nil {
-		return fmt.Errorf("Error making data directory: %v", err)
-	}
-
-	if dir != "" {
-		if err = Copy(dir, dst); err != nil {
-			return err
-		}
-	}
-	if genesis != "" {
-		if err = Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
-			return err
-		}
-	} else {
-		// TODO: run mintgen and open the genesis in editor
-	}
-
-	if config != "" {
-		if err = Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
-			return err
-		}
-	}
-
-	// copy from host to container
-	if err = data.ImportDataRaw(chainName, containerNumber); err != nil {
-		return err
-	}
-
-	chain := &def.Chain{
-		Name:    chainName,
-		ChainID: chainID,
-		Service: &def.Service{},
-	}
-
-	chain.Service.AutoData = true
-
-	// write the chain definition file ...
-	fileName := filepath.Join(BlockchainsPath, chainName) + ".toml"
-	if _, err = os.Stat(fileName); err != nil {
-		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
-			err = fmt.Errorf("error writing chain definition to file: %v", err)
-			return
-		}
-	}
-
-	chain, err = LoadChainDefinition(chainName, containerNumber)
-	if err != nil {
-		return err
-	}
-
-	chain.Operations.PublishAllPorts = publishAllPorts
-
-	// cmd should be "new" or "install"
-	chain.Service.Command = cmd
-
-	// set chainid and other vars
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
-	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
-	chain.Service.Environment = append(chain.Service.Environment, "RUN=false") // TODO new should take a run flag
-	// TODO mint vs. erisdb (in terms of rpc)
-	// chain.Service.Environment = append(chain.Service.Environment, "CHAIN_TYPE=mint")
-	if genesis == "" {
-		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
-	}
-
-	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s", util.NameAndNumber(chainName, containerNumber))
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		chain.Operations.Remove = true
-	}
-	err = services.StartServiceByService(chain.Service, chain.Operations)
-
-	return
-}
-
 func NewChainRaw(name, genesis, config, dir string, containerNumber int) (err error) {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
@@ -309,7 +163,6 @@ func RenameChainRaw(oldName, newName string) error {
 
 	newNameBase := strings.Replace(newName, filepath.Ext(newName), "", 1)
 	transformOnly := newNameBase == oldName
-	fmt.Println("old, new, newBase, transformonly:", oldName, newName, newNameBase, transformOnly)
 
 	if isKnownChain(oldName) {
 		logger.Infoln("Renaming chain", oldName, "to", newNameBase)
@@ -411,24 +264,6 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 	return nil
 }
 
-func ServiceDefFromChain(chain *def.Chain) *def.ServiceDefinition {
-	chainID := chain.ChainID
-	srv := chain.Service
-
-	srv.Name = chainID
-	// set the main command
-	srv.Command = ErisChainInstall
-	// TODO mint vs. erisdb (in terms of rpc)
-	// chain.Service.Environment = append(chain.Service.Environment, "CHAIN_TYPE=mint")
-	srv.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
-	return &def.ServiceDefinition{
-		Service:    srv,
-		Maintainer: chain.Maintainer,
-		Location:   chain.Location, // TODO
-		Machine:    chain.Machine,
-	}
-}
-
 func GraduateChainRaw(chainName string) error {
 	chain, err := LoadChainDefinition(chainName, 1)
 	if err != nil {
@@ -442,6 +277,151 @@ func GraduateChainRaw(chainName string) error {
 		return err
 	}
 	return nil
+}
+
+//------------------------------------------------------------------------
+
+// the main function for setting up a chain container
+// handles both "new" and "fetch" - most of the differentiating logic is in the container
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
+	// chainName is mandatory
+	if chainName == "" {
+		return fmt.Errorf("setupChain requires a chainName")
+	}
+	containerName := util.NameAndNumber(chainName, containerNumber)
+	if chainID == "" {
+		chainID = chainName
+	}
+
+	// TODO: check if data container already exists
+	// run containers and exit (creates data container)
+	logger.Infof("Creating data container for %s\n", chainName)
+	if err := perform.DockerCreateDataContainer(chainName, containerNumber); err != nil {
+		return fmt.Errorf("Error creating data container %v", err)
+	}
+
+	// if something goes wrong, cleanup
+	defer func() {
+		if err != nil {
+			logger.Infof("\nError on setupChain: %v\n", err)
+			logger.Infoln("Cleaning up...")
+			if err2 := RmChainRaw(chainName, true, false, containerNumber); err2 != nil {
+				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nCleanup error: %v", containerName, err, err2)
+			}
+		}
+	}()
+
+	// copy dir, genesis, config into container
+	containerDst := path.Join("blockchains", chainName)           // path in container
+	dst := path.Join(DataContainersPath, chainName, containerDst) // path on host
+	// TODO: deal with containerNumbers ....!
+	// we probably need to update Import
+
+	if err = os.MkdirAll(dst, 0700); err != nil {
+		return fmt.Errorf("Error making data directory: %v", err)
+	}
+
+	if dir != "" {
+		if err = Copy(dir, dst); err != nil {
+			return err
+		}
+	}
+	if genesis != "" {
+		if err = Copy(genesis, path.Join(dst, "genesis.json")); err != nil {
+			return err
+		}
+	} else {
+		// TODO: run mintgen and open the genesis in editor
+	}
+
+	if config != "" {
+		if err = Copy(config, path.Join(dst, "config."+path.Ext(config))); err != nil {
+			return err
+		}
+	}
+
+	// copy from host to container
+	if err = data.ImportDataRaw(chainName, containerNumber); err != nil {
+		return err
+	}
+
+	chain := &def.Chain{
+		Name:    chainName,
+		ChainID: chainID,
+		Service: &def.Service{},
+	}
+
+	chain.Service.AutoData = true
+
+	// write the chain definition file ...
+	fileName := filepath.Join(BlockchainsPath, chainName) + ".toml"
+	if _, err = os.Stat(fileName); err != nil {
+		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
+			err = fmt.Errorf("error writing chain definition to file: %v", err)
+			return
+		}
+	}
+
+	chain, err = LoadChainDefinition(chainName, containerNumber)
+	if err != nil {
+		return err
+	}
+
+	chain.Operations.PublishAllPorts = publishAllPorts
+
+	// cmd should be "new" or "install"
+	chain.Service.Command = cmd
+
+	// set chainid and other vars
+	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
+	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
+	chain.Service.Environment = append(chain.Service.Environment, "RUN=false") // TODO new should take a run flag
+	// TODO mint vs. erisdb (in terms of rpc)
+	if genesis == "" {
+		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
+	}
+
+	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s", util.NameAndNumber(chainName, containerNumber))
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		chain.Operations.Remove = true
+	}
+	err = services.StartServiceByService(chain.Service, chain.Operations)
+
+	return
+}
+
+// genesis file either given directly, in dir, or not found (empty)
+func resolveGenesisFile(genesis, dir string) string {
+	if genesis == "" {
+		genesis = path.Join(dir, "genesis.json")
+		if _, err := os.Stat(genesis); err != nil {
+			return ""
+		}
+	}
+	return genesis
+}
+
+// "chain_id" should be in the genesis.json
+// or else is set to name
+func getChainIDFromGenesis(genesis, name string) (string, error) {
+	var hasChainID = struct {
+		ChainID string `json:"chain_id"`
+	}{}
+
+	b, err := ioutil.ReadFile(genesis)
+	if err != nil {
+		return "", fmt.Errorf("Error reading genesis file: %v", err)
+	}
+
+	if err = json.Unmarshal(b, &hasChainID); err != nil {
+		return "", fmt.Errorf("Error reading chain id from genesis file: %v", err)
+	}
+
+	chainID := hasChainID.ChainID
+	if chainID == "" {
+		chainID = name
+	}
+	return chainID, nil
 }
 
 func exportFile(chainName string) (string, error) {

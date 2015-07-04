@@ -70,6 +70,23 @@ func IsChainRunning(chain *def.Chain) bool {
 	return isRunningChain(chain.Service.Name, false)
 }
 
+func ServiceDefFromChain(chain *def.Chain) *def.ServiceDefinition {
+	chainID := chain.ChainID
+	srv := chain.Service
+
+	srv.Name = chainID
+	// set the main command
+	srv.Command = ErisChainInstall
+	// TODO mint vs. erisdb (in terms of rpc)
+	srv.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
+	return &def.ServiceDefinition{
+		Service:    srv,
+		Maintainer: chain.Maintainer,
+		Location:   chain.Location, // TODO
+		Machine:    chain.Machine,
+	}
+}
+
 // read the config file into viper
 func loadChainDefinition(chainName string) (*viper.Viper, error) {
 	return util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
