@@ -532,8 +532,8 @@ func attachContainer(id string) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
 		InputStream:  os.Stdin,
-		OutputStream: os.Stdout,
-		ErrorStream:  os.Stderr,
+		OutputStream: util.GlobalConfig.Writer,
+		ErrorStream:  util.GlobalConfig.ErrorWriter,
 		Logs:         true,
 		Stream:       true,
 		Stdin:        true,
@@ -559,6 +559,17 @@ func waitContainer(id string) error {
 }
 
 func logsContainer(id string, follow bool, tail string) error {
+	var writer io.Writer
+	var eWriter io.Writer
+
+	if util.GlobalConfig != nil {
+		writer = util.GlobalConfig.Writer
+		eWriter = util.GlobalConfig.ErrorWriter
+	} else {
+		writer = os.Stdout
+		eWriter = os.Stderr
+	}
+
 	opts := docker.LogsOptions{
 		Container:    id,
 		Follow:       follow,
@@ -566,8 +577,8 @@ func logsContainer(id string, follow bool, tail string) error {
 		Stdout:       true,
 		Stderr:       true,
 		Timestamps:   false,
-		OutputStream: os.Stdout,
-		ErrorStream:  os.Stderr,
+		OutputStream: writer,
+		ErrorStream:  eWriter,
 		RawTerminal:  true, // Usually true when the container contains a TTY.
 	}
 
@@ -641,7 +652,7 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
-			Tty:             false,
+			Tty:             true,
 			OpenStdin:       false,
 			Env:             srv.Environment,
 			Labels:          srv.Labels,
@@ -671,7 +682,6 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 		opts.Config.AttachStdin = true
 		opts.Config.AttachStdout = true
 		opts.Config.AttachStderr = true
-		opts.Config.Tty = true
 		opts.Config.OpenStdin = true
 	}
 
@@ -760,17 +770,27 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 }
 
 func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
+	// by default data containers will rely on the image used by
+	//   the base service. sometimes, tho, especially for testing
+	//   that base image will not be present. in such cases use
+	//   the base eris data container.
+	if srv.Image == "" {
+		srv.Image = "eris/data"
+	}
+
 	opts := docker.CreateContainerOptions{
 		Name: ops.DataContainerName,
 		Config: &docker.Config{
-			Image:           "eris/data",
+			Image:           srv.Image,
 			User:            srv.User,
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
 			Tty:             false,
 			OpenStdin:       false,
-			NetworkDisabled: true,
+			NetworkDisabled: true, // data containers do not need to talk to the outside world.
+			Entrypoint:      []string{},
+			Cmd:             []string{"false"}, // just gracefully exit. data containers just need to "exist" not run.
 		},
 		HostConfig: &docker.HostConfig{},
 	}

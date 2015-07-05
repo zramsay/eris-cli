@@ -1,6 +1,7 @@
 package commands
 
 import (
+	// "fmt"
 	"github.com/eris-ltd/eris-cli/config"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -21,11 +22,14 @@ use [eris services config]; to configure projects use
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
+var Cum []int
+
 // build the config subcommand
 func buildConfigCommand() {
 	Config.AddCommand(configPlop)
 	Config.AddCommand(configSet)
 	Config.AddCommand(configEdit)
+	// configPlop.Flags().IntSliceVar(&Cum, "cum", "c", []int{}, "suppress action output")
 }
 
 // set
@@ -48,6 +52,7 @@ var configPlop = &cobra.Command{
 	Short: "Display the config for the Eris Platform CLI.",
 	Long:  `Display the config for the Eris Platform CLI.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// fmt.Println(Cum)
 		// config.PlopEntireConfig(globalConfig, args)
 	},
 }
