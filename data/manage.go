@@ -3,15 +3,19 @@ package data
 import (
 	"fmt"
 
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
 func RenameDataRaw(oldName, newName string, containerNumber int) error {
-	if parseKnown(oldName, containerNumber) {
+	if util.IsDataContainer(oldName, containerNumber) {
 		logger.Infoln("Renaming data container", oldName, "to", newName)
-		srv, ops := MockService(oldName, containerNumber)
-		err := perform.DockerRename(srv, ops, oldName, newName)
+
+		srv := definitions.BlankServiceDefinition()
+		srv.Operations.SrvContainerName = util.ContainersName("data", oldName, containerNumber)
+
+		err := perform.DockerRename(srv.Service, srv.Operations, oldName, newName)
 		if err != nil {
 			return err
 		}
@@ -22,11 +26,13 @@ func RenameDataRaw(oldName, newName string, containerNumber int) error {
 }
 
 func InspectDataRaw(name, field string, containerNumber int) error {
-	if parseKnown(name, containerNumber) {
+	if util.IsDataContainer(name, containerNumber) {
 		logger.Infoln("Inspecting data container" + name)
 
-		srv, ops := MockService(name, containerNumber)
-		err := perform.DockerInspect(srv, ops, field)
+		srv := definitions.BlankServiceDefinition()
+		srv.Operations.SrvContainerName = util.ContainersName("data", name, containerNumber)
+
+		err := perform.DockerInspect(srv.Service, srv.Operations, field)
 		if err != nil {
 			return err
 		}
@@ -37,11 +43,13 @@ func InspectDataRaw(name, field string, containerNumber int) error {
 }
 
 func RmDataRaw(name string, containerNumber int) error {
-	if parseKnown(name, containerNumber) {
+	if util.IsDataContainer(name, containerNumber) {
 		logger.Infoln("Removing data container " + name)
 
-		srv, ops := MockService(name, containerNumber)
-		err := perform.DockerRemove(srv, ops)
+		srv := definitions.BlankServiceDefinition()
+		srv.Operations.SrvContainerName = util.ContainersName("data", name, containerNumber)
+
+		err := perform.DockerRemove(srv.Service, srv.Operations, false)
 		if err != nil {
 			return err
 		}
@@ -53,5 +61,5 @@ func RmDataRaw(name string, containerNumber int) error {
 }
 
 func ListKnownRaw() ([]string, error) {
-	return util.ParseContainerNames("data", true), nil
+	return util.DataContainerNames(), nil
 }

@@ -8,8 +8,6 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
@@ -17,16 +15,14 @@ import (
 // if given empty string for fileName will use Service
 // Definition Name
 func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
-	// writer := os.Stdout
 
 	if strings.Contains(fileName, " ") {
 		fileName = strings.Replace(actDef.Name, " ", "_", -1)
 	}
-
 	if filepath.Ext(fileName) == "" {
-		fileName = actDef.Name + ".toml"
-		fileName = filepath.Join(ActionsPath, fileName)
+		fileName = fileName + ".toml"
 	}
+	logger.Debugf("Writing action def file =>\t%s to %s\n", actDef.Name, fileName)
 
 	writer, err := os.Create(fileName)
 	defer writer.Close()
@@ -54,8 +50,8 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + actDef.Name + "\"\n"))
-		writer.Write([]byte("services = [ \"" + strings.Join(actDef.Services, "\",\"") + "\" ]\n"))
-		writer.Write([]byte("chains = [ \"" + strings.Join(actDef.Chains, "\",\"") + "\" ]\n"))
+		writer.Write([]byte("services = [ \"" + strings.Join(actDef.ServiceDeps, "\",\"") + "\" ]\n"))
+		writer.Write([]byte("chain = \"" + actDef.Chain + "\"\n"))
 		writer.Write([]byte("steps = [ \n"))
 		for _, s := range actDef.Steps {
 			if strings.Contains(s, "\"") {

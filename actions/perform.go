@@ -12,14 +12,12 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 )
 
-func DoRaw(action *def.Action, actionVars []string, noOutput bool) error {
-	err := StartServicesAndChains(action)
-	if err != nil {
+func DoRaw(action *def.Action, actionVars []string, quiet bool) error {
+	if err := StartServicesAndChains(action); err != nil {
 		return err
 	}
 
-	err = PerformCommand(action, actionVars, noOutput)
-	if err != nil {
+	if err := PerformCommand(action, actionVars, quiet); err != nil {
 		return err
 	}
 	return nil
@@ -30,10 +28,10 @@ func StartServicesAndChains(action *def.Action) error {
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
 
 	runningServices := services.ListRunningRaw()
-	services.StartGroup(ch, wg, action.Services, runningServices, "service", &def.ServiceOperation{ContainerNumber: 1}, services.StartServiceRaw) // TODO:CNUM
+	services.StartGroup(ch, wg, action.ServiceDeps, runningServices, "service", &def.Operation{ContainerNumber: 1}, services.StartServiceRaw) // TODO:CNUM
 
 	runningChains := chains.ListRunningRaw()
-	services.StartGroup(ch, wg, action.Chains, runningChains, "chain", &def.ServiceOperation{ContainerNumber: 1}, chains.StartChainRaw) // TODO:CNUM
+	services.StartGroup(ch, wg, []string{action.Chain}, runningChains, "chain", &def.Operation{ContainerNumber: 1}, chains.StartChainRaw) // TODO:CNUM
 
 	go func() {
 		wg.Wait()
@@ -43,11 +41,14 @@ func StartServicesAndChains(action *def.Action) error {
 	return <-ch
 }
 
-func PerformCommand(action *def.Action, actionVars []string, noOutput bool) error {
+func PerformCommand(action *def.Action, actionVars []string, quiet bool) error {
+	logger.Infof("Performing Action:\t%s.\n", action.Name)
+
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
+	logger.Debugf("Directory for action:\t%s\n", dir)
 
 	// pull actionVars (first given from command line) and
 	// combine with the environment variables (given in the
@@ -57,22 +58,26 @@ func PerformCommand(action *def.Action, actionVars []string, noOutput bool) erro
 	for k, v := range action.Environment {
 		actionVars = append(actionVars, fmt.Sprintf("%s=%s", k, v))
 	}
+
+	for _, v := range actionVars {
+		logger.Debugf("Variable for action:\t%s\n", v)
+	}
+
 	actionVars = append(os.Environ(), actionVars...)
-	logger.Infoln("Performing Action: ", action.Name)
 
 	for n, step := range action.Steps {
 		cmd := exec.Command("sh", "-c", step)
 		cmd.Env = actionVars
 		cmd.Dir = dir
 
+		logger.Debugf("Performing Step %d:\t%s\n", n+1, strings.Join(cmd.Args, " "))
+
 		prev, err := cmd.Output()
 		if err != nil {
 			return fmt.Errorf("error running command (%v): %s", err, prev)
 		}
 
-		if noOutput {
-			logger.Infoln(strings.TrimSpace(string(prev)))
-		} else {
+		if !quiet {
 			logger.Println(strings.TrimSpace(string(prev)))
 		}
 

@@ -16,7 +16,7 @@ import (
 func NewActionRaw(actionName []string) error {
 	name := strings.Join(actionName, "_")
 	path := filepath.Join(ActionsPath, name)
-	act := MockAction(name)
+	act, _ := MockAction(actionName)
 	if err := WriteActionDefinitionFile(act, path); err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func ExportActionRaw(actionName []string) error {
 		logger.Println(hash)
 	} else {
 		logger.Infoln("IPFS is not running. Starting now.")
-		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
+		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{})
 		if err != nil {
 			return err
 		}

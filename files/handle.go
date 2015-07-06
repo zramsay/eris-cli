@@ -23,7 +23,7 @@ func GetFilesRaw(hash, fileName string) error {
 
 	} else {
 		logger.Infoln("IPFS is not running. Starting now.")
-		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
+		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{})
 		if err != nil {
 			return err
 		}
@@ -55,7 +55,7 @@ func PutFilesRaw(fileName string) (string, error) {
 
 	} else {
 		logger.Infoln("IPFS is not running. Starting now.")
-		if err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations); err != nil {
+		if err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{}); err != nil {
 			return "", err
 		}
 

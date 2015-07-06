@@ -132,9 +132,14 @@ var actionsRemove = &cobra.Command{
 //----------------------------------------------------------------------
 // cli flags
 
+var Chain string
+var ServicesSlice []string
+
 func addActionsFlags() {
 	actionsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action without confirming")
 	actionsDo.Flags().BoolVarP(&Quiet, "quiet", "q", false, "suppress action output")
+	actionsDo.Flags().StringSliceVarP(&ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
+	actionsDo.Flags().StringVarP(&Chain, "chain", "c", "", "run action against a particular chain")
 }
 
 //----------------------------------------------------------------------
@@ -185,6 +190,12 @@ func DoAction(cmd *cobra.Command, args []string) {
 		logger.Errorln(err)
 		return
 	}
+
+	if err := act.MergeStepsAndCLIArgs(action, &actionVars, args); err != nil {
+		logger.Errorln(err)
+		return
+	}
+
 	IfExit(act.DoRaw(action, actionVars, cmd.Flags().Lookup("quiet").Changed))
 }
 

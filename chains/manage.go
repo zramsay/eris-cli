@@ -98,7 +98,7 @@ func ExportChainRaw(chainName string) error {
 			logger.Println(hash)
 		} else {
 			logger.Infoln("IPFS is not running. Starting now.")
-			err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations)
+			err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{})
 			if err != nil {
 				return err
 			}
@@ -148,11 +148,11 @@ func ListKnownRaw() []string {
 }
 
 func ListRunningRaw() []string {
-	return listChains(false)
+	return util.ChainContainerNames(false)
 }
 
 func ListExistingRaw() []string {
-	return listChains(true)
+	return util.ChainContainerNames(true)
 }
 
 // XXX: What's going on here?
@@ -241,16 +241,9 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 	if err != nil {
 		return err
 	}
-	if IsChainRunning(chain) {
-		if err = perform.DockerRemove(chain.Service, chain.Operations); err != nil {
-			return err
-		}
-		if rmData {
-			mockServ, mockOp := data.MockService(chainName, containerNumber)
-			if err = perform.DockerRemove(mockServ, mockOp); err != nil {
-				return err
-			}
-		}
+	err = perform.DockerRemove(chain.Service, chain.Operations, rmData)
+	if err != nil {
+		return err
 	}
 
 	if file {
@@ -294,12 +287,14 @@ func CatChainRaw(chainName string) error {
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts, run bool) (err error) {
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
+	// XXX: if chainName is unique, we can safely assume (and we probably should) that containerNumber = 1
+
 	// chainName is mandatory
 	if chainName == "" {
 		return fmt.Errorf("setupChain requires a chainName")
 	}
-	containerName := util.NameAndNumber(chainName, containerNumber)
+	containerName := util.ChainContainersName(chainName, containerNumber)
 	if chainID == "" {
 		chainID = chainName
 	}
@@ -317,7 +312,7 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 			logger.Infof("\nError on setupChain: %v\n", err)
 			logger.Infoln("Cleaning up...")
 			if err2 := RmChainRaw(chainName, true, false, containerNumber); err2 != nil {
-				err = fmt.Errorf("Tragic! We encountered an error during setupChain for %s, and failed to cleanup after ourselves (remove containers) due to another error.\n\nFirst error:  %v\nCleanup error: %v", containerName, err, err2)
+				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t%v\nCleanup error =>\t%v\n", containerName, err, err2)
 			}
 		}
 	}()
@@ -356,20 +351,13 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 		return err
 	}
 
-	chain := &def.Chain{
-		Name:    chainName,
-		ChainID: chainID,
-		Service: &def.Service{},
-	}
-
-	chain.Service.AutoData = true
+	chain := MockChainDefinition(chainName, chainID, containerNumber)
 
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, chainName) + ".toml"
 	if _, err = os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
-			err = fmt.Errorf("error writing chain definition to file: %v", err)
-			return
+			return fmt.Errorf("error writing chain definition to file: %v", err)
 		}
 	}
 
@@ -392,12 +380,15 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 	}
 	// TODO mint vs. erisdb (in terms of rpc)
 
-	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s", util.NameAndNumber(chainName, containerNumber))
+	chain.Operations.DataContainerName = util.DataContainersName(chainName, containerNumber)
+
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		chain.Operations.Remove = true
 	}
-	err = services.StartServiceByService(chain.Service, chain.Operations)
+
+	err = services.StartServiceByService(chain.Service, chain.Operations, []string{})
 	// this err is caught in the defer above
+
 	return
 }
 

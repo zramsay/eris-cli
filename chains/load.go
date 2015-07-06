@@ -3,16 +3,14 @@ package chains
 import (
 	"fmt"
 	"path"
-	"regexp"
-	"strings"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
@@ -21,8 +19,8 @@ import (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, error) {
-	var chain def.Chain
+func LoadChainDefinition(chainName string, cNum ...int) (*def.Chain, error) {
+	chain := def.BlankChain()
 	chainConf, err := loadChainDefinition(chainName)
 	if err != nil {
 		return nil, err
@@ -31,11 +29,12 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	// marshal chain and always reset the operational requirements
 	// this will make sure to sync with docker so that if changes
 	// have occured in the interim they are caught.
-	marshalChainDefinition(chainConf, &chain)
-	chain.Operations = &def.ServiceOperation{}
+	if err = marshalChainDefinition(chainConf, chain); err != nil {
+		return nil, err
+	}
 
-	var serv *def.ServiceDefinition
-	serv, err = services.LoadServiceDefinition(ErisChainType, containerNumber)
+	serv := def.BlankServiceDefinition()
+	serv, err = services.LoadServiceDefinition(ErisChainType, cNum...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,43 +46,70 @@ func LoadChainDefinition(chainName string, containerNumber int) (*def.Chain, err
 	if chain.Service == nil {
 		chain.Service = serv.Service
 	} else {
-		mergeChainAndService(&chain, serv.Service)
+		mergeChainAndService(chain, serv.Service)
 	}
 
-	chain.Maintainer = serv.Maintainer
-	chain.Location = serv.Location
-	chain.Machine = serv.Machine
+	// TODO -> pull these from tool level configs
+	// chain.Maintainer = serv.Maintainer
+	// chain.Location = serv.Location
+	// chain.Machine = serv.Machine
 
-	chain.Operations.ContainerNumber = containerNumber
-	checkChainHasUniqueName(&chain)
-	checkDataContainerTurnedOn(&chain, chainConf)
-	checkDataContainerHasName(chain.Operations)
+	if len(cNum) == 0 {
+		// TODO: findNextContainerIndex => util/container_operations.go
+		chain.Operations.ContainerNumber = 1
+	} else {
+		chain.Operations.ContainerNumber = cNum[0]
+	}
 
-	return &chain, nil
+	checkNames(chain)
+
+	return chain, nil
+}
+
+func MockChainDefinition(chainName, chainID string, cNum ...int) *def.Chain {
+	chn := def.BlankChain()
+	chn.Name = chainName
+	chn.ChainID = chainID
+	chn.Service.AutoData = true
+
+	if len(cNum) == 0 {
+		// TODO: findNextContainerIndex => util/container_operations.go
+		chn.Operations.ContainerNumber = 1
+	} else {
+		chn.Operations.ContainerNumber = cNum[0]
+	}
+
+	checkNames(chn)
+	return chn
 }
 
 func IsChainExisting(chain *def.Chain) bool {
-	return isRunningChain(chain.Service.Name, true)
+	return util.IsChainContainer(chain.Name, chain.Operations.ContainerNumber, true)
 }
 
 func IsChainRunning(chain *def.Chain) bool {
-	return isRunningChain(chain.Service.Name, false)
+	return util.IsChainContainer(chain.Name, chain.Operations.ContainerNumber, false)
 }
 
 func ServiceDefFromChain(chain *def.Chain) *def.ServiceDefinition {
 	chainID := chain.ChainID
 	srv := chain.Service
 
-	srv.Name = chainID
-	// set the main command
-	srv.Command = ErisChainInstall
-	// TODO mint vs. erisdb (in terms of rpc)
+	srv.Name = chain.Name // this let's the data containers flow thru
+	srv.Image = "eris/erisdb:" + version.VERSION
+	srv.AutoData = true // default. they can turn it off. it's like BarBri
+	srv.Command = ErisChainStart
 	srv.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
+	// TODO mint vs. erisdb (in terms of rpc) --> think we default them to erisdb's REST/Stream API
+
 	return &def.ServiceDefinition{
-		Service:    srv,
-		Maintainer: chain.Maintainer,
-		Location:   chain.Location, // TODO
-		Machine:    chain.Machine,
+		Name:        chain.Name,
+		ServiceID:   chain.ChainID,
+		ServiceDeps: []string{"keys"},
+		Service:     srv,
+		Maintainer:  chain.Maintainer,
+		Location:    chain.Location,
+		Machine:     chain.Machine,
 	}
 }
 
@@ -95,7 +121,22 @@ func loadChainDefinition(chainName string) (*viper.Viper, error) {
 // marshal from viper to definitions struct
 func marshalChainDefinition(chainConf *viper.Viper, chain *def.Chain) error {
 	err := chainConf.Marshal(chain)
-	return fmt.Errorf("Error marshalling from viper to chain def: %v", err)
+	if err != nil {
+		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
+	}
+
+	// toml bools don't really marshal well
+	// data_container can be in the chain or
+	// in the service layer. this is very
+	// opinionated. we know.
+	for _, s := range []string{"", "service."} {
+		if chainConf.GetBool(s + "data_container") {
+			logger.Debugln("Data Containers Turned On.")
+			chain.Service.AutoData = true
+		}
+	}
+
+	return nil
 }
 
 // get the config file's path from the chain name
@@ -115,8 +156,6 @@ func mergeChainAndService(chain *def.Chain, service *def.Service) {
 	chain.Service.Name = chain.Name
 	chain.Service.Image = overWriteString(chain.Service.Image, service.Image)
 	chain.Service.Command = overWriteString(chain.Service.Command, service.Command)
-	chain.Service.ServiceDeps = overWriteSlice(chain.Service.ServiceDeps, service.ServiceDeps)
-	chain.Service.Labels = mergeMap(chain.Service.Labels, service.Labels)
 	chain.Service.Links = overWriteSlice(chain.Service.Links, service.Links)
 	chain.Service.Ports = overWriteSlice(chain.Service.Ports, service.Ports)
 	chain.Service.Expose = overWriteSlice(chain.Service.Expose, service.Expose)
@@ -126,8 +165,6 @@ func mergeChainAndService(chain *def.Chain, service *def.Service) {
 	chain.Service.EnvFile = overWriteSlice(chain.Service.EnvFile, service.EnvFile)
 	chain.Service.Net = overWriteString(chain.Service.Net, service.Net)
 	chain.Service.PID = overWriteString(chain.Service.PID, service.PID)
-	chain.Service.CapAdd = overWriteSlice(chain.Service.CapAdd, service.CapAdd)
-	chain.Service.CapDrop = overWriteSlice(chain.Service.CapDrop, service.CapDrop)
 	chain.Service.DNS = overWriteSlice(chain.Service.DNS, service.DNS)
 	chain.Service.DNSSearch = overWriteSlice(chain.Service.DNSSearch, service.DNSSearch)
 	chain.Service.CPUShares = overWriteInt64(chain.Service.CPUShares, service.CPUShares)
@@ -184,60 +221,13 @@ func mergeMap(mapOne, mapTwo map[string]string) map[string]string {
 //----------------------------------------------------------------------
 // validation funcs
 
-func checkChainHasUniqueName(chain *def.Chain) {
-	chain.Operations.SrvContainerName = fmt.Sprintf("eris_chain_%s", util.NameAndNumber(chain.Name, chain.Operations.ContainerNumber))
-}
-
-func checkDataContainerTurnedOn(chain *def.Chain, chainConf *viper.Viper) {
-	// toml bools don't really marshal well
-	if chainConf.GetBool("service.data_container") {
-		chain.Service.AutoData = true
-		chain.Operations.DataContainer = true
-	}
-}
-
-func checkDataContainerHasName(ops *def.ServiceOperation) {
-	if ops.DataContainer {
-		ops.DataContainerName = ""
-		if ops.DataContainer {
-			dataSplit := strings.Split(ops.SrvContainerName, "_")
-			dataSplit[1] = "data"
-			ops.DataContainerName = strings.Join(dataSplit, "_")
-		}
-	}
+func checkNames(chain *def.Chain) {
+	chain.Operations.SrvContainerName = util.ChainContainersName(chain.Name, chain.Operations.ContainerNumber)
+	chain.Operations.DataContainerName = util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
 }
 
 //----------------------------------------------------------------------
 // chain lists, lookups
-
-// list all running eris_chain docker containers
-func listChains(running bool) []string {
-	chains := []string{}
-	r := regexp.MustCompile(`\/eris_chain_(.+)_\d`)
-
-	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: running})
-	for _, con := range contns {
-		for _, c := range con.Names {
-			match := r.FindAllStringSubmatch(c, 1)
-			if len(match) != 0 {
-				chains = append(chains, r.FindAllStringSubmatch(c, 1)[0][1])
-			}
-		}
-	}
-
-	return chains
-}
-
-// check if given chain is running
-func isRunningChain(name string, all bool) bool {
-	running := listChains(all)
-	for _, srv := range running {
-		if srv == name {
-			return true
-		}
-	}
-	return false
-}
 
 // check if given chain is known
 func isKnownChain(name string) bool {

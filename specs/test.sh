@@ -9,6 +9,9 @@ passed() {
   echo ""
 }
 
+# eris services stop -rx ipfs
+# eris chains stop -rx testChain
+
 export TEST_IN_CIRCLE=true
 cd perform && go test -v
 passed Perform

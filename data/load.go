@@ -7,17 +7,29 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-// XXX: should this be moved into utils? also we have actions.MockAction(actionName string)
-//   which should probably be treated similarly.
-func MockService(name string, containerNumber int) (*def.Service, *def.ServiceOperation) {
-	srv := &def.Service{}
-	ops := &def.ServiceOperation{}
-	ops.SrvContainerName = nameToContainerName(name, containerNumber)
-	return srv, ops
+func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.ServiceDefinition {
+	srv := def.BlankServiceDefinition()
+	srv.Name = serviceYourPretendingToBe
+
+	if len(cNum) == 0 {
+		// TODO: findNextContainerIndex => util/container_operations.go
+		srv.Operations.ContainerNumber = 1
+	} else {
+		srv.Operations.ContainerNumber = cNum[0]
+	}
+
+	giveMeAllTheNames(serviceYourPretendingToBe, srv)
+	return srv
 }
 
-func nameToContainerName(name string, containerNumber int) string {
-	return fmt.Sprintf("eris_data_%s_%d", name, containerNumber)
+func giveMeAllTheNames(name string, srv *def.ServiceDefinition) {
+	logger.Debugf("Giving myself all the names =>\t%s\n", name)
+	srv.Name = name
+	srv.Service.Name = name
+	srv.Operations.SrvContainerName = util.DataContainersName(srv.Name, srv.Operations.ContainerNumber)
+	srv.Operations.DataContainerName = util.DataContainersName(srv.Name, srv.Operations.ContainerNumber)
+	logger.Debugf("My service container name is =>\t%s\n", srv.Operations.SrvContainerName)
+	logger.Debugf("My data container name is =>\t%s\n", srv.Operations.DataContainerName)
 }
 
 func checkServiceGiven(args []string) error {
@@ -25,17 +37,4 @@ func checkServiceGiven(args []string) error {
 		return fmt.Errorf("No Data Container Given. Please rerun command with a known data container.")
 	}
 	return nil
-}
-
-func parseKnown(name string, num int) bool {
-	name = util.NameAndNumber(name, num)
-	known, _ := ListKnownRaw()
-	if len(known) != 0 {
-		for _, srv := range known {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
 }

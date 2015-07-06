@@ -28,11 +28,9 @@ import (
 func DockerCreateDataContainer(srvName string, containerNumber int) error {
 	logger.Infoln("Starting Data Container for Service: " + srvName)
 
-	srv := def.Service{}
-	ops := def.ServiceOperation{}
-	srvName = util.NameAndNumber(srvName, containerNumber)
-	ops.DataContainerName = fmt.Sprintf("eris_data_%s", srvName)
-	optsData, err := configureDataContainer(&srv, &ops, nil)
+	srv := def.BlankServiceDefinition()
+	srv.Operations.DataContainerName = util.DataContainersName(srvName, containerNumber)
+	optsData, err := configureDataContainer(srv.Service, srv.Operations, nil)
 	if err != nil {
 		return err
 	}
@@ -100,7 +98,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	return nil
 }
 
-func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
+func DockerRun(srv *def.Service, ops *def.Operation) error {
 	var id_main, id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
@@ -109,7 +107,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	logger.Infoln("Starting Service: " + srv.Name)
 
 	// copy service config into docker client config
-	optsServ, err := configureContainer(srv, ops)
+	optsServ, err := configureServiceContainer(srv, ops)
 	if err != nil {
 		return err
 	}
@@ -121,7 +119,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	}
 
 	// setup data container
-	if ops.DataContainer {
+	if srv.AutoData {
 		logger.Infoln("You've asked me to manage the data containers. I shall do so good human.")
 		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
@@ -132,7 +130,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	// check existence || create the container
 	if servCont, exists := ContainerExists(ops); exists {
 		logger.Infoln("Service Container already exists, am not creating.")
-		if ops.DataContainer {
+		if srv.AutoData {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
 				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
@@ -151,7 +149,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	} else {
 		logger.Infoln("Service Container does not exist, creating.")
 
-		if ops.DataContainer {
+		if srv.AutoData {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
 				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
@@ -174,7 +172,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 
 	// start the container
 	logger.Infoln("Starting Service Container ID: " + id_main)
-	if ops.DataContainer {
+	if srv.AutoData {
 		logger.Infoln("with DataContainer ID: " + id_data)
 	}
 
@@ -217,7 +215,7 @@ func DockerRun(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
-func DockerExec(srv *def.Service, ops *def.ServiceOperation, cmd []string, interactive bool) error {
+func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive bool) error {
 	logger.Infoln("Starting Execution: " + srv.Name)
 
 	// check existence || create the container
@@ -244,7 +242,7 @@ func DockerExec(srv *def.Service, ops *def.ServiceOperation, cmd []string, inter
 	}
 }
 
-func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, skipPull bool) error {
+func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool) error {
 	var id string
 	var wasRunning bool = false
 
@@ -281,7 +279,7 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, skipPull bool) e
 		}
 	}
 
-	opts, err := configureContainer(srv, ops)
+	opts, err := configureServiceContainer(srv, ops)
 	if err != nil {
 		return err
 	}
@@ -310,7 +308,7 @@ func DockerRebuild(srv *def.Service, ops *def.ServiceOperation, skipPull bool) e
 	return nil
 }
 
-func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
+func DockerPull(srv *def.Service, ops *def.Operation) error {
 	logger.Infof("Pulling an image (%s) for the service (%s)\n", srv.Image, srv.Name)
 
 	var wasRunning bool = false
@@ -352,7 +350,7 @@ func DockerPull(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
-func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool, tail string) error {
+func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Logging Service ID: " + service.ID)
 		err := logsContainer(service.ID, follow, tail)
@@ -366,7 +364,7 @@ func DockerLogs(srv *def.Service, ops *def.ServiceOperation, follow bool, tail s
 	return nil
 }
 
-func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string) error {
+func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Inspecting Service ID: " + service.ID)
 		err := inspectContainer(service.ID, field)
@@ -374,12 +372,12 @@ func DockerInspect(srv *def.Service, ops *def.ServiceOperation, field string) er
 			return err
 		}
 	} else {
-		return fmt.Errorf("Service container does not exist. Cannot inspect.")
+		logger.Infoln("Service container does not exist. Cannot inspect.")
 	}
 	return nil
 }
 
-func DockerStop(srv *def.Service, ops *def.ServiceOperation) error {
+func DockerStop(srv *def.Service, ops *def.Operation) error {
 	// don't limit this to verbose because it takes a few seconds
 	logger.Println("Stopping: " + srv.Name + ". This may take a few seconds.")
 
@@ -398,7 +396,7 @@ func DockerStop(srv *def.Service, ops *def.ServiceOperation) error {
 	return nil
 }
 
-func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName string) error {
+func DockerRename(srv *def.Service, ops *def.Operation, oldName, newName string) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Renaming Service ID: " + service.ID)
 		newName = strings.Replace(service.Names[0], oldName, newName, 1)
@@ -407,32 +405,42 @@ func DockerRename(srv *def.Service, ops *def.ServiceOperation, oldName, newName 
 			return err
 		}
 	} else {
-		return fmt.Errorf("Service container does not exist. Cannot rename.")
+		logger.Infoln("Service container does not exist. Cannot rename.")
 	}
 
 	return nil
 }
 
-func DockerRemove(srv *def.Service, ops *def.ServiceOperation) error {
+func DockerRemove(srv *def.Service, ops *def.Operation, withData bool) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infoln("Removing Service ID: " + service.ID)
-		err := removeContainer(service.ID)
-		if err != nil {
+		if err := removeContainer(service.ID); err != nil {
 			return err
 		}
+		if withData {
+			if srv, ext := ContainerDataContainerExists(ops); ext {
+				if err := removeContainer(srv.ID); err != nil {
+					return err
+				}
+			}
+		}
 	} else {
-		return fmt.Errorf("Service container does not exist. Cannot remove.")
+		logger.Infoln("Service container does not exist. Cannot remove.")
 	}
 
 	return nil
 }
 
-func ContainerExists(ops *def.ServiceOperation) (docker.APIContainers, bool) {
+func ContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
 	return parseContainers(ops.SrvContainerName, true)
 }
 
-func ContainerRunning(ops *def.ServiceOperation) (docker.APIContainers, bool) {
+func ContainerRunning(ops *def.Operation) (docker.APIContainers, bool) {
 	return parseContainers(ops.SrvContainerName, false)
+}
+
+func ContainerDataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
+	return parseContainers(ops.DataContainerName, true)
 }
 
 // ----------------------------------------------------------------------------
@@ -636,7 +644,7 @@ func removeContainer(id string) error {
 	return nil
 }
 
-func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.CreateContainerOptions, error) {
+func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.CreateContainerOptions, error) {
 	if ops.ContainerNumber == 0 {
 		ops.ContainerNumber = 1
 	}
@@ -655,7 +663,7 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 			Tty:             true,
 			OpenStdin:       false,
 			Env:             srv.Environment,
-			Labels:          srv.Labels,
+			Labels:          ops.Labels,
 			Cmd:             strings.Fields(srv.Command),
 			Entrypoint:      strings.Fields(srv.EntryPoint),
 			Image:           srv.Image,
@@ -671,8 +679,8 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 			DNS:             srv.DNS,
 			DNSSearch:       srv.DNSSearch,
 			VolumesFrom:     srv.VolumesFrom,
-			CapAdd:          srv.CapAdd,
-			CapDrop:         srv.CapDrop,
+			CapAdd:          ops.CapAdd,
+			CapDrop:         ops.CapDrop,
 			RestartPolicy:   docker.NeverRestart(),
 			NetworkMode:     "bridge",
 		},
@@ -732,13 +740,6 @@ func configureContainer(srv *def.Service, ops *def.ServiceOperation) (docker.Cre
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
-	for _, depServ := range srv.ServiceDeps {
-		name := depServ
-		depServ = nameToContainerName("service", depServ, ops.ContainerNumber)
-		newLink := depServ + ":" + name
-		opts.HostConfig.Links = append(opts.HostConfig.Links, newLink)
-	}
-
 	return opts, nil
 }
 
@@ -769,7 +770,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 	return opts
 }
 
-func configureDataContainer(srv *def.Service, ops *def.ServiceOperation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
+func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
 	// by default data containers will rely on the image used by
 	//   the base service. sometimes, tho, especially for testing
 	//   that base image will not be present. in such cases use
@@ -867,8 +868,4 @@ func fixDirs(arg []string) ([]string, error) {
 	}
 
 	return arg, nil
-}
-
-func nameToContainerName(contType, name string, num int) string {
-	return "eris_" + contType + "_" + name + "_" + fmt.Sprintf("%v", num)
 }

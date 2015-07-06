@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	// logger.Level = 2
 
 	if err := testsInit(); err != nil {
-		logger.Errorln(err)
+		fmt.Printf("Could not initialize the tests\n%v", err)
 		os.Exit(1)
 	}
 
@@ -33,18 +33,18 @@ func TestMain(m *testing.M) {
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e1 = data.RmDataRaw("keys", 1)
 		if e1 != nil {
-			logger.Errorln(e1)
+			fmt.Println(e1)
 		}
 		e2 = data.RmDataRaw("ipfs", 1)
 		if e2 != nil {
-			logger.Errorln(e2)
+			fmt.Println(e2)
 		}
 	}
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		e3 = testsTearDown()
 		if e3 != nil {
-			logger.Errorln(e3)
+			fmt.Println(e3)
 		}
 	}
 
@@ -80,37 +80,28 @@ func TestLoadServiceDefinition(t *testing.T) {
 		t.FailNow()
 	}
 
+	if srv.Name != servName {
+		logger.Errorf("FAILURE: improper name on LOAD. expected: %s\tgot: %s\n", servName, srv.Name)
+	}
+
 	if srv.Service.Name != servName {
 		logger.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
 		t.FailNow()
 	}
 
-	if !srv.Operations.DataContainer {
+	if !srv.Service.AutoData {
 		logger.Errorf("FAILURE: data_container not properly read on LOAD.\n")
 		t.FailNow()
 	}
 
 	if srv.Operations.DataContainerName == "" {
-		logger.Errorf("FAILURe: data_container_name not set.\n")
-		t.Fail()
-	}
-}
-
-func TestLoadService(t *testing.T) {
-	s, e := LoadService(servName)
-	if e != nil {
-		logger.Errorln(e)
-		t.FailNow()
-	}
-
-	if s.Name != servName {
-		logger.Errorf("FAILURE: improper service name on LOAD_SERVICE. expected: %s\tgot: %s\n", servName, s.Name)
+		logger.Errorf("FAILURE: data_container_name not set.\n")
 		t.Fail()
 	}
 }
 
 func TestStartServiceRaw(t *testing.T) {
-	e := StartServiceRaw(servName, 1, new(def.ServiceOperation))
+	e := StartServiceRaw(servName, 1, def.BlankOperation())
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -202,7 +193,7 @@ func TestNewServiceRaw(t *testing.T) {
 		t.FailNow()
 	}
 
-	e = StartServiceRaw("keys", 1, new(def.ServiceOperation))
+	e = StartServiceRaw("keys", 1, new(def.Operation))
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -267,14 +258,14 @@ func testsInit() error {
 	// make sure ipfs not running
 	for _, r := range ListRunningRaw() {
 		if r == "ipfs" {
-			return fmt.Errorf("IPFS service is running. Please stop it with eris services stop ipfs.")
+			return fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n")
 		}
 	}
 
 	// make sure ipfs container does not exist
 	for _, r := range ListExistingRaw() {
 		if r == "ipfs" {
-			return fmt.Errorf("IPFS service exists. Please remove it with eris services rm ipfs.")
+			return fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n")
 		}
 	}
 
@@ -287,21 +278,23 @@ func testsTearDown() error {
 
 func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
 	var exist, run bool
-	servName = util.NameAndNumber(servName, containerNumber)
+	servName = util.ServiceContainersName(servName, containerNumber)
 	for _, r := range ListExistingRaw() {
-		if r == servName {
+		logger.Debugf("Existing =>\t%s\n", r)
+		if r == util.ContainersShortName(servName) {
 			exist = true
 		}
 	}
 	for _, r := range ListRunningRaw() {
-		if r == servName {
+		logger.Debugf("Running => \t%s\n", r)
+		if r == util.ContainersShortName(servName) {
 			run = true
 		}
 	}
 
 	if toRun != run {
 		if toRun {
-			logger.Errorf("Could not find a running instance of %s\n", servName)
+			logger.Errorf("Could not find a running instance of\t%s\n", servName)
 		} else {
 			logger.Errorf("Found a running instance of %s when I shouldn't have\n", servName)
 		}
@@ -310,7 +303,7 @@ func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist
 
 	if toExist != exist {
 		if toExist {
-			logger.Errorf("Could not find an existing instance of %s\n", servName)
+			logger.Errorf("Could not find an existing instance of\t%s\n", servName)
 		} else {
 			logger.Errorf("Found an existing instance of %s when I shouldn't have\n", servName)
 		}

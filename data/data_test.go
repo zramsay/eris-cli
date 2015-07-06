@@ -104,15 +104,9 @@ func TestExecDataRaw(t *testing.T) {
 }
 
 func TestExportDataRaw(t *testing.T) {
-	args := []string{"ls", "-la", "/home/eris/.eris"}
-	if err := ExecDataRaw(dataName, 1, false, args); err != nil {
-		logger.Errorln(err)
-		t.Fail()
-	}
-
 	if err := ExportDataRaw(dataName, 1); err != nil {
 		logger.Errorln(err)
-		t.Fail()
+		t.FailNow()
 	}
 
 	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
@@ -153,16 +147,15 @@ func testsInit() error {
 }
 
 func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
-	}
+	// if e := os.RemoveAll(erisDir); e != nil {
+	// 	return e
+	// }
 
 	return nil
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
 	var exist bool
-	name = name + "_1" // NOTE: this is temporary, remove when #42 closed
 	known, _ := ListKnownRaw()
 	for _, r := range known {
 		if r == name {

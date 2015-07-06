@@ -48,19 +48,13 @@ func ImportServiceRaw(servName, servPath string) error {
 }
 
 func NewServiceRaw(servName, imageName string) error {
-	srv := &def.Service{
-		Name:     servName,
-		Image:    imageName,
-		AutoData: true,
-	}
-	srvDef := &def.ServiceDefinition{
-		Service:    srv,
-		Maintainer: &def.Maintainer{},
-		Location:   &def.Location{},
-		Machine:    &def.Machine{},
-	}
+	srv := def.BlankServiceDefinition()
+	srv.Name = servName
+	srv.Service.Name = servName
+	srv.Service.Image = imageName
+	srv.Service.AutoData = true
 
-	err := WriteServiceDefinitionFile(srvDef, path.Join(ServicesPath, servName+".toml"))
+	err := WriteServiceDefinitionFile(srv, path.Join(ServicesPath, servName+".toml"))
 	if err != nil {
 		return err
 	}
@@ -167,7 +161,7 @@ func ExportServiceRaw(servName string) error {
 		} else {
 			logger.Infoln("IPFS is not running. Starting now.")
 
-			if err := StartServiceByService(ipfsService.Service, ipfsService.Operations); err != nil {
+			if err := StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{}); err != nil {
 				return err
 			}
 
@@ -187,7 +181,7 @@ To find known services use: eris services known`)
 	return nil
 }
 
-func InspectServiceByService(srv *def.Service, ops *def.ServiceOperation, field string) error {
+func InspectServiceByService(srv *def.Service, ops *def.Operation, field string) error {
 	if IsServiceExisting(srv, ops) {
 		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
@@ -216,11 +210,11 @@ func ListKnownRaw() []string {
 }
 
 func ListRunningRaw() []string {
-	return listServices(false)
+	return util.ServiceContainerNames(false)
 }
 
 func ListExistingRaw() []string {
-	return listServices(true)
+	return util.ServiceContainerNames(true)
 }
 
 func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error {
@@ -236,26 +230,18 @@ func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error
 }
 
 // TODO: not sure why this deletes the service def (?)
-func RmServiceRaw(servNames []string, containerNumber int, force, rmData bool) error {
+func RmServiceRaw(servNames []string, containerNumber int, file, rmData bool) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
 			return err
 		}
-		err = perform.DockerRemove(service.Service, service.Operations)
+		err = perform.DockerRemove(service.Service, service.Operations, rmData)
 		if err != nil {
 			return err
 		}
 
-		if rmData {
-			mockServ, mockOp := data.MockService(servName, containerNumber)
-			err = perform.DockerRemove(mockServ, mockOp)
-			if err != nil {
-				return err
-			}
-		}
-
-		if force {
+		if file {
 			oldFile, err := servDefFileByServName(servName)
 			if err != nil {
 				return err

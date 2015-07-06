@@ -16,9 +16,9 @@ import (
 )
 
 func ImportDataRaw(name string, containerNumber int) error {
-	if parseKnown(name, containerNumber) {
+	if util.IsDataContainer(name, containerNumber) {
 
-		containerName := nameToContainerName(name, containerNumber)
+		containerName := util.DataContainersName(name, containerNumber)
 		importPath := filepath.Join(DataContainersPath, name)
 
 		// temp until docker cp works both ways.
@@ -46,8 +46,8 @@ func ImportDataRaw(name string, containerNumber int) error {
 }
 
 func ExecDataRaw(name string, containerNumber int, interactive bool, args []string) error {
-	if parseKnown(name, containerNumber) {
-		name = nameToContainerName(name, containerNumber)
+	if util.IsDataContainer(name, containerNumber) {
+		name = util.DataContainersName(name, containerNumber)
 		logger.Infoln("Running exec on container with volumes from data container " + name)
 		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
 			return err
@@ -59,12 +59,13 @@ func ExecDataRaw(name string, containerNumber int, interactive bool, args []stri
 }
 
 func ExportDataRaw(name string, containerNumber int) error {
-	if parseKnown(name, containerNumber) {
-		logger.Infoln("Exporting data container" + name)
+	if util.IsDataContainer(name, containerNumber) {
+		logger.Infoln("Exporting data container", name)
 
 		exportPath := filepath.Join(DataContainersPath, name) // TODO: containerNumber ?
-		_, ops := MockService(name, containerNumber)
-		service, exists := perform.ContainerExists(ops)
+		srv := PretendToBeAService(name, containerNumber)
+
+		service, exists := perform.ContainerExists(srv.Operations)
 
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")

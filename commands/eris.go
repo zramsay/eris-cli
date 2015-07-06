@@ -7,12 +7,13 @@ import (
 
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-const VERSION = "0.10.0"
+const VERSION = version.VERSION
 
 // Defining the root command
 var ErisCmd = &cobra.Command{

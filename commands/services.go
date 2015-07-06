@@ -287,7 +287,7 @@ func StartService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.StartServiceRaw(args[0], ContainerNumber, &def.ServiceOperation{}))
+	IfExit(srv.StartServiceRaw(args[0], ContainerNumber, &def.Operation{}))
 }
 
 func LogService(cmd *cobra.Command, args []string) {

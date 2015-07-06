@@ -141,7 +141,9 @@ func actDef() error {
 }
 
 func defIpfs() string {
-	return `[service]
+	return `name = "ipfs"
+
+[service]
 name = "ipfs"
 image = "eris/ipfs"
 data_container = true
@@ -165,7 +167,7 @@ func defEdb() string {
 	return `[service]
 name           = "erisdb"
 image          = "eris/erisdb:develop"
-ports          = [ "46656:46656", "46657:46657" ]
+ports          = [ "46656", "46657" ]
 environment    = [ "TMROOT=/home/eris/.eris/blockchains/tendermint" ]
 data_container = true
 
@@ -307,7 +309,7 @@ func defGen() string {
 func defAct() string {
 	return `name = "do not use"
 services = [ "ipfs" ]
-chains = [ "" ]
+chain = ""
 steps = [
   "printenv",
   "echo hello",

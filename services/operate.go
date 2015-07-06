@@ -9,17 +9,23 @@ import (
 	"sync"
 )
 
-func StartServiceRaw(servName string, containerNumber int, ops *def.ServiceOperation) error {
-	service, err := LoadServiceDefinition(servName, containerNumber)
+func StartServiceRaw(servName string, containerNumber int, ops *def.Operation) error {
+	srv, err := LoadServiceDefinition(servName, containerNumber)
 	if err != nil {
 		return err
 	}
 
-	if IsServiceRunning(service.Service, service.Operations) {
+	if IsServiceRunning(srv.Service, srv.Operations) {
 		logger.Infoln("Service already started. Skipping", servName)
 	} else {
-		util.OverwriteOps(service.Operations, ops)
-		return StartServiceByService(service.Service, service.Operations)
+		util.OverwriteOps(srv.Operations, ops)
+
+		for _, dep := range srv.ServiceDeps {
+			newLink := util.ServiceContainersName(dep, ops.ContainerNumber) + ":" + dep
+			srv.Service.Links = append(srv.Service.Links, newLink)
+		}
+
+		return StartServiceByService(srv.Service, srv.Operations, srv.ServiceDeps)
 	}
 
 	return nil
@@ -57,7 +63,7 @@ func KillServiceRaw(all, rm, rmData bool, containerNumber int, servNames ...stri
 		}
 
 		if IsServiceRunning(service.Service, service.Operations) {
-			if err := KillServiceByService(all, rm, rmData, service.Service, service.Operations); err != nil {
+			if err := KillServiceByService(service.Service, service.Operations, service.ServiceDeps, all, rm, rmData); err != nil {
 				return err
 			}
 
@@ -75,12 +81,12 @@ func KillServiceRaw(all, rm, rmData bool, containerNumber int, servNames ...stri
 	return nil
 }
 
-func LogsServiceByService(srv *def.Service, ops *def.ServiceOperation, follow bool, tail string) error {
+func LogsServiceByService(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
 	return perform.DockerLogs(srv, ops, follow, tail)
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
-func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, ops *def.ServiceOperation, start func(string, int, *def.ServiceOperation) error) {
+func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name string, ops *def.Operation, start func(string, int, *def.Operation) error) {
 	num := ops.ContainerNumber
 	var skip bool
 	for _, srv := range group {
@@ -117,9 +123,9 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group, running []string, name
 	}
 }
 
-func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) error {
+func StartServiceByService(srvMain *def.Service, ops *def.Operation, servDeps []string) error {
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
-	StartGroup(ch, wg, srvMain.ServiceDeps, nil, "service", ops, StartServiceRaw)
+	StartGroup(ch, wg, servDeps, nil, "service", ops, StartServiceRaw)
 	go func() {
 		wg.Wait()
 		ch <- nil
@@ -130,13 +136,13 @@ func StartServiceByService(srvMain *def.Service, ops *def.ServiceOperation) erro
 	return perform.DockerRun(srvMain, ops)
 }
 
-func ExecServiceByService(srvMain *def.Service, ops *def.ServiceOperation, cmd []string, attach bool) error {
+func ExecServiceByService(srvMain *def.Service, ops *def.Operation, cmd []string, attach bool) error {
 	return perform.DockerExec(srvMain, ops, cmd, attach)
 }
 
-func KillServiceByService(all, rm, rmData bool, srvMain *def.Service, ops *def.ServiceOperation) error {
+func KillServiceByService(srvMain *def.Service, ops *def.Operation, servDeps []string, all, rm, rmData bool) error {
 	if all {
-		for _, srv := range srvMain.ServiceDeps {
+		for _, srv := range servDeps {
 			go KillServiceRaw(all, rm, rmData, ops.ContainerNumber, srv)
 		}
 	}

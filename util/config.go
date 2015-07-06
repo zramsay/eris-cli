@@ -58,7 +58,7 @@ func LoadViperConfig(configPath, configName, typ string) (*viper.Viper, error) {
 	conf.SetConfigName(configName)
 	err := conf.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to load %s config for %s in %s. Viper error: %v", typ, configName, configPath, err)
+		return nil, fmt.Errorf("Unable to load the %s's config for %s in %s.\nCheck your known %ss with:\neris %ss known", typ, configName, configPath, typ, typ)
 	}
 
 	return conf, nil

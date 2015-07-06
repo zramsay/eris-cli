@@ -315,7 +315,7 @@ func StartChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.StartChainRaw(args[0], ContainerNumber, &def.ServiceOperation{PublishAllPorts: PublishAllPorts}))
+	IfExit(chns.StartChainRaw(args[0], ContainerNumber, &def.Operation{PublishAllPorts: PublishAllPorts}))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {

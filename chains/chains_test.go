@@ -87,24 +87,23 @@ func TestLoadChainDefinition(t *testing.T) {
 	}
 
 	if chn.Service.Name != chainName {
-		logger.Errorln("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", chainName, chn.Service.Name)
+		logger.Errorln("FAILURE: improper service name on LOAD. expected: %s\tgot: %s", chainName, chn.Service.Name)
 		t.FailNow()
 	}
 
-	if !chn.Operations.DataContainer {
-		fmt.Println(chn.Operations)
-		logger.Errorln("FAILURE: data_container not properly read on LOAD.\n")
+	if !chn.Service.AutoData {
+		logger.Errorln("FAILURE: data_container not properly read on LOAD.")
 		t.FailNow()
 	}
 
 	if chn.Operations.DataContainerName == "" {
-		logger.Errorln("FAILURE: data_container_name not set.\n")
+		logger.Errorln("FAILURE: data_container_name not set.")
 		t.Fail()
 	}
 }
 
 func TestStartChainRaw(t *testing.T) {
-	e := StartChainRaw(chainName, 1, new(def.ServiceOperation))
+	e := StartChainRaw(chainName, 1, def.BlankOperation())
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
