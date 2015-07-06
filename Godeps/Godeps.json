@@ -45,6 +45,15 @@
 			"Rev": "542b39186cdb2013d4acdf713d5e11671c2fe934"
 		},
 		{
+			"ImportPath": "github.com/oleiade/reflections",
+			"Comment": "0.1.2-2-g632977f",
+			"Rev": "632977f98cd34d217c4b57d0840ec188b3d3dcaf"
+		},
+		{
+			"ImportPath": "github.com/serenize/snaker",
+			"Rev": "d88cc11617e4f179fa2c821a60908d5fabd7bdad"
+		},
+		{
 			"ImportPath": "github.com/spf13/cast",
 			"Rev": "2c4fdb5416dd394ff5e61fcdb8eb4f09e46a2ed8"
 		},

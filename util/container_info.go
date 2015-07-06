@@ -69,6 +69,9 @@ func ContainerDisassemble(containerName string) *ContainerName {
 		return &ContainerName{}
 	}
 
+	// remove the leading slash docker adds
+	containerName = strings.Replace(containerName, "/", "", 1)
+
 	return &ContainerName{
 		FullName:    containerName,
 		DockersName: "/" + containerName,
