@@ -428,7 +428,7 @@ func CatService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.CatServiceRaw(args[0], ContainerNumber, &def.ServiceOperation{}))
+	IfExit(srv.CatServiceRaw(args[0]))
 
 }
 

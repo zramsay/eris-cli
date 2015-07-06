@@ -268,7 +268,7 @@ func RmServiceRaw(servNames []string, containerNumber int, force, rmData bool) e
 	return nil
 }
 
-func CatServiceRaw(servName string, containerNumber int, ops *def.ServiceOperation) error {
+func CatServiceRaw(servName string) error {
 
 	cat, err := ioutil.ReadFile(path.Join(ServicesPath, servName+".toml"))
 	if err != nil {
