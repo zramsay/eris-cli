@@ -63,3 +63,7 @@ func RmDataRaw(name string, containerNumber int) error {
 func ListKnownRaw() ([]string, error) {
 	return util.DataContainerNames(), nil
 }
+
+func IsKnown(name string) bool {
+	return _parseKnown(name)
+}

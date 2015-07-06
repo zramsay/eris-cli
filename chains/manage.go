@@ -307,11 +307,12 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 		chainID = chainName
 	}
 
-	// TODO: check if data container already exists
 	// run containers and exit (creates data container)
-	logger.Infof("Creating data container for %s\n", chainName)
-	if err := perform.DockerCreateDataContainer(chainName, containerNumber); err != nil {
-		return fmt.Errorf("Error creating data container %v", err)
+	if !data.IsKnown(containerName) {
+		logger.Infof("Creating data container for %s\n", chainName)
+		if err := perform.DockerCreateDataContainer(chainName, containerNumber); err != nil {
+			return fmt.Errorf("Error creating data container %v", err)
+		}
 	}
 
 	// if something goes wrong, cleanup
