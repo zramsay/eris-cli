@@ -43,6 +43,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
+	Services.AddCommand(servicesCat)
 	addServicesFlags()
 }
 
@@ -248,6 +249,17 @@ Use the --force flag to also remove the service definition file.`,
 	},
 }
 
+var servicesCat = &cobra.Command{
+	Use:   "cat [name]",
+	Short: "Displays service file.",
+	Long: `Displays service file.
+
+Command will cat local service definition file.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CatService(cmd, args)
+	},
+}
+
 //----------------------------------------------------------------------
 // cli flags
 
@@ -409,6 +421,15 @@ func RmService(cmd *cobra.Command, args []string) {
 		return
 	}
 	IfExit(srv.RmServiceRaw(args, ContainerNumber, Force, RmD))
+}
+
+func CatService(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(srv.CatServiceRaw(args[0], ContainerNumber, &def.ServiceOperation{}))
+
 }
 
 func checkServiceGiven(args []string) error {

@@ -2,11 +2,11 @@ package services
 
 import (
 	"fmt"
-	"sync"
-
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+
+	"sync"
 )
 
 func StartServiceRaw(servName string, containerNumber int, ops *def.ServiceOperation) error {

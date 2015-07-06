@@ -48,6 +48,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
+	Chains.AddCommand(chainsCat)
 	addChainsFlags()
 }
 
@@ -263,6 +264,17 @@ var chainsGraduate = &cobra.Command{
 	Long:  `Graduates a chain to a service by laying a service definition file with the chain_id`,
 	Run: func(cmd *cobra.Command, args []string) {
 		GraduateChain(cmd, args)
+	},
+}
+
+var chainsCat = &cobra.Command{
+	Use:   "cat [name]",
+	Short: "Displays service file.",
+	Long: `Displays service file.
+
+Command will cat local service definition file.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CatChain(cmd, args)
 	},
 }
 
@@ -488,6 +500,15 @@ func GraduateChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	IfExit(chns.GraduateChainRaw(args[0]))
+}
+
+func CatChain(cmd *cobra.Command, args []string) {
+	if err := checkChainGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	IfExit(chns.CatChainRaw(args[0]))
+
 }
 
 func checkChainGiven(args []string) error {

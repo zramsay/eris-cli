@@ -279,6 +279,16 @@ func GraduateChainRaw(chainName string) error {
 	return nil
 }
 
+func CatChainRaw(chainName string) error {
+	cat, err := ioutil.ReadFile(path.Join(BlockchainsPath, chainName+".toml"))
+	if err != nil {
+		return err
+	}
+	logger.Println(string(cat))
+	return nil
+
+}
+
 //------------------------------------------------------------------------
 
 // the main function for setting up a chain container

@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -264,6 +265,16 @@ func RmServiceRaw(servNames []string, containerNumber int, force, rmData bool) e
 			}
 		}
 	}
+	return nil
+}
+
+func CatServiceRaw(servName string, containerNumber int, ops *def.ServiceOperation) error {
+
+	cat, err := ioutil.ReadFile(path.Join(ServicesPath, servName+".toml"))
+	if err != nil {
+		return err
+	}
+	logger.Println(string(cat))
 	return nil
 }
 
