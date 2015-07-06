@@ -2,7 +2,6 @@ FROM golang:1.4
 MAINTAINER Eris Industries <support@erisindustries.com>
 
 # User Creation
-
 ENV USER eris
 
 # Choose the user id number 1000 to work well with Boot2Docker volumes.  See:

@@ -82,18 +82,28 @@ var Debug bool
 var ContainerNumber int
 
 // Flags that are to be used by commands
-var Force bool
-var Interactive bool
-var Pull bool
-var SkipPull bool
-var Quiet bool
-var All bool
-var Follow bool
-var Tail string
-var Rm bool
-var RmD bool
-var Lines int
-var PublishAllPorts bool
+var (
+	Force           bool
+	Interactive     bool
+	Pull            bool
+	SkipPull        bool
+	Quiet           bool
+	All             bool
+	Follow          bool
+	Tail            string
+	Rm              bool
+	RmD             bool
+	Lines           int
+	PublishAllPorts bool
+
+	// chain specific flags
+	ChainName   string
+	GenesisFile string
+	ConfigFile  string
+	DirToCopy   string
+	ChainID     string
+	Run         bool
+)
 
 // Define the persistent commands (globals)
 func AddGlobalFlags() {

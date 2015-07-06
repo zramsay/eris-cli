@@ -279,20 +279,12 @@ Command will cat local service definition file.`,
 }
 
 //----------------------------------------------------------------------
-// cli flags
-
-var (
-	ChainName   string
-	GenesisFile string
-	ConfigFile  string
-	DirToCopy   string
-	ChainID     string
-)
 
 func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&GenesisFile, "genesis", "g", "", "genesis.json file")
 	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsNew.PersistentFlags().BoolVarP(&Run, "run", "r", false, "run the chain after creating")
 
 	chainsStart.PersistentFlags().BoolVarP(&PublishAllPorts, "publish", "p", false, "publish all ports")
 
@@ -385,7 +377,7 @@ func NewChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	chainName := args[0]
-	IfExit(chns.NewChainRaw(chainName, GenesisFile, ConfigFile, DirToCopy, ContainerNumber))
+	IfExit(chns.NewChainRaw(chainName, GenesisFile, ConfigFile, DirToCopy, Run, ContainerNumber))
 }
 
 // import a chain definition file

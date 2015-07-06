@@ -26,7 +26,7 @@ const (
 	ErisChainNew     = "erisdb-wrapper new"
 )
 
-func NewChainRaw(name, genesis, config, dir string, containerNumber int) (err error) {
+func NewChainRaw(name, genesis, config, dir string, run bool, containerNumber int) (err error) {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
 	var chainID string
@@ -39,11 +39,11 @@ func NewChainRaw(name, genesis, config, dir string, containerNumber int) (err er
 		}
 	}
 
-	return setupChain(chainID, name, ErisChainNew, dir, genesis, config, containerNumber, false)
+	return setupChain(chainID, name, ErisChainNew, dir, genesis, config, containerNumber, false, run)
 }
 
 func InstallChainRaw(chainID, chainName, config, dir string, publishAllPorts bool, containerNumber int) error {
-	return setupChain(chainID, chainName, ErisChainInstall, dir, "", config, containerNumber, publishAllPorts)
+	return setupChain(chainID, chainName, ErisChainInstall, dir, "", config, containerNumber, publishAllPorts, true)
 }
 
 func ImportChainRaw(chainName, path string) error {
@@ -241,16 +241,15 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRemove(chain.Service, chain.Operations)
-	if err != nil {
-		return err
-	}
-
-	if rmData {
-		mockServ, mockOp := data.MockService(chainName, containerNumber)
-		err = perform.DockerRemove(mockServ, mockOp)
-		if err != nil {
+	if IsChainRunning(chain) {
+		if err = perform.DockerRemove(chain.Service, chain.Operations); err != nil {
 			return err
+		}
+		if rmData {
+			mockServ, mockOp := data.MockService(chainName, containerNumber)
+			if err = perform.DockerRemove(mockServ, mockOp); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -259,7 +258,9 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 		if err != nil {
 			return err
 		}
-		os.Remove(oldFile)
+		if err := os.Remove(oldFile); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -293,7 +294,7 @@ func CatChainRaw(chainName string) error {
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts, run bool) (err error) {
 	// chainName is mandatory
 	if chainName == "" {
 		return fmt.Errorf("setupChain requires a chainName")
@@ -385,18 +386,18 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 	// set chainid and other vars
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
 	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
-	chain.Service.Environment = append(chain.Service.Environment, "RUN=false") // TODO new should take a run flag
-	// TODO mint vs. erisdb (in terms of rpc)
+	chain.Service.Environment = append(chain.Service.Environment, fmt.Sprintf("RUN=%v", run))
 	if genesis == "" {
 		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
 	}
+	// TODO mint vs. erisdb (in terms of rpc)
 
 	chain.Operations.DataContainerName = fmt.Sprintf("eris_data_%s", util.NameAndNumber(chainName, containerNumber))
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		chain.Operations.Remove = true
 	}
 	err = services.StartServiceByService(chain.Service, chain.Operations)
-
+	// this err is caught in the defer above
 	return
 }
 

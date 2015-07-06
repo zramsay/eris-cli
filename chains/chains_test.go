@@ -71,7 +71,7 @@ func TestKnownChainRaw(t *testing.T) {
 
 func TestNewChainRaw(t *testing.T) {
 	genFile := path.Join(common.BlockchainsPath, "genesis", "default.json")
-	e := NewChainRaw(chainName, genFile, "", "", 1) // configFile and dir are not needed for the tests.
+	e := NewChainRaw(chainName, genFile, "", "", false, 1) // configFile and dir are not needed for the tests.
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -251,7 +251,7 @@ func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 
 	if toRun != run {
 		if toRun {
-			logger.Errorln("Could not find a running instance of %s.", chainName)
+			logger.Errorf("Could not find a running instance of %s.\n", chainName)
 		} else {
 			logger.Errorln("Found a running instance of %s when I shouldn't have.", chainName)
 		}
