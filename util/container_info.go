@@ -279,3 +279,8 @@ func erisRegExp(typ string) *regexp.Regexp {
 func erisRegExpLinks(typ string) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf(`\A\/eris_%s_(.+?)_\d+/(.+?)\z`, typ))
 }
+
+// here temporarily
+func NameAndNumber(name string, num int) string {
+	return fmt.Sprintf("%s_%d", name, num)
+}

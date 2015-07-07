@@ -237,16 +237,17 @@ func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error
 	return nil
 }
 
-// TODO: not sure why this deletes the service def (?)
 func RmServiceRaw(servNames []string, containerNumber int, file, rmData bool) error {
 	for _, servName := range servNames {
 		service, err := LoadServiceDefinition(servName, containerNumber)
 		if err != nil {
 			return err
 		}
-		err = perform.DockerRemove(service.Service, service.Operations, rmData)
-		if err != nil {
-			return err
+		if IsServiceExisting(service.Service, service.Operations) {
+			err = perform.DockerRemove(service.Service, service.Operations, rmData)
+			if err != nil {
+				return err
+			}
 		}
 
 		if file {

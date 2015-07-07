@@ -256,14 +256,14 @@ func testsInit() error {
 	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
 
 	// make sure ipfs not running
-	for _, r := range ListRunningRaw() {
+	for _, r := range ListRunningRaw(false) {
 		if r == "ipfs" {
 			return fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n")
 		}
 	}
 
 	// make sure ipfs container does not exist
-	for _, r := range ListExistingRaw() {
+	for _, r := range ListExistingRaw(false) {
 		if r == "ipfs" {
 			return fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n")
 		}
@@ -279,13 +279,13 @@ func testsTearDown() error {
 func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
 	var exist, run bool
 	servName = util.ServiceContainersName(servName, containerNumber)
-	for _, r := range ListExistingRaw() {
+	for _, r := range ListExistingRaw(false) {
 		logger.Debugf("Existing =>\t%s\n", r)
 		if r == util.ContainersShortName(servName) {
 			exist = true
 		}
 	}
-	for _, r := range ListRunningRaw() {
+	for _, r := range ListRunningRaw(false) {
 		logger.Debugf("Running => \t%s\n", r)
 		if r == util.ContainersShortName(servName) {
 			run = true

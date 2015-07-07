@@ -518,9 +518,11 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		// TODO: better error handling
-		if fmt.Sprintf("%v", err) == "no such image" {
+		if strings.Contains(err.Error(), "no such image") {
 			fmt.Printf("Pulling image (%s) from repository. This could take a second.\n", opts.Config.Image)
-			pullImage(opts.Config.Image, nil)
+			if err := pullImage(opts.Config.Image, nil); err != nil {
+				return nil, err
+			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
 			if err != nil {
 				return nil, err

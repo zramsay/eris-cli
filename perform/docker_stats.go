@@ -46,7 +46,7 @@ func PrintTableReport(typ string, running bool) error {
 		return nil
 	}
 
-	table := tablewriter.NewWriter(util.GlobalConfig.Writer)
+	table := tablewriter.NewWriter(logger.Writer)
 	table.SetHeader([]string{"SERVICE NAME", "TYPE", "CONTAINER #", "PORTS", "CONTAINER NAME"})
 	for _, c := range conts {
 		n, _ := PrintLineByContainerName(c.FullName)

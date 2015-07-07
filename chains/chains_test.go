@@ -218,7 +218,7 @@ func testsInit() error {
 	}
 
 	// make sure erisdb container does not exist
-	for _, r := range services.ListExistingRaw() {
+	for _, r := range services.ListExistingRaw(false) {
 		if r == "erisdb" {
 			return fmt.Errorf("ERISDB service exists. Please remove it with eris services rm erisdb.")
 		}
@@ -237,7 +237,7 @@ func testsTearDown() error {
 
 func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 	var exist, run bool
-	for _, r := range ListExistingRaw() {
+	for _, r := range ListExistingRaw(false) {
 		if r == chainName {
 			exist = true
 		}

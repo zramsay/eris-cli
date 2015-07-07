@@ -249,9 +249,10 @@ func RmChainRaw(chainName string, rmData bool, file bool, containerNumber int) e
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRemove(chain.Service, chain.Operations, rmData)
-	if err != nil {
-		return err
+	if IsChainExisting(chain) {
+		if err = perform.DockerRemove(chain.Service, chain.Operations, rmData); err != nil {
+			return err
+		}
 	}
 
 	if file {
@@ -272,9 +273,7 @@ func GraduateChainRaw(chainName string) error {
 		return err
 	}
 
-	fmt.Println(chain)
 	serv := ServiceDefFromChain(chain)
-	fmt.Println(serv)
 	if err := services.WriteServiceDefinitionFile(serv, path.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
 		return err
 	}
@@ -295,7 +294,7 @@ func CatChainRaw(chainName string) error {
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
-func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts bool) (err error) {
+func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerNumber int, publishAllPorts, run bool) (err error) {
 	// XXX: if chainName is unique, we can safely assume (and we probably should) that containerNumber = 1
 
 	// chainName is mandatory
