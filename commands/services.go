@@ -101,7 +101,7 @@ To list the known services: [eris services known]
 To list the running services: [eris services ps]
 To start a service use: [eris services start serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListExistingServices()
+		ListExistingServices(Quiet)
 	},
 }
 
@@ -146,7 +146,7 @@ var servicesListRunning = &cobra.Command{
 	Short: "Lists the running services.",
 	Long:  `Lists the services which are currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListRunningServices()
+		ListRunningServices(Quiet)
 	},
 }
 
@@ -277,6 +277,9 @@ func addServicesFlags() {
 
 	servicesRm.Flags().BoolVarP(&Force, "file", "f", false, "remove service definition file as well as service container")
 	servicesRm.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers as well")
+
+	servicesListExisting.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
+	servicesListRunning.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
 }
 
 //----------------------------------------------------------------------
@@ -401,15 +404,15 @@ func ListKnownServices() {
 	}
 }
 
-func ListRunningServices() {
-	services := srv.ListRunningRaw()
+func ListRunningServices(quiet bool) {
+	services := srv.ListRunningRaw(quiet)
 	for _, s := range services {
 		fmt.Println(s)
 	}
 }
 
-func ListExistingServices() {
-	services := srv.ListExistingRaw()
+func ListExistingServices(quiet bool) {
+	services := srv.ListExistingRaw(quiet)
 	for _, s := range services {
 		fmt.Println(s)
 	}

@@ -118,7 +118,7 @@ To list the running chains: [eris chains ps]
 To start a chain use: [eris chains start chainName].
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListChains()
+		ListChains(Quiet)
 	},
 }
 
@@ -174,7 +174,7 @@ var chainsListRunning = &cobra.Command{
 	Short: "List the running blockchains.",
 	Long:  `List the running blockchains.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListRunningChains()
+		ListRunningChains(Quiet)
 	},
 }
 
@@ -305,6 +305,9 @@ func addChainsFlags() {
 
 	chainsStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
 	chainsStop.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers after stopping")
+
+	chainsList.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
+	chainsListRunning.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
 }
 
 //----------------------------------------------------------------------
@@ -440,19 +443,19 @@ func ListKnownChains() {
 	}
 }
 
-func ListInstalledChains() {
-	chns.ListExistingRaw()
-}
+// func ListInstalledChains(quiet bool) {
+// 	chns.ListExistingRaw(quiet)
+// }
 
-func ListChains() {
-	chains := chns.ListExistingRaw()
+func ListChains(quiet bool) {
+	chains := chns.ListExistingRaw(quiet)
 	for _, s := range chains {
 		fmt.Println(s)
 	}
 }
 
-func ListRunningChains() {
-	chains := chns.ListRunningRaw()
+func ListRunningChains(quiet bool) {
+	chains := chns.ListRunningRaw(quiet)
 	for _, s := range chains {
 		fmt.Println(s)
 	}

@@ -147,12 +147,20 @@ func ListKnownRaw() []string {
 	return chns
 }
 
-func ListRunningRaw() []string {
-	return util.ChainContainerNames(false)
+func ListRunningRaw(quiet bool) []string {
+	if quiet {
+		return util.ChainContainerNames(false)
+	}
+	perform.PrintTableReport("chain", false)
+	return nil
 }
 
-func ListExistingRaw() []string {
-	return util.ChainContainerNames(true)
+func ListExistingRaw(quiet bool) []string {
+	if quiet {
+		return util.ChainContainerNames(true)
+	}
+	perform.PrintTableReport("chain", true)
+	return nil
 }
 
 // XXX: What's going on here?

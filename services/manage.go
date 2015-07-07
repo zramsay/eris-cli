@@ -209,12 +209,20 @@ func ListKnownRaw() []string {
 	return srvs
 }
 
-func ListRunningRaw() []string {
-	return util.ServiceContainerNames(false)
+func ListRunningRaw(quiet bool) []string {
+	if quiet {
+		return util.ServiceContainerNames(false)
+	}
+	perform.PrintTableReport("service", true)
+	return nil
 }
 
-func ListExistingRaw() []string {
-	return util.ServiceContainerNames(true)
+func ListExistingRaw(quiet bool) []string {
+	if quiet {
+		return util.ServiceContainerNames(true)
+	}
+	perform.PrintTableReport("service", true)
+	return nil
 }
 
 func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error {

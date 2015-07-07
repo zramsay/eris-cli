@@ -50,6 +50,10 @@
 			"Rev": "632977f98cd34d217c4b57d0840ec188b3d3dcaf"
 		},
 		{
+			"ImportPath": "github.com/olekukonko/tablewriter",
+			"Rev": "bc39950e081b457853031334b3c8b95cdfe428ba"
+		},
+		{
 			"ImportPath": "github.com/serenize/snaker",
 			"Rev": "d88cc11617e4f179fa2c821a60908d5fabd7bdad"
 		},

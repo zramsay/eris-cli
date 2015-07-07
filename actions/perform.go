@@ -27,10 +27,10 @@ func StartServicesAndChains(action *def.Action) error {
 	// start the services and chains
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
 
-	runningServices := services.ListRunningRaw()
+	runningServices := services.ListRunningRaw(true)
 	services.StartGroup(ch, wg, action.ServiceDeps, runningServices, "service", &def.Operation{ContainerNumber: 1}, services.StartServiceRaw) // TODO:CNUM
 
-	runningChains := chains.ListRunningRaw()
+	runningChains := chains.ListRunningRaw(true)
 	services.StartGroup(ch, wg, []string{action.Chain}, runningChains, "chain", &def.Operation{ContainerNumber: 1}, chains.StartChainRaw) // TODO:CNUM
 
 	go func() {

@@ -11,13 +11,18 @@ import (
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/oleiade/reflections"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/olekukonko/tablewriter"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/serenize/snaker"
 )
 
 func PrintInspectionReport(cont *docker.Container, field string) error {
 	switch field {
 	case "line":
-		return PrintLineByContainerID(cont.ID)
+		parts, err := printLine(cont)
+		if err != nil {
+			return err
+		}
+		logger.Println(strings.Join(parts, " "))
 	case "all":
 		for _, obj := range []interface{}{cont, cont.Config, cont.HostConfig, cont.NetworkSettings} {
 			t, err := reflections.Fields(obj)
@@ -35,40 +40,56 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 	return nil
 }
 
-func PrintLineByContainerName(containerName string) error {
+func PrintTableReport(typ string, running bool) error {
+	conts := util.ErisContainersByType(typ, running)
+	if len(conts) == 0 {
+		return nil
+	}
+
+	table := tablewriter.NewWriter(util.GlobalConfig.Writer)
+	table.SetHeader([]string{"SERVICE NAME", "TYPE", "CONTAINER #", "PORTS", "CONTAINER NAME"})
+	for _, c := range conts {
+		n, _ := PrintLineByContainerName(c.FullName)
+		table.Append(n)
+	}
+
+	// Styling
+	table.SetBorder(false)
+	table.SetCenterSeparator(" ")
+	table.SetColumnSeparator(" ")
+	table.SetRowSeparator("-")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.Render()
+	return nil
+}
+
+func PrintLineByContainerName(containerName string) ([]string, error) {
 	cont, exists := parseContainers(containerName, true)
 	if exists {
 		return PrintLineByContainerID(cont.ID)
 	}
-	return nil
+	return nil, nil //fail silently
 }
 
-func PrintLineByContainerID(containerID string) error {
-	cont, _ := util.DockerClient.InspectContainer(containerID)
+func PrintLineByContainerID(containerID string) ([]string, error) {
+	cont, err := util.DockerClient.InspectContainer(containerID)
+	if err != nil {
+		return nil, err
+	}
 	return printLine(cont)
 }
 
 // this function populates the listing functions
-func printLine(container *docker.Container) error {
-	var line string
-	// var n string
-	tmp, _ := reflections.GetField(container, "Name")
-	n := tmp.(string)
-	Names := util.ContainerDisassemble(n)
-	line = line + fmt.Sprintf("%-20s", Names.ShortName)
-	line = line + fmt.Sprintf("%-10s", Names.Type)
-	line = line + fmt.Sprintf("%-6d", Names.Number)
-
-	if probablyHasDataContainer(container) {
-		line = line + fmt.Sprintf("%-5s", "yes")
-	} else {
-		line = line + fmt.Sprintf("%-5s", "no")
+func printLine(container *docker.Container) ([]string, error) {
+	tmp, err := reflections.GetField(container, "Name")
+	if err != nil {
+		return nil, err
 	}
+	n := tmp.(string)
 
-	line = line + formulatePortsOutput(container)
-	line = line + fmt.Sprintf("%-20s", Names.FullName)
-	line = line + "\n"
-	return writeTemplate(container, line)
+	Names := util.ContainerDisassemble(n)
+	parts := []string{Names.ShortName, Names.Type, fmt.Sprintf("%d", Names.Number), formulatePortsOutput(container), Names.FullName}
+	return parts, nil
 }
 
 // this function is for parsing single variables
