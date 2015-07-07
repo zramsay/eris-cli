@@ -249,8 +249,8 @@ Use the --force flag to also remove the service definition file.`,
 
 var servicesCat = &cobra.Command{
 	Use:   "cat [name]",
-	Short: "Displays service file.",
-	Long: `Displays service file.
+	Short: "Displays service definition file.",
+	Long: `Displays service definition file.
 
 Command will cat local service definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {

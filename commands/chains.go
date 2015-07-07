@@ -293,10 +293,10 @@ var chainsGraduate = &cobra.Command{
 
 var chainsCat = &cobra.Command{
 	Use:   "cat [name]",
-	Short: "Displays service file.",
-	Long: `Displays service file.
+	Short: "Displays chains definition file.",
+	Long: `Displays chains definition file.
 
-Command will cat local service definition file.`,
+Command will cat local chains definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		CatChain(cmd, args)
 	},

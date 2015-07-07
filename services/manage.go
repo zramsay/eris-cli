@@ -278,12 +278,42 @@ func RmServiceRaw(do *definitions.Do) error {
 }
 
 func CatServiceRaw(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(path.Join(ServicesPath, do.Name+".toml"))
+	dir, err := ioutil.ReadDir(ServicesPath)
 	if err != nil {
 		return err
 	}
 
-	logger.Println(string(cat)) // todo: remove all of these
+	var valid bool
+	for i := 0; i < len(dir); i++ {
+		fi := dir[i].Name()
+
+		switch fi {
+		case do.Name + ".toml":
+			prettyCat(do.Name, ".toml")
+			valid = true
+		case do.Name + ".yaml":
+			prettyCat(do.Name, ".yaml")
+			valid = true
+		case do.Name + ".yml":
+			prettyCat(do.Name, ".yml")
+			valid = true
+		case do.Name + ".json":
+			prettyCat(do.Name, ".json")
+			valid = true
+		default:
+		}
+	}
+	if valid != true {
+		logger.Println("Invalid file format. Only '.toml', '.yaml', '.yml', and '.json' are allowed")
+	}
+	return nil
+}
+
+func prettyCat(servName string, ext string) error {
+	cat, err := ioutil.ReadFile(path.Join(ServicesPath, do.Name+ext))
+	if err != nil {
+		return err
+	}
 	do.Result = string(cat)
 	return nil
 }
