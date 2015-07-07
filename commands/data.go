@@ -106,7 +106,7 @@ func buildDataCommand() {
 	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 	Data.AddCommand(dataExec)
 	Data.AddCommand(dataRm)
-	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+	addDataFlags()
 }
 
 var dataImport = &cobra.Command{
@@ -192,6 +192,12 @@ var dataRm = &cobra.Command{
 
 //----------------------------------------------------
 
+func addDataFlags() {
+	dataRm.Flags().BoolVarP(&RmHF, "dir", "", false, "remove data folder from host")
+	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+}
+
+//----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
 	if err := data.ListKnownRaw(do); err != nil {
 		return

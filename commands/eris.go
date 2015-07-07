@@ -78,7 +78,42 @@ func AddCommands() {
 	ErisCmd.AddCommand(Init)
 }
 
+<<<<<<< HEAD
 var do *definitions.Do
+=======
+// Global Flags
+var Verbose bool
+var Debug bool
+var ContainerNumber int
+
+// Flags that are to be used by commands
+var (
+	Force           bool
+	Interactive     bool
+	Pull            bool
+	SkipPull        bool
+	Quiet           bool
+	All             bool
+	Follow          bool
+	Tail            string
+	Rm              bool
+	RmD             bool
+	RmHF            bool
+	Lines           int
+	PublishAllPorts bool
+
+	Chain string
+	ServicesSlice []string
+
+	// chain specific flags
+	ChainName   string
+	GenesisFile string
+	ConfigFile  string
+	DirToCopy   string
+	ChainID     string
+	Run         bool
+)
+>>>>>>> closes #57
 
 // Flags that are to be used by commands are handled by the Do struct
 // Define the persistent commands (globals)

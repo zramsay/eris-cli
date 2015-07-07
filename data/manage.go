@@ -7,6 +7,8 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+	"os"
+	"path"
 )
 
 func RenameDataRaw(do *definitions.Do) error {
@@ -47,6 +49,10 @@ func InspectDataRaw(do *definitions.Do) error {
 }
 
 func RmDataRaw(do *definitions.Do) error {
+	if do.RmHF {
+		logger.Println("Removing host folder " + do.Name)
+		os.RemoveAll(path.Join(DataContainersPath, do.Name))
+	}
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		logger.Infoln("Removing data container " + do.Name)
 
@@ -57,6 +63,7 @@ func RmDataRaw(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
+
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
