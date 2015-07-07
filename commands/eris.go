@@ -97,6 +97,9 @@ var (
 	Lines           int
 	PublishAllPorts bool
 
+	Chain string
+	ServicesSlice []string
+
 	// chain specific flags
 	ChainName   string
 	GenesisFile string

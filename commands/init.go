@@ -13,6 +13,6 @@ var Init = &cobra.Command{
 	Long: `Create the ~/.eris directory with actions and services subfolders
 and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		util.Initialize(cmd.Flags().Lookup("pull").Changed, cmd.Flags().Lookup("verbose").Changed)
+		util.Initialize(Pull, Verbose)
 	},
 }

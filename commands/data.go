@@ -75,9 +75,24 @@ func ExecData(cmd *cobra.Command, args []string) {
 // Primary Data Sub-Command
 var Data = &cobra.Command{
 	Use:   "data",
-	Short: "Manage Data containers for your Application.",
+	Short: "Manage Data Containers for your Application.",
 	Long: `The data subcommand is used to import, and export
-data into containers for use by your application.`,
+data into containers for use by your application.
+
+eris data import and eris data export should be thought of from
+the point of view of the container.
+
+eris data import sends files *as is* from ~/.eris/data/NAME on
+the host to ~/.eris/ inside of the data container.
+
+eris data export performs this process in the reverse. It sucks
+out whatever is in the volumes of the data container and sticks
+it back into ~/.eris/data/NAME on the host.
+
+At eris, we use this functionality to formulate little jsons
+and configs on the host and then "stick them back into the
+containers"
+`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -94,9 +109,9 @@ func buildDataCommand() {
 }
 
 var dataImport = &cobra.Command{
-	Use:   "import [name] [folder]",
-	Short: "Import a folder to a named data container",
-	Long:  `Import a folder to a named data container`,
+	Use:   "import [name]",
+	Short: "Import ~/.eris/data/name folder to a named data container",
+	Long:  `Import ~/.eris/data/name folder to a named data container`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ImportData(cmd, args)
 	},
@@ -104,8 +119,8 @@ var dataImport = &cobra.Command{
 
 var dataList = &cobra.Command{
 	Use:   "ls",
-	Short: "List the data containers",
-	Long:  `List the data containers`,
+	Short: "List the data containers eris manages for you",
+	Long:  `List the data containers eris manages for you`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListKnownData(cmd, args)
 	},
@@ -113,8 +128,26 @@ var dataList = &cobra.Command{
 
 var dataExec = &cobra.Command{
 	Use:   "exec",
-	Short: "Run a command or interactive shell in in data container",
-	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Short: "Run a command or interactive shell in a data container",
+	Long: `Run a command or interactive shell in a container with
+volumes-from the data container.
+
+Exec can be used to run a single one off command to interact
+with the data. Use it for things like ls.
+
+If you want to pass flags into the command that is run in the
+data container, please surround the command you want to pass
+in with double quotes. Use it like this: "ls -la".
+
+Exec instances run as the Eris user.
+
+Exec can also be used as an interactive shell. When put in
+this mode, you can "get inside of" your containers. You will
+have root access to a throwaway container which has the volumes
+of the data container mounted to it.`,
+	Example: `  eris data exec name ls /home/eris/.eris -> will list the eris dir
+  eris data exec name "ls -la /home/eris/.eris" -> will pass flags to the ls command
+  eris data exec --interactive name -> will start interactive console`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecData(cmd, args)
 	},
@@ -140,8 +173,8 @@ var dataInspect = &cobra.Command{
 
 var dataExport = &cobra.Command{
 	Use:   "export [name] [folder]",
-	Short: "Import a named data container to a folder",
-	Long:  `Import a named data container to a folder`,
+	Short: "Export a named data container's volumes to ~/.eris/data/name",
+	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExportData(cmd, args)
 	},

@@ -14,6 +14,7 @@ import (
 // cli definitions
 
 // Primary Actions Sub-Command
+// flags to add: --global --project
 var Actions = &cobra.Command{
 	Use:   "actions",
 	Short: "Manage and Perform Structured Actions.",
@@ -21,15 +22,20 @@ var Actions = &cobra.Command{
 Eris platform and for the platform itself.
 
 Actions are bundles of commands which rely upon a project
-which is currently in scope or a any set of installed
-services. Actions are held in yaml, toml, or json
-action-definition files within the action folder in the
-eris tree (globally scoped actions) or in a directory
-pointed to by the actions field of the currently checked
-out project (project scoped actions). Actions are a
-sequence of commands which operate in a similar fashion
-to how a circle.yml file or a .travis.yml script field
-may operate.`,
+which is currently in scope or on a global set of actions.
+Actions are held in yaml, toml, or json action-definition
+files within the action folder in the eris tree (globally
+scoped actions) or in a directory pointed to by the
+actions field of the currently checked out project
+(project scoped actions). Actions are a sequence of
+commands which operate in a similar fashion to how a
+circle.yml file or a .travis.yml script field may operate.
+
+Actions execute in a series of individual sub-shells ran
+on the host. Note actions do not run from inside containers
+but can interact with containers either via the installed
+eris commands or via the docker cli itself or, indeed, any
+other programs installed *on the host*.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -61,6 +67,7 @@ To list known actions use: [eris actions known].`,
 	},
 }
 
+// flags to add: template
 var actionsNew = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Create a new action definition file.",
@@ -70,7 +77,6 @@ var actionsNew = &cobra.Command{
 	},
 }
 
-// flags to add: --global --project
 var actionsList = &cobra.Command{
 	Use:   "ls",
 	Short: "List all registered action definition files.",
@@ -83,7 +89,31 @@ var actionsList = &cobra.Command{
 var actionsDo = &cobra.Command{
 	Use:   "do [name]",
 	Short: "Perform an action.",
-	Long:  `Perform an action according to the action definition file.`,
+	Long:  `Perform an action according to the action definition file.
+
+Actions are used to perform functions which are a
+semi-scriptable series of steps. These are general
+helper functions.
+
+Actions are a series of commands passed to a series of
+*individual* subshells. These actions can take a series
+of arguments.
+
+Arguments passed into the shells via the command line
+(extra arguments which do not match the name) will be
+available to the command steps as $1, $2, $3, etc.
+
+In addition, variables will be populated within the
+subshell according to the key:val syntax within the
+command line.
+
+The shells will be passed the host's environment as
+well as any additional env vars added to the action
+definition file.
+`,
+	Example: `  eris actions do dns register -> will run the ~/.eris/actions/dns_register action def file
+  eris actions do dns register name:cutemarm ip:111.111.111.111 -> will populate $name and $ip
+  eris actions do dns register cutemarm 111.111.111.111 -> will populate $1 and $2`,
 	Run: func(cmd *cobra.Command, args []string) {
 		DoAction(cmd, args)
 	},
@@ -131,10 +161,6 @@ var actionsRemove = &cobra.Command{
 
 //----------------------------------------------------------------------
 // cli flags
-
-var Chain string
-var ServicesSlice []string
-
 func addActionsFlags() {
 	actionsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action without confirming")
 	actionsDo.Flags().BoolVarP(&Quiet, "quiet", "q", false, "suppress action output")

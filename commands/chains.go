@@ -21,11 +21,27 @@ var Chains = &cobra.Command{
 	Short: "Start, Stop, and Manage Blockchains.",
 	Long: `Start, Stop, and Manage Blockchains.
 
-The chains subcommand is used to start, stop, and configure blockchains.
-Within the Eris platform, blockchains are the primary method of storing
-structured data which is used by the Eris platform in combination with
-IPFS (a globally-accessible content-addressable peer to peer file
-storage solution).`,
+The chains subcommand is used to work on erisdb smart contract
+blockchain networks. The name is not perfect, as eris is able
+to operate a wide variety of blockchains out of the box. Most
+of those existing blockchains should be ran via the
+
+eris services ...
+
+commands. As they fall under the rubric of "things I just want
+to turn on or off". While you can develop against those
+blockchains, you generally aren't developing those blockchains
+themselves.
+
+Eris chains is built to help you build blockchains. It is our
+opinionated gateway to the wonderful world of permissioned
+smart contract networks.
+
+Your own baby blockchain/smart contract machine is just an
+
+eris chains new
+
+away!`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -70,6 +86,8 @@ var chainsInstall = &cobra.Command{
 	Short: "Install a blockchain.",
 	Long: `Install a blockchain.
 
+Install an existing erisdb based blockchain for use locally.
+
 Still a WIP.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		InstallChain(cmd, args)
@@ -81,12 +99,17 @@ var chainsListKnown = &cobra.Command{
 	Short: "List all the blockchains Eris knows about.",
 	Long: `Lists the blockchains which Eris has installed for you.
 
-To has a new blockchain from a chain definition file, use: [eris chains new].
-To install a new blockchain from a chain definition file, use: [eris chains install].
-To install a new chain definition file, use: [eris chains import].
+To hash a new blockchain, use:
 
-Services include all executable chains supported by the Eris platform which are
-NOT blockchains or key managers.
+eris chains new
+
+To install and fetch a blockchain from a chain definition
+file, use:
+
+eris chains install
+
+Services include all other chain types supported by the
+Eris platform.
 
 Services are handled using the [eris services] command.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -163,7 +186,8 @@ var chainsLogs = &cobra.Command{
 var chainsExec = &cobra.Command{
 	Use:   "exec [serviceName]",
 	Short: "Run a command or interactive shell",
-	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Long:  `Run a command or interactive shell in a container
+with volumes-from the data container`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecChain(cmd, args)
 	},
