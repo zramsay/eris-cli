@@ -379,12 +379,22 @@ func setupChain(chainID, chainName, cmd, dir, genesis, config string, containerN
 	// cmd should be "new" or "install"
 	chain.Service.Command = cmd
 
-	// set chainid and other vars
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
-	chain.Service.Environment = append(chain.Service.Environment, "CONTAINER_NAME="+containerName)
-	chain.Service.Environment = append(chain.Service.Environment, fmt.Sprintf("RUN=%v", run))
+	// do we need to create our own genesis?
+	var genGen bool
 	if genesis == "" {
-		chain.Service.Environment = append(chain.Service.Environment, "GENERATE_GENESIS=true")
+		genGen = true
+	}
+
+	// set chainid and other vars
+	envVars := []string{
+		"CHAIN_ID=" + chainID,
+		"CONTAINER_NAME=" + containerName,
+		fmt.Sprintf("RUN=%v", run),
+		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
+	}
+	logger.Debugln("Setting env variables from setupChain:", envVars)
+	for _, eV := range envVars {
+		chain.Service.Environment = append(chain.Service.Environment, eV)
 	}
 	// TODO mint vs. erisdb (in terms of rpc)
 

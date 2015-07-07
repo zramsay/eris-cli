@@ -147,7 +147,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		id_main = servCont.ID
 
 	} else {
-		logger.Infoln("Service Container does not exist, creating.")
+		logger.Infof("Service Container does not exist, creating from image (%s).\n", srv.Image)
 
 		if srv.AutoData {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
