@@ -12,7 +12,6 @@ type Do struct {
 	Run             bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm              bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD             bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	PublishAllPorts bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Verbose         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines           int      `mapstructure:"," json:"," yaml:"," toml:","`
@@ -21,7 +20,6 @@ type Do struct {
 	ChainName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile      string   `mapstructure:"," json:"," yaml:"," toml:","`
-	DirToCopy       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID         string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name            string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path            string   `mapstructure:"," json:"," yaml:"," toml:","`

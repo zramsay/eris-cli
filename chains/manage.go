@@ -31,7 +31,7 @@ func NewChainRaw(do *definitions.Do) error {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
 	var err error
-	if do.GenesisFile = resolveGenesisFile(do.GenesisFile, do.DirToCopy); do.GenesisFile == "" {
+	if do.GenesisFile = resolveGenesisFile(do.GenesisFile, do.Path); do.GenesisFile == "" {
 		do.ChainID = do.Name
 	} else {
 		do.ChainID, err = getChainIDFromGenesis(do.GenesisFile, do.Name)
@@ -328,7 +328,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}()
 
-	// copy do.DirToCopy, do.GenesisFile, config into container
+	// copy do.Path, do.GenesisFile, config into container
 	containerDst := path.Join("blockchains", do.Name)           // path in container
 	dst := path.Join(DataContainersPath, do.Name, containerDst) // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
@@ -338,8 +338,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	if do.DirToCopy != "" {
-		if err = Copy(do.DirToCopy, dst); err != nil {
+	if do.Path != "" {
+		if err = Copy(do.Path, dst); err != nil {
 			return err
 		}
 	}
@@ -377,7 +377,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 	logger.Debugf("Chain Loaded. Image =>\t\t%v\n", chain.Service.Image)
-	chain.Operations.PublishAllPorts = do.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
+	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
 
 	// cmd should be "new" or "install"
 	chain.Service.Command = cmd

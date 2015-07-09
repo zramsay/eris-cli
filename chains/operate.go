@@ -23,7 +23,7 @@ func StartChainRaw(do *definitions.Do) error {
 
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
-		logger.Infoln("Cannot start a chain I cannot find. Failing silently.")
+		logger.Infoln("Cannot start a chain I cannot find.")
 		do.Result = "no file"
 		return nil
 	}

@@ -307,15 +307,15 @@ Command will cat local service definition file.`,
 func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
 	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsNew.PersistentFlags().StringVarP(&do.DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "run", "r", false, "run the chain after creating")
 
-	chainsStart.PersistentFlags().BoolVarP(&do.PublishAllPorts, "publish", "p", false, "publish all ports")
-
 	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsInstall.PersistentFlags().StringVarP(&do.DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
 	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
+
+	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
@@ -333,6 +333,7 @@ func addChainsFlags() {
 	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
 	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+
 	chainsListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 }
 

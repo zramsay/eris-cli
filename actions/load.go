@@ -41,11 +41,6 @@ func MockAction(act string) (*def.Action, []string) {
 	return action, []string{}
 }
 
-func MergeStepsAndCLIArgs(action *def.Action, actionVars *[]string, args []string) error {
-
-	return nil
-}
-
 func cullCLIVariables(act []string) ([]string, []string) {
 	var actionVars []string
 	var action []string
@@ -110,7 +105,7 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	if len(dropReversed) == 0 {
 		return
 	} else {
-		logger.Debugln("Variables to replace:\t\t", dropReversed)
+		logger.Debugf("Variables to replace =>\t\t%s\n", dropReversed)
 	}
 
 	// Because we pop from the end of the args list, the variables
@@ -119,7 +114,7 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	dropped := make(map[string]string)
 	j := 1
 	for i := len(dropReversed); i > 0; i-- {
-		logger.Debugln("Reversing:\t\t\t", fmt.Sprintf("$%d -> $%d", i, j))
+		logger.Debugf("Reversing =>\t\t\t$%d:$%d\n", i, j)
 		dropped[fmt.Sprintf("$%d", j)] = dropReversed[fmt.Sprintf("$%d", i)]
 		j++
 	}
@@ -127,16 +122,40 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	reg := regexp.MustCompile(`\$\d`)
 	for n, step := range action.Steps {
 		if reg.MatchString(step) {
-			logger.Debugln("Match(es) Found In Step:\t", step)
+			logger.Debugf("Match(es) Found In Step =>\t%s\n", step)
 			for _, m := range reg.FindAllString(step, -1) {
 				action.Steps[n] = strings.Replace(step, m, dropped[m], -1)
 			}
-			logger.Debugln("After replacing the step is:\t", step)
+			logger.Debugf("After replacing the step is =>\t%s\n", step)
 		}
 	}
 
-	logger.Debugln("After Fixing Steps, we have:")
+	logger.Debugf("After Fixing Steps, we have ...\n")
 	for _, step := range action.Steps {
-		logger.Debugln("\t", step)
+		logger.Debugf("\t%s\n", step)
+	}
+}
+
+func fixChain(action *def.Action, chainName string) {
+	// Steps can include a $chain variable which will be populated *solely*
+	// the --chain flag which has been passed via the command line
+	if chainName == "" {
+		return
+	}
+
+	reg := regexp.MustCompile(`\$chain`)
+	for n, step := range action.Steps {
+		if reg.MatchString(step) {
+			logger.Debugf("Match(es) Found In Step =>\t%s\n", step)
+			for _, m := range reg.FindAllString(step, -1) {
+				action.Steps[n] = strings.Replace(step, m, chainName, -1)
+			}
+			logger.Debugf("After replacing the step is =>\t%s\n", step)
+		}
+	}
+
+	logger.Debugf("After Adding Chains to the Steps, we have ...\n")
+	for _, step := range action.Steps {
+		logger.Debugf("\t%s\n", step)
 	}
 }

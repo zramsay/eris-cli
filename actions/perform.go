@@ -12,6 +12,10 @@ import (
 )
 
 func DoRaw(do *definitions.Do) error {
+	logger.Infof("Performing Action =>\t\t%v\n", do.Args)
+	logger.Debugf("CLI Chain to turn on =>\t\t%v\n", do.ChainName)
+	logger.Debugf("CLI Services to turn on =>\t%v\n", do.ServicesSlice)
+
 	var err error
 	var actionVars []string
 	do.Action, actionVars, err = LoadActionDefinition(strings.Join(do.Args, "_"))
@@ -19,9 +23,9 @@ func DoRaw(do *definitions.Do) error {
 		return err
 	}
 
-	if err := MergeStepsAndCLIArgs(do.Action, &actionVars, do.Args); err != nil {
-		return err
-	}
+	resolveServices(do)
+	resolveChain(do)
+	fixChain(do.Action, do.ChainName)
 
 	if err := StartServicesAndChains(do); err != nil {
 		return err
@@ -38,16 +42,24 @@ func StartServicesAndChains(do *definitions.Do) error {
 	// start the services and chains
 	doSrvs := definitions.NowDo()
 	doSrvs.Args = do.Action.ServiceDeps
-	logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
-	if err := services.StartServiceRaw(doSrvs); err != nil {
-		return err
+	if len(doSrvs.Args) == 0 {
+		logger.Debugf("No services to start.\n")
+	} else {
+		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
+		if err := services.StartServiceRaw(doSrvs); err != nil {
+			return err
+		}
 	}
 
 	doChns := definitions.NowDo()
-	doChns.Name = do.ChainName
-	logger.Debugf("Starting Chain. Name =>\t%v\n", doChns.Name)
-	if err := chains.StartChainRaw(do); err != nil {
-		return err
+	doChns.Name = do.Action.Chain
+	if doChns.Name == "" {
+		logger.Debugf("No chain to start.\n")
+	} else {
+		logger.Debugf("Starting Chain. Name =>\t\t%v\n", doChns.Name)
+		if err := chains.StartChainRaw(do); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -101,4 +113,19 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 
 	logger.Infoln("Action performed")
 	return nil
+}
+
+func resolveChain(do *definitions.Do) {
+	if do.ChainName == "" { // do.ChainName populated via CLI flag
+		do.Action.Chain = do.ChainName
+	}
+
+	if do.Action.Chain == "$chain" { // requires chains via the CLI
+		do.Action.Chain = do.ChainName
+	}
+}
+
+func resolveServices(do *definitions.Do) {
+	do.Action.ServiceDeps = append(do.Action.ServiceDeps, do.ServicesSlice...)
+	logger.Debugf("Services to start =>\t\t%v\n", do.Args)
 }
