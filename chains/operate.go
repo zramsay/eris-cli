@@ -38,7 +38,9 @@ func StartChainRaw(do *definitions.Do) error {
 	util.OverwriteOps(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 
-	logger.Infoln("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
+	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
+	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
+	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
 	if err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
 		do.Result = "error"
 		return err

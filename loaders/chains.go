@@ -49,6 +49,7 @@ func LoadChainDefinition(chainName string, cNum ...int) (*definitions.Chain, err
 
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
+	logger.Debugf("\twith Environment =>\t%d\n", chain.Service.Environment)
 	return chain, nil
 }
 
@@ -95,16 +96,16 @@ func MockChainDefinition(chainName, chainID string, cNum ...int) *definitions.Ch
 // marshal from viper to definitions struct
 func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
 	chnTemp := definitions.BlankChain()
-	// logger.Debugf("Loader.Chain. Chain =>\t\t%v\n", chain.Service)
+	// logger.Debugf("Loader.Chain: ChainID =>\t\t%v\n", chain.ChainID)
 	// logger.Debugf("Loader.Chain. Conf =>\t\t%v\n", chainConf)
 	err := chainConf.Marshal(chnTemp)
 	if err != nil {
 		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
 	}
-	// logger.Debugf("Loader.Chain.Marshal: Chain =>\t%v\n", chain.Service)
-	// logger.Debugf("Loader.Chain. Image to use =>\t%v\n", chain.Service.Image)
+	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
 	mergeChainAndService(chain, chnTemp.Service)
+	chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well
 	// data_container can be in the chain or
