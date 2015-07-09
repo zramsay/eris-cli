@@ -183,7 +183,7 @@ func RenameChainRaw(do *definitions.Do) error {
 			}
 		}
 
-		oldFile := findChainDefinitionFile(do.Name)
+		oldFile := util.GetFileByNameAndType("chains", do.Name)
 		if err != nil {
 			return err
 		}
@@ -248,17 +248,22 @@ func RmChainRaw(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
+
 	if IsChainExisting(chain) {
 		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD); err != nil {
 			return err
 		}
+	} else {
+		logger.Infoln("That chain's container does not exist.")
 	}
 
 	if do.File {
-		oldFile := findChainDefinitionFile(do.Name)
+		oldFile := util.GetFileByNameAndType("chains", do.Name)
 		if err != nil {
 			return err
 		}
+		oldFile = path.Join(BlockchainsPath, oldFile)+".toml"
+		logger.Printf("Removing file =>\t\t%s\n", oldFile)
 		if err := os.Remove(oldFile); err != nil {
 			return err
 		}
@@ -446,7 +451,7 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 }
 
 func exportFile(chainName string) (string, error) {
-	fileName := findChainDefinitionFile(chainName)
+	fileName := util.GetFileByNameAndType("chains", chainName)
 
 	var hash string
 	var err error

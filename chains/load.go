@@ -4,7 +4,9 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 )
+
 func IsChainExisting(chain *definitions.Chain) bool {
+	logger.Debugf("Does Chain Exist? =>\t\t%s:%d\n", chain.Name, chain.Operations.ContainerNumber)
 	cName := util.FindChainContainer(chain.Name, chain.Operations.ContainerNumber, true)
 	if cName == nil {
 		return false
@@ -34,8 +36,4 @@ func isKnownChain(name string) bool {
 		}
 	}
 	return false
-}
-
-func findChainDefinitionFile(name string) string {
-	return util.GetFileByNameAndType("chains", name)
 }

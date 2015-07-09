@@ -125,7 +125,7 @@ func TestRenameActionRaw(t *testing.T) {
 func TestRemoveActionRaw(t *testing.T) {
 	do := definitions.NowDo()
 	do.Args = strings.Fields(oldName)
-	do.Force = true
+	do.File = true
 	if err := RmActionRaw(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()

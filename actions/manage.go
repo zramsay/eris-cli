@@ -164,7 +164,7 @@ func ListKnownRaw(do *definitions.Do) error {
 
 func RmActionRaw(do *definitions.Do) error {
 	do.Name = strings.Join(do.Args, "_")
-	if do.Force {
+	if do.File {
 		oldFile := util.GetFileByNameAndType("actions", do.Name)
 		if oldFile == "" {
 			return nil

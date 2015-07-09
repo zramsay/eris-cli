@@ -239,7 +239,12 @@ func RmServiceRaw(do *definitions.Do) error {
 		}
 
 		if do.File {
-			oldFile := FindServiceDefinitionFile(servName)
+			oldFile := util.GetFileByNameAndType("services", servName)
+			if err != nil {
+				return err
+			}
+			oldFile = path.Join(ServicesPath, oldFile)+".toml"
+			logger.Printf("Removing file =>\t\t%s\n", oldFile)
 			if err := os.Remove(oldFile); err != nil {
 				return err
 			}

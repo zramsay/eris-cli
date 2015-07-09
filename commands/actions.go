@@ -162,10 +162,10 @@ var actionsRemove = &cobra.Command{
 //----------------------------------------------------------------------
 // cli flags
 func addActionsFlags() {
-	actionsRemove.Flags().BoolVarP(&do.Force, "force", "f", false, "force action without confirming")
 	actionsDo.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "suppress action output")
 	actionsDo.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
 	actionsDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "run action against a particular chain")
+	actionsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "force removal of the action definition file")
 }
 
 //----------------------------------------------------------------------
@@ -246,7 +246,7 @@ func RmAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	do.Name = args[0]
+	do.Args = args
 	IfExit(act.RmActionRaw(do))
 }
 

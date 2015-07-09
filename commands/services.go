@@ -275,7 +275,7 @@ func addServicesFlags() {
 	servicesStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
 	servicesStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
-	servicesRm.Flags().BoolVarP(&do.Force, "file", "f", false, "remove service definition file as well as service container")
+	servicesRm.Flags().BoolVarP(&do.File, "file", "f", false, "remove service definition file as well as service container")
 	servicesRm.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers as well")
 
 	servicesListExisting.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")

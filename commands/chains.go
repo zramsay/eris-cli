@@ -320,7 +320,7 @@ func addChainsFlags() {
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
-	chainsRemove.Flags().BoolVarP(&do.Force, "file", "f", false, "remove chain definition file as well as chain container")
+	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
 
 	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
