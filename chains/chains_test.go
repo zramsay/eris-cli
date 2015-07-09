@@ -112,7 +112,7 @@ func TestStartChainRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, chainName, true, true)
+	testExistAndRun(t, chainName, true, true)
 }
 
 func TestLogsChainRaw(t *testing.T) {
@@ -161,11 +161,10 @@ func TestUpdateChainRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, chainName, true, true)
+	testExistAndRun(t, chainName, true, true)
 }
 
 func TestRenameChainRaw(t *testing.T) {
-	// log.SetLoggers(2, os.Stdout, os.Stderr)
 	do := def.NowDo()
 	do.Name = chainName
 	do.NewName = "niahctset"
@@ -176,7 +175,7 @@ func TestRenameChainRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, "niahctset", true, true)
+	testExistAndRun(t, "niahctset", true, true)
 
 	do = def.NowDo()
 	do.Name = "niahctset"
@@ -188,38 +187,45 @@ func TestRenameChainRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, chainName, true, true)
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
+	testExistAndRun(t, chainName, true, true)
 }
 
 func TestKillChainRaw(t *testing.T) {
-	testRunAndExist(t, chainName, true, true)
+	// log.SetLoggers(2, os.Stdout, os.Stderr)
+	testExistAndRun(t, chainName, true, true)
 
 	do := def.NowDo()
-	do.Name = chainName
-	do.Rm = false
-	do.RmD = false
-	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
-	e := KillChainRaw(do)
+	do.Args = []string{"keys"}
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		do.Rm = true
+		do.RmD = true
+	}
+	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
+	e := services.KillServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
 	do = def.NowDo()
-	do.Args = []string{"keys"}
-	if os.Getenv("TEST_IN_CIRCLE") == "" {
+	do.Name = chainName
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		do.Rm = true
 		do.RmD = true
 	}
-	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
-	e = services.KillServiceRaw(do)
+	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	e = KillChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, chainName, true, false)
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		testExistAndRun(t, chainName, false, false)
+	} else {
+		testExistAndRun(t, chainName, true, false)
+	}
+	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestRmChainRaw(t *testing.T) {
@@ -238,16 +244,17 @@ func TestRmChainRaw(t *testing.T) {
 		t.Fail()
 	}
 
-	testRunAndExist(t, chainName, false, false)
+	testExistAndRun(t, chainName, false, false)
 }
 
-func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
+func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	var exist, run bool
 	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", chainName, toRun, toExist)
 	chainName = util.ChainContainersName(chainName, 1) // not worried about containerNumbers, deal with multiple containers in services tests
 
 	do := def.NowDo()
 	do.Quiet = true
+	do.Args = []string{"testing"}
 	if err := ListExistingRaw(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -262,6 +269,7 @@ func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 
 	do = def.NowDo()
 	do.Quiet = true
+	do.Args = []string{"testing"}
 	if err := ListRunningRaw(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -274,6 +282,15 @@ func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 		}
 	}
 
+	if toExist != exist {
+		if toExist {
+			logger.Infof("Could not find an existing =>\t%s\n", chainName)
+		} else {
+			logger.Infof("Found an existing instance of %s when I shouldn't have\n", chainName)
+		}
+		t.Fail()
+	}
+
 	if toRun != run {
 		if toRun {
 			logger.Infof("Could not find a running =>\t%s\n", chainName)
@@ -283,14 +300,7 @@ func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
 		t.Fail()
 	}
 
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", chainName)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", chainName)
-		}
-		t.Fail()
-	}
+	logger.Debugln("")
 }
 
 func testsInit() error {

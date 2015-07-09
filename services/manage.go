@@ -187,9 +187,12 @@ func ListKnownRaw(do *definitions.Do) error {
 }
 
 func ListRunningRaw(do *definitions.Do) error {
-	logger.Debugln("Asking Docker Client for the Running Containers.")
+	logger.Debugln("Asking Docker Client for the Running Containers. Quiet? %v", do.Quiet)
 	if do.Quiet {
-		logger.Printf("%s\n", strings.Join(util.ServiceContainerNames(false), "\n"))
+		do.Result = strings.Join(util.ServiceContainerNames(false), "\n")
+		if len(do.Args) != 0 && do.Args[0] != "testing" {
+			logger.Printf("%s\n", "\n")
+		}
 	} else {
 		perform.PrintTableReport("service", false) // TODO: return this as a string.
 	}
@@ -199,9 +202,12 @@ func ListRunningRaw(do *definitions.Do) error {
 func ListExistingRaw(do *definitions.Do) error {
 	logger.Debugln("Asking Docker Client for the Existing Containers.")
 	if do.Quiet {
-		logger.Printf("%s\n", strings.Join(util.ServiceContainerNames(true), "\n"))
+		do.Result = strings.Join(util.ServiceContainerNames(true), "\n")
+		if len(do.Args) != 0 && do.Args[0] != "testing" {
+			logger.Printf("%s\n", "\n")
+		}
 	} else {
-		perform.PrintTableReport("service", true) // TODO: return this as a string.
+		perform.PrintTableReport("service", false) // TODO: return this as a string.
 	}
 	return nil
 }

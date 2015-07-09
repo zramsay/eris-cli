@@ -83,8 +83,15 @@ func KillChainRaw(do *definitions.Do) error {
 		return err
 	}
 
+
+	if do.Force {
+		if do.Timeout == 10 { // default set by flags
+			do.Timeout = 0
+		}
+	}
+
 	if IsChainRunning(chain) {
-		if err := perform.DockerStop(chain.Service, chain.Operations); err != nil {
+		if err := perform.DockerStop(chain.Service, chain.Operations, do.Timeout); err != nil {
 			return err
 		}
 	} else {

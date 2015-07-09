@@ -16,7 +16,7 @@ type Do struct {
 	Verbose         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines           int      `mapstructure:"," json:"," yaml:"," toml:","`
-	// ContainerNumber int      `mapstructure:"," json:"," yaml:"," toml:","` // this is confusing. just use ops
+	Timeout         uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail            string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile     string   `mapstructure:"," json:"," yaml:"," toml:","`

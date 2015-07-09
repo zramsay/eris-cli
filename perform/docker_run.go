@@ -264,7 +264,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool) error {
 	if service, exists := ContainerExists(ops); exists {
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			err := DockerStop(srv, ops)
+			err := DockerStop(srv, ops, 10)
 			if err != nil {
 				return err
 			}
@@ -327,7 +327,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 		logger.Infoln("Found Service ID: " + service.ID)
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			err := DockerStop(srv, ops)
+			err := DockerStop(srv, ops, 10)
 			if err != nil {
 				return err
 			}
@@ -387,11 +387,10 @@ func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
 	return nil
 }
 
-func DockerStop(srv *def.Service, ops *def.Operation) error {
+func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 	// don't limit this to verbose because it takes a few seconds
 	logger.Printf("Docker is Stopping =>\t\t%s\tThis may take a few seconds.\n", srv.Name)
 
-	var timeout uint = 10
 	dockerAPIContainer, running := ContainerExists(ops)
 
 	if running {

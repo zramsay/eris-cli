@@ -131,7 +131,10 @@ func ListKnownRaw(do *definitions.Do) error {
 func ListRunningRaw(do *definitions.Do) error {
 	logger.Debugf("Quiet? =>\t\t\t%v\n", do.Quiet)
 	if do.Quiet {
-		logger.Printf("%s\n", strings.Join(util.ChainContainerNames(false), "\n"))
+		do.Result = strings.Join(util.ChainContainerNames(false), "\n")
+		if len(do.Args) != 0 && do.Args[0] != "testing" {
+			logger.Printf("%s\n", "\n")
+		}
 	} else {
 		logger.Debugf("ListRunningRaw:PrintTable =>\t%s:%v\n", "chain", false)
 		perform.PrintTableReport("chain", false)
@@ -142,7 +145,10 @@ func ListRunningRaw(do *definitions.Do) error {
 
 func ListExistingRaw(do *definitions.Do) error {
 	if do.Quiet {
-		logger.Printf("%s\n", strings.Join(util.ChainContainerNames(true), "\n"))
+		do.Result = strings.Join(util.ChainContainerNames(true), "\n")
+		if len(do.Args) != 0 && do.Args[0] != "testing" {
+			logger.Printf("%s\n", "\n")
+		}
 	} else {
 		logger.Debugf("ListExistingRaw:PrintTable =>\t%s:%v\n", "chain", true)
 		perform.PrintTableReport("chain", true)

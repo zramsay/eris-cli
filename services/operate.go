@@ -75,9 +75,15 @@ func KillServiceRaw(do *definitions.Do) error {
 		services = append(services, s...)
 	}
 
+	if do.Force {
+		if do.Timeout == 10 { // default set by flags
+			do.Timeout = 0
+		}
+	}
+
 	for _, service := range services {
 		if IsServiceRunning(service.Service, service.Operations) {
-			if err := perform.DockerStop(service.Service, service.Operations); err != nil {
+			if err := perform.DockerStop(service.Service, service.Operations, do.Timeout); err != nil {
 				return err
 			}
 
@@ -143,8 +149,8 @@ func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, 
 	return perform.DockerLogs(srv, ops, follow, tail)
 }
 
-func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
-	return perform.DockerStop(srvMain, ops)
+func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation, timeout uint) error {
+	return perform.DockerStop(srvMain, ops, timeout)
 }
 
 // ------------------------------------------------------------------------------------------

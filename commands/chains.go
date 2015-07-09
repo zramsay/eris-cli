@@ -329,6 +329,8 @@ func addChainsFlags() {
 
 	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
+	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
+	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
 	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 	chainsListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")

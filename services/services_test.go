@@ -292,6 +292,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 
 	do := def.NowDo()
 	do.Quiet = true
+	do.Args = []string{"testing"}
 	if err := ListExistingRaw(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -306,6 +307,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 
 	do = def.NowDo()
 	do.Quiet = true
+	do.Args = []string{"testing"}
 	if err := ListRunningRaw(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -318,6 +320,15 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 		}
 	}
 
+	if toExist != exist {
+		if toExist {
+			logger.Infof("Could not find an existing =>\t%s\n", servName)
+		} else {
+			logger.Infof("Found an existing instance of %s when I shouldn't have\n", servName)
+		}
+		t.Fail()
+	}
+
 	if toRun != run {
 		if toRun {
 			logger.Infof("Could not find a running =>\t%s\n", servName)
@@ -327,14 +338,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 		t.Fail()
 	}
 
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", servName)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", servName)
-		}
-		t.Fail()
-	}
+	logger.Debugln("")
 }
 
 func testsInit() error {
@@ -362,6 +366,7 @@ func testsInit() error {
 	// make sure ipfs not running
 	do := def.NowDo()
 	do.Quiet = true
+	logger.Debugln("Finding the running services.")
 	if err := ListRunningRaw(do); err != nil {
 		ifExit(err)
 	}
