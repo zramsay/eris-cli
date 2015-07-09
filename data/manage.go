@@ -2,13 +2,13 @@ package data
 
 import (
 	"fmt"
-	"strings"
-
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 	"os"
 	"path"
+	"strings"
 )
 
 func RenameDataRaw(do *definitions.Do) error {

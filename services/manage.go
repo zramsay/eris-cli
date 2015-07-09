@@ -309,12 +309,12 @@ func CatServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func prettyCat(servName string, ext string) error {
-	cat, err := ioutil.ReadFile(path.Join(ServicesPath, do.Name+ext))
+func prettyCat(name string, ext string) error {
+	cat, err := ioutil.ReadFile(path.Join(ServicesPath, name+ext))
 	if err != nil {
 		return err
 	}
-	do.Result = string(cat)
+	logger.Println(string(cat))
 	return nil
 }
 

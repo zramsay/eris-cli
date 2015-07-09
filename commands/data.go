@@ -193,8 +193,8 @@ var dataRm = &cobra.Command{
 //----------------------------------------------------
 
 func addDataFlags() {
-	dataRm.Flags().BoolVarP(&RmHF, "dir", "", false, "remove data folder from host")
-	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
+	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 }
 
 //----------------------------------------------------
