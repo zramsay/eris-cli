@@ -41,7 +41,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 }
 
 func PrintTableReport(typ string, running bool) error {
-	logger.Debugf("PrintTableReport Initialized.\n")
+	logger.Debugf("PrintTableReport Initialized =>\t%s:%v\n", typ, running)
 	conts := util.ErisContainersByType(typ, running)
 	if len(conts) == 0 {
 		return nil

@@ -474,31 +474,18 @@ func ListKnownChains() {
 		return
 	}
 
-	chains := do.Result
-	for _, s := range strings.Split(chains, "||") {
-		fmt.Println(s)
-	}
+	fmt.Println(do.Result)
 }
 
 func ListChains() {
 	if err := chns.ListExistingRaw(do); err != nil {
 		return
 	}
-
-	chains := do.Result
-	for _, s := range strings.Split(chains, "||") {
-		fmt.Println(s)
-	}
 }
 
 func ListRunningChains() {
 	if err := chns.ListRunningRaw(do); err != nil {
 		return
-	}
-
-	chains := do.Result
-	for _, s := range strings.Split(chains, "||") {
-		fmt.Println(s)
 	}
 }
 
