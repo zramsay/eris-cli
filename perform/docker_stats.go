@@ -41,13 +41,14 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 }
 
 func PrintTableReport(typ string, running bool) error {
+	logger.Debugf("PrintTableReport Initialized.\n")
 	conts := util.ErisContainersByType(typ, running)
 	if len(conts) == 0 {
 		return nil
 	}
 
-	table := tablewriter.NewWriter(logger.Writer)
-	table.SetHeader([]string{"SERVICE NAME", "TYPE", "CONTAINER #", "PORTS", "CONTAINER NAME"})
+	table := tablewriter.NewWriter(util.GlobalConfig.Writer)
+	table.SetHeader([]string{"SERVICE NAME", "CONTAINER NAME", "TYPE", "CONTAINER #", "PORTS"})
 	for _, c := range conts {
 		n, _ := PrintLineByContainerName(c.FullName)
 		table.Append(n)
@@ -88,7 +89,7 @@ func printLine(container *docker.Container) ([]string, error) {
 	n := tmp.(string)
 
 	Names := util.ContainerDisassemble(n)
-	parts := []string{Names.ShortName, Names.Type, fmt.Sprintf("%d", Names.Number), formulatePortsOutput(container), Names.FullName}
+	parts := []string{Names.ShortName, Names.FullName, Names.Type, fmt.Sprintf("%d", Names.Number), formulatePortsOutput(container)}
 	return parts, nil
 }
 
