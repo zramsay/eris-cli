@@ -12,8 +12,9 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadActionDefinition(act []string) (*def.Action, []string, error) {
-	logger.Infof("Reading action def file =>\t%v\n", act)
+func LoadActionDefinition(actionName string) (*def.Action, []string, error) {
+	logger.Infof("Reading action def file =>\t%v\n", actionName)
+	act := strings.Split(actionName, "_")
 	action := def.BlankAction()
 
 	act, actionVars := cullCLIVariables(act)
@@ -34,9 +35,8 @@ func LoadActionDefinition(act []string) (*def.Action, []string, error) {
 	return action, actionVars, nil
 }
 
-func MockAction(act []string) (*def.Action, []string) {
+func MockAction(act string) (*def.Action, []string) {
 	action := def.BlankAction()
-	action.Name = strings.Join(act, " ")
 	logger.Debugf("Mocking action =>\t\t%v\n", act)
 	return action, []string{}
 }
@@ -55,25 +55,26 @@ func cullCLIVariables(act []string) ([]string, []string) {
 		if strings.Contains(a, ":") {
 			r := strings.Replace(a, ":", "=", 1)
 			actionVars = append(actionVars, r)
-			logger.Debugln("Culling from variable list:\t", r)
+			logger.Debugln("Culling from variable list =>\t%s\n", r)
 		} else {
 			action = append(action, a)
 		}
 	}
 
-	logger.Debugln("Args culled:\t\t\t", actionVars)
-	logger.Debugln("Args not culled:\t\t", action)
-	logger.Debugln("Success fully parsed the named variables passed to the command line.")
+	logger.Debugf("Args culled =>\t\t\t%s\n", actionVars)
+	logger.Debugf("Args not culled =>\t\t%s\n", action)
+	logger.Infof("Successfully parsed the named variables passed to the command line.\n")
 	return action, actionVars
 }
 
 func readActionDefinition(actionName []string, dropped map[string]string, varNum int) (*viper.Viper, map[string]string, error) {
 	if len(actionName) == 0 {
+		logger.Debugf("Fail. actionName, drop, varN =>\t%v:%v:%v\n", actionName, dropped, varNum)
 		return nil, dropped, fmt.Errorf("The marmots could not find the action definition file.\nPlease check your actions with [eris actions ls]")
 	}
 
-	logger.Debugln("Reading action definition file:\t", strings.Join(actionName, "_"))
-	logger.Debugln("Args to add to the steps:\t", dropped)
+	logger.Debugf("Read action definition file =>\t%s\n", strings.Join(actionName, "_"))
+	logger.Debugf("Args to add to the steps =>\t%s\n", dropped)
 
 	var actionConf = viper.New()
 
@@ -81,14 +82,8 @@ func readActionDefinition(actionName []string, dropped map[string]string, varNum
 	actionConf.SetConfigName(strings.Join(actionName, "_"))
 	err := actionConf.ReadInConfig()
 
-	// we allow a maximum of 3 additional variables that can be passed as
-	//   args to the command. but the read parser needs to be able to find
-	//   the file first. so this portion of the function adds a maximum
-	//   of three additional variables to be populated before it will
-	//   fail.
 	if err != nil {
-		// we are under the recursion limit, pop off actionName slice and into dropped slice, recurse
-		logger.Debugln("Dropping and retrying:\t\t", actionName[len(actionName)-1])
+		logger.Debugf("Dropping and retrying =>\t%s\n", actionName[len(actionName)-1])
 		dropped[fmt.Sprintf("$%d", varNum)] = actionName[len(actionName)-1]
 		actionName = actionName[:len(actionName)-1]
 		varNum++
@@ -144,13 +139,4 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	for _, step := range action.Steps {
 		logger.Debugln("\t", step)
 	}
-}
-
-// get the config file's path from the chain name
-func configFileNameFromActionName(actionName string) (string, error) {
-	actionConf, _, err := readActionDefinition(strings.Split(actionName, "_"), make(map[string]string), 1)
-	if err != nil {
-		return "", err
-	}
-	return actionConf.ConfigFileUsed(), nil
 }

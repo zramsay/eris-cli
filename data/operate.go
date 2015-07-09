@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -15,56 +16,60 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-func ImportDataRaw(name string, containerNumber int) error {
-	if util.IsDataContainer(name, containerNumber) {
+func ImportDataRaw(do *definitions.Do) error {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
-		containerName := util.DataContainersName(name, containerNumber)
-		importPath := filepath.Join(DataContainersPath, name)
+		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+		importPath := filepath.Join(DataContainersPath, do.Name)
 
 		// temp until docker cp works both ways.
 		os.Chdir(importPath)
-		// TODO: deal with hardcoded user
+		// TODO [eb]: deal with hardcoded user
+		// TODO [csk]: drop the whole damn cmd call
+		//         use go's tar lib to make a tarball of the directory
+		//         read the tar file into an io.Reader
+		//         start a container with its Stdin open, connect to an io.Writer
+		//         connect them up with io.Pipe
+		//         this will free us from any quirks that the cli has
 		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C /home/eris/.eris"
-		s, err := pipes.RunString(cmd)
+		_, err := pipes.RunString(cmd)
 		if err != nil {
 			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C /home/eris/.eris"
-			s2, e2 := pipes.RunString(cmd)
+			_, e2 := pipes.RunString(cmd)
 			if e2 != nil {
 				return fmt.Errorf("Could not import the data container.\n\nTried with docker --rm: %v.\n Tried without docker --rm: %v.\n", err, e2)
 			}
-			logger.Infoln(s2)
-		} else {
-			logger.Infoln(s)
 		}
 	} else {
-		if err := perform.DockerCreateDataContainer(name, containerNumber); err != nil {
+		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
-		return ImportDataRaw(name, containerNumber)
+		return ImportDataRaw(do)
 	}
-
+	do.Result = "success"
 	return nil
 }
 
-func ExecDataRaw(name string, containerNumber int, interactive bool, args []string) error {
-	if util.IsDataContainer(name, containerNumber) {
-		name = util.DataContainersName(name, containerNumber)
-		logger.Infoln("Running exec on container with volumes from data container " + name)
-		if err := perform.DockerRunVolumesFromContainer(name, interactive, args); err != nil {
+func ExecDataRaw(do *definitions.Do) error {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
+		if err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args); err != nil {
 			return err
 		}
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+	do.Result = "success"
 	return nil
 }
 
-func ExportDataRaw(name string, containerNumber int) error {
-	if util.IsDataContainer(name, containerNumber) {
-		logger.Infoln("Exporting data container", name)
+func ExportDataRaw(do *definitions.Do) error {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		logger.Infoln("Exporting data container", do.Name)
 
-		exportPath := filepath.Join(DataContainersPath, name) // TODO: containerNumber ?
-		srv := PretendToBeAService(name, containerNumber)
+		exportPath := filepath.Join(DataContainersPath, do.Name) // TODO: do.Operations.ContainerNumber ?
+		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
 
 		service, exists := perform.ContainerExists(srv.Operations)
 
@@ -90,7 +95,7 @@ func ExportDataRaw(name string, containerNumber int) error {
 			writer.Close()
 		}()
 
-		err = util.Untar(reader, name, exportPath)
+		err = util.Untar(reader, do.Name, exportPath)
 		if err != nil {
 			return err
 		}
@@ -122,6 +127,7 @@ func ExportDataRaw(name string, containerNumber int) error {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
 
+	do.Result = "success"
 	return nil
 }
 

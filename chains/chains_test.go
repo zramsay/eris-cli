@@ -5,10 +5,12 @@ import (
 	"os"
 	"path"
 	"strings"
+	"strconv"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -20,58 +22,54 @@ var chainName string = "testchain"
 var hash string
 
 func TestMain(m *testing.M) {
-	logger.Level = 0
-	// logger.Level = 1
-	// logger.Level = 2
+	var logLevel int
+	var err error
 
-	if err := testsInit(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	if os.Getenv("LOG_LEVEL") != "" {
+		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
+	} else {
+		logLevel = 0
+		// logLevel = 1
+		// logLevel = 2
 	}
+	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+
+	testsInit()
+	logger.Infoln("Test init completed. Starting main test sequence now.")
 
 	exitCode := m.Run()
 
-	var e1, e2, e3 error
+	logger.Infoln("Commensing with Tests Tear Down.")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		e1 = data.RmDataRaw(chainName, 1)
-		if e1 != nil {
-			logger.Errorln(e1)
+		err = testsTearDown()
+		if err != nil {
+			logger.Errorln(err)
+			os.Exit(1)
 		}
 	}
 
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		e3 = testsTearDown()
-		if e3 != nil {
-			logger.Errorln(e3)
-		}
-	}
-
-	if e1 != nil || e2 != nil || e3 != nil {
-		os.Exit(1)
-	}
 	os.Exit(exitCode)
 }
 
 func TestKnownChainRaw(t *testing.T) {
-	k := services.ListKnownRaw()
-	if len(k) < 2 {
-		fmt.Printf("Less than two service definitions found. Something is wrong.\n")
-		t.Fail()
-		testsTearDown()
-		os.Exit(1)
-	}
+	do := def.NowDo()
+	ifExit(ListKnownRaw(do))
 
-	if k[0] != "erisdb" {
-		fmt.Printf("Could not find erisdb service definition.\n")
-		t.Fail()
-		testsTearDown()
-		os.Exit(1)
+	k := strings.Split(do.Result, "\n") // tests output formatting.
+
+	if k[0] != "" {
+		logger.Debugf("Result =>\t\t%s\n", do.Result)
+		ifExit(fmt.Errorf("Found a chain definition file. Something is wrong."))
 	}
 }
 
 func TestNewChainRaw(t *testing.T) {
-	genFile := path.Join(common.BlockchainsPath, "genesis", "default.json")
-	e := NewChainRaw(chainName, genFile, "", "", false, 1) // configFile and dir are not needed for the tests.
+	do := def.NowDo()
+	do.GenesisFile = path.Join(common.BlockchainsPath, "genesis", "default.json")
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	e := NewChainRaw(do) // configFile and dir are not needed for the tests.
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -80,7 +78,8 @@ func TestNewChainRaw(t *testing.T) {
 
 func TestLoadChainDefinition(t *testing.T) {
 	var e error
-	chn, e := LoadChainDefinition(chainName, 1)
+	logger.Infof("Load chain def (from tests) =>\t%s\n", chainName)
+	chn, e := loaders.LoadChainDefinition(chainName, 1)
 	if e != nil {
 		logger.Errorln(e)
 		t.FailNow()
@@ -103,7 +102,11 @@ func TestLoadChainDefinition(t *testing.T) {
 }
 
 func TestStartChainRaw(t *testing.T) {
-	e := StartChainRaw(chainName, 1, def.BlankOperation())
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
+	e := StartChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -113,7 +116,12 @@ func TestStartChainRaw(t *testing.T) {
 }
 
 func TestLogsChainRaw(t *testing.T) {
-	e := LogsChainRaw(chainName, false, "all", 1)
+	do := def.NowDo()
+	do.Name = chainName
+	do.Follow = false
+	do.Tail = "all"
+	logger.Infof("Get chain logs (from tests) =>\t%s:%s\n", do.Name, do.Tail)
+	e := LogsChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -125,8 +133,12 @@ func TestExecChainRaw(t *testing.T) {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
 	}
-	cmd := strings.Fields("ls -la /home/eris/.eris/blockchains")
-	e := ExecChainRaw(chainName, cmd, false, 1)
+	do := def.NowDo()
+	do.Name = chainName
+	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
+	do.Interactive = false
+	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
+	e := ExecChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -139,7 +151,11 @@ func TestUpdateChainRaw(t *testing.T) {
 		return
 	}
 
-	e := UpdateChainRaw(chainName, true, 1)
+	do := def.NowDo()
+	do.Name = chainName
+	do.SkipPull = true
+	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
+	e := UpdateChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -148,9 +164,13 @@ func TestUpdateChainRaw(t *testing.T) {
 	testRunAndExist(t, chainName, true, true)
 }
 
-//
 func TestRenameChainRaw(t *testing.T) {
-	e := RenameChainRaw(chainName, "niahctset")
+	// log.SetLoggers(2, os.Stdout, os.Stderr)
+	do := def.NowDo()
+	do.Name = chainName
+	do.NewName = "niahctset"
+	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	e := RenameChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -158,19 +178,42 @@ func TestRenameChainRaw(t *testing.T) {
 
 	testRunAndExist(t, "niahctset", true, true)
 
-	e = RenameChainRaw("niahctset", chainName)
+	do = def.NowDo()
+	do.Name = "niahctset"
+	do.NewName = chainName
+	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	e = RenameChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
 	testRunAndExist(t, chainName, true, true)
+	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestKillChainRaw(t *testing.T) {
 	testRunAndExist(t, chainName, true, true)
 
-	e := KillChainRaw(chainName, false, false, 1)
+	do := def.NowDo()
+	do.Name = chainName
+	do.Rm = false
+	do.RmD = false
+	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	e := KillChainRaw(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+
+	do = def.NowDo()
+	do.Args = []string{"keys"}
+	if os.Getenv("TEST_IN_CIRCLE") == "" {
+		do.Rm = true
+		do.RmD = true
+	}
+	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
+	e = services.KillServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -185,7 +228,11 @@ func TestRmChainRaw(t *testing.T) {
 		return
 	}
 
-	e := RmChainRaw(chainName, false, false, 1)
+	do := def.NowDo()
+	do.Name = chainName
+	do.RmD = true
+	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
+	e := RmChainRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -194,7 +241,66 @@ func TestRmChainRaw(t *testing.T) {
 	testRunAndExist(t, chainName, false, false)
 }
 
+func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
+	var exist, run bool
+	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", chainName, toRun, toExist)
+	chainName = util.ChainContainersName(chainName, 1) // not worried about containerNumbers, deal with multiple containers in services tests
+
+	do := def.NowDo()
+	do.Quiet = true
+	if err := ListExistingRaw(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+	res := strings.Split(do.Result, "\n")
+	for _, r := range res {
+		logger.Debugf("Existing =>\t\t\t%s\n", r)
+		if r == util.ContainersShortName(chainName) {
+			exist = true
+		}
+	}
+
+	do = def.NowDo()
+	do.Quiet = true
+	if err := ListRunningRaw(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+	res = strings.Split(do.Result, "\n")
+	for _, r := range res {
+		logger.Debugf("Running =>\t\t\t%s\n", r)
+		if r == util.ContainersShortName(chainName) {
+			run = true
+		}
+	}
+
+	if toRun != run {
+		if toRun {
+			logger.Infof("Could not find a running =>\t%s\n", chainName)
+		} else {
+			logger.Infof("Found a running instance of %s when I shouldn't have\n", chainName)
+		}
+		t.Fail()
+	}
+
+	if toExist != exist {
+		if toExist {
+			logger.Infof("Could not find an existing =>\t%s\n", chainName)
+		} else {
+			logger.Infof("Found an existing instance of %s when I shouldn't have\n", chainName)
+		}
+		t.Fail()
+	}
+}
+
 func testsInit() error {
+	var err error
+	// TODO: make a reader/pipe so we can see what is written from tests.
+	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	if err != nil {
+		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
+	}
+
 	// common is initialized on import so
 	// we have to manually override these
 	// variables to ensure that the tests
@@ -204,65 +310,23 @@ func testsInit() error {
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
 	if err := util.Initialize(false, false); err != nil {
-		return fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n")
+		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
 	// init dockerClient
 	util.DockerConnect(false)
-
-	// make sure erisdb not running
-	for _, r := range services.ListRunningRaw() {
-		if r == "erisdb" {
-			return fmt.Errorf("ERISDB service is running. Please stop it with eris services stop erisdb.")
-		}
-	}
-
-	// make sure erisdb container does not exist
-	for _, r := range services.ListExistingRaw(false) {
-		if r == "erisdb" {
-			return fmt.Errorf("ERISDB service exists. Please remove it with eris services rm erisdb.")
-		}
-	}
-
 	return nil
 }
 
 func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
-	}
-
-	return nil
+	return os.RemoveAll(erisDir)
 }
 
-func testRunAndExist(t *testing.T, chainName string, toExist, toRun bool) {
-	var exist, run bool
-	for _, r := range ListExistingRaw(false) {
-		if r == chainName {
-			exist = true
-		}
-	}
-	for _, r := range ListRunningRaw() {
-		if r == chainName {
-			run = true
-		}
-	}
-
-	if toRun != run {
-		if toRun {
-			logger.Errorf("Could not find a running instance of %s.\n", chainName)
-		} else {
-			logger.Errorln("Found a running instance of %s when I shouldn't have.", chainName)
-		}
-		t.Fail()
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Errorln("Could not find an existing instance of %s.", chainName)
-		} else {
-			logger.Errorln("Found an existing instance of %s when I shouldn't have.", chainName)
-		}
-		t.Fail()
+func ifExit(err error) {
+	if err != nil {
+		logger.Errorln(err)
+		log.Flush()
+		testsTearDown()
+		os.Exit(1)
 	}
 }

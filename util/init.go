@@ -68,12 +68,15 @@ func pullRepo(name, location string, verbose bool) error {
 }
 
 func dropDefaults() error {
-	if err := ipfsDef(); err != nil {
+  if err := keysDef(); err != nil {
+    return fmt.Errorf("Cannot add keys: %s.\n", err)
+  }
+  if err := ipfsDef(); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
-	if err := edbDef(); err != nil {
-		return fmt.Errorf("Cannot add erisdb: %s.\n", err)
-	}
+	// if err := edbDef(); err != nil {
+	// 	return fmt.Errorf("Cannot add erisdb: %s.\n", err)
+	// }
 	if err := genDef(); err != nil {
 		return fmt.Errorf("Cannot add default genesis: %s.\n", err)
 	}
@@ -81,6 +84,20 @@ func dropDefaults() error {
 		return fmt.Errorf("Cannot add default action: %s.\n", err)
 	}
 	return nil
+}
+
+func keysDef() error {
+  if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
+    return err
+  }
+  writer, err := os.Create(filepath.Join(common.ServicesPath, "keys.toml"))
+  defer writer.Close()
+  if err != nil {
+    return err
+  }
+  keysD := defKeys()
+  writer.Write([]byte(keysD))
+  return nil
 }
 
 func ipfsDef() error {
@@ -140,6 +157,15 @@ func actDef() error {
 	return nil
 }
 
+func defKeys() string {
+  return `[service]
+name = "keys"
+
+image = "eris/keys"
+data_container = true
+`
+}
+
 func defIpfs() string {
 	return `name = "ipfs"
 
@@ -164,6 +190,7 @@ requires = [""]
 }
 
 func defEdb() string {
+  // TODO: remove this. we should be hard coding these defaults...
 	return `[service]
 name           = "erisdb"
 image          = "eris/erisdb:develop"

@@ -19,7 +19,7 @@ func Untar(reader io.Reader, name, dest string) error {
 
 func SendToIPFS(fileName string, w io.Writer) (string, error) {
 	url := IPFSBaseUrl()
-	w.Write([]byte("POSTing file to IPFS. File -> " + fileName + "\n"))
+	w.Write([]byte("POSTing file to IPFS. File =>\t" + fileName + "\n"))
 	head, err := UploadFromFileToUrl(url, fileName, w)
 	if err != nil {
 		return "", err
@@ -35,7 +35,7 @@ func UploadFromFileToUrl(url, fileName string, w io.Writer) (http.Header, error)
 	if url == "" {
 		return http.Header{}, fmt.Errorf("To upload from a file to a url, I need a URL.")
 	}
-	w.Write([]byte("Uploading " + fileName + " to " + url + "\n"))
+	w.Write([]byte("Uploading =>\t\t\t" + fileName + ":" + url + "\n"))
 
 	input, err := os.Open(fileName)
 	if err != nil {

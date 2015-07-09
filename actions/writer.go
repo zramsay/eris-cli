@@ -15,14 +15,14 @@ import (
 // if given empty string for fileName will use Service
 // Definition Name
 func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
-
 	if strings.Contains(fileName, " ") {
 		fileName = strings.Replace(actDef.Name, " ", "_", -1)
 	}
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
-	logger.Debugf("Writing action def file =>\t%s to %s\n", actDef.Name, fileName)
+
+	logger.Debugf("Writing action def file =>\t%s:%s\n", actDef.Name, fileName)
 
 	writer, err := os.Create(fileName)
 	defer writer.Close()

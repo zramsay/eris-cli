@@ -10,20 +10,21 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func ImportServiceRaw(servName, servPath string) error {
-	fileName := filepath.Join(ServicesPath, servName)
+func ImportServiceRaw(do *definitions.Do) error {
+	fileName := filepath.Join(ServicesPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
 
-	s := strings.Split(servPath, ":")
+	s := strings.Split(do.Path, ":")
 	if s[0] == "ipfs" {
 
 		var err error
@@ -43,80 +44,77 @@ func ImportServiceRaw(servName, servPath string) error {
 		logger.Errorln("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
-
+	do.Result = "success"
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func NewServiceRaw(servName, imageName string) error {
-	srv := def.BlankServiceDefinition()
-	srv.Name = servName
-	srv.Service.Name = servName
-	srv.Service.Image = imageName
+func NewServiceRaw(do *definitions.Do) error {
+	srv := definitions.BlankServiceDefinition()
+	srv.Name = do.Name
+	srv.Service.Name = do.Name
+	srv.Service.Image = do.Args[0]
 	srv.Service.AutoData = true
 
-	err := WriteServiceDefinitionFile(srv, path.Join(ServicesPath, servName+".toml"))
+	logger.Debugf("Creating a new srv def file =>\t%s:%s\n", srv.Service.Name, srv.Service.Image)
+	err := WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}
+	do.Result = "success"
 	return nil
 }
 
-func EditServiceRaw(servName string) error {
-	servDefFile, err := servDefFileByServName(servName)
-	if err != nil {
-		return err
-	}
+func EditServiceRaw(do *definitions.Do) error {
+	servDefFile := FindServiceDefinitionFile(do.Name)
+	do.Result = "success"
 	return Editor(servDefFile)
 }
 
-func RenameServiceRaw(oldName, newName string, containerNumber int) error {
-	if oldName == newName {
+func RenameServiceRaw(do *definitions.Do) error {
+	logger.Infof("Renaming Service =>\t\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
+
+	if do.Name == do.NewName {
 		return fmt.Errorf("Cannot rename to same name")
 	}
 
-	newNameBase := strings.Replace(newName, filepath.Ext(newName), "", 1)
-	transformOnly := newNameBase == oldName
+	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
+	transformOnly := newNameBase == do.Name
 
-	if parseKnown(oldName) {
-		logger.Infoln("Renaming service", oldName, "to", newName)
-
-		serviceDef, err := LoadServiceDefinition(oldName, containerNumber)
+	if parseKnown(do.Name) {
+		serviceDef, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 		if err != nil {
 			return err
 		}
 
 		if !transformOnly {
-			err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, oldName, newName)
+			err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, do.Name, do.NewName)
 			if err != nil {
 				return err
 			}
 		}
 
-		oldFile, err := servDefFileByServName(oldName)
-		if err != nil {
-			return err
-		}
+		oldFile := FindServiceDefinitionFile(do.Name)
 
-		if filepath.Base(oldFile) == newName {
+		if filepath.Base(oldFile) == do.NewName {
 			logger.Infoln("Those are the same file. Not renaming")
 			return nil
 		}
 
 		var newFile string
-		if filepath.Ext(newName) == "" {
-			newFile = strings.Replace(oldFile, oldName, newName, 1)
+		if filepath.Ext(do.NewName) == "" {
+			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
 		} else {
-			newFile = filepath.Join(ServicesPath, newName)
+			newFile = filepath.Join(ServicesPath, do.NewName)
 		}
 
-		serviceDef.Service.Name = strings.Replace(newName, filepath.Ext(newName), "", 1)
+		serviceDef.Service.Name = strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
 		err = WriteServiceDefinitionFile(serviceDef, newFile)
 		if err != nil {
 			return err
 		}
 
 		if !transformOnly {
-			err = data.RenameDataRaw(oldName, newName, containerNumber)
+			err = data.RenameDataRaw(do)
 			if err != nil {
 				return err
 			}
@@ -126,25 +124,25 @@ func RenameServiceRaw(oldName, newName string, containerNumber int) error {
 	} else {
 		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
 	}
-
+	do.Result = "success"
 	return nil
 }
 
-func InspectServiceRaw(servName string, field string, containerNumber int) error {
-	service, err := LoadServiceDefinition(servName, containerNumber)
+func InspectServiceRaw(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
-	err = InspectServiceByService(service.Service, service.Operations, field)
+	err = InspectServiceByService(service.Service, service.Operations, do.Args[0])
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ExportServiceRaw(servName string) error {
-	if parseKnown(servName) {
-		ipfsService, err := LoadServiceDefinition("ipfs", 1)
+func ExportServiceRaw(do *definitions.Do) error {
+	if parseKnown(do.Name) {
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 		if err != nil {
 			return err
 		}
@@ -152,7 +150,7 @@ func ExportServiceRaw(servName string) error {
 		if IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 			logger.Infoln("IPFS is running. Adding now.")
 
-			hash, err := exportFile(servName)
+			hash, err := exportFile(do.Name)
 			if err != nil {
 				return err
 			}
@@ -161,15 +159,16 @@ func ExportServiceRaw(servName string) error {
 		} else {
 			logger.Infoln("IPFS is not running. Starting now.")
 
-			if err := StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{}); err != nil {
+			if err := perform.DockerRun(ipfsService.Service, ipfsService.Operations); err != nil {
 				return err
 			}
 
-			hash, err := exportFile(servName)
+			hash, err := exportFile(do.Name)
 			if err != nil {
 				return err
 			}
 
+			do.Result = hash
 			logger.Println(hash)
 		}
 
@@ -181,7 +180,81 @@ To find known services use: eris services known`)
 	return nil
 }
 
-func InspectServiceByService(srv *def.Service, ops *def.Operation, field string) error {
+func ListKnownRaw(do *definitions.Do) error {
+	srvs := util.GetGlobalLevelConfigFilesByType("services", false)
+	do.Result = strings.Join(srvs, "\n")
+	return nil
+}
+
+func ListRunningRaw(do *definitions.Do) error {
+	logger.Debugln("Asking Docker Client for the Running Containers.")
+	if do.Quiet {
+		do.Result = strings.Join(util.ServiceContainerNames(false), "\n")
+	} else {
+		perform.PrintTableReport("service", true) // TODO: return this as a string.
+	}
+	return nil
+}
+
+func ListExistingRaw(do *definitions.Do) error {
+	logger.Debugln("Asking Docker Client for the Existing Containers.")
+	if do.Quiet {
+		do.Result = strings.Join(util.ServiceContainerNames(true), "\n")
+	} else {
+		perform.PrintTableReport("service", true) // TODO: return this as a string.
+	}
+	return nil
+}
+
+func UpdateServiceRaw(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	err = perform.DockerRebuild(service.Service, service.Operations, do.SkipPull)
+	if err != nil {
+		return err
+	}
+	do.Result = "success"
+	return nil
+}
+
+func RmServiceRaw(do *definitions.Do) error {
+	for _, servName := range do.Args {
+		service, err := loaders.LoadServiceDefinition(servName, do.Operations.ContainerNumber)
+		if err != nil {
+			return err
+		}
+		if IsServiceExisting(service.Service, service.Operations) {
+			err = perform.DockerRemove(service.Service, service.Operations, do.RmD)
+			if err != nil {
+				return err
+			}
+		}
+
+		if do.File {
+			oldFile := FindServiceDefinitionFile(servName)
+			if err := os.Remove(oldFile); err != nil {
+				return err
+			}
+		}
+	}
+	do.Result = "success"
+	return nil
+}
+
+func CatServiceRaw(do *definitions.Do) error {
+	cat, err := ioutil.ReadFile(path.Join(ServicesPath, do.Name+".toml"))
+	if err != nil {
+		return err
+	}
+
+	logger.Println(string(cat)) // todo: remove all of these
+	do.Result = string(cat)
+	return nil
+}
+
+func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
 	if IsServiceExisting(srv, ops) {
 		err := perform.DockerInspect(srv, ops, field)
 		if err != nil {
@@ -193,93 +266,11 @@ func InspectServiceByService(srv *def.Service, ops *def.Operation, field string)
 	return nil
 }
 
-func ListKnownRaw() []string {
-	srvs := []string{}
-	fileTypes := []string{}
-	for _, t := range []string{"*.json", "*.yaml", "*.toml"} {
-		fileTypes = append(fileTypes, filepath.Join(ServicesPath, t))
-	}
-	for _, t := range fileTypes {
-		s, _ := filepath.Glob(t)
-		for _, s1 := range s {
-			s1 = strings.Split(filepath.Base(s1), ".")[0]
-			srvs = append(srvs, s1)
-		}
-	}
-	return srvs
-}
-
-func ListRunningRaw(quiet bool) []string {
-	if quiet {
-		return util.ServiceContainerNames(false)
-	}
-	perform.PrintTableReport("service", true)
-	return nil
-}
-
-func ListExistingRaw(quiet bool) []string {
-	if quiet {
-		return util.ServiceContainerNames(true)
-	}
-	perform.PrintTableReport("service", true)
-	return nil
-}
-
-func UpdateServiceRaw(servName string, skipPull bool, containerNumber int) error {
-	service, err := LoadServiceDefinition(servName, containerNumber)
-	if err != nil {
-		return err
-	}
-	err = perform.DockerRebuild(service.Service, service.Operations, skipPull)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func RmServiceRaw(servNames []string, containerNumber int, file, rmData bool) error {
-	for _, servName := range servNames {
-		service, err := LoadServiceDefinition(servName, containerNumber)
-		if err != nil {
-			return err
-		}
-		if IsServiceExisting(service.Service, service.Operations) {
-			err = perform.DockerRemove(service.Service, service.Operations, rmData)
-			if err != nil {
-				return err
-			}
-		}
-
-		if file {
-			oldFile, err := servDefFileByServName(servName)
-			if err != nil {
-				return err
-			}
-			if err := os.Remove(oldFile); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func CatServiceRaw(servName string) error {
-
-	cat, err := ioutil.ReadFile(path.Join(ServicesPath, servName+".toml"))
-	if err != nil {
-		return err
-	}
-	logger.Println(string(cat))
-	return nil
-}
-
 func exportFile(servName string) (string, error) {
-	fileName, err := servDefFileByServName(servName)
-	if err != nil {
-		return "", err
-	}
+	fileName := FindServiceDefinitionFile(servName)
 
 	var hash string
+	var err error
 	if logger.Level > 0 {
 		hash, err = util.SendToIPFS(fileName, logger.Writer)
 	} else {

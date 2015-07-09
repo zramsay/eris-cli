@@ -5,10 +5,12 @@ import (
 	"os"
 	"path"
 	"strings"
+	"strconv"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -18,63 +20,46 @@ var servName string = "ipfs"
 var hash string
 
 func TestMain(m *testing.M) {
-	logger.Level = 0
-	// logger.Level = 1
-	// logger.Level = 2
+	var logLevel int
 
-	if err := testsInit(); err != nil {
-		fmt.Printf("Could not initialize the tests\n%v", err)
-		os.Exit(1)
+	if os.Getenv("LOG_LEVEL") != "" {
+		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
+	} else {
+		logLevel = 0
+		// logLevel = 1
+		// logLevel = 2
 	}
+	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+
+	ifExit(testsInit())
 
 	exitCode := m.Run()
 
-	var e1, e2, e3 error
+	logger.Infoln("Commensing with Tests Tear Down.")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		e1 = data.RmDataRaw("keys", 1)
-		if e1 != nil {
-			fmt.Println(e1)
-		}
-		e2 = data.RmDataRaw("ipfs", 1)
-		if e2 != nil {
-			fmt.Println(e2)
-		}
+		ifExit(testsTearDown())
 	}
 
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		e3 = testsTearDown()
-		if e3 != nil {
-			fmt.Println(e3)
-		}
-	}
-
-	if e1 != nil || e2 != nil || e3 != nil {
-		os.Exit(1)
-	}
 	os.Exit(exitCode)
 }
 
 func TestKnownServiceRaw(t *testing.T) {
-	k := ListKnownRaw()
+	do := def.NowDo()
+	ifExit(ListKnownRaw(do))
+	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 2 {
-		logger.Errorf("More than two service definitions found. Something is wrong.\n")
-		t.Fail()
-		testsTearDown()
-		os.Exit(1)
+		ifExit(fmt.Errorf("More than two service definitions found. Something is wrong.\n"))
 	}
 
-	if k[1] != "ipfs" {
-		logger.Errorf("Could not find ipfs service definition.\n")
-		t.Fail()
-		testsTearDown()
-		os.Exit(1)
+	if k[0] != "ipfs" {
+		ifExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
 	}
 }
 
 func TestLoadServiceDefinition(t *testing.T) {
 	var e error
-	srv, e = LoadServiceDefinition(servName, 1)
+	srv, e = loaders.LoadServiceDefinition(servName, 1)
 	if e != nil {
 		logger.Errorln(e)
 		t.FailNow()
@@ -101,31 +86,50 @@ func TestLoadServiceDefinition(t *testing.T) {
 }
 
 func TestStartServiceRaw(t *testing.T) {
-	e := StartServiceRaw(servName, 1, def.BlankOperation())
+	do := def.NowDo()
+	do.Args = []string{servName}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Starting service (via tests) =>\t%s\n", servName)
+	e := StartServiceRaw(do)
 	if e != nil {
-		logger.Errorln(e)
+		logger.Infoln("Error starting service =>\t%v\n", e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, 1, true, true)
+	testExistAndRun(t, servName, 1, true, true)
 }
 
 func TestInspectServiceRaw(t *testing.T) {
-	e := InspectServiceRaw(servName, "name", 1)
+	do := def.NowDo()
+	do.Name = servName
+	do.Args = []string{"name"}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
+	e := InspectServiceRaw(do)
 	if e != nil {
-		logger.Errorln(e)
+		logger.Infof("Error inspecting service =>\t%v\n", e)
 		t.FailNow()
 	}
 
-	e = InspectServiceRaw(servName, "config.user", 1)
+	do = def.NowDo()
+	do.Name = servName
+	do.Args = []string{"config.user"}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
+	e = InspectServiceRaw(do)
 	if e != nil {
-		logger.Errorln(e)
+		logger.Infof("Error inspecting service =>\t%v\n", e)
 		t.Fail()
 	}
 }
 
 func TestLogsServiceRaw(t *testing.T) {
-	e := LogsServiceRaw(servName, false, "all", 1)
+	do := def.NowDo()
+	do.Name = servName
+	do.Follow = false
+	do.Tail = "all"
+	logger.Debugf("Inspect logs (via tests) =>\t%s:%v\n", servName, do.Tail)
+	e := LogsServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -137,8 +141,13 @@ func TestExecServiceRaw(t *testing.T) {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
 	}
-	cmd := strings.Fields("ls -la /root/")
-	e := ExecServiceRaw(servName, cmd, false, 1)
+
+	do := def.NowDo()
+	do.Name = servName
+	do.Interactive = false
+	do.Args = strings.Fields("ls -la /root/")
+	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
+	e := ExecServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -151,23 +160,33 @@ func TestUpdateServiceRaw(t *testing.T) {
 		return
 	}
 
-	e := UpdateServiceRaw(servName, true, 1)
+	do := def.NowDo()
+	do.Name = servName
+	do.SkipPull = true
+	logger.Debugf("Update serv (via tests) =>\t%s\n", servName)
+	e := UpdateServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, 1, true, true)
+	testExistAndRun(t, servName, 1, true, true)
 }
 
 func TestKillServiceRaw(t *testing.T) {
-	e := KillServiceRaw(true, false, false, 1, servName)
+	do := def.NowDo()
+	do.Name = servName
+	do.Rm = false
+	do.RmD = false
+	do.Args = []string{servName}
+	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
+	e := KillServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, 1, true, false)
+	testExistAndRun(t, servName, 1, true, false)
 }
 
 func TestRmServiceRaw(t *testing.T) {
@@ -176,67 +195,154 @@ func TestRmServiceRaw(t *testing.T) {
 		return
 	}
 
-	s := []string{servName}
-	e := RmServiceRaw(s, 1, false, false)
+	do := def.NowDo()
+	do.Name = servName
+	do.Args = []string{servName}
+	do.File = false
+	do.RmD = true
+	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
+	e := RmServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, servName, 1, false, false)
+	testExistAndRun(t, servName, 1, false, false)
 }
 
 func TestNewServiceRaw(t *testing.T) {
-	e := NewServiceRaw("keys", "eris/keys")
+	do := def.NowDo()
+	do.Name = "keys"
+	do.Args = []string{"eris/keys"}
+	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
+	e := NewServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.FailNow()
 	}
 
-	e = StartServiceRaw("keys", 1, new(def.Operation))
+	do = def.NowDo()
+	do.Args = []string{"keys"}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Stating serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
+	e = StartServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", 1, true, true)
+	testExistAndRun(t, "keys", 1, true, true)
 }
 
 func TestRenameServiceRaw(t *testing.T) {
-	e := RenameServiceRaw("keys", "syek", 1)
+	do := def.NowDo()
+	do.Name = "keys"
+	do.NewName = "syek"
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	e := RenameServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "syek", 1, true, true)
+	testExistAndRun(t, "syek", 1, true, true)
 
-	e = RenameServiceRaw("syek", "keys", 1)
+	do = def.NowDo()
+	do.Name = "syek"
+	do.NewName = "keys"
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	e = RenameServiceRaw(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", 1, true, true)
+	testExistAndRun(t, "keys", 1, true, true)
 }
 
 // tests remove+kill
 func TestKillServiceRawPostNew(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
-		return
-	}
 
-	e := KillServiceRaw(true, true, false, 1, "keys")
+	do := def.NowDo()
+	do.Args = []string{"keys"}
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		do.Rm = true
+		do.RmD = true
+	}
+	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	e := KillServiceRaw(do)
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
 	}
 
-	testRunAndExist(t, "keys", 1, false, false)
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		testExistAndRun(t, "keys", 1, false, false)
+	} else {
+		testExistAndRun(t, "keys", 1, true, false)
+	}
+}
+
+func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
+	var exist, run bool
+	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", servName, toRun, toExist)
+	servName = util.ServiceContainersName(servName, containerNumber)
+
+	do := def.NowDo()
+	do.Quiet = true
+	if err := ListExistingRaw(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+	res := strings.Split(do.Result, "\n")
+	for _, r := range res {
+		logger.Debugf("Existing =>\t\t\t%s\n", r)
+		if r == util.ContainersShortName(servName) {
+			exist = true
+		}
+	}
+
+	do = def.NowDo()
+	do.Quiet = true
+	if err := ListRunningRaw(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+	res = strings.Split(do.Result, "\n")
+	for _, r := range res {
+		logger.Debugf("Running =>\t\t\t%s\n", r)
+		if r == util.ContainersShortName(servName) {
+			run = true
+		}
+	}
+
+	if toRun != run {
+		if toRun {
+			logger.Infof("Could not find a running =>\t%s\n", servName)
+		} else {
+			logger.Infof("Found a running instance of %s when I shouldn't have\n", servName)
+		}
+		t.Fail()
+	}
+
+	if toExist != exist {
+		if toExist {
+			logger.Infof("Could not find an existing =>\t%s\n", servName)
+		} else {
+			logger.Infof("Found an existing instance of %s when I shouldn't have\n", servName)
+		}
+		t.Fail()
+	}
 }
 
 func testsInit() error {
+	var err error
+	// TODO: make a reader/pipe so we can see what is written from tests.
+	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	ifExit(err)
+
 	// common is initialized on import so
 	// we have to manually override these
 	// variables to ensure that the tests
@@ -245,9 +351,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	if err := util.Initialize(false, false); err != nil {
-		return fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err)
-	}
+	ifExit(util.Initialize(false, false))
 
 	// init dockerClient
 	util.DockerConnect(false)
@@ -256,19 +360,31 @@ func testsInit() error {
 	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
 
 	// make sure ipfs not running
-	for _, r := range ListRunningRaw(false) {
+	do := def.NowDo()
+	do.Quiet = true
+	if err := ListRunningRaw(do); err != nil {
+		ifExit(err)
+	}
+	res := strings.Split(do.Result, "\n")
+	for _, r := range res {
 		if r == "ipfs" {
-			return fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n")
+			ifExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
 		}
 	}
-
 	// make sure ipfs container does not exist
-	for _, r := range ListExistingRaw(false) {
+	do = def.NowDo()
+	do.Quiet = true
+	if err := ListExistingRaw(do); err != nil {
+		ifExit(err)
+	}
+	res = strings.Split(do.Result, "\n")
+	for _, r := range res {
 		if r == "ipfs" {
-			return fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n")
+			ifExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
 		}
 	}
 
+	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil
 }
 
@@ -276,37 +392,11 @@ func testsTearDown() error {
 	return os.RemoveAll(erisDir)
 }
 
-func testRunAndExist(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	var exist, run bool
-	servName = util.ServiceContainersName(servName, containerNumber)
-	for _, r := range ListExistingRaw(false) {
-		logger.Debugf("Existing =>\t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			exist = true
-		}
-	}
-	for _, r := range ListRunningRaw(false) {
-		logger.Debugf("Running => \t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			run = true
-		}
-	}
-
-	if toRun != run {
-		if toRun {
-			logger.Errorf("Could not find a running instance of\t%s\n", servName)
-		} else {
-			logger.Errorf("Found a running instance of %s when I shouldn't have\n", servName)
-		}
-		t.Fail()
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Errorf("Could not find an existing instance of\t%s\n", servName)
-		} else {
-			logger.Errorf("Found an existing instance of %s when I shouldn't have\n", servName)
-		}
-		t.Fail()
+func ifExit(err error) {
+	if err != nil {
+		logger.Errorln(err)
+		log.Flush()
+		testsTearDown()
+		os.Exit(1)
 	}
 }

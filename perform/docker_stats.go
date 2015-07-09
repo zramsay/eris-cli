@@ -22,7 +22,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 		if err != nil {
 			return err
 		}
-		logger.Println(strings.Join(parts, " "))
+		logger.Printf("%s\n", strings.Join(parts, " "))
 	case "all":
 		for _, obj := range []interface{}{cont, cont.Config, cont.HostConfig, cont.NetworkSettings} {
 			t, err := reflections.Fields(obj)
@@ -94,16 +94,25 @@ func printLine(container *docker.Container) ([]string, error) {
 
 // this function is for parsing single variables
 func printField(container interface{}, field string) error {
+	logger.Debugf("Inspecting field =>\t\t%s\n", field)
 	var line string
-	FieldCamel := camelize(field)
+
+	// We allow fields to be passed using dot syntax, but
+	// we have to make sure all fields are Camelized
+	lineSplit := strings.Split(field, ".")
+	for n, f := range lineSplit {
+		lineSplit[n] = camelize(f)
+	}
+	FieldCamel := strings.Join(lineSplit, ".")
+
 	f, _ := reflections.GetFieldKind(container, FieldCamel)
 	switch f.String() {
 	case "ptr":
 		// we don't recurse into to gain a bit more control... this function will be rarely used and doesn't have to be perfectly parseable.
 	case "map":
-		line = fmt.Sprintf("{{ range $key, $val := .%v }}{{ $key }}->{{ $val }}\n{{ end }}", FieldCamel)
+		line = fmt.Sprintf("{{ range $key, $val := .%v }}{{ $key }}->{{ $val }}\n{{ end }}\n", FieldCamel)
 	case "slice":
-		line = fmt.Sprintf("{{ range .%v }}{{ . }}\n{{ end }}", FieldCamel)
+		line = fmt.Sprintf("{{ range .%v }}{{ . }}\n{{ end }}\n", FieldCamel)
 	default:
 		line = fmt.Sprintf("{{.%v}}\n", FieldCamel)
 	}
@@ -170,6 +179,7 @@ func camelize(field string) string {
 }
 
 func writeTemplate(container interface{}, toParse string) error {
+	logger.Debugf("Template parsing =>\t\t%s", toParse)
 	tmpl, err := template.New("field").Parse(toParse)
 	if err != nil {
 		return err

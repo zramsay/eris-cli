@@ -2,52 +2,56 @@ package data
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func RenameDataRaw(oldName, newName string, containerNumber int) error {
-	if util.IsDataContainer(oldName, containerNumber) {
-		logger.Infoln("Renaming data container", oldName, "to", newName)
+func RenameDataRaw(do *definitions.Do) error {
+	logger.Infof("Renaming DataC (fm DataRaw) =>\t%s:%s\n", do.Name, do.NewName)
+
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName("data", oldName, containerNumber)
+		srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
 
-		err := perform.DockerRename(srv.Service, srv.Operations, oldName, newName)
+		err := perform.DockerRename(srv.Service, srv.Operations, do.Name, do.NewName)
 		if err != nil {
 			return err
 		}
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+	do.Result = "success"
 	return nil
 }
 
-func InspectDataRaw(name, field string, containerNumber int) error {
-	if util.IsDataContainer(name, containerNumber) {
-		logger.Infoln("Inspecting data container" + name)
+func InspectDataRaw(do *definitions.Do) error {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		logger.Infoln("Inspecting data container" + do.Name)
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName("data", name, containerNumber)
+		srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
 
-		err := perform.DockerInspect(srv.Service, srv.Operations, field)
+		err := perform.DockerInspect(srv.Service, srv.Operations, do.Args[0])
 		if err != nil {
 			return err
 		}
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+	do.Result = "success"
 	return nil
 }
 
-func RmDataRaw(name string, containerNumber int) error {
-	if util.IsDataContainer(name, containerNumber) {
-		logger.Infoln("Removing data container " + name)
+func RmDataRaw(do *definitions.Do) error {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		logger.Infoln("Removing data container " + do.Name)
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName("data", name, containerNumber)
+		srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
 
 		err := perform.DockerRemove(srv.Service, srv.Operations, false)
 		if err != nil {
@@ -56,12 +60,13 @@ func RmDataRaw(name string, containerNumber int) error {
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
-
+	do.Result = "success"
 	return nil
 }
 
-func ListKnownRaw() ([]string, error) {
-	return util.DataContainerNames(), nil
+func ListKnownRaw(do *definitions.Do) error {
+	do.Result = strings.Join(util.DataContainerNames(), "\n")
+	return nil
 }
 
 func IsKnown(name string) bool {

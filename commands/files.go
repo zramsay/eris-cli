@@ -8,6 +8,7 @@ import (
 )
 
 // Primary Files Sub-Command
+// Flags to add: ipfsHost
 var Files = &cobra.Command{
 	Use:   "files",
 	Short: "Manage Files containers for your Application.",
@@ -45,7 +46,9 @@ func Get(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(files.GetFilesRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(files.GetFilesRaw(do))
 }
 
 func Put(cmd *cobra.Command, args []string) {
@@ -53,7 +56,8 @@ func Put(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	hash, err := files.PutFilesRaw(args[0])
+	do.Name = args[0]
+	err := files.PutFilesRaw(do)
 	IfExit(err)
-	logger.Println(hash)
+	logger.Println(do.Result)
 }

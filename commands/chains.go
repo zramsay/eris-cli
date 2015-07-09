@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	srv "github.com/eris-ltd/eris-cli/services"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -141,7 +141,7 @@ To list the running chains: [eris chains ps]
 To start a chain use: [eris chains start chainName].
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListChains(Quiet)
+		ListChains()
 	},
 }
 
@@ -186,7 +186,7 @@ var chainsLogs = &cobra.Command{
 var chainsExec = &cobra.Command{
 	Use:   "exec [serviceName]",
 	Short: "Run a command or interactive shell",
-	Long:  `Run a command or interactive shell in a container
+	Long: `Run a command or interactive shell in a container
 with volumes-from the data container`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecChain(cmd, args)
@@ -198,7 +198,7 @@ var chainsListRunning = &cobra.Command{
 	Short: "List the running blockchains.",
 	Long:  `List the running blockchains.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListRunningChains(Quiet)
+		ListRunningChains()
 	},
 }
 
@@ -305,33 +305,33 @@ Command will cat local service definition file.`,
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
-	chainsNew.PersistentFlags().StringVarP(&GenesisFile, "genesis", "g", "", "genesis.json file")
-	chainsNew.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsNew.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	chainsNew.PersistentFlags().BoolVarP(&Run, "run", "r", false, "run the chain after creating")
+	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
+	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsNew.PersistentFlags().StringVarP(&do.DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsNew.PersistentFlags().BoolVarP(&do.Run, "run", "r", false, "run the chain after creating")
 
-	chainsStart.PersistentFlags().BoolVarP(&PublishAllPorts, "publish", "p", false, "publish all ports")
+	chainsStart.PersistentFlags().BoolVarP(&do.PublishAllPorts, "publish", "p", false, "publish all ports")
 
-	chainsInstall.PersistentFlags().StringVarP(&ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsInstall.PersistentFlags().StringVarP(&DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	chainsInstall.PersistentFlags().StringVarP(&ChainID, "id", "", "", "id of the chain to fetch")
-	chainsInstall.PersistentFlags().BoolVarP(&PublishAllPorts, "publish", "p", false, "publish all ports")
+	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsInstall.PersistentFlags().StringVarP(&do.DirToCopy, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
+	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 
-	chainsLogs.Flags().BoolVarP(&Follow, "follow", "f", false, "follow logs, like tail -f")
-	chainsLogs.Flags().StringVarP(&Tail, "tail", "t", "all", "number of lines to show from end of logs")
+	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
+	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
-	chainsRemove.Flags().BoolVarP(&Force, "file", "f", false, "remove chain definition file as well as chain container")
-	chainsRemove.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers also")
+	chainsRemove.Flags().BoolVarP(&do.Force, "file", "f", false, "remove chain definition file as well as chain container")
+	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
 
-	chainsExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 
-	chainsUpdate.Flags().BoolVarP(&Pull, "pull", "p", false, "pull an updated version of the chain's base service image from docker hub")
+	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 
-	chainsStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
-	chainsStop.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers after stopping")
+	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
+	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 
-	chainsList.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
-	chainsListRunning.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
+	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+	chainsListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 }
 
 //----------------------------------------------------------------------
@@ -342,7 +342,8 @@ func StartChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.StartChainRaw(args[0], ContainerNumber, &def.Operation{PublishAllPorts: PublishAllPorts}))
+	do.Name = args[0]
+	IfExit(chns.StartChainRaw(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
@@ -350,7 +351,8 @@ func LogChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.LogsChainRaw(args[0], Follow, Tail, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.LogsChainRaw(do))
 }
 
 func ExecChain(cmd *cobra.Command, args []string) {
@@ -359,10 +361,9 @@ func ExecChain(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	srv := args[0]
+	do.Name = args[0]
 	// if interactive, we ignore args. if not, run args as command
-	interactive := cmd.Flags().Lookup("interactive").Changed
-	if !interactive {
+	if !do.Interactive {
 		if len(args) < 2 {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
@@ -371,8 +372,8 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
-
-	IfExit(chns.ExecChainRaw(srv, args, interactive, ContainerNumber))
+	do.Args = args
+	IfExit(chns.ExecChainRaw(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
@@ -380,7 +381,8 @@ func KillChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.KillChainRaw(args[0], Rm, RmD, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.KillChainRaw(do))
 }
 
 // fetch and install a chain
@@ -392,8 +394,8 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	// the idea here is you will either specify a chainName as the arg and that will
 	// double as the chainID, or you want a local reference name for the chain, so you specify
 	// the chainID with a flag and give your local reference name as the arg
-	chainName := args[0]
-	IfExit(chns.InstallChainRaw(ChainID, chainName, ConfigFile, DirToCopy, PublishAllPorts, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.InstallChainRaw(do))
 }
 
 // create a new chain
@@ -403,8 +405,8 @@ func NewChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	chainName := args[0]
-	IfExit(chns.NewChainRaw(chainName, GenesisFile, ConfigFile, DirToCopy, Run, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.NewChainRaw(do))
 }
 
 // import a chain definition file
@@ -417,7 +419,9 @@ func ImportChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.ImportChainRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(chns.ImportChainRaw(do))
 }
 
 // edit a chain definition file
@@ -430,7 +434,9 @@ func EditChain(cmd *cobra.Command, args []string) {
 	if len(args) > 1 {
 		configVals = args[1:]
 	}
-	IfExit(chns.EditChainRaw(args[0], configVals))
+	do.Name = args[0]
+	do.Args = configVals
+	IfExit(chns.EditChainRaw(do))
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
@@ -438,17 +444,19 @@ func InspectChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	chainName := args[0]
-	var field string
+
+	do.Name = args[0]
 	if len(args) == 1 {
-		field = "all"
+		do.Args = []string{"all"}
 	} else {
-		field = args[1]
+		do.Args = []string{args[1]}
 	}
-	chain, err := chns.LoadChainDefinition(chainName, ContainerNumber)
+
+	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	IfExit(err)
+
 	if chns.IsChainExisting(chain) {
-		IfExit(srv.InspectServiceByService(chain.Service, chain.Operations, field))
+		IfExit(srv.InspectServiceByService(chain.Service, chain.Operations, do.Args[0]))
 	}
 }
 
@@ -457,30 +465,39 @@ func ExportChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.ExportChainRaw(args[0]))
+	do.Name = args[0]
+	IfExit(chns.ExportChainRaw(do))
 }
 
 func ListKnownChains() {
-	chains := chns.ListKnownRaw()
-	for _, s := range chains {
+	if err := chns.ListKnownRaw(do); err != nil {
+		return
+	}
+
+	chains := do.Result
+	for _, s := range strings.Split(chains, "||") {
 		fmt.Println(s)
 	}
 }
 
-// func ListInstalledChains(quiet bool) {
-// 	chns.ListExistingRaw(quiet)
-// }
+func ListChains() {
+	if err := chns.ListExistingRaw(do); err != nil {
+		return
+	}
 
-func ListChains(quiet bool) {
-	chains := chns.ListExistingRaw(quiet)
-	for _, s := range chains {
+	chains := do.Result
+	for _, s := range strings.Split(chains, "||") {
 		fmt.Println(s)
 	}
 }
 
-func ListRunningChains(quiet bool) {
-	chains := chns.ListRunningRaw(quiet)
-	for _, s := range chains {
+func ListRunningChains() {
+	if err := chns.ListRunningRaw(do); err != nil {
+		return
+	}
+
+	chains := do.Result
+	for _, s := range strings.Split(chains, "||") {
 		fmt.Println(s)
 	}
 }
@@ -494,7 +511,9 @@ func RenameChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.RenameChainRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.NewName = args[1]
+	IfExit(chns.RenameChainRaw(do))
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {
@@ -502,7 +521,8 @@ func UpdateChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.UpdateChainRaw(args[0], Pull, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.UpdateChainRaw(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {
@@ -510,7 +530,8 @@ func RmChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.RmChainRaw(args[0], RmD, Force, ContainerNumber))
+	do.Name = args[0]
+	IfExit(chns.RmChainRaw(do))
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
@@ -518,7 +539,8 @@ func GraduateChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.GraduateChainRaw(args[0]))
+	do.Name = args[0]
+	IfExit(chns.GraduateChainRaw(do))
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
@@ -526,8 +548,8 @@ func CatChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(chns.CatChainRaw(args[0]))
-
+	do.Name = args[0]
+	IfExit(chns.CatChainRaw(do))
 }
 
 func checkChainGiven(args []string) error {

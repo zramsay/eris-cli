@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -29,15 +30,15 @@ Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var logLevel int
-		if Verbose {
+		if do.Verbose {
 			logLevel = 1
-		} else if Debug {
+		} else if do.Debug {
 			logLevel = 2
 		}
 		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
 
 		common.InitErisDir()
-		util.DockerConnect(Verbose)
+		util.DockerConnect(do.Verbose)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
@@ -77,50 +78,23 @@ func AddCommands() {
 	ErisCmd.AddCommand(Init)
 }
 
-// Global Flags
-var Verbose bool
-var Debug bool
-var ContainerNumber int
+var do *definitions.Do
 
-// Flags that are to be used by commands
-var (
-	Force           bool
-	Interactive     bool
-	Pull            bool
-	SkipPull        bool
-	Quiet           bool
-	All             bool
-	Follow          bool
-	Tail            string
-	Rm              bool
-	RmD             bool
-	Lines           int
-	PublishAllPorts bool
-
-	Chain string
-	ServicesSlice []string
-
-	// chain specific flags
-	ChainName   string
-	GenesisFile string
-	ConfigFile  string
-	DirToCopy   string
-	ChainID     string
-	Run         bool
-)
-
+// Flags that are to be used by commands are handled by the Do struct
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
-	ErisCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
-	ErisCmd.PersistentFlags().BoolVarP(&Debug, "debug", "d", false, "debug level output")
-	ErisCmd.PersistentFlags().IntVarP(&ContainerNumber, "num", "n", 1, "container number")
-	Init.Flags().BoolVarP(&Pull, "pull", "p", false, "skip the pulling feature; for when git is not installed")
+	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
+	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
+	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
+	Init.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature; for when git is not installed")
 }
 
 func InitializeConfig() {
 	var err error
 	var out io.Writer
 	var erw io.Writer
+
+	do = definitions.NowDo()
 
 	if os.Getenv("ERIS_CLI_WRITER") != "" {
 		out, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))

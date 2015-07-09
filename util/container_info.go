@@ -18,6 +18,7 @@ type ContainerName struct {
 	ShortName   string
 	Number      int
 	Type        string
+	ContainerID string
 }
 
 func ContainersName(typ, name string, number int) string {
@@ -123,6 +124,9 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 
 	if len(contns) == 0 || err != nil {
 		logger.Infoln("There are no containers.")
+		if err != nil {
+			logger.Debugf("Marmot error duing DockerClient.ListContainers: %v\n", err)
+		}
 		return containers
 	}
 
@@ -134,7 +138,9 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 			if r.MatchString(c) {
 				c = strings.Replace(c, "/", "", 1) // Docker's leading slash
 				logger.Debugf("Found Eris Container =>\t\t%s\n", c)
-				containers = append(containers, ContainerDisassemble(c))
+				cont := ContainerDisassemble(c)
+				cont.ContainerID = con.ID
+				containers = append(containers, cont)
 			}
 		}
 	}
@@ -147,11 +153,13 @@ func ServiceContainers(running bool) []*ContainerName {
 }
 
 func ServiceContainerNames(running bool) []string {
+	logger.Debugf("Populating current containrs =>\tall? %t\n", running)
 	a := ServiceContainers(running)
 	b := []string{}
 	for _, c := range a {
 		b = append(b, c.ShortName)
 	}
+	logger.Debugf("Containers I found =>\t\t%v\n", b)
 	return b
 }
 
@@ -208,18 +216,20 @@ func DataContainerFullNames() []string {
 	return b
 }
 
-func FindServiceContainer(name string, number int, running bool) *ContainerName {
+func FindServiceContainer(srvName string, number int, running bool) *ContainerName {
 	for _, srv := range ServiceContainers(running) {
-		logger.Debugf("Find Service container =>\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
-		if srv.ShortName == name {
+		if srv.ShortName == srvName {
 			if srv.Number == number {
+				logger.Debugf("Found Service container =>\t%s:%s and %d:%d\n", srv.ShortName, srvName, srv.Number, number)
 				return srv
 			}
 		}
 	}
+	logger.Infof("Could not find container =>\t%s:%d\n", srvName, number)
 	return nil
 }
 
+// TODO: populate the ContainerID during this portion of the general sequence
 func IsServiceContainer(name string, number int, running bool) bool {
 	if FindServiceContainer(name, number, running) == nil {
 		return false
@@ -229,13 +239,14 @@ func IsServiceContainer(name string, number int, running bool) bool {
 
 func FindChainContainer(name string, number int, running bool) *ContainerName {
 	for _, srv := range ChainContainers(running) {
-		logger.Debugf("Find Chain container =>\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
 		if srv.ShortName == name {
 			if srv.Number == number {
+				logger.Debugf("Found Chain container =>\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
 				return srv
 			}
 		}
 	}
+	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
 	return nil
 }
 
@@ -248,13 +259,14 @@ func IsChainContainer(name string, number int, running bool) bool {
 
 func FindDataContainer(name string, number int) *ContainerName {
 	for _, srv := range DataContainers() {
-		logger.Debugf("Find Data container =>\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
 		if srv.ShortName == name {
 			if srv.Number == number {
+				logger.Debugf("Found Data container =>\t\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
 				return srv
 			}
 		}
 	}
+	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
 	return nil
 }
 

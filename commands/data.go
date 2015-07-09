@@ -106,6 +106,7 @@ func buildDataCommand() {
 	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 	Data.AddCommand(dataExec)
 	Data.AddCommand(dataRm)
+	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 }
 
 var dataImport = &cobra.Command{
@@ -187,4 +188,96 @@ var dataRm = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		RmData(cmd, args)
 	},
+}
+
+//----------------------------------------------------
+
+func ListKnownData(cmd *cobra.Command, args []string) {
+	if err := data.ListKnownRaw(do); err != nil {
+		return
+	}
+
+	// https://www.reddit.com/r/television/comments/2755ow/hbos_silicon_valley_tells_the_most_elaborate/
+	datasToManipulate := do.Result
+	for _, s := range strings.Split(datasToManipulate, "||") {
+		fmt.Println(s)
+	}
+}
+
+func RenameData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) != 2 {
+		cmd.Help()
+		return
+	}
+
+	do.Name = args[0]
+	do.NewName = args[1]
+	IfExit(data.RenameDataRaw(do))
+}
+
+func InspectData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	if len(args) == 1 {
+		args = append(args, "all")
+	}
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(data.InspectDataRaw(do))
+}
+
+func RmData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	IfExit(data.RmDataRaw(do))
+}
+
+func ImportData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	IfExit(data.ImportDataRaw(do))
+}
+
+func ExportData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	IfExit(data.ExportDataRaw(do))
+}
+
+func ExecData(cmd *cobra.Command, args []string) {
+	if err := checkServiceGiven(args); err != nil {
+		cmd.Help()
+		return
+	}
+
+	do.Name = args[0]
+
+	// if interactive, we ignore args. if not, run args as command
+	if !do.Interactive {
+		if len(args) < 2 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+		args = args[1:]
+		if len(args) == 1 {
+			args = strings.Split(args[0], " ")
+		}
+	}
+
+	do.Args = args
+	IfExit(data.ExecDataRaw(do))
 }

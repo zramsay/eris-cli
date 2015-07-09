@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
@@ -100,7 +99,7 @@ To list the known services: [eris services known]
 To list the running services: [eris services ps]
 To start a service use: [eris services start serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListExistingServices(Quiet)
+		ListExistingServices()
 	},
 }
 
@@ -145,7 +144,7 @@ var servicesListRunning = &cobra.Command{
 	Short: "Lists the running services.",
 	Long:  `Lists the services which are currently running.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListRunningServices(Quiet)
+		ListRunningServices()
 	},
 }
 
@@ -263,22 +262,22 @@ Command will cat local service definition file.`,
 // cli flags
 
 func addServicesFlags() {
-	servicesLogs.Flags().BoolVarP(&Follow, "follow", "f", false, "follow logs")
-	servicesLogs.Flags().StringVarP(&Tail, "tail", "t", "all", "number of lines to show from end of logs")
+	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
+	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
-	servicesExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
+	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 
-	servicesUpdate.Flags().BoolVarP(&SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
+	servicesUpdate.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 
-	servicesStop.Flags().BoolVarP(&All, "all", "a", false, "stop the primary service and its dependent services")
-	servicesStop.Flags().BoolVarP(&Rm, "rm", "r", false, "remove containers after stopping")
-	servicesStop.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers after stopping")
+	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
+	servicesStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
+	servicesStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 
-	servicesRm.Flags().BoolVarP(&Force, "file", "f", false, "remove service definition file as well as service container")
-	servicesRm.Flags().BoolVarP(&RmD, "data", "x", false, "remove data containers as well")
+	servicesRm.Flags().BoolVarP(&do.Force, "file", "f", false, "remove service definition file as well as service container")
+	servicesRm.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers as well")
 
-	servicesListExisting.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
-	servicesListRunning.Flags().BoolVarP(&Quiet, "quiet", "q", false, "machine parsable output")
+	servicesListExisting.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+	servicesListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 }
 
 //----------------------------------------------------------------------
@@ -289,7 +288,8 @@ func StartService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.StartServiceRaw(args[0], ContainerNumber, &def.Operation{}))
+	do.Args = args
+	IfExit(srv.StartServiceRaw(do))
 }
 
 func LogService(cmd *cobra.Command, args []string) {
@@ -297,7 +297,8 @@ func LogService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.LogsServiceRaw(args[0], Follow, Tail, ContainerNumber))
+	do.Name = args[0]
+	IfExit(srv.LogsServiceRaw(do))
 }
 
 func ExecService(cmd *cobra.Command, args []string) {
@@ -305,12 +306,15 @@ func ExecService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	service := args[0]
+
+	do.Name = args[0]
 	args = args[1:]
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
-	IfExit(srv.ExecServiceRaw(service, args, Interactive, ContainerNumber))
+	do.Args = args
+
+	IfExit(srv.ExecServiceRaw(do))
 }
 
 // TODO: how to specify container numbers ...
@@ -319,7 +323,9 @@ func KillService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.KillServiceRaw(All, Rm, RmD, ContainerNumber, args...))
+
+	do.Args = args
+	IfExit(srv.KillServiceRaw(do))
 }
 
 // install
@@ -332,7 +338,9 @@ func ImportService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.ImportServiceRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(srv.ImportServiceRaw(do))
 }
 
 func NewService(cmd *cobra.Command, args []string) {
@@ -344,7 +352,9 @@ func NewService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.NewServiceRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.Args = []string{args[1]}
+	IfExit(srv.NewServiceRaw(do))
 }
 
 func EditService(cmd *cobra.Command, args []string) {
@@ -352,7 +362,8 @@ func EditService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.EditServiceRaw(args[0]))
+	do.Name = args[0]
+	IfExit(srv.EditServiceRaw(do))
 }
 
 func RenameService(cmd *cobra.Command, args []string) {
@@ -364,7 +375,9 @@ func RenameService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.RenameServiceRaw(args[0], args[1], ContainerNumber))
+	do.Name = args[0]
+	do.NewName = args[1]
+	IfExit(srv.RenameServiceRaw(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {
@@ -375,7 +388,9 @@ func InspectService(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
-	IfExit(srv.InspectServiceRaw(args[0], args[1], ContainerNumber))
+	do.Name = args[0]
+	do.Args = []string{args[1]}
+	IfExit(srv.InspectServiceRaw(do))
 }
 
 func ExportService(cmd *cobra.Command, args []string) {
@@ -383,7 +398,8 @@ func ExportService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.ExportServiceRaw(args[0]))
+	do.Name = args[0]
+	IfExit(srv.ExportServiceRaw(do))
 }
 
 // Updates an installed service, or installs it if it has not been installed.
@@ -392,28 +408,28 @@ func UpdateService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.UpdateServiceRaw(args[0], SkipPull, ContainerNumber))
+	do.Name = args[0]
+	IfExit(srv.UpdateServiceRaw(do))
 }
 
 // list known
 func ListKnownServices() {
-	services := srv.ListKnownRaw()
-	for _, s := range services {
-		fmt.Println(s)
+	if err := srv.ListKnownRaw(do); err != nil {
+		return
+	}
+
+	fmt.Println(do.Result)
+}
+
+func ListRunningServices() {
+	if err := srv.ListRunningRaw(do); err != nil {
+		return
 	}
 }
 
-func ListRunningServices(quiet bool) {
-	services := srv.ListRunningRaw(quiet)
-	for _, s := range services {
-		fmt.Println(s)
-	}
-}
-
-func ListExistingServices(quiet bool) {
-	services := srv.ListExistingRaw(quiet)
-	for _, s := range services {
-		fmt.Println(s)
+func ListExistingServices() {
+	if err := srv.ListExistingRaw(do); err != nil {
+		return
 	}
 }
 
@@ -422,7 +438,8 @@ func RmService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.RmServiceRaw(args, ContainerNumber, Force, RmD))
+	do.Args = args
+	IfExit(srv.RmServiceRaw(do))
 }
 
 func CatService(cmd *cobra.Command, args []string) {
@@ -430,8 +447,8 @@ func CatService(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	IfExit(srv.CatServiceRaw(args[0]))
-
+	do.Name = args[0]
+	IfExit(srv.CatServiceRaw(do))
 }
 
 func checkServiceGiven(args []string) error {

@@ -89,7 +89,7 @@ var actionsList = &cobra.Command{
 var actionsDo = &cobra.Command{
 	Use:   "do [name]",
 	Short: "Perform an action.",
-	Long:  `Perform an action according to the action definition file.
+	Long: `Perform an action according to the action definition file.
 
 Actions are used to perform functions which are a
 semi-scriptable series of steps. These are general
@@ -162,10 +162,10 @@ var actionsRemove = &cobra.Command{
 //----------------------------------------------------------------------
 // cli flags
 func addActionsFlags() {
-	actionsRemove.Flags().BoolVarP(&Force, "force", "f", false, "force action without confirming")
-	actionsDo.Flags().BoolVarP(&Quiet, "quiet", "q", false, "suppress action output")
-	actionsDo.Flags().StringSliceVarP(&ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	actionsDo.Flags().StringVarP(&Chain, "chain", "c", "", "run action against a particular chain")
+	actionsRemove.Flags().BoolVarP(&do.Force, "force", "f", false, "force action without confirming")
+	actionsDo.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "suppress action output")
+	actionsDo.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
+	actionsDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "run action against a particular chain")
 }
 
 //----------------------------------------------------------------------
@@ -180,8 +180,9 @@ func ImportAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-
-	IfExit(act.ImportActionRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(act.ImportActionRaw(do))
 }
 
 func NewAction(cmd *cobra.Command, args []string) {
@@ -189,14 +190,15 @@ func NewAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-
-	IfExit(act.NewActionRaw(args))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(act.NewActionRaw(do))
 }
 
 func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
-	actions := act.ListKnownRaw()
-	for _, s := range actions {
+	act.ListKnownRaw(do)
+	for _, s := range strings.Split(do.Result, "\n") {
 		logger.Println(strings.Replace(s, "_", " ", -1))
 	}
 }
@@ -207,22 +209,13 @@ func EditAction(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	IfExit(act.EditActionRaw(args))
+	do.Name = strings.Join(args, "_")
+	IfExit(act.EditActionRaw(do))
 }
 
 func DoAction(cmd *cobra.Command, args []string) {
-	action, actionVars, err := act.LoadActionDefinition(args)
-	if err != nil {
-		logger.Errorln(err)
-		return
-	}
-
-	if err := act.MergeStepsAndCLIArgs(action, &actionVars, args); err != nil {
-		logger.Errorln(err)
-		return
-	}
-
-	IfExit(act.DoRaw(action, actionVars, cmd.Flags().Lookup("quiet").Changed))
+	do.Args = args
+	IfExit(act.DoRaw(do))
 }
 
 func ExportAction(cmd *cobra.Command, args []string) {
@@ -230,8 +223,8 @@ func ExportAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-
-	IfExit(act.ExportActionRaw(args))
+	do.Name = strings.Join(args, "_")
+	IfExit(act.ExportActionRaw(do))
 }
 
 func RenameAction(cmd *cobra.Command, args []string) {
@@ -243,8 +236,9 @@ func RenameAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-
-	IfExit(act.RenameActionRaw(args[0], args[1]))
+	do.Name = args[0]
+	do.NewName = args[1]
+	IfExit(act.RenameActionRaw(do))
 }
 
 func RmAction(cmd *cobra.Command, args []string) {
@@ -252,8 +246,8 @@ func RmAction(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-
-	IfExit(act.RmActionRaw(args, cmd.Flags().Lookup("force").Changed))
+	do.Name = args[0]
+	IfExit(act.RmActionRaw(do))
 }
 
 func checkActionGiven(args []string) error {

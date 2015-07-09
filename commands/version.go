@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 

@@ -11,12 +11,19 @@ func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.Ser
 	srv := def.BlankServiceDefinition()
 	srv.Name = serviceYourPretendingToBe
 
-	if len(cNum) == 0 {
+	if len(cNum) == 0 || cNum[0] == 0 {
+		logger.Debugf("Loading Service Definition =>\t%s:1 (autoassigned)\n", serviceYourPretendingToBe)
 		// TODO: findNextContainerIndex => util/container_operations.go
-		srv.Operations.ContainerNumber = 1
+		if len(cNum) == 0 {
+			cNum = append(cNum, 1)
+		} else {
+			cNum[0] = 1
+		}
 	} else {
-		srv.Operations.ContainerNumber = cNum[0]
+		logger.Debugf("Loading Service Definition =>\t%s:%d\n", serviceYourPretendingToBe, cNum[0])
 	}
+
+	srv.Operations.ContainerNumber = cNum[0]
 
 	giveMeAllTheNames(serviceYourPretendingToBe, srv)
 	return srv
@@ -45,9 +52,10 @@ func parseKnown(name string, num int) bool {
 }
 
 func _parseKnown(name string) bool {
-	known, _ := ListKnownRaw()
-	if len(known) != 0 {
-		for _, srv := range known {
+	do := def.NowDo()
+	_ = ListKnownRaw(do)
+	if len(do.Args) != 0 {
+		for _, srv := range do.Args {
 			if srv == name {
 				return true
 			}

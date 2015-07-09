@@ -2,13 +2,17 @@ package files
 
 import (
 	"bytes"
+	"time"
 
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func GetFilesRaw(hash, fileName string) error {
-	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
+func GetFilesRaw(do *definitions.Do) error {
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
 		return err
 	}
@@ -16,55 +20,61 @@ func GetFilesRaw(hash, fileName string) error {
 	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 		logger.Infoln("IPFS is running. Adding now.")
 
-		err := importFile(hash, fileName)
+		logger.Debugf("Gonna Import a file =>\t\t%s:%v\n", do.Name, do.Path)
+		err := importFile(do.Name, do.Path)
 		if err != nil {
 			return err
 		}
 
 	} else {
-		logger.Infoln("IPFS is not running. Starting now.")
-		err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{})
+		logger.Infoln("IPFS is not running. Starting now. Waiting for IPFS to become available")
+		time.Sleep(time.Second * 5) // this is dirty
+		err := perform.DockerRun(ipfsService.Service, ipfsService.Operations)
 		if err != nil {
 			return err
 		}
 
-		err = importFile(hash, fileName)
+		err = importFile(do.Args[0], do.Name)
 		if err != nil {
 			return err
 		}
 	}
+	do.Result = "success"
 	return nil
 }
 
-func PutFilesRaw(fileName string) (string, error) {
+func PutFilesRaw(do *definitions.Do) error {
 	var hash string
 	var err error
 
-	ipfsService, err := services.LoadServiceDefinition("ipfs", 1)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 		logger.Infoln("IPFS is running. Adding now.")
 
-		hash, err = exportFile(fileName)
+		hash, err = exportFile(do.Name)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 	} else {
 		logger.Infoln("IPFS is not running. Starting now.")
-		if err := services.StartServiceByService(ipfsService.Service, ipfsService.Operations, []string{}); err != nil {
-			return "", err
+		time.Sleep(time.Second * 5) // this is dirty
+
+		if err := perform.DockerRun(ipfsService.Service, ipfsService.Operations); err != nil {
+			return err
 		}
 
-		hash, err = exportFile(fileName)
+		hash, err = exportFile(do.Name)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
-	return hash, nil
+	do.Result = hash
+	return nil
 }
 
 func importFile(hash, fileName string) error {

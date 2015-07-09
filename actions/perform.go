@@ -5,50 +5,62 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 
 	"github.com/eris-ltd/eris-cli/chains"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
 )
 
-func DoRaw(action *def.Action, actionVars []string, quiet bool) error {
-	if err := StartServicesAndChains(action); err != nil {
+func DoRaw(do *definitions.Do) error {
+	var err error
+	var actionVars []string
+	do.Action, actionVars, err = LoadActionDefinition(strings.Join(do.Args, "_"))
+	if err != nil {
 		return err
 	}
 
-	if err := PerformCommand(action, actionVars, quiet); err != nil {
+	if err := MergeStepsAndCLIArgs(do.Action, &actionVars, do.Args); err != nil {
 		return err
 	}
+
+	if err := StartServicesAndChains(do); err != nil {
+		return err
+	}
+
+	if err := PerformCommand(do.Action, actionVars, do.Quiet); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func StartServicesAndChains(action *def.Action) error {
+func StartServicesAndChains(do *definitions.Do) error {
 	// start the services and chains
-	wg, ch := new(sync.WaitGroup), make(chan error, 1)
+	doSrvs := definitions.NowDo()
+	doSrvs.Args = do.Action.ServiceDeps
+	logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
+	if err := services.StartServiceRaw(doSrvs); err != nil {
+		return err
+	}
 
-	runningServices := services.ListRunningRaw(true)
-	services.StartGroup(ch, wg, action.ServiceDeps, runningServices, "service", &def.Operation{ContainerNumber: 1}, services.StartServiceRaw) // TODO:CNUM
+	doChns := definitions.NowDo()
+	doChns.Name = do.ChainName
+	logger.Debugf("Starting Chain. Name =>\t%v\n", doChns.Name)
+	if err := chains.StartChainRaw(do); err != nil {
+		return err
+	}
 
-	runningChains := chains.ListRunningRaw(true)
-	services.StartGroup(ch, wg, []string{action.Chain}, runningChains, "chain", &def.Operation{ContainerNumber: 1}, chains.StartChainRaw) // TODO:CNUM
-
-	go func() {
-		wg.Wait()
-		ch <- nil
-	}()
-
-	return <-ch
+	return nil
 }
 
-func PerformCommand(action *def.Action, actionVars []string, quiet bool) error {
-	logger.Infof("Performing Action:\t%s.\n", action.Name)
+func PerformCommand(action *definitions.Action, actionVars []string, quiet bool) error {
+	logger.Infof("Performing Action =>\t\t%s.\n", action.Name)
 
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	logger.Debugf("Directory for action:\t%s\n", dir)
+	logger.Debugf("Directory for action =>\t\t%s\n", dir)
 
 	// pull actionVars (first given from command line) and
 	// combine with the environment variables (given in the
@@ -60,7 +72,7 @@ func PerformCommand(action *def.Action, actionVars []string, quiet bool) error {
 	}
 
 	for _, v := range actionVars {
-		logger.Debugf("Variable for action:\t%s\n", v)
+		logger.Debugf("Variable for action =>\t\t%s\n", v)
 	}
 
 	actionVars = append(os.Environ(), actionVars...)
@@ -70,7 +82,7 @@ func PerformCommand(action *def.Action, actionVars []string, quiet bool) error {
 		cmd.Env = actionVars
 		cmd.Dir = dir
 
-		logger.Debugf("Performing Step %d:\t%s\n", n+1, strings.Join(cmd.Args, " "))
+		logger.Debugf("Performing Step %d =>\t\t%s\n", n+1, strings.Join(cmd.Args, " "))
 
 		prev, err := cmd.Output()
 		if err != nil {

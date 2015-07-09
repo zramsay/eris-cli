@@ -6,9 +6,12 @@ import (
 	"os"
 	"path"
 	"strings"
+	"strconv"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -17,9 +20,16 @@ var content string = "test content\n"
 var hash string
 
 func TestMain(m *testing.M) {
-	logger.Level = 0
-	// logger.Level = 1
-	// logger.Level = 2
+	var logLevel int
+
+	if os.Getenv("LOG_LEVEL") != "" {
+		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
+	} else {
+		logLevel = 0
+		// logLevel = 1
+		// logLevel = 2
+	}
+	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		erisDir = os.Getenv("HOME")
@@ -27,49 +37,48 @@ func TestMain(m *testing.M) {
 
 	file = path.Join(erisDir, "temp")
 
-	if err := testsInit(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	ifExit(testsInit())
 
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		if err := testsTearDown(); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		ifExit(testsTearDown())
 	}
 
 	os.Exit(exitCode)
 }
 
 func TestPutFilesRaw(t *testing.T) {
-	var err error
-	hash, err = PutFilesRaw(file)
-	if err != nil {
-		fmt.Println(err)
+	do := definitions.NowDo()
+	do.Name = file
+	logger.Infof("Putting File =>\t\t\t%s\n", do.Name)
+	if err := PutFilesRaw(do); err != nil {
+		logger.Errorln(err)
 		t.Fail()
 	}
-	logger.Debugln(hash)
+	hash = do.Result
+	logger.Debugf("My Result =>\t\t\t%s\n", do.Result)
 }
 
 func TestGetFilesRaw(t *testing.T) {
 	fileName := strings.Replace(file, "temp", "pmet", 1)
-	if err := GetFilesRaw(hash, fileName); err != nil {
-		fmt.Println(err)
+	do := definitions.NowDo()
+	do.Name = hash
+	do.Path = fileName
+	if err := GetFilesRaw(do); err != nil {
+		logger.Errorln(err)
 		t.FailNow()
 	}
 
 	f, err := os.Open(fileName)
 	if err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.FailNow()
 	}
 
 	contentPuted, err := ioutil.ReadAll(f)
 	if err != nil {
-		fmt.Println(err)
+		logger.Errorln(err)
 		t.FailNow()
 	}
 
@@ -80,6 +89,11 @@ func TestGetFilesRaw(t *testing.T) {
 }
 
 func testsInit() error {
+	var err error
+	// TODO: make a reader/pipe so we can see what is written from tests.
+	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	ifExit(err)
+
 	// common is initialized on import so
 	// we have to manually override these
 	// variables to ensure that the tests
@@ -88,9 +102,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	if err := util.Initialize(false, false); err != nil {
-		return fmt.Errorf("TRAGIC. Could not initialize the eris dir:\n%s\n", err)
-	}
+	ifExit(util.Initialize(false, false))
 
 	// init dockerClient
 	util.DockerConnect(false)
@@ -100,18 +112,25 @@ func testsInit() error {
 
 	// dump a test file with some stuff
 	f, err := os.Create(file)
-	if err != nil {
-		return err
-	}
+	ifExit(err)
 	f.Write([]byte(content))
 
 	return nil
 }
 
 func testsTearDown() error {
-	// if e := os.RemoveAll(erisDir); e != nil {
-	// 	return e
-	// }
+	if e := os.RemoveAll(erisDir); e != nil {
+		return e
+	}
 
 	return nil
+}
+
+func ifExit(err error) {
+	if err != nil {
+		logger.Errorln(err)
+		log.Flush()
+		testsTearDown()
+		os.Exit(1)
+	}
 }
