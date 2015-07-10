@@ -266,7 +266,7 @@ func RmServiceRaw(do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
-			oldFile = path.Join(ServicesPath, oldFile)+".toml"
+			oldFile = path.Join(ServicesPath, oldFile) + ".toml"
 			logger.Printf("Removing file =>\t\t%s\n", oldFile)
 			if err := os.Remove(oldFile); err != nil {
 				return err
@@ -278,44 +278,19 @@ func RmServiceRaw(do *definitions.Do) error {
 }
 
 func CatServiceRaw(do *definitions.Do) error {
-	dir, err := ioutil.ReadDir(ServicesPath)
-	if err != nil {
-		return err
-	}
-
-	var valid bool
-	for i := 0; i < len(dir); i++ {
-		fi := dir[i].Name()
-
-		switch fi {
-		case do.Name + ".toml":
-			prettyCat(do.Name, ".toml")
-			valid = true
-		case do.Name + ".yaml":
-			prettyCat(do.Name, ".yaml")
-			valid = true
-		case do.Name + ".yml":
-			prettyCat(do.Name, ".yml")
-			valid = true
-		case do.Name + ".json":
-			prettyCat(do.Name, ".json")
-			valid = true
-		default:
+	configs := util.GetGlobalLevelConfigFilesByType("services", true)
+	for _, c := range configs {
+		cName := strings.Split(filepath.Base(c), ".")[0]
+		if cName == do.Name {
+			cat, err := ioutil.ReadFile(c)
+			if err != nil {
+				return err
+			}
+			logger.Println(string(cat))
+			return nil
 		}
 	}
-	if valid != true {
-		logger.Println("Invalid file format. Only '.toml', '.yaml', '.yml', and '.json' are allowed")
-	}
-	return nil
-}
-
-func prettyCat(name string, ext string) error {
-	cat, err := ioutil.ReadFile(path.Join(ServicesPath, name+ext))
-	if err != nil {
-		return err
-	}
-	logger.Println(string(cat))
-	return nil
+	return fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
