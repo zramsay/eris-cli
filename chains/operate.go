@@ -17,7 +17,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func NewChainRaw(do *definitions.Do) error {
+func NewChain(do *definitions.Do) error {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
 	var err error
@@ -33,11 +33,11 @@ func NewChainRaw(do *definitions.Do) error {
 	return setupChain(do, loaders.ErisChainNew)
 }
 
-func InstallChainRaw(do *definitions.Do) error {
+func InstallChain(do *definitions.Do) error {
 	return setupChain(do, loaders.ErisChainInstall)
 }
 
-func StartChainRaw(do *definitions.Do) error {
+func StartChain(do *definitions.Do) error {
 	logger.Infoln("Ensuring Key Server is Started.")
 	keysService, err := loaders.LoadServiceDefinition("keys", 1)
 	if err != nil {
@@ -77,7 +77,7 @@ func StartChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func KillChainRaw(do *definitions.Do) error {
+func KillChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err != nil {
 			logger.Infof("Error on setupChain =>\t\t%v\n", err)
 			logger.Infoln("Cleaning up...")
-			if err2 := RmChainRaw(do); err2 != nil {
+			if err2 := RmChain(do); err2 != nil {
 				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t%v\nCleanup error =>\t%v\n", containerName, err, err2)
 			}
 		}
@@ -171,7 +171,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// copy from host to container
-	if err = data.ImportDataRaw(do); err != nil {
+	if err = data.ImportData(do); err != nil {
 		return err
 	}
 

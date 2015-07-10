@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 )
 
-func DoRaw(do *definitions.Do) error {
+func Do(do *definitions.Do) error {
 	logger.Infof("Performing Action =>\t\t%v\n", do.Args)
 	logger.Debugf("CLI Chain to turn on =>\t\t%v\n", do.ChainName)
 	logger.Debugf("CLI Services to turn on =>\t%v\n", do.ServicesSlice)
@@ -46,7 +46,7 @@ func StartServicesAndChains(do *definitions.Do) error {
 		logger.Debugf("No services to start.\n")
 	} else {
 		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
-		if err := services.StartServiceRaw(doSrvs); err != nil {
+		if err := services.StartService(doSrvs); err != nil {
 			return err
 		}
 	}
@@ -57,7 +57,7 @@ func StartServicesAndChains(do *definitions.Do) error {
 		logger.Debugf("No chain to start.\n")
 	} else {
 		logger.Debugf("Starting Chain. Name =>\t\t%v\n", doChns.Name)
-		if err := chains.StartChainRaw(do); err != nil {
+		if err := chains.StartChain(do); err != nil {
 			return err
 		}
 	}

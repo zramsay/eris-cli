@@ -346,7 +346,7 @@ func StartChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.StartChainRaw(do))
+	IfExit(chns.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
@@ -355,7 +355,7 @@ func LogChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.LogsChainRaw(do))
+	IfExit(chns.LogsChain(do))
 }
 
 func ExecChain(cmd *cobra.Command, args []string) {
@@ -376,7 +376,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 		args = strings.Split(args[0], " ")
 	}
 	do.Args = args
-	IfExit(chns.ExecChainRaw(do))
+	IfExit(chns.ExecChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
@@ -385,7 +385,7 @@ func KillChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.KillChainRaw(do))
+	IfExit(chns.KillChain(do))
 }
 
 // fetch and install a chain
@@ -398,7 +398,7 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	// double as the chainID, or you want a local reference name for the chain, so you specify
 	// the chainID with a flag and give your local reference name as the arg
 	do.Name = args[0]
-	IfExit(chns.InstallChainRaw(do))
+	IfExit(chns.InstallChain(do))
 }
 
 // create a new chain
@@ -409,7 +409,7 @@ func NewChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.NewChainRaw(do))
+	IfExit(chns.NewChain(do))
 }
 
 // import a chain definition file
@@ -424,7 +424,7 @@ func ImportChain(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(chns.ImportChainRaw(do))
+	IfExit(chns.ImportChain(do))
 }
 
 // edit a chain definition file
@@ -439,7 +439,7 @@ func EditChain(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Args = configVals
-	IfExit(chns.EditChainRaw(do))
+	IfExit(chns.EditChain(do))
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
@@ -469,11 +469,11 @@ func ExportChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.ExportChainRaw(do))
+	IfExit(chns.ExportChain(do))
 }
 
 func ListKnownChains() {
-	if err := chns.ListKnownRaw(do); err != nil {
+	if err := chns.ListKnown(do); err != nil {
 		return
 	}
 
@@ -481,13 +481,13 @@ func ListKnownChains() {
 }
 
 func ListChains() {
-	if err := chns.ListExistingRaw(do); err != nil {
+	if err := chns.ListExisting(do); err != nil {
 		return
 	}
 }
 
 func ListRunningChains() {
-	if err := chns.ListRunningRaw(do); err != nil {
+	if err := chns.ListRunning(do); err != nil {
 		return
 	}
 }
@@ -503,7 +503,7 @@ func RenameChain(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.NewName = args[1]
-	IfExit(chns.RenameChainRaw(do))
+	IfExit(chns.RenameChain(do))
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {
@@ -512,7 +512,7 @@ func UpdateChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.UpdateChainRaw(do))
+	IfExit(chns.UpdateChain(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {
@@ -521,7 +521,7 @@ func RmChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.RmChainRaw(do))
+	IfExit(chns.RmChain(do))
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
@@ -530,7 +530,7 @@ func GraduateChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.GraduateChainRaw(do))
+	IfExit(chns.GraduateChain(do))
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
@@ -539,7 +539,7 @@ func CatChain(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(chns.CatChainRaw(do))
+	IfExit(chns.CatChain(do))
 }
 
 func checkChainGiven(args []string) error {

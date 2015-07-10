@@ -48,11 +48,11 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestPutFilesRaw(t *testing.T) {
+func TestPutFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = file
 	logger.Infof("Putting File =>\t\t\t%s\n", do.Name)
-	if err := PutFilesRaw(do); err != nil {
+	if err := PutFiles(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -60,12 +60,12 @@ func TestPutFilesRaw(t *testing.T) {
 	logger.Debugf("My Result =>\t\t\t%s\n", do.Result)
 }
 
-func TestGetFilesRaw(t *testing.T) {
+func TestGetFiles(t *testing.T) {
 	fileName := strings.Replace(file, "temp", "pmet", 1)
 	do := definitions.NowDo()
 	do.Name = hash
 	do.Path = fileName
-	if err := GetFilesRaw(do); err != nil {
+	if err := GetFiles(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}

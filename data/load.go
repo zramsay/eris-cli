@@ -53,7 +53,7 @@ func parseKnown(name string, num int) bool {
 
 func _parseKnown(name string) bool {
 	do := def.NowDo()
-	_ = ListKnownRaw(do)
+	_ = ListKnown(do)
 	if len(do.Args) != 0 {
 		for _, srv := range do.Args {
 			if srv == name {

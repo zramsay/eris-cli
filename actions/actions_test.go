@@ -43,9 +43,9 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestListActionsRaw(t *testing.T) {
+func TestListActions(t *testing.T) {
 	do := definitions.NowDo()
-	ifExit(ListKnownRaw(do))
+	ifExit(ListKnown(do))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 1 {
@@ -73,29 +73,29 @@ func TestLoadActionDefinition(t *testing.T) {
 	}
 }
 
-func TestDoActionRaw(t *testing.T) {
+func TestDoAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Args = strings.Fields(actionName)
 	do.Quiet = true
 	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Args)
-	if err := DoRaw(do); err != nil {
+	if err := Do(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
 }
 
-func TestNewActionRaw(t *testing.T) {
+func TestNewAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Args = strings.Fields(oldName)
 	logger.Infof("New Action (from tests) =>\t%v\n", do.Args)
-	if err := NewActionRaw(do); err != nil {
+	if err := NewAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
 	testExist(t, oldName, true)
 }
 
-func TestRenameActionRaw(t *testing.T) {
+func TestRenameAction(t *testing.T) {
 	testExist(t, newName, false)
 	testExist(t, oldName, true)
 
@@ -103,7 +103,7 @@ func TestRenameActionRaw(t *testing.T) {
 	do.Name = oldName
 	do.NewName = newName
 	logger.Infof("Renaming Action (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	if err := RenameActionRaw(do); err != nil {
+	if err := RenameAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -114,7 +114,7 @@ func TestRenameActionRaw(t *testing.T) {
 	do.Name = newName
 	do.NewName = oldName
 	logger.Infof("Renaming Action (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	if err := RenameActionRaw(do); err != nil {
+	if err := RenameAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -122,11 +122,11 @@ func TestRenameActionRaw(t *testing.T) {
 	testExist(t, oldName, true)
 }
 
-func TestRemoveActionRaw(t *testing.T) {
+func TestRemoveAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Args = strings.Fields(oldName)
 	do.File = true
-	if err := RmActionRaw(do); err != nil {
+	if err := RmAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -171,7 +171,7 @@ func testExist(t *testing.T, name string, toExist bool) {
 
 	do := definitions.NowDo()
 	do.Quiet = true
-	if err := ListKnownRaw(do); err != nil {
+	if err := ListKnown(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}

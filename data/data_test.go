@@ -69,7 +69,7 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	do.Name = dataName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Importing Data (from tests) =>\t%s\n", do.Name)
-	if err := ImportDataRaw(do); err != nil {
+	if err := ImportData(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -77,7 +77,7 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	testExist(t, dataName, true)
 }
 
-func TestRenameDataRaw(t *testing.T) {
+func TestRenameData(t *testing.T) {
 	testExist(t, dataName, true)
 	testExist(t, newName, false)
 
@@ -86,7 +86,7 @@ func TestRenameDataRaw(t *testing.T) {
 	do.NewName = newName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Renaming Data (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	if err := RenameDataRaw(do); err != nil {
+	if err := RenameData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}
@@ -99,7 +99,7 @@ func TestRenameDataRaw(t *testing.T) {
 	do.NewName = dataName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Renaming Data (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	if err := RenameDataRaw(do); err != nil {
+	if err := RenameData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}
@@ -108,13 +108,13 @@ func TestRenameDataRaw(t *testing.T) {
 	testExist(t, newName, false)
 }
 
-func TestInspectDataRaw(t *testing.T) {
+func TestInspectData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
-	if err := InspectDataRaw(do); err != nil {
+	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}
@@ -124,30 +124,30 @@ func TestInspectDataRaw(t *testing.T) {
 	do.Args = []string{"config.network_disabled"}
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
-	if err := InspectDataRaw(do); err != nil {
+	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
 }
 
-func TestExecDataRaw(t *testing.T) {
+func TestExecData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
 	do.Interactive = false
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
-	if err := ExecDataRaw(do); err != nil {
+	if err := ExecData(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
 }
 
-func TestExportDataRaw(t *testing.T) {
+func TestExportData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.ContainerNumber = 1
-	if err := ExportDataRaw(do); err != nil {
+	if err := ExportData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}
@@ -158,7 +158,7 @@ func TestExportDataRaw(t *testing.T) {
 	}
 }
 
-func TestRmDataRaw(t *testing.T) {
+func TestRmData(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -167,7 +167,7 @@ func TestRmDataRaw(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.ContainerNumber = 1
-	if err := RmDataRaw(do); err != nil {
+	if err := RmData(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
@@ -175,7 +175,7 @@ func TestRmDataRaw(t *testing.T) {
 	do = definitions.NowDo()
 	do.Name = newName
 	do.Operations.ContainerNumber = 1
-	RmDataRaw(do) // don't reap this error, it is just to check its Rm'ed
+	RmData(do) // don't reap this error, it is just to check its Rm'ed
 }
 
 func testsInit() error {
@@ -215,7 +215,7 @@ func testExist(t *testing.T, name string, toExist bool) {
 
 	do := definitions.NowDo()
 	do.Quiet = true
-	if err := ListKnownRaw(do); err != nil {
+	if err := ListKnown(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}

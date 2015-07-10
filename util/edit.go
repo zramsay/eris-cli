@@ -8,7 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func EditRaw(conf *viper.Viper, configVals []string) error {
+func Edit(conf *viper.Viper, configVals []string) error {
 	filePath := conf.ConfigFileUsed()
 	if len(configVals) == 0 {
 		if err := Editor(filePath); err != nil {

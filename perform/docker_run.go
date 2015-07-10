@@ -142,6 +142,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	// check existence || create the container
 	if servCont, exists := ContainerExists(ops); exists {
 		logger.Infoln("Service Container already exists, am not creating.")
+
 		if srv.AutoData {
 			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
 				logger.Infoln("Data Container already exists, am not creating.")
@@ -175,6 +176,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 			}
 		}
 
+		logger.Infoln("Service container does not exist, creating.")
 		servContCreated, err := createContainer(optsServ)
 		if err != nil {
 			return err
@@ -183,11 +185,10 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	}
 
 	// start the container
-	logger.Infof("Starting Service Contanr ID =>\t%s\n", id_main)
+	logger.Infof("Starting Service Contanr ID =>\t%s:%s\n", optsServ.Name, id_main)
 	if srv.AutoData {
 		logger.Infof("\twith DataContanr ID =>\t%s\n", id_data)
 	}
-
 	logger.Debugf("Service Container CMD =>\t%v\n", optsServ.Config.Cmd)
 	logger.Debugf("Service Container Image =>\t%v\n", optsServ.Config.Image)
 	logger.Debugf("Service Container Env =>\t%s\n", optsServ.Config.Env)

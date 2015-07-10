@@ -10,7 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func StartServiceRaw(do *definitions.Do) error {
+func StartService(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
 	if do.Operations.ContainerNumber == 0 { // TODO: automagic, see #67
 		do.Operations.ContainerNumber = 1
@@ -51,7 +51,7 @@ func StartServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func KillServiceRaw(do *definitions.Do) error {
+func KillService(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
 
 	for _, servName := range do.Args {
@@ -124,8 +124,7 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group []*definitions.ServiceD
 
 			logger.Debugf("Telling Docker to start srv =>\t%s\n", s.Name)
 			if err := perform.DockerRun(s.Service, s.Operations); err != nil {
-				logger.Debugf("Error starting service (%s): %v\n", s.Name, err)
-				ch <- err
+				ch <- fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", s.Name, err)
 			}
 
 			wg.Done()

@@ -294,7 +294,7 @@ func StartService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Args = args
-	IfExit(srv.StartServiceRaw(do))
+	IfExit(srv.StartService(do))
 }
 
 func LogService(cmd *cobra.Command, args []string) {
@@ -303,7 +303,7 @@ func LogService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(srv.LogsServiceRaw(do))
+	IfExit(srv.LogsService(do))
 }
 
 func ExecService(cmd *cobra.Command, args []string) {
@@ -319,7 +319,7 @@ func ExecService(cmd *cobra.Command, args []string) {
 	}
 	do.Args = args
 
-	IfExit(srv.ExecServiceRaw(do))
+	IfExit(srv.ExecService(do))
 }
 
 // TODO: how to specify container numbers ...
@@ -330,7 +330,7 @@ func KillService(cmd *cobra.Command, args []string) {
 	}
 
 	do.Args = args
-	IfExit(srv.KillServiceRaw(do))
+	IfExit(srv.KillService(do))
 }
 
 // install
@@ -345,7 +345,7 @@ func ImportService(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(srv.ImportServiceRaw(do))
+	IfExit(srv.ImportService(do))
 }
 
 func NewService(cmd *cobra.Command, args []string) {
@@ -359,7 +359,7 @@ func NewService(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Args = []string{args[1]}
-	IfExit(srv.NewServiceRaw(do))
+	IfExit(srv.NewService(do))
 }
 
 func EditService(cmd *cobra.Command, args []string) {
@@ -368,7 +368,7 @@ func EditService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(srv.EditServiceRaw(do))
+	IfExit(srv.EditService(do))
 }
 
 func RenameService(cmd *cobra.Command, args []string) {
@@ -382,7 +382,7 @@ func RenameService(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.NewName = args[1]
-	IfExit(srv.RenameServiceRaw(do))
+	IfExit(srv.RenameService(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {
@@ -395,7 +395,7 @@ func InspectService(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Args = []string{args[1]}
-	IfExit(srv.InspectServiceRaw(do))
+	IfExit(srv.InspectService(do))
 }
 
 func ExportService(cmd *cobra.Command, args []string) {
@@ -404,7 +404,7 @@ func ExportService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(srv.ExportServiceRaw(do))
+	IfExit(srv.ExportService(do))
 }
 
 // Updates an installed service, or installs it if it has not been installed.
@@ -414,12 +414,12 @@ func UpdateService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(srv.UpdateServiceRaw(do))
+	IfExit(srv.UpdateService(do))
 }
 
 // list known
 func ListKnownServices() {
-	if err := srv.ListKnownRaw(do); err != nil {
+	if err := srv.ListKnown(do); err != nil {
 		return
 	}
 
@@ -427,13 +427,13 @@ func ListKnownServices() {
 }
 
 func ListRunningServices() {
-	if err := srv.ListRunningRaw(do); err != nil {
+	if err := srv.ListRunning(do); err != nil {
 		return
 	}
 }
 
 func ListExistingServices() {
-	if err := srv.ListExistingRaw(do); err != nil {
+	if err := srv.ListExisting(do); err != nil {
 		return
 	}
 }
@@ -444,7 +444,7 @@ func RmService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Args = args
-	IfExit(srv.RmServiceRaw(do))
+	IfExit(srv.RmService(do))
 }
 
 func CatService(cmd *cobra.Command, args []string) {
@@ -453,7 +453,7 @@ func CatService(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(srv.CatServiceRaw(do))
+	IfExit(srv.CatService(do))
 }
 
 func checkServiceGiven(args []string) error {

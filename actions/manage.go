@@ -15,7 +15,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func NewActionRaw(do *definitions.Do) error {
+func NewAction(do *definitions.Do) error {
 	do.Name = strings.Join(do.Args, "_")
 	path := filepath.Join(ActionsPath, do.Name)
 	logger.Debugf("NewActionRaw to MockAction =>\t%v:%s\n", do.Name, path)
@@ -26,7 +26,7 @@ func NewActionRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ImportActionRaw(do *definitions.Do) error {
+func ImportAction(do *definitions.Do) error {
 	if do.Name == "" {
 		do.Name = strings.Join(do.Args, "_")
 	}
@@ -71,7 +71,7 @@ func ImportActionRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ExportActionRaw(do *definitions.Do) error {
+func ExportAction(do *definitions.Do) error {
 	_, _, err := LoadActionDefinition(do.Name)
 	if err != nil {
 		return err
@@ -96,13 +96,13 @@ func ExportActionRaw(do *definitions.Do) error {
 	return nil
 }
 
-func EditActionRaw(do *definitions.Do) error {
+func EditAction(do *definitions.Do) error {
 	f := filepath.Join(ActionsPath, do.Name) + ".toml"
 	Editor(f)
 	return nil
 }
 
-func RenameActionRaw(do *definitions.Do) error {
+func RenameAction(do *definitions.Do) error {
 	if do.Name == do.NewName {
 		return fmt.Errorf("Cannot rename to same name")
 	}
@@ -156,13 +156,13 @@ func RenameActionRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ListKnownRaw(do *definitions.Do) error {
+func ListKnown(do *definitions.Do) error {
 	chns := util.GetGlobalLevelConfigFilesByType("actions", false)
 	do.Result = strings.Join(chns, "\n")
 	return nil
 }
 
-func RmActionRaw(do *definitions.Do) error {
+func RmAction(do *definitions.Do) error {
 	do.Name = strings.Join(do.Args, "_")
 	if do.File {
 		oldFile := util.GetFileByNameAndType("actions", do.Name)

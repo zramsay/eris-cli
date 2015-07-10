@@ -48,7 +48,7 @@ func Get(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(files.GetFilesRaw(do))
+	IfExit(files.GetFiles(do))
 }
 
 func Put(cmd *cobra.Command, args []string) {
@@ -57,7 +57,7 @@ func Put(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	err := files.PutFilesRaw(do)
+	err := files.PutFiles(do)
 	IfExit(err)
 	logger.Println(do.Result)
 }

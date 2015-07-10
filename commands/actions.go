@@ -183,7 +183,7 @@ func ImportAction(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(act.ImportActionRaw(do))
+	IfExit(act.ImportAction(do))
 }
 
 func NewAction(cmd *cobra.Command, args []string) {
@@ -193,12 +193,12 @@ func NewAction(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(act.NewActionRaw(do))
+	IfExit(act.NewAction(do))
 }
 
 func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
-	act.ListKnownRaw(do)
+	act.ListKnown(do)
 	for _, s := range strings.Split(do.Result, "\n") {
 		logger.Println(strings.Replace(s, "_", " ", -1))
 	}
@@ -211,12 +211,12 @@ func EditAction(cmd *cobra.Command, args []string) {
 	}
 
 	do.Name = strings.Join(args, "_")
-	IfExit(act.EditActionRaw(do))
+	IfExit(act.EditAction(do))
 }
 
 func DoAction(cmd *cobra.Command, args []string) {
 	do.Args = args
-	IfExit(act.DoRaw(do))
+	IfExit(act.Do(do))
 }
 
 func ExportAction(cmd *cobra.Command, args []string) {
@@ -225,7 +225,7 @@ func ExportAction(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = strings.Join(args, "_")
-	IfExit(act.ExportActionRaw(do))
+	IfExit(act.ExportAction(do))
 }
 
 func RenameAction(cmd *cobra.Command, args []string) {
@@ -239,7 +239,7 @@ func RenameAction(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.NewName = args[1]
-	IfExit(act.RenameActionRaw(do))
+	IfExit(act.RenameAction(do))
 }
 
 func RmAction(cmd *cobra.Command, args []string) {
@@ -248,7 +248,7 @@ func RmAction(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Args = args
-	IfExit(act.RmActionRaw(do))
+	IfExit(act.RmAction(do))
 }
 
 func checkActionGiven(args []string) error {

@@ -51,9 +51,9 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestKnownChainRaw(t *testing.T) {
+func TestKnownChain(t *testing.T) {
 	do := def.NowDo()
-	ifExit(ListKnownRaw(do))
+	ifExit(ListKnown(do))
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
@@ -63,13 +63,13 @@ func TestKnownChainRaw(t *testing.T) {
 	}
 }
 
-func TestNewChainRaw(t *testing.T) {
+func TestNewChain(t *testing.T) {
 	do := def.NowDo()
 	do.GenesisFile = path.Join(common.BlockchainsPath, "genesis", "default.json")
 	do.Name = chainName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	e := NewChainRaw(do) // configFile and dir are not needed for the tests.
+	e := NewChain(do) // configFile and dir are not needed for the tests.
 	if e != nil {
 		fmt.Println(e)
 		t.Fail()
@@ -101,12 +101,12 @@ func TestLoadChainDefinition(t *testing.T) {
 	}
 }
 
-func TestStartChainRaw(t *testing.T) {
+func TestStartChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
-	e := StartChainRaw(do)
+	e := StartChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -115,20 +115,20 @@ func TestStartChainRaw(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
-func TestLogsChainRaw(t *testing.T) {
+func TestLogsChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
 	do.Follow = false
 	do.Tail = "all"
 	logger.Infof("Get chain logs (from tests) =>\t%s:%s\n", do.Name, do.Tail)
-	e := LogsChainRaw(do)
+	e := LogsChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
-func TestExecChainRaw(t *testing.T) {
+func TestExecChain(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
@@ -138,14 +138,14 @@ func TestExecChainRaw(t *testing.T) {
 	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
 	do.Interactive = false
 	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
-	e := ExecChainRaw(do)
+	e := ExecChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
 }
 
-func TestUpdateChainRaw(t *testing.T) {
+func TestUpdateChain(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -155,7 +155,7 @@ func TestUpdateChainRaw(t *testing.T) {
 	do.Name = chainName
 	do.SkipPull = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
-	e := UpdateChainRaw(do)
+	e := UpdateChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -164,12 +164,12 @@ func TestUpdateChainRaw(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
-func TestRenameChainRaw(t *testing.T) {
+func TestRenameChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
 	do.NewName = "niahctset"
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e := RenameChainRaw(do)
+	e := RenameChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -181,7 +181,7 @@ func TestRenameChainRaw(t *testing.T) {
 	do.Name = "niahctset"
 	do.NewName = chainName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e = RenameChainRaw(do)
+	e = RenameChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -190,7 +190,7 @@ func TestRenameChainRaw(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
-func TestKillChainRaw(t *testing.T) {
+func TestKillChain(t *testing.T) {
 	// log.SetLoggers(2, os.Stdout, os.Stderr)
 	testExistAndRun(t, chainName, true, true)
 
@@ -201,7 +201,7 @@ func TestKillChainRaw(t *testing.T) {
 		do.RmD = true
 	}
 	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
-	e := services.KillServiceRaw(do)
+	e := services.KillService(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -214,7 +214,7 @@ func TestKillChainRaw(t *testing.T) {
 		do.RmD = true
 	}
 	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
-	e = KillChainRaw(do)
+	e = KillChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -233,7 +233,7 @@ func TestKillChainRaw(t *testing.T) {
 // 	do := definitions.NowDo()
 // 	do.Name = "keys"
 // 	do.Args = []string{"eris/keys"}
-// 	err := services.NewServiceRaw(do)
+// 	err := services.NewService(do)
 // 	if err != nil {
 // 		logger.Errorln(err)
 // 		t.FailNow()
@@ -244,7 +244,7 @@ func TestKillChainRaw(t *testing.T) {
 
 // }
 
-func TestRmChainRaw(t *testing.T) {
+func TestRmChain(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -254,7 +254,7 @@ func TestRmChainRaw(t *testing.T) {
 	do.Name = chainName
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
-	e := RmChainRaw(do)
+	e := RmChain(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -271,7 +271,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do := def.NowDo()
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListExistingRaw(do); err != nil {
+	if err := ListExisting(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}
@@ -286,7 +286,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do = def.NowDo()
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListRunningRaw(do); err != nil {
+	if err := ListRunning(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}

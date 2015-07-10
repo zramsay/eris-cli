@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func GetFilesRaw(do *definitions.Do) error {
+func GetFiles(do *definitions.Do) error {
 	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func GetFilesRaw(do *definitions.Do) error {
 	return nil
 }
 
-func PutFilesRaw(do *definitions.Do) error {
+func PutFiles(do *definitions.Do) error {
 	var hash string
 	var err error
 

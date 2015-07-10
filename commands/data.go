@@ -199,7 +199,7 @@ func addDataFlags() {
 
 //----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
-	if err := data.ListKnownRaw(do); err != nil {
+	if err := data.ListKnown(do); err != nil {
 		return
 	}
 
@@ -222,7 +222,7 @@ func RenameData(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 	do.NewName = args[1]
-	IfExit(data.RenameDataRaw(do))
+	IfExit(data.RenameData(do))
 }
 
 func InspectData(cmd *cobra.Command, args []string) {
@@ -235,7 +235,7 @@ func InspectData(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	do.Path = args[1]
-	IfExit(data.InspectDataRaw(do))
+	IfExit(data.InspectData(do))
 }
 
 func RmData(cmd *cobra.Command, args []string) {
@@ -244,7 +244,7 @@ func RmData(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(data.RmDataRaw(do))
+	IfExit(data.RmData(do))
 }
 
 func ImportData(cmd *cobra.Command, args []string) {
@@ -253,7 +253,7 @@ func ImportData(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(data.ImportDataRaw(do))
+	IfExit(data.ImportData(do))
 }
 
 func ExportData(cmd *cobra.Command, args []string) {
@@ -262,7 +262,7 @@ func ExportData(cmd *cobra.Command, args []string) {
 		return
 	}
 	do.Name = args[0]
-	IfExit(data.ExportDataRaw(do))
+	IfExit(data.ExportData(do))
 }
 
 func ExecData(cmd *cobra.Command, args []string) {
@@ -285,5 +285,5 @@ func ExecData(cmd *cobra.Command, args []string) {
 	}
 
 	do.Args = args
-	IfExit(data.ExecDataRaw(do))
+	IfExit(data.ExecData(do))
 }

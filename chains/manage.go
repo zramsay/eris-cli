@@ -19,7 +19,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func ImportChainRaw(do *definitions.Do) error {
+func ImportChain(do *definitions.Do) error {
 	fileName := filepath.Join(BlockchainsPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -49,7 +49,7 @@ func ImportChainRaw(do *definitions.Do) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func LogsChainRaw(do *definitions.Do) error {
+func LogsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func LogsChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ExecChainRaw(do *definitions.Do) error {
+func ExecChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func ExecChainRaw(do *definitions.Do) error {
 }
 
 // export a chain definition file
-func ExportChainRaw(do *definitions.Do) error {
+func ExportChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, 1) //TODO:CNUM
 	if err != nil {
 		return err
@@ -109,12 +109,12 @@ To find known chains use: eris chains known`)
 	return nil
 }
 
-func EditChainRaw(do *definitions.Do) error {
+func EditChain(do *definitions.Do) error {
 	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {
 		return err
 	}
-	if err := util.EditRaw(chainConf, do.Args); err != nil {
+	if err := util.Edit(chainConf, do.Args); err != nil {
 		return err
 	}
 	var chain definitions.Chain
@@ -122,13 +122,13 @@ func EditChainRaw(do *definitions.Do) error {
 	return WriteChainDefinitionFile(&chain, chainConf.ConfigFileUsed())
 }
 
-func ListKnownRaw(do *definitions.Do) error {
+func ListKnown(do *definitions.Do) error {
 	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
 	do.Result = strings.Join(chns, "\n")
 	return nil
 }
 
-func ListRunningRaw(do *definitions.Do) error {
+func ListRunning(do *definitions.Do) error {
 	logger.Debugf("Quiet? =>\t\t\t%v\n", do.Quiet)
 	if do.Quiet {
 		do.Result = strings.Join(util.ChainContainerNames(false), "\n")
@@ -143,7 +143,7 @@ func ListRunningRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ListExistingRaw(do *definitions.Do) error {
+func ListExisting(do *definitions.Do) error {
 	if do.Quiet {
 		do.Result = strings.Join(util.ChainContainerNames(true), "\n")
 		if len(do.Args) != 0 && do.Args[0] != "testing" {
@@ -158,7 +158,7 @@ func ListExistingRaw(do *definitions.Do) error {
 }
 
 // XXX: What's going on here? => [csk]: magic
-func RenameChainRaw(do *definitions.Do) error {
+func RenameChain(do *definitions.Do) error {
 	if do.Name == do.NewName {
 		return fmt.Errorf("Cannot rename to same name")
 	}
@@ -213,7 +213,7 @@ func RenameChainRaw(do *definitions.Do) error {
 			logger.Infof("Renaming DataC (fm ChainRaw) =>\t%s:%s\n", do.Name, do.NewName)
 			do.Operations.ContainerNumber = chainDef.Operations.ContainerNumber
 			logger.Debugf("\twith ContainerNumber =>\t%d\n", do.Operations.ContainerNumber)
-			err = data.RenameDataRaw(do)
+			err = data.RenameData(do)
 			if err != nil {
 				return err
 			}
@@ -226,7 +226,7 @@ func RenameChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func UpdateChainRaw(do *definitions.Do) error {
+func UpdateChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func UpdateChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func RmChainRaw(do *definitions.Do) error {
+func RmChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func RmChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func GraduateChainRaw(do *definitions.Do) error {
+func GraduateChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, 1)
 	if err != nil {
 		return err
@@ -284,7 +284,7 @@ func GraduateChainRaw(do *definitions.Do) error {
 	return nil
 }
 
-func CatChainRaw(do *definitions.Do) error {
+func CatChain(do *definitions.Do) error {
 	cat, err := ioutil.ReadFile(path.Join(BlockchainsPath, do.Name+".toml"))
 	if err != nil {
 		return err

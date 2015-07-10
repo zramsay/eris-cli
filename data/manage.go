@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func RenameDataRaw(do *definitions.Do) error {
+func RenameData(do *definitions.Do) error {
 	logger.Infof("Renaming DataC (fm DataRaw) =>\t%s:%s\n", do.Name, do.NewName)
 
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
@@ -30,7 +30,7 @@ func RenameDataRaw(do *definitions.Do) error {
 	return nil
 }
 
-func InspectDataRaw(do *definitions.Do) error {
+func InspectData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		logger.Infoln("Inspecting data container" + do.Name)
 
@@ -48,11 +48,7 @@ func InspectDataRaw(do *definitions.Do) error {
 	return nil
 }
 
-func RmDataRaw(do *definitions.Do) error {
-	if do.RmHF {
-		logger.Println("Removing host folder " + do.Name)
-		os.RemoveAll(path.Join(DataContainersPath, do.Name))
-	}
+func RmData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		logger.Infoln("Removing data container " + do.Name)
 
@@ -67,11 +63,20 @@ func RmDataRaw(do *definitions.Do) error {
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
+
+	if do.RmHF {
+		logger.Println("Removing host folder " + do.Name)
+		err := os.RemoveAll(path.Join(DataContainersPath, do.Name))
+		if err != nil {
+			return err
+		}
+	}
+
 	do.Result = "success"
 	return nil
 }
 
-func ListKnownRaw(do *definitions.Do) error {
+func ListKnown(do *definitions.Do) error {
 	do.Result = strings.Join(util.DataContainerNames(), "\n")
 	return nil
 }

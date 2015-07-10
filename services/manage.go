@@ -18,7 +18,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func ImportServiceRaw(do *definitions.Do) error {
+func ImportService(do *definitions.Do) error {
 	fileName := filepath.Join(ServicesPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
@@ -48,7 +48,7 @@ func ImportServiceRaw(do *definitions.Do) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
-func NewServiceRaw(do *definitions.Do) error {
+func NewService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
 	srv.Service.Name = do.Name
@@ -64,13 +64,13 @@ func NewServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func EditServiceRaw(do *definitions.Do) error {
+func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	do.Result = "success"
 	return Editor(servDefFile)
 }
 
-func RenameServiceRaw(do *definitions.Do) error {
+func RenameService(do *definitions.Do) error {
 	logger.Infof("Renaming Service =>\t\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
 
 	if do.Name == do.NewName {
@@ -114,7 +114,7 @@ func RenameServiceRaw(do *definitions.Do) error {
 		}
 
 		if !transformOnly {
-			err = data.RenameDataRaw(do)
+			err = data.RenameData(do)
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ func RenameServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func InspectServiceRaw(do *definitions.Do) error {
+func InspectService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func InspectServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func LogsServiceRaw(do *definitions.Do) error {
+func LogsService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func LogsServiceRaw(do *definitions.Do) error {
 	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
-func ExecServiceRaw(do *definitions.Do) error {
+func ExecService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func ExecServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ExportServiceRaw(do *definitions.Do) error {
+func ExportService(do *definitions.Do) error {
 	if parseKnown(do.Name) {
 		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 		if err != nil {
@@ -203,14 +203,14 @@ To find known services use: eris services known`)
 	return nil
 }
 
-func ListKnownRaw(do *definitions.Do) error {
+func ListKnown(do *definitions.Do) error {
 	srvs := util.GetGlobalLevelConfigFilesByType("services", false)
 	do.Result = strings.Join(srvs, "\n")
 	return nil
 }
 
-func ListRunningRaw(do *definitions.Do) error {
-	logger.Debugln("Asking Docker Client for the Running Containers. Quiet? %v", do.Quiet)
+func ListRunning(do *definitions.Do) error {
+	logger.Debugf("Asking Docker Client for the Running Containers. Quiet? %v\n", do.Quiet)
 	if do.Quiet {
 		do.Result = strings.Join(util.ServiceContainerNames(false), "\n")
 		if len(do.Args) != 0 && do.Args[0] != "testing" {
@@ -222,7 +222,7 @@ func ListRunningRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ListExistingRaw(do *definitions.Do) error {
+func ListExisting(do *definitions.Do) error {
 	logger.Debugln("Asking Docker Client for the Existing Containers.")
 	if do.Quiet {
 		do.Result = strings.Join(util.ServiceContainerNames(true), "\n")
@@ -235,7 +235,7 @@ func ListExistingRaw(do *definitions.Do) error {
 	return nil
 }
 
-func UpdateServiceRaw(do *definitions.Do) error {
+func UpdateService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func UpdateServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func RmServiceRaw(do *definitions.Do) error {
+func RmService(do *definitions.Do) error {
 	for _, servName := range do.Args {
 		service, err := loaders.LoadServiceDefinition(servName, do.Operations.ContainerNumber)
 		if err != nil {
@@ -277,7 +277,7 @@ func RmServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func CatServiceRaw(do *definitions.Do) error {
+func CatService(do *definitions.Do) error {
 	configs := util.GetGlobalLevelConfigFilesByType("services", true)
 	for _, c := range configs {
 		cName := strings.Split(filepath.Base(c), ".")[0]
@@ -286,6 +286,7 @@ func CatServiceRaw(do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
+			do.Result = string(cat)
 			logger.Println(string(cat))
 			return nil
 		}

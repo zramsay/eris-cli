@@ -16,7 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-func ImportDataRaw(do *definitions.Do) error {
+func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -44,13 +44,13 @@ func ImportDataRaw(do *definitions.Do) error {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
-		return ImportDataRaw(do)
+		return ImportData(do)
 	}
 	do.Result = "success"
 	return nil
 }
 
-func ExecDataRaw(do *definitions.Do) error {
+func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
@@ -64,7 +64,7 @@ func ExecDataRaw(do *definitions.Do) error {
 	return nil
 }
 
-func ExportDataRaw(do *definitions.Do) error {
+func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		logger.Infoln("Exporting data container", do.Name)
 
