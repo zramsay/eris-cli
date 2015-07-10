@@ -7,6 +7,7 @@ type Action struct {
 	Chain       string            `json:"chain" yaml:"chain" toml:"chain"`
 	Steps       []string          `mapstructure:"steps" json:"steps" yaml:"steps" toml:"steps"`
 	Environment map[string]string `json:"environment" yaml:"environment" toml:"environment"`
+
 	Maintainer  *Maintainer       `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
 	Location    *Location         `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
 	Machine     *Machine          `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`

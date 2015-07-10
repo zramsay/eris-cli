@@ -140,6 +140,29 @@ func InspectServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
+func LogsServiceRaw(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
+}
+
+func ExecServiceRaw(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsServiceExisting(service.Service, service.Operations) {
+		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
+	} else {
+		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
+	}
+
+	return nil
+}
+
 func ExportServiceRaw(do *definitions.Do) error {
 	if parseKnown(do.Name) {
 		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)

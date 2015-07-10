@@ -5,7 +5,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-
 func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
 	logger.Debugf("Is Service Existing? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
 	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, true)

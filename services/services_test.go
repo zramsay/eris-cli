@@ -2,16 +2,20 @@ package services
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"strconv"
 	"testing"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
+
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 )
 
 var srv *def.ServiceDefinition
@@ -262,16 +266,94 @@ func TestRenameServiceRaw(t *testing.T) {
 	testExistAndRun(t, "keys", 1, true, true)
 }
 
-// tests remove+kill
-func TestKillServiceRawPostNew(t *testing.T) {
-
+func TestKillServicePostNew(t *testing.T) {
 	do := def.NowDo()
 	do.Args = []string{"keys"}
+	do.Operations.ContainerNumber = 1
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		do.Rm = true
 		do.RmD = true
 	}
-	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	logger.Debugf("Killing service post new =>\t%s\n", do.Args)
+	e := KillServiceRaw(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.FailNow()
+	}
+
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		testExistAndRun(t, "keys", 1, false, false)
+		testExistAndRun(t, servName, 1, false, false)
+	} else {
+		testExistAndRun(t, "keys", 1, true, false)
+		testExistAndRun(t, servName, 1, true, false)
+	}
+}
+
+func TestCatService(t *testing.T) {
+	filePath := path.Join(ServicesPath, "keys.toml")
+	addition := `services = ["` + servName + `"]` + "\n\n"
+	additReg := `services = \["` + servName + `"\]`
+	reg      := regexp.MustCompile(additReg)
+
+	orig, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+	orig = append([]byte(addition), orig...)
+	ioutil.WriteFile(filePath, orig, 0777)
+
+	var sec []byte
+	sec, err =  ioutil.ReadFile(filePath)
+	secd := string(sec)
+	if !reg.MatchString(secd) {
+		logger.Errorf("FAIL: Additional Service Not Found Pre Cat. I got: %s\n", secd)
+		t.FailNow()
+	}
+
+	do := def.NowDo()
+	do.Name = "keys"
+	err = CatServiceRaw(do)
+	if err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+
+	secd = do.Result
+	if !reg.MatchString(secd) {
+		logger.Errorf("FAIL: Additional Service Not Found Post Cat. I got: %s\n", secd)
+		t.FailNow()
+	}
+}
+
+func TestStartServiceWithDependencies(t *testing.T) {
+	// log.SetLoggers(2, os.Stdout, os.Stderr)
+	do := def.NowDo()
+	do.Args = []string{"keys"}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Starting service with deps =>\t%s:%s\n", "keys", servName)
+	e := StartServiceRaw(do)
+	if e != nil {
+		logger.Infoln("Error starting service =>\t%v\n", e)
+		t.Fail()
+	}
+
+	testExistAndRun(t, servName, 1, true, true)
+	testExistAndRun(t, "keys", 1, true, true)
+	// log.SetLoggers(0, os.Stdout, os.Stderr)
+}
+
+// tests remove+kill
+func TestKillServiceWithDependencies(t *testing.T) {
+	do := def.NowDo()
+	do.Args = []string{"keys"}
+	do.All = true
+	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		do.Rm = true
+		do.RmD = true
+	}
+	logger.Debugf("Kill service with deps =>\t%v\n", do.Args)
 	e := KillServiceRaw(do)
 	if e != nil {
 		fmt.Println(e)
@@ -279,8 +361,10 @@ func TestKillServiceRawPostNew(t *testing.T) {
 	}
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
+		testExistAndRun(t, servName, 1, false, false)
 		testExistAndRun(t, "keys", 1, false, false)
 	} else {
+		testExistAndRun(t, servName, 1, true, false)
 		testExistAndRun(t, "keys", 1, true, false)
 	}
 }

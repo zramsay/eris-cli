@@ -269,7 +269,10 @@ func addServicesFlags() {
 
 	servicesUpdate.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 
+	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
+
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
+	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
 	servicesStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	servicesStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 	servicesStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")

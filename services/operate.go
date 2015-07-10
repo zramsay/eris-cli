@@ -12,20 +12,30 @@ import (
 
 func StartServiceRaw(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
-	logger.Debugf("Building the Services Group =>\t%v\n", do.Args)
+	if do.Operations.ContainerNumber == 0 { // TODO: automagic, see #67
+		do.Operations.ContainerNumber = 1
+	}
 
+	do.Args = append(do.Args, do.ServicesSlice...)
+	logger.Debugf("Building the Services Group =>\t%v\n", do.Args)
 	for _, srv := range do.Args {
-		s, e := BuildGroup(srv)
+		// this forces CLI/Agent level overwrites of the Operations.
+		// if this needs to get reversed, we should discuss on GH.
+		s, e := BuildServicesGroup(srv)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
 	}
 
-	// Gives us a chance to overwrite operational functionality
-	// which has been passed via command line flags or otherwise
-	for _, srv := range services {
-		util.OverwriteOps(srv.Operations, do.Operations)
+	for _, s := range services {
+		util.OverWriteOperations(s.Operations, do.Operations)
+	}
+
+	var err error
+	services, err = BuildChainGroup(do.ChainName, services)
+	if err != nil {
+		return err
 	}
 
 	wg, ch := new(sync.WaitGroup), make(chan error, 1)
@@ -41,38 +51,21 @@ func StartServiceRaw(do *definitions.Do) error {
 	return nil
 }
 
-func LogsServiceRaw(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
-}
-
-func ExecServiceRaw(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-
-	if IsServiceExisting(service.Service, service.Operations) {
-		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
-	}
-
-	return nil
-}
-
 func KillServiceRaw(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
 
 	for _, servName := range do.Args {
-		s, e := BuildGroup(servName)
+		s, e := BuildServicesGroup(servName)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
+	}
+
+	var err error
+	services, err = BuildChainGroup(do.ChainName, services)
+	if err != nil {
+		return err
 	}
 
 	if do.Force {
@@ -102,13 +95,15 @@ func KillServiceRaw(do *definitions.Do) error {
 }
 
 // TODO: test this recursion and service deps generally
-func BuildGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
-	srv, err := loaders.LoadServiceDefinition(srvName) // TODO: populate cNum in load process
+func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
+	logger.Debugf("BuildServicesGroup for =>\t%s:%d\n", srvName, len(services))
+	srv, err := loaders.LoadServiceDefinition(srvName)
 	if err != nil {
 		return nil, err
 	}
 	for _, sName := range srv.ServiceDeps {
-		s, e := BuildGroup(sName) // TODO: populate cNum in load process
+		logger.Debugf("Found service dependency =>\t%s\n", sName)
+		s, e := BuildServicesGroup(sName)
 		if e != nil {
 			return nil, e
 		}
@@ -121,20 +116,68 @@ func BuildGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
 // TODO: Add ONE Chain
 func StartGroup(ch chan error, wg *sync.WaitGroup, group []*definitions.ServiceDefinition) {
+	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
 		wg.Add(1)
 
 		go func(s *definitions.ServiceDefinition) {
-			logger.Debugf("Telling Docker to start srv =>\t%s\n", s.Name)
 
-			if err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
-				logger.Debugln("Error starting service (%s): %v\n", s.Name, err)
+			logger.Debugf("Telling Docker to start srv =>\t%s\n", s.Name)
+			if err := perform.DockerRun(s.Service, s.Operations); err != nil {
+				logger.Debugf("Error starting service (%s): %v\n", s.Name, err)
 				ch <- err
 			}
 
 			wg.Done()
 		}(srv)
+
 	}
+}
+
+// Note chainName in this command refers mostly to a chain which has been passed as a flag
+// the command will add to the group a single chain passed into the group as well as
+// individualized chains that each service may individually rely upon.
+func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
+	var chains []*definitions.ServiceDefinition
+
+	for _, srv := range services {
+		if srv.Chain == "$chain" && chainName == "" {
+			return nil, fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
+		}
+		if chainName != "" {
+			s, err := ChainConnectedToAService(chainName, srv)
+			if err != nil {
+				return nil, err
+			}
+			chains = append(chains, s)
+		}
+		if srv.Chain == "$chain" {
+			continue
+		}
+		if srv.Chain != "" {
+			s, err := ChainConnectedToAService(srv.Chain, srv)
+			if err != nil {
+				return nil, err
+			}
+			chains = append(chains, s)
+		}
+	}
+
+	return append(services, chains...), nil
+}
+
+func ChainConnectedToAService(chainName string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
+	s, err := loaders.ChainsAsAService(chainName, srv.Operations.ContainerNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	loaders.ConnectToAService(srv, chainName) // first make the service container linked to the chain
+	loaders.ConnectToAService(s, srv.Name)   // now make the chain container linked to the service container
+	// XXX: we may have name collision here if we're not careful.
+
+	util.OverWriteOperations(s.Operations, srv.Operations)
+	return s, nil
 }
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {

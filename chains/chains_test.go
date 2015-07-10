@@ -228,6 +228,22 @@ func TestKillChainRaw(t *testing.T) {
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
+// TODO: finish this....
+// func TestServiceWithChainDependencies(t *testing.T) {
+// 	do := definitions.NowDo()
+// 	do.Name = "keys"
+// 	do.Args = []string{"eris/keys"}
+// 	err := services.NewServiceRaw(do)
+// 	if err != nil {
+// 		logger.Errorln(err)
+// 		t.FailNow()
+// 	}
+
+// 	services.TestCatService(t)
+
+
+// }
+
 func TestRmChainRaw(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
