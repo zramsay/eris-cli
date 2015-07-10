@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -164,6 +164,25 @@ func TestUpdateChain(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
+func TestInspectChain(t *testing.T) {
+	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		return
+	}
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Args = []string{"name"}
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
+	e := InspectChain(do)
+	if e != nil {
+		logger.Infof("Error inspecting chain =>\t%v\n", e)
+		t.FailNow()
+	}
+
+}
+
 func TestRenameChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
@@ -219,7 +238,6 @@ func TestKillChain(t *testing.T) {
 		logger.Errorln(e)
 		t.Fail()
 	}
-
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		testExistAndRun(t, chainName, false, false)
 	} else {
@@ -240,7 +258,6 @@ func TestKillChain(t *testing.T) {
 // 	}
 
 // 	services.TestCatService(t)
-
 
 // }
 

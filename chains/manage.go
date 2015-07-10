@@ -49,6 +49,18 @@ func ImportChain(do *definitions.Do) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
+func InspectChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	err = InspectChainByChain(chain.Service, chain.Operations, chain, do.Args[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func LogsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
 	if err != nil {
@@ -262,7 +274,7 @@ func RmChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		oldFile = path.Join(BlockchainsPath, oldFile)+".toml"
+		oldFile = path.Join(BlockchainsPath, oldFile) + ".toml"
 		logger.Printf("Removing file =>\t\t%s\n", oldFile)
 		if err := os.Remove(oldFile); err != nil {
 			return err
@@ -293,6 +305,18 @@ func CatChain(do *definitions.Do) error {
 	logger.Println(string(cat))
 	return nil
 
+}
+
+func InspectChainByChain(srv *definitions.Service, ops *definitions.Operation, chain *definitions.Chain, field string) error {
+	if IsChainExisting(chain) {
+		err := perform.DockerInspect(srv, ops, field)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("No chain matching that name.\n")
+	}
+	return nil
 }
 
 func exportFile(chainName string) (string, error) {
