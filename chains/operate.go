@@ -69,6 +69,7 @@ func StartChain(do *definitions.Do) error {
 	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
+	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
 	if err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
 		do.Result = "error"
 		return err

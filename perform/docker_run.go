@@ -189,9 +189,10 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	if srv.AutoData {
 		logger.Infof("\twith DataContanr ID =>\t%s\n", id_data)
 	}
-	logger.Debugf("Service Container CMD =>\t%v\n", optsServ.Config.Cmd)
-	logger.Debugf("Service Container Image =>\t%v\n", optsServ.Config.Image)
-	logger.Debugf("Service Container Env =>\t%s\n", optsServ.Config.Env)
+	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
+	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
+	logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
+	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	if err := startContainer(id_main, &optsServ); err != nil {
 		return err
 	}
