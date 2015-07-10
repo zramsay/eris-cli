@@ -3,6 +3,7 @@ package loaders
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -47,7 +48,10 @@ func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDe
 	}
 
 	srv.Operations.ContainerNumber = cNum[0]
-	addDependencyVolumesAndLinks(srv)
+
+	if os.Getenv("TEST_IN_CIRCLE") != "true" { // this really should be docker version < 1.7...?
+		addDependencyVolumesAndLinks(srv)
+	}
 
 	ServiceFinalizeLoad(srv)
 	return srv, nil
