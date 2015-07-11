@@ -107,8 +107,9 @@ These are the lessons which underpin our design of the `eris` tool.
 
 We intend to add the following concepts over time:
 
-* `workers` -- scripted processes which need more logic than actions allow (node based, evented, middle layer)
+* `projects` -- actions, workers, agents, contracts scoping feature
 * `agents` -- local or remote agents which can adjust the settings of any node running `eris`
+* `workers` -- scripted processes which need more logic than actions allow (node based, evented, middle layer)
 
 These concepts (along with a few other goodies) provide the core functionality of what we think a true distributed application would look like.
 
