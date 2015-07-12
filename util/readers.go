@@ -19,7 +19,7 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 }
 
 func GetFromIPFS(hash, fileName string, w io.Writer) error {
-	url := IPFSBaseUrl() + hash
+	url := IPFSBaseUrl() + ":8080/ipfs/" + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
 }
@@ -122,7 +122,7 @@ func IPFSBaseUrl() string {
 			host = GetConfigValue("IpfsHost")
 		}
 	}
-	return host + ":8080/ipfs/"
+	return host
 }
 
 var timeout = time.Duration(10 * time.Second)

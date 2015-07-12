@@ -21,6 +21,7 @@ files into containers for use by your application.`,
 func buildFilesCommand() {
 	Files.AddCommand(filesImport)
 	Files.AddCommand(filesExport)
+	Files.AddCommand(filesCache)
 }
 
 var filesImport = &cobra.Command{
@@ -41,6 +42,17 @@ var filesExport = &cobra.Command{
 	},
 }
 
+var filesCache = &cobra.Command{
+	Use:   "cache [fileHash]",
+	Short: "Cache a file to IPFS .",
+	Long: `Cache a file to IPFS' local daemon.
+	
+Caches a file locally via IPFS pin, by hash.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		PinIt(cmd, args)
+	},
+}
+
 func Get(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
 		cmd.Help()
@@ -58,6 +70,17 @@ func Put(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	err := files.PutFiles(do)
+	IfExit(err)
+	logger.Println(do.Result)
+}
+
+func PinIt(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	err := files.PinFiles(do)
 	IfExit(err)
 	logger.Println(do.Result)
 }

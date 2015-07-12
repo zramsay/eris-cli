@@ -2,13 +2,12 @@ package files
 
 import (
 	"bytes"
-	"time"
-
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"time"
 )
 
 func GetFiles(do *definitions.Do) error {
@@ -77,6 +76,39 @@ func PutFiles(do *definitions.Do) error {
 	return nil
 }
 
+func PinFiles(do *definitions.Do) error {
+	var hash string
+	var err error
+
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
+	if err != nil {
+		return err
+	}
+
+	if services.IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
+		logger.Infoln("IPFS is running. Pining now.")
+		hash, err = pinFile(do.Name)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		logger.Infoln("IPFS is not running. Starting now.")
+		time.Sleep(time.Second * 5) // this is dirty
+
+		if err := perform.DockerRun(ipfsService.Service, ipfsService.Operations); err != nil {
+			return err
+		}
+
+		hash, err = pinFile(do.Name)
+		if err != nil {
+			return err
+		}
+	}
+	do.Result = hash
+	return nil
+}
+
 func importFile(hash, fileName string) error {
 	var err error
 	if logger.Level > 0 {
@@ -105,4 +137,21 @@ func exportFile(fileName string) (string, error) {
 	}
 
 	return hash, nil
+}
+
+func pinFile(fileHash string) (string, error) {
+	var hash string
+	var err error
+
+	if logger.Level > 0 {
+		hash, err = util.PinToIPFS(fileHash, logger.Writer)
+	} else {
+		hash, err = util.PinToIPFS(fileHash, bytes.NewBuffer([]byte{}))
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
+
 }
