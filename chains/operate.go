@@ -1,8 +1,8 @@
 package chains
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -39,6 +39,7 @@ func InstallChain(do *definitions.Do) error {
 
 func StartChain(do *definitions.Do) error {
 	logger.Infoln("Ensuring Key Server is Started.")
+	//should it take a flag? keys server may be running another cNum
 	keysService, err := loaders.LoadServiceDefinition("keys", 1)
 	if err != nil {
 		return err
@@ -83,7 +84,6 @@ func KillChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-
 
 	if do.Force {
 		if do.Timeout == 10 { // default set by flags

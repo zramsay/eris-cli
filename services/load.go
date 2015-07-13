@@ -16,7 +16,7 @@ func IsServiceExisting(service *definitions.Service, ops *definitions.Operation)
 }
 
 func IsServiceRunning(service *definitions.Service, ops *definitions.Operation) bool {
-	logger.Debugf("Is Service Existing? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
+	logger.Debugf("Is Service Running? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
 	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, false)
 	if cName == nil {
 		return false

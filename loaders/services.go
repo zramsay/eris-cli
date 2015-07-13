@@ -1,6 +1,5 @@
 package loaders
 
-
 import (
 	"fmt"
 	"os"
@@ -17,14 +16,8 @@ import (
 
 func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDefinition, error) {
 	if len(cNum) == 0 || cNum[0] == 0 {
-		logger.Debugf("Loading Service Definition =>\t%s:1 (autoassigned)\n", servName)
-		// TODO: findNextContainerIndex => util/container_operations.go
-		// automagician needs to only be triggered if len(cNum) == 0
-		if len(cNum) == 0 {
-			cNum = append(cNum, 1)
-		} else {
-			cNum[0] = 1
-		}
+		cNum = append(cNum, util.AutoMagic(0, "service"))
+		logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		logger.Debugf("Loading Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
@@ -48,7 +41,6 @@ func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDe
 	}
 
 	srv.Operations.ContainerNumber = cNum[0]
-
 	if os.Getenv("TEST_IN_CIRCLE") != "true" { // this really should be docker version < 1.7...?
 		addDependencyVolumesAndLinks(srv)
 	}
@@ -62,8 +54,7 @@ func MockServiceDefinition(servName string, cNum ...int) *definitions.ServiceDef
 	srv.Name = servName
 
 	if len(cNum) == 0 {
-		// TODO: findNextContainerIndex => util/container_operations.go
-		srv.Operations.ContainerNumber = 1
+		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], "service")
 	} else {
 		srv.Operations.ContainerNumber = cNum[0]
 	}
@@ -107,6 +98,7 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	}
 
 	container := util.FindServiceContainer(srv.Name, srv.Operations.ContainerNumber, true)
+
 	if container != nil {
 		logger.Debugf("Setting SrvCont Names =>\t%s:%s\n", container.FullName, container.ContainerID)
 		srv.Operations.SrvContainerName = container.FullName
@@ -137,7 +129,7 @@ func ConnectToAService(srv *definitions.ServiceDefinition, dep string) {
 
 	// Automagically mount VolumesFrom for serviceDeps so they can
 	// easily pass files back and forth
-	newVol  := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":rw" // for now mounting as "rw"
+	newVol := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":rw" // for now mounting as "rw"
 	srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
 }
 

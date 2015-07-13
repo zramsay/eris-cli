@@ -294,7 +294,6 @@ func LogService(cmd *cobra.Command, args []string) {
 	IfExit(srv.LogsService(do))
 }
 
-// TODO: how to specify container numbers ...
 func KillService(cmd *cobra.Command, args []string) {
 	if err := checkServiceGiven(args); err != nil {
 		cmd.Help()

@@ -2,37 +2,36 @@ package services
 
 import (
 	"fmt"
-	"sync"
-
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+	"sync"
 )
 
-func StartService(do *definitions.Do) error {
+func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
-	if do.Operations.ContainerNumber == 0 { // TODO: automagic, see #67
-		do.Operations.ContainerNumber = 1
-	}
 
+	cNum := do.Operations.ContainerNumber
+	if err != nil {
+		return err
+	}
 	do.Args = append(do.Args, do.ServicesSlice...)
 	logger.Debugf("Building the Services Group =>\t%v\n", do.Args)
 	for _, srv := range do.Args {
 		// this forces CLI/Agent level overwrites of the Operations.
 		// if this needs to get reversed, we should discuss on GH.
-		s, e := BuildServicesGroup(srv)
+		s, e := BuildServicesGroup(srv, cNum)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
 	}
-
 	for _, s := range services {
+		//XXX does AutoMagic elim need for this?
 		util.OverWriteOperations(s.Operations, do.Operations)
 	}
 
-	var err error
 	services, err = BuildChainGroup(do.ChainName, services)
 	if err != nil {
 		return err
@@ -55,7 +54,7 @@ func KillService(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
 
 	for _, servName := range do.Args {
-		s, e := BuildServicesGroup(servName)
+		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
 		}
@@ -95,15 +94,15 @@ func KillService(do *definitions.Do) error {
 }
 
 // TODO: test this recursion and service deps generally
-func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
+func BuildServicesGroup(srvName string, cNum int, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
 	logger.Debugf("BuildServicesGroup for =>\t%s:%d\n", srvName, len(services))
-	srv, err := loaders.LoadServiceDefinition(srvName)
+	srv, err := loaders.LoadServiceDefinition(srvName, cNum)
 	if err != nil {
 		return nil, err
 	}
 	for _, sName := range srv.ServiceDeps {
 		logger.Debugf("Found service dependency =>\t%s\n", sName)
-		s, e := BuildServicesGroup(sName)
+		s, e := BuildServicesGroup(sName, cNum)
 		if e != nil {
 			return nil, e
 		}
@@ -121,7 +120,6 @@ func StartGroup(ch chan error, wg *sync.WaitGroup, group []*definitions.ServiceD
 		wg.Add(1)
 
 		go func(s *definitions.ServiceDefinition) {
-
 			logger.Debugf("Telling Docker to start srv =>\t%s\n", s.Name)
 			if err := perform.DockerRun(s.Service, s.Operations); err != nil {
 				ch <- fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", s.Name, err)

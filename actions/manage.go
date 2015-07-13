@@ -39,7 +39,7 @@ func ImportAction(do *definitions.Do) error {
 	if s[0] == "ipfs" {
 
 		var err error
-
+		//unset 1 as default ContainerNumber, let it take flag?
 		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 		if err != nil {
 			return err
@@ -77,11 +77,11 @@ func ExportAction(do *definitions.Do) error {
 		return err
 	}
 
+	//unset 1 as default ContainerNumber, let it take flag?
 	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
 	if err != nil {
 		return err
 	}
-
 	err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func RenameAction(do *definitions.Do) error {
 	logger.Debugf("Found defFile at =>\t\t%s\n", oldFile)
 
 	if !strings.Contains(oldFile, ActionsPath) {
-		oldFile = filepath.Join(ActionsPath, oldFile)+".toml"
+		oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
 	}
 
 	var newFile string
@@ -171,7 +171,7 @@ func RmAction(do *definitions.Do) error {
 		}
 
 		if !strings.Contains(oldFile, ActionsPath) {
-			oldFile = filepath.Join(ActionsPath, oldFile)+".toml"
+			oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
 		}
 
 		logger.Debugf("Removing file =>\t\t%s\n", oldFile)

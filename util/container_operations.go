@@ -21,6 +21,24 @@ func OverWriteOperations(opsBase, opsOver *def.Operation) {
 	opsBase.PublishAllPorts = OverWriteBool(opsBase.PublishAllPorts, opsOver.PublishAllPorts)
 }
 
+//TODO add bool (backlog)
+func AutoMagic(cNum int, typ string) (cnum int) {
+	contns := ErisContainersByType(typ, true)
+
+	contnums := make([]int, len(contns))
+	for i, c := range contns {
+		contnums[i] = c.Number
+	}
+
+	g := 0
+	for _, n := range contnums {
+		if n >= g {
+			g = n
+		}
+	}
+	return g + 1
+}
+
 func OverWriteBool(trumpEr, toOver bool) bool {
 	if trumpEr {
 		return trumpEr

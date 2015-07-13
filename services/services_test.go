@@ -107,7 +107,7 @@ func TestInspectService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Args = []string{"name"}
-	do.Operations.ContainerNumber = 1
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
 	e := InspectService(do)
 	if e != nil {
@@ -209,7 +209,9 @@ func TestNewService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Args = []string{"keys"}
-	do.Operations.ContainerNumber = 1
+	//XXX call AutoMagic?
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Stating serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
 	e = StartService(do)
 	if e != nil {
@@ -224,7 +226,8 @@ func TestRenameService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "keys"
 	do.NewName = "syek"
-	do.Operations.ContainerNumber = 1
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	e := RenameService(do)
 	if e != nil {
@@ -237,7 +240,8 @@ func TestRenameService(t *testing.T) {
 	do = def.NowDo()
 	do.Name = "syek"
 	do.NewName = "keys"
-	do.Operations.ContainerNumber = 1
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	e = RenameService(do)
 	if e != nil {
@@ -251,7 +255,8 @@ func TestRenameService(t *testing.T) {
 func TestKillServicePostNew(t *testing.T) {
 	do := def.NowDo()
 	do.Args = []string{"keys"}
-	do.Operations.ContainerNumber = 1
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	//do.Operations.ContainerNumber = 1
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		do.Rm = true
 		do.RmD = true
@@ -313,7 +318,8 @@ func TestStartServiceWithDependencies(t *testing.T) {
 	// log.SetLoggers(2, os.Stdout, os.Stderr)
 	do := def.NowDo()
 	do.Args = []string{"keys"}
-	do.Operations.ContainerNumber = 1
+	//do.Operations.ContainerNumber = 1
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", "keys", servName)
 	e := StartService(do)
 	if e != nil {

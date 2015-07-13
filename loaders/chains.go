@@ -24,12 +24,9 @@ const (
 // load service, validate name and data container
 func LoadChainDefinition(chainName string, cNum ...int) (*definitions.Chain, error) {
 	if len(cNum) == 0 || cNum[0] == 0 {
-		logger.Debugf("Loading Service Definition =>\t%s:1 (autoassigned)\n", chainName)
-		// TODO: findNextContainerIndex => util/container_operations.go
 		if len(cNum) == 0 {
-			cNum = append(cNum, 1)
-		} else {
-			cNum[0] = 1
+			cNum = append(cNum, util.AutoMagic(0, "chain"))
+			logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
 		}
 	} else {
 		logger.Debugf("Loading Service Definition =>\t%s:%d\n", chainName, cNum[0])
@@ -70,10 +67,10 @@ func ChainsAsAService(chainName string, cNum ...int) (*definitions.ServiceDefini
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	chainID := chain.ChainID
 
-	chain.Service.Name        = chain.Name // this let's the data containers flow thru
-	chain.Service.Image       = "eris/erisdb:" + version.VERSION
-	chain.Service.AutoData    = true // default. they can turn it off. it's like BarBri
-	chain.Service.Command     = cmd
+	chain.Service.Name = chain.Name // this let's the data containers flow thru
+	chain.Service.Image = "eris/erisdb:" + version.VERSION
+	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
+	chain.Service.Command = cmd
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
 
 	// TODO mint vs. erisdb (in terms of rpc) --> think we default them to erisdb's REST/Stream API
@@ -100,8 +97,7 @@ func MockChainDefinition(chainName, chainID string, cNum ...int) *definitions.Ch
 	chn.Service.AutoData = true
 
 	if len(cNum) == 0 {
-		// TODO: findNextContainerIndex => util/container_operations.go
-		chn.Operations.ContainerNumber = 1
+		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], "chain")
 	} else {
 		chn.Operations.ContainerNumber = cNum[0]
 	}
