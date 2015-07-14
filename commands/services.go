@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -35,7 +34,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
-	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesRename)
@@ -164,15 +162,6 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 	},
 }
 
-var servicesExec = &cobra.Command{
-	Use:   "exec [serviceName]",
-	Short: "Run a command or interactive shell",
-	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
-	Run: func(cmd *cobra.Command, args []string) {
-		ExecService(cmd, args)
-	},
-}
-
 var servicesExport = &cobra.Command{
 	Use:   "export [serviceName]",
 	Short: "Export a service definition file to IPFS.",
@@ -265,8 +254,6 @@ func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
-	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
-
 	servicesUpdate.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
@@ -304,22 +291,6 @@ func LogService(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	IfExit(srv.LogsService(do))
-}
-
-func ExecService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-
-	do.Name = args[0]
-	args = args[1:]
-	if len(args) == 1 {
-		args = strings.Split(args[0], " ")
-	}
-	do.Args = args
-
-	IfExit(srv.ExecService(do))
 }
 
 // TODO: how to specify container numbers ...

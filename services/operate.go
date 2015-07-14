@@ -172,7 +172,7 @@ func ChainConnectedToAService(chainName string, srv *definitions.ServiceDefiniti
 	}
 
 	loaders.ConnectToAService(srv, chainName) // first make the service container linked to the chain
-	loaders.ConnectToAService(s, srv.Name)   // now make the chain container linked to the service container
+	loaders.ConnectToAService(s, srv.Name)    // now make the chain container linked to the service container
 	// XXX: we may have name collision here if we're not careful.
 
 	util.OverWriteOperations(s.Operations, srv.Operations)
@@ -181,10 +181,6 @@ func ChainConnectedToAService(chainName string, srv *definitions.ServiceDefiniti
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
 	return perform.DockerRun(srvMain, ops)
-}
-
-func ExecServiceByService(srvMain *definitions.Service, ops *definitions.Operation, cmd []string, attach bool) error {
-	return perform.DockerExec(srvMain, ops, cmd, attach)
 }
 
 func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, follow bool, tail string) error {
@@ -197,4 +193,3 @@ func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operati
 
 // ------------------------------------------------------------------------------------------
 // Helpers
-

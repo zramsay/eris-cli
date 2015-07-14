@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -57,7 +56,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsInspect)
-	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
@@ -180,16 +178,6 @@ var chainsLogs = &cobra.Command{
 	Long:  `Display the logs of a blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		LogChain(cmd, args)
-	},
-}
-
-var chainsExec = &cobra.Command{
-	Use:   "exec [serviceName]",
-	Short: "Run a command or interactive shell",
-	Long: `Run a command or interactive shell in a container
-with volumes-from the data container`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ExecChain(cmd, args)
 	},
 }
 
@@ -323,8 +311,6 @@ func addChainsFlags() {
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
 
-	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
-
 	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 
 	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
@@ -356,27 +342,6 @@ func LogChain(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
-}
-
-func ExecChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-
-	do.Name = args[0]
-	// if interactive, we ignore args. if not, run args as command
-	if !do.Interactive {
-		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
-		}
-		args = args[1:]
-	}
-	if len(args) == 1 {
-		args = strings.Split(args[0], " ")
-	}
-	do.Args = args
-	IfExit(chns.ExecChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {

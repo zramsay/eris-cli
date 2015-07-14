@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 	"testing"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -134,24 +134,6 @@ func TestLogsService(t *testing.T) {
 	do.Tail = "all"
 	logger.Debugf("Inspect logs (via tests) =>\t%s:%v\n", servName, do.Tail)
 	e := LogsService(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
-	}
-}
-
-func TestExecService(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
-		return
-	}
-
-	do := def.NowDo()
-	do.Name = servName
-	do.Interactive = false
-	do.Args = strings.Fields("ls -la /root/")
-	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
-	e := ExecService(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
@@ -294,7 +276,7 @@ func TestCatService(t *testing.T) {
 	filePath := path.Join(ServicesPath, "keys.toml")
 	addition := `services = ["` + servName + `"]` + "\n\n"
 	additReg := `services = \["` + servName + `"\]`
-	reg      := regexp.MustCompile(additReg)
+	reg := regexp.MustCompile(additReg)
 
 	orig, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -305,7 +287,7 @@ func TestCatService(t *testing.T) {
 	ioutil.WriteFile(filePath, orig, 0777)
 
 	var sec []byte
-	sec, err =  ioutil.ReadFile(filePath)
+	sec, err = ioutil.ReadFile(filePath)
 	secd := string(sec)
 	if !reg.MatchString(secd) {
 		logger.Errorf("FAIL: Additional Service Not Found Pre Cat. I got: %s\n", secd)

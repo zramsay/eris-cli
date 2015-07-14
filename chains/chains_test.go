@@ -128,23 +128,6 @@ func TestLogsChain(t *testing.T) {
 	}
 }
 
-func TestExecChain(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
-		return
-	}
-	do := def.NowDo()
-	do.Name = chainName
-	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
-	do.Interactive = false
-	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
-	e := ExecChain(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
-	}
-}
-
 func TestUpdateChain(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")

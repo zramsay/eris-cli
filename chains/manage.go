@@ -73,22 +73,6 @@ func LogsChain(do *definitions.Do) error {
 	return nil
 }
 
-func ExecChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-
-	if IsChainExisting(chain) {
-		logger.Infoln("Chain exists.")
-		return perform.DockerExec(chain.Service, chain.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", do.Name)
-	}
-
-	return nil
-}
-
 // export a chain definition file
 func ExportChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, 1) //TODO:CNUM
