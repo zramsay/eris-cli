@@ -254,7 +254,9 @@ func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
-	servicesUpdate.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature and simply rebuild the service container")
+	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+
+	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 
