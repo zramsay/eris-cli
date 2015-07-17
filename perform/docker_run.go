@@ -283,7 +283,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool) error {
 		return nil
 	}
 
-	if !skipPull {
+	if skipPull {
 		logger.Infof("Pulling new image =>\t\t%s\n", srv.Image)
 		err := DockerPull(srv, ops)
 		if err != nil {

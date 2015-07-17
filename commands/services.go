@@ -203,8 +203,9 @@ var servicesRename = &cobra.Command{
 }
 
 var servicesUpdate = &cobra.Command{
-	Use:   "update [name]",
-	Short: "Updates an installed service.",
+	Use:     "update [name]",
+	Aliases: []string{"restart"},
+	Short:   "Updates an installed service.",
 	Long: `Updates an installed service, or installs it if it has not been installed.
 
 Functionally this command will perform the following sequence:
