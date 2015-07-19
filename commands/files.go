@@ -22,6 +22,9 @@ func buildFilesCommand() {
 	Files.AddCommand(filesImport)
 	Files.AddCommand(filesExport)
 	Files.AddCommand(filesCache)
+	Files.AddCommand(filesCat)
+	Files.AddCommand(filesList)
+	//	addFilesFlags()
 }
 
 var filesImport = &cobra.Command{
@@ -53,6 +56,28 @@ Caches a file locally via IPFS pin, by hash.`,
 	},
 }
 
+var filesCat = &cobra.Command{
+	Use:   "cat [fileHash]",
+	Short: "Cat the contents of a file from IPFS.",
+	Long:  "Cat the contents of a file from IPFS.",
+	Run: func(cmd *cobra.Command, args []string) {
+		CatIt(cmd, args)
+	},
+}
+
+var filesList = &cobra.Command{
+	Use:   "ls [objectHash]",
+	Short: "List links from an IPFS object.",
+	//TODO test listing up and down through DAG / Zach just learn the DAG.
+	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
+	Run: func(cmd *cobra.Command, args []string) {
+		ListIt(cmd, args)
+	},
+}
+
+//--------------------------------------------------------------
+// cli flags
+
 func Get(cmd *cobra.Command, args []string) {
 	if len(args) != 2 {
 		cmd.Help()
@@ -81,6 +106,29 @@ func PinIt(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	err := files.PinFiles(do)
+	IfExit(err)
+	logger.Println(do.Result)
+}
+
+func CatIt(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	err := files.CatFiles(do)
+	IfExit(err)
+	logger.Println(do.Result)
+
+}
+
+func ListIt(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	do.Name = args[0]
+	err := files.ListFiles(do)
 	IfExit(err)
 	logger.Println(do.Result)
 }

@@ -60,6 +60,42 @@ func PinFiles(do *definitions.Do) error {
 	return nil
 }
 
+func CatFiles(do *definitions.Do) error {
+	var hash string
+	doNow := definitions.NowDo()
+	doNow.Name = "ipfs"
+	err := services.EnsureRunning(doNow)
+	if err != nil {
+		return err
+	}
+	logger.Infoln("IPFS is running.")
+	logger.Debugf("Gonna Cat a file =>\t\t%s:%v\n", do.Name, do.Path)
+	hash, err = catFile(do.Name)
+	if err != nil {
+		return err
+	}
+	do.Result = hash
+	return nil
+}
+
+func ListFiles(do *definitions.Do) error {
+	var hash string
+	doNow := definitions.NowDo()
+	doNow.Name = "ipfs"
+	err := services.EnsureRunning(doNow)
+	if err != nil {
+		return err
+	}
+	logger.Infoln("IPFS is running.")
+	logger.Debugf("Gonna List an object =>\t\t%s:%v\n", do.Name, do.Path)
+	hash, err = listFile(do.Name)
+	if err != nil {
+		return err
+	}
+	do.Result = hash
+	return nil
+}
+
 func importFile(hash, fileName string) error {
 	var err error
 	if logger.Level > 0 {
@@ -102,7 +138,34 @@ func pinFile(fileHash string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return hash, nil
+}
 
+func catFile(fileHash string) (string, error) {
+	var hash string
+	var err error
+	//CatFrom may have to contents here
+	if logger.Level > 0 {
+		hash, err = util.CatFromIPFS(fileHash, logger.Writer)
+	} else {
+		hash, err = util.CatFromIPFS(fileHash, bytes.NewBuffer([]byte{}))
+	}
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
+}
+
+func listFile(objectHash string) (string, error) {
+	var hash string
+	var err error
+	if logger.Level > 0 {
+		hash, err = util.ListFromIPFS(objectHash, logger.Writer)
+	} else {
+		hash, err = util.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
+	}
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
 }

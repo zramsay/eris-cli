@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -22,6 +24,50 @@ func GetFromIPFS(hash, fileName string, w io.Writer) error {
 	url := IPFSBaseUrl() + ":8080/ipfs/" + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
+}
+
+func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
+	url := IPFSBaseUrl() + ":5001/api/v0/cat?arg=" + fileHash
+	w.Write([]byte("CATing file from IPFS. Hash =>\t" + fileHash + "\n"))
+	body, err := PostAPICall(url, fileHash, w)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
+	url := IPFSBaseUrl() + ":5001/api/v0/ls?arg=" + objectHash
+	w.Write([]byte("LISTing file from IPFS. objectHash =>\t" + objectHash + "\n"))
+	body, err := PostAPICall(url, objectHash, w)
+	r := bytes.NewReader(body)
+
+	type LsLink struct {
+		Name, Hash string
+		Size       uint64
+	}
+
+	type LsObject struct {
+		Hash  string
+		Links []LsLink
+	}
+
+	dec := json.NewDecoder(r)
+	out := struct{ Objects []LsObject }{}
+	err = dec.Decode(&out)
+	if err != nil {
+		return "", err
+	}
+	contents := out.Objects[0].Links
+
+	res := make([]string, len(contents))
+	for i, c := range contents {
+		res[i] = c.Hash + " " + c.Name
+	}
+	result := strings.Join(res, "\n")
+	return result, nil
 }
 
 func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
