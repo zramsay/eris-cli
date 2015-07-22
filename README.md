@@ -20,7 +20,7 @@ eris init
 
 # Introduction
 
-`eris` is a tool which makes it easy for developers to build, test, manage, and operate their distributed applications.
+`eris` is a tool which makes it easy for developers to build, test, manage, and operate distributed applications.
 
 **No matter the blockchain**.
 
@@ -41,28 +41,36 @@ When used appropriately.
 
 ## Take 1: The Original Eris
 
-In the summer of 2014 when we built reddit on a smart contract backbone we built a simple fork of eth's POC5 testnet, connected it to bittorrent (via trackerless torrentIDs put into contracts on our testNet using transmission), added in some pretty interesting smart contracts, and built a bunch of ruby glue to hold the thing together into an application built to provide users with a serverless application that had a view layer harmonized across nodes and where the data and processes were built across different and distinct distributed platforms for users. Folks wanted to tinker with this concept. Some from a technical perspective. Some from a social perspective. Whoever wanted to play with the damn thing, though, had to:
+In the summer of 2014 when we built a reddit-like application on a smart contract backbone we built a simple fork of eth's POC5 testnet, connected it to bittorrent, added in some pretty interesting smart contracts, and built a bunch of ruby glue to hold the thing together into an application built to provide users with a serverless application that had a view layer harmonized across nodes and where the data and processes were built across different and distinct distributed platform building blocks. Folks wanted to tinker with this concept. Some from a technical perspective. Some from a social perspective.
+
+Whoever wanted to play with the damn thing, though, had to:
 
 1. make sure ruby was installed locally
-2. download poc5 c++ ethereum. get that installed for their platform.
-3. (linux only) make sure that transmission was setup in the right way.
-4. make sure you had git installed locally.
-5. clone a repo.
-6. turn on the client.
-7. mine some fake ether.
-8. go through a contract based registration process.
-9. pray.
+2. download poc5 c++ ethereum.
+3. change some values in the c++ client so it would connect do a different peer server
+4. get that installed for their platform.
+5. (linux only) make sure that transmission was setup in the right way.
+6. make sure you had git installed locally.
+7. clone a repo.
+8. turn on the client.
+9. mine some fake ether.
+10. go through a contract based registration process.
+11. pray.
 
 Needless to say, this was not a winning user experience.
 
-Yet it was also a bit magical. We were building smart contracts which mediated content publishing. At the time we called it `contract controlled content dissemination` or (`c3d`). And all the content was served on a peer to peer basis. Exciting stuff! When the damn thing ran.
+Yet it was also a bit magical. We were building smart contracts which mediated content publishing. At the time we called it `contract controlled content dissemination` or (`c3d`). And all the content was served on a peer to peer basis.
 
-## Take 2: 2gather
+Exciting stuff! When the damn thing ran.
 
-In the winter of 2015 when we built youtube on a smart contract backbone we built a very complicated and divergent fork of eth's POC8 goclient with smart contract technology embedded in the genesis block providing a permissions layer for an ethereum style blockchain, connected it to ipfs and built a sophisticated go wrapper we called `decerver` which had scripting capabilities and provided a much more rich, while also much more robust middle layer than the Ruby glue we originally used to tie together early eth and transmission. Also ipfs, FTW! Again folks wanted to tinker with this idea. But whoever wanted to play with the damn thing, had to:
+## Take 2: The 0.9 Stack
+
+In the winter of 2015 when we built a youtube-like application on a smart contract backbone we built a very complicated and divergent fork of eth's POC8 goclient with smart contract technology embedded in the genesis block providing a permissions layer for an ethereum style blockchain, connected it to IPFS and built a sophisticated go wrapper we called `decerver` which had scripting capabilities and provided a much more rich, while also much more robust middle layer than the Ruby glue we originally used to tie together early eth and transmission. Also IPFS, FTW! Again folks wanted to tinker with this idea.
+
+But whoever wanted to play with the damn thing, had to:
 
 1. make sure go was installed locally
-2. `go get github.com/eris-ltd/decerver/cmd/decerver`
+2. go get decerver
 3. go get ipfs
 4. run a start up script
 5. type their username into the screen (if they hadn't registered their key)
@@ -70,7 +78,11 @@ In the winter of 2015 when we built youtube on a smart contract backbone we buil
 
 We were getting better. Still we had edge cases and some other challenges with getting everything just right for users.
 
-Again, not so bad, but what if someone wanted to take the application and deploy it to ethereum and use bittorrent_sync rather than ipfs? It would have been doable with a very few lines of code actually. Yet, what kind of user experience would it be for the distributed application ecosystem if some users were on ethereum/bittorent sync application and others were on ethereum/swarm application and others were on decerver/ipfs application. And so help you god if you needed to switch from one to the other. How many binaries can even superusers with dev experience be expected to compile? Bloody nightmare.
+Again, not so bad, but what if someone wanted to take the application and deploy it to ethereum and use bittorrent_sync rather than IPFS? It would have been doable with a very few lines of code actually.
+
+Yet, we could not help but wonder what kind of user experience would it be for the distributed application ecosystem if some users were on ethereum/bittorent sync application and others were on ethereum/eth-swarm application and others were on decerver/IPFS application.
+
+How many binaries can even superusers with dev experience be expected to compile? Bloody nightmare.
 
 # Eris: Philosophy
 
@@ -78,23 +90,21 @@ We have learned along this arc that blockchain-backed applications are hard. The
 
 We have learned that its doable. It is doable to provide *something like* a web application experience with a completely distributed backend relying on smart contract and distributed data lake technologies.
 
-We have learned that smart contracts are straight up legit. Verifiable, automate-able, distributed process. FTW!
+We have learned that smart contracts are straight up legit. Verifiable, automate-able, distributed process.
 
 We have learned that there are tons of great ideas out there. That tons of folks are working on incredibly interesting things. As such, we have learned the benefits (and reaped some of the costs) which come with a corporate philosophy that does not presume to establish which blockchain or which distributed file storage system or which peer to peer message system or any other system is right for **your** application.
 
 We have learned that *application developers should have some choice* if the distributed application ecosystem is to blossom.
 
-Choice in crafting the set of technologies which is right for their distributed application.
+* Choice in crafting the set of technologies which is right for their distributed application.
+* Choice in crafting which pieces of the application need to go in which data storage, data organization, and/or data dissemination facilities (which is what an application frontend -- no matter the backend -- needs).
+* Choice in where and how users are able to interact with their applications in a participatory manner which allows users (particularly superusers) to help application developers share the cost of scaling their application.
 
-Choice in crafting which pieces of the application need to go in which data storage, data organization, and/or data dissemination facilities (which is what an application frontend -- no matter the backend -- needs).
-
-Choice in where and how users are able to interact with their applications in a participatory manner which allows users (particularly superusers) to help application developers share the cost of scaling their application.
-
-We have learned that *application users need a sane way to run distributed applications* and perhaps even more importantly than a sane way to run blockchain-backed applications but also a sane way to install and try out such applications.
+We have learned that application superusers wanting to participate in the data storage, organization and/or dissemination of the application *need a sane way to run distributed applications* and perhaps even more importantly than a sane way to run blockchain-backed applications a sane way to install and try out such applications.
 
 **No matter the blockchain**.
 
-These are the lessons which underpin our design of the `eris` tool.
+These are the lessons which underpin the design of the `eris` tool.
 
 # Eris: Today
 
@@ -109,7 +119,7 @@ We intend to add the following concepts over time:
 
 * `projects` -- actions, workers, agents, contracts scoping feature
 * `agents` -- local or remote agents which can adjust the settings of any node running `eris`
-* `workers` -- scripted processes which need more logic than actions allow (node based, evented, middle layer)
+* `workers` -- scripted processes which need more logic than actions allow
 
 These concepts (along with a few other goodies) provide the core functionality of what we think a true distributed application would look like.
 
@@ -161,7 +171,57 @@ eris
 
 From here on out, we're gonna go full nerd. Be forewarned.
 
-[TODO]
+The Eris CLI tool is mostly an opinionated wrapper around Docker's API. We have found that running applications locally which require sophisticated installation paths and/or complex configuration work best when used from Docker's Container based system. During our 0.9 series we have learned both the benefits of using Docker, as well as the challenges that using Docker present to distributed application developers and users. This learning, along with our user's feedback, have led directly the the current architecture. Each of the `concepts` listed above is described in a bit more detail below.
+
+## Services
+
+Services are "things that you turn on or off". Examples of services include:
+
+* a pgp daemon
+* an ipfs node
+* a bitcoin node
+* a bitcoin node with its rpc on
+* a bitcoin-testnet node with its rpc on
+* an ethereum-frontier node
+* a counterparty node
+* a tendermint-testchain node
+* a tinydns daemon
+
+Services work from a base of **service definition files**. These files are held on the host in the following location: `~/.eris/services`. Service definition files tell `eris` how a docker container should be started. The specification for service definition files is located [here](#).
+
+To see the various ways in which `eris` can interact with services, please type:
+
+```bash
+eris services
+```
+
+## Chains
+
+Chains are an opinionated toolchain around permissioned tendermint blockchains. They can be most easily thought of as your "develop" branch for blockchains. In other words, if you need to work *on* a permissioned tendermint blockchain, then it is best to use chains. Chains hardcode most of the service starting criteria, but still allow for some flexibility as to how chains are worked with. Chains are operated from a base of **chain definition files**. These files are held on the host in the following location: `~/.eris/chains`. The specification for chain definition files is located [here](#).
+
+To see the various ways in which `eris` can help you develop blockchains, please type:
+
+```bash
+eris chains
+```
+
+## Actions
+
+Actions ...
+
+## Data
+
+Eris can automagically utilize [data containers](http://container42.com/2014/11/18/data-only-container-madness/) for you. If you turn the `data_container` variable to `true` in the service or chain definition file, then `eris` deposit "most" of the data utilized by that service or chain into a data container which can be managed separately from the "program" container. The advantage of working with data containers has been dealt with elsewhere.
+
+To see the various ways in which `eris` can help you manage your data containers, please type:
+
+```bash
+eris data
+```
+
+## Files
+
+
 
 # Contributions
 
