@@ -80,16 +80,9 @@ func ExportChain(do *definitions.Do) error {
 		return err
 	}
 	if IsChainExisting(chain) {
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
-		if err != nil {
-			return err
-		}
-
-		logger.Infoln("IPFS is not running. Starting now.")
-		err = perform.DockerRun(ipfsService.Service, ipfsService.Operations) // docker run fails quickly if the service is already running so this is safe to do now
-		if err != nil {
-			return err
-		}
+		doNow := definitions.NowDo()
+		doNow.Name = "ipfs"
+		services.EnsureRunning(doNow)
 
 		hash, err := exportFile(do.Name)
 		if err != nil {

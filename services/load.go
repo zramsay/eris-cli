@@ -2,8 +2,32 @@ package services
 
 import (
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+	"strings"
+	"time"
 )
+
+func EnsureRunning(do *definitions.Do) error {
+	srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if !IsServiceRunning(srv.Service, srv.Operations) {
+		logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", strings.ToUpper(do.Name))
+		time.Sleep(time.Second * 5) // this is dirty
+		err := perform.DockerRun(srv.Service, srv.Operations)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
+	}
+	return nil
+
+}
 
 func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
 	logger.Debugf("Is Service Existing? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)

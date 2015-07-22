@@ -156,36 +156,17 @@ func LogsService(do *definitions.Do) error {
 
 func ExportService(do *definitions.Do) error {
 	if parseKnown(do.Name) {
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
+		doNow := definitions.NowDo()
+		doNow.Name = "ipfs"
+		err := EnsureRunning(doNow)
 		if err != nil {
 			return err
 		}
 
-		// XXX: todo refactor post merge of EnsureRunning
-		if IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
-			logger.Infoln("IPFS is running. Adding now.")
+		hash, err := exportFile(do.Name)
 
-			hash, err := exportFile(do.Name)
-			if err != nil {
-				return err
-			}
-
-			logger.Println(hash)
-		} else {
-			logger.Infoln("IPFS is not running. Starting now.")
-
-			if err := perform.DockerRun(ipfsService.Service, ipfsService.Operations); err != nil {
-				return err
-			}
-
-			hash, err := exportFile(do.Name)
-			if err != nil {
-				return err
-			}
-
-			do.Result = hash
-			logger.Println(hash)
-		}
+		do.Result = hash
+		logger.Println(hash)
 
 	} else {
 		return fmt.Errorf(`I don't known of that service.
