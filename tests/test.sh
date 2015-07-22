@@ -10,11 +10,11 @@ passed() {
 }
 
 if [ -z "$CIRCLE_BUILD_NUM" ]; then
-  echo "Testing Not in Circle Environment."
+  echo "Testing NOT in Circle Environment."
   eris services start ipfs
   sleep 3
 else
-  echo "Testing Not in Circle Environment."
+  echo "Testing in Circle Environment."
   export TEST_IN_CIRCLE=true
 fi
 
