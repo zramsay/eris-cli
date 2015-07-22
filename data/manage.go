@@ -12,7 +12,8 @@ import (
 )
 
 func RenameData(do *definitions.Do) error {
-	logger.Infof("Renaming DataC (fm DataRaw) =>\t%s:%s\n", do.Name, do.NewName)
+	logger.Infof("Renaming Data =>\t\t%s:%s\n", do.Name, do.NewName)
+	logger.Debugf("\twith ContainerNumber =>\t%d\n", do.Operations.ContainerNumber)
 
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 

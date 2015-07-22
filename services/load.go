@@ -7,22 +7,12 @@ import (
 
 func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
 	logger.Debugf("Is Service Existing? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
-	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, true)
-	if cName == nil {
-		return false
-	}
-	ops.SrvContainerID = cName.ContainerID
-	return true
+	return parseContainers(service, ops, true)
 }
 
 func IsServiceRunning(service *definitions.Service, ops *definitions.Operation) bool {
 	logger.Debugf("Is Service Running? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
-	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, false)
-	if cName == nil {
-		return false
-	}
-	ops.SrvContainerID = cName.ContainerID
-	return true
+	return parseContainers(service, ops, false)
 }
 
 func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bool {
@@ -31,6 +21,27 @@ func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bo
 
 func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
+}
+
+func parseContainers(service *definitions.Service, ops *definitions.Operation, all bool) bool {
+	// populate service container specifics
+	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, all)
+	if cName == nil {
+		return false
+	}
+	ops.SrvContainerName = cName.DockersName
+	ops.SrvContainerID = cName.ContainerID
+
+	// populate data container specifics
+	if service.AutoData && ops.DataContainerID == "" {
+		dName := util.FindDataContainer(service.Name, ops.ContainerNumber)
+		if dName != nil {
+			ops.DataContainerName = dName.DockersName
+			ops.DataContainerID = dName.ContainerID
+		}
+	}
+
+	return true
 }
 
 func parseKnown(name string) bool {

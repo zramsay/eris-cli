@@ -40,7 +40,7 @@ func InstallChain(do *definitions.Do) error {
 func StartChain(do *definitions.Do) error {
 	logger.Infoln("Ensuring Key Server is Started.")
 	//should it take a flag? keys server may be running another cNum
-	keysService, err := loaders.LoadServiceDefinition("keys", 1)
+	keysService, err := loaders.LoadServiceDefinition("keys", false, 1)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func StartChain(do *definitions.Do) error {
 		return err
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		logger.Infoln("Cannot start a chain I cannot find.")
 		do.Result = "no file"
@@ -80,7 +80,7 @@ func StartChain(do *definitions.Do) error {
 }
 
 func KillChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
-	chain := loaders.MockChainDefinition(do.Name, do.ChainID, do.Operations.ContainerNumber)
+	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
 
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, do.Name) + ".toml"
@@ -186,7 +186,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}
 
-	chain, err = loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err = loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}

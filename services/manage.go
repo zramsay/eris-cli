@@ -81,16 +81,21 @@ func RenameService(do *definitions.Do) error {
 	transformOnly := newNameBase == do.Name
 
 	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+		serviceDef, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 		if err != nil {
 			return err
 		}
 
+		do.Operations.ContainerNumber = serviceDef.Operations.ContainerNumber
+
 		if !transformOnly {
+			logger.Debugf("Asking Docker to Service =>\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
 			err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, do.Name, do.NewName)
 			if err != nil {
 				return err
 			}
+		} else {
+			logger.Infoln("Changing the service definition file type only. Not renaming container(s).")
 		}
 
 		oldFile := FindServiceDefinitionFile(do.Name)
@@ -114,6 +119,7 @@ func RenameService(do *definitions.Do) error {
 		}
 
 		if !transformOnly {
+			logger.Debugf("Calling Data Rename =>\t\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
 			err = data.RenameData(do)
 			if err != nil {
 				return err
@@ -129,7 +135,7 @@ func RenameService(do *definitions.Do) error {
 }
 
 func InspectService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -141,7 +147,7 @@ func InspectService(do *definitions.Do) error {
 }
 
 func LogsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -150,11 +156,12 @@ func LogsService(do *definitions.Do) error {
 
 func ExportService(do *definitions.Do) error {
 	if parseKnown(do.Name) {
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
 		if err != nil {
 			return err
 		}
 
+		// XXX: todo refactor post merge of EnsureRunning
 		if IsServiceRunning(ipfsService.Service, ipfsService.Operations) {
 			logger.Infoln("IPFS is running. Adding now.")
 
@@ -221,7 +228,7 @@ func ListExisting(do *definitions.Do) error {
 }
 
 func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -235,7 +242,7 @@ func UpdateService(do *definitions.Do) error {
 
 func RmService(do *definitions.Do) error {
 	for _, servName := range do.Args {
-		service, err := loaders.LoadServiceDefinition(servName, do.Operations.ContainerNumber)
+		service, err := loaders.LoadServiceDefinition(servName, false, do.Operations.ContainerNumber)
 		if err != nil {
 			return err
 		}

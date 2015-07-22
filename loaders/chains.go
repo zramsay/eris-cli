@@ -22,18 +22,21 @@ const (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainName string, cNum ...int) (*definitions.Chain, error) {
-	if len(cNum) == 0 || cNum[0] == 0 {
-		if len(cNum) == 0 {
-			cNum = append(cNum, util.AutoMagic(0, "chain"))
-			logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
-		}
+func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definitions.Chain, error) {
+	if len(cNum) == 0 {
+		cNum = append(cNum, 0)
+	}
+
+	if cNum[0] == 0 {
+		cNum[0] = util.AutoMagic(0, "chain", newCont)
+		logger.Debugf("Loading Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
 	} else {
-		logger.Debugf("Loading Service Definition =>\t%s:%d\n", chainName, cNum[0])
+		logger.Debugf("Loading Chain Definition =>\t%s:%d\n", chainName, cNum[0])
 	}
 
 	chain := definitions.BlankChain()
 	chain.Name = chainName
+	chain.Operations.ContainerNumber = cNum[0]
 	setChainDefaults(chain)
 
 	chainConf, err := loadChainDefinition(chainName)
@@ -48,16 +51,14 @@ func LoadChainDefinition(chainName string, cNum ...int) (*definitions.Chain, err
 		return nil, err
 	}
 
-	chain.Operations.ContainerNumber = cNum[0]
-
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
 	logger.Debugf("\twith Environment =>\t%d\n", chain.Service.Environment)
 	return chain, nil
 }
 
-func ChainsAsAService(chainName string, cNum ...int) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainDefinition(chainName)
+func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
+	chain, err := LoadChainDefinition(chainName, newCont, cNum...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +73,6 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
 	chain.Service.Command = cmd
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
-
-	// TODO mint vs. erisdb (in terms of rpc) --> think we default them to erisdb's REST/Stream API
 
 	srv := &definitions.ServiceDefinition{
 		Name:        chain.Name,
@@ -90,16 +89,18 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	return srv
 }
 
-func MockChainDefinition(chainName, chainID string, cNum ...int) *definitions.Chain {
+func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {
 	chn := definitions.BlankChain()
 	chn.Name = chainName
 	chn.ChainID = chainID
 	chn.Service.AutoData = true
 
 	if len(cNum) == 0 {
-		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], "chain")
+		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], "chain", newCont)
+		logger.Debugf("Mocking Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
 	} else {
 		chn.Operations.ContainerNumber = cNum[0]
+		logger.Debugf("Mocking Chain Definition =>\t%s:%d\n", chainName, cNum[0])
 	}
 
 	checkChainNames(chn)

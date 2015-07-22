@@ -392,14 +392,19 @@ func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
 func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 	// don't limit this to verbose because it takes a few seconds
 	logger.Printf("Docker is Stopping =>\t\t%s\tThis may take a few seconds.\n", srv.Name)
+	logger.Debugf("\twith ContainerNumber =>\t%d\n", ops.ContainerNumber)
+	logger.Debugf("\twith SrvContnerName =>\t%s\n", ops.SrvContainerName)
 
 	dockerAPIContainer, running := ContainerExists(ops)
 
 	if running {
+		logger.Infof("Service is running =>\t\t%s:%d\n", srv.Name, ops.ContainerNumber)
 		err := stopContainer(dockerAPIContainer.ID, timeout)
 		if err != nil {
 			return err
 		}
+	} else {
+		logger.Infof("Service is not running =>\t%s:%d\n", srv.Name, ops.ContainerNumber)
 	}
 
 	logger.Infof("Finished stopping service =>\t%s\n", srv.Name)
@@ -407,6 +412,11 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 }
 
 func DockerRename(srv *def.Service, ops *def.Operation, oldName, newName string) error {
+	// don't limit this to verbose because it takes a few seconds
+	logger.Debugf("Docker is Renaming =>\t\t%s:%s:%d\n", srv.Name, newName, ops.ContainerNumber)
+	logger.Debugf("\twith ContainerNumber =>\t%d\n", ops.ContainerNumber)
+	logger.Debugf("\twith SrvContnerName =>\t%s\n", ops.SrvContainerName)
+
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infof("Renaming Service ID =>\t\t%s\n", service.ID)
 		newName = strings.Replace(service.Names[0], oldName, newName, 1)
@@ -496,15 +506,22 @@ func pullImage(name string, writer io.Writer) error {
 // ---------------------    Container Core ------------------------------------
 // ----------------------------------------------------------------------------
 func parseContainers(name string, all bool) (docker.APIContainers, bool) {
-	name = "/" + name
+	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
 	containers := listContainers(all)
+
+	r := regexp.MustCompile(name)
+
 	if len(containers) != 0 {
 		for _, container := range containers {
-			if container.Names[0] == name {
+			if r.MatchString(container.Names[0]) {
+				logger.Debugf("Container Found =>\t\t%s\n", name)
 				return container, true
+			} else {
+				logger.Debugf("No match =>\t\t\t%s:%s\n", name, container.Names[0])
 			}
 		}
 	}
+	logger.Debugf("Container Not Found =>\t\t%s\n", name)
 	return docker.APIContainers{}, false
 }
 
@@ -517,6 +534,7 @@ func listContainers(all bool) []docker.APIContainers {
 		for _, c := range con.Names {
 			match := r.FindAllStringSubmatch(c, 1)
 			if len(match) != 0 {
+				logger.Debugf("Container Found =>\t\t%s\n", con.Names[0])
 				container = append(container, con)
 			}
 		}
@@ -621,6 +639,8 @@ func inspectContainer(id, field string) error {
 }
 
 func stopContainer(id string, timeout uint) error {
+	logger.Debugf("\twith ContainerID =>\t%s\n", id)
+	logger.Debugf("\twith Timeout =>\t\t%d\n", timeout)
 	err := util.DockerClient.StopContainer(id, timeout)
 	if err != nil {
 		return err

@@ -50,7 +50,7 @@ func ImportChain(do *definitions.Do) error {
 }
 
 func InspectChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func InspectChain(do *definitions.Do) error {
 }
 
 func LogsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -75,12 +75,12 @@ func LogsChain(do *definitions.Do) error {
 
 // export a chain definition file
 func ExportChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, 1) //TODO:CNUM
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
 	if IsChainExisting(chain) {
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
 		if err != nil {
 			return err
 		}
@@ -166,7 +166,7 @@ func RenameChain(do *definitions.Do) error {
 		logger.Infof("Renaming chain =>\t\t%s:%s\n", do.Name, do.NewName)
 
 		logger.Debugf("Loading Chain Def File =>\t%s\n", do.Name)
-		chainDef, err := loaders.LoadChainDefinition(do.Name, 1) // TODO:CNUM
+		chainDef, err := loaders.LoadChainDefinition(do.Name, false, 1) // TODO:CNUM
 		if err != nil {
 			return err
 		}
@@ -223,7 +223,7 @@ func RenameChain(do *definitions.Do) error {
 }
 
 func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func UpdateChain(do *definitions.Do) error {
 }
 
 func RmChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func RmChain(do *definitions.Do) error {
 }
 
 func GraduateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, 1)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, 1)
 	if err != nil {
 		return err
 	}

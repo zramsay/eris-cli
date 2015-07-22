@@ -63,7 +63,7 @@ func TestKnownService(t *testing.T) {
 
 func TestLoadServiceDefinition(t *testing.T) {
 	var e error
-	srv, e = loaders.LoadServiceDefinition(servName, 1)
+	srv, e = loaders.LoadServiceDefinition(servName, true, 1)
 	if e != nil {
 		logger.Errorln(e)
 		t.FailNow()
@@ -92,8 +92,8 @@ func TestLoadServiceDefinition(t *testing.T) {
 func TestStartService(t *testing.T) {
 	do := def.NowDo()
 	do.Args = []string{servName}
-	do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting service (via tests) =>\t%s\n", servName)
+	do.Operations.ContainerNumber = util.AutoMagic(0, "service", true)
+	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", servName, do.Operations.ContainerNumber)
 	e := StartService(do)
 	if e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
@@ -101,14 +101,15 @@ func TestStartService(t *testing.T) {
 	}
 
 	testExistAndRun(t, servName, 1, true, true)
+	testNumbersExistAndRun(t, servName, 1, 1)
 }
 
 func TestInspectService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Args = []string{"name"}
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
+	do.Operations.ContainerNumber = 1
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Args, do.Operations.ContainerNumber)
 	e := InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
@@ -149,6 +150,7 @@ func TestUpdateService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.SkipPull = true
+	do.Timeout = 1
 	logger.Debugf("Update serv (via tests) =>\t%s\n", servName)
 	e := UpdateService(do)
 	if e != nil {
@@ -157,6 +159,7 @@ func TestUpdateService(t *testing.T) {
 	}
 
 	testExistAndRun(t, servName, 1, true, true)
+	testNumbersExistAndRun(t, servName, 1, 1)
 }
 
 func TestKillService(t *testing.T) {
@@ -173,6 +176,7 @@ func TestKillService(t *testing.T) {
 	}
 
 	testExistAndRun(t, servName, 1, true, false)
+	testNumbersExistAndRun(t, servName, 1, 0)
 }
 
 func TestRmService(t *testing.T) {
@@ -194,6 +198,7 @@ func TestRmService(t *testing.T) {
 	}
 
 	testExistAndRun(t, servName, 1, false, false)
+	testNumbersExistAndRun(t, servName, 0, 0)
 }
 
 func TestNewService(t *testing.T) {
@@ -209,8 +214,7 @@ func TestNewService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Args = []string{"keys"}
-	//XXX call AutoMagic?
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Stating serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
 	e = StartService(do)
@@ -220,42 +224,53 @@ func TestNewService(t *testing.T) {
 	}
 
 	testExistAndRun(t, "keys", 1, true, true)
+	testNumbersExistAndRun(t, "keys", 1, 1)
 }
 
 func TestRenameService(t *testing.T) {
+	// log.SetLoggers(2, os.Stdout, os.Stderr)
 	do := def.NowDo()
 	do.Name = "keys"
 	do.NewName = "syek"
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	e := RenameService(do)
 	if e != nil {
-		logger.Errorln(e)
+		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
 		t.Fail()
 	}
 
 	testExistAndRun(t, "syek", 1, true, true)
+	testExistAndRun(t, "keys", 1, false, false)
+
+	testNumbersExistAndRun(t, "syek", 1, 1)
+	testNumbersExistAndRun(t, "keys", 0, 0)
 
 	do = def.NowDo()
 	do.Name = "syek"
 	do.NewName = "keys"
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	e = RenameService(do)
 	if e != nil {
-		logger.Errorln(e)
+		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
 		t.Fail()
 	}
 
 	testExistAndRun(t, "keys", 1, true, true)
+	testExistAndRun(t, "syek", 1, false, false)
+
+	testNumbersExistAndRun(t, "syek", 0, 0)
+	testNumbersExistAndRun(t, "keys", 1, 1)
+	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestKillServicePostNew(t *testing.T) {
 	do := def.NowDo()
 	do.Args = []string{"keys"}
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		do.Rm = true
@@ -271,9 +286,15 @@ func TestKillServicePostNew(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		testExistAndRun(t, "keys", 1, false, false)
 		testExistAndRun(t, servName, 1, false, false)
+
+		testNumbersExistAndRun(t, "keys", 0, 0)
+		testNumbersExistAndRun(t, servName, 0, 0)
 	} else {
 		testExistAndRun(t, "keys", 1, true, false)
 		testExistAndRun(t, servName, 1, true, false)
+
+		testNumbersExistAndRun(t, "keys", 1, 0)
+		testNumbersExistAndRun(t, servName, 1, 0)
 	}
 }
 
@@ -315,11 +336,10 @@ func TestCatService(t *testing.T) {
 }
 
 func TestStartServiceWithDependencies(t *testing.T) {
-	// log.SetLoggers(2, os.Stdout, os.Stderr)
 	do := def.NowDo()
 	do.Args = []string{"keys"}
 	//do.Operations.ContainerNumber = 1
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service")
+	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", "keys", servName)
 	e := StartService(do)
 	if e != nil {
@@ -329,7 +349,9 @@ func TestStartServiceWithDependencies(t *testing.T) {
 
 	testExistAndRun(t, servName, 1, true, true)
 	testExistAndRun(t, "keys", 1, true, true)
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
+
+	testNumbersExistAndRun(t, "keys", 1, 1)
+	testNumbersExistAndRun(t, servName, 1, 1)
 }
 
 // tests remove+kill
@@ -351,9 +373,15 @@ func TestKillServiceWithDependencies(t *testing.T) {
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		testExistAndRun(t, servName, 1, false, false)
 		testExistAndRun(t, "keys", 1, false, false)
+
+		testNumbersExistAndRun(t, "keys", 0, 0)
+		testNumbersExistAndRun(t, servName, 0, 0)
 	} else {
 		testExistAndRun(t, servName, 1, true, false)
 		testExistAndRun(t, "keys", 1, true, false)
+
+		testNumbersExistAndRun(t, "keys", 1, 0)
+		testNumbersExistAndRun(t, servName, 1, 0)
 	}
 }
 
@@ -394,23 +422,44 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 
 	if toExist != exist {
 		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", servName)
+			logger.Printf("Could not find an existing =>\t%s\n", servName)
 		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", servName)
+			logger.Printf("Found an existing instance of %s when I shouldn't have\n", servName)
 		}
 		t.Fail()
 	}
 
 	if toRun != run {
 		if toRun {
-			logger.Infof("Could not find a running =>\t%s\n", servName)
+			logger.Printf("Could not find a running =>\t%s\n", servName)
 		} else {
-			logger.Infof("Found a running instance of %s when I shouldn't have\n", servName)
+			logger.Printf("Found a running instance of %s when I shouldn't have\n", servName)
 		}
 		t.Fail()
 	}
 
-	logger.Debugln("")
+	logger.Infoln("All good.\n")
+}
+
+func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
+	logger.Infof("\nTesting number of (%s) containers. Existing? (%d) and Running? (%d)\n", servName, containerExist, containerRun)
+
+	logger.Debugf("Checking Existing Containers =>\t%s\n", servName)
+	exist := util.HowManyContainersExisting(servName, "service")
+	logger.Debugf("Checking Running Containers =>\t%s\n", servName)
+	run := util.HowManyContainersRunning(servName, "service")
+
+	if exist != containerExist {
+		logger.Printf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist)
+		t.Fail()
+	}
+
+	if run != containerRun {
+		logger.Printf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run)
+		t.Fail()
+	}
+
+	logger.Infoln("All good.\n")
 }
 
 func testsInit() error {

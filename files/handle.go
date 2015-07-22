@@ -6,13 +6,13 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
 func GetFiles(do *definitions.Do) error {
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func PutFiles(do *definitions.Do) error {
 	var hash string
 	var err error
 
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs", 1)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
 	if err != nil {
 		return err
 	}

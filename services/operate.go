@@ -67,14 +67,14 @@ func KillService(do *definitions.Do) error {
 		return err
 	}
 
+	// if force flag given, this will override any timeout flag
 	if do.Force {
-		if do.Timeout == 10 { // default set by flags
-			do.Timeout = 0
-		}
+		do.Timeout = 0
 	}
 
 	for _, service := range services {
 		if IsServiceRunning(service.Service, service.Operations) {
+			logger.Debugf("Stopping Service =>\t\t%s:%d\n", service.Service.Name, service.Operations.ContainerNumber)
 			if err := perform.DockerStop(service.Service, service.Operations, do.Timeout); err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func KillService(do *definitions.Do) error {
 // TODO: test this recursion and service deps generally
 func BuildServicesGroup(srvName string, cNum int, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
 	logger.Debugf("BuildServicesGroup for =>\t%s:%d\n", srvName, len(services))
-	srv, err := loaders.LoadServiceDefinition(srvName, cNum)
+	srv, err := loaders.LoadServiceDefinition(srvName, false, cNum)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition
 }
 
 func ChainConnectedToAService(chainName string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
-	s, err := loaders.ChainsAsAService(chainName, srv.Operations.ContainerNumber)
+	s, err := loaders.ChainsAsAService(chainName, false, srv.Operations.ContainerNumber)
 	if err != nil {
 		return nil, err
 	}

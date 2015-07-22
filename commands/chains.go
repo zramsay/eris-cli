@@ -420,7 +420,7 @@ func InspectChain(cmd *cobra.Command, args []string) {
 		do.Args = []string{args[1]}
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	IfExit(err)
 
 	if chns.IsChainExisting(chain) {

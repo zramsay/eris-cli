@@ -110,8 +110,6 @@ func DataContainerToChain(dataContainerName string) string {
 	return strings.Replace(dataContainerName, "data", "chain", 1)
 }
 
-func HowManyContainers() {}
-
 // ------------------------------------------------------------------------
 // Container Find and Assemble Functions
 
@@ -146,6 +144,29 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 	}
 
 	return containers
+}
+
+func HowManyContainers(name, typ string, running bool) int {
+	res := 0
+	conts := ErisContainersByType(typ, running)
+	if len(conts) == 0 {
+		return res
+	}
+
+	for _, c := range conts {
+		if c.ShortName == name {
+			res++
+		}
+	}
+	return res
+}
+
+func HowManyContainersExisting(name, typ string) int {
+	return HowManyContainers(name, typ, true)
+}
+
+func HowManyContainersRunning(name, typ string) int {
+	return HowManyContainers(name, typ, false)
 }
 
 func ServiceContainers(running bool) []*ContainerName {

@@ -14,15 +14,20 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDefinition, error) {
-	if len(cNum) == 0 || cNum[0] == 0 {
-		cNum = append(cNum, util.AutoMagic(0, "service"))
+func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
+	if len(cNum) == 0 {
+		cNum = append(cNum, 0)
+	}
+
+	if cNum[0] == 0 {
+		cNum[0] = util.AutoMagic(0, "service", newCont)
 		logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		logger.Debugf("Loading Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
 
 	srv := definitions.BlankServiceDefinition()
+	srv.Operations.ContainerNumber = cNum[0]
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
 		return nil, err
@@ -40,7 +45,6 @@ func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDe
 		return nil, err
 	}
 
-	srv.Operations.ContainerNumber = cNum[0]
 	if os.Getenv("TEST_IN_CIRCLE") != "true" { // this really should be docker version < 1.7...?
 		addDependencyVolumesAndLinks(srv)
 	}
@@ -49,14 +53,16 @@ func LoadServiceDefinition(servName string, cNum ...int) (*definitions.ServiceDe
 	return srv, nil
 }
 
-func MockServiceDefinition(servName string, cNum ...int) *definitions.ServiceDefinition {
+func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definitions.ServiceDefinition {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = servName
 
 	if len(cNum) == 0 {
-		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], "service")
+		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], "service", newCont)
+		logger.Debugf("Mocking Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		srv.Operations.ContainerNumber = cNum[0]
+		logger.Debugf("Mocking Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
 
 	ServiceFinalizeLoad(srv)

@@ -21,8 +21,11 @@ func OverWriteOperations(opsBase, opsOver *def.Operation) {
 	opsBase.PublishAllPorts = OverWriteBool(opsBase.PublishAllPorts, opsOver.PublishAllPorts)
 }
 
-//TODO add bool (backlog)
-func AutoMagic(cNum int, typ string) (cnum int) {
+// AutoMagic will return the highest container number which would represent the most recent
+// container to work on unless newCont == true in which case it would return the highest
+// container number plus one.
+func AutoMagic(cNum int, typ string, newCont bool) int {
+	logger.Debugf("Automagic (base) =>\t\t%s:%d\n", typ, cNum)
 	contns := ErisContainersByType(typ, true)
 
 	contnums := make([]int, len(contns))
@@ -30,13 +33,25 @@ func AutoMagic(cNum int, typ string) (cnum int) {
 		contnums[i] = c.Number
 	}
 
+	// get highest container number
 	g := 0
 	for _, n := range contnums {
 		if n >= g {
 			g = n
 		}
 	}
-	return g + 1
+
+	// ensure outcomes appropriate
+	result := g
+	if newCont {
+		result = g + 1
+	}
+	if result == 0 {
+		result = 1
+	}
+
+	logger.Debugf("Automagic (result) =>\t\t%s:%d\n", typ, result)
+	return result
 }
 
 func OverWriteBool(trumpEr, toOver bool) bool {

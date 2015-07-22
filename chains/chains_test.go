@@ -79,7 +79,7 @@ func TestNewChain(t *testing.T) {
 func TestLoadChainDefinition(t *testing.T) {
 	var e error
 	logger.Infof("Load chain def (from tests) =>\t%s\n", chainName)
-	chn, e := loaders.LoadChainDefinition(chainName, 1)
+	chn, e := loaders.LoadChainDefinition(chainName, false, 1)
 	if e != nil {
 		logger.Errorln(e)
 		t.FailNow()
