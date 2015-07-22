@@ -195,6 +195,9 @@ var dataRm = &cobra.Command{
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+
+	dataImport.Flags().StringVarP(&do.Path, "dest", "", "/home/eris/.eris", "destination for import into data container")
+	dataExport.Flags().StringVarP(&do.Path, "src", "", "/home/eris/.eris", "source inside data container to export from")
 }
 
 //----------------------------------------------------

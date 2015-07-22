@@ -31,10 +31,16 @@ func ImportData(do *definitions.Do) error {
 		//         start a container with its Stdin open, connect to an io.Writer
 		//         connect them up with io.Pipe
 		//         this will free us from any quirks that the cli has
-		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C /home/eris/.eris"
+		if do.Path != "" {
+			do.Path = do.Path
+		} else {
+			do.Path = "/home/eris/.eris"
+		}
+
+		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
 		_, err := pipes.RunString(cmd)
 		if err != nil {
-			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C /home/eris/.eris"
+			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
 			_, e2 := pipes.RunString(cmd)
 			if e2 != nil {
 				return fmt.Errorf("Could not import the data container.\n\nTried with docker --rm: %v.\n Tried without docker --rm: %v.\n", err, e2)
@@ -84,10 +90,16 @@ func ExportData(do *definitions.Do) error {
 		}
 
 		reader, writer := io.Pipe()
+
+		if do.Path != "" {
+			do.Path = do.Path
+		} else {
+			do.Path = "/home/eris/.eris"
+		}
 		opts := docker.CopyFromContainerOptions{
 			OutputStream: writer,
 			Container:    service.ID,
-			Resource:     "/home/eris/.eris/",
+			Resource:     do.Path,
 		}
 
 		go func() {
