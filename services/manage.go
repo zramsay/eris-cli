@@ -232,7 +232,7 @@ func UpdateService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull)
+	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
 	if err != nil {
 		return err
 	}

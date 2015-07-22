@@ -256,6 +256,7 @@ func addServicesFlags() {
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
+	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 

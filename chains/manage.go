@@ -232,7 +232,7 @@ func UpdateChain(do *definitions.Do) error {
 	//   variable will mean it pulls. But we want the opposite default
 	//   behaviour for chains as we do for services in this regard
 	//   so we flip the variable.
-	err = perform.DockerRebuild(chain.Service, chain.Operations, do.SkipPull)
+	err = perform.DockerRebuild(chain.Service, chain.Operations, do.SkipPull, do.Timeout)
 	if err != nil {
 		return err
 	}

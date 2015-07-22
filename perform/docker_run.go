@@ -257,7 +257,7 @@ func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive 
 	}
 }
 
-func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool) error {
+func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout uint) error {
 	var id string
 	var wasRunning bool = false
 
@@ -266,7 +266,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool) error {
 	if service, exists := ContainerExists(ops); exists {
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			err := DockerStop(srv, ops, 10)
+			err := DockerStop(srv, ops, timeout)
 			if err != nil {
 				return err
 			}
