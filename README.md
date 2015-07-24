@@ -157,13 +157,13 @@ At the current time, `eris` requires `docker` >= 1.6. You can check your docker 
 
 If you are on OSX, we **strongly recommend** that you install Docker via [Kitematic](https://kitematic.com/). Kitematic will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
 
-If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` has been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
 
 #### Windows
 
 If you are on Windows, we **strongly recommend** that you install Docker via [Kitematic](https://kitematic.com/). Kitematic will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
 
-If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` has been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
 
 ### Go
 
