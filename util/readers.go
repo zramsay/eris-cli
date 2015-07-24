@@ -21,13 +21,13 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 }
 
 func GetFromIPFS(hash, fileName string, w io.Writer) error {
-	url := IPFSBaseUrl() + ":8080/ipfs/" + hash
+	url := IPFSBaseGatewayUrl() + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
 }
 
 func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
-	url := IPFSBaseUrl() + ":5001/api/v0/cat?arg=" + fileHash
+	url := IPFSBaseAPIUrl() + "cat?arg=" + fileHash
 	w.Write([]byte("CATing file from IPFS. Hash =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
 
@@ -39,7 +39,7 @@ func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
 }
 
 func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
-	url := IPFSBaseUrl() + ":5001/api/v0/ls?arg=" + objectHash
+	url := IPFSBaseAPIUrl() + "ls?arg=" + objectHash
 	w.Write([]byte("LISTing file from IPFS. objectHash =>\t" + objectHash + "\n"))
 	body, err := PostAPICall(url, objectHash, w)
 	r := bytes.NewReader(body)
@@ -157,7 +157,7 @@ func GetFileByNameAndType(typ, name string) string {
 // --------------------------------------------------------------
 // Helper functions
 
-func IPFSBaseUrl() string {
+func IPFSBaseGatewayUrl() string {
 	var host string
 	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
 		host = "http://ipfs"
@@ -168,7 +168,21 @@ func IPFSBaseUrl() string {
 			host = GetConfigValue("IpfsHost")
 		}
 	}
-	return host
+	return host + ":8080/ipfs/"
+}
+
+func IPFSBaseAPIUrl() string {
+	var host string
+	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
+		host = "http://ipfs"
+	} else {
+		if os.Getenv("ERIS_IPFS_HOST") != "" {
+			host = os.Getenv("ERIS_IPFS_HOST")
+		} else {
+			host = GetConfigValue("IpfsHost")
+		}
+	}
+	return host + ":5001/api/v0/"
 }
 
 var timeout = time.Duration(10 * time.Second)

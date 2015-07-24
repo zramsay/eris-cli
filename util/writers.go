@@ -60,7 +60,7 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 }
 
 func SendToIPFS(fileName string, w io.Writer) (string, error) {
-	url := IPFSBaseUrl() + ":8080/ipfs/"
+	url := IPFSBaseGatewayUrl()
 	w.Write([]byte("POSTing file to IPFS. File =>\t" + fileName + "\n"))
 	head, err := UploadFromFileToUrl(url, fileName, w)
 	if err != nil {
@@ -74,7 +74,7 @@ func SendToIPFS(fileName string, w io.Writer) (string, error) {
 }
 
 func PinToIPFS(fileHash string, w io.Writer) (string, error) {
-	url := IPFSBaseUrl() + ":5001/api/v0/pin/add?arg=" + fileHash
+	url := IPFSBaseAPIUrl() + "pin/add?arg=" + fileHash
 
 	w.Write([]byte("PINing file to IPFS. File =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
