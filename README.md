@@ -119,7 +119,9 @@ These are the lessons which underpin the design of the `eris` tool.
 # Eris: Today
 
 ```
-Eris is a platform for building, testing, maintaining, and operating distributed applications with a blockchain backend. Eris makes it easy and simple to wrangle the dragons of smart contract blockchains.
+Eris is a platform for building, testing, maintaining, and operating distributed
+applications with a blockchain backend. Eris makes it easy and simple to wrangle
+the dragons of smart contract blockchains.
 ```
 
 The `eris` tool is centered around a very few concepts:
@@ -219,7 +221,7 @@ Services are "things that you turn on or off". Examples of services include:
 * a tendermint-testchain node
 * a tinydns daemon
 
-Services work from a base of **service definition files**. These files are held on the host in the following location: `~/.eris/services`. Service definition files tell `eris` how a docker container should be started. The specification for service definition files is located [here](#).
+Services work from a base of **service definition files**. These files are held on the host in the following location: `~/.eris/services`. Service definition files tell `eris` how a docker container should be started. The specification for service definition files is located [here](docs/services_specification.md).
 
 To see the various ways in which `eris` can interact with services, please type:
 
@@ -231,7 +233,7 @@ eris services
 
 Chains are an opinionated toolchain around permissioned tendermint blockchains. They can be most easily thought of as your "develop" branch for blockchains. In other words, if you need to work **on** a permissioned tendermint blockchain, then it is best to use `eris chains`.
 
-Chains hardcode most of the service starting criteria, but still allow for some flexibility as to how chains are worked with. Chains are operated from a base of **chain definition files**. These files are held on the host in the following location: `~/.eris/chains`. The specification for chain definition files is located [here](#).
+Chains hardcode most of the service starting criteria, but still allow for some flexibility as to how chains are worked with. Chains are operated from a base of **chain definition files**. These files are held on the host in the following location: `~/.eris/chains`. The specification for chain definition files is located [here](docs/chains_specification.md).
 
 To see the various ways in which `eris` can help you develop blockchains, please type:
 
@@ -248,7 +250,7 @@ Examples of things actions are made to support:
 * register a domain entry via mindy
 * drop a preformulated transaction into the btc network using a specific key
 
-Actions work from a base of **action definition files**. These files are held on the host in the following location: `~/.eris/actions`. Action definition files tell `eris` what steps to take, what services to make available, what chain to run, and what steps to take. The specification for action definition files is located [here](#).
+Actions work from a base of **action definition files**. These files are held on the host in the following location: `~/.eris/actions`. Action definition files tell `eris` what steps to take, what services to make available, what chain to run, and what steps to take. The specification for action definition files is located [here](docs/actions_specification.md).
 
 To see the various ways in which `eris` can interact with actions, please type:
 
