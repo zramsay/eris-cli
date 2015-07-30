@@ -48,7 +48,6 @@ func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
 		Name, Hash string
 		Size       uint64
 	}
-
 	type LsObject struct {
 		Hash  string
 		Links []LsLink
@@ -65,6 +64,39 @@ func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
 	res := make([]string, len(contents))
 	for i, c := range contents {
 		res[i] = c.Hash + " " + c.Name
+	}
+	result := strings.Join(res, "\n")
+	return result, nil
+}
+
+func ListPinnedFromIPFS(w io.Writer) (string, error) {
+	url := IPFSBaseAPIUrl() + "pin/ls"
+	w.Write([]byte("LISTing files pinned locally.\n"))
+	body, err := PostAPICall(url, "", w)
+	r := bytes.NewReader(body)
+
+	type RefKeyObject struct {
+		Type  string
+		Count int
+	}
+
+	type RefKeyList struct {
+		Keys map[string]RefKeyObject
+	}
+
+	var out RefKeyList
+	dec := json.NewDecoder(r)
+	err = dec.Decode(&out)
+	if err != nil {
+		return "", err
+	}
+	contents := out.Keys
+
+	res := make([]string, len(contents))
+	i := 0
+	for c := range contents {
+		res[i] = c
+		i += 1
 	}
 	result := strings.Join(res, "\n")
 	return result, nil

@@ -24,6 +24,7 @@ func buildFilesCommand() {
 	Files.AddCommand(filesCache)
 	Files.AddCommand(filesCat)
 	Files.AddCommand(filesList)
+	Files.AddCommand(filesCached)
 	//	addFilesFlags()
 }
 
@@ -47,7 +48,7 @@ var filesExport = &cobra.Command{
 
 var filesCache = &cobra.Command{
 	Use:   "cache [fileHash]",
-	Short: "Cache a file to IPFS .",
+	Short: "Cache a file to IPFS.",
 	Long: `Cache a file to IPFS' local daemon.
 	
 Caches a file locally via IPFS pin, by hash.`,
@@ -72,6 +73,15 @@ var filesList = &cobra.Command{
 	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
 	Run: func(cmd *cobra.Command, args []string) {
 		ListIt(cmd, args)
+	},
+}
+
+var filesCached = &cobra.Command{
+	Use:   "cached",
+	Short: "Lists files cached locally.",
+	Long:  "Displays list of files cached locally.",
+	Run: func(cmd *cobra.Command, args []string) {
+		PinnedLs(cmd, args)
 	},
 }
 
@@ -129,6 +139,12 @@ func ListIt(cmd *cobra.Command, args []string) {
 	}
 	do.Name = args[0]
 	err := files.ListFiles(do)
+	IfExit(err)
+	logger.Println(do.Result)
+}
+
+func PinnedLs(cmd *cobra.Command, args []string) {
+	err := files.ListPinned(do)
 	IfExit(err)
 	logger.Println(do.Result)
 }

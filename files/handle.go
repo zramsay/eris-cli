@@ -96,6 +96,23 @@ func ListFiles(do *definitions.Do) error {
 	return nil
 }
 
+func ListPinned(do *definitions.Do) error {
+	var hash string
+	doNow := definitions.NowDo()
+	doNow.Name = "ipfs"
+	err := services.EnsureRunning(doNow)
+	if err != nil {
+		return err
+	}
+	logger.Infoln("IPFS is running.")
+	logger.Debugf("Listing files pinned locally")
+	hash, err = listPinned()
+	if err != nil {
+		return err
+	}
+	do.Result = hash
+	return nil
+}
 func importFile(hash, fileName string) error {
 	var err error
 	if logger.Level > 0 {
@@ -163,6 +180,20 @@ func listFile(objectHash string) (string, error) {
 		hash, err = util.ListFromIPFS(objectHash, logger.Writer)
 	} else {
 		hash, err = util.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
+	}
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
+}
+
+func listPinned() (string, error) {
+	var hash string
+	var err error
+	if logger.Level > 0 {
+		hash, err = util.ListPinnedFromIPFS(logger.Writer)
+	} else {
+		hash, err = util.ListPinnedFromIPFS(bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
