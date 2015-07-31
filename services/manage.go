@@ -16,6 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
 func ImportService(do *definitions.Do) error {
@@ -55,8 +56,21 @@ func NewService(do *definitions.Do) error {
 	srv.Service.Image = do.Args[0]
 	srv.Service.AutoData = true
 
+	//get maintainer info
+	uName, err := gitconfig.Username()
+	if err != nil {
+		return err
+	}
+	email, err := gitconfig.Email()
+	if err != nil {
+		return err
+	}
+
+	srv.Maintainer.Name = uName
+	srv.Maintainer.Email = email
+
 	logger.Debugf("Creating a new srv def file =>\t%s:%s\n", srv.Service.Name, srv.Service.Image)
-	err := WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
+	err = WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}

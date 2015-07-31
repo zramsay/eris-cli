@@ -78,6 +78,11 @@
 			"Rev": "db7ff930a189b98d602179d9001d33345f42b8c7"
 		},
 		{
+			"ImportPath": "github.com/tcnksm/go-gitconfig",
+			"Comment": "v0.1.2-3-g6411ba1",
+			"Rev": "6411ba19847f20afe47f603328d97aaeca6def6f"
+		},
+		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
 		}

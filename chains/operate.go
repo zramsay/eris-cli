@@ -15,6 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
 func NewChain(do *definitions.Do) error {
@@ -180,6 +181,19 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
+
+	//get maintainer info
+	uName, err := gitconfig.Username()
+	if err != nil {
+		return err
+	}
+	email, err := gitconfig.Email()
+	if err != nil {
+		return err
+	}
+
+	chain.Maintainer.Name = uName
+	chain.Maintainer.Email = email
 
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, do.Name) + ".toml"
