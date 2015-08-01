@@ -64,6 +64,9 @@ func StartChain(do *definitions.Do) error {
 	}
 
 	chain.Service.Command = loaders.ErisChainStart
+	if do.Run {
+		chain.Service.Command = loaders.ErisChainStartApi
+	}
 	util.OverWriteOperations(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 

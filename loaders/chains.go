@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	ErisChainStart   = "erisdb-wrapper run"
-	ErisChainInstall = "erisdb-wrapper install"
-	ErisChainNew     = "erisdb-wrapper new"
+	ErisChainStart    = "erisdb-wrapper run"
+	ErisChainStartApi = "erisdb-wrapper api"
+	ErisChainInstall  = "erisdb-wrapper install"
+	ErisChainNew      = "erisdb-wrapper new"
 )
 
 // viper read config file, marshal to definition struct,

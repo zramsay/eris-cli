@@ -304,6 +304,7 @@ func addChainsFlags() {
 	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 
 	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
+	chainsStart.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
