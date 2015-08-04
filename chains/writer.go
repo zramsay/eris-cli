@@ -51,10 +51,9 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 		writer.Write([]byte("name = \"" + chainDef.Name + "\"\n"))
 		writer.Write([]byte("chain_id = \"" + chainDef.ChainID + "\"\n"))
 		writer.Write([]byte("\n[service]\n"))
-		writer.Write([]byte("\n[maintainer]\n"))
-		writer.Write([]byte("name = \"" + chainDef.Maintainer.Name + "\"\n"))
-		writer.Write([]byte("email = \"" + chainDef.Maintainer.Email + "\"\n"))
 		enc.Encode(chainDef.Service)
+		writer.Write([]byte("\n[maintainer]\n"))
+		enc.Encode(chainDef.Maintainer)
 	}
 	return nil
 }
