@@ -9,7 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
-func Initialize(toPull, verbose bool) error {
+func Initialize(toPull, verbose, dev bool) error {
 	if _, err := os.Stat(common.ErisRoot); err != nil {
 		if err := common.InitErisDir(); err != nil {
 			return fmt.Errorf("Could not Initialize the Eris Root Directory.\n%s\n", err)
@@ -28,6 +28,38 @@ func Initialize(toPull, verbose bool) error {
 		fmt.Printf("Initialized eris root directory (%s) with default actions and service files.\n", common.ErisRoot)
 	}
 
+	//pull images
+	argsAll := []string{}
+	argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/eth"}
+	argsDev := []string{
+		"erisindustries/evm_compilers",
+		"eris/compilers",
+		"erisindustries/node",
+		"erisindustries/python",
+		"erisindustries/gulp",
+		"erisindustries/embark_base",
+		"erisindustries/sunit_base",
+		"erisindustries/pyepm_base",
+	}
+
+	fmt.Println("Pulling base images...")
+
+	if !dev {
+		argsAll = argsDef
+	} else {
+		fmt.Println("...and development images")
+		argsAll = append(argsDef, argsDev...)
+	}
+
+	fmt.Println("This could take awhile, now is a good time to feed your marmot")
+	for _, img := range argsAll {
+		pImg := []string{"pull", img}
+		err := exec.Command("docker", pImg...).Run()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
 	// todo: when called from cli provide option to go on tour, like `ipfs tour`
 	return nil
 }
@@ -68,10 +100,10 @@ func pullRepo(name, location string, verbose bool) error {
 }
 
 func dropDefaults() error {
-  if err := keysDef(); err != nil {
-    return fmt.Errorf("Cannot add keys: %s.\n", err)
-  }
-  if err := ipfsDef(); err != nil {
+	if err := keysDef(); err != nil {
+		return fmt.Errorf("Cannot add keys: %s.\n", err)
+	}
+	if err := ipfsDef(); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
 	// if err := edbDef(); err != nil {
@@ -87,17 +119,17 @@ func dropDefaults() error {
 }
 
 func keysDef() error {
-  if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
-    return err
-  }
-  writer, err := os.Create(filepath.Join(common.ServicesPath, "keys.toml"))
-  defer writer.Close()
-  if err != nil {
-    return err
-  }
-  keysD := defKeys()
-  writer.Write([]byte(keysD))
-  return nil
+	if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
+		return err
+	}
+	writer, err := os.Create(filepath.Join(common.ServicesPath, "keys.toml"))
+	defer writer.Close()
+	if err != nil {
+		return err
+	}
+	keysD := defKeys()
+	writer.Write([]byte(keysD))
+	return nil
 }
 
 func ipfsDef() error {
@@ -158,7 +190,7 @@ func actDef() error {
 }
 
 func defKeys() string {
-  return `[service]
+	return `[service]
 name = "keys"
 
 image = "eris/keys"
@@ -173,7 +205,7 @@ func defIpfs() string {
 name = "ipfs"
 image = "eris/ipfs"
 data_container = true
-ports = ["4001:4001", "5001", "8080:8080"]
+ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"
 
 [maintainer]
@@ -190,7 +222,7 @@ requires = [""]
 }
 
 func defEdb() string {
-  // TODO: remove this. we should be hard coding these defaults...
+	// TODO: remove this. we should be hard coding these defaults...
 	return `[service]
 name           = "erisdb"
 image          = "eris/erisdb:develop"

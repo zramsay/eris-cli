@@ -9,10 +9,12 @@ import (
 // flags to add: --no-clone
 var Init = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize the ~/.eris directory with some default services and actions",
+	Short: "Initialize the ~/.eris directory with some default services and actions, and pull important images",
 	Long: `Create the ~/.eris directory with actions and services subfolders
-and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.`,
+and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.
+
+Pull important images; --dev flags pulls images needed for development`,
 	Run: func(cmd *cobra.Command, args []string) {
-		util.Initialize(do.Pull, do.Verbose)
+		util.Initialize(do.Pull, do.Verbose, do.Dev)
 	},
 }

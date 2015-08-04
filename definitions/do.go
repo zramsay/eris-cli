@@ -1,6 +1,7 @@
 package definitions
 
 type Do struct {
+	Dev           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
