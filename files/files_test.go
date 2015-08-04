@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -102,7 +102,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(util.Initialize(false, false))
+	ifExit(util.Initialize(false, false, false))
 
 	// init dockerClient
 	util.DockerConnect(false)
