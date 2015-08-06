@@ -15,7 +15,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
@@ -283,14 +284,14 @@ func CatService(do *definitions.Do) error {
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
-	if IsServiceExisting(srv, ops) {
-		err := perform.DockerInspect(srv, ops, field)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("No service matching that name.\n")
+	// if IsServiceExisting(srv, ops) {
+	err := perform.DockerInspect(srv, ops, field)
+	if err != nil {
+		return err
 	}
+	// } else {
+	// 	return fmt.Errorf("No service matching that name.\n")
+	// }
 	return nil
 }
 

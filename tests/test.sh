@@ -37,6 +37,8 @@ cd ../chains && go test
 passed Chains
 cd ../actions && go test
 passed Actions
+cd ../contracts && go test
+passed Contracts
 # cd ../projects && go test
 # passed Projects
 # cd ../remotes && go test

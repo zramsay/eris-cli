@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-12",
+			"Rev": "7dda39b2e7d5e265014674c5af696ba4186679e9"
+		},
+		{
 			"ImportPath": "github.com/BurntSushi/toml",
 			"Comment": "v0.1.0-21-g056c9bc",
 			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
@@ -15,8 +20,12 @@
 			"Rev": "83e1324808622485314bff0fd97b8b944200a7a4"
 		},
 		{
-			"ImportPath": "github.com/eris-ltd/common",
-			"Rev": "0c71725038d51f858b052f2e0bdaaef83690e43f"
+			"ImportPath": "github.com/eris-ltd/common/go/common",
+			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
+		},
+		{
+			"ImportPath": "github.com/eris-ltd/common/go/log",
+			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",

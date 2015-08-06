@@ -9,8 +9,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -29,11 +30,11 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		var logLevel int
+		var logLevel log.LogLevel
 		if do.Verbose {
-			logLevel = 1
-		} else if do.Debug {
 			logLevel = 2
+		} else if do.Debug {
+			logLevel = 3
 		}
 		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
 
@@ -64,6 +65,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Services)
 	buildChainsCommand()
 	ErisCmd.AddCommand(Chains)
+	buildContractsCommand()
+	ErisCmd.AddCommand(Contracts)
 	buildActionsCommand()
 	ErisCmd.AddCommand(Actions)
 	buildDataCommand()
@@ -78,10 +81,11 @@ func AddCommands() {
 	//	ErisCmd.AddCommand(ListRunning)
 
 	ErisCmd.AddCommand(Config)
-	ErisCmd.AddCommand(Version)
+	ErisCmd.AddCommand(VerSion)
 	ErisCmd.AddCommand(Init)
 }
 
+// Global Do struct
 var do *definitions.Do
 
 // Flags that are to be used by commands are handled by the Do struct
@@ -127,4 +131,20 @@ func InitializeConfig() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func ArgCheck(num int, comp string, cmd *cobra.Command, args []string) error {
+	switch comp {
+	case "eq":
+		if len(args) != num {
+			cmd.Help()
+			return fmt.Errorf("\n**Note** you sent our marmots the wrong number of arguments.\nPlease send the marmots %d arguments only.", num)
+		}
+	case "ge":
+		if len(args) < num {
+			cmd.Help()
+			return fmt.Errorf("\n**Note** you sent our marmots the wrong number of arguments.\nPlease send the marmots at least %d argument(s).", num)
+		}
+	}
+	return nil
 }

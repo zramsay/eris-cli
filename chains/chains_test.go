@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -16,7 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -24,16 +23,13 @@ var chainName string = "testchain"
 var hash string
 
 func TestMain(m *testing.M) {
-	var logLevel int
+	var logLevel log.LogLevel
 	var err error
 
-	if os.Getenv("LOG_LEVEL") != "" {
-		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
-	} else {
-		logLevel = 0
-		// logLevel = 1
-		// logLevel = 2
-	}
+	logLevel = 0
+	// logLevel = 1
+	// logLevel = 2
+
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
 	testsInit()
@@ -67,7 +63,7 @@ func TestKnownChain(t *testing.T) {
 
 func TestNewChain(t *testing.T) {
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "genesis", "default.json")
+	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
 	do.Name = chainName
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
@@ -89,7 +85,7 @@ func TestChainGraduate(t *testing.T) {
 		t.FailNow()
 	}
 
-	srvDef, err := loaders.LoadServiceDefinition("etcb_testnet", false, 1)
+	srvDef, err := loaders.LoadServiceDefinition("my_tests", false, 1)
 	if err != nil {
 		logger.Errorln(err)
 		t.Fail()
@@ -192,6 +188,7 @@ func TestUpdateChain(t *testing.T) {
 }
 
 func TestInspectChain(t *testing.T) {
+	// log.SetLoggers(3, os.Stdout, os.Stderr)
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
 		return
@@ -207,7 +204,7 @@ func TestInspectChain(t *testing.T) {
 		logger.Infof("Error inspecting chain =>\t%v\n", e)
 		t.FailNow()
 	}
-
+	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestRenameChain(t *testing.T) {

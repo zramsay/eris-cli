@@ -16,7 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func ImportChain(do *definitions.Do) error {
@@ -54,10 +54,15 @@ func InspectChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = InspectChainByChain(chain.Service, chain.Operations, chain, do.Args[0])
-	if err != nil {
-		return err
+
+	if IsChainExisting(chain) {
+		logger.Debugf("Chain exists, calling services.InspectServiceByService.\n")
+		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Args[0])
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -66,10 +71,12 @@ func LogsChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
+
 	err = perform.DockerLogs(chain.Service, chain.Operations, do.Follow, do.Tail)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -282,18 +289,6 @@ func CatChain(do *definitions.Do) error {
 	logger.Println(string(cat))
 	return nil
 
-}
-
-func InspectChainByChain(srv *definitions.Service, ops *definitions.Operation, chain *definitions.Chain, field string) error {
-	if IsChainExisting(chain) {
-		err := perform.DockerInspect(srv, ops, field)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("No chain matching that name.\n")
-	}
-	return nil
 }
 
 func exportFile(chainName string) (string, error) {

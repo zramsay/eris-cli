@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -15,8 +14,8 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var srv *def.ServiceDefinition
@@ -25,15 +24,12 @@ var servName string = "ipfs"
 var hash string
 
 func TestMain(m *testing.M) {
-	var logLevel int
+	var logLevel log.LogLevel
 
-	if os.Getenv("LOG_LEVEL") != "" {
-		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
-	} else {
-		logLevel = 0
-		// logLevel = 1
-		// logLevel = 2
-	}
+	logLevel = 0
+	// logLevel = 1
+	// logLevel = 2
+
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
 	ifExit(testsInit())

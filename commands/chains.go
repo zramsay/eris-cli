@@ -4,10 +4,8 @@ import (
 	"fmt"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
-	"github.com/eris-ltd/eris-cli/loaders"
-	srv "github.com/eris-ltd/eris-cli/services"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -329,66 +327,46 @@ func addChainsFlags() {
 // cli command wrappers
 
 func StartChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.KillChain(do))
 }
 
 // fetch and install a chain
+//
+// the idea here is you will either specify a chainName as the arg and that will
+// double as the chainID, or you want a local reference name for the chain, so you specify
+// the chainID with a flag and give your local reference name as the arg
 func InstallChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	// the idea here is you will either specify a chainName as the arg and that will
-	// double as the chainID, or you want a local reference name for the chain, so you specify
-	// the chainID with a flag and give your local reference name as the arg
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.InstallChain(do))
 }
 
 // create a new chain
+//
 // genesis is either given or a simple single-validator genesis will be laid for you
 func NewChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.NewChain(do))
 }
 
 // import a chain definition file
 func ImportChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(chns.ImportChain(do))
@@ -396,10 +374,7 @@ func ImportChain(cmd *cobra.Command, args []string) {
 
 // edit a chain definition file
 func EditChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	var configVals []string
 	if len(args) > 1 {
 		configVals = args[1:]
@@ -410,10 +385,7 @@ func EditChain(cmd *cobra.Command, args []string) {
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	if len(args) == 1 {
@@ -422,19 +394,11 @@ func InspectChain(cmd *cobra.Command, args []string) {
 		do.Args = []string{args[1]}
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
-	IfExit(err)
-
-	if chns.IsChainExisting(chain) {
-		IfExit(srv.InspectServiceByService(chain.Service, chain.Operations, do.Args[0]))
-	}
+	IfExit(chns.InspectChain(do))
 }
 
 func ExportChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.ExportChain(do))
 }
@@ -460,58 +424,32 @@ func ListRunningChains() {
 }
 
 func RenameChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
 	IfExit(chns.RenameChain(do))
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.UpdateChain(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.RmChain(do))
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.GraduateChain(do))
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
-	if err := checkChainGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.CatChain(do))
-}
-
-func checkChainGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("Please provide a chain")
-	}
-	return nil
 }

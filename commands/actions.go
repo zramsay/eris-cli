@@ -1,12 +1,11 @@
 package commands
 
 import (
-	"fmt"
 	"strings"
 
 	act "github.com/eris-ltd/eris-cli/actions"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -173,24 +172,14 @@ func addActionsFlags() {
 // cli command wrappers
 
 func ImportAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(act.ImportAction(do))
 }
 
 func NewAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(act.NewAction(do))
@@ -205,55 +194,32 @@ func ListActions(cmd *cobra.Command, args []string) {
 }
 
 func EditAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = strings.Join(args, "_")
 	IfExit(act.EditAction(do))
 }
 
 func DoAction(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Args = args
 	IfExit(act.Do(do))
 }
 
 func ExportAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = strings.Join(args, "_")
 	IfExit(act.ExportAction(do))
 }
 
 func RenameAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
 	IfExit(act.RenameAction(do))
 }
 
 func RmAction(cmd *cobra.Command, args []string) {
-	if err := checkActionGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Args = args
 	IfExit(act.RmAction(do))
-}
-
-func checkActionGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
-	}
-	return nil
 }

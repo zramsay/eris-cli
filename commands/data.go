@@ -6,7 +6,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/data"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -196,8 +196,8 @@ func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 
-	dataImport.Flags().StringVarP(&do.Path, "dest", "", "/home/eris/.eris", "destination for import into data container")
-	dataExport.Flags().StringVarP(&do.Path, "src", "", "/home/eris/.eris", "source inside data container to export from")
+	dataImport.Flags().StringVarP(&do.Path, "dest", "", "", "destination for import into data container")
+	dataExport.Flags().StringVarP(&do.Path, "src", "", "", "source inside data container to export from")
 }
 
 //----------------------------------------------------
@@ -214,65 +214,46 @@ func ListKnownData(cmd *cobra.Command, args []string) {
 }
 
 func RenameData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
-
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
 	IfExit(data.RenameData(do))
 }
 
 func InspectData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
 	if len(args) == 1 {
 		args = append(args, "all")
 	}
+
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(data.InspectData(do))
 }
 
 func RmData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(data.RmData(do))
 }
 
 func ImportData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	setDefaultDir()
 	IfExit(data.ImportData(do))
 }
 
 func ExportData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	setDefaultDir()
 	IfExit(data.ExportData(do))
 }
 
 func ExecData(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 
@@ -289,4 +270,13 @@ func ExecData(cmd *cobra.Command, args []string) {
 
 	do.Args = args
 	IfExit(data.ExecData(do))
+}
+
+// we don't set this as the default for the flag because it overwrites
+// the unified do.Path script with other packages expect to be able to
+// provide their own defaults for.
+func setDefaultDir() {
+	if do.Path == "" {
+		do.Path = "/home/eris/.eris"
+	}
 }

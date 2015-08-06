@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"

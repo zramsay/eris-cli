@@ -4,7 +4,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-var Version = &cobra.Command{
+var VerSion = &cobra.Command{
 	Use:   "version",
 	Short: "Display Eris's Platform Version.",
 	Long:  `Display the versions of what your platform.`,

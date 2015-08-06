@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/files"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -89,20 +89,16 @@ var filesCached = &cobra.Command{
 // cli flags
 
 func Get(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "eq", cmd, args))
+
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(files.GetFiles(do))
 }
 
 func Put(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "eq", cmd, args))
+
 	do.Name = args[0]
 	err := files.PutFiles(do)
 	IfExit(err)

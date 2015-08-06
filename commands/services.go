@@ -5,7 +5,7 @@ import (
 
 	srv "github.com/eris-ltd/eris-cli/services"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -278,113 +278,73 @@ func addServicesFlags() {
 // cli command wrappers
 
 func StartService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Args = args
 	IfExit(srv.StartService(do))
 }
 
 func LogService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.LogsService(do))
 }
 
 func KillService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Args = args
 	IfExit(srv.KillService(do))
 }
 
 // install
 func ImportService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(srv.ImportService(do))
 }
 
 func NewService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Args = []string{args[1]}
 	IfExit(srv.NewService(do))
 }
 
 func EditService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.EditService(do))
 }
 
 func RenameService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) != 2 {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
 	IfExit(srv.RenameService(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
-	if len(args) == 1 {
-		args = append(args, "all")
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
 	do.Name = args[0]
-	do.Args = []string{args[1]}
+	if len(args) == 1 {
+		do.Args = []string{"all"}
+	} else {
+		do.Args = []string{args[1]}
+	}
+
 	IfExit(srv.InspectService(do))
 }
 
 func ExportService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.ExportService(do))
 }
 
 // Updates an installed service, or installs it if it has not been installed.
 func UpdateService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.UpdateService(do))
 }
@@ -411,26 +371,13 @@ func ListExistingServices() {
 }
 
 func RmService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Args = args
 	IfExit(srv.RmService(do))
 }
 
 func CatService(cmd *cobra.Command, args []string) {
-	if err := checkServiceGiven(args); err != nil {
-		cmd.Help()
-		return
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.CatService(do))
-}
-
-func checkServiceGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No Service Given. Please rerun command with a known service.")
-	}
-	return nil
 }

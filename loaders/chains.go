@@ -9,7 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -54,7 +54,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
-	logger.Debugf("\twith Environment =>\t%d\n", chain.Service.Environment)
+	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
 	return chain, nil
 }
 
@@ -67,13 +67,13 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 }
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
-	chainID := chain.ChainID
+	// chainID := chain.ChainID
 	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
 	chain.Service.Image = "eris/erisdb:" + vers
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
+	setChainDefaults(chain)
 	chain.Service.Command = cmd
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)
 
 	srv := &definitions.ServiceDefinition{
 		Name:        chain.Name,
@@ -140,6 +140,8 @@ func setChainDefaults(chain *definitions.Chain) {
 	ver := strings.Join(strings.Split(version.VERSION, ".")[:2], ".") // only need 0.10 not full ver => 0.10.0
 	chain.Service.Image = "eris/erisdb:" + ver
 	chain.Service.AutoData = true
+	chain.ChainType = "mint"
+	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID, "CHAIN_TYPE="+chain.ChainType)
 	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
 }
 

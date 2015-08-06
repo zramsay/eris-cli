@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/ebuchman/go-shell-pipes"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -23,6 +23,7 @@ func ImportData(do *definitions.Do) error {
 		importPath := filepath.Join(DataContainersPath, do.Name)
 
 		// temp until docker cp works both ways.
+		logger.Debugf("Importing FROM =>\t\t%s\n", importPath)
 		os.Chdir(importPath)
 		// TODO [eb]: deal with hardcoded user
 		// TODO [csk]: drop the whole damn cmd call
@@ -37,13 +38,14 @@ func ImportData(do *definitions.Do) error {
 			do.Path = "/home/eris/.eris"
 		}
 
+		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Path)
 		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
 		_, err := pipes.RunString(cmd)
 		if err != nil {
 			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
 			_, e2 := pipes.RunString(cmd)
 			if e2 != nil {
-				return fmt.Errorf("Could not import the data container.\n\nTried with docker --rm: %v.\n Tried without docker --rm: %v.\n", err, e2)
+				return fmt.Errorf("Could not import the data container.\nTried with docker --rm =>\t%v\nTried without docker --rm =>\t%v", err, e2)
 			}
 		}
 	} else {

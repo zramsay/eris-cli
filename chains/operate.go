@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -14,7 +15,9 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
@@ -30,7 +33,7 @@ func NewChain(do *definitions.Do) error {
 			return err
 		}
 	}
-
+	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.ChainID)
 	return setupChain(do, loaders.ErisChainNew)
 }
 
@@ -112,6 +115,29 @@ func KillChain(do *definitions.Do) error {
 	return nil
 }
 
+func ThrowAwayChain(do *definitions.Do) error {
+	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
+	do.Path = filepath.Join(ChainsConfigPath, "default")
+	logger.Debugf("Making a ThrowAwayChain =>\t%s:%s\n", do.Name, do.Path)
+
+	if err := NewChain(do); err != nil {
+		return err
+	}
+
+	logger.Debugf("ThrowAwayChain created =>\t%s\n", do.Name)
+
+	// fakeId := strings.Split(uuid.New(), "-")[0]
+	// srv, err := loaders.MockChainDefinition(do.Name, fakeId, true, 1)
+	// if err != nil {
+	// 	return err
+	// }
+
+	StartChain(do)
+
+	logger.Debugf("ThrowAwayChain started =>\t%s\n", do.Name)
+	return nil
+}
+
 //------------------------------------------------------------------------
 
 // the main function for setting up a chain container
@@ -135,13 +161,15 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}
 
+	logger.Debugf("Chain's Data Contain Built =>\t%s\n", do.Name)
+
 	// if something goes wrong, cleanup
 	defer func() {
 		if err != nil {
 			logger.Infof("Error on setupChain =>\t\t%v\n", err)
 			logger.Infoln("Cleaning up...")
 			if err2 := RmChain(do); err2 != nil {
-				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t%v\nCleanup error =>\t%v\n", containerName, err, err2)
+				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
 			}
 		}
 	}()
@@ -176,7 +204,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// copy from host to container
-	if err = data.ImportData(do); err != nil {
+	logger.Debugf("Copying Files into DataCont =>\t%s:%s\n", dst, containerDst)
+	importDo := definitions.NowDo()
+	importDo.Name = do.Name
+	importDo.Operations = do.Operations
+	if err = data.ImportData(importDo); err != nil {
 		return err
 	}
 

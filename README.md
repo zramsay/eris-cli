@@ -163,6 +163,8 @@ See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service
 
 Note: The Toolbox obfuscates Kitematic in a convenient manner. 
 
+If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
+
 #### Windows
 
 If you are on Windows, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
@@ -172,6 +174,8 @@ If you do not install the Toolbox, then you will need to make sure that the `DOC
 See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
 
 Note: The Toolbox obfuscates Kitematic in a convenient manner. 
+
+If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
 
 ### Go
 

@@ -19,6 +19,8 @@ type Do struct {
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","`
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
+	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`

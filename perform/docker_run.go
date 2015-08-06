@@ -15,16 +15,16 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
+	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 // Build against Docker cli...
-//   Client version: 1.6.2
-//   Client API version: 1.18
+//   Client version: 1.6.2, 1.7
+//   Client API version: 1.18, 1.19
 // Verified against ...
-//   Client version: 1.6.2
-//   Client API version: 1.18
+//   Client version: 1.6.2, 1.7
+//   Client API version: 1.18, 1.19
 func DockerCreateDataContainer(srvName string, containerNumber int) error {
 	logger.Infof("Creating Data Container for =>\t%s\n", srvName)
 
@@ -112,7 +112,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 
 	_, running := ContainerRunning(ops)
 	if running {
-		logger.Infof("Service already Started. Skipping. Service: %s\n", srv.Name)
+		logger.Infof("Service already Started. Skipping.\n\tService Name=>\t\t%s\n", srv.Name)
 		return nil
 	}
 
@@ -220,7 +220,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		// let the logs finish
 		<-doneLogs
 
-		logger.Infof("DockerRun. Removing cont =>\t\t%s\n", id_main)
+		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
 		if err := removeContainer(id_main); err != nil {
 			return err
 		}

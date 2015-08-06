@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	"github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -21,15 +22,12 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	var logLevel int
+	var logLevel log.LogLevel
 
-	if os.Getenv("LOG_LEVEL") != "" {
-		logLevel, _ = strconv.Atoi(os.Getenv("LOG_LEVEL"))
-	} else {
-		logLevel = 0
-		// logLevel = 1
-		// logLevel = 2
-	}
+	logLevel = 0
+	// logLevel = 1
+	// logLevel = 2
+
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
 	ifExit(testsInit())
