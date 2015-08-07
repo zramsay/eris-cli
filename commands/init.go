@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris-cli/util"
+	ini "github.com/eris-ltd/eris-cli/initialize"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -15,6 +15,6 @@ and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.
 
 Pull important images; --dev flags pulls images needed for development`,
 	Run: func(cmd *cobra.Command, args []string) {
-		util.Initialize(do.Pull, do.Verbose, do.Dev)
+		ini.Initialize(do.Pull, do.Verbose, do.Dev)
 	},
 }
