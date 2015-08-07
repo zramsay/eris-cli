@@ -10,6 +10,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/log"
 	"github.com/eris-ltd/eris-cli/definitions"
+	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -145,12 +146,12 @@ func testsInit() error {
 	// run correctly.
 	util.ChangeErisDir(erisDir)
 
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	ifExit(util.Initialize(false, false, false))
-
 	// init dockerClient
 	util.DockerConnect(false)
+
+	// this dumps the ipfs service def into the temp dir which
+	// has been set as the erisRoot
+	ifExit(ini.Initialize(false, false, false))
 
 	return nil
 }
