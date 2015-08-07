@@ -7,6 +7,7 @@ type Do struct {
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	SkipPull      bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	SkipImages    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`

@@ -92,6 +92,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	Init.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature; for when git is not installed")
 	Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
+	Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")
 }
 
 func InitializeConfig() {

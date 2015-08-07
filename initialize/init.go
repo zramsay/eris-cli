@@ -9,7 +9,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 )
 
-func Initialize(toPull, verbose, dev bool) error {
+func Initialize(toPull, skipImages, verbose, dev bool) error {
+
 	if _, err := os.Stat(common.ErisRoot); err != nil {
 		if err := common.InitErisDir(); err != nil {
 			return fmt.Errorf("Could not Initialize the Eris Root Directory.\n%s\n", err)
@@ -28,38 +29,40 @@ func Initialize(toPull, verbose, dev bool) error {
 		fmt.Printf("Initialized eris root directory (%s) with default actions and service files.\n", common.ErisRoot)
 	}
 
-	//pull images
-	argsAll := []string{}
-	argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/eth"}
-	argsDev := []string{
-		"erisindustries/evm_compilers",
-		"eris/compilers",
-		"erisindustries/node",
-		"erisindustries/python",
-		"erisindustries/gulp",
-		"erisindustries/embark_base",
-		"erisindustries/sunit_base",
-		"erisindustries/pyepm_base",
-	}
+	if !skipImages {
+		//pull images
+		argsAll := []string{}
+		argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/eth"}
+		argsDev := []string{
+			"erisindustries/evm_compilers",
+			"eris/compilers",
+			"erisindustries/node",
+			"erisindustries/python",
+			"erisindustries/gulp",
+			"erisindustries/embark_base",
+			"erisindustries/sunit_base",
+			"erisindustries/pyepm_base",
+		}
 
-	fmt.Println("Pulling base images...")
+		fmt.Println("Pulling base images...")
 
-	if !dev {
-		argsAll = argsDef
-	} else {
-		fmt.Println("...and development images")
-		argsAll = append(argsDef, argsDev...)
-	}
+		if !dev {
+			argsAll = argsDef
+		} else {
+			fmt.Println("...and development images")
+			argsAll = append(argsDef, argsDev...)
+		}
 
-	fmt.Println("This could take awhile, now is a good time to feed your marmot")
-	for _, img := range argsAll {
-		srv := definitions.BlankService()
-		srv.Image = img
-		ops := definitions.BlankOperation()
-		err := perform.DockerPull(srv, ops)
-		if err != nil {
-			fmt.Println("An error occured pulling the images: ", err)
-			return err
+		fmt.Println("This could take awhile, now is a good time to feed your marmot")
+		for _, img := range argsAll {
+			srv := definitions.BlankService()
+			srv.Image = img
+			ops := definitions.BlankOperation()
+			err := perform.DockerPull(srv, ops)
+			if err != nil {
+				fmt.Println("An error occured pulling the images: ", err)
+				return err
+			}
 		}
 	}
 	// todo: when called from cli provide option to go on tour, like `ipfs tour`
