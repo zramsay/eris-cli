@@ -190,20 +190,14 @@ func GetFileByNameAndType(typ, name string) string {
 // Helper functions
 
 func IPFSBaseGatewayUrl() string {
-	var host string
-	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
-		host = "http://ipfs"
-	} else {
-		if os.Getenv("ERIS_IPFS_HOST") != "" {
-			host = os.Getenv("ERIS_IPFS_HOST")
-		} else {
-			host = GetConfigValue("IpfsHost")
-		}
-	}
-	return host + ":8080/ipfs/"
+	return IPFSUrl() + ":8080/ipfs/"
 }
 
 func IPFSBaseAPIUrl() string {
+	return IPFSUrl() + ":5001/api/v0/"
+}
+
+func IPFSUrl() string {
 	var host string
 	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
 		host = "http://ipfs"
@@ -214,7 +208,7 @@ func IPFSBaseAPIUrl() string {
 			host = GetConfigValue("IpfsHost")
 		}
 	}
-	return host + ":5001/api/v0/"
+	return host
 }
 
 var timeout = time.Duration(10 * time.Second)
