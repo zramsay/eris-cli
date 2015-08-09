@@ -339,7 +339,13 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	if err := ini.Initialize(false, false, false, false); err != nil {
+	var skipImages bool
+	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		skipImages = true
+	} else {
+		skipImages = false
+	}
+	if err := ini.Initialize(false, skipImages, false, false); err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
