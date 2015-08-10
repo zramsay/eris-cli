@@ -4,12 +4,12 @@ type ServiceDefinition struct {
 	// name of the service
 	Name string `json:"name" yaml:"name" toml:"name"`
 	// id of the service
-	ServiceID string `mapstructure:"service_id" json:"service_id" yaml:"service_id" toml:"service_id"`
+	ServiceID string `mapstructure:"service_id,omitempty" json:"service_id,omitempty" yaml:"service_id,omitempty" toml:"service_id,omitempty"`
 	// array of strings of other services which should be started prior to this service starting
 	ServiceDeps []string `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
 	// a chain which must be started prior to this service starting. can take a `$chain` string
 	// which would then be passed in via a command line flag
-	Chain string `json:"chain" yaml:"chain" toml:"chain"`
+	Chain string `json:"chain,omitempty" yaml:"chain,omitempty" toml:"chain,omitempty"`
 
 	Service    *Service    `json:"service" yaml:"service" toml:"service"`
 	Maintainer *Maintainer `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`

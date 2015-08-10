@@ -127,6 +127,7 @@ func RenameService(do *definitions.Do) error {
 		}
 
 		serviceDef.Service.Name = strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
+		serviceDef.Name = serviceDef.Service.Name
 		err = WriteServiceDefinitionFile(serviceDef, newFile)
 		if err != nil {
 			return err

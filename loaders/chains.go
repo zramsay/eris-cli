@@ -68,9 +68,9 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	chainID := chain.ChainID
-
+	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
-	chain.Service.Image = "eris/erisdb:" + version.VERSION
+	chain.Service.Image = "eris/erisdb:" + vers
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
 	chain.Service.Command = cmd
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chainID)

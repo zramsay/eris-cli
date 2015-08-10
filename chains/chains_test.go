@@ -14,6 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
@@ -75,6 +76,48 @@ func TestNewChain(t *testing.T) {
 		fmt.Println(e)
 		t.Fail()
 	}
+}
+
+func TestChainGraduate(t *testing.T) {
+
+	do := def.NowDo()
+	do.Name = chainName
+	logger.Infof("Graduating chain (from tests) ==>\t%s\n", do.Name)
+	g := GraduateChain(do)
+	if g != nil {
+		fmt.Println(g)
+		t.FailNow()
+	}
+
+	srvDef, err := loaders.LoadServiceDefinition("etcb_testnet", false, 1)
+	if err != nil {
+		logger.Errorln(err)
+		t.Fail()
+	}
+
+	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
+	image := "eris/erisdb:" + vers
+	if srvDef.Service.Image != image {
+		logger.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image)
+		t.Fail()
+	}
+
+	if srvDef.Service.Command != loaders.ErisChainStart {
+		logger.Errorf("FAILURE: improper service command on GRADUATE. expected: %s\tgot: %s\n", loaders.ErisChainStart, srvDef.Service.Command)
+		t.Fail()
+	}
+
+	if !srvDef.Service.AutoData {
+		logger.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData)
+		t.Fail()
+	}
+
+	if len(srvDef.ServiceDeps) != 1 {
+		logger.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps)
+		t.Fail()
+	}
+
+	//	testExistAndRun(t, chainName, true, true)
 }
 
 func TestLoadChainDefinition(t *testing.T) {
@@ -339,13 +382,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	var skipImages bool
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		skipImages = true
-	} else {
-		skipImages = false
-	}
-	if err := ini.Initialize(false, skipImages, false, false); err != nil {
+	if err := ini.Initialize(false, true, false, false); err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 

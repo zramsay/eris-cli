@@ -480,13 +480,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	var skipImages bool
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		skipImages = true
-	} else {
-		skipImages = false
-	}
-	ifExit(ini.Initialize(false, skipImages, false, false))
+	ifExit(ini.Initialize(false, true, false, false))
 
 	// set ipfs endpoint
 	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
@@ -523,6 +517,7 @@ func testsInit() error {
 
 func testsTearDown() error {
 	return os.RemoveAll(erisDir)
+	// return nil
 }
 
 func ifExit(err error) {
