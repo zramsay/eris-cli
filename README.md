@@ -155,15 +155,23 @@ At the current time, `eris` requires `docker` >= 1.6. You can check your docker 
 
 #### OSX
 
-If you are on OSX, we **strongly recommend** that you install Docker via [Kitematic](https://kitematic.com/). Kitematic will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
+If you are on OSX, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
 
-If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+
+See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
+
+Note: The Toolbox obfuscates Kitematic in a convenient manner. 
 
 #### Windows
 
-If you are on Windows, we **strongly recommend** that you install Docker via [Kitematic](https://kitematic.com/). Kitematic will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
+If you are on Windows, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
 
-If you do not use Kitematic, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+
+See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
+
+Note: The Toolbox obfuscates Kitematic in a convenient manner. 
 
 ### Go
 
