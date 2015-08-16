@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/util"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common"
 )
 
 func Initialize(toPull, skipImages, verbose, dev bool) error {
@@ -21,6 +23,10 @@ func Initialize(toPull, skipImages, verbose, dev bool) error {
 		}
 	}
 
+	if err := util.CheckDockerClient(); err != nil {
+		return err
+	}
+
 	if err := InitDefaultServices(toPull, verbose); err != nil {
 		return fmt.Errorf("Could not instantiate default services.\n%s\n", err)
 	}
@@ -32,7 +38,7 @@ func Initialize(toPull, skipImages, verbose, dev bool) error {
 	if !skipImages {
 		//pull images
 		argsAll := []string{}
-		argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/eth"}
+		argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/data"}
 		argsDev := []string{
 			"erisindustries/evm_compilers",
 			"eris/compilers",
@@ -70,6 +76,10 @@ func Initialize(toPull, skipImages, verbose, dev bool) error {
 }
 
 func InitDefaultServices(toPull, verbose bool) error {
+	if err := dropChainDefaults(); err != nil {
+		return err
+	}
+
 	if toPull {
 		if err := pullRepo("eris-services", common.ServicesPath, verbose); err != nil {
 			if verbose {
@@ -88,5 +98,6 @@ func InitDefaultServices(toPull, verbose bool) error {
 			return err
 		}
 	}
+
 	return nil
 }

@@ -1,9 +1,7 @@
 package initialize
 
-import ()
-
 func defKeys() string {
-	return `[service]
+  return `[service]
 name = "keys"
 
 image = "eris/keys"
@@ -12,7 +10,7 @@ data_container = true
 }
 
 func defIpfs() string {
-	return `name = "ipfs"
+  return `name = "ipfs"
 
 [service]
 name = "ipfs"
@@ -34,152 +32,8 @@ requires = [""]
 `
 }
 
-func defEdb() string {
-	// TODO: remove this. we should be hard coding these defaults...
-	return `[service]
-name           = "erisdb"
-image          = "eris/erisdb:develop"
-ports          = [ "46656", "46657" ]
-environment    = [ "TMROOT=/home/eris/.eris/blockchains/tendermint" ]
-data_container = true
-
-[manager]
-fetch = "tendermint node --fast_sync" # we'd like this to stop when caught up!
-start = "tendermint node"
-new   = "tendermint node && last_pid=$! && sleep(1) && kill -KILL $last_pid"
-
-[maintainer]
-name  = "Eris Industries"
-email = "support@erisindustries.com"
-
-[location]
-repository = "github.com/eris-ltd/eris-services"
-
-[machine]
-include  = [ "docker" ]
-requires = [ "" ]
-`
-}
-
-func defGen() string {
-	return `{
-  "genesis_time": "Wed Jun 24 21:54:02 +0000 2015",
-  "chain_id": "etcb_testnet",
-  "accounts": [
-    {
-      "address": "F3C0A608D9D942AF61A294CFF248F18A90A7A00A",
-      "amount": 200000000
-    },
-    {
-      "address": "BBFA7E58C4AB496FB4EEA429C76BE15678EEB189",
-      "amount": 200000000
-    },
-    {
-      "address": "F81CB9ED0A868BD961C4F5BBC0E39B763B89FCB6",
-      "amount": 200000000
-    },
-    {
-      "address": "1AC99AC0F9F321ADB73525DB2B4CB9D741BC7A97",
-      "amount": 200000000
-    },
-    {
-      "address": "BB8B65F1FC9EE8F90EE91EC74C80332D3EE589FA",
-      "amount": 200000000
-    },
-    {
-      "address": "964B1493BBE3312278B7DEB94C39149F7899A345",
-      "amount": 200000000
-    },
-    {
-      "address": "01101C8AA9C74021599B787729E018EC7AA1EB03",
-      "amount": 200000000
-    },
-    {
-      "address": "38277CF570DFA8EA77130EFBA6DD55C4E143C9C0",
-      "amount": 200000000
-    },
-    {
-      "address": "9F74F1ACCAE15B8D63E1BD0ED67C9D3A3EA71894",
-      "amount": 200000000
-    },
-    {
-      "address": "E0F8B081950D07C7FACE52E0AA740AC67A2D75EB",
-      "amount": 200000000
-    }
-  ],
-  "validators": [
-    {
-      "pub_key": [
-        1,
-        "F6C79CF0CB9D66B677988BCB9B8EADD9A091CD465A60542A8AB85476256DBA92"
-      ],
-      "amount": 1000000,
-      "unbond_to": [
-        {
-          "address": "964B1493BBE3312278B7DEB94C39149F7899A345",
-          "amount": 1000000
-        }
-      ]
-    },
-    {
-      "pub_key": [
-        1,
-        "E15E88C226C5AEFF0597B4E71C9FEBF620538795C34CCCEB13D3CFECA8F6157B"
-      ],
-      "amount": 1000000,
-      "unbond_to": [
-        {
-          "address": "01101C8AA9C74021599B787729E018EC7AA1EB03",
-          "amount": 1000000
-        }
-      ]
-    },
-    {
-      "pub_key": [
-        1,
-        "388180AC9AAF0C9A624DC0BC397A0FC0416E1713CD9181E41E8096DF5B6686FC"
-      ],
-      "amount": 1000000,
-      "unbond_to": [
-        {
-          "address": "38277CF570DFA8EA77130EFBA6DD55C4E143C9C0",
-          "amount": 1000000
-        }
-      ]
-    },
-    {
-      "pub_key": [
-        1,
-        "A0B0501D148232AD06BF9C57361FE35B490E2920A7622F2840F88D4097B7ECB3"
-      ],
-      "amount": 1000000,
-      "unbond_to": [
-        {
-          "address": "9F74F1ACCAE15B8D63E1BD0ED67C9D3A3EA71894",
-          "amount": 1000000
-        }
-      ]
-    },
-    {
-      "pub_key": [
-        1,
-        "6ED22473414B8DA547F5C781ADB12FB05BC6989A28BC0FADDA86D9831306F83C"
-      ],
-      "amount": 1000000,
-      "unbond_to": [
-        {
-          "address": "E0F8B081950D07C7FACE52E0AA740AC67A2D75EB",
-          "amount": 1000000
-        }
-      ]
-    }
-  ]
-}
-`
-}
-
 func defAct() string {
-	return `name = "do not use"
+  return `name = "do not use"
 services = [ "ipfs" ]
 chain = ""
 steps = [
@@ -201,5 +55,123 @@ repository = "github.com/eris-ltd/eris-cli"
 [machine]
 include = ["docker"]
 requires = [""]
+`
+}
+
+func defChainConfig() string {
+  return `
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+moniker = "defaulttester.com"
+seeds = ""
+fast_sync = false
+db_backend = "leveldb"
+log_level = "debug"
+node_laddr = ""
+rpc_laddr = ""
+`
+}
+
+func defChainGen() string {
+  return `
+{
+  "chain_id": "my_tests",
+  "accounts": [
+    {
+      "address": "F81CB9ED0A868BD961C4F5BBC0E39B763B89FCB6",
+      "amount": 690000000000
+    },
+    {
+      "address": "0000000000000000000000000000000000000002",
+      "amount": 565000000000
+    },
+    {
+      "address": "9E54C9ECA9A3FD5D4496696818DA17A9E17F69DA",
+      "amount": 525000000000
+    },
+    {
+      "address": "0000000000000000000000000000000000000004",
+      "amount": 110000000000
+    },
+    {
+      "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
+      "amount": 110000000000
+    }
+  ],
+  "validators": [
+    {
+      "pub_key": [
+        1,
+        "CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"
+      ],
+      "amount": 5000000000,
+      "unbond_to": [
+        {
+          "address": "93E243AC8A01F723DE353A4FA1ED911529CCB6E5",
+          "amount": 5000000000
+        }
+      ]
+    }
+  ]
+}
+`
+}
+
+func defChainKeys() string {
+  return `
+{
+  "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
+  "pub_key": [
+    1,
+    "CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"
+  ],
+  "priv_key": [
+    1,
+    "6B72D45EB65F619F11CE580C8CAED9E0BADC774E9C9C334687A65DCBAD2C4151CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"
+  ],
+  "last_height": 0,
+  "last_round": 0,
+  "last_step": 0
+}
+`
+}
+
+func defChainServConfig() string {
+  return `
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+[bind]
+address=""
+port=1337
+
+[TLS]
+tls=false
+cert_path=""
+key_path=""
+
+[CORS]
+enable=false
+allow_origins=[]
+allow_credentials=false
+allow_methods=[]
+allow_headers=[]
+expose_headers=[]
+max_age=0
+
+[HTTP]
+json_rpc_endpoint="/rpc"
+
+[web_socket]
+websocket_endpoint="/socketrpc"
+max_websocket_sessions=50
+read_buffer_size=2048
+write_buffer_size=2048
+
+[logging]
+console_log_level="info"
+file_log_level="warn"
+log_file=""
 `
 }

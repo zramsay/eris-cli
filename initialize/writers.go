@@ -23,91 +23,45 @@ func pullRepo(name, location string, verbose bool) error {
 }
 
 func dropDefaults() error {
-	if err := keysDef(); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defKeys); err != nil {
 		return fmt.Errorf("Cannot add keys: %s.\n", err)
 	}
-	if err := ipfsDef(); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defIpfs); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
-	// if err := edbDef(); err != nil {
-	// 	return fmt.Errorf("Cannot add erisdb: %s.\n", err)
-	// }
-	if err := genDef(); err != nil {
-		return fmt.Errorf("Cannot add default genesis: %s.\n", err)
-	}
-	if err := actDef(); err != nil {
+	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
 		return fmt.Errorf("Cannot add default action: %s.\n", err)
 	}
 	return nil
 }
 
-func keysDef() error {
-	if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
-		return err
+func dropChainDefaults() error {
+	defChainDir := filepath.Join(common.BlockchainsPath, "config", "default")
+	if err := writeDefaultFile(defChainDir, "config.toml", defChainConfig); err != nil {
+		return fmt.Errorf("Cannot add default config.toml: %s.\n", err)
 	}
-	writer, err := os.Create(filepath.Join(common.ServicesPath, "keys.toml"))
-	defer writer.Close()
-	if err != nil {
-		return err
+	if err := writeDefaultFile(defChainDir, "genesis.json", defChainGen); err != nil {
+		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
-	keysD := defKeys()
-	writer.Write([]byte(keysD))
+	if err := writeDefaultFile(defChainDir, "priv_validator.json", defChainKeys); err != nil {
+		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
+	}
+	if err := writeDefaultFile(defChainDir, "server_conf.toml", defChainServConfig); err != nil {
+		return fmt.Errorf("Cannot add default server_conf.toml: %s.\n", err)
+	}
 	return nil
 }
 
-func ipfsDef() error {
-	if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
+func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
+	if err := os.MkdirAll(savePath, 0777); err != nil {
 		return err
 	}
-	writer, err := os.Create(filepath.Join(common.ServicesPath, "ipfs.toml"))
+	writer, err := os.Create(filepath.Join(savePath, fileName))
 	defer writer.Close()
 	if err != nil {
 		return err
 	}
-	ipfsD := defIpfs()
-	writer.Write([]byte(ipfsD))
-	return nil
-}
-
-func edbDef() error {
-	if err := os.MkdirAll(common.ServicesPath, 0777); err != nil {
-		return err
-	}
-	writer, err := os.Create(filepath.Join(common.ServicesPath, "erisdb.toml"))
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	edbD := defEdb()
-	writer.Write([]byte(edbD))
-	return nil
-}
-
-func genDef() error {
-	genPath := filepath.Join(common.BlockchainsPath, "genesis")
-	if err := os.MkdirAll(genPath, 0777); err != nil {
-		return err
-	}
-	writer, err := os.Create(filepath.Join(genPath, "default.json"))
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	gen := defGen()
-	writer.Write([]byte(gen))
-	return nil
-}
-
-func actDef() error {
-	if err := os.MkdirAll(common.ActionsPath, 0777); err != nil {
-		return err
-	}
-	writer, err := os.Create(filepath.Join(common.ActionsPath, "do_not_use.toml"))
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	act := defAct()
-	writer.Write([]byte(act))
+	def := toWrite()
+	writer.Write([]byte(def))
 	return nil
 }
