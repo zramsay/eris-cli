@@ -379,7 +379,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	if err := ini.Initialize(false, true, false, false); err != nil {
+	if err := ini.Initialize(false, false, false); err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
