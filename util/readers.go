@@ -3,7 +3,9 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -131,6 +133,15 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 	_, err = io.Copy(output, response.Body)
 	if err != nil {
 		return err
+	}
+
+	body, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+
+	if string(body) == "Path Resolve error: context deadline exceeded" {
+		return fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
 	}
 
 	return nil

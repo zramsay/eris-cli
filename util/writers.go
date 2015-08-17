@@ -57,6 +57,10 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 			return []byte(errs.Message), nil
 		}
 	}
+
+	if string(body) == "Path Resolve error: context deadline exceeded" {
+		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
+	}
 	return body, nil
 }
 
