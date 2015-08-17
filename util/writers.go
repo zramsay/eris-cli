@@ -3,11 +3,12 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/vendor/github.com/docker/docker/pkg/archive"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
 )
 
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {

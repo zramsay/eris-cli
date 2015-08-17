@@ -29,7 +29,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "173db66165099bf237ecf7d20c22239aadc1f3af"
+			"Rev": "42d06e2b125654477366c320dcea99107a86e9c2"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
@@ -72,7 +72,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/cobra",
-			"Rev": "385fc87e4343efec233811d3d933509e8975d11a"
+			"Rev": "db0518444643a7b170abb78164bbeaf5a2bb816f"
 		},
 		{
 			"ImportPath": "github.com/spf13/jwalterweatherman",
@@ -80,11 +80,11 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
-			"Rev": "67cbc198fd11dab704b214c1e629a97af392c085"
+			"Rev": "112aaa578dfdd0e913663b05153be974bd72497a"
 		},
 		{
 			"ImportPath": "github.com/spf13/viper",
-			"Rev": "db7ff930a189b98d602179d9001d33345f42b8c7"
+			"Rev": "9fca10189b1307bba68b2cd487dd93da0bfbda06"
 		},
 		{
 			"ImportPath": "github.com/tcnksm/go-gitconfig",

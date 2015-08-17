@@ -128,12 +128,23 @@ type PortMapping map[string]string
 
 // NetworkSettings contains network-related information about a container
 type NetworkSettings struct {
-	IPAddress   string                 `json:"IPAddress,omitempty" yaml:"IPAddress,omitempty"`
-	IPPrefixLen int                    `json:"IPPrefixLen,omitempty" yaml:"IPPrefixLen,omitempty"`
-	Gateway     string                 `json:"Gateway,omitempty" yaml:"Gateway,omitempty"`
-	Bridge      string                 `json:"Bridge,omitempty" yaml:"Bridge,omitempty"`
-	PortMapping map[string]PortMapping `json:"PortMapping,omitempty" yaml:"PortMapping,omitempty"`
-	Ports       map[Port][]PortBinding `json:"Ports,omitempty" yaml:"Ports,omitempty"`
+	IPAddress              string                 `json:"IPAddress,omitempty" yaml:"IPAddress,omitempty"`
+	IPPrefixLen            int                    `json:"IPPrefixLen,omitempty" yaml:"IPPrefixLen,omitempty"`
+	MacAddress             string                 `json:"MacAddress,omitempty" yaml:"MacAddress,omitempty"`
+	Gateway                string                 `json:"Gateway,omitempty" yaml:"Gateway,omitempty"`
+	Bridge                 string                 `json:"Bridge,omitempty" yaml:"Bridge,omitempty"`
+	PortMapping            map[string]PortMapping `json:"PortMapping,omitempty" yaml:"PortMapping,omitempty"`
+	Ports                  map[Port][]PortBinding `json:"Ports,omitempty" yaml:"Ports,omitempty"`
+	NetworkID              string                 `json:"NetworkID,omitempty" yaml:"NetworkID,omitempty"`
+	EndpointID             string                 `json:"EndpointID,omitempty" yaml:"EndpointID,omitempty"`
+	SandboxKey             string                 `json:"SandboxKey,omitempty" yaml:"SandboxKey,omitempty"`
+	GlobalIPv6Address      string                 `json:"GlobalIPv6Address,omitempty" yaml:"GlobalIPv6Address,omitempty"`
+	GlobalIPv6PrefixLen    int                    `json:"GlobalIPv6PrefixLen,omitempty" yaml:"GlobalIPv6PrefixLen,omitempty"`
+	IPv6Gateway            string                 `json:"IPv6Gateway,omitempty" yaml:"IPv6Gateway,omitempty"`
+	LinkLocalIPv6Address   string                 `json:"LinkLocalIPv6Address,omitempty" yaml:"LinkLocalIPv6Address,omitempty"`
+	LinkLocalIPv6PrefixLen int                    `json:"LinkLocalIPv6PrefixLen,omitempty" yaml:"LinkLocalIPv6PrefixLen,omitempty"`
+	SecondaryIPAddresses   []string               `json:"SecondaryIPAddresses,omitempty" yaml:"SecondaryIPAddresses,omitempty"`
+	SecondaryIPv6Addresses []string               `json:"SecondaryIPv6Addresses,omitempty" yaml:"SecondaryIPv6Addresses,omitempty"`
 }
 
 // PortMappingAPI translates the port mappings as contained in NetworkSettings
@@ -252,6 +263,7 @@ type Container struct {
 	ResolvConfPath string `json:"ResolvConfPath,omitempty" yaml:"ResolvConfPath,omitempty"`
 	HostnamePath   string `json:"HostnamePath,omitempty" yaml:"HostnamePath,omitempty"`
 	HostsPath      string `json:"HostsPath,omitempty" yaml:"HostsPath,omitempty"`
+	LogPath        string `json:"LogPath,omitempty" yaml:"LogPath,omitempty"`
 	Name           string `json:"Name,omitempty" yaml:"Name,omitempty"`
 	Driver         string `json:"Driver,omitempty" yaml:"Driver,omitempty"`
 
@@ -329,8 +341,8 @@ func (c *Client) ContainerChanges(id string) ([]Change, error) {
 // See http://goo.gl/2xxQQK for more details.
 type CreateContainerOptions struct {
 	Name       string
-	Config     *Config `qs:"-"`
-	HostConfig *HostConfig
+	Config     *Config     `qs:"-"`
+	HostConfig *HostConfig `qs:"-"`
 }
 
 // CreateContainer creates a new container, returning the container instance,
@@ -632,20 +644,24 @@ type Stats struct {
 		IOTimeRecursive         []BlkioStatsEntry `json:"io_time_recursive,omitempty" yaml:"io_time_recursive,omitempty"`
 		SectorsRecursive        []BlkioStatsEntry `json:"sectors_recursive,omitempty" yaml:"sectors_recursive,omitempty"`
 	} `json:"blkio_stats,omitempty" yaml:"blkio_stats,omitempty"`
-	CPUStats struct {
-		CPUUsage struct {
-			PercpuUsage       []uint64 `json:"percpu_usage,omitempty" yaml:"percpu_usage,omitempty"`
-			UsageInUsermode   uint64   `json:"usage_in_usermode,omitempty" yaml:"usage_in_usermode,omitempty"`
-			TotalUsage        uint64   `json:"total_usage,omitempty" yaml:"total_usage,omitempty"`
-			UsageInKernelmode uint64   `json:"usage_in_kernelmode,omitempty" yaml:"usage_in_kernelmode,omitempty"`
-		} `json:"cpu_usage,omitempty" yaml:"cpu_usage,omitempty"`
-		SystemCPUUsage uint64 `json:"system_cpu_usage,omitempty" yaml:"system_cpu_usage,omitempty"`
-		ThrottlingData struct {
-			Periods          uint64 `json:"periods,omitempty"`
-			ThrottledPeriods uint64 `json:"throttled_periods,omitempty"`
-			ThrottledTime    uint64 `json:"throttled_time,omitempty"`
-		} `json:"throttling_data,omitempty" yaml:"throttling_data,omitempty"`
-	} `json:"cpu_stats,omitempty" yaml:"cpu_stats,omitempty"`
+	CPUStats    CPUStats `json:"cpu_stats,omitempty" yaml:"cpu_stats,omitempty"`
+	PreCPUStats CPUStats `json:"precpu_stats,omitempty"`
+}
+
+// CPUStats is a stats entry for cpu stats
+type CPUStats struct {
+	CPUUsage struct {
+		PercpuUsage       []uint64 `json:"percpu_usage,omitempty" yaml:"percpu_usage,omitempty"`
+		UsageInUsermode   uint64   `json:"usage_in_usermode,omitempty" yaml:"usage_in_usermode,omitempty"`
+		TotalUsage        uint64   `json:"total_usage,omitempty" yaml:"total_usage,omitempty"`
+		UsageInKernelmode uint64   `json:"usage_in_kernelmode,omitempty" yaml:"usage_in_kernelmode,omitempty"`
+	} `json:"cpu_usage,omitempty" yaml:"cpu_usage,omitempty"`
+	SystemCPUUsage uint64 `json:"system_cpu_usage,omitempty" yaml:"system_cpu_usage,omitempty"`
+	ThrottlingData struct {
+		Periods          uint64 `json:"periods,omitempty"`
+		ThrottledPeriods uint64 `json:"throttled_periods,omitempty"`
+		ThrottledTime    uint64 `json:"throttled_time,omitempty"`
+	} `json:"throttling_data,omitempty" yaml:"throttling_data,omitempty"`
 }
 
 // BlkioStatsEntry is a stats entry for blkio_stats
@@ -665,6 +681,8 @@ type StatsOptions struct {
 	Stream bool
 	// A flag that enables stopping the stats operation
 	Done <-chan bool
+	// Initial connection timeout
+	Timeout time.Duration
 }
 
 // Stats sends container statistics for the given container to the given channel.
@@ -701,6 +719,7 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 			rawJSONStream:  true,
 			useJSONDecoder: true,
 			stdout:         writeCloser,
+			timeout:        opts.Timeout,
 		})
 		if err != nil {
 			dockerError, ok := err.(*Error)
@@ -717,6 +736,18 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 		close(errC)
 	}()
 
+	quit := make(chan struct{})
+	defer close(quit)
+	go func() {
+		// block here waiting for the signal to stop function
+		select {
+		case <-opts.Done:
+			readCloser.Close()
+		case <-quit:
+			return
+		}
+	}()
+
 	decoder := json.NewDecoder(readCloser)
 	stats := new(Stats)
 	for err := decoder.Decode(&stats); err != io.EOF; err = decoder.Decode(stats) {
@@ -725,12 +756,6 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 		}
 		opts.Stats <- stats
 		stats = new(Stats)
-		select {
-		case <-opts.Done:
-			readCloser.Close()
-		default:
-			// Continue
-		}
 	}
 	return nil
 }
@@ -940,6 +965,7 @@ type LogsOptions struct {
 	Follow       bool
 	Stdout       bool
 	Stderr       bool
+	Since        int64
 	Timestamps   bool
 	Tail         string
 
