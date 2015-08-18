@@ -34,7 +34,7 @@ RUN chmod +x /usr/local/bin/go-wrapper
 # DOCKER
 RUN mkdir -p /var/log/supervisor
 RUN mkdir -p /var/log/docker
-COPY ./specs/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./agent/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9 \
@@ -58,7 +58,7 @@ RUN mkdir --parents /go/src/github.com/eris-ltd/eris-cli
 COPY . /go/src/github.com/eris-ltd/eris-cli/
 RUN cd /go/src/github.com/eris-ltd/eris-cli/cmd/eris && go install
 
-COPY ./specs/test.sh /home/$USER/
+COPY ./tests/test.sh /home/$USER/
 WORKDIR /home/$USER
 
 # CMD eris agent
