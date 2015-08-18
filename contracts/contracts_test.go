@@ -68,7 +68,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(ini.Initialize(false, false, false))
+	ifExit(ini.Initialize(true, false))
 
 	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil

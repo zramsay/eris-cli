@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-func Initialize(toPull, verbose, dev bool) error {
+func Initialize(skipPull, verbose bool) error {
 
 	if _, err := os.Stat(common.ErisRoot); err != nil {
 		if err := common.InitErisDir(); err != nil {
@@ -27,7 +27,7 @@ func Initialize(toPull, verbose, dev bool) error {
 		return err
 	}
 
-	if err := InitDefaultServices(toPull, verbose); err != nil {
+	if err := InitDefaultServices(skipPull, verbose); err != nil {
 		return fmt.Errorf("Could not instantiate default services.\n%s\n", err)
 	}
 
@@ -36,7 +36,7 @@ func Initialize(toPull, verbose, dev bool) error {
 	}
 
 	// lets not pull any by default. this will spread out the get started pain
-	// if toPull {
+	// if skipPull {
 	// 	//pull images
 	// 	argsAll := []string{}
 	// 	argsDef := []string{"eris/keys", "eris/ipfs", "eris/erisdb", "eris/data"}
@@ -76,12 +76,12 @@ func Initialize(toPull, verbose, dev bool) error {
 	return nil
 }
 
-func InitDefaultServices(toPull, verbose bool) error {
+func InitDefaultServices(skipPull, verbose bool) error {
 	if err := dropChainDefaults(); err != nil {
 		return err
 	}
 
-	if toPull {
+	if !skipPull {
 		if err := pullRepo("eris-services", common.ServicesPath, verbose); err != nil {
 			if verbose {
 				fmt.Println("Using default defs.")
