@@ -10,11 +10,8 @@ The Distributed Application Platform.
 
 Install Docker.
 
-```bash
+```
 go get github.com/eris-ltd/eris-cli/cmd/eris
-# TODO:::: remove next 2 lines post merge to master
-cd $GOPATH/src/github.com/eris-ltd/eris-cli/cmd/eris
-git checkout develop && go install
 eris init
 ```
 
@@ -88,7 +85,7 @@ How many binaries can even superusers with dev experience be expected to compile
 
 It has been this journey which has led us directly to the many design and implementation details behind the first thing we've actually felt comfortable naming:
 
-```bash
+```
 eris
 ```
 
@@ -161,7 +158,7 @@ If you do not install the Toolbox, then you will need to make sure that the `DOC
 
 See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
 
-Note: The Toolbox obfuscates Kitematic in a convenient manner. 
+Note: The Toolbox obfuscates Kitematic in a convenient manner.
 
 If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
 
@@ -173,7 +170,7 @@ If you do not install the Toolbox, then you will need to make sure that the `DOC
 
 See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
 
-Note: The Toolbox obfuscates Kitematic in a convenient manner. 
+Note: The Toolbox obfuscates Kitematic in a convenient manner.
 
 If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
 
@@ -185,12 +182,8 @@ At the current time, `eris` requires `go` >= 1.4. You can check your go version 
 
 ## Install Eris
 
-```bash
-go get github.com/eris-ltd/eris-cli
-# there will be an error here about no buildable go files. ignore that.
-# TODO: remove next two lines post merge to master
-cd $GOPATH/src/github.com/eris-ltd/eris-cli/cmd/eris
-git checkout develop && go install
+```
+go get github.com/eris-ltd/eris-cli/cmd/eris
 eris init
 ```
 
@@ -204,7 +197,7 @@ Eris allows you to make and develop against numerous blockchains. You can
 
 [For a further overview of this tool, please see here.](http://www.slideshare.net/CaseyKuhlman/erisplatform-introduction) or simply type:
 
-```bash
+```
 eris
 ```
 
@@ -237,7 +230,7 @@ Services work from a base of **service definition files**. These files are held 
 
 To see the various ways in which `eris` can interact with services, please type:
 
-```bash
+```
 eris services
 ```
 
@@ -249,7 +242,7 @@ Chains hardcode most of the service starting criteria, but still allow for some 
 
 To see the various ways in which `eris` can help you develop blockchains, please type:
 
-```bash
+```
 eris chains
 ```
 
@@ -266,7 +259,7 @@ Actions work from a base of **action definition files**. These files are held on
 
 To see the various ways in which `eris` can interact with actions, please type:
 
-```bash
+```
 eris actions
 ```
 
@@ -276,7 +269,7 @@ Eris can automagically utilize [data containers](http://container42.com/2014/11/
 
 To see the various ways in which `eris` can help you manage your data containers, please type:
 
-```bash
+```
 eris data
 ```
 
@@ -286,7 +279,7 @@ Eris has a pretty handy wrapper around IPFS which is useful for quick file shari
 
 To see the various ways in which `eris` can help you with distributed file sharing, please type:
 
-```bash
+```
 eris files
 ```
 
