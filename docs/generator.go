@@ -16,7 +16,7 @@ import (
 
 const RENDER_DIR = "./docs/eris-cli/"
 
-const SPECS_DIR = "./specs/"
+const SPECS_DIR = "./docs/"
 
 const BASE_URL = "https://docs.erisindustries.com/documentation/eris-cli/"
 
@@ -199,6 +199,8 @@ func GenerateSpecs(dir string) []string {
 
 func main() {
 	eris := commands.ErisCmd
+	commands.InitializeConfig()
+	commands.AddGlobalFlags()
 	commands.AddCommands()
 	specs := GenerateSpecs(SPECS_DIR)
 	GenerateTree(eris, RENDER_DIR, specs)
