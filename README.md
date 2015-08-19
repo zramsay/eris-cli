@@ -293,6 +293,19 @@ Are Welcome! Before submitting a pull request please:
 
 That's pretty much it (for now).
 
+## Bug Reporting
+
+Found a bug in our stack? Make an issue!
+
+Issues should contain four things:
+
+* The operating system. Please be specific. Include the Docker version and, if applicable, which VM you are using (Toolbox/Kitematic/boot2docker).
+* The reproduction steps. Starting from a fresh environment, what are all the steps that lead to the bug? Also include the branch you're working from.
+* What you expected to happen. Provide a sample output.
+* What actually happened. Error messages, logs, etc. Use `-v` to provide the most information. For lengthy outputs, link to a gist.
+
+Finally, add a label to your bug (critical or minor). Critical bugs will likely be addressed quickly while minor ones may take awhile. Pull requests welcome for either, just let us know you're working on one in the issue.
+
 # License
 
 GPL-3. See [license file](https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md).
