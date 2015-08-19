@@ -472,7 +472,7 @@ func testsInit() error {
 	util.ChangeErisDir(erisDir)
 
 	// init dockerClient
-	util.DockerConnect(false)
+	util.DockerConnect(false, "eris")
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot

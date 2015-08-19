@@ -61,7 +61,7 @@ func testsInit() error {
 	util.ChangeErisDir(erisDir)
 
 	// init dockerClient
-	util.DockerConnect(false)
+	util.DockerConnect(false, "eris")
 
 	// clone bank...for now.
 	// TODO: add better tester
