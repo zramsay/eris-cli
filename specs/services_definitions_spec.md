@@ -1,2 +1,0 @@
-# Action Definition Files Specification
-

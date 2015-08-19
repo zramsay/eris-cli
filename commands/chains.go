@@ -1,10 +1,16 @@
 package commands
 
 import (
+	"fmt"
+
 	chns "github.com/eris-ltd/eris-cli/chains"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
+
+//----------------------------------------------------------------------
+// cli definitions
 
 // Primary Chains Sub-Command
 var Chains = &cobra.Command{
@@ -12,221 +18,438 @@ var Chains = &cobra.Command{
 	Short: "Start, Stop, and Manage Blockchains.",
 	Long: `Start, Stop, and Manage Blockchains.
 
-The chains subcommand is used to start, stop, and configure blockchains.
-Within the Eris platform, blockchains are the primary method of storing
-structured data which is used by the Eris platform in combination with
-IPFS (a globally-accessible content-addressable peer to peer file
-storage solution).`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListChains()
-	},
+The chains subcommand is used to work on erisdb smart contract
+blockchain networks. The name is not perfect, as eris is able
+to operate a wide variety of blockchains out of the box. Most
+of those existing blockchains should be ran via the
+
+eris services ...
+
+commands. As they fall under the rubric of "things I just want
+to turn on or off". While you can develop against those
+blockchains, you generally aren't developing those blockchains
+themselves.
+
+Eris chains is built to help you build blockchains. It is our
+opinionated gateway to the wonderful world of permissioned
+smart contract networks.
+
+Your own baby blockchain/smart contract machine is just an
+
+eris chains new
+
+away!`,
+	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
 // Build the chains subcommand
 func buildChainsCommand() {
-	Chains.AddCommand(chainsListKnown)
-	Chains.AddCommand(chainsInstall)
-	Chains.AddCommand(chainsTypes)
 	Chains.AddCommand(chainsNew)
-	Chains.AddCommand(chainsAdd)
+	Chains.AddCommand(chainsInstall)
+	Chains.AddCommand(chainsImport)
+	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsList)
-	Chains.AddCommand(chainsCheckout)
-	Chains.AddCommand(chainsConfig)
+	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
-	Chains.AddCommand(chainsKill)
+	Chains.AddCommand(chainsInspect)
+	Chains.AddCommand(chainsStop)
+	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
-	Chains.AddCommand(chainsRemove)
-	Chains.AddCommand(chainsClean)
 	Chains.AddCommand(chainsUpdate)
+	Chains.AddCommand(chainsRemove)
+	Chains.AddCommand(chainsGraduate)
+	Chains.AddCommand(chainsCat)
+	addChainsFlags()
 }
 
-// known lists the known chain types which eris can install
-// flags to add: --list-versions
-var chainsListKnown = &cobra.Command{
-	Use:   "known",
-	Short: "List all the blockchain types Eris can install.",
-	Long: `Lists the blockchain types which Eris can install for your platform. To install
-a service, use: eris chains install.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListKnown()
-	},
-}
-
-// install a blockchain library for your machine
-var chainsInstall = &cobra.Command{
-	Use:   "install [type] [version]",
-	Short: "Installs a blockchain library for your platform.",
-	Long: `Installs a blockchain library for your platform.  By default, Eris will install
-the most recent version of a service unless another version is
-passed as an argument. To list known services use:
-[eris chains known].`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Install(cmd, args)
-	},
-}
-
-// types lists the currently installed chain types
-var chainsTypes = &cobra.Command{
-	Use:   "types",
-	Short: "Lists the currently installed blockchain types.",
-	Long:  `Lists the currently installed blockchain types.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListInstalled()
-	},
-}
-
-// new
-// flags to add: --type, --genesis, --config, --checkout, --force-name
+// Chains Sub-sub-Commands
 var chainsNew = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Hashes a new blockchain.",
 	Long: `Hashes a new blockchain.
 
-Will use a default genesis.json unless a --genesis flag is passed.`,
+Will use a default genesis.json unless a --genesis flag is passed.
+Still a WIP.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.New(cmd, args)
+		NewChain(cmd, args)
 	},
 }
 
-// add
-// flags to add: --checkout
-var chainsAdd = &cobra.Command{
-	Use:   "add [name] [ref]",
-	Short: "Adds an existing blockchain to Eris' blockchain tree.",
-	Long:  `Adds an existing blockchain to Eris' blockchain tree.`,
+var chainsInstall = &cobra.Command{
+	Use:   "install [chainID]",
+	Short: "Install a blockchain.",
+	Long: `Install a blockchain.
+
+Install an existing erisdb based blockchain for use locally.
+
+Still a WIP.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Add(cmd, args)
+		InstallChain(cmd, args)
 	},
 }
 
-// list
-// flags to add: --current, --short, --all
+var chainsListKnown = &cobra.Command{
+	Use:   "known",
+	Short: "List all the blockchains Eris knows about.",
+	Long: `Lists the blockchains which Eris has installed for you.
+
+To hash a new blockchain, use:
+
+eris chains new
+
+To install and fetch a blockchain from a chain definition
+file, use:
+
+eris chains install
+
+Services include all other chain types supported by the
+Eris platform.
+
+Services are handled using the [eris services] command.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ListKnownChains()
+	},
+}
+
+var chainsImport = &cobra.Command{
+	Use:   "import [name] [location]",
+	Short: "Import a chain definition file from Github or IPFS.",
+	Long: `Import a chain definition for your platform.
+
+By default, Eris will import from ipfs.
+
+To list known chains use: [eris chains known].`,
+	Example: "  eris chains import 2gather ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+	Run: func(cmd *cobra.Command, args []string) {
+		ImportChain(cmd, args)
+	},
+}
+
 var chainsList = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists all known blockchains in the Eris tree.",
-	Long:  `Lists all known blockchains in the Eris tree.`,
+	Long: `Lists all known blockchains in the Eris tree.
+
+To list the known chains: [eris chains known]
+To list the running chains: [eris chains ps]
+To start a chain use: [eris chains start chainName].
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListChains()
+		ListChains()
 	},
 }
 
-// checkout
-var chainsCheckout = &cobra.Command{
-	Use:   "checkout",
-	Short: "Checks out a blockchain.",
-	Long: `Checks out a blockchain.
+var chainsEdit = &cobra.Command{
+	Use:   "edit [name]",
+	Short: "Edit a blockchain.",
+	Long: `Edit a blockchain definition file.
 
-Unless Eris is running a particular project, it will only
-operate on a single blockchain at a time; namely, it will
-operate on the currently *checked* out blockchain. This
-command is used to change the currently checked out chain.`,
+
+Edit will utilize your default editor.
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Checkout(cmd, args)
+		EditChain(cmd, args)
 	},
 }
 
-// config
-// flags to add: --chain, --edit
-var chainsConfig = &cobra.Command{
-	Use:   "config [key]:[val]",
-	Short: "Configure a blockchain.",
-	Long: `Configure a blockchain.
-
-Multiple config options may be given at the same time.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Config(cmd, args)
-	},
-}
-
-// start
-// flags to add: --commit, --multi, --foreground, --config, --chain
 var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
-	Long:  `Start a blockchain.`,
+	Long: `Start a blockchain.
+
+[eris chains start name] by default will put the chain into the
+background so its logs will not be viewable from the command line.
+
+To stop the chain use:      [eris chains stop chainName].
+To view a chain's logs use: [eris chains logs chainName].
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Start(cmd, args)
+		StartChain(cmd, args)
 	},
 }
 
-// logs
-// flags to add: --tail
 var chainsLogs = &cobra.Command{
 	Use:   "logs",
 	Short: "Display the logs of a blockchain.",
-	Long:  `Display the logs of a running blockchain.`,
+	Long:  `Display the logs of a blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Logs(cmd, args)
+		LogChain(cmd, args)
 	},
 }
 
-// ps
 var chainsListRunning = &cobra.Command{
 	Use:   "ps",
 	Short: "List the running blockchains.",
 	Long:  `List the running blockchains.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.ListRunning()
+		ListRunningChains()
 	},
 }
 
-// kill
-var chainsKill = &cobra.Command{
-	Use:   "kill [name]",
-	Short: "Stop a running blockchains.",
-	Long:  `Stop a running blockchains.`,
+var chainsStop = &cobra.Command{
+	Use:   "stop [name]",
+	Short: "Stop a running blockchain.",
+	Long:  `Stop a running blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Kill(cmd, args)
+		KillChain(cmd, args)
 	},
 }
 
-// rename
+var chainsInspect = &cobra.Command{
+	Use:   "inspect [chainName] [key]",
+	Short: "Machine readable chain operation details.",
+	Long: `Displays machine readable details about running containers.
+
+Information available to the inspect command is provided by the
+Docker API. For more information about return values,
+see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
+	Example: `  eris chains inspect 2gather -> will display the entire information about 2gather containers
+  eris chains inspect 2gather name -> will display the name in machine readable format
+  eris chains inspect 2gather host_config.binds -> will display only that value`,
+	Run: func(cmd *cobra.Command, args []string) {
+		InspectChain(cmd, args)
+	},
+}
+
+var chainsExport = &cobra.Command{
+	Use:   "export [chainName]",
+	Short: "Export a chain definition file to IPFS.",
+	Long: `Export a chain definition file to IPFS.
+
+Command will return a machine readable version of the IPFS hash
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ExportChain(cmd, args)
+	},
+}
+
 var chainsRename = &cobra.Command{
 	Use:   "rename [old] [new]",
 	Short: "Rename a blockchain.",
 	Long:  `Rename a blockchain.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Rename(cmd, args)
+		RenameChain(cmd, args)
 	},
 }
 
-// rm
-// flags to add: --force (no confirm), --clean
 var chainsRemove = &cobra.Command{
 	Use:   "rm [name]",
-	Short: "Remove a blockchain's reference from Eris tree.",
-	Long: `Remove a blockchain's reference from Eris tree.
+	Short: "Removes an installed chain.",
+	Long: `Removes an installed chain.
 
-[eris chains rm] does not remove any data, just removes
-the reference from eris' tree of blockchains. To remove
-the blockchain data from the node use: [eris chains clean].`,
+Command will remove the chain's container but will not
+remove the chain definition file.
+
+Use the --force flag to also remove the chain definition file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Remove(cmd, args)
+		RmChain(cmd, args)
 	},
 }
 
-// clean
-// flags to add: --force (no confirm)
-var chainsClean = &cobra.Command{
-	Use:   "clean [name]",
-	Short: "Clean a blockchains' data from the node.",
-	Long: `Clean a blockchains' data from the node.
-
-Clean will remove the blockchain reference as well as
-its data.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		chns.Clean(cmd, args)
-	},
-}
-
-// update
 var chainsUpdate = &cobra.Command{
-	Use:   "update [type]",
-	Short: "Update a blockchain library.",
-	Long:  `Update a blockchain library.`,
+	Use:   "update [name]",
+	Short: "Updates an installed chain.",
+	Long: `Updates an installed chain, or installs it if it has not been installed.
+
+Functionally this command will perform the following sequence:
+
+1. Stop the chain (if it is running)
+2. Remove the container which ran the chain
+3. Pull the image the container uses from a hub
+4. Rebuild the container from the updated image
+5. Restart the chain (if it was previously running)
+
+**NOTE**: If the chain uses data containers those will not be affected
+by the update command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		chns.Update(cmd, args)
+		UpdateChain(cmd, args)
 	},
+}
+
+var chainsGraduate = &cobra.Command{
+	Use:   "graduate",
+	Short: "Graduates a chain to a service.",
+	Long:  `Graduates a chain to a service by laying a service definition file with the chain_id`,
+	Run: func(cmd *cobra.Command, args []string) {
+		GraduateChain(cmd, args)
+	},
+}
+
+var chainsCat = &cobra.Command{
+	Use:   "cat [name]",
+	Short: "Displays chains definition file.",
+	Long: `Displays chains definition file.
+
+Command will cat local chains definition file.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CatChain(cmd, args)
+	},
+}
+
+//----------------------------------------------------------------------
+
+func addChainsFlags() {
+	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
+	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsNew.PersistentFlags().BoolVarP(&do.Run, "run", "r", false, "run the chain after creating")
+
+	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
+	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
+
+	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
+	chainsStart.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
+
+	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
+	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
+
+	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
+	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
+
+	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
+	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+
+	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
+	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
+	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
+	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+
+	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+
+	chainsListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+}
+
+//----------------------------------------------------------------------
+// cli command wrappers
+
+func StartChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.StartChain(do))
+}
+
+func LogChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.LogsChain(do))
+}
+
+func KillChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.KillChain(do))
+}
+
+// fetch and install a chain
+//
+// the idea here is you will either specify a chainName as the arg and that will
+// double as the chainID, or you want a local reference name for the chain, so you specify
+// the chainID with a flag and give your local reference name as the arg
+func InstallChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.InstallChain(do))
+}
+
+// create a new chain
+//
+// genesis is either given or a simple single-validator genesis will be laid for you
+func NewChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.NewChain(do))
+}
+
+// import a chain definition file
+func ImportChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "eq", cmd, args))
+	do.Name = args[0]
+	do.Path = args[1]
+	IfExit(chns.ImportChain(do))
+}
+
+// edit a chain definition file
+func EditChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	var configVals []string
+	if len(args) > 1 {
+		configVals = args[1:]
+	}
+	do.Name = args[0]
+	do.Args = configVals
+	IfExit(chns.EditChain(do))
+}
+
+func InspectChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
+	do.Name = args[0]
+	if len(args) == 1 {
+		do.Args = []string{"all"}
+	} else {
+		do.Args = []string{args[1]}
+	}
+
+	IfExit(chns.InspectChain(do))
+}
+
+func ExportChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.ExportChain(do))
+}
+
+func ListKnownChains() {
+	if err := chns.ListKnown(do); err != nil {
+		return
+	}
+
+	fmt.Println(do.Result)
+}
+
+func ListChains() {
+	if err := chns.ListExisting(do); err != nil {
+		return
+	}
+}
+
+func ListRunningChains() {
+	if err := chns.ListRunning(do); err != nil {
+		return
+	}
+}
+
+func RenameChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "eq", cmd, args))
+	do.Name = args[0]
+	do.NewName = args[1]
+	IfExit(chns.RenameChain(do))
+}
+
+func UpdateChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.UpdateChain(do))
+}
+
+func RmChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.RmChain(do))
+}
+
+func GraduateChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.GraduateChain(do))
+}
+
+func CatChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(chns.CatChain(do))
 }
