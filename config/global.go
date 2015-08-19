@@ -1,15 +1,15 @@
 package config
 
 import (
-	"fmt"
+	// "fmt"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
 func PlopEntireConfig(globalConfig *viper.Viper, args []string) {
-	for _, key := range args {
-		fmt.Println(globalConfig.GetString(key))
-	}
+	// for _, arg := range args {
+	// fmt.Printf("%s -> %s\n", arg, globalConfig.GetString(arg))
+	// }
 }
 
 func Set(args []string) {
