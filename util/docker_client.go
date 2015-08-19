@@ -62,7 +62,7 @@ func DockerConnect(verbose bool) { // TODO: return an error...?
 
 		logger.Debugln("Successfully connected to Docker daemon")
 		logger.Debugln("Setting IPFS Host")
-		os.Setenv("ERIS_IPFS_HOST", dockerHost)
+		setIPFSHostViaDockerHost(dockerHost)
 	}
 }
 
@@ -243,4 +243,13 @@ func prepWin() error {
 		return err
 	}
 	return nil
+}
+
+func setIPFSHostViaDockerHost(dockerHost string) {
+	// this is hacky, probably should be using URL path lib, but whatever
+	ipfs := strings.Replace(dockerHost, "tcp://", "", 1)
+	ipfs = strings.Split(ipfs, ":")[0]
+	ipfs = "http://" + ipfs
+	logger.Debugf("Set ERIS_IPFS_HOST to =>\t%s\n", ipfs)
+	os.Setenv("ERIS_IPFS_HOST", ipfs)
 }

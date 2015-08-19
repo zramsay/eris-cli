@@ -73,6 +73,8 @@ func Initialize(skipPull, verbose bool) error {
 	// 	}
 	// }
 	// todo: when called from cli provide option to go on tour, like `ipfs tour`
+
+	fmt.Printf("The marmots have everything set up for you.\n")
 	return nil
 }
 
