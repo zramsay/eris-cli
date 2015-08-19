@@ -31,6 +31,7 @@ title:      "Documentation | eris:cli | {{}}"
 
 // Needed to sort properly
 type byName []*cobra.Command
+
 func (s byName) Len() int           { return len(s) }
 func (s byName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s byName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
@@ -170,7 +171,7 @@ func GenerateSpecs(dir string) []string {
 		fileBase := title
 		title = strings.Replace(title, "_", " ", -1)
 		title = strings.Replace(title, ".md", "", 1)
-		title = strings.Replace(title, "spec", "specification", 1)
+		title = strings.Replace(title, "specs", "specification", 1)
 		title = strings.Title(title)
 
 		pre := []byte(strings.Replace(FRONT_MATTER, "{{}}", title, -1))
