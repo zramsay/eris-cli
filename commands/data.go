@@ -12,66 +12,6 @@ import (
 
 //----------------------------------------------------
 
-func ListKnownData(cmd *cobra.Command, args []string) {
-	dataCont, err := data.ListKnownRaw()
-	IfExit(err)
-	for _, s := range dataCont {
-		fmt.Println(s)
-	}
-}
-
-func RenameData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	if len(args) != 2 {
-		fmt.Println("Please give me: eris data rename [oldName] [newName]")
-		return
-	}
-	IfExit(data.RenameDataRaw(args[0], args[1], ContainerNumber))
-}
-
-func InspectData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	if len(args) == 1 {
-		args = append(args, "all")
-	}
-	IfExit(data.InspectDataRaw(args[0], args[1], ContainerNumber))
-}
-
-func RmData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	IfExit(data.RmDataRaw(args[0], ContainerNumber))
-}
-
-func ImportData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	IfExit(data.ImportDataRaw(args[0], ContainerNumber))
-}
-
-func ExportData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	IfExit(data.ExportDataRaw(args[0], ContainerNumber))
-}
-
-func ExecData(cmd *cobra.Command, args []string) {
-	IfExit(checkServiceGiven(args))
-	srv := args[0]
-
-	// if interactive, we ignore args. if not, run args as command
-	if !Interactive {
-		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
-		}
-		args = args[1:]
-		if len(args) == 1 {
-			args = strings.Split(args[0], " ")
-		}
-	}
-
-	IfExit(data.ExecDataRaw(srv, ContainerNumber, Interactive, args))
-}
-
-//----------------------------------------------------
-
 // Primary Data Sub-Command
 var Data = &cobra.Command{
 	Use:   "data",
@@ -103,7 +43,6 @@ func buildDataCommand() {
 	Data.AddCommand(dataRename)
 	Data.AddCommand(dataInspect)
 	Data.AddCommand(dataExport)
-	dataExec.Flags().BoolVarP(&Interactive, "interactive", "i", false, "interactive shell")
 	Data.AddCommand(dataExec)
 	Data.AddCommand(dataRm)
 	addDataFlags()
