@@ -39,7 +39,7 @@ Complete documentation is available at https://docs.erisindustries.com
 		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
 
 		common.InitErisDir()
-		util.DockerConnect(do.Verbose)
+		util.DockerConnect(do.Verbose, do.MachineName)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
@@ -94,6 +94,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
+	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
 	Init.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature; for when git is not installed")
 	// Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
 	// Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")

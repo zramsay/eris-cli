@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -16,7 +17,7 @@ import (
 // Docker Client initialization
 var DockerClient *docker.Client
 
-func DockerConnect(verbose bool) { // TODO: return an error...?
+func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 	var err error
 
 	if runtime.GOOS == "linux" {
@@ -36,7 +37,7 @@ func DockerConnect(verbose bool) { // TODO: return an error...?
 		var dockerHost string
 		var dockerCertPath string
 
-		dockerHost, dockerCertPath, err = getMachineDeets("eris") // we'd want this to be a flag in the future
+		dockerHost, dockerCertPath, err = getMachineDeets(machName)
 
 		if err != nil {
 			logger.Debugf("Could not connect to the eris docker-machine.\nError:\t%v\nTrying default docker-machine.\n", err)
@@ -246,10 +247,17 @@ func prepWin() error {
 }
 
 func setIPFSHostViaDockerHost(dockerHost string) {
-	// this is hacky, probably should be using URL path lib, but whatever
-	ipfs := strings.Replace(dockerHost, "tcp://", "", 1)
-	ipfs = strings.Split(ipfs, ":")[0]
-	ipfs = "http://" + ipfs
-	logger.Debugf("Set ERIS_IPFS_HOST to =>\t%s\n", ipfs)
-	os.Setenv("ERIS_IPFS_HOST", ipfs)
+	u, err := url.Parse(dockerHost)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	dIP, _, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
+	logger.Debugf("Set ERIS_IPFS_HOST to =>\t%s\n", dockerIP)
+	os.Setenv("ERIS_IPFS_HOST", dockerIP)
 }

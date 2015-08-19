@@ -26,6 +26,7 @@ type Do struct {
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
