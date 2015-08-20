@@ -60,11 +60,13 @@ func NewService(do *definitions.Do) error {
 	//get maintainer info
 	uName, err := gitconfig.Username()
 	if err != nil {
-		return err
+		logger.Debugf("Could not find git user.name, setting service.Maintainer.Name = \"\"")
+		uName = ""
 	}
 	email, err := gitconfig.Email()
 	if err != nil {
-		return err
+		logger.Debugf("Could not find git user.email, setting service.Maintainer.Email = \"\"")
+		email = ""
 	}
 
 	srv.Maintainer.Name = uName

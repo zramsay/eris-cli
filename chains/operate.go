@@ -217,11 +217,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	//get maintainer info
 	uName, err := gitconfig.Username()
 	if err != nil {
-		return err
+		logger.Debugf("Could not find git user.name, setting chain.Maintainer.Name = \"\"")
+		uName = ""
 	}
 	email, err := gitconfig.Email()
 	if err != nil {
-		return err
+		logger.Debugf("Could not find git user.email, setting chain.Maintainer.Email = \"\"")
+		email = ""
 	}
 
 	chain.Maintainer.Name = uName
