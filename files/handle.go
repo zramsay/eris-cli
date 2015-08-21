@@ -33,12 +33,27 @@ func PutFiles(do *definitions.Do) error {
 		return err
 	}
 	logger.Infoln("IPFS is running.")
-	logger.Debugf("Gonna Add a file =>\t\t%s:%v\n", do.Name, do.Path)
-	hash, err = exportFile(do.Name)
-	if err != nil {
-		return err
+
+	if do.AddDir {
+		logger.Debugf("Adding directory recursively")
+		hashes, err := exportDir(do.Name)
+		if err != nil {
+			return err
+		}
+		do.Result = hashes
+	} else {
+		logger.Debugf("Gonna Add a file =>\t\t%s:%v\n", do.Name, do.Path)
+		hash, err = exportFile(do.Name, do.Gateway)
+		if err != nil {
+			return err
+		}
+		do.Result = hash
 	}
-	do.Result = hash
+	//XXX need logic to prevent do.AddDir & do.Gateway from conflict
+	if do.Gateway {
+		logger.Debugf("Also pinning it to gateway (ipfs.erisbootstrap.sexy) =>\t\t%s:%v\n", do.Name, do.Path)
+	}
+
 	return nil
 }
 
@@ -52,7 +67,8 @@ func PinFiles(do *definitions.Do) error {
 	}
 	logger.Infoln("IPFS is running.")
 	logger.Debugf("Gonna Pin a file =>\t\t%s:%v\n", do.Name, do.Path)
-	hash, err = pinFile(do.Name)
+	//could also take flag instead of false
+	hash, err = pinFile(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -127,14 +143,14 @@ func importFile(hash, fileName string) error {
 	return nil
 }
 
-func exportFile(fileName string) (string, error) {
+func exportFile(fileName string, gateway bool) (string, error) {
 	var hash string
 	var err error
 
 	if logger.Level > 0 {
-		hash, err = util.SendToIPFS(fileName, logger.Writer)
+		hash, err = util.SendToIPFS(fileName, gateway, logger.Writer)
 	} else {
-		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+		hash, err = util.SendToIPFS(fileName, gateway, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -143,14 +159,32 @@ func exportFile(fileName string) (string, error) {
 	return hash, nil
 }
 
-func pinFile(fileHash string) (string, error) {
+func exportDir(dirName string) (string, error) {
+	var hashes string
+	var err error
+
+	if logger.Level > 0 {
+		hashes, err = util.SendDirToIPFS(dirName, logger.Writer)
+	} else {
+		hashes, err = util.SendDirToIPFS(dirName, bytes.NewBuffer([]byte{}))
+	}
+	if err != nil {
+		return "", err
+	}
+	//hashes := strings.Split whatever returns from the shell
+	//do.Result = hashes
+
+	return hashes, nil
+}
+
+func pinFile(fileHash string, gateway bool) (string, error) {
 	var hash string
 	var err error
 
 	if logger.Level > 0 {
-		hash, err = util.PinToIPFS(fileHash, logger.Writer)
+		hash, err = util.PinToIPFS(fileHash, gateway, logger.Writer)
 	} else {
-		hash, err = util.PinToIPFS(fileHash, bytes.NewBuffer([]byte{}))
+		hash, err = util.PinToIPFS(fileHash, gateway, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err

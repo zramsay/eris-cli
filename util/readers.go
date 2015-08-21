@@ -23,13 +23,13 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 }
 
 func GetFromIPFS(hash, fileName string, w io.Writer) error {
-	url := IPFSBaseGatewayUrl() + hash
+	url := IPFSBaseGatewayUrl(false) + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
 }
 
 func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl() + "cat?arg=" + fileHash
+	url := IPFSBaseAPIUrl(false) + "cat?arg=" + fileHash
 	w.Write([]byte("CATing file from IPFS. Hash =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
 
@@ -41,7 +41,7 @@ func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
 }
 
 func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl() + "ls?arg=" + objectHash
+	url := IPFSBaseAPIUrl(false) + "ls?arg=" + objectHash
 	w.Write([]byte("LISTing file from IPFS. objectHash =>\t" + objectHash + "\n"))
 	body, err := PostAPICall(url, objectHash, w)
 	r := bytes.NewReader(body)
@@ -72,7 +72,7 @@ func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
 }
 
 func ListPinnedFromIPFS(w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl() + "pin/ls"
+	url := IPFSBaseAPIUrl(false) + "pin/ls"
 	w.Write([]byte("LISTing files pinned locally.\n"))
 	body, err := PostAPICall(url, "", w)
 	r := bytes.NewReader(body)
@@ -200,12 +200,21 @@ func GetFileByNameAndType(typ, name string) string {
 // --------------------------------------------------------------
 // Helper functions
 
-func IPFSBaseGatewayUrl() string {
-	return IPFSUrl() + ":8080/ipfs/"
+//XXX url funcs can take flags for which host to go to.
+func IPFSBaseGatewayUrl(bootstrap bool) string {
+	if bootstrap {
+		return sexyUrl() + ":8080/ipfs/"
+	} else {
+		return IPFSUrl() + ":8080/ipfs/"
+	}
 }
 
-func IPFSBaseAPIUrl() string {
+func IPFSBaseAPIUrl(boostrap bool) string {
 	return IPFSUrl() + ":5001/api/v0/"
+}
+
+func sexyUrl() string {
+	return "http://147.75.194.73"
 }
 
 func IPFSUrl() string {

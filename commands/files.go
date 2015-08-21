@@ -25,7 +25,7 @@ func buildFilesCommand() {
 	Files.AddCommand(filesCat)
 	Files.AddCommand(filesList)
 	Files.AddCommand(filesCached)
-	//	addFilesFlags()
+	addFilesFlags()
 }
 
 var filesImport = &cobra.Command{
@@ -87,6 +87,12 @@ var filesCached = &cobra.Command{
 
 //--------------------------------------------------------------
 // cli flags
+func addFilesFlags() {
+	//helper is generalized b/c this flag will eventually be used on several commands; TBD
+	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "use an IPFS gateway - for when IPFS is not running locally or as a service. default is ipfs.erisbootstrap.sexy")
+	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add a directory recursively")
+
+}
 
 func Get(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))

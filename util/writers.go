@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
+	//	"github.com/ipfs/go-ipfs-shell"
 )
 
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
@@ -46,13 +47,13 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 	if response.StatusCode >= http.StatusBadRequest {
 		//TODO better err handling; this is a (very) slimed version of how IPFS does it.
 		if err = json.Unmarshal(body, &errs); err != nil {
-			return []byte(""), fmt.Errorf("error json unmarshaling body %v", err)
+			return []byte(""), fmt.Errorf("error json unmarshaling body one %v", err)
 		}
 		return []byte(errs.Message), nil
 
 		if response.StatusCode == http.StatusNotFound {
 			if err = json.Unmarshal(body, &errs); err != nil {
-				return []byte(""), fmt.Errorf("error json unmarshaling body %v", err)
+				return []byte(""), fmt.Errorf("error json unmarshaling body two %v", err)
 			}
 			return []byte(errs.Message), nil
 		}
@@ -64,8 +65,8 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 	return body, nil
 }
 
-func SendToIPFS(fileName string, w io.Writer) (string, error) {
-	url := IPFSBaseGatewayUrl()
+func SendToIPFS(fileName string, bootstrap bool, w io.Writer) (string, error) {
+	url := IPFSBaseGatewayUrl(bootstrap)
 	w.Write([]byte("POSTing file to IPFS. File =>\t" + fileName + "\n"))
 	head, err := UploadFromFileToUrl(url, fileName, w)
 	if err != nil {
@@ -78,8 +79,27 @@ func SendToIPFS(fileName string, w io.Writer) (string, error) {
 	return hash[0], nil
 }
 
-func PinToIPFS(fileHash string, w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl() + "pin/add?arg=" + fileHash
+func SendDirToIPFS(dirName string, w io.Writer) (string, error) {
+	w.Write([]byte("POSTing file to IPFS. File =>\t" + dirName + "\n"))
+	/*
+		sh := shell.NewShell(sexyUrl())
+		hashes, err := sh.AddDir(dirName)
+		if err != nil {
+			fmt.Println("fuck: ", err)
+		}
+	*/hashes := "geah"
+	return hashes, nil
+}
+
+func PinToIPFS(fileHash string, bootstrap bool, w io.Writer) (string, error) {
+	var url string
+	//	if bootstrap {
+	//		url = IPFSBaseAPIUrl(true) + "pin/add?arg=" + fileHash
+	//		fmt.Println("sexy: ", url)
+	//	} else {
+	url = IPFSBaseAPIUrl(false) + "pin/add?arg=" + fileHash
+	//		fmt.Println("boring: ", url)
+	//	}
 
 	w.Write([]byte("PINing file to IPFS. File =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
