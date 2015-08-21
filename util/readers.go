@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -19,13 +20,13 @@ import (
 func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error {
 	url := "https://rawgit.com/" + strings.Join([]string{org, repo, branch, path}, "/")
 	w.Write([]byte("Will download from url -> " + url))
-	return DownloadFromUrlToFile(url, fileName, w)
+	return DownloadFromUrlToFile(url, fileName, "", w)
 }
 
-func GetFromIPFS(hash, fileName string, w io.Writer) error {
+func GetFromIPFS(hash, fileName, dirName string, w io.Writer) error {
 	url := IPFSBaseGatewayUrl(false) + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
-	return DownloadFromUrlToFile(url, fileName, w)
+	return DownloadFromUrlToFile(url, fileName, dirName, w)
 }
 
 func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
@@ -104,18 +105,48 @@ func ListPinnedFromIPFS(w io.Writer) (string, error) {
 	return result, nil
 }
 
-func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
+func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
 	tokens := strings.Split(url, "/")
 	if fileName == "" {
 		fileName = tokens[len(tokens)-1]
 	}
-	w.Write([]byte("Downloading " + url + " to " + fileName + "\n"))
 
-	output, err := os.Create(fileName)
-	if err != nil {
-		return err
+	//use absolute paths?
+	endPath := path.Join(dirName, fileName)
+	if dirName != "" {
+		w.Write([]byte("Downloading " + url + " to " + endPath + "\n"))
+		checkDir, err := os.Stat(dirName)
+		if err != nil {
+			w.Write([]byte("Directory does not exist, creating it"))
+			err1 := os.MkdirAll(dirName, 0700)
+			if err1 != nil {
+				return fmt.Errorf("error making directory, check your permissions %v\n", err1)
+			}
+		}
+		if !checkDir.IsDir() {
+			return fmt.Errorf("path specified is not a directory, please enter a directory")
+		}
+	} else {
+		//dirNAme = getwd
+		w.Write([]byte("Downloading " + url + " to " + fileName + "\n"))
 	}
-	defer output.Close()
+
+	var outputInDir *os.File
+	var outputFile *os.File
+	var err error
+	if dirName != "" {
+		outputInDir, err = os.Create(endPath)
+		if err != nil {
+			return err
+		}
+		defer outputInDir.Close()
+	} else {
+		outputFile, err = os.Create(fileName)
+		if err != nil {
+			return err
+		}
+		defer outputFile.Close()
+	}
 
 	// adding manual timeouts as IPFS hangs for a while
 	transport := http.Transport{
@@ -130,17 +161,32 @@ func DownloadFromUrlToFile(url, fileName string, w io.Writer) error {
 	}
 	defer response.Body.Close()
 
-	_, err = io.Copy(output, response.Body)
-	if err != nil {
-		return err
+	var checkBody []byte
+	if dirName != "" {
+		_, err = io.Copy(outputInDir, response.Body)
+		if err != nil {
+			return err
+		}
+		checkBody, err = ioutil.ReadFile(endPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = io.Copy(outputFile, response.Body)
+		if err != nil {
+			return err
+		}
+		checkBody, err = ioutil.ReadFile(fileName)
+		if err != nil {
+			return err
+		}
 	}
 
-	body, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return err
-	}
-
-	if string(body) == "Path Resolve error: context deadline exceeded" {
+	//deal with ipfs' error ungracefully. maybe we want to maintain our own fork?
+	//or could run `cache` under the hood, so user doesn't even see error (although we probably shouldn't pin by default)
+	//IF this is the only current fix for this error, then we should have `eris files cacheD --rm [hash]` or something
+	if string(checkBody) == "Path Resolve error: context deadline exceeded" {
+		//this won't work unless we `eris files cache --csv (which will be especially needed to deal with this error)
 		return fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
 	}
 
@@ -215,6 +261,7 @@ func IPFSBaseAPIUrl() string {
 
 func sexyUrl() string {
 	//bootstrap was down
+	//TODO fix before merge; DNS + load balancer
 	return "http://147.75.194.73"
 }
 

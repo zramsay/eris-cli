@@ -88,17 +88,29 @@ var filesCached = &cobra.Command{
 //--------------------------------------------------------------
 // cli flags
 func addFilesFlags() {
-	//maybe add flag to specify the gateway one wants to use?
-	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "put files to a hosted gateway")
-	//filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add a directory recursively")
 
+	filesImport.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
+	filesImport.Flags().StringVarP(&do.NewName, "dirname", "", "", "name of new directory to dump IPFS files from --csv")
+	//maybe add flag to specify the gateway one wants to use?
+	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "put files to Eris' hosted gateway")
+	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add all files from a directory (note: this will not create an ipfs object). returns a log file (ipfs_hashes.txt to pass into `eris files get`")
+
+	//command will ignore fileName but that's ok
+	filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
+
+	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
+	filesCached.Flags().StringVarP(&do.Hash, "rm", "", "", "remove a cached file by hash")
 }
 
 func Get(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-
-	do.Name = args[0]
-	do.Path = args[1]
+	if do.CSV == "" {
+		IfExit(ArgCheck(2, "eq", cmd, args))
+		do.Name = args[0]
+		do.Path = args[1]
+	} else {
+		do.Name = ""
+		do.Path = ""
+	}
 	IfExit(files.GetFiles(do))
 }
 
@@ -112,11 +124,15 @@ func Put(cmd *cobra.Command, args []string) {
 }
 
 func PinIt(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		cmd.Help()
-		return
+	if do.CSV == "" {
+		if len(args) != 1 {
+			cmd.Help()
+			return
+		}
+		do.Name = args[0]
+	} else {
+		do.Name = ""
 	}
-	do.Name = args[0]
 	err := files.PinFiles(do)
 	IfExit(err)
 	logger.Println(do.Result)

@@ -51,9 +51,9 @@ func ImportAction(do *definitions.Do) error {
 		}
 
 		if logger.Level > 0 {
-			err = util.GetFromIPFS(s[1], fileName, logger.Writer)
+			err = util.GetFromIPFS(s[1], fileName, "", logger.Writer)
 		} else {
-			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
+			err = util.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
 		}
 
 		if err != nil {

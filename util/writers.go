@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
-	//"github.com/ipfs/go-ipfs-shell"
 )
 
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
@@ -27,6 +26,7 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 	if err != nil {
 		return []byte(""), err
 	}
+	request.Close = true //for successive api calls
 	request.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	response, err := client.Do(request)
@@ -91,7 +91,6 @@ func PinToIPFS(fileHash string, w io.Writer) (string, error) {
 	var p struct {
 		Pinned []string
 	}
-	var msg string
 
 	if err = json.Unmarshal(body, &p); err != nil {
 		if fmt.Sprintf("%v", err) == "invalid character 'p' looking for beginning of value" {
@@ -99,8 +98,27 @@ func PinToIPFS(fileHash string, w io.Writer) (string, error) {
 		}
 		return "", fmt.Errorf("unexpected error unmarshalling json: %v", err)
 	}
-	msg = p.Pinned[0]
-	return msg, nil
+	return p.Pinned[0], nil
+}
+
+func RemovePinnedFromIPFS(fileHash string, w io.Writer) (string, error) {
+	url := IPFSBaseAPIUrl() + "pin/rm?arg=" + fileHash
+
+	w.Write([]byte("Removing pinned file to IPFS. File =>\t" + fileHash + "\n"))
+	body, err := PostAPICall(url, fileHash, w)
+	if err != nil {
+		return "", err
+	}
+	w.Write([]byte("Deleting from cache =>\t\t\t" + fileHash + ":" + url + "\n"))
+	var p struct {
+		Pinned []string
+	}
+
+	if err = json.Unmarshal(body, &p); err != nil {
+		return "", fmt.Errorf("unexpected error unmarshalling json: %v", err)
+	}
+
+	return p.Pinned[0], nil
 }
 
 func UploadFromFileToUrl(url, fileName string, w io.Writer) (http.Header, error) {
