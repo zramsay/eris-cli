@@ -2,10 +2,8 @@ package services
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -14,7 +12,6 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
@@ -23,10 +20,15 @@ var erisDir string = path.Join(os.TempDir(), "eris")
 var servName string = "ipfs"
 var hash string
 
+var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
+
 func fatal(t *testing.T, err error) {
-	log.Flush()
-	testsTearDown()
-	panic(err)
+	if !DEAD {
+		log.Flush()
+		testsTearDown()
+		DEAD = true
+		panic(err)
+	}
 }
 
 func TestMain(m *testing.M) {
@@ -90,40 +92,6 @@ func TestLoadServiceDefinition(t *testing.T) {
 		logger.Errorf("FAILURE: data_container_name not set.\n")
 		t.Fail()
 	}
-}
-
-func testStartService(t *testing.T, serviceName string) {
-	do := def.NowDo()
-	do.Args = []string{serviceName}
-	do.Operations.ContainerNumber = util.AutoMagic(0, "service", true)
-	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
-	e := StartService(do)
-	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
-		t.Fail()
-	}
-
-	testExistAndRun(t, serviceName, 1, true, true)
-	testNumbersExistAndRun(t, serviceName, 1, 1)
-}
-
-func testKillService(t *testing.T, serviceName string, wipe bool) {
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
-
-	do := def.NowDo()
-	do.Name = serviceName
-	do.Args = []string{serviceName}
-	if wipe {
-		do.Rm = true
-		do.RmD = true
-	}
-	e := KillService(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
-	}
-	testExistAndRun(t, serviceName, 1, !wipe, false)
-	testNumbersExistAndRun(t, serviceName, 0, 0)
 }
 
 func TestStartKillService(t *testing.T) {
@@ -234,7 +202,8 @@ func TestKillRmService(t *testing.T) {
 
 func TestNewService(t *testing.T) {
 	do := def.NowDo()
-	do.Name = "keys"
+	servName := "not-keys"
+	do.Name = servName
 	do.Args = []string{"eris/keys"}
 	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
 	e := NewService(do)
@@ -244,20 +213,19 @@ func TestNewService(t *testing.T) {
 	}
 
 	do = def.NowDo()
-	do.Args = []string{"keys"}
+	do.Args = []string{servName}
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Stating serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
+	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
 	e = StartService(do)
 	if e != nil {
 		logger.Errorln(e)
 		t.Fail()
 	}
+	defer testKillService(t, servName, true)
 
-	testExistAndRun(t, "keys", 1, true, true)
-	testNumbersExistAndRun(t, "keys", 1, 1)
-
-	testKillService(t, "keys", true)
+	testExistAndRun(t, servName, 1, true, true)
+	testNumbersExistAndRun(t, servName, 1, 1)
 }
 
 func TestRenameService(t *testing.T) {
@@ -311,55 +279,20 @@ func TestRenameService(t *testing.T) {
 }
 
 func TestCatService(t *testing.T) {
-	filePath := path.Join(ServicesPath, "keys.toml")
-	addition := `services = ["` + servName + `"]` + "\n\n"
-	additReg := `services = \["` + servName + `"\]`
-	reg := regexp.MustCompile(additReg)
-
-	orig, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-	}
-	orig = append([]byte(addition), orig...)
-	ioutil.WriteFile(filePath, orig, 0777)
-
-	var sec []byte
-	sec, err = ioutil.ReadFile(filePath)
-	secd := string(sec)
-	if !reg.MatchString(secd) {
-		logger.Errorf("FAIL: Additional Service Not Found Pre Cat. I got: %s\n", secd)
-		t.FailNow()
-	}
-
 	do := def.NowDo()
-	do.Name = "keys"
-	err = CatService(do)
-	if err != nil {
-		logger.Errorln(err)
-		t.FailNow()
+	do.Name = "do_not_use"
+	if err := CatService(do); err != nil {
+		fatal(t, err)
 	}
 
-	secd = do.Result
-	if !reg.MatchString(secd) {
-		logger.Errorf("FAIL: Additional Service Not Found Post Cat. I got: %s\n", secd)
-		t.FailNow()
+	if do.Result != ini.DefaultIpfs2() {
+		fatal(t, fmt.Errorf("CatService on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
 	}
 }
 
-func _TestStartServiceWithDependencies(t *testing.T) {
-	defer func() {
-		testKillService(t, servName, true)
-
-		testExistAndRun(t, servName, 1, false, false)
-		testExistAndRun(t, "keys", 1, false, false)
-
-		testNumbersExistAndRun(t, "keys", 1, 0)
-		testNumbersExistAndRun(t, servName, 1, 0)
-	}()
-
+func TestStartKillServiceWithDependencies(t *testing.T) {
 	do := def.NowDo()
-	do.Args = []string{servName}
+	do.Args = []string{"do_not_use"}
 	//do.Operations.ContainerNumber = 1
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
@@ -369,12 +302,60 @@ func _TestStartServiceWithDependencies(t *testing.T) {
 		t.Fail()
 	}
 
+	defer func() {
+		testKillService(t, "do_not_use", true)
+
+		testExistAndRun(t, servName, 1, false, false)
+		testNumbersExistAndRun(t, servName, 0, 0)
+
+		// XXX: option for kill to kill dependencies too
+		testKillService(t, "keys", true)
+		//testExistAndRun(t, "keys", 1, false, false)
+		//testNumbersExistAndRun(t, "keys", 1, 0)
+	}()
+
 	testExistAndRun(t, servName, 1, true, true)
 	testExistAndRun(t, "keys", 1, true, true)
 
 	testNumbersExistAndRun(t, "keys", 1, 1)
 	testNumbersExistAndRun(t, servName, 1, 1)
+}
 
+//----------------------------------------------------------------------
+// test utils!
+
+func testStartService(t *testing.T, serviceName string) {
+	do := def.NowDo()
+	do.Args = []string{serviceName}
+	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
+	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
+	e := StartService(do)
+	if e != nil {
+		logger.Infof("Error starting service =>\t%v\n", e)
+		t.Fail()
+	}
+
+	testExistAndRun(t, serviceName, 1, true, true)
+	testNumbersExistAndRun(t, serviceName, 1, 1)
+}
+
+func testKillService(t *testing.T, serviceName string, wipe bool) {
+	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
+
+	do := def.NowDo()
+	do.Name = serviceName
+	do.Args = []string{serviceName}
+	if wipe {
+		do.Rm = true
+		do.RmD = true
+	}
+	e := KillService(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+	testExistAndRun(t, serviceName, 1, !wipe, false)
+	testNumbersExistAndRun(t, serviceName, 0, 0)
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {

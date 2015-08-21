@@ -23,13 +23,13 @@ func pullRepo(name, location string, verbose bool) error {
 }
 
 func dropDefaults() error {
-	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defKeys); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "keys.toml", DefaultKeys); err != nil {
 		return fmt.Errorf("Cannot add keys: %s.\n", err)
 	}
-	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defIpfs); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", DefaultIpfs); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
-	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", defIpfs2); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", DefaultIpfs2); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {

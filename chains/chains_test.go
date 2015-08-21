@@ -108,7 +108,7 @@ func TestChainGraduate(t *testing.T) {
 		t.Fail()
 	}
 
-	if len(srvDef.ServiceDeps) != 1 {
+	if len(srvDef.ServiceDeps.Dependencies) != 1 {
 		logger.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps)
 		t.Fail()
 	}

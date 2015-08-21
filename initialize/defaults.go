@@ -1,6 +1,6 @@
 package initialize
 
-func defKeys() string {
+func DefaultKeys() string {
 	return `[service]
 name = "keys"
 
@@ -9,7 +9,7 @@ data_container = true
 `
 }
 
-func defIpfs() string {
+func DefaultIpfs() string {
 	return `name = "ipfs"
 
 [service]
@@ -32,10 +32,8 @@ requires = [""]
 `
 }
 
-func defIpfs2() string {
+func DefaultIpfs2() string {
 	return `name = "ipfs"
-
-  services = ["keys"]
 
 [service]
 name = "ipfs"
@@ -43,6 +41,9 @@ image = "eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"
+
+[services]
+dependencies = ["keys"]
 
 [maintainer]
 name = "Eris Industries"

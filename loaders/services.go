@@ -156,7 +156,9 @@ func checkImage(srv *definitions.Service) error {
 }
 
 func addDependencyVolumesAndLinks(srv *definitions.ServiceDefinition) {
-	for _, dep := range srv.ServiceDeps {
-		ConnectToAService(srv, dep)
+	if srv.ServiceDeps != nil {
+		for _, dep := range srv.ServiceDeps.Dependencies {
+			ConnectToAService(srv, dep)
+		}
 	}
 }

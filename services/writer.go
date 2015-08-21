@@ -50,8 +50,8 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + serviceDef.Name + "\"\n\n"))
-		if len(serviceDef.ServiceDeps) != 0 {
-			writer.Write([]byte("services = [ \"" + strings.Join(serviceDef.ServiceDeps, "\",\"") + "\" ]\n"))
+		if serviceDef.ServiceDeps != nil && len(serviceDef.ServiceDeps.Dependencies) != 0 {
+			writer.Write([]byte("services = [ \"" + strings.Join(serviceDef.ServiceDeps.Dependencies, "\",\"") + "\" ]\n"))
 		}
 		if serviceDef.ServiceID != "" {
 			writer.Write([]byte("service_id = \"" + serviceDef.ServiceID + "\"\n"))
