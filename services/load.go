@@ -1,11 +1,13 @@
 package services
 
 import (
+	"strings"
+	"time"
+
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-	"strings"
 )
 
 func EnsureRunning(do *definitions.Do) error {
@@ -21,6 +23,7 @@ func EnsureRunning(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
+		time.Sleep(time.Second * 5)
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
 	}
