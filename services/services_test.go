@@ -35,8 +35,8 @@ func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 
 	logLevel = 0
-	// logLevel = 1
-	logLevel = 2
+	//logLevel = 1
+	//logLevel = 2
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
@@ -50,9 +49,6 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + serviceDef.Name + "\"\n\n"))
-		if serviceDef.ServiceDeps != nil && len(serviceDef.ServiceDeps.Dependencies) != 0 {
-			writer.Write([]byte("services = [ \"" + strings.Join(serviceDef.ServiceDeps.Dependencies, "\",\"") + "\" ]\n"))
-		}
 		if serviceDef.ServiceID != "" {
 			writer.Write([]byte("service_id = \"" + serviceDef.ServiceID + "\"\n"))
 		}
@@ -61,6 +57,10 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		}
 		writer.Write([]byte("[service]\n"))
 		enc.Encode(serviceDef.Service)
+		writer.Write([]byte("[services]\n"))
+		if serviceDef.ServiceDeps != nil && len(serviceDef.ServiceDeps.Dependencies) != 0 {
+			enc.Encode(serviceDef.ServiceDeps)
+		}
 		writer.Write([]byte("\n[maintainer]\n"))
 		enc.Encode(serviceDef.Maintainer)
 		writer.Write([]byte("\n[location]\n"))
