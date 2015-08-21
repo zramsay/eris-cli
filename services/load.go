@@ -6,7 +6,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 	"strings"
-	"time"
 )
 
 func EnsureRunning(do *definitions.Do) error {
@@ -16,8 +15,8 @@ func EnsureRunning(do *definitions.Do) error {
 	}
 
 	if !IsServiceRunning(srv.Service, srv.Operations) {
-		logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", strings.ToUpper(do.Name))
-		time.Sleep(time.Second * 5) // this is dirty
+		name := strings.ToUpper(do.Name)
+		logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
 		err := perform.DockerRun(srv.Service, srv.Operations)
 		if err != nil {
 			return err

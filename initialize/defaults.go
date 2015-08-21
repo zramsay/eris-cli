@@ -1,7 +1,7 @@
 package initialize
 
 func defKeys() string {
-  return `[service]
+	return `[service]
 name = "keys"
 
 image = "eris/keys"
@@ -10,7 +10,32 @@ data_container = true
 }
 
 func defIpfs() string {
-  return `name = "ipfs"
+	return `name = "ipfs"
+
+[service]
+name = "ipfs"
+image = "eris/ipfs"
+data_container = true
+ports = ["4001:4001", "5001:5001", "8080:8080"]
+user = "root"
+
+[maintainer]
+name = "Eris Industries"
+email = "support@erisindustries.com"
+
+[location]
+repository = "github.com/eris-ltd/eris-services"
+
+[machine]
+include = ["docker"]
+requires = [""]
+`
+}
+
+func defIpfs2() string {
+	return `name = "ipfs"
+
+  services = ["keys"]
 
 [service]
 name = "ipfs"
@@ -33,7 +58,7 @@ requires = [""]
 }
 
 func defAct() string {
-  return `name = "do not use"
+	return `name = "do not use"
 services = [ "ipfs" ]
 chain = ""
 steps = [
@@ -59,7 +84,7 @@ requires = [""]
 }
 
 func defChainConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -74,7 +99,7 @@ rpc_laddr = ""
 }
 
 func defChainGen() string {
-  return `
+	return `
 {
   "chain_id": "my_tests",
   "accounts": [
@@ -119,7 +144,7 @@ func defChainGen() string {
 }
 
 func defChainKeys() string {
-  return `
+	return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -138,7 +163,7 @@ func defChainKeys() string {
 }
 
 func defChainServConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 

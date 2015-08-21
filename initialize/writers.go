@@ -29,6 +29,9 @@ func dropDefaults() error {
 	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defIpfs); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
+	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", defIpfs2); err != nil {
+		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
+	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
 		return fmt.Errorf("Cannot add default action: %s.\n", err)
 	}
