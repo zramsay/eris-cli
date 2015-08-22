@@ -24,7 +24,7 @@ import (
 func NewChain(do *definitions.Do) error {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
-	var err error
+	/*var err error
 	if do.GenesisFile = resolveGenesisFile(do.GenesisFile, do.Path); do.GenesisFile == "" {
 		do.ChainID = do.Name
 	} else {
@@ -32,7 +32,10 @@ func NewChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-	}
+	}*/
+
+	// for now we just let setupChain force do.ChainID = do.Name
+	// and we overwrite using jq in the container
 	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.ChainID)
 	return setupChain(do, loaders.ErisChainNew)
 }
@@ -264,7 +267,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("RUN=%v", do.Run),
 		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
-		fmt.Sprintf("CSV=%v", csvFile),
+		fmt.Sprintf("CSV=/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
 	}
 
