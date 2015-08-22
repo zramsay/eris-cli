@@ -184,6 +184,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
 
+	logger.Debugln("container destination:", containerDst)
+	logger.Debugln("local destination:", dst)
+
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
@@ -328,6 +331,7 @@ type stringPair struct {
 func copyFiles(dst string, files []stringPair) error {
 	for _, f := range files {
 		if f.key != "" {
+			logger.Debugf("copying files from %s to %s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
 				return err
 			}

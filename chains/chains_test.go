@@ -1,7 +1,9 @@
 package chains
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -11,6 +13,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -38,9 +41,9 @@ func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 	var err error
 
-	logLevel = 0
+	//logLevel = 0
 	// logLevel = 1
-	// logLevel = 3
+	logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -127,6 +130,48 @@ func TestLoadChainDefinition(t *testing.T) {
 func TestStartKillChain(t *testing.T) {
 	testStartChain(t, chainName)
 	testKillChain(t, chainName)
+}
+
+// eris chains new --dir
+func TestChainsNewDir(t *testing.T) {
+	chainID := "mynewchain"
+	myDir := path.Join(common.DataContainersPath, chainID)
+	if err := os.MkdirAll(myDir, 0700); err != nil {
+		fatal(t, err)
+	}
+	contents := []byte("this is a file in the directory\n")
+	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), contents, 0600); err != nil {
+		fatal(t, err)
+	}
+
+	do := def.NowDo()
+	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
+	do.Name = chainID
+	do.Path = myDir
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	// remove the data container
+	defer data.RmData(do)
+
+	// verify the contents
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	oldWriter := util.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	//args := []string{fmt.Sprintf("cat /home/eris/.eris/blockchains/%s/file.file", chainID)}
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
+	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+		fatal(t, err)
+	}
+	util.GlobalConfig.Writer = oldWriter
+	result := newWriter.Bytes()
+	result = result[:len(result)-2]
+	contents = contents[:len(contents)-1]
+	if string(result) != string(contents) {
+		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
+	}
 }
 
 func TestLogsChain(t *testing.T) {
