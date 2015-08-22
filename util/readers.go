@@ -23,7 +23,7 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 }
 
 func GetFromIPFS(hash, fileName string, w io.Writer) error {
-	url := IPFSBaseGatewayUrl() + hash
+	url := IPFSBaseGatewayUrl(false) + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, w)
 }
@@ -200,12 +200,22 @@ func GetFileByNameAndType(typ, name string) string {
 // --------------------------------------------------------------
 // Helper functions
 
-func IPFSBaseGatewayUrl() string {
-	return IPFSUrl() + ":8080/ipfs/"
+//XXX url funcs can take flags for which host to go to.
+func IPFSBaseGatewayUrl(bootstrap bool) string {
+	if bootstrap {
+		return sexyUrl() + ":8080/ipfs/"
+	} else {
+		return IPFSUrl() + ":8080/ipfs/"
+	}
 }
 
 func IPFSBaseAPIUrl() string {
 	return IPFSUrl() + ":5001/api/v0/"
+}
+
+func sexyUrl() string {
+	//bootstrap was down
+	return "http://147.75.194.73"
 }
 
 func IPFSUrl() string {

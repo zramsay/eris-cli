@@ -33,12 +33,17 @@ func PutFiles(do *definitions.Do) error {
 		return err
 	}
 	logger.Infoln("IPFS is running.")
+
 	logger.Debugf("Gonna Add a file =>\t\t%s:%v\n", do.Name, do.Path)
-	hash, err = exportFile(do.Name)
+	hash, err = exportFile(do.Name, do.Gateway)
 	if err != nil {
 		return err
 	}
 	do.Result = hash
+	if do.Gateway {
+		logger.Debugf("Also pinning it to gateway (ipfs.erisbootstrap.sexy) =>\t\t%s:%v\n", do.Name, do.Path)
+	}
+
 	return nil
 }
 
@@ -127,14 +132,14 @@ func importFile(hash, fileName string) error {
 	return nil
 }
 
-func exportFile(fileName string) (string, error) {
+func exportFile(fileName string, gateway bool) (string, error) {
 	var hash string
 	var err error
 
 	if logger.Level > 0 {
-		hash, err = util.SendToIPFS(fileName, logger.Writer)
+		hash, err = util.SendToIPFS(fileName, gateway, logger.Writer)
 	} else {
-		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+		hash, err = util.SendToIPFS(fileName, gateway, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err

@@ -11,6 +11,7 @@ type Do struct {
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Gateway       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`

@@ -25,7 +25,7 @@ func buildFilesCommand() {
 	Files.AddCommand(filesCat)
 	Files.AddCommand(filesList)
 	Files.AddCommand(filesCached)
-	//	addFilesFlags()
+	addFilesFlags()
 }
 
 var filesImport = &cobra.Command{
@@ -87,6 +87,12 @@ var filesCached = &cobra.Command{
 
 //--------------------------------------------------------------
 // cli flags
+func addFilesFlags() {
+	//maybe add flag to specify the gateway one wants to use?
+	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "put files to a hosted gateway")
+	//filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add a directory recursively")
+
+}
 
 func Get(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
