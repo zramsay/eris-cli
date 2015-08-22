@@ -47,10 +47,20 @@ func PrintTableReport(typ string, running bool) error {
 		return nil
 	}
 
+	var head string
+	if typ == "chain" {
+		head, _ = util.GetHead()
+	}
+
 	table := tablewriter.NewWriter(util.GlobalConfig.Writer)
 	table.SetHeader([]string{"SERVICE NAME", "CONTAINER NAME", "TYPE", "CONTAINER #", "PORTS"})
 	for _, c := range conts {
 		n, _ := PrintLineByContainerName(c.FullName)
+		if typ == "chain" {
+			if n[0] == head {
+				n[0] = fmt.Sprintf("**  %s", n[0]) // TODO: colorize this when we settle on a lib
+			}
+		}
 		table.Append(n)
 	}
 

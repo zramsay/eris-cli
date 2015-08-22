@@ -105,6 +105,34 @@ To find known chains use: eris chains known`)
 	return nil
 }
 
+func CheckoutChain(do *definitions.Do) error {
+	if do.Name == "" {
+		do.Result = "nil"
+		return util.NullHead()
+	}
+
+	curHead, _ := util.GetHead()
+	if do.Name == curHead {
+		do.Result = "no change"
+		return nil
+	}
+
+	return util.ChangeHead(do.Name)
+}
+
+func CurrentChain(do *definitions.Do) error {
+	head, _ := util.GetHead()
+
+	if head == "" {
+		head = "There is no chain checked out."
+	}
+
+	logger.Println(head)
+	do.Result = head
+
+	return nil
+}
+
 func EditChain(do *definitions.Do) error {
 	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {
@@ -119,8 +147,17 @@ func EditChain(do *definitions.Do) error {
 }
 
 func ListKnown(do *definitions.Do) error {
+	head, _ := util.GetHead()
 	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
-	do.Result = strings.Join(chns, "\n")
+	var chainsNew []string
+	for _, c := range chns {
+		if c == head {
+			chainsNew = append(chainsNew, fmt.Sprintf("*\t%s", c))
+		} else {
+			chainsNew = append(chainsNew, fmt.Sprintf("\t%s", c))
+		}
+	}
+	do.Result = strings.Join(chainsNew, "\n")
 	return nil
 }
 
@@ -162,7 +199,7 @@ func RenameChain(do *definitions.Do) error {
 	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
 	transformOnly := newNameBase == do.Name
 
-	if isKnownChain(do.Name) {
+	if util.IsKnownChain(do.Name) {
 		logger.Infof("Renaming chain =>\t\t%s:%s\n", do.Name, do.NewName)
 
 		logger.Debugf("Loading Chain Def File =>\t%s\n", do.Name)

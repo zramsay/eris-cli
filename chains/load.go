@@ -24,16 +24,3 @@ func IsChainRunning(chain *definitions.Chain) bool {
 	return true
 
 }
-
-// check if given chain is known
-func isKnownChain(name string) bool {
-	known := util.GetGlobalLevelConfigFilesByType("chains", false)
-	if len(known) != 0 {
-		for _, srv := range known {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
-}

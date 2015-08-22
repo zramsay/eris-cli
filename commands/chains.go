@@ -49,6 +49,8 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsList)
+	Chains.AddCommand(chainsCheckout)
+	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
@@ -138,6 +140,38 @@ To start a chain use: [eris chains start chainName].
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListChains()
+	},
+}
+
+var chainsCheckout = &cobra.Command{
+	Use:   "checkout",
+	Short: "Checks out a chain.",
+	Long: `Checks out a chain.
+
+Checkout if a convenience features. For any eris command
+which accepts a --chain or $chain variable, the checked
+out chain can replace manually passing in a --chain flag.
+If a --chain is passed to any command accepting --chain,
+the --chain which is passed will overwrite any checked
+out chain.
+
+If command is given without arguments it will clear the
+head and there will be no chain checked out.
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CheckoutChain(cmd, args)
+	},
+}
+
+var chainsHead = &cobra.Command{
+	Use:   "current",
+	Short: "The currently checked out chain.",
+	Long: `The currently checked out chain.
+
+To checkout a new chain use eris chains checkout
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CurrentChain()
 	},
 }
 
@@ -370,6 +404,20 @@ func ImportChain(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	do.Path = args[1]
 	IfExit(chns.ImportChain(do))
+}
+
+// checkout a chain
+func CheckoutChain(cmd *cobra.Command, args []string) {
+	if len(args) >= 1 {
+		do.Name = args[0]
+	} else {
+		do.Name = ""
+	}
+	IfExit(chns.CheckoutChain(do))
+}
+
+func CurrentChain() {
+	IfExit(chns.CurrentChain(do))
 }
 
 // edit a chain definition file
