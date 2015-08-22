@@ -66,7 +66,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
 		<-c
-		logger.Infof("Caught signal. Stopping container %s\n", id_main)
+		logger.Infof("\nCaught signal. Stopping container %s\n", id_main)
 		if err = stopContainer(id_main, 5); err != nil {
 			logger.Errorf("Error stopping container: %v\n", err)
 		}
@@ -79,18 +79,20 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		}
 	}()
 
-	logger.Infoln("Exec Container ID: " + id_main)
-
 	// start the container (either interactive or one off command)
+	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
 	if err := startContainer(id_main, &opts); err != nil {
 		return err
 	}
 
 	if interactive {
-		if err := attachContainer(id_main); err != nil {
-			return err
-		}
+		logger.Debugf("Attaching to container =>\t%s\n", id_main)
+		// attachContainer uses hijack so we need to run this in a goroutine
+		go func() {
+			attachContainer(id_main)
+		}()
 	} else {
+		logger.Debugf("Getting logs for container =>\t%s\n", id_main)
 		if err := logsContainer(id_main, true, "all"); err != nil {
 			return err
 		}
@@ -784,8 +786,8 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 			User:            "root",
 			AttachStdout:    true,
 			AttachStderr:    true,
+			AttachStdin:     true,
 			Tty:             true,
-			StdinOnce:       true,
 			NetworkDisabled: true,
 		},
 		HostConfig: &docker.HostConfig{
@@ -793,7 +795,6 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		},
 	}
 	if interactive {
-		opts.Config.AttachStdin = true
 		opts.Config.OpenStdin = true
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
