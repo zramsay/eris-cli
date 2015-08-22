@@ -88,9 +88,9 @@ var filesCached = &cobra.Command{
 //--------------------------------------------------------------
 // cli flags
 func addFilesFlags() {
-	//helper is generalized b/c this flag will eventually be used on several commands; TBD
-	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "use an IPFS gateway - for when IPFS is not running locally or as a service. default is ipfs.erisbootstrap.sexy")
-	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add a directory recursively")
+	//maybe add flag to specify the gateway one wants to use?
+	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "put files to a hosted gateway")
+	//filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add a directory recursively")
 
 }
 

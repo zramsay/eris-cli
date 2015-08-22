@@ -29,7 +29,7 @@ func GetFromIPFS(hash, fileName string, w io.Writer) error {
 }
 
 func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl(false) + "cat?arg=" + fileHash
+	url := IPFSBaseAPIUrl() + "cat?arg=" + fileHash
 	w.Write([]byte("CATing file from IPFS. Hash =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
 
@@ -41,7 +41,7 @@ func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
 }
 
 func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl(false) + "ls?arg=" + objectHash
+	url := IPFSBaseAPIUrl() + "ls?arg=" + objectHash
 	w.Write([]byte("LISTing file from IPFS. objectHash =>\t" + objectHash + "\n"))
 	body, err := PostAPICall(url, objectHash, w)
 	r := bytes.NewReader(body)
@@ -72,7 +72,7 @@ func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
 }
 
 func ListPinnedFromIPFS(w io.Writer) (string, error) {
-	url := IPFSBaseAPIUrl(false) + "pin/ls"
+	url := IPFSBaseAPIUrl() + "pin/ls"
 	w.Write([]byte("LISTing files pinned locally.\n"))
 	body, err := PostAPICall(url, "", w)
 	r := bytes.NewReader(body)
@@ -209,11 +209,12 @@ func IPFSBaseGatewayUrl(bootstrap bool) string {
 	}
 }
 
-func IPFSBaseAPIUrl(boostrap bool) string {
+func IPFSBaseAPIUrl() string {
 	return IPFSUrl() + ":5001/api/v0/"
 }
 
 func sexyUrl() string {
+	//bootstrap was down
 	return "http://147.75.194.73"
 }
 

@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
-	//	"github.com/ipfs/go-ipfs-shell"
+	//"github.com/ipfs/go-ipfs-shell"
 )
 
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
@@ -47,19 +47,19 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 	if response.StatusCode >= http.StatusBadRequest {
 		//TODO better err handling; this is a (very) slimed version of how IPFS does it.
 		if err = json.Unmarshal(body, &errs); err != nil {
-			return []byte(""), fmt.Errorf("error json unmarshaling body one %v", err)
+			return []byte(""), fmt.Errorf("error json unmarshaling body (bad request): %v", err)
 		}
 		return []byte(errs.Message), nil
 
 		if response.StatusCode == http.StatusNotFound {
 			if err = json.Unmarshal(body, &errs); err != nil {
-				return []byte(""), fmt.Errorf("error json unmarshaling body two %v", err)
+				return []byte(""), fmt.Errorf("error json unmarshaling body (status not found): %v", err)
 			}
 			return []byte(errs.Message), nil
 		}
 	}
-
-	if string(body) == "Path Resolve error: context deadline exceeded" {
+	//XXX hacky: would need to fix ipfs error msgs
+	if string(body) == "Path Resolve error: context deadline exceeded" && string(body) == "context deadline exceeded" {
 		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
 	}
 	return body, nil
@@ -79,27 +79,8 @@ func SendToIPFS(fileName string, bootstrap bool, w io.Writer) (string, error) {
 	return hash[0], nil
 }
 
-func SendDirToIPFS(dirName string, w io.Writer) (string, error) {
-	w.Write([]byte("POSTing file to IPFS. File =>\t" + dirName + "\n"))
-	/*
-		sh := shell.NewShell(sexyUrl())
-		hashes, err := sh.AddDir(dirName)
-		if err != nil {
-			fmt.Println("fuck: ", err)
-		}
-	*/hashes := "geah"
-	return hashes, nil
-}
-
-func PinToIPFS(fileHash string, bootstrap bool, w io.Writer) (string, error) {
-	var url string
-	//	if bootstrap {
-	//		url = IPFSBaseAPIUrl(true) + "pin/add?arg=" + fileHash
-	//		fmt.Println("sexy: ", url)
-	//	} else {
-	url = IPFSBaseAPIUrl(false) + "pin/add?arg=" + fileHash
-	//		fmt.Println("boring: ", url)
-	//	}
+func PinToIPFS(fileHash string, w io.Writer) (string, error) {
+	url := IPFSBaseAPIUrl() + "pin/add?arg=" + fileHash
 
 	w.Write([]byte("PINing file to IPFS. File =>\t" + fileHash + "\n"))
 	body, err := PostAPICall(url, fileHash, w)
@@ -107,14 +88,16 @@ func PinToIPFS(fileHash string, bootstrap bool, w io.Writer) (string, error) {
 		return "", err
 	}
 	w.Write([]byte("Caching =>\t\t\t" + fileHash + ":" + url + "\n"))
-
 	var p struct {
 		Pinned []string
 	}
 	var msg string
 
 	if err = json.Unmarshal(body, &p); err != nil {
-		return "", fmt.Errorf("error json unmarshaling body %v", err)
+		if fmt.Sprintf("%v", err) == "invalid character 'p' looking for beginning of value" {
+			return "", fmt.Errorf("The file has already been pinned recusively (probably from ipfs add or eris files put). It is only possible to cache a file you don't already have. see issue #133 for more information")
+		}
+		return "", fmt.Errorf("unexpected error unmarshalling json: %v", err)
 	}
 	msg = p.Pinned[0]
 	return msg, nil
