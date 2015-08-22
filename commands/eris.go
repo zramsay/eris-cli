@@ -40,6 +40,7 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
+		do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
