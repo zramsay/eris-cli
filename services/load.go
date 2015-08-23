@@ -23,7 +23,7 @@ func EnsureRunning(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 5) // TODO: ping container until ready: issue #149
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
 	}

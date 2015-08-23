@@ -50,16 +50,18 @@ func TestMain(m *testing.M) {
 	testsInit()
 	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
-	exitCode := m.Run()
+	var exitCode int
+	defer func() {
+		logger.Infoln("Commensing with Tests Tear Down.")
+		if err = testsTearDown(); err != nil {
+			logger.Errorln(err)
+			os.Exit(1)
+		}
+		os.Exit(exitCode)
 
-	logger.Infoln("Commensing with Tests Tear Down.")
-	err = testsTearDown()
-	if err != nil {
-		logger.Errorln(err)
-		os.Exit(1)
-	}
+	}()
 
-	os.Exit(exitCode)
+	exitCode = m.Run()
 }
 
 func TestKnownChain(t *testing.T) {
@@ -68,9 +70,10 @@ func TestKnownChain(t *testing.T) {
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if k[0] != chainName {
+	// apparently these have extra space
+	if strings.TrimSpace(k[0]) != chainName {
 		logger.Debugf("Result =>\t\t%s\n", do.Result)
-		ifExit(fmt.Errorf("Found a chain definition file. Something is wrong."))
+		ifExit(fmt.Errorf("Unexpected chain definition file. Got %s, expected %s.", k[0], chainName))
 	}
 }
 
@@ -153,14 +156,17 @@ func TestChainsNewDir(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer data.RmData(do)
+	defer func() {
+		do.Name = chainID
+		data.RmData(do)
+	}()
 
-	// verify the contents
+	// verify the contents - swap config writer with bytes.Buffer
+	// TODO: functions for facilitating this
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	oldWriter := util.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
 	util.GlobalConfig.Writer = newWriter
-	//args := []string{fmt.Sprintf("cat /home/eris/.eris/blockchains/%s/file.file", chainID)}
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
 	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
 		fatal(t, err)
@@ -419,10 +425,12 @@ func testNewChain(chain string) {
 	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	ifExit(NewChain(do)) // configFile and dir are not needed for the tests.
+	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
+	ifExit(NewChain(do))
 
 	// remove the data container
+	logger.Infoln("REMOVING DATA", chain)
+	do.Args = []string{chain}
 	ifExit(data.RmData(do))
 }
 

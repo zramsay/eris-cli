@@ -58,7 +58,7 @@ func TestKnownService(t *testing.T) {
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 3 {
-		ifExit(fmt.Errorf("More than two service definitions found. Something is wrong.\n"))
+		ifExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
 	}
 
 	if k[1] != "ipfs" {

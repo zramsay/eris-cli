@@ -49,8 +49,11 @@ func InspectData(do *definitions.Do) error {
 	return nil
 }
 
-// XXX: what to do with error if only some (not all) are removed
+// TODO: skip errors flag
 func RmData(do *definitions.Do) (err error) {
+	if len(do.Args) == 0 {
+		do.Args = []string{do.Name}
+	}
 	for _, name := range do.Args {
 		do.Name = name
 		if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
@@ -61,11 +64,13 @@ func RmData(do *definitions.Do) (err error) {
 
 			if err = perform.DockerRemove(srv.Service, srv.Operations, false); err != nil {
 				logger.Errorf("Error removing %s: %v", do.Name, err)
+				return err
 			}
 
 		} else {
 			err = fmt.Errorf("I cannot find that data container for %s. Please check the data container name you sent me.", do.Name)
 			logger.Errorln(err)
+			return err
 		}
 
 		if do.RmHF {
