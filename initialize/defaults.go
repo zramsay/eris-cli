@@ -1,5 +1,9 @@
 package initialize
 
+import (
+	"fmt"
+)
+
 func DefaultKeys() string {
 	return `[service]
 name = "keys"
@@ -84,7 +88,7 @@ requires = [""]
 `
 }
 
-func defChainConfig() string {
+func DefChainConfig() string {
 	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
@@ -94,12 +98,12 @@ seeds = ""
 fast_sync = false
 db_backend = "leveldb"
 log_level = "debug"
-node_laddr = ""
-rpc_laddr = ""
+node_laddr = "0.0.0.0:46656"
+rpc_laddr = "0.0.0.0:46657"
 `
 }
 
-func defChainGen() string {
+func DefChainGen() string {
 	return `
 {
   "chain_id": "my_tests",
@@ -144,7 +148,14 @@ func defChainGen() string {
 `
 }
 
-func defChainKeys() string {
+// different from genesis above!
+var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
+
+func DefChainCSV() string {
+	return fmt.Sprintf("%s,", DefaultPubKeys[0])
+}
+
+func DefChainKeys() string {
 	return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
@@ -163,7 +174,7 @@ func defChainKeys() string {
 `
 }
 
-func defChainServConfig() string {
+func DefChainServConfig() string {
 	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml

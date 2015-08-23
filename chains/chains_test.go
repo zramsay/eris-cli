@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -39,10 +40,11 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestMain(m *testing.M) {
+	runtime.GOMAXPROCS(1)
 	var logLevel log.LogLevel
 	var err error
 
-	//logLevel = 0
+	//	logLevel = 0
 	// logLevel = 1
 	logLevel = 3
 
@@ -138,14 +140,14 @@ func TestStartKillChain(t *testing.T) {
 
 // eris chains new --dir _ -g _
 // the default chain_id is my_tests, so should be overwritten
-func TestChainsNewDir(t *testing.T) {
-	chainID := "mynewchain"
+func TestChainsNewDirGen(t *testing.T) {
+	chainID := "testChainsNewDirGen"
 	myDir := path.Join(common.DataContainersPath, chainID)
 	if err := os.MkdirAll(myDir, 0700); err != nil {
 		fatal(t, err)
 	}
-	contents := []byte("this is a file in the directory\n")
-	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), contents, 0600); err != nil {
+	contents := "this is a file in the directory\n"
+	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0600); err != nil {
 		fatal(t, err)
 	}
 
@@ -172,10 +174,10 @@ func TestChainsNewDir(t *testing.T) {
 	}
 
 	util.GlobalConfig.Writer = oldWriter
-	result := newWriter.Bytes()
-	result = result[:len(result)-2]
-	contents = contents[:len(contents)-1]
-	if string(result) != string(contents) {
+	result := newWriter.String()
+	result = trimResult(result)
+	contents = trimResult(contents)
+	if result != contents {
 		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
 	}
 
@@ -190,17 +192,135 @@ func TestChainsNewDir(t *testing.T) {
 	}
 
 	util.GlobalConfig.Writer = oldWriter
-	result = newWriter.Bytes()
+	result = newWriter.String()
 
 	s := struct {
 		ChainID string `json:"chain_id"`
 	}{}
-	if err := json.Unmarshal(result, &s); err != nil {
+	if err := json.Unmarshal([]byte(result), &s); err != nil {
 		fatal(t, err)
 	}
 	if s.ChainID != chainID {
 		fatal(t, fmt.Errorf("ChainID mismatch: got %s, expected %s", s.ChainID, chainID))
 	}
+}
+
+// eris chains new -c _ -csv _
+func TestChainsNewConfigAndCSV(t *testing.T) {
+	chainID := "testChainsNewConfigAndCSV"
+	do := def.NowDo()
+	do.Name = chainID
+	do.ConfigFile = path.Join(common.BlockchainsPath, "config", "default", "config.toml")
+	do.CSV = path.Join(common.BlockchainsPath, "config", "default", "genesis.csv")
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	b, err := ioutil.ReadFile(do.ConfigFile)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
+
+	// remove the data container
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+
+	// verify the contents of config.toml
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	oldWriter := util.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+		fatal(t, err)
+	}
+
+	util.GlobalConfig.Writer = oldWriter
+	result := trimResult(newWriter.String())
+	contents := trimResult(ini.DefChainConfig())
+	if result != contents {
+		fatal(t, fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
+	}
+
+	// verify the contents of genesis.json (should have the validator from the csv)
+	oldWriter = util.GlobalConfig.Writer
+	newWriter = new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
+	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+		fatal(t, err)
+	}
+
+	util.GlobalConfig.Writer = oldWriter
+	result = newWriter.String()
+	spl := strings.Split(result, "\n")
+	var found bool
+	for _, s := range spl {
+		if strings.Contains(s, ini.DefaultPubKeys[0]) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		fatal(t, fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
+	}
+}
+
+// eris chains new --options
+func TestChainsNewConfigOpts(t *testing.T) {
+	// XXX: need to use a different chainID or remove the local tmp/eris/data/chainID dir with each test!
+	chainID := "testChainsNewConfigOpts"
+	do := def.NowDo()
+
+	do.Name = chainID
+	do.ConfigOpts = []string{"moniker=satoshi", "p2p=1.1.1.1:42", "fast-sync=true"}
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	// remove the data container
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+
+	// verify the contents of config.toml
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	oldWriter := util.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+		fatal(t, err)
+	}
+
+	util.GlobalConfig.Writer = oldWriter
+	result := newWriter.String()
+
+	spl := strings.Split(result, "\n")
+	var found bool
+	for _, s := range spl {
+		if ensureTomlValue(t, s, "moniker", "satoshi") {
+			found = true
+		}
+		if ensureTomlValue(t, s, "node_laddr", "1.1.1.1:42") {
+			found = true
+		}
+		if ensureTomlValue(t, s, "fast_sync", "true") {
+			found = true
+		}
+	}
+	if !found {
+		fatal(t, fmt.Errorf("failed to find fields: %s", result))
+	}
+}
+
+func ensureTomlValue(t *testing.T, s, field, value string) bool {
+	if strings.Contains(s, field) {
+		if !strings.Contains(s, value) {
+			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
+		}
+		return true
+	}
+	return false
 }
 
 func TestLogsChain(t *testing.T) {
@@ -452,7 +572,6 @@ func testNewChain(chain string) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	logger.Infoln("REMOVING DATA", chain)
 	do.Args = []string{chain}
 	ifExit(data.RmData(do))
 }
@@ -477,4 +596,15 @@ func ifExit(err error) {
 		testsTearDown()
 		os.Exit(1)
 	}
+}
+
+func trimResult(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.Trim(s, "\n")
+	spl := strings.Split(s, "\n")
+	for i, t := range spl {
+		t = strings.TrimSpace(t)
+		spl[i] = t
+	}
+	return strings.Join(spl, "\n")
 }

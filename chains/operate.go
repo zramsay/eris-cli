@@ -165,6 +165,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data containr =>\t%v", err)
 		}
+	} else {
+		logger.Debugln("Data container already exists for", do.Name)
 	}
 
 	logger.Debugf("Chain's Data Contain Built =>\t%s\n", do.Name)
@@ -194,9 +196,10 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	var csvFile string
+	var csvFile, csvPath string
 	if do.CSV != "" {
 		csvFile = "genesis.csv"
+		csvPath = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile)
 	}
 
 	if err := copyFiles(dst, []stringPair{
@@ -253,13 +256,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// write the list of <key>:<value> config options as flags
 	buf := new(bytes.Buffer)
 	for _, cv := range do.ConfigOpts {
-		spl := strings.Split(cv, ":")
+		spl := strings.Split(cv, "=")
 		if len(spl) != 2 {
-			return fmt.Errorf("Config options should be <key>:<value> pairs. Got %s", cv)
+			return fmt.Errorf("Config options should be <key>=<value> pairs. Got %s", cv)
 		}
 		buf.WriteString(fmt.Sprintf(" --%s=%s", spl[0], spl[1]))
 	}
-	configOpts := string(buf.Bytes())
+	configOpts := buf.String()
 
 	// set chainid and other vars
 	envVars := []string{
@@ -267,7 +270,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("RUN=%v", do.Run),
 		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
-		fmt.Sprintf("CSV=/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile),
+		fmt.Sprintf("CSV=%v", csvPath),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
 	}
 
@@ -334,7 +337,7 @@ type stringPair struct {
 func copyFiles(dst string, files []stringPair) error {
 	for _, f := range files {
 		if f.key != "" {
-			logger.Debugf("copying files from %s to %s\n", f.key, path.Join(dst, f.value))
+			logger.Debugf("\tcopying files from %s to %s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
 				return err
 			}
