@@ -2,6 +2,7 @@ package chains
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -135,7 +136,8 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
-// eris chains new --dir
+// eris chains new --dir _ -g _
+// the default chain_id is my_tests, so should be overwritten
 func TestChainsNewDir(t *testing.T) {
 	chainID := "mynewchain"
 	myDir := path.Join(common.DataContainersPath, chainID)
@@ -156,12 +158,9 @@ func TestChainsNewDir(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer func() {
-		do.Name = chainID
-		data.RmData(do)
-	}()
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
 
-	// verify the contents - swap config writer with bytes.Buffer
+	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	oldWriter := util.GlobalConfig.Writer
@@ -171,12 +170,36 @@ func TestChainsNewDir(t *testing.T) {
 	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
 		fatal(t, err)
 	}
+
 	util.GlobalConfig.Writer = oldWriter
 	result := newWriter.Bytes()
 	result = result[:len(result)-2]
 	contents = contents[:len(contents)-1]
 	if string(result) != string(contents) {
 		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
+	}
+
+	// verify the chain_id got swapped in the genesis.json
+	// TODO: functions for facilitating this
+	oldWriter = util.GlobalConfig.Writer
+	newWriter = new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
+	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+		fatal(t, err)
+	}
+
+	util.GlobalConfig.Writer = oldWriter
+	result = newWriter.Bytes()
+
+	s := struct {
+		ChainID string `json:"chain_id"`
+	}{}
+	if err := json.Unmarshal(result, &s); err != nil {
+		fatal(t, err)
+	}
+	if s.ChainID != chainID {
+		fatal(t, fmt.Errorf("ChainID mismatch: got %s, expected %s", s.ChainID, chainID))
 	}
 }
 
@@ -432,6 +455,15 @@ func testNewChain(chain string) {
 	logger.Infoln("REMOVING DATA", chain)
 	do.Args = []string{chain}
 	ifExit(data.RmData(do))
+}
+
+func removeDataContainer(t *testing.T, chainID string, cNum int) {
+	do := def.NowDo()
+	do.Name = chainID
+	do.Operations.ContainerNumber = cNum
+	if err := data.RmData(do); err != nil {
+		fatal(t, err)
+	}
 }
 
 func testsTearDown() error {
