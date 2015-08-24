@@ -230,6 +230,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	if srv.AutoData {
 		logger.Infof("\twith DataContanr ID =>\t%s\n", id_data)
 	}
+	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
 	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
 	logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)

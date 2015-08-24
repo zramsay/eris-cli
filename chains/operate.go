@@ -185,36 +185,35 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// we probably need to update Import
 
 	logger.Debugf("Container destination =>\t%s\n", containerDst)
-	logger.Debugf("Local destination =>\t%s\n", dst)
+	logger.Debugf("Local destination =>\t\t%s\n", dst)
 
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	var csvFile, csvPath string
-	if do.CSV != "" {
-		csvFile = "genesis.csv"
-		csvPath = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile)
-	}
+	// var csvFile string
+	// if do.CSV != "" {
+	// 	csvFile = "genesis.csv"
+	// }
 
-	if err := copyFiles(dst, []stringPair{
-		{do.Path, ""},
-		{do.GenesisFile, "genesis.json"},
-		{do.ConfigFile, "config.toml"},
-		{do.Priv, "priv_validator.json"},
-		{do.CSV, csvFile},
-	}); err != nil {
-		return err
-	}
+	// if err := copyFiles(dst, []stringPair{
+	// 	{do.Path, ""},
+	// 	{do.GenesisFile, "genesis.json"},
+	// 	{do.ConfigFile, "config.toml"},
+	// 	{do.Priv, "priv_validator.json"},
+	// 	{do.CSV, csvFile},
+	// }); err != nil {
+	// 	return err
+	// }
 
-	// copy from host to container
-	logger.Debugf("Copying Files into DataCont =>\t%s:%s\n", dst, containerDst)
-	importDo := definitions.NowDo()
-	importDo.Name = do.Name
-	importDo.Operations = do.Operations
-	if err = data.ImportData(importDo); err != nil {
-		return err
-	}
+	// // copy from host to container
+	// logger.Debugf("Copying Files into DataCont =>\t%s:%s\n", dst, containerDst)
+	// importDo := definitions.NowDo()
+	// importDo.Name = do.Name
+	// importDo.Operations = do.Operations
+	// if err = data.ImportData(importDo); err != nil {
+	// 	return err
+	// }
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
 
@@ -237,6 +236,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 	logger.Debugf("Chain Loaded. Image =>\t\t%v\n", chain.Service.Image)
+	logger.Debugf("\tBooting =>\t\t%v:%v\n", chain.Service.EntryPoint, chain.Service.Command)
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
 
 	// cmd should be "new" or "install"
@@ -265,8 +265,31 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("RUN=%v", do.Run),
 		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
-		fmt.Sprintf("CSV=%v", csvPath),
+		// fmt.Sprintf("CSV=/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
+	}
+
+	if do.Path != "" {
+		if err := resolveFilesFromPath(do); err != nil {
+			return err
+		}
+	}
+
+	if do.GenesisFile == "" && do.ConfigFile == "" { // XXX these are the minimums we need, no?
+		do.Path = path.Join(BlockchainsPath, "config", "default")
+		if err := resolveFilesFromPath(do); err != nil {
+			return err
+		}
+	}
+
+	if err := envVarsFromFiles(chain, []stringPair{
+		{"GENESIS", do.GenesisFile},
+		{"CHAIN_CONFIG", do.ConfigFile},
+		{"KEY", do.Priv},
+		{"GENESIS_CSV", do.CSV},
+		{"SERVER_CONFIG", do.ServerConf},
+	}); err != nil {
+		return err
 	}
 
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
@@ -324,19 +347,33 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 	return chainID, nil
 }
 
+func resolveFilesFromPath(do *definitions.Do) error {
+	do.GenesisFile = path.Join(do.Path, "genesis.json")
+	do.ConfigFile = path.Join(do.Path, "config.toml")
+	do.Priv = path.Join(do.Path, "priv_validator.json")
+	do.ServerConf = path.Join(do.Path, "server_conf.toml")
+	do.CSV = path.Join(do.Path, "genesis.csv")
+	return nil // returning an error in case we want to do more error checking here
+}
+
 type stringPair struct {
 	key   string
 	value string
 }
 
-func copyFiles(dst string, files []stringPair) error {
-	for _, f := range files {
-		if f.key != "" {
-			logger.Debugf("\tcopying files from %s to %s\n", f.key, path.Join(dst, f.value))
-			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
-				return err
+func envVarsFromFiles(chain *definitions.Chain, pairs []stringPair) error {
+	var contents []byte
+	for _, e := range pairs {
+		if _, err := os.Stat(e.value); os.IsNotExist(err) {
+			contents = []byte{}
+		} else {
+			contents, err = ioutil.ReadFile(e.value)
+			if err != nil {
+				return fmt.Errorf("Could not read file (%s).\n%s", e.value, err)
 			}
 		}
+		eV := fmt.Sprintf("%s=%s", e.key, contents)
+		chain.Service.Environment = append(chain.Service.Environment, eV)
 	}
 	return nil
 }
