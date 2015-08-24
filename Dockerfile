@@ -58,7 +58,8 @@ RUN mkdir --parents /go/src/github.com/eris-ltd/eris-cli
 COPY . /go/src/github.com/eris-ltd/eris-cli/
 RUN cd /go/src/github.com/eris-ltd/eris-cli/cmd/eris && go install
 
-COPY ./tests/test.sh /home/$USER/
+COPY ./tests/* /home/$USER/
+RUN chown --recursive $USER /home/$USER
 WORKDIR /home/$USER
 ENTRYPOINT ["eris"]
 # CMD eris agent
