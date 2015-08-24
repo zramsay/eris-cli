@@ -132,12 +132,8 @@ func ThrowAwayChain(do *definitions.Do) error {
 
 	logger.Debugf("ThrowAwayChain created =>\t%s\n", do.Name)
 
-	// fakeId := strings.Split(uuid.New(), "-")[0]
-	// srv, err := loaders.MockChainDefinition(do.Name, fakeId, true, 1)
-	// if err != nil {
-	// 	return err
-	// }
-
+	logger.Debugf("Starting a ThrowAwayChain =>\t%s\n", do.Name)
+	do.Operations.Remove = true
 	StartChain(do)
 
 	logger.Debugf("ThrowAwayChain started =>\t%s\n", do.Name)
@@ -177,8 +173,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 			logger.Infof("Error on setupChain =>\t\t%v\n", err)
 			logger.Infoln("Cleaning up...")
 			if err2 := RmChain(do); err2 != nil {
-				// maybe be less dramatic
-				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
+				err = fmt.Errorf("Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
 			}
 		}
 	}()
@@ -189,8 +184,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
 
-	logger.Debugln("container destination:", containerDst)
-	logger.Debugln("local destination:", dst)
+	logger.Debugf("Container destination =>\t%s\n", containerDst)
+	logger.Debugf("Local destination =>\t%s\n", dst)
 
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
@@ -203,11 +198,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	if err := copyFiles(dst, []stringPair{
-		stringPair{do.Path, ""},
-		stringPair{do.GenesisFile, "genesis.json"},
-		stringPair{do.ConfigFile, "config.toml"},
-		stringPair{do.Priv, "priv_validator.json"},
-		stringPair{do.CSV, csvFile},
+		{do.Path, ""},
+		{do.GenesisFile, "genesis.json"},
+		{do.ConfigFile, "config.toml"},
+		{do.Priv, "priv_validator.json"},
+		{do.CSV, csvFile},
 	}); err != nil {
 		return err
 	}

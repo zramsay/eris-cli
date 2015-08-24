@@ -38,9 +38,11 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	chain := definitions.BlankChain()
 	chain.Name = chainName
 	chain.Operations.ContainerNumber = cNum[0]
-	setChainDefaults(chain)
+	if err := setChainDefaults(chain); err != nil {
+		return nil, err
+	}
 
-	chainConf, err := loadChainDefinition(chainName)
+	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +71,10 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	// chainID := chain.ChainID
 	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
+	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
 	chain.Service.Image = "eris/erisdb:" + vers
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
-	setChainDefaults(chain)
 	chain.Service.Command = cmd
 
 	srv := &definitions.ServiceDefinition{
@@ -110,17 +112,17 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 
 // marshal from viper to definitions struct
 func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
-	chnTemp := definitions.BlankChain()
+	// chnTemp := definitions.BlankChain()
 	// logger.Debugf("Loader.Chain: ChainID =>\t\t%v\n", chain.ChainID)
 	// logger.Debugf("Loader.Chain. Conf =>\t\t%v\n", chainConf)
-	err := chainConf.Marshal(chnTemp)
+	err := chainConf.Marshal(chain)
 	if err != nil {
 		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
 	}
 	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
-	mergeChainAndService(chain, chnTemp.Service)
-	chain.ChainID = chnTemp.ChainID
+	// mergeChainAndService(chain, chnTemp.Service)
+	// chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well
 	// data_container can be in the chain or
@@ -128,7 +130,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	// opinionated. we know.
 	for _, s := range []string{"", "service."} {
 		if chainConf.GetBool(s + "data_container") {
-			logger.Debugln("Loader.Chain.Marshal: Data Containers Turned On.")
+			logger.Debugln("Loader.Chain.Marshal. Data Containers Turned On.")
 			chain.Service.AutoData = true
 		}
 	}
@@ -136,18 +138,17 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	return nil
 }
 
-func setChainDefaults(chain *definitions.Chain) {
-	ver := strings.Join(strings.Split(version.VERSION, ".")[:2], ".") // only need 0.10 not full ver => 0.10.0
-	chain.Service.Image = "eris/erisdb:" + ver
-	chain.Service.AutoData = true
-	chain.ChainType = "mint"
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID, "CHAIN_TYPE="+chain.ChainType)
-	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
-}
+func setChainDefaults(chain *definitions.Chain) error {
+	cfg, err := util.LoadViperConfig(path.Join(BlockchainsPath), "default", "chain")
+	if err != nil {
+		return err
+	}
+	if err := cfg.Marshal(chain); err != nil {
+		return err
+	}
 
-// read the config file into viper
-func loadChainDefinition(chainName string) (*viper.Viper, error) {
-	return util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
+	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
+	return nil
 }
 
 //----------------------------------------------------------------------
@@ -159,27 +160,26 @@ func checkChainNames(chain *definitions.Chain) {
 }
 
 // overwrite service attributes with chain config
-// TODO: remove this in favor of using Viper's SetDefaults functionality.
-func mergeChainAndService(chain *definitions.Chain, service *definitions.Service) {
-	chain.Service.Name = chain.Name
-	chain.Service.Image = util.OverWriteString(chain.Service.Image, service.Image)
-	chain.Service.Command = util.OverWriteString(chain.Service.Command, service.Command)
-	chain.Service.Links = util.OverWriteSlice(chain.Service.Links, service.Links)
-	chain.Service.Ports = util.OverWriteSlice(chain.Service.Ports, service.Ports)
-	chain.Service.Expose = util.OverWriteSlice(chain.Service.Expose, service.Expose)
-	chain.Service.Volumes = util.OverWriteSlice(chain.Service.Volumes, service.Volumes)
-	chain.Service.VolumesFrom = util.OverWriteSlice(chain.Service.VolumesFrom, service.VolumesFrom)
-	chain.Service.Environment = util.MergeSlice(chain.Service.Environment, service.Environment)
-	chain.Service.EnvFile = util.OverWriteSlice(chain.Service.EnvFile, service.EnvFile)
-	chain.Service.Net = util.OverWriteString(chain.Service.Net, service.Net)
-	chain.Service.PID = util.OverWriteString(chain.Service.PID, service.PID)
-	chain.Service.DNS = util.OverWriteSlice(chain.Service.DNS, service.DNS)
-	chain.Service.DNSSearch = util.OverWriteSlice(chain.Service.DNSSearch, service.DNSSearch)
-	chain.Service.CPUShares = util.OverWriteInt64(chain.Service.CPUShares, service.CPUShares)
-	chain.Service.WorkDir = util.OverWriteString(chain.Service.WorkDir, service.WorkDir)
-	chain.Service.EntryPoint = util.OverWriteString(chain.Service.EntryPoint, service.EntryPoint)
-	chain.Service.HostName = util.OverWriteString(chain.Service.HostName, service.HostName)
-	chain.Service.DomainName = util.OverWriteString(chain.Service.DomainName, service.DomainName)
-	chain.Service.User = util.OverWriteString(chain.Service.User, service.User)
-	chain.Service.MemLimit = util.OverWriteInt64(chain.Service.MemLimit, service.MemLimit)
-}
+// func mergeChainAndService(chain *definitions.Chain, service *definitions.Service) {
+// 	chain.Service.Name = chain.Name
+// 	chain.Service.Image = util.OverWriteString(chain.Service.Image, service.Image)
+// 	chain.Service.Command = util.OverWriteString(chain.Service.Command, service.Command)
+// 	chain.Service.Links = util.OverWriteSlice(chain.Service.Links, service.Links)
+// 	chain.Service.Ports = util.OverWriteSlice(chain.Service.Ports, service.Ports)
+// 	chain.Service.Expose = util.OverWriteSlice(chain.Service.Expose, service.Expose)
+// 	chain.Service.Volumes = util.OverWriteSlice(chain.Service.Volumes, service.Volumes)
+// 	chain.Service.VolumesFrom = util.OverWriteSlice(chain.Service.VolumesFrom, service.VolumesFrom)
+// 	chain.Service.Environment = util.MergeSlice(chain.Service.Environment, service.Environment)
+// 	chain.Service.EnvFile = util.OverWriteSlice(chain.Service.EnvFile, service.EnvFile)
+// 	chain.Service.Net = util.OverWriteString(chain.Service.Net, service.Net)
+// 	chain.Service.PID = util.OverWriteString(chain.Service.PID, service.PID)
+// 	chain.Service.DNS = util.OverWriteSlice(chain.Service.DNS, service.DNS)
+// 	chain.Service.DNSSearch = util.OverWriteSlice(chain.Service.DNSSearch, service.DNSSearch)
+// 	chain.Service.CPUShares = util.OverWriteInt64(chain.Service.CPUShares, service.CPUShares)
+// 	chain.Service.WorkDir = util.OverWriteString(chain.Service.WorkDir, service.WorkDir)
+// 	chain.Service.EntryPoint = util.OverWriteString(chain.Service.EntryPoint, service.EntryPoint)
+// 	chain.Service.HostName = util.OverWriteString(chain.Service.HostName, service.HostName)
+// 	chain.Service.DomainName = util.OverWriteString(chain.Service.DomainName, service.DomainName)
+// 	chain.Service.User = util.OverWriteString(chain.Service.User, service.User)
+// 	chain.Service.MemLimit = util.OverWriteInt64(chain.Service.MemLimit, service.MemLimit)
+// }

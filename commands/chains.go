@@ -365,18 +365,21 @@ func addChainsFlags() {
 // cli command wrappers
 
 func StartChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.KillChain(do))
@@ -426,6 +429,7 @@ func CurrentChain() {
 
 // edit a chain definition file
 func EditChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	var configVals []string
 	if len(args) > 1 {
@@ -437,6 +441,7 @@ func EditChain(cmd *cobra.Command, args []string) {
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
@@ -450,6 +455,7 @@ func InspectChain(cmd *cobra.Command, args []string) {
 }
 
 func ExportChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.ExportChain(do))
@@ -483,6 +489,7 @@ func RenameChain(cmd *cobra.Command, args []string) {
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.UpdateChain(do))
@@ -495,12 +502,14 @@ func RmChain(cmd *cobra.Command, args []string) {
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.GraduateChain(do))
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.CatChain(do))

@@ -151,11 +151,17 @@ func ListKnown(do *definitions.Do) error {
 	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
 	var chainsNew []string
 	for _, c := range chns {
-		if c == head {
+		switch c {
+		case "default":
+			continue
+		case head:
 			chainsNew = append(chainsNew, fmt.Sprintf("*\t%s", c))
-		} else {
+		default:
 			chainsNew = append(chainsNew, fmt.Sprintf("\t%s", c))
 		}
+		// if c == head {
+		// } else {
+		// }
 	}
 	do.Result = strings.Join(chainsNew, "\n")
 	return nil

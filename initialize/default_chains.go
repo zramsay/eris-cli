@@ -1,95 +1,31 @@
 package initialize
 
 import (
-	"fmt"
+  "fmt"
+  "strings"
+
+  "github.com/eris-ltd/eris-cli/version"
 )
 
-func DefaultKeys() string {
-	return `[service]
-name = "keys"
-
-image = "eris/keys"
-data_container = true
-`
-}
-
-func DefaultIpfs() string {
-	return `name = "ipfs"
-
+func defChain() string {
+  ver := strings.Join(strings.Split(version.VERSION, ".")[:2], ".") // only need 0.10 not full ver => 0.10.0
+  return fmt.Sprintf(`
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
 [service]
-name = "ipfs"
-image = "eris/ipfs"
+image          = "eris/erisdb:0.10"
 data_container = true
-ports = ["4001:4001", "5001:5001", "8080:8080"]
-user = "root"
+ports          = [ "1337:1337", "46656:46656", "46657:46657" ]
 
 [maintainer]
 name = "Eris Industries"
 email = "support@erisindustries.com"
 
-[location]
-repository = "github.com/eris-ltd/eris-services"
-
-[machine]
-include = ["docker"]
-requires = [""]
-`
-}
-
-func DefaultIpfs2() string {
-	return `name = "ipfs"
-
-[service]
-name = "ipfs"
-image = "eris/ipfs"
-data_container = true
-ports = ["4001:4001", "5001:5001", "8080:8080"]
-user = "root"
-
-[services]
-dependencies = ["keys"]
-
-[maintainer]
-name = "Eris Industries"
-email = "support@erisindustries.com"
-
-[location]
-repository = "github.com/eris-ltd/eris-services"
-
-[machine]
-include = ["docker"]
-requires = [""]
-`
-}
-
-func defAct() string {
-	return `name = "do not use"
-services = [ "ipfs" ]
-chain = ""
-steps = [
-  "printenv",
-  "echo hello",
-  "echo goodbye"
-]
-
-[environment]
-HELLO = "WORLD"
-
-[maintainer]
-name = "Eris Industries"
-email = "support@erisindustries.com"
-
-[location]
-repository = "github.com/eris-ltd/eris-cli"
-
-[machine]
-include = ["docker"]
-requires = [""]
-`
+`, ver)
 }
 
 func DefChainConfig() string {
-	return `
+  return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -104,7 +40,7 @@ rpc_laddr = "0.0.0.0:46657"
 }
 
 func DefChainGen() string {
-	return `
+  return `
 {
   "chain_id": "my_tests",
   "accounts": [
@@ -152,11 +88,11 @@ func DefChainGen() string {
 var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
 
 func DefChainCSV() string {
-	return fmt.Sprintf("%s,", DefaultPubKeys[0])
+  return fmt.Sprintf("%s,", DefaultPubKeys[0])
 }
 
 func DefChainKeys() string {
-	return `
+  return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -175,7 +111,7 @@ func DefChainKeys() string {
 }
 
 func DefChainServConfig() string {
-	return `
+  return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
