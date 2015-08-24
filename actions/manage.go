@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/ipfs"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -51,9 +52,9 @@ func ImportAction(do *definitions.Do) error {
 		}
 
 		if logger.Level > 0 {
-			err = util.GetFromIPFS(s[1], fileName, "", logger.Writer)
+			err = ipfs.GetFromIPFS(s[1], fileName, "", logger.Writer)
 		} else {
-			err = util.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
+			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
 		}
 
 		if err != nil {
@@ -189,9 +190,9 @@ func exportFile(actionName string) (string, error) {
 
 	var hash string
 	if logger.Level > 0 {
-		hash, err = util.SendToIPFS(fileName, false, logger.Writer)
+		hash, err = ipfs.SendToIPFS(fileName, false, logger.Writer)
 	} else {
-		hash, err = util.SendToIPFS(fileName, false, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fileName, false, bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {

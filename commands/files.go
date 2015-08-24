@@ -30,8 +30,10 @@ func buildFilesCommand() {
 
 var filesImport = &cobra.Command{
 	Use:   "get [hash] [fileName]",
-	Short: "Pull a file from IPFS via its hash and save it locally.",
-	Long:  `Pull a file from IPFS via its hash and save it locally.`,
+	Short: "Pull files from IPFS via a hash and save them locally.",
+	Long: `Pull files from IPFS via a hash and save them locally.
+	
+Optionally pass in a csv with: get --csv=[fileName]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Get(cmd, args)
 	},
@@ -39,8 +41,10 @@ var filesImport = &cobra.Command{
 
 var filesExport = &cobra.Command{
 	Use:   "put [fileName]",
-	Short: "Post a file to IPFS.",
-	Long:  `Post a file to IPFS.`,
+	Short: "Post files to IPFS.",
+	Long: `Post files to IPFS. 
+	
+Optionally post all contents of a directory with: put [dirName] --dir`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Put(cmd, args)
 	},
@@ -48,10 +52,12 @@ var filesExport = &cobra.Command{
 
 var filesCache = &cobra.Command{
 	Use:   "cache [fileHash]",
-	Short: "Cache a file to IPFS.",
-	Long: `Cache a file to IPFS' local daemon.
+	Short: "Cache files to IPFS.",
+	Long: `Cache files to IPFS' local daemon.
 	
-Caches a file locally via IPFS pin, by hash.`,
+Caches a files locally via IPFS pin, by hash.
+Optionally pass in a csv with: cache --csv=[fileName]
+Note: "put" will "cache" recursively by default`,
 	Run: func(cmd *cobra.Command, args []string) {
 		PinIt(cmd, args)
 	},
@@ -79,9 +85,9 @@ var filesList = &cobra.Command{
 var filesCached = &cobra.Command{
 	Use:   "cached",
 	Short: "Lists files cached locally.",
-	Long:  "Displays list of files cached locally.",
+	Long:  `Displays list of files cached locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		PinnedLs(cmd, args)
+		ManageCached(cmd, args)
 	},
 }
 
@@ -93,7 +99,7 @@ func addFilesFlags() {
 	filesImport.Flags().StringVarP(&do.NewName, "dirname", "", "", "name of new directory to dump IPFS files from --csv")
 	//maybe add flag to specify the gateway one wants to use?
 	filesExport.Flags().BoolVarP(&do.Gateway, "gateway", "", false, "put files to Eris' hosted gateway")
-	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add all files from a directory (note: this will not create an ipfs object). returns a log file (ipfs_hashes.txt to pass into `eris files get`")
+	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add all files from a directory (note: this will not create an ipfs object). returns a log file (ipfs_hashes.csv) to pass into `eris files get`")
 
 	//command will ignore fileName but that's ok
 	filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
@@ -161,8 +167,8 @@ func ListIt(cmd *cobra.Command, args []string) {
 	logger.Println(do.Result)
 }
 
-func PinnedLs(cmd *cobra.Command, args []string) {
-	err := files.ListPinned(do)
+func ManageCached(cmd *cobra.Command, args []string) {
+	err := files.ManagePinned(do)
 	IfExit(err)
 	logger.Println(do.Result)
 }

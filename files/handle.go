@@ -10,18 +10,13 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/ipfs"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
 )
 
 func GetFiles(do *definitions.Do) error {
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
-	}
-	logger.Infoln("IPFS is running.")
+	ensureRunning()
+	var err error
 	if do.CSV != "" {
 		logger.Debugf("Gonna Import the files from =>\t\t%s into %v\n", do.CSV, do.NewName)
 		err = importFiles(do.CSV, do.NewName)
@@ -38,15 +33,7 @@ func GetFiles(do *definitions.Do) error {
 }
 
 func PutFiles(do *definitions.Do) error {
-	var hash string
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
-	}
-	logger.Infoln("IPFS is running.")
-
+	ensureRunning()
 	if do.AddDir {
 		logger.Debugf("Gonna add the contents of a directory =>\t\t%s:%v\n", do.Name, do.Path)
 		hashes, err := exportDir(do.Name, do.Gateway)
@@ -56,7 +43,7 @@ func PutFiles(do *definitions.Do) error {
 		do.Result = hashes
 	} else {
 		logger.Debugf("Gonna Add a file =>\t\t%s:%v\n", do.Name, do.Path)
-		hash, err = exportFile(do.Name, do.Gateway)
+		hash, err := exportFile(do.Name, do.Gateway)
 		if err != nil {
 			return err
 		}
@@ -73,43 +60,30 @@ func PutFiles(do *definitions.Do) error {
 }
 
 func PinFiles(do *definitions.Do) error {
-	var hash string
-	var hashes string
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
-	}
-	logger.Infoln("IPFS is running.")
-
+	ensureRunning()
 	if do.CSV != "" {
 		logger.Debugf("Gonna Pin all the files from =>\t\t%s\n", do.CSV)
-		hashes, err = pinFiles(do.CSV)
+		hashes, err := pinFiles(do.CSV)
+		if err != nil {
+			return err
+		}
 		do.Result = hashes
 
 	} else {
 		logger.Debugf("Gonna Pin a file =>\t\t%s:%v\n", do.Name, do.Path)
-		hash, err = pinFile(do.Name)
+		hash, err := pinFile(do.Name)
+		if err != nil {
+			return err
+		}
 		do.Result = hash
-	}
-	if err != nil {
-		return err
 	}
 	return nil
 }
 
 func CatFiles(do *definitions.Do) error {
-	var hash string
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
-	}
-	logger.Infoln("IPFS is running.")
+	ensureRunning()
 	logger.Debugf("Gonna Cat a file =>\t\t%s:%v\n", do.Name, do.Path)
-	hash, err = catFile(do.Name)
+	hash, err := catFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -118,16 +92,9 @@ func CatFiles(do *definitions.Do) error {
 }
 
 func ListFiles(do *definitions.Do) error {
-	var hash string
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
-	}
-	logger.Infoln("IPFS is running.")
+	ensureRunning()
 	logger.Debugf("Gonna List an object =>\t\t%s:%v\n", do.Name, do.Path)
-	hash, err = listFile(do.Name)
+	hash, err := listFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -135,32 +102,33 @@ func ListFiles(do *definitions.Do) error {
 	return nil
 }
 
-func ListPinned(do *definitions.Do) error {
-	var hash string
-	var hashes string
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
-		return err
+func ManagePinned(do *definitions.Do) error {
+	ensureRunning()
+	if do.Rm && do.Hash != "" {
+		return fmt.Errorf("Either remove a file by hash or all of them\n")
 	}
-	logger.Infoln("IPFS is running.")
 
 	if do.Rm {
 		logger.Infoln("Removing all cached files")
-		hashes, err = rmAllPinned()
+		hashes, err := rmAllPinned()
+		if err != nil {
+			return err
+		}
 		do.Result = hashes
 	} else if do.Hash != "" {
 		logger.Infof("Removing %v, from cache", do.Hash)
-		hashes, err = rmPinnedByHash(do.Hash)
+		hashes, err := rmPinnedByHash(do.Hash)
+		if err != nil {
+			return err
+		}
 		do.Result = hashes
 	} else {
 		logger.Debugf("Listing files pinned locally")
-		hash, err = listPinned()
+		hash, err := listPinned()
+		if err != nil {
+			return err
+		}
 		do.Result = hash
-	}
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -169,11 +137,10 @@ func importFile(hash, fileName string) error {
 	var err error
 
 	if logger.Level > 0 {
-		err = util.GetFromIPFS(hash, fileName, "", logger.Writer)
+		err = ipfs.GetFromIPFS(hash, fileName, "", logger.Writer)
 	} else {
-		err = util.GetFromIPFS(hash, fileName, "", bytes.NewBuffer([]byte{}))
+		err = ipfs.GetFromIPFS(hash, fileName, "", bytes.NewBuffer([]byte{}))
 	}
-
 	if err != nil {
 		return err
 	}
@@ -194,15 +161,13 @@ func importFiles(csvfile, newdir string) error {
 	if err != nil {
 		return fmt.Errorf("error reading csv file: %v\n", err)
 	}
-	//TODO mkdir (dirname) and dump files in there rather than in pwd
-	//file outputs tied up in GetFromIPFS
+
 	for _, each := range rawCSVdata {
 		if logger.Level > 0 {
-			err = util.GetFromIPFS(each[0], each[1], newdir, logger.Writer)
+			err = ipfs.GetFromIPFS(each[0], each[1], newdir, logger.Writer)
 		} else {
-			err = util.GetFromIPFS(each[0], each[1], newdir, bytes.NewBuffer([]byte{}))
+			err = ipfs.GetFromIPFS(each[0], each[1], newdir, bytes.NewBuffer([]byte{}))
 		}
-
 		if err != nil {
 			return err
 		}
@@ -215,9 +180,9 @@ func exportFile(fileName string, gateway bool) (string, error) {
 	var err error
 
 	if logger.Level > 0 {
-		hash, err = util.SendToIPFS(fileName, gateway, logger.Writer)
+		hash, err = ipfs.SendToIPFS(fileName, gateway, logger.Writer)
 	} else {
-		hash, err = util.SendToIPFS(fileName, gateway, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fileName, gateway, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -245,9 +210,9 @@ func exportDir(dirName string, gateway bool) (string, error) {
 		//hacky
 		file := path.Join(gwd, dirName, files[i].Name())
 		if logger.Level > 0 {
-			hashArray[i], err = util.SendToIPFS(file, gateway, logger.Writer)
+			hashArray[i], err = ipfs.SendToIPFS(file, gateway, logger.Writer)
 		} else {
-			hashArray[i], err = util.SendToIPFS(file, gateway, bytes.NewBuffer([]byte{}))
+			hashArray[i], err = ipfs.SendToIPFS(file, gateway, bytes.NewBuffer([]byte{}))
 		}
 		if err != nil {
 			return "", fmt.Errorf("error reading file %v\n", err)
@@ -270,9 +235,9 @@ func pinFile(fileHash string) (string, error) {
 	var err error
 
 	if logger.Level > 0 {
-		hash, err = util.PinToIPFS(fileHash, logger.Writer)
+		hash, err = ipfs.PinToIPFS(fileHash, logger.Writer)
 	} else {
-		hash, err = util.PinToIPFS(fileHash, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.PinToIPFS(fileHash, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -298,28 +263,25 @@ func pinFiles(csvfile string) (string, error) {
 	hashArray := make([]string, len(rawCSVdata))
 	for i, each := range rawCSVdata {
 		if logger.Level > 0 {
-			hashArray[i], err = util.PinToIPFS(each[0], logger.Writer)
+			hashArray[i], err = ipfs.PinToIPFS(each[0], logger.Writer)
 		} else {
-			hashArray[i], err = util.PinToIPFS(each[0], bytes.NewBuffer([]byte{}))
+			hashArray[i], err = ipfs.PinToIPFS(each[0], bytes.NewBuffer([]byte{}))
 		}
 		if err != nil {
 			return "", err
 		}
 	}
-
 	hashes := strings.Join(hashArray, "\n")
-
 	return hashes, nil
 }
 
 func catFile(fileHash string) (string, error) {
 	var hash string
 	var err error
-	//CatFrom may have to contents here
 	if logger.Level > 0 {
-		hash, err = util.CatFromIPFS(fileHash, logger.Writer)
+		hash, err = ipfs.CatFromIPFS(fileHash, logger.Writer)
 	} else {
-		hash, err = util.CatFromIPFS(fileHash, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.CatFromIPFS(fileHash, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -331,9 +293,9 @@ func listFile(objectHash string) (string, error) {
 	var hash string
 	var err error
 	if logger.Level > 0 {
-		hash, err = util.ListFromIPFS(objectHash, logger.Writer)
+		hash, err = ipfs.ListFromIPFS(objectHash, logger.Writer)
 	} else {
-		hash, err = util.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -345,9 +307,9 @@ func listPinned() (string, error) {
 	var hash string
 	var err error
 	if logger.Level > 0 {
-		hash, err = util.ListPinnedFromIPFS(logger.Writer)
+		hash, err = ipfs.ListPinnedFromIPFS(logger.Writer)
 	} else {
-		hash, err = util.ListPinnedFromIPFS(bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.ListPinnedFromIPFS(bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -356,7 +318,6 @@ func listPinned() (string, error) {
 }
 
 func rmAllPinned() (string, error) {
-
 	hashList, err := listPinned()
 	if err != nil {
 		return "", err
@@ -377,9 +338,9 @@ func rmAllPinned() (string, error) {
 func rmPinnedByHash(hash string) (string, error) {
 	var err error
 	if logger.Level > 0 {
-		hash, err = util.RemovePinnedFromIPFS(hash, logger.Writer)
+		hash, err = ipfs.RemovePinnedFromIPFS(hash, logger.Writer)
 	} else {
-		hash, err = util.RemovePinnedFromIPFS(hash, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.RemovePinnedFromIPFS(hash, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
 		return "", err
@@ -391,7 +352,6 @@ func rmPinnedByHash(hash string) (string, error) {
 // helpers
 
 func writeCsv(hashArray, fileNames []string) error {
-
 	strToWrite := make([][]string, len(hashArray))
 	for i := range hashArray {
 		strToWrite[i] = []string{hashArray[i], fileNames[i]}
@@ -410,6 +370,16 @@ func writeCsv(hashArray, fileNames []string) error {
 	if err := w.Error(); err != nil {
 		return fmt.Errorf("error writing csv: \n", err)
 	}
-
 	return nil
+}
+
+func ensureRunning() {
+	doNow := definitions.NowDo()
+	doNow.Name = "ipfs"
+	err := services.EnsureRunning(doNow)
+	if err != nil {
+		fmt.Printf("Failed to ensure IPFS is running: %v", err)
+		return
+	}
+	logger.Infoln("IPFS is running.")
 }
