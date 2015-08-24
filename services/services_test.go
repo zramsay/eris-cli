@@ -34,9 +34,9 @@ func fatal(t *testing.T, err error) {
 func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 
-	logLevel = 0
+	//logLevel = 0
 	//logLevel = 1
-	//logLevel = 2
+	logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -71,7 +71,7 @@ func TestLoadServiceDefinition(t *testing.T) {
 	srv, e = loaders.LoadServiceDefinition(servName, true, 1)
 	if e != nil {
 		logger.Errorln(e)
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	if srv.Name != servName {
@@ -80,17 +80,17 @@ func TestLoadServiceDefinition(t *testing.T) {
 
 	if srv.Service.Name != servName {
 		logger.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	if !srv.Service.AutoData {
 		logger.Errorf("FAILURE: data_container not properly read on LOAD.\n")
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	if srv.Operations.DataContainerName == "" {
 		logger.Errorf("FAILURE: data_container_name not set.\n")
-		t.Fail()
+		fatal(t, e)
 	}
 }
 
@@ -111,7 +111,7 @@ func TestInspectService(t *testing.T) {
 	e := InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	do = def.NowDo()
@@ -122,7 +122,7 @@ func TestInspectService(t *testing.T) {
 	e = InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
-		t.Fail()
+		fatal(t, e)
 	}
 }
 
@@ -137,7 +137,7 @@ func TestLogsService(t *testing.T) {
 	e := LogsService(do)
 	if e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 }
 
@@ -157,7 +157,7 @@ func TestUpdateService(t *testing.T) {
 	e := UpdateService(do)
 	if e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, servName, 1, true, true)
@@ -174,7 +174,7 @@ func TestKillRmService(t *testing.T) {
 	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
 	if e := KillService(do); e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, servName, 1, true, false)
@@ -193,7 +193,7 @@ func TestKillRmService(t *testing.T) {
 	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
 	if e := RmService(do); e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, servName, 1, false, false)
@@ -209,7 +209,7 @@ func TestNewService(t *testing.T) {
 	e := NewService(do)
 	if e != nil {
 		logger.Errorln(e)
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	do = def.NowDo()
@@ -220,7 +220,7 @@ func TestNewService(t *testing.T) {
 	e = StartService(do)
 	if e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 	defer testKillService(t, servName, true)
 
@@ -267,7 +267,7 @@ func TestRenameService(t *testing.T) {
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	if e := RenameService(do); e != nil {
 		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, "keys", 1, true, true)
@@ -296,10 +296,9 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 	//do.Operations.ContainerNumber = 1
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
-	e := StartService(do)
-	if e != nil {
+	if e := StartService(do); e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	defer func() {
@@ -332,7 +331,7 @@ func testStartService(t *testing.T, serviceName string) {
 	e := StartService(do)
 	if e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, serviceName, 1, true, true)
@@ -352,7 +351,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	e := KillService(do)
 	if e != nil {
 		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 	testExistAndRun(t, serviceName, 1, !wipe, false)
 	testNumbersExistAndRun(t, serviceName, 0, 0)
@@ -368,7 +367,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	do.Args = []string{"testing"}
 	if err := ListExisting(do); err != nil {
 		logger.Errorln(err)
-		t.FailNow()
+		fatal(t, err)
 	}
 	res := strings.Split(do.Result, "\n")
 	for _, r := range res {
@@ -383,7 +382,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	do.Args = []string{"testing"}
 	if err := ListRunning(do); err != nil {
 		logger.Errorln(err)
-		t.FailNow()
+		fatal(t, err)
 	}
 	res = strings.Split(do.Result, "\n")
 	for _, r := range res {

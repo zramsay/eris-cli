@@ -169,13 +169,13 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter := new(bytes.Buffer)
 	util.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
-	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	if err != nil {
 		fatal(t, err)
 	}
 
 	util.GlobalConfig.Writer = oldWriter
-	result := newWriter.String()
-	result = trimResult(result)
+	result := trimResult(string(b))
 	contents = trimResult(contents)
 	if result != contents {
 		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
@@ -187,12 +187,13 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter = new(bytes.Buffer)
 	util.GlobalConfig.Writer = newWriter
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
-	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
+	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	if err != nil {
 		fatal(t, err)
 	}
 
 	util.GlobalConfig.Writer = oldWriter
-	result = newWriter.String()
+	result = string(b)
 
 	s := struct {
 		ChainID string `json:"chain_id"`
@@ -228,35 +229,19 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	oldWriter := util.GlobalConfig.Writer
-	newWriter := new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
-	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
-		fatal(t, err)
-	}
-
-	util.GlobalConfig.Writer = oldWriter
-	result := trimResult(newWriter.String())
+	result := trimResult(string(runContainer(t, do.Name, args)))
 	contents := trimResult(ini.DefChainConfig())
 	if result != contents {
 		fatal(t, fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
 	}
 
 	// verify the contents of genesis.json (should have the validator from the csv)
-	oldWriter = util.GlobalConfig.Writer
-	newWriter = new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
-	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
-		fatal(t, err)
-	}
+	result = string(runContainer(t, do.Name, args))
 
-	util.GlobalConfig.Writer = oldWriter
-	result = newWriter.String()
-	spl := strings.Split(result, "\n")
 	var found bool
-	for _, s := range spl {
+	for _, s := range strings.Split(result, "\n") {
 		if strings.Contains(s, ini.DefaultPubKeys[0]) {
 			found = true
 			break
@@ -265,6 +250,19 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	if !found {
 		fatal(t, fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
 	}
+}
+
+func runContainer(t *testing.T, name string, args []string) []byte {
+	oldWriter := util.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	util.GlobalConfig.Writer = newWriter
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	util.GlobalConfig.Writer = oldWriter
+	return b
 }
 
 // eris chains new --options
@@ -284,16 +282,8 @@ func TestChainsNewConfigOpts(t *testing.T) {
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	oldWriter := util.GlobalConfig.Writer
-	newWriter := new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
-	if err := perform.DockerRunVolumesFromContainer(do.Name, false, args); err != nil {
-		fatal(t, err)
-	}
-
-	util.GlobalConfig.Writer = oldWriter
-	result := newWriter.String()
+	result := string(runContainer(t, do.Name, args))
 
 	spl := strings.Split(result, "\n")
 	var found bool
@@ -466,7 +456,7 @@ func testKillChain(t *testing.T, chain string) {
 
 	do := def.NowDo()
 	do.Args, do.Rm, do.RmD = []string{"keys"}, true, true
-	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
+	logger.Infof("Killing keys (from tests) =>\n%s\n", do.Name)
 	if e := services.KillService(do); e != nil {
 		fatal(t, e)
 	}
@@ -505,6 +495,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	if err := ListRunning(do); err != nil {
 		fatal(t, err)
 	}
+	logger.Debugln("RUNNING RESULT:", do.Result)
 	res = strings.Split(do.Result, "\n")
 	for _, r := range res {
 		logger.Debugf("Running =>\t\t\t%s\n", r)
@@ -606,5 +597,5 @@ func trimResult(s string) string {
 		t = strings.TrimSpace(t)
 		spl[i] = t
 	}
-	return strings.Join(spl, "\n")
+	return strings.Trim(strings.Join(spl, "\n"), "\n")
 }

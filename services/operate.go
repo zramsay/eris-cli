@@ -38,11 +38,13 @@ func StartService(do *definitions.Do) (err error) {
 	}
 
 	// TODO: move this wg, ch logic into func StartGroup([]*definitions.ServiceDefinition) error {}
-	wg, ch := new(sync.WaitGroup), make(chan error, 1)
+	wg, ch := new(sync.WaitGroup), make(chan error)
 	StartGroup(ch, wg, services)
 	go func() {
 		wg.Wait()
-		ch <- nil
+		select {
+		case ch <- nil:
+		}
 	}()
 	if err := <-ch; err != nil {
 		return err
