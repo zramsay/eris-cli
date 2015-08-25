@@ -1,28 +1,29 @@
 package ipfs
 
 import (
-	"os"
-
+	"fmt"
 	"github.com/eris-ltd/eris-cli/util"
+	"os"
 )
 
 //XXX url funcs can take flags for which host to go to.
-func IPFSBaseGatewayUrl(bootstrap bool) string {
-	if bootstrap {
-		return sexyUrl() + ":8080/ipfs/"
+func IPFSBaseGatewayUrl(gateway string) string {
+	if gateway == "eris" {
+		return fmt.Sprintf("%s%s", sexyUrl(), ":8080/ipfs/")
+	} else if gateway != "" {
+		return fmt.Sprintf("%s%s", gateway, ":8080/ipfs/")
 	} else {
-		return IPFSUrl() + ":8080/ipfs/"
+		return fmt.Sprintf("%s%s", IPFSUrl(), ":8080/ipfs/")
 	}
 }
 
 func IPFSBaseAPIUrl() string {
-	return IPFSUrl() + ":5001/api/v0/"
+	return fmt.Sprintf("%s%s", IPFSUrl(), ":5001/api/v0/")
 }
 
 func sexyUrl() string {
-	//bootstrap was down
-	//TODO fix before merge; DNS + load balancer
-	return "http://147.75.194.73"
+	//TODO load balancer (when one isn't enough)
+	return "http://ipfs.erisbootstrap.sexy"
 }
 
 func IPFSUrl() string {

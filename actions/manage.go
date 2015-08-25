@@ -190,9 +190,9 @@ func exportFile(actionName string) (string, error) {
 
 	var hash string
 	if logger.Level > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, false, logger.Writer)
+		hash, err = ipfs.SendToIPFS(fileName, "", logger.Writer)
 	} else {
-		hash, err = ipfs.SendToIPFS(fileName, false, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {

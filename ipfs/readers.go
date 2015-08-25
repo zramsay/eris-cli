@@ -22,7 +22,7 @@ func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error 
 }
 
 func GetFromIPFS(hash, fileName, dirName string, w io.Writer) error {
-	url := IPFSBaseGatewayUrl(false) + hash
+	url := IPFSBaseGatewayUrl("") + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
 	return DownloadFromUrlToFile(url, fileName, dirName, w)
 }
@@ -182,7 +182,6 @@ func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
 
 	//deal with ipfs' error ungracefully. maybe we want to maintain our own fork?
 	//or could run `cache` under the hood, so user doesn't even see error (although we probably shouldn't pin by default)
-	//IF this is the only current fix for this error, then we should have `eris files cacheD --rm [hash]` or something
 	if string(checkBody) == "Path Resolve error: context deadline exceeded" {
 		//this won't work unless we `eris files cache --csv (which will be especially needed to deal with this error)
 		return fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")

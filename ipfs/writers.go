@@ -8,8 +8,8 @@ import (
 	"os"
 )
 
-func SendToIPFS(fileName string, bootstrap bool, w io.Writer) (string, error) {
-	url := IPFSBaseGatewayUrl(bootstrap)
+func SendToIPFS(fileName, gateway string, w io.Writer) (string, error) {
+	url := IPFSBaseGatewayUrl(gateway)
 	w.Write([]byte("POSTing file to IPFS. File =>\t" + fileName + "\n"))
 	head, err := UploadFromFileToUrl(url, fileName, w)
 	if err != nil {
@@ -36,6 +36,7 @@ func PinToIPFS(fileHash string, w io.Writer) (string, error) {
 	}
 
 	if err = json.Unmarshal(body, &p); err != nil {
+		//XXX hacky
 		if fmt.Sprintf("%v", err) == "invalid character 'p' looking for beginning of value" {
 			return "", fmt.Errorf("The file has already been pinned recusively (probably from ipfs add or eris files put). It is only possible to cache a file you don't already have. see issue #133 for more information")
 		}

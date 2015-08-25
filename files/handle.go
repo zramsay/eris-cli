@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -34,6 +35,17 @@ func GetFiles(do *definitions.Do) error {
 
 func PutFiles(do *definitions.Do) error {
 	ensureRunning()
+
+	if do.Gateway != "" {
+		_, err := url.Parse(do.Gateway)
+		if err != nil {
+			return fmt.Errorf("Invalid gateway URL provided %v\n", err)
+		}
+		logger.Debugf("Posting to %v\n", do.Gateway)
+	} else {
+		logger.Debugf("Posting to gateway.ipfs.io\n")
+	}
+
 	if do.AddDir {
 		logger.Debugf("Gonna add the contents of a directory =>\t\t%s:%v\n", do.Name, do.Path)
 		hashes, err := exportDir(do.Name, do.Gateway)
@@ -49,13 +61,6 @@ func PutFiles(do *definitions.Do) error {
 		}
 		do.Result = hash
 	}
-	//make string flag that defaults to sexy but can point anywhere
-	if do.Gateway {
-		logger.Debugf("Posting to ipfs.erisbootstrap.sexy")
-	} else {
-		logger.Debugf("Posting to gateway.ipfs.io")
-	}
-
 	return nil
 }
 
@@ -175,7 +180,7 @@ func importFiles(csvfile, newdir string) error {
 	return nil
 }
 
-func exportFile(fileName string, gateway bool) (string, error) {
+func exportFile(fileName, gateway string) (string, error) {
 	var hash string
 	var err error
 
@@ -191,7 +196,7 @@ func exportFile(fileName string, gateway bool) (string, error) {
 	return hash, nil
 }
 
-func exportDir(dirName string, gateway bool) (string, error) {
+func exportDir(dirName, gateway string) (string, error) {
 	var hashes string
 	var err error
 
