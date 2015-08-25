@@ -1,7 +1,7 @@
 package definitions
 
 type Do struct {
-	Dev           bool     `mapstructure:"," json:"," yaml:"," toml:","` // ?
+	Dev           bool     `mapstructure:"," json:"," yaml:"," toml:","` // ? [csk]: no idea
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -18,7 +18,7 @@ type Do struct {
 	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // ?
+	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -27,6 +27,7 @@ type Do struct {
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`

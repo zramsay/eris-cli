@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	ErisChainStart    = "erisdb-wrapper run"
-	ErisChainStartApi = "erisdb-wrapper api"
-	ErisChainInstall  = "erisdb-wrapper install"
-	ErisChainNew      = "erisdb-wrapper new"
+	ErisChainStart    = "run"
+	ErisChainStartApi = "api"
+	ErisChainInstall  = "install"
+	ErisChainNew      = "new"
 )
 
 // viper read config file, marshal to definition struct,
@@ -38,9 +38,11 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	chain := definitions.BlankChain()
 	chain.Name = chainName
 	chain.Operations.ContainerNumber = cNum[0]
-	setChainDefaults(chain)
+	if err := setChainDefaults(chain); err != nil {
+		return nil, err
+	}
 
-	chainConf, err := loadChainDefinition(chainName)
+	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +57,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
+	logger.Debugf("\tBooting =>\t\t%v:%v\n", chain.Service.EntryPoint, chain.Service.Command)
 	return chain, nil
 }
 
@@ -69,10 +72,10 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	// chainID := chain.ChainID
 	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
+	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
 	chain.Service.Image = "eris/erisdb:" + vers
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
-	setChainDefaults(chain)
 	chain.Service.Command = cmd
 
 	srv := &definitions.ServiceDefinition{
@@ -119,7 +122,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	}
 	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
-	mergeChainAndService(chain, chnTemp.Service)
+	mergeDefaultsAndChain(chain, chnTemp.Service)
 	chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well
@@ -128,7 +131,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	// opinionated. we know.
 	for _, s := range []string{"", "service."} {
 		if chainConf.GetBool(s + "data_container") {
-			logger.Debugln("Loader.Chain.Marshal: Data Containers Turned On.")
+			logger.Debugln("Loader.Chain.Marshal. Data Containers Turned On.")
 			chain.Service.AutoData = true
 		}
 	}
@@ -136,18 +139,17 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	return nil
 }
 
-func setChainDefaults(chain *definitions.Chain) {
-	ver := strings.Join(strings.Split(version.VERSION, ".")[:2], ".") // only need 0.10 not full ver => 0.10.0
-	chain.Service.Image = "eris/erisdb:" + ver
-	chain.Service.AutoData = true
-	chain.ChainType = "mint"
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID, "CHAIN_TYPE="+chain.ChainType)
-	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
-}
+func setChainDefaults(chain *definitions.Chain) error {
+	cfg, err := util.LoadViperConfig(path.Join(BlockchainsPath), "default", "chain")
+	if err != nil {
+		return err
+	}
+	if err := cfg.Marshal(chain); err != nil {
+		return err
+	}
 
-// read the config file into viper
-func loadChainDefinition(chainName string) (*viper.Viper, error) {
-	return util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
+	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
+	return nil
 }
 
 //----------------------------------------------------------------------
@@ -159,8 +161,7 @@ func checkChainNames(chain *definitions.Chain) {
 }
 
 // overwrite service attributes with chain config
-// TODO: remove this in favor of using Viper's SetDefaults functionality.
-func mergeChainAndService(chain *definitions.Chain, service *definitions.Service) {
+func mergeDefaultsAndChain(chain *definitions.Chain, service *definitions.Service) {
 	chain.Service.Name = chain.Name
 	chain.Service.Image = util.OverWriteString(chain.Service.Image, service.Image)
 	chain.Service.Command = util.OverWriteString(chain.Service.Command, service.Command)
