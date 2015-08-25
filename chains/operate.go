@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,13 +19,12 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
 func NewChain(do *definitions.Do) error {
 	// read chainID from genesis. genesis may be in dir
 	// if no genesis or no genesis.chain_id, chainID = name
-	var err error
+	/*var err error
 	if do.GenesisFile = resolveGenesisFile(do.GenesisFile, do.Path); do.GenesisFile == "" {
 		do.ChainID = do.Name
 	} else {
@@ -32,7 +32,10 @@ func NewChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-	}
+	}*/
+
+	// for now we just let setupChain force do.ChainID = do.Name
+	// and we overwrite using jq in the container
 	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.ChainID)
 	return setupChain(do, loaders.ErisChainNew)
 }
@@ -44,6 +47,8 @@ func InstallChain(do *definitions.Do) error {
 func StartChain(do *definitions.Do) error {
 	logger.Infoln("Ensuring Key Server is Started.")
 	//should it take a flag? keys server may be running another cNum
+	// XXX: currently we don't use or need a key server.
+	// plus this should be specified in a service def anyways
 	keysService, err := loaders.LoadServiceDefinition("keys", false, 1)
 	if err != nil {
 		return err
@@ -115,6 +120,7 @@ func KillChain(do *definitions.Do) error {
 	return nil
 }
 
+// Throw away chains are used for eris contracts
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
 	do.Path = filepath.Join(ChainsConfigPath, "default")
@@ -154,11 +160,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
-	// do.Run containers and exit (creates data container)
+	// ensure/create data container
 	if !data.IsKnown(containerName) {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data containr =>\t%v", err)
 		}
+	} else {
+		logger.Debugln("Data container already exists for", do.Name)
 	}
 
 	logger.Debugf("Chain's Data Contain Built =>\t%s\n", do.Name)
@@ -169,38 +177,39 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 			logger.Infof("Error on setupChain =>\t\t%v\n", err)
 			logger.Infoln("Cleaning up...")
 			if err2 := RmChain(do); err2 != nil {
+				// maybe be less dramatic
 				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
 			}
 		}
 	}()
 
-	// copy do.Path, do.GenesisFile, config into container
+	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
 	containerDst := path.Join("blockchains", do.Name)           // path in container
 	dst := path.Join(DataContainersPath, do.Name, containerDst) // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
 
+	logger.Debugln("container destination:", containerDst)
+	logger.Debugln("local destination:", dst)
+
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	if do.Path != "" {
-		if err = Copy(do.Path, dst); err != nil {
-			return err
-		}
-	}
-	if do.GenesisFile != "" {
-		if err = Copy(do.GenesisFile, path.Join(dst, "genesis.json")); err != nil {
-			return err
-		}
-	} else {
-		// TODO: do.Run mintgen and open the do.GenesisFile in editor
+	var csvFile, csvPath string
+	if do.CSV != "" {
+		csvFile = "genesis.csv"
+		csvPath = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile)
 	}
 
-	if do.ConfigFile != "" {
-		if err = Copy(do.ConfigFile, path.Join(dst, "config."+path.Ext(do.ConfigFile))); err != nil {
-			return err
-		}
+	if err := copyFiles(dst, []stringPair{
+		stringPair{do.Path, ""},
+		stringPair{do.GenesisFile, "genesis.json"},
+		stringPair{do.ConfigFile, "config.toml"},
+		stringPair{do.Priv, "priv_validator.json"},
+		stringPair{do.CSV, csvFile},
+	}); err != nil {
+		return err
 	}
 
 	// copy from host to container
@@ -214,20 +223,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
 
-	//get maintainer info
-	uName, err := gitconfig.Username()
+	//set maintainer info
+	chain.Maintainer.Name, chain.Maintainer.Email, err = util.GitConfigUser()
 	if err != nil {
-		logger.Debugf("Could not find git user.name, setting chain.Maintainer.Name = \"\"")
-		uName = ""
+		logger.Debugf(err.Error())
 	}
-	email, err := gitconfig.Email()
-	if err != nil {
-		logger.Debugf("Could not find git user.email, setting chain.Maintainer.Email = \"\"")
-		email = ""
-	}
-
-	chain.Maintainer.Name = uName
-	chain.Maintainer.Email = email
 
 	// write the chain definition file ...
 	fileName := filepath.Join(BlockchainsPath, do.Name) + ".toml"
@@ -253,19 +253,33 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		genGen = true
 	}
 
+	// write the list of <key>:<value> config options as flags
+	buf := new(bytes.Buffer)
+	for _, cv := range do.ConfigOpts {
+		spl := strings.Split(cv, "=")
+		if len(spl) != 2 {
+			return fmt.Errorf("Config options should be <key>=<value> pairs. Got %s", cv)
+		}
+		buf.WriteString(fmt.Sprintf(" --%s=%s", spl[0], spl[1]))
+	}
+	configOpts := buf.String()
+
 	// set chainid and other vars
 	envVars := []string{
-		"CHAIN_ID=" + do.ChainID,
-		"CONTAINER_NAME=" + containerName,
+		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
+		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("RUN=%v", do.Run),
 		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
+		fmt.Sprintf("CSV=%v", csvPath),
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
 	}
 
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
 	for _, eV := range envVars {
 		chain.Service.Environment = append(chain.Service.Environment, eV)
 	}
-	// TODO mint vs. erisdb (in terms of rpc)
+
+	// TODO: if do.N > 1 ...
 
 	chain.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 
@@ -313,4 +327,21 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 		chainID = name
 	}
 	return chainID, nil
+}
+
+type stringPair struct {
+	key   string
+	value string
+}
+
+func copyFiles(dst string, files []stringPair) error {
+	for _, f := range files {
+		if f.key != "" {
+			logger.Debugf("\tcopying files from %s to %s\n", f.key, path.Join(dst, f.value))
+			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

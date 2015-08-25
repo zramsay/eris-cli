@@ -38,11 +38,13 @@ func StartService(do *definitions.Do) (err error) {
 	}
 
 	// TODO: move this wg, ch logic into func StartGroup([]*definitions.ServiceDefinition) error {}
-	wg, ch := new(sync.WaitGroup), make(chan error, 1)
+	wg, ch := new(sync.WaitGroup), make(chan error)
 	StartGroup(ch, wg, services)
 	go func() {
 		wg.Wait()
-		ch <- nil
+		select {
+		case ch <- nil:
+		}
 	}()
 	if err := <-ch; err != nil {
 		return err
@@ -101,13 +103,15 @@ func BuildServicesGroup(srvName string, cNum int, services ...*definitions.Servi
 	if err != nil {
 		return nil, err
 	}
-	for _, sName := range srv.ServiceDeps {
-		logger.Debugf("Found service dependency =>\t%s\n", sName)
-		s, e := BuildServicesGroup(sName, cNum)
-		if e != nil {
-			return nil, e
+	if srv.ServiceDeps != nil {
+		for _, sName := range srv.ServiceDeps.Dependencies {
+			logger.Debugf("Found service dependency =>\t%s\n", sName)
+			s, e := BuildServicesGroup(sName, cNum)
+			if e != nil {
+				return nil, e
+			}
+			services = append(services, s...)
 		}
-		services = append(services, s...)
 	}
 	services = append(services, srv)
 	return services, nil

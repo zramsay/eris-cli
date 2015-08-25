@@ -1,7 +1,11 @@
 package initialize
 
-func defKeys() string {
-  return `[service]
+import (
+	"fmt"
+)
+
+func DefaultKeys() string {
+	return `[service]
 name = "keys"
 
 image = "eris/keys"
@@ -9,8 +13,8 @@ data_container = true
 `
 }
 
-func defIpfs() string {
-  return `name = "ipfs"
+func DefaultIpfs() string {
+	return `name = "ipfs"
 
 [service]
 name = "ipfs"
@@ -32,8 +36,34 @@ requires = [""]
 `
 }
 
+func DefaultIpfs2() string {
+	return `name = "ipfs"
+
+[service]
+name = "ipfs"
+image = "eris/ipfs"
+data_container = true
+ports = ["4001:4001", "5001:5001", "8080:8080"]
+user = "root"
+
+[services]
+dependencies = ["keys"]
+
+[maintainer]
+name = "Eris Industries"
+email = "support@erisindustries.com"
+
+[location]
+repository = "github.com/eris-ltd/eris-services"
+
+[machine]
+include = ["docker"]
+requires = [""]
+`
+}
+
 func defAct() string {
-  return `name = "do not use"
+	return `name = "do not use"
 services = [ "ipfs" ]
 chain = ""
 steps = [
@@ -58,8 +88,8 @@ requires = [""]
 `
 }
 
-func defChainConfig() string {
-  return `
+func DefChainConfig() string {
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -68,13 +98,13 @@ seeds = ""
 fast_sync = false
 db_backend = "leveldb"
 log_level = "debug"
-node_laddr = ""
-rpc_laddr = ""
+node_laddr = "0.0.0.0:46656"
+rpc_laddr = "0.0.0.0:46657"
 `
 }
 
-func defChainGen() string {
-  return `
+func DefChainGen() string {
+	return `
 {
   "chain_id": "my_tests",
   "accounts": [
@@ -118,8 +148,15 @@ func defChainGen() string {
 `
 }
 
-func defChainKeys() string {
-  return `
+// different from genesis above!
+var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
+
+func DefChainCSV() string {
+	return fmt.Sprintf("%s,", DefaultPubKeys[0])
+}
+
+func DefChainKeys() string {
+	return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -137,8 +174,8 @@ func defChainKeys() string {
 `
 }
 
-func defChainServConfig() string {
-  return `
+func DefChainServConfig() string {
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -11,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
@@ -53,11 +55,11 @@ func DockerCreateDataContainer(srvName string, containerNumber int) error {
 // create a container with volumes-from the srvName data container
 // and either attach interactively or execute a command
 // container should be destroyed on exit
-func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) error {
+func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) (result []byte, err error) {
 	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
 	cont, err := createContainer(opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	id_main := cont.ID
 
@@ -82,7 +84,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	// start the container (either interactive or one off command)
 	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
 	if err := startContainer(id_main, &opts); err != nil {
-		return err
+		return nil, err
 	}
 
 	if interactive {
@@ -91,19 +93,56 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		go func() {
 			attachContainer(id_main)
 		}()
-	} else {
-		logger.Debugf("Getting logs for container =>\t%s\n", id_main)
-		if err := logsContainer(id_main, true, "all"); err != nil {
-			return err
-		}
 	}
 
 	logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
 	if err := waitContainer(id_main); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if !interactive {
+		logger.Debugf("Getting logs for container =>\t%s\n", id_main)
+		if err := logsContainer(id_main, true, "all"); err != nil {
+			return nil, err
+		}
+		// now lets get the logs out
+		// XXX: we only do this if the global config writer is a bytes.Buffer
+		if util.GlobalConfig.Writer != nil {
+			writer := util.GlobalConfig.Writer
+			reader, ok := writer.(*bytes.Buffer)
+			if !ok {
+				return nil, nil
+			}
+
+			done := make(chan struct{}, 1)
+			var b []byte
+			go func() {
+				// TODO: this routine will hang forever if  ReadAll doesn't complete
+				// need to be smarter
+				logger.Debugln("attempting to read log reader")
+				b, err = ioutil.ReadAll(reader)
+				done <- struct{}{}
+			}()
+			ticker := time.NewTicker(time.Second * 2)
+		LOOP:
+			for {
+				select {
+				case <-ticker.C:
+					logger.Debugln("tick!")
+					if reader.Len() == 0 {
+						// nothing to read means dont bother waiting
+						break LOOP
+					} else {
+						logger.Debugln("Read something", reader.Len())
+					}
+				case <-done:
+					return b, err
+				}
+			}
+		}
+	}
+
+	return nil, nil
 }
 
 func DockerRun(srv *def.Service, ops *def.Operation) error {
@@ -285,7 +324,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 		return nil
 	}
 
-	if skipPull {
+	if !skipPull {
 		logger.Infof("Pulling new image =>\t\t%s\n", srv.Image)
 		err := DockerPull(srv, ops)
 		if err != nil {
@@ -367,8 +406,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infof("Getting Logs for Service ID =>\t%s\n", service.ID)
-		err := logsContainer(service.ID, follow, tail)
-		if err != nil {
+		if err := logsContainer(service.ID, follow, tail); err != nil {
 			return err
 		}
 	} else {

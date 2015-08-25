@@ -78,7 +78,7 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	srv := &definitions.ServiceDefinition{
 		Name:        chain.Name,
 		ServiceID:   chain.ChainID,
-		ServiceDeps: []string{"keys"},
+		ServiceDeps: &definitions.ServiceDeps{[]string{"keys"}},
 		Service:     chain.Service,
 		Operations:  chain.Operations,
 		Maintainer:  chain.Maintainer,

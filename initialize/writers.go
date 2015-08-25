@@ -23,10 +23,13 @@ func pullRepo(name, location string, verbose bool) error {
 }
 
 func dropDefaults() error {
-	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defKeys); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "keys.toml", DefaultKeys); err != nil {
 		return fmt.Errorf("Cannot add keys: %s.\n", err)
 	}
-	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defIpfs); err != nil {
+	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", DefaultIpfs); err != nil {
+		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
+	}
+	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", DefaultIpfs2); err != nil {
 		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
 	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
@@ -37,17 +40,20 @@ func dropDefaults() error {
 
 func dropChainDefaults() error {
 	defChainDir := filepath.Join(common.BlockchainsPath, "config", "default")
-	if err := writeDefaultFile(defChainDir, "config.toml", defChainConfig); err != nil {
+	if err := writeDefaultFile(defChainDir, "config.toml", DefChainConfig); err != nil {
 		return fmt.Errorf("Cannot add default config.toml: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "genesis.json", defChainGen); err != nil {
+	if err := writeDefaultFile(defChainDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "priv_validator.json", defChainKeys); err != nil {
+	if err := writeDefaultFile(defChainDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "server_conf.toml", defChainServConfig); err != nil {
+	if err := writeDefaultFile(defChainDir, "server_conf.toml", DefChainServConfig); err != nil {
 		return fmt.Errorf("Cannot add default server_conf.toml: %s.\n", err)
+	}
+	if err := writeDefaultFile(defChainDir, "genesis.csv", DefChainCSV); err != nil {
+		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
 	}
 	return nil
 }

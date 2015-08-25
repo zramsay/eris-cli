@@ -265,10 +265,12 @@ func UpdateChain(do *definitions.Do) error {
 		return err
 	}
 
-	// DockerRebuild is built for services, adding false to the final
-	//   variable will mean it pulls. But we want the opposite default
-	//   behaviour for chains as we do for services in this regard
-	//   so we flip the variable.
+	// if the chain is already running we need to set the right env vars and command
+	if IsChainRunning(chain) {
+		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
+		chain.Service.Command = loaders.ErisChainStart
+	}
+
 	err = perform.DockerRebuild(chain.Service, chain.Operations, do.SkipPull, do.Timeout)
 	if err != nil {
 		return err

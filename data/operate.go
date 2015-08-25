@@ -63,7 +63,7 @@ func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
-		if err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args); err != nil {
+		if _, err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args); err != nil {
 			return err
 		}
 	} else {
