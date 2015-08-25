@@ -1,24 +1,14 @@
 machine:
   post:
-    - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
-    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
 
 dependencies:
-  pre:
-    # - docker pull eris/erisdb:0.10
-    # - docker pull eris/ipfs
-    # - docker pull eris/keys
-    # - docker pull eris/data
-
   override:
-    - sudo curl -L -o /usr/bin/docker 'http://s3-external-1.amazonaws.com/circle-downloads/docker-1.6.0-circleci'; chmod 0755 /usr/bin/docker; true
+    - sudo curl -L -o /usr/bin/docker http://s3-external-1.amazonaws.com/circle-downloads/docker-$DOCKER_VERSION-circleci; chmod 0755 /usr/bin/docker; true
     - sudo service docker start
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-    # - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
-    - "DOCKER_MACHINE_VERSION=0.4.0; sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && sudo chmod +x /usr/local/bin/docker-machine"
+    - "sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && sudo chmod +x /usr/local/bin/docker-machine"
 
 test:
   override:
@@ -28,25 +18,10 @@ deployment:
   master:
     branch: master
     commands:
-      - docker build -t eris/eris .
       - docker push eris/eris
-      # todo: refactor this to use tests/build_tool.sh
-      - mkdir -p docs/eris-cli
-      - go run docs/generator.go
-      - "cd ~ && git clone git@github.com:eris-ltd/docs.erisindustries.com.git"
-      - "rsync -av docs/eris-cli ~/docs.erisindustries.com/documentation/"
-      - >
-          cd ~/docs.erisindustries.com;
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "All Good!"
-          else
-            git add -A :/ &&
-            git commit -m "eris-cli build number $CIRCLE_BUILD_NUM doc generation" &&
-            git push origin master
-          fi
+      - docs/build.sh
+
   develop:
     branch: develop
     commands:
-      - docker build -t eris/eris:develop .
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push eris/eris:develop
+      - docker push eris/eris
