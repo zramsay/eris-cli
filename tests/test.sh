@@ -11,6 +11,8 @@ then
 else
   repo=$GOPATH/src/$base
 fi
+branch=${CIRCLE_BRANCH:=master}
+branch=${branch/-/_}
 
 # Docker Backend Versions Eris Tests Against -- Final element in this array is the definitive one.
 #   Circle passes or fails based on it. To speed testing uncomment out the second line to override
@@ -64,7 +66,7 @@ runTests(){
     #   a non-zero exit code
     if [ "$CIRCLE_BRANCH" ]
     then
-      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$CIRCLE_BRANCH
+      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$branch
     else
       docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
     fi

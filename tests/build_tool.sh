@@ -3,6 +3,7 @@
 release_maj="0.10"
 release_min="0.10.1"
 branch=${CIRCLE_BRANCH:=master}
+branch=${branch/-/_}
 
 start=`pwd`
 cd $repo
