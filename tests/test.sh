@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
-set -e
 
 # ----------------------------------------------------------------------------
 # Set definitions and defaults
-
-# Docker Backend Versions Eris Tests Against
-declare -a docker_versions=( "1.8.0" "1.8.1" "1.7.1" )
-# declare -a docker_versions=( "1.7.1" )
 
 # Where are the Things
 base=github.com/eris-ltd/eris-cli
@@ -17,21 +12,27 @@ else
   repo=$GOPATH/src/$base
 fi
 
-# For quick dev use comment out the override (second line); circle should use the override
-machine_definitions="$(strings /dev/urandom | grep -o '[[:alnum:]]' | head -n 10 | tr -d '\n' ; echo)"
-machine_definitions=matDef
+# Docker Backend Versions Eris Tests Against -- Final element in this array is the definitive one.
+#   Circle passes or fails based on it. To speed testing uncomment out the second line to override
+#   the array and just test against the authoritative one. If testing against a specific backend
+#   then change the authoritative one to use that. We define "authoritative" to mean "what docker
+#   installs by default on Linux"
+declare -a docker_versions=( "1.8.0" "1.8.1" "1.7.1" )
+# declare -a docker_versions=( "1.7.1" )
 
-# secondary suite of backend machines (swarm, or data_center)
-swarm="nyc2"
-# primary swarm of backend machines -- comment out to use secondary machines
+# Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
+#   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
+#   data centers. These boxes are on Digital Ocean.
 swarm="ams3"
+# swarm="nyc2"
 
-# how will the tool test run?
+# Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="/home/eris/test_tool.sh"
 testimage=eris/eris
 testuser=eris
 remotesocket=2376
 localsocket=/var/run/docker.sock
+machine_definitions=matDef
 
 # ----------------------------------------------------------------------------
 # Define how tests will run
@@ -40,95 +41,72 @@ runTests(){
   if [[ $1 == "local" ]]
   then
     machine="eris-test-local"
-    swarmb4=$swarm # need to save this value when called with "all"
+    # need to save this value when called with "all"
+    swarmb4=$swarm
     swarm=solo
     ver=$(docker version | grep "Client version" | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')
-    echo ""
-    echo ""
-    echo "Testing (locally) against"
-    echo -e "Docker version:\t$ver"
-    echo -e "In Data Center:\t$swarm"
-    echo -e "Machine name:\t$machine"
-    # Note NEVER do this in circle. It will explode
-    docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -v $localsocket:$localsocket --user $testuser $testimage
+    # Note NEVER do this in circle. It will explode.
+    if [ ! "$CIRCLE_BRANCH" ]
+    then
+      if [[ $(uname -s) == "Linux" ]]
+      then
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage
+      else
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
+      fi
+    fi
+    # when doing "tests/test.sh all" we want to use the swarm despite changing above
+    test_exit=$(echo $?)
     swarm=$swarmb4
   else
     machine=eris-test-$swarm-$ver
-    echo ""
-    echo ""
-    echo "Testing against"
-    echo -e "Docker version:\t$ver"
-    echo -e "In Data Center:\t$swarm"
-    echo -e "Machine name:\t$machine"
-    echo ""
-    echo ""
-    echo "Starting Machine."
-    docker-machine start $machine
-    sleep 15 # boot time for the machine. TODO: curl on a loop..?
-    echo "Machine Started."
-    if [ $run_count -ne $run_len ]
-    then
-      set +e
-    fi
+    # only the last element in the backend array should cause this script to exit with
+    #   a non-zero exit code
     if [ "$CIRCLE_BRANCH" ]
     then
-      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket:$remotesocket --user $testuser $testimage:$CIRCLE_BRANCH
+      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$CIRCLE_BRANCH
     else
-      docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket:$remotesocket --user $testuser $testimage
+      docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
     fi
-    if [ $run_count -ne $run_len ]
-    then
-      set -e
-    fi
-    echo "Stopping Machine."
-    docker-machine kill $machine
-    echo "Machine Stopped."
+    test_exit=$(echo $?)
   fi
 }
 
 # ---------------------------------------------------------------------------
-# Go!
-echo ""
+# Get the things build and dependencies turned on
+
+echo "Hello! I'm the testing suite for eris."
 echo ""
 echo "Getting machine definition files sorted."
-echo ""
-echo ""
-# output suppressed to optimize logs captured. to debug switch commented lines
+# suppressed by default as too chatty
 sh -c "docker run --name $machine_definitions erisindustries/test_machines" &>/dev/null
-# docker run --name $machine_definitions erisindustries/test_machines
-if [ "$CIRCLE_BRANCH" ]
-then
-  # Circle won't have the machine definitions on the host. Need to export them
-  docker cp $machine_definitions:/home/eris/.docker $HOME
-fi
 
 echo ""
-echo ""
 echo "Building eris in a docker container."
-echo ""
-echo ""
 strt=`pwd`
 cd $repo
 export testimage
 export repo
-# suppressed by default as too chatty. to debug, switch commented lines
+# suppressed by default as too chatty
 tests/build_tool.sh > /dev/null
-# tests/build_tool.sh
+if [ $? -ne 0 ]
+then
+  echo "Could not build eris. Debug via by directly running [`pwd`/build_tool.sh]"
+  exit 1
+fi
 
-echo "Testing tool."
+# ---------------------------------------------------------------------------
+# Go!
+
+echo ""
 if [[ $1 == "local" ]]
 then
   # We don't wan't purely local tests to exit the script or it will preempt teardown
-  set +e
   runTests "local"
-  set -e
 else
   if [[ $1 == "all" ]]
   then
-    # comment the sets if you want "all" to fail if local fails
-    # set +e
     runTests "local"
-    # set -e
   fi
 
   # The last API in the array should be the *authoritative* one that will get reported to circle
@@ -143,14 +121,14 @@ fi
 
 # ---------------------------------------------------------------------------
 # Cleaning up
+
 echo ""
 echo ""
 echo "Cleaning up"
-echo ""
-echo ""
 if [ ! "$CIRCLE_BRANCH" ]
 then
-  docker rm $machine_definitions
+  sh -c "docker rm $machine_definitions" &>/dev/null
 fi
 
 cd $strt
+exit $test_exit
