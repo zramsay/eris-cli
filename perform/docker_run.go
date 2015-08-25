@@ -56,6 +56,7 @@ func DockerCreateDataContainer(srvName string, containerNumber int) error {
 // and either attach interactively or execute a command
 // container should be destroyed on exit
 func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) (result []byte, err error) {
+	logger.Infof("DockerRunVolumesFromContnr =>\t%s:%v\n", volumesFrom, args)
 	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
 	cont, err := createContainer(opts)
 	if err != nil {
@@ -75,7 +76,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	}()
 
 	defer func() {
-		logger.Infof("Removing container %s\n", id_main)
+		logger.Infof("Removing container =>\t\t%s\n", id_main)
 		if err2 := removeContainer(id_main); err2 != nil {
 			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 		}
@@ -233,7 +234,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
 	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
-	logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
+	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	if err := startContainer(id_main, &optsServ); err != nil {
 		return err

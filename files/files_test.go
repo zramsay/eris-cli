@@ -34,9 +34,9 @@ func fatal(t *testing.T, err error) {
 func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 
-	//	logLevel = 0
+	logLevel = 0
 	// logLevel = 1
-	logLevel = 3
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -113,7 +113,7 @@ func testsInit() error {
 	ifExit(ini.Initialize(true, false))
 
 	// set ipfs endpoint
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+	// os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") // conflicts with docker-machine based testing
 
 	// dump a test file with some stuff
 	f, err := os.Create(file)

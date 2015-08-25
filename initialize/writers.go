@@ -9,13 +9,11 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-func pullRepo(name, location string, verbose bool) error {
+func pullRepo(name, location string) error {
 	src := "https://github.com/eris-ltd/" + name
 	c := exec.Command("git", "clone", src, location)
-	if verbose {
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-	}
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
 		return err
 	}
@@ -40,6 +38,9 @@ func dropDefaults() error {
 
 func dropChainDefaults() error {
 	defChainDir := filepath.Join(common.BlockchainsPath, "config", "default")
+	if err := writeDefaultFile(common.BlockchainsPath, "default.toml", DefChainService); err != nil {
+		return fmt.Errorf("Cannot add default chain definition: %s.\n", err)
+	}
 	if err := writeDefaultFile(defChainDir, "config.toml", DefChainConfig); err != nil {
 		return fmt.Errorf("Cannot add default config.toml: %s.\n", err)
 	}
@@ -67,7 +68,6 @@ func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err != nil {
 		return err
 	}
-	def := toWrite()
-	writer.Write([]byte(def))
+	writer.Write([]byte(toWrite()))
 	return nil
 }

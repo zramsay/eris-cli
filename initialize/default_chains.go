@@ -2,25 +2,24 @@ package initialize
 
 import (
   "fmt"
-  "strings"
 
   "github.com/eris-ltd/eris-cli/version"
 )
 
-func defChain() string {
-  ver := strings.Join(strings.Split(version.VERSION, ".")[:2], ".") // only need 0.10 not full ver => 0.10.0
+func DefChainService() string {
+  ver := version.VERSION
   return fmt.Sprintf(`
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 [service]
-image          = "eris/erisdb:0.10"
+image          = "eris/erisdb:%s"
 data_container = true
 ports          = [ "1337:1337", "46656:46656", "46657:46657" ]
+entry_point    = "erisdb-wrapper"
 
 [maintainer]
 name = "Eris Industries"
 email = "support@erisindustries.com"
-
 `, ver)
 }
 
