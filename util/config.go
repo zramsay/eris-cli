@@ -162,11 +162,11 @@ func GitConfigUser() (uName string, email string, err error) {
 	}
 
 	if uName == "" && email == "" {
-		err = fmt.Errorf("Can not find username or email in git config. Using \"\" for both")
+		err = fmt.Errorf("Can not find username or email in git config. Using \"\" for both\n")
 	} else if uName == "" {
-		err = fmt.Errorf("Can not find username in git config. Using \"\"")
+		err = fmt.Errorf("Can not find username in git config. Using \"\"\n")
 	} else if email == "" {
-		err = fmt.Errorf("Can not find email in git config. Using \"\"")
+		err = fmt.Errorf("Can not find email in git config. Using \"\"\n")
 	}
 	return
 }

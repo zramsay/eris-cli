@@ -8,27 +8,29 @@ machine:
 
 dependencies:
   pre:
-    - sudo curl -L -o /usr/bin/docker 'http://s3-external-1.amazonaws.com/circle-downloads/docker-1.6.0-circleci'; chmod 0755 /usr/bin/docker; true
-    - sudo service docker start
-    - docker pull eris/erisdb:0.10
-    - docker pull eris/ipfs
-    - docker pull eris/keys
-    - docker pull eris/data
+    # - docker pull eris/erisdb:0.10
+    # - docker pull eris/ipfs
+    # - docker pull eris/keys
+    # - docker pull eris/data
 
   override:
-    - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
+    - sudo curl -L -o /usr/bin/docker 'http://s3-external-1.amazonaws.com/circle-downloads/docker-1.6.0-circleci'; chmod 0755 /usr/bin/docker; true
+    - sudo service docker start
+    - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+    # - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
+    - "DOCKER_MACHINE_VERSION=0.4.0; sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && sudo chmod +x /usr/local/bin/docker-machine"
 
 test:
   override:
-    - tests/test.sh
+    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0"
 
 deployment:
   master:
     branch: master
     commands:
       - docker build -t eris/eris .
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push eris/eris
+      # todo: refactor this to use tests/build_tool.sh
       - mkdir -p docs/eris-cli
       - go run docs/generator.go
       - "cd ~ && git clone git@github.com:eris-ltd/docs.erisindustries.com.git"

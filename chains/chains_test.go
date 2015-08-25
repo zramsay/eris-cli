@@ -44,9 +44,9 @@ func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 	var err error
 
-	//	logLevel = 0
+	logLevel = 0
 	// logLevel = 1
-	logLevel = 3
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
