@@ -4,9 +4,9 @@ set -e
 # for reference only. it takes forever to provision these
 # docker-machine create --driver digitalocean \
 #   --digitalocean-access-token $DO_TOKEN \
-#   --digitalocean-region $data_center \
-#   --engine-env DOCKER_VERSION=$ver \
-#   eris-test-$data_center-$ver
+#   --digitalocean-region ams3 \
+#   --engine-env DOCKER_VERSION=1.8.1 \
+#   eris-build-ams3-apt
 
 export DOCKER_VERSION=$(hostname | cut -d'-' -f4)
 wget -qO- https://get.docker.io/gpg | apt-key add -
