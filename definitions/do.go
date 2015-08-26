@@ -1,7 +1,7 @@
 package definitions
 
 type Do struct {
-	Dev           bool     `mapstructure:"," json:"," yaml:"," toml:","` // ? [csk]: no idea
+	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -11,7 +11,6 @@ type Do struct {
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Gateway       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -29,12 +28,14 @@ type Do struct {
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
-	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`

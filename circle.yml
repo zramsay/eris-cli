@@ -2,6 +2,9 @@ machine:
   post:
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
+    - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
 
 dependencies:
   override:
@@ -12,6 +15,7 @@ dependencies:
 
 test:
   override:
+    - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
     - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0"
 
 deployment:
