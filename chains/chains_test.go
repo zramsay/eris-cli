@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
@@ -165,16 +166,16 @@ func TestChainsNewDirGen(t *testing.T) {
 	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	oldWriter := util.GlobalConfig.Writer
+	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
+	config.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
 	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args)
 	if err != nil {
 		fatal(t, err)
 	}
 
-	util.GlobalConfig.Writer = oldWriter
+	config.GlobalConfig.Writer = oldWriter
 	result := trimResult(string(b))
 	contents = trimResult(contents)
 	if result != contents {
@@ -183,16 +184,16 @@ func TestChainsNewDirGen(t *testing.T) {
 
 	// verify the chain_id got swapped in the genesis.json
 	// TODO: functions for facilitating this
-	oldWriter = util.GlobalConfig.Writer
+	oldWriter = config.GlobalConfig.Writer
 	newWriter = new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
+	config.GlobalConfig.Writer = newWriter
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
 	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args)
 	if err != nil {
 		fatal(t, err)
 	}
 
-	util.GlobalConfig.Writer = oldWriter
+	config.GlobalConfig.Writer = oldWriter
 	result = string(b)
 
 	s := struct {
@@ -253,15 +254,15 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 }
 
 func runContainer(t *testing.T, name string, args []string) []byte {
-	oldWriter := util.GlobalConfig.Writer
+	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
-	util.GlobalConfig.Writer = newWriter
+	config.GlobalConfig.Writer = newWriter
 	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
 	if err != nil {
 		fatal(t, err)
 	}
 
-	util.GlobalConfig.Writer = oldWriter
+	config.GlobalConfig.Writer = oldWriter
 	return b
 }
 
@@ -528,7 +529,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 func testsInit() error {
 	var err error
 	// TODO: make a reader/pipe so we can see what is written from tests.
-	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
@@ -537,7 +538,7 @@ func testsInit() error {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	util.ChangeErisDir(erisDir)
+	config.ChangeErisDir(erisDir)
 
 	// init dockerClient
 	util.DockerConnect(false, "eris")

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -108,8 +109,8 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		}
 		// now lets get the logs out
 		// XXX: we only do this if the global config writer is a bytes.Buffer
-		if util.GlobalConfig.Writer != nil {
-			writer := util.GlobalConfig.Writer
+		if config.GlobalConfig.Writer != nil {
+			writer := config.GlobalConfig.Writer
 			reader, ok := writer.(*bytes.Buffer)
 			if !ok {
 				return nil, nil
@@ -613,8 +614,8 @@ func attachContainer(id string) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
 		InputStream:  os.Stdin,
-		OutputStream: util.GlobalConfig.Writer,
-		ErrorStream:  util.GlobalConfig.ErrorWriter,
+		OutputStream: config.GlobalConfig.Writer,
+		ErrorStream:  config.GlobalConfig.ErrorWriter,
 		Logs:         true,
 		Stream:       true,
 		Stdin:        true,
@@ -643,9 +644,9 @@ func logsContainer(id string, follow bool, tail string) error {
 	var writer io.Writer
 	var eWriter io.Writer
 
-	if util.GlobalConfig != nil {
-		writer = util.GlobalConfig.Writer
-		eWriter = util.GlobalConfig.ErrorWriter
+	if config.GlobalConfig != nil {
+		writer = config.GlobalConfig.Writer
+		eWriter = config.GlobalConfig.ErrorWriter
 	} else {
 		writer = os.Stdout
 		eWriter = os.Stderr

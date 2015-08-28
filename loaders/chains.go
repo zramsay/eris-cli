@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -42,7 +43,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
-	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
+	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := util.LoadViperConfig(path.Join(BlockchainsPath), "default", "chain")
+	cfg, err := config.LoadViperConfig(path.Join(BlockchainsPath), "default", "chain")
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -224,7 +225,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
 
 	//set maintainer info
-	chain.Maintainer.Name, chain.Maintainer.Email, err = util.GitConfigUser()
+	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
 		logger.Debugf(err.Error())
 	}

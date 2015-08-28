@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -13,7 +13,7 @@ import (
 func LoadContractPackage(path, chainName, command, typ string) (*definitions.Contracts, error) {
 	contConf, err := loadContractPackage(path)
 	if err != nil {
-		// return a custom error message because util.LoadViperConfig's message
+		// return a custom error message because config.LoadViperConfig's message
 		// will be unhelpful in this context.
 		return nil, fmt.Errorf("The marmots could not read that package.json.")
 	}
@@ -39,7 +39,7 @@ func LoadContractPackage(path, chainName, command, typ string) (*definitions.Con
 
 // read the config file into viper
 func loadContractPackage(path string) (*viper.Viper, error) {
-	return util.LoadViperConfig(path, "package", "contracts")
+	return config.LoadViperConfig(path, "package", "contracts")
 }
 
 func marshalContractPackage(contConf *viper.Viper) (*definitions.Contracts, error) {

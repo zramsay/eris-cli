@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/services"
@@ -96,14 +97,14 @@ func TestGetFiles(t *testing.T) {
 func testsInit() error {
 	var err error
 	// TODO: make a reader/pipe so we can see what is written from tests.
-	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	ifExit(err)
 
 	// common is initialized on import so
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	util.ChangeErisDir(erisDir)
+	config.ChangeErisDir(erisDir)
 
 	// init dockerClient
 	util.DockerConnect(false, "eris")

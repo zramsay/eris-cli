@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -36,14 +37,14 @@ Complete documentation is available at https://docs.erisindustries.com
 		} else if do.Debug {
 			logLevel = 3
 		}
-		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
+		log.SetLoggers(logLevel, config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter)
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
 		do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
+		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
 		if err != nil {
 			logger.Errorln(err)
 		}
@@ -128,7 +129,7 @@ func InitializeConfig() {
 		erw = os.Stderr
 	}
 
-	util.GlobalConfig, err = util.SetGlobalObject(out, erw)
+	config.GlobalConfig, err = config.SetGlobalObject(out, erw)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

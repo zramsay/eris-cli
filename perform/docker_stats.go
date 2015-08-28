@@ -7,6 +7,7 @@ import (
 	"text/template"
 	"unicode"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -52,7 +53,7 @@ func PrintTableReport(typ string, running bool) error {
 		head, _ = util.GetHead()
 	}
 
-	table := tablewriter.NewWriter(util.GlobalConfig.Writer)
+	table := tablewriter.NewWriter(config.GlobalConfig.Writer)
 	table.SetHeader([]string{"SERVICE NAME", "CONTAINER NAME", "TYPE", "CONTAINER #", "PORTS"})
 	for _, c := range conts {
 		n, _ := PrintLineByContainerName(c.FullName)
@@ -196,7 +197,7 @@ func writeTemplate(container interface{}, toParse string) error {
 		return err
 	}
 
-	if err = tmpl.Execute(util.GlobalConfig.Writer, container); err != nil {
+	if err = tmpl.Execute(config.GlobalConfig.Writer, container); err != nil {
 		return err
 	}
 
