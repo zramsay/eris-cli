@@ -4,6 +4,8 @@ release_maj="0.10"
 release_min="0.10.1"
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
+testimage=${testimage:="eris/eris"}
+repo=${repo:=$GOPATH/src/github.com/eris-ltd/eris-cli}
 
 start=`pwd`
 cd $repo

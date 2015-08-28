@@ -37,13 +37,11 @@ RUN curl -sSL -o $INSTALL_BASE/go-wrapper https://raw.githubusercontent.com/dock
 RUN chmod +x $INSTALL_BASE/go-wrapper
 
 # DOCKER
-RUN mkdir -p /var/log/supervisor
 RUN mkdir -p /var/log/docker
-COPY ./agent/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list \
-  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9 \
+RUN echo deb https://apt.dockerproject.org/repo ubuntu-trusty main > /etc/apt/sources.list.d/docker.list \
+  && apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D \
   && apt-get update -qq \
-  && apt-get install -qqy lxc-docker
+  && apt-get install -qqy docker-engine
 
 # DOCKER WRAPPER
 RUN curl -sSL -o $INSTALL_BASE/wrapdocker https://raw.githubusercontent.com/jpetazzo/dind/master/wrapdocker
