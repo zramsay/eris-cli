@@ -9,13 +9,44 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-func pullRepo(name, location string) error {
+func cloneRepo(name, location string) error {
+	if _, err := os.Stat(location); !os.IsNotExist(err) {
+		logger.Debugf("The location exists. Attempting to pull instead.\n")
+		if err := pullRepo(location); err != nil {
+			return err
+		} else {
+			return nil
+		}
+	}
 	src := "https://github.com/eris-ltd/" + name
 	c := exec.Command("git", "clone", src, location)
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
 	if err := c.Run(); err != nil {
 		return err
+	}
+	return nil
+}
+
+func pullRepo(location string) error {
+	var input string
+	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (Y/n): ", location)
+	fmt.Scanln(&input)
+
+	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+		prevDir, _ := os.Getwd()
+		if err := os.Chdir(location); err != nil {
+			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
+		}
+		c := exec.Command("git", "pull", "origin", "master")
+		// c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		if err := c.Run(); err != nil {
+			return err
+		}
+		if err := os.Chdir(prevDir); err != nil {
+			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
+		}
 	}
 	return nil
 }

@@ -96,7 +96,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-	Init.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature; for when git is not installed")
+	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag for when git is not installed")
 	// Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
 	// Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")
 }
