@@ -18,6 +18,7 @@ then
   docker build -t $testimage:docker17 -f tests/Dockerfile-1.7 .
 else
   docker build -t $testimage:$branch .
+  docker build -t $testimage:docker17 -f tests/Dockerfile-1.7 .
 fi
 
 cd $start
