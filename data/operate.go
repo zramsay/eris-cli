@@ -75,6 +75,11 @@ func ExecData(do *definitions.Do) error {
 
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		dVer, err := util.DockerClientVersion()
+		if err != nil {
+			return err
+		}
+
 		logger.Infoln("Exporting data container", do.Name)
 
 		// we want to export to a temp directory.
@@ -127,7 +132,8 @@ func ExportData(do *definitions.Do) error {
 		//   into exportPath/_data into export. ranging through the
 		//   volumes is probably overkill as we could just assume
 		//   that it *was* `_data` but in case docker changes later
-		//   we'll just keep it for now.
+		//   we'll just keep it for now. this is specific to 1.7 and
+		//   below. For 1.8 we do not need to do this.
 		os.Chdir(exportPath)
 		var unTarDestination string
 		for k, v := range cont.Volumes {
@@ -135,9 +141,12 @@ func ExportData(do *definitions.Do) error {
 				unTarDestination = filepath.Base(v)
 			}
 		}
-		logger.Debugf("%s\n", unTarDestination)
-		if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
-			return err
+		logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
+
+		if dVer <= 1.7 {
+			if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
+				return err
+			}
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
@@ -149,6 +158,11 @@ func ExportData(do *definitions.Do) error {
 		// finally remove everything in the data directory and move
 		//   the temp contents there
 		prevDir := filepath.Join(DataContainersPath, do.Name)
+		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
+			if e2 := os.MkdirAll(prevDir, 0666); e2 != nil {
+				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)
+			}
+		}
 		ClearDir(prevDir)
 		if err := moveOutOfDirAndRmDir(exportPath, prevDir); err != nil {
 			return err

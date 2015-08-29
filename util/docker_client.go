@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -203,6 +204,29 @@ func getMachineDeets(machName string) (string, string, error) {
 	return dPath, dHost, nil
 }
 
+func DockerClientVersion() (float64, error) {
+	verR, err := DockerClient.Version()
+	if err != nil {
+		return 0, err
+	}
+
+	verD := verR.Get("Version")
+	v := strings.Split(verD, ".")
+	v = v[:len(v)-1] // we only want 1.8 so we can marshal that into a float64
+
+	return strconv.ParseFloat(strings.Join(v, "."), 10)
+}
+
+func DockerAPIVersion() (float64, error) {
+	verR, err := DockerClient.Version()
+	if err != nil {
+		return 0, err
+	}
+
+	verD := verR.Get("APIVersion")
+	return strconv.ParseFloat(verD, 10)
+}
+
 func setupErisMachine(driver string) error {
 	logger.Printf("Creating the eris docker-machine.\nThis will take some time, please feel free to go feed your marmot.\n")
 	cmd := exec.Command("docker-machine", "create", "--driver", driver, "eris")
@@ -227,7 +251,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 
 	logger.Debugf("Connecting to the Docker Client via TLS.\n")
 	logger.Debugf("\tURL =>\t\t\t%s\n", dockerHost)
-	logger.Debugf("\tDocker Certificate Path =>\t%s\n", dockerCertPath)
+	logger.Debugf("\tDocker Cert Path =>\t%s\n", dockerCertPath)
 
 	DockerClient, err = docker.NewTLSClient(dockerHost, path.Join(dockerCertPath, "cert.pem"), path.Join(dockerCertPath, "key.pem"), path.Join(dockerCertPath, "ca.pem"))
 	if err != nil {

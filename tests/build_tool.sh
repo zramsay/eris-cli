@@ -15,6 +15,7 @@ then
   docker build -t $testimage:latest .
   docker tag -f $testimage:latest $testimage:$release_maj
   docker tag -f $testimage:latest $testimage:$release_min
+  docker build -t $testimage:docker1.7 -f tests/Dockerfile-1.7 .
 else
   docker build -t $testimage:$branch .
 fi

@@ -8,8 +8,10 @@ base=github.com/eris-ltd/eris-cli
 if [ "$CIRCLE_BRANCH" ]
 then
   repo=${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+  circle=true
 else
   repo=$GOPATH/src/$base
+  circle=false
 fi
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
@@ -19,8 +21,9 @@ branch=${branch/-/_}
 #   the array and just test against the authoritative one. If testing against a specific backend
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
-declare -a docker_versions=( "1.8.0" "1.8.1" "1.7.1" )
-# declare -a docker_versions=( "1.7.1" )
+declare -a docker_versions17=( "1.7.1" )
+declare -a docker_versions18=( "1.8.0" "1.8.1" )
+# declare -a docker_versions18=( "1.8.1" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
@@ -48,7 +51,8 @@ runTests(){
     swarm=solo
     ver=$(docker version | grep "Client version" | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')
     # Note NEVER do this in circle. It will explode.
-    if [ ! "$CIRCLE_BRANCH" ]
+    echo -e "Starting Eris Docker container.\n"
+    if [ "$circle" = false ]
     then
       if [[ $(uname -s) == "Linux" ]]
       then
@@ -56,6 +60,8 @@ runTests(){
       else
         docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
       fi
+    else
+      echo "Don't run local in Circle environment."
     fi
     # when doing "tests/test.sh all" we want to use the swarm despite changing above
     test_exit=$(echo $?)
@@ -64,11 +70,17 @@ runTests(){
     machine=eris-test-$swarm-$ver
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
-    if [ "$CIRCLE_BRANCH" ]
+    echo "Starting Eris Docker container."
+    if [[ "$1" == "1.7" ]]
     then
-      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$branch
+      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:docker$1
     else
-      docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
+      if [ "$circle" = true ]
+      then
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$branch
+      else
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
+      fi
     fi
     test_exit=$(echo $?)
   fi
@@ -91,9 +103,10 @@ export testimage
 export repo
 # suppressed by default as too chatty
 tests/build_tool.sh > /dev/null
+# tests/build_tool.sh
 if [ $? -ne 0 ]
 then
-  echo "Could not build eris. Debug via by directly running [`pwd`/build_tool.sh]"
+  echo "Could not build eris. Debug via by directly running [`pwd`/tests/build_tool.sh]"
   exit 1
 fi
 
@@ -104,7 +117,7 @@ echo ""
 if [[ $1 == "local" ]]
 then
   # We don't wan't purely local tests to exit the script or it will preempt teardown
-  runTests "local"
+  runTests 'local'
 else
   if [[ $1 == "all" ]]
   then
@@ -113,8 +126,12 @@ else
 
   # The last API in the array should be the *authoritative* one that will get reported to circle
   run_count=0
-  run_len=${#docker_versions[@]}
-  for ver in "${docker_versions[@]}"
+  run_len=${#docker_versions18[@]}
+  for ver in "${docker_versions17[@]}"
+  do
+    runTests "1.7"
+  done
+  for ver in "${docker_versions18[@]}"
   do
     run_count=$[$run_count +1]
     runTests
@@ -127,7 +144,7 @@ fi
 echo ""
 echo ""
 echo "Cleaning up"
-if [ ! "$CIRCLE_BRANCH" ]
+if [ "$circle" = false ]
 then
   sh -c "docker rm $machine_definitions" &>/dev/null
 fi
