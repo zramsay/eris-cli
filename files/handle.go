@@ -10,7 +10,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
 )

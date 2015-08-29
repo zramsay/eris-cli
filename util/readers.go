@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	ipfs "github.com/eris-ltd/common/go/ipfs"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	ipfs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
 )
 
