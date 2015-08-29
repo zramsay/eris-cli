@@ -90,14 +90,15 @@ func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.Service
 func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	// If no name use image name
 	if srv.Name == "" {
+		logger.Debugf("Service definition has no name. ")
 		if srv.Service.Name != "" {
-			logger.Debugf("Service definition has no name.\nDefaulting to service name =>\t%s\n", srv.Service.Name)
+			logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
 			srv.Name = srv.Service.Name
 		} else {
 			if srv.Service.Image != "" {
 				srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
 				srv.Service.Name = srv.Name
-				logger.Debugf("Service definition has no name.\nDefaulting to image name =>\t%s\n", srv.Name)
+				logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
 			} else {
 				panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
 			}
@@ -128,20 +129,30 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 }
 
 func ConnectToAService(srv *definitions.ServiceDefinition, dep string) {
-	// Automagically provide links to serviceDeps so they can easily
-	// find each other using Docker's automagical modifications to
-	// /etc/hosts
-	newLink := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":" + dep
-	srv.Service.Links = append(srv.Service.Links, newLink)
-
-	// Automagically mount VolumesFrom for serviceDeps so they can
-	// easily pass files back and forth
-	newVol := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":rw" // for now mounting as "rw"
-	srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+	connectToAService(srv, dep, false)
 }
 
 // --------------------------------------------------------------------
 // helpers
+
+func connectToAService(srv *definitions.ServiceDefinition, dep string, isChain bool) {
+	// Automagically provide links to serviceDeps so they can easily
+	// find each other using Docker's automagical modifications to
+	// /etc/hosts
+	var containerName string
+	if isChain {
+		containerName = util.ChainContainersName(dep, srv.Operations.ContainerNumber)
+	} else {
+		containerName = util.ServiceContainersName(dep, srv.Operations.ContainerNumber)
+	}
+	newLink := containerName + ":" + dep
+	srv.Service.Links = append(srv.Service.Links, newLink)
+
+	// Automagically mount VolumesFrom for serviceDeps so they can
+	// easily pass files back and forth
+	newVol := containerName + ":rw" // for now mounting as "rw"
+	srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+}
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
 	return config.LoadViperConfig(path.Join(ServicesPath), servName, "service")

@@ -248,12 +248,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// cmd should be "new" or "install"
 	chain.Service.Command = cmd
 
-	// do we need to create our own do.GenesisFile?
-	var genGen bool
-	if do.GenesisFile == "" {
-		genGen = true
-	}
-
 	// write the list of <key>:<value> config options as flags
 	buf := new(bytes.Buffer)
 	for _, cv := range do.ConfigOpts {
@@ -270,7 +264,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("RUN=%v", do.Run),
-		fmt.Sprintf("GENERATE_GENESIS=%v", genGen),
 		fmt.Sprintf("CSV=%v", csvPath),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
 	}

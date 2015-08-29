@@ -41,7 +41,9 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
-		do.ChainName, _ = util.GetHead()
+		// XXX: this has tragic consequences (eg. makes `services start --chain` not work)
+		// do it specifically where we need it
+		// do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)

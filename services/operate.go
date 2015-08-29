@@ -6,16 +6,12 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-	"sync"
 )
 
 func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
 	cNum := do.Operations.ContainerNumber
-	if err != nil {
-		return err
-	}
 	do.Args = append(do.Args, do.ServicesSlice...)
 	logger.Debugf("Building the Services Group =>\t%v\n", do.Args)
 	for _, srv := range do.Args {
@@ -32,25 +28,20 @@ func StartService(do *definitions.Do) (err error) {
 		util.OverWriteOperations(s.Operations, do.Operations)
 	}
 
+	logger.Debugln("services before build chain")
+	for _, s := range services {
+		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
+	}
 	services, err = BuildChainGroup(do.ChainName, services)
 	if err != nil {
 		return err
 	}
-
-	// TODO: move this wg, ch logic into func StartGroup([]*definitions.ServiceDefinition) error {}
-	wg, ch := new(sync.WaitGroup), make(chan error)
-	StartGroup(ch, wg, services)
-	go func() {
-		wg.Wait()
-		select {
-		case ch <- nil:
-		}
-	}()
-	if err := <-ch; err != nil {
-		return err
+	logger.Debugln("services after build chain")
+	for _, s := range services {
+		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
 	}
 
-	return nil
+	return StartGroup(services)
 }
 
 func KillService(do *definitions.Do) error {
@@ -119,63 +110,54 @@ func BuildServicesGroup(srvName string, cNum int, services ...*definitions.Servi
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
 // TODO: Add ONE Chain
-func StartGroup(ch chan error, wg *sync.WaitGroup, group []*definitions.ServiceDefinition) {
+func StartGroup(group []*definitions.ServiceDefinition) error {
 	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
-		wg.Add(1)
-
-		go func(s *definitions.ServiceDefinition) {
-			logger.Debugf("Telling Docker to start srv =>\t%s\n", s.Name)
-			if err := perform.DockerRun(s.Service, s.Operations); err != nil {
-				ch <- fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", s.Name, err)
-			}
-
-			wg.Done()
-		}(srv)
-
+		logger.Debugf("Telling Docker to start srv =>\t%s\n", srv.Name)
+		if err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
+			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
+		}
 	}
+	return nil
 }
 
-// Note chainName in this command refers mostly to a chain which has been passed as a flag
-// the command will add to the group a single chain passed into the group as well as
-// individualized chains that each service may individually rely upon.
-func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
-	var chains []*definitions.ServiceDefinition
-
+// BuildChainGroup adds the chain specified in each service definition to the service group.
+// If chainName is not empty, it will overwrite chains specified in the defs.
+// Service defs which don't specify a chain or $chain won't connect to a chain.
+// NOTE: chains have to be started before services that depend on them.
+func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) (servicesAndChains []*definitions.ServiceDefinition, err error) {
+	var s *definitions.ServiceDefinition
+	var chains = make(map[string]*definitions.ServiceDefinition)
 	for _, srv := range services {
-		if srv.Chain == "$chain" && chainName == "" {
-			return nil, fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
-		}
-		if chainName != "" {
-			s, err := ChainConnectedToAService(chainName, srv)
-			if err != nil {
-				return nil, err
-			}
-			chains = append(chains, s)
-		}
-		if srv.Chain == "$chain" {
-			continue
-		}
 		if srv.Chain != "" {
-			s, err := ChainConnectedToAService(srv.Chain, srv)
+			if chainName != "" {
+				s, err = ConnectChainToService(chainName, srv)
+			} else if srv.Chain == "$chain" {
+				err = fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
+			} else {
+				s, err = ConnectChainToService(srv.Chain, srv)
+			}
 			if err != nil {
 				return nil, err
 			}
-			chains = append(chains, s)
+			if _, ok := chains[s.Name]; !ok {
+				chains[s.Name] = s
+			}
 		}
 	}
-
-	return append(services, chains...), nil
+	for _, sd := range chains {
+		servicesAndChains = append(servicesAndChains, sd)
+	}
+	return append(servicesAndChains, services...), nil
 }
 
-func ChainConnectedToAService(chainName string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
+func ConnectChainToService(chainName string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
 	s, err := loaders.ChainsAsAService(chainName, false, srv.Operations.ContainerNumber)
 	if err != nil {
 		return nil, err
 	}
-
-	loaders.ConnectToAService(srv, chainName) // first make the service container linked to the chain
-	loaders.ConnectToAService(s, srv.Name)    // now make the chain container linked to the service container
+	// link the service container linked to the chain
+	loaders.ConnectToAChain(srv, chainName)
 	// XXX: we may have name collision here if we're not careful.
 
 	util.OverWriteOperations(s.Operations, srv.Operations)

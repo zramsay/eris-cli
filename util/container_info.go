@@ -246,7 +246,7 @@ func FindServiceContainer(srvName string, number int, running bool) *ContainerNa
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", srvName, number)
+	logger.Infof("Could not find service container =>\t%s:%d\n", srvName, number)
 	return nil
 }
 
@@ -267,7 +267,7 @@ func FindChainContainer(name string, number int, running bool) *ContainerName {
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
+	logger.Infof("Could not find chain container =>\t%s:%d\n", name, number)
 	return nil
 }
 
@@ -287,7 +287,7 @@ func FindDataContainer(name string, number int) *ContainerName {
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
+	logger.Infof("Could not find data container =>\t%s:%d\n", name, number)
 	return nil
 }
 

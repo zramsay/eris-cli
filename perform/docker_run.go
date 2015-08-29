@@ -219,7 +219,6 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 			}
 		}
 
-		logger.Infoln("Service container does not exist, creating.")
 		servContCreated, err := createContainer(optsServ)
 		if err != nil {
 			return err
@@ -589,9 +588,8 @@ func listContainers(all bool) []docker.APIContainers {
 func createContainer(opts docker.CreateContainerOptions) (*docker.Container, error) {
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
-		// TODO: better error handling
-		if strings.Contains(err.Error(), "no such image") {
-			fmt.Printf("Pulling image (%s) from repository. This could take a second.\n", opts.Config.Image)
+		if err == docker.ErrNoSuchImage {
+			logger.Infof("Image (%s) not found. Pulling from repository. This could take a second.\n", opts.Config.Image)
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
 			}

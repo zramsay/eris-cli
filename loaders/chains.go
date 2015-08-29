@@ -62,12 +62,19 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	return chain, nil
 }
 
+// Convert the chain def to a service def but keep the "eris_chains" containers prefix and set the chain id
 func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
 	chain, err := LoadChainDefinition(chainName, newCont, cNum...)
 	if err != nil {
 		return nil, err
 	}
-	return ServiceDefFromChain(chain, ErisChainStart), nil
+	s, err := ServiceDefFromChain(chain, ErisChainStart), nil
+	if err != nil {
+		return nil, err
+	}
+	s.Operations.SrvContainerName = util.ChainContainersName(chainName, s.Operations.ContainerNumber)
+	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
+	return s, nil
 }
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
@@ -92,6 +99,10 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	ServiceFinalizeLoad(srv) // these are mostly operational considerations that we want to ensure are met
 
 	return srv
+}
+
+func ConnectToAChain(srv *definitions.ServiceDefinition, dep string) {
+	connectToAService(srv, dep, true)
 }
 
 func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {
