@@ -25,3 +25,4 @@ _testmain.go
 *.*~
 docs/eris-cli
 .goxc.local.json
+builds
