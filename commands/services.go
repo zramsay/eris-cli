@@ -80,8 +80,8 @@ var servicesNew = &cobra.Command{
 
 Command must be given a name and a Container Image using standard
 docker format of [repository/organization/image].`,
-	Example: `  eris new eth eris/eth
-  eris new mint tutum.co/tendermint/tendermint`,
+	Example: `  eris services new eth eris/eth
+  eris services new mint tutum.co/tendermint/tendermint`,
 	Run: func(cmd *cobra.Command, args []string) {
 		NewService(cmd, args)
 	},

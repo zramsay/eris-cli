@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -17,8 +18,6 @@ import (
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
 func ImportService(do *definitions.Do) error {
@@ -50,21 +49,12 @@ func NewService(do *definitions.Do) error {
 	srv.Service.Image = do.Args[0]
 	srv.Service.AutoData = true
 
+	var err error
 	//get maintainer info
-	//TODO refac like chains
-	uName, err := gitconfig.Username()
+	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
-		logger.Debugf("Could not find git user.name, setting service.Maintainer.Name = \"\"")
-		uName = ""
+		logger.Debugf(err.Error())
 	}
-	email, err := gitconfig.Email()
-	if err != nil {
-		logger.Debugf("Could not find git user.email, setting service.Maintainer.Email = \"\"")
-		email = ""
-	}
-
-	srv.Maintainer.Name = uName
-	srv.Maintainer.Email = email
 
 	logger.Debugf("Creating a new srv def file =>\t%s:%s\n", srv.Service.Name, srv.Service.Image)
 	err = WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
