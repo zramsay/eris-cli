@@ -68,6 +68,9 @@ runTests(){
     swarm=$swarmb4
   else
     machine=eris-test-$swarm-$ver
+    if [[ "$branch" == "master" ]]
+      branch="latest"
+    fi
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
     echo "Starting Eris Docker container."
