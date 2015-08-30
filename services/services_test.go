@@ -202,9 +202,8 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestImportService(t *testing.T) {
-	//testStartService(t, "ipfs")
-	//defer testKillService(t, "ipfs", true)
-
+	//	testStartService(t, "ipfs")
+	//	defer testKillService(t, "ipfs", true)
 	//XXX above functions paniced; this worked
 	do := def.NowDo()
 	do.Name = "ipfs"
@@ -495,7 +494,7 @@ func testsInit() error {
 	ifExit(ini.Initialize(true, false))
 
 	// set ipfs endpoint
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
 
 	// make sure ipfs not running
 	do := def.NowDo()
