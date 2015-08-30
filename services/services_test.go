@@ -201,6 +201,46 @@ func TestKillRmService(t *testing.T) {
 	testNumbersExistAndRun(t, servName, 0, 0)
 }
 
+func TestImportService(t *testing.T) {
+	//testStartService(t, "ipfs")
+	//defer testKillService(t, "ipfs", true)
+
+	//XXX above functions paniced; this worked
+	do := def.NowDo()
+	do.Name = "ipfs"
+	do.Operations.ContainerNumber = 1
+	err := EnsureRunning(do)
+	if err != nil {
+		logger.Errorln(err)
+		fatal(t, err)
+	}
+
+	servName := "eth"
+	do.Name = servName
+	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
+
+	e := ImportService(do)
+	if e != nil {
+		logger.Errorln(e)
+		fatal(t, e)
+	}
+
+	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
+func TestExportService(t *testing.T) {
+	do := def.NowDo()
+	do.Name = "ipfs"
+	err := ExportService(do) //ExportService has EnsureRunning builtin
+	if err != nil {
+		logger.Errorln(err)
+		fatal(t, err)
+	}
+
+	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
 func TestNewService(t *testing.T) {
 	do := def.NowDo()
 	servName := "not-keys"
@@ -287,7 +327,7 @@ func TestCatService(t *testing.T) {
 	}
 
 	if do.Result != ini.DefaultIpfs2() {
-		fatal(t, fmt.Errorf("CatService on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
+		fatal(t, fmt.Errorf("Cat Service on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
 	}
 }
 
