@@ -7,8 +7,6 @@
 	],
 	"TasksExclude": [
 		"go-test",
-		"archive-zip",
-		"archive-tar-gz",
 		"codesign",
 		"downloads-page"
 	],

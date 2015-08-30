@@ -56,6 +56,8 @@ We haven't perfected the installation path yet. We will ensure that this path is
 
 We have prototyped an apt-get -able binary installation. **Warning, could break**. If you would like to protoype please run [this script](tests/hack/install_deb.sh) (as sudo).
 
+We also have (experimental) downloadable builds from our [Github Releases Page](https://github.com/eris-ltd/eris-cli/releases).
+
 ### Docker
 
 Installation requires that Docker be installed. Please see the [Docker](https://docs.docker.com/installation/) documentation for how to install.
