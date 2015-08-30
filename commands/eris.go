@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -36,13 +37,14 @@ Complete documentation is available at https://docs.erisindustries.com
 		} else if do.Debug {
 			logLevel = 3
 		}
-		log.SetLoggers(logLevel, util.GlobalConfig.Writer, util.GlobalConfig.ErrorWriter)
+		log.SetLoggers(logLevel, config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter)
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
+		do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		err := util.SaveGlobalConfig(util.GlobalConfig.Config)
+		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
 		if err != nil {
 			logger.Errorln(err)
 		}
@@ -95,7 +97,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-	Init.Flags().BoolVarP(&do.SkipPull, "skip-pull", "p", false, "skip the pulling feature; for when git is not installed")
+	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag for when git is not installed")
 	// Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
 	// Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")
 }
@@ -127,7 +129,7 @@ func InitializeConfig() {
 		erw = os.Stderr
 	}
 
-	util.GlobalConfig, err = util.SetGlobalObject(out, erw)
+	config.GlobalConfig, err = config.SetGlobalObject(out, erw)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

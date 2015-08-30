@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -30,9 +32,9 @@ func ImportChain(do *definitions.Do) error {
 
 		var err error
 		if logger.Level > 0 {
-			err = util.GetFromIPFS(s[1], fileName, logger.Writer)
+			err = ipfs.GetFromIPFS(s[1], fileName, "", logger.Writer)
 		} else {
-			err = util.GetFromIPFS(s[1], fileName, bytes.NewBuffer([]byte{}))
+			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
 		}
 
 		if err != nil {
@@ -105,8 +107,36 @@ To find known chains use: eris chains known`)
 	return nil
 }
 
+func CheckoutChain(do *definitions.Do) error {
+	if do.Name == "" {
+		do.Result = "nil"
+		return util.NullHead()
+	}
+
+	curHead, _ := util.GetHead()
+	if do.Name == curHead {
+		do.Result = "no change"
+		return nil
+	}
+
+	return util.ChangeHead(do.Name)
+}
+
+func CurrentChain(do *definitions.Do) error {
+	head, _ := util.GetHead()
+
+	if head == "" {
+		head = "There is no chain checked out."
+	}
+
+	logger.Println(head)
+	do.Result = head
+
+	return nil
+}
+
 func EditChain(do *definitions.Do) error {
-	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
+	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {
 		return err
 	}
@@ -119,8 +149,23 @@ func EditChain(do *definitions.Do) error {
 }
 
 func ListKnown(do *definitions.Do) error {
+	head, _ := util.GetHead()
 	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
-	do.Result = strings.Join(chns, "\n")
+	var chainsNew []string
+	for _, c := range chns {
+		switch c {
+		case "default":
+			continue
+		case head:
+			chainsNew = append(chainsNew, fmt.Sprintf("*\t%s", c))
+		default:
+			chainsNew = append(chainsNew, fmt.Sprintf("\t%s", c))
+		}
+		// if c == head {
+		// } else {
+		// }
+	}
+	do.Result = strings.Join(chainsNew, "\n")
 	return nil
 }
 
@@ -162,7 +207,7 @@ func RenameChain(do *definitions.Do) error {
 	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
 	transformOnly := newNameBase == do.Name
 
-	if isKnownChain(do.Name) {
+	if util.IsKnownChain(do.Name) {
 		logger.Infof("Renaming chain =>\t\t%s:%s\n", do.Name, do.NewName)
 
 		logger.Debugf("Loading Chain Def File =>\t%s\n", do.Name)
@@ -228,10 +273,12 @@ func UpdateChain(do *definitions.Do) error {
 		return err
 	}
 
-	// DockerRebuild is built for services, adding false to the final
-	//   variable will mean it pulls. But we want the opposite default
-	//   behaviour for chains as we do for services in this regard
-	//   so we flip the variable.
+	// if the chain is already running we need to set the right env vars and command
+	if IsChainRunning(chain) {
+		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
+		chain.Service.Command = loaders.ErisChainStart
+	}
+
 	err = perform.DockerRebuild(chain.Service, chain.Operations, do.SkipPull, do.Timeout)
 	if err != nil {
 		return err
@@ -297,9 +344,9 @@ func exportFile(chainName string) (string, error) {
 	var hash string
 	var err error
 	if logger.Level > 0 {
-		hash, err = util.SendToIPFS(fileName, logger.Writer)
+		hash, err = ipfs.SendToIPFS(fileName, "", logger.Writer)
 	} else {
-		hash, err = util.SendToIPFS(fileName, bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {

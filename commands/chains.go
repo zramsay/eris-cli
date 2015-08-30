@@ -49,6 +49,8 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsList)
+	Chains.AddCommand(chainsCheckout)
+	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
@@ -138,6 +140,38 @@ To start a chain use: [eris chains start chainName].
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListChains()
+	},
+}
+
+var chainsCheckout = &cobra.Command{
+	Use:   "checkout",
+	Short: "Checks out a chain.",
+	Long: `Checks out a chain.
+
+Checkout if a convenience features. For any eris command
+which accepts a --chain or $chain variable, the checked
+out chain can replace manually passing in a --chain flag.
+If a --chain is passed to any command accepting --chain,
+the --chain which is passed will overwrite any checked
+out chain.
+
+If command is given without arguments it will clear the
+head and there will be no chain checked out.
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CheckoutChain(cmd, args)
+	},
+}
+
+var chainsHead = &cobra.Command{
+	Use:   "current",
+	Short: "The currently checked out chain.",
+	Long: `The currently checked out chain.
+
+To checkout a new chain use eris chains checkout
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		CurrentChain()
 	},
 }
 
@@ -292,11 +326,17 @@ Command will cat local chains definition file.`,
 
 func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
-	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "config.toml file")
+	chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
 	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	chainsNew.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
+	chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
+	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
+	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "run", "r", false, "run the chain after creating")
 
 	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
+	chainsInstall.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
 	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
@@ -327,18 +367,21 @@ func addChainsFlags() {
 // cli command wrappers
 
 func StartChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.KillChain(do))
@@ -372,8 +415,23 @@ func ImportChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.ImportChain(do))
 }
 
+// checkout a chain
+func CheckoutChain(cmd *cobra.Command, args []string) {
+	if len(args) >= 1 {
+		do.Name = args[0]
+	} else {
+		do.Name = ""
+	}
+	IfExit(chns.CheckoutChain(do))
+}
+
+func CurrentChain() {
+	IfExit(chns.CurrentChain(do))
+}
+
 // edit a chain definition file
 func EditChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	var configVals []string
 	if len(args) > 1 {
@@ -385,6 +443,7 @@ func EditChain(cmd *cobra.Command, args []string) {
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
@@ -398,6 +457,7 @@ func InspectChain(cmd *cobra.Command, args []string) {
 }
 
 func ExportChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.ExportChain(do))
@@ -431,6 +491,7 @@ func RenameChain(cmd *cobra.Command, args []string) {
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.UpdateChain(do))
@@ -443,12 +504,14 @@ func RmChain(cmd *cobra.Command, args []string) {
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.GraduateChain(do))
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.CatChain(do))

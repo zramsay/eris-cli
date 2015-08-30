@@ -3,6 +3,7 @@ package data
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -62,11 +63,11 @@ func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
-		if err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args); err != nil {
+		if _, err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args); err != nil {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
 	}
 	do.Result = "success"
 	return nil
@@ -74,17 +75,26 @@ func ExecData(do *definitions.Do) error {
 
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		dVer, err := util.DockerClientVersion()
+		if err != nil {
+			return err
+		}
+
 		logger.Infoln("Exporting data container", do.Name)
 
-		exportPath := filepath.Join(DataContainersPath, do.Name) // TODO: do.Operations.ContainerNumber ?
-		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
+		// we want to export to a temp directory.
+		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name) // TODO: do.Operations.ContainerNumber ?
+		defer os.Remove(exportPath)
+		if err != nil {
+			return err
+		}
 
+		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
 		service, exists := perform.ContainerExists(srv.Operations)
 
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
 		}
-		logger.Infoln("Service ID: " + service.ID)
 
 		cont, err := util.DockerClient.InspectContainer(service.ID)
 		if err != nil {
@@ -92,6 +102,7 @@ func ExportData(do *definitions.Do) error {
 		}
 
 		reader, writer := io.Pipe()
+		defer reader.Close()
 
 		if do.Path != "" {
 			do.Path = do.Path
@@ -105,12 +116,14 @@ func ExportData(do *definitions.Do) error {
 		}
 
 		go func() {
+			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
+			logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
 			IfExit(util.DockerClient.CopyFromContainer(opts))
 			writer.Close()
 		}()
 
-		err = util.Untar(reader, do.Name, exportPath)
-		if err != nil {
+		logger.Debugf("Untarring Package from Cont =>\t%s\n", exportPath)
+		if err = util.Untar(reader, do.Name, exportPath); err != nil {
 			return err
 		}
 
@@ -119,21 +132,39 @@ func ExportData(do *definitions.Do) error {
 		//   into exportPath/_data into export. ranging through the
 		//   volumes is probably overkill as we could just assume
 		//   that it *was* `_data` but in case docker changes later
-		//   we'll just keep it for now.
+		//   we'll just keep it for now. this is specific to 1.7 and
+		//   below. For 1.8 we do not need to do this.
 		os.Chdir(exportPath)
 		var unTarDestination string
 		for k, v := range cont.Volumes {
-			if k == "/home/eris/.eris" {
+			if k == do.Path {
 				unTarDestination = filepath.Base(v)
 			}
 		}
-		if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
-			return err
+		logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
+
+		if dVer <= 1.7 {
+			if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
+				return err
+			}
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
 		//   move everything from .eris to exportPath
 		if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, ".eris"), exportPath); err != nil {
+			return err
+		}
+
+		// finally remove everything in the data directory and move
+		//   the temp contents there
+		prevDir := filepath.Join(DataContainersPath, do.Name)
+		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
+			if e2 := os.MkdirAll(prevDir, 0666); e2 != nil {
+				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)
+			}
+		}
+		ClearDir(prevDir)
+		if err := moveOutOfDirAndRmDir(exportPath, prevDir); err != nil {
 			return err
 		}
 
@@ -146,9 +177,9 @@ func ExportData(do *definitions.Do) error {
 }
 
 func moveOutOfDirAndRmDir(src, dest string) error {
-	logger.Debugln("\nMove all files/dirs out of a dir and rm -rf that dir.")
-	logger.Debugf("Source of the move:\t%s.\n", src)
-	logger.Debugf("Destin of the move:\t%s.\n\n", dest)
+	logger.Infof("Move all files/dirs out of a dir and rm -rf that dir.\n")
+	logger.Debugf("Source of the move =>\t\t%s.\n", src)
+	logger.Debugf("Destin of the move =>\t\t%s.\n", dest)
 	toMove, err := filepath.Glob(filepath.Join(src, "*"))
 	if err != nil {
 		return err
@@ -160,13 +191,14 @@ func moveOutOfDirAndRmDir(src, dest string) error {
 
 	for _, f := range toMove {
 		logger.Debugf("Moving file [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
-		err = os.Rename(f, filepath.Join(dest, filepath.Base(f)))
-		if err != nil {
-			return err
-		}
+
+		// using a copy (read+write) strategy to get around swap partitions and other
+		//   problems that cause a simple rename strategy to fail. it is more io overhead
+		//   to do this, but for now that is preferable to alternative solutions.
+		Copy(f, filepath.Join(dest, filepath.Base(f)))
 	}
 
-	logger.Debugf("\nRemoving directory:\t%s.\n", src)
+	logger.Infof("Removing directory =>\t\t%s.\n", src)
 	err = os.RemoveAll(src)
 	if err != nil {
 		return err

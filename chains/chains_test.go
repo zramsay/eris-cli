@@ -1,52 +1,71 @@
 package chains
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
-var chainName string = "testchain"
+var chainName string = "my_tests" // :(
 var hash string
 
+var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
+
+func fatal(t *testing.T, err error) {
+	if !DEAD {
+		log.Flush()
+		testsTearDown()
+		DEAD = true
+		panic(err)
+	}
+}
+
 func TestMain(m *testing.M) {
+	runtime.GOMAXPROCS(1)
 	var logLevel log.LogLevel
 	var err error
 
 	logLevel = 0
 	// logLevel = 1
-	// logLevel = 2
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
 	testsInit()
-	logger.Infoln("Test init completed. Starting main test sequence now.")
+	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
-	exitCode := m.Run()
-
-	logger.Infoln("Commensing with Tests Tear Down.")
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		err = testsTearDown()
-		if err != nil {
+	var exitCode int
+	defer func() {
+		logger.Infoln("Commensing with Tests Tear Down.")
+		if err = testsTearDown(); err != nil {
 			logger.Errorln(err)
 			os.Exit(1)
 		}
-	}
+		os.Exit(exitCode)
 
-	os.Exit(exitCode)
+	}()
+
+	exitCode = m.Run()
 }
 
 func TestKnownChain(t *testing.T) {
@@ -55,65 +74,43 @@ func TestKnownChain(t *testing.T) {
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if k[0] != "" {
+	// apparently these have extra space
+	if strings.TrimSpace(k[0]) != chainName {
 		logger.Debugf("Result =>\t\t%s\n", do.Result)
-		ifExit(fmt.Errorf("Found a chain definition file. Something is wrong."))
-	}
-}
-
-func TestNewChain(t *testing.T) {
-	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
-	do.Name = chainName
-	do.Operations.ContainerNumber = 1
-	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	e := NewChain(do) // configFile and dir are not needed for the tests.
-	if e != nil {
-		fmt.Println(e)
-		t.Fail()
+		ifExit(fmt.Errorf("Unexpected chain definition file. Got %s, expected %s.", k[0], chainName))
 	}
 }
 
 func TestChainGraduate(t *testing.T) {
-
 	do := def.NowDo()
 	do.Name = chainName
 	logger.Infof("Graduating chain (from tests) ==>\t%s\n", do.Name)
-	g := GraduateChain(do)
-	if g != nil {
-		fmt.Println(g)
-		t.FailNow()
+	if err := GraduateChain(do); err != nil {
+		fatal(t, err)
 	}
 
-	srvDef, err := loaders.LoadServiceDefinition("my_tests", false, 1)
+	srvDef, err := loaders.LoadServiceDefinition(chainName, false, 1)
 	if err != nil {
-		logger.Errorln(err)
-		t.Fail()
+		fatal(t, err)
 	}
 
 	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
 	image := "eris/erisdb:" + vers
 	if srvDef.Service.Image != image {
-		logger.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image)
-		t.Fail()
+		fatal(t, fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}
 
 	if srvDef.Service.Command != loaders.ErisChainStart {
-		logger.Errorf("FAILURE: improper service command on GRADUATE. expected: %s\tgot: %s\n", loaders.ErisChainStart, srvDef.Service.Command)
-		t.Fail()
+		fatal(t, fmt.Errorf("FAILURE: improper service command on GRADUATE. expected: %s\tgot: %s\n", loaders.ErisChainStart, srvDef.Service.Command))
 	}
 
 	if !srvDef.Service.AutoData {
-		logger.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData)
-		t.Fail()
+		fatal(t, fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
 	}
 
-	if len(srvDef.ServiceDeps) != 1 {
-		logger.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps)
-		t.Fail()
+	if len(srvDef.ServiceDeps.Dependencies) != 1 {
+		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps))
 	}
-
-	//	testExistAndRun(t, chainName, true, true)
 }
 
 func TestLoadChainDefinition(t *testing.T) {
@@ -121,41 +118,206 @@ func TestLoadChainDefinition(t *testing.T) {
 	logger.Infof("Load chain def (from tests) =>\t%s\n", chainName)
 	chn, e := loaders.LoadChainDefinition(chainName, false, 1)
 	if e != nil {
-		logger.Errorln(e)
-		t.FailNow()
+		fatal(t, e)
 	}
 
 	if chn.Service.Name != chainName {
-		logger.Errorln("FAILURE: improper service name on LOAD. expected: %s\tgot: %s", chainName, chn.Service.Name)
-		t.FailNow()
+		fatal(t, fmt.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s", chainName, chn.Service.Name))
 	}
 
 	if !chn.Service.AutoData {
-		logger.Errorln("FAILURE: data_container not properly read on LOAD.")
-		t.FailNow()
+		fatal(t, fmt.Errorf("FAILURE: data_container not properly read on LOAD."))
 	}
 
 	if chn.Operations.DataContainerName == "" {
-		logger.Errorln("FAILURE: data_container_name not set.")
-		t.Fail()
+		fatal(t, fmt.Errorf("FAILURE: data_container_name not set."))
 	}
 }
 
-func TestStartChain(t *testing.T) {
-	do := def.NowDo()
-	do.Name = chainName
-	do.Operations.ContainerNumber = 1
-	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
-	e := StartChain(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+func TestStartKillChain(t *testing.T) {
+	testStartChain(t, chainName)
+	testKillChain(t, chainName)
+}
+
+// eris chains new --dir _ -g _
+// the default chain_id is my_tests, so should be overwritten
+func TestChainsNewDirGen(t *testing.T) {
+	chainID := "testChainsNewDirGen"
+	myDir := path.Join(common.DataContainersPath, chainID)
+	if err := os.MkdirAll(myDir, 0700); err != nil {
+		fatal(t, err)
+	}
+	contents := "this is a file in the directory\n"
+	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0600); err != nil {
+		fatal(t, err)
 	}
 
-	testExistAndRun(t, chainName, true, true)
+	do := def.NowDo()
+	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
+	do.Name = chainID
+	do.Path = myDir
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	// remove the data container
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+
+	// verify the contents of file.file - swap config writer with bytes.Buffer
+	// TODO: functions for facilitating this
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	oldWriter := config.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
+	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	config.GlobalConfig.Writer = oldWriter
+	result := trimResult(string(b))
+	contents = trimResult(contents)
+	if result != contents {
+		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
+	}
+
+	// verify the chain_id got swapped in the genesis.json
+	// TODO: functions for facilitating this
+	oldWriter = config.GlobalConfig.Writer
+	newWriter = new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
+	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	config.GlobalConfig.Writer = oldWriter
+	result = string(b)
+
+	s := struct {
+		ChainID string `json:"chain_id"`
+	}{}
+	if err := json.Unmarshal([]byte(result), &s); err != nil {
+		fatal(t, err)
+	}
+	if s.ChainID != chainID {
+		fatal(t, fmt.Errorf("ChainID mismatch: got %s, expected %s", s.ChainID, chainID))
+	}
+}
+
+// eris chains new -c _ -csv _
+func TestChainsNewConfigAndCSV(t *testing.T) {
+	chainID := "testChainsNewConfigAndCSV"
+	do := def.NowDo()
+	do.Name = chainID
+	do.ConfigFile = path.Join(common.BlockchainsPath, "config", "default", "config.toml")
+	do.CSV = path.Join(common.BlockchainsPath, "config", "default", "genesis.csv")
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	b, err := ioutil.ReadFile(do.ConfigFile)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
+
+	// remove the data container
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+
+	// verify the contents of config.toml
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	result := trimResult(string(runContainer(t, do.Name, args)))
+	contents := trimResult(ini.DefChainConfig())
+	if result != contents {
+		fatal(t, fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
+	}
+
+	// verify the contents of genesis.json (should have the validator from the csv)
+	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
+	result = string(runContainer(t, do.Name, args))
+
+	var found bool
+	for _, s := range strings.Split(result, "\n") {
+		if strings.Contains(s, ini.DefaultPubKeys[0]) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		fatal(t, fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
+	}
+}
+
+func runContainer(t *testing.T, name string, args []string) []byte {
+	oldWriter := config.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	config.GlobalConfig.Writer = oldWriter
+	return b
+}
+
+// eris chains new --options
+func TestChainsNewConfigOpts(t *testing.T) {
+	// XXX: need to use a different chainID or remove the local tmp/eris/data/chainID dir with each test!
+	chainID := "testChainsNewConfigOpts"
+	do := def.NowDo()
+
+	do.Name = chainID
+	do.ConfigOpts = []string{"moniker=satoshi", "p2p=1.1.1.1:42", "fast-sync=true"}
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	ifExit(NewChain(do))
+
+	// remove the data container
+	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+
+	// verify the contents of config.toml
+	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	result := string(runContainer(t, do.Name, args))
+
+	spl := strings.Split(result, "\n")
+	var found bool
+	for _, s := range spl {
+		if ensureTomlValue(t, s, "moniker", "satoshi") {
+			found = true
+		}
+		if ensureTomlValue(t, s, "node_laddr", "1.1.1.1:42") {
+			found = true
+		}
+		if ensureTomlValue(t, s, "fast_sync", "true") {
+			found = true
+		}
+	}
+	if !found {
+		fatal(t, fmt.Errorf("failed to find fields: %s", result))
+	}
+}
+
+func ensureTomlValue(t *testing.T, s, field, value string) bool {
+	if strings.Contains(s, field) {
+		if !strings.Contains(s, value) {
+			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
+		}
+		return true
+	}
+	return false
 }
 
 func TestLogsChain(t *testing.T) {
+	testStartChain(t, chainName)
+	defer testKillChain(t, chainName)
+
 	do := def.NowDo()
 	do.Name = chainName
 	do.Follow = false
@@ -163,16 +325,13 @@ func TestLogsChain(t *testing.T) {
 	logger.Infof("Get chain logs (from tests) =>\t%s:%s\n", do.Name, do.Tail)
 	e := LogsChain(do)
 	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 }
 
 func TestUpdateChain(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
-		return
-	}
+	testStartChain(t, chainName)
+	defer testKillChain(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -180,19 +339,15 @@ func TestUpdateChain(t *testing.T) {
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
 	e := UpdateChain(do)
 	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, chainName, true, true)
 }
 
 func TestInspectChain(t *testing.T) {
-	// log.SetLoggers(3, os.Stdout, os.Stderr)
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
-		return
-	}
+	testStartChain(t, chainName)
+	defer testKillChain(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -201,73 +356,38 @@ func TestInspectChain(t *testing.T) {
 	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
 	e := InspectChain(do)
 	if e != nil {
-		logger.Infof("Error inspecting chain =>\t%v\n", e)
-		t.FailNow()
+		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestRenameChain(t *testing.T) {
+	oldName := chainName
+	newName := "niahctset"
+	testStartChain(t, oldName)
+	defer testKillChain(t, oldName)
+
 	do := def.NowDo()
-	do.Name = chainName
-	do.NewName = "niahctset"
+	do.Name = oldName
+	do.NewName = newName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 	e := RenameChain(do)
 	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
-	testExistAndRun(t, "niahctset", true, true)
+	testExistAndRun(t, newName, true, true)
 
 	do = def.NowDo()
-	do.Name = "niahctset"
+	do.Name = newName
 	do.NewName = chainName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 	e = RenameChain(do)
 	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, chainName, true, true)
-}
-
-func TestKillChain(t *testing.T) {
-	// log.SetLoggers(2, os.Stdout, os.Stderr)
-	testExistAndRun(t, chainName, true, true)
-
-	do := def.NowDo()
-	do.Args = []string{"keys"}
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		do.Rm = true
-		do.RmD = true
-	}
-	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
-	e := services.KillService(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
-	}
-
-	do = def.NowDo()
-	do.Name = chainName
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		do.Rm = true
-		do.RmD = true
-	}
-	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
-	e = KillChain(do)
-	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
-	}
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		testExistAndRun(t, chainName, false, false)
-	} else {
-		testExistAndRun(t, chainName, true, false)
-	}
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 // TODO: finish this....
@@ -286,22 +406,69 @@ func TestKillChain(t *testing.T) {
 // }
 
 func TestRmChain(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
-		return
-	}
+	testStartChain(t, chainName)
 
 	do := def.NowDo()
+	do.Args, do.Rm, do.RmD = []string{"keys"}, true, true
+	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
+	if e := services.KillService(do); e != nil {
+		fatal(t, e)
+	}
+
+	do = def.NowDo()
+	do.Name, do.Rm, do.RmD = chainName, false, false
+	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	if e := KillChain(do); e != nil {
+		fatal(t, e)
+	}
+	testExistAndRun(t, chainName, true, false)
+
+	do = def.NowDo()
 	do.Name = chainName
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
 	e := RmChain(do)
 	if e != nil {
-		logger.Errorln(e)
-		t.Fail()
+		fatal(t, e)
 	}
 
 	testExistAndRun(t, chainName, false, false)
+}
+
+//------------------------------------------------------------------
+// testing utils
+
+func testStartChain(t *testing.T, chain string) {
+	do := def.NowDo()
+	do.Name = chain
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
+	e := StartChain(do)
+	if e != nil {
+		logger.Errorln(e)
+		fatal(t, nil)
+	}
+	testExistAndRun(t, chain, true, true)
+}
+
+func testKillChain(t *testing.T, chain string) {
+	// log.SetLoggers(2, os.Stdout, os.Stderr)
+	testExistAndRun(t, chain, true, true)
+
+	do := def.NowDo()
+	do.Args, do.Rm, do.RmD = []string{"keys"}, true, true
+	logger.Infof("Killing keys (from tests) =>\n%s\n", do.Name)
+	if e := services.KillService(do); e != nil {
+		fatal(t, e)
+	}
+
+	do = def.NowDo()
+	do.Name, do.Rm, do.RmD = chain, true, true
+	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	if e := KillChain(do); e != nil {
+		fatal(t, e)
+	}
+	testExistAndRun(t, chain, false, false)
 }
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
@@ -313,8 +480,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do.Quiet = true
 	do.Args = []string{"testing"}
 	if err := ListExisting(do); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
+		fatal(t, err)
 	}
 	res := strings.Split(do.Result, "\n")
 	for _, r := range res {
@@ -328,9 +494,9 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do.Quiet = true
 	do.Args = []string{"testing"}
 	if err := ListRunning(do); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
+		fatal(t, err)
 	}
+	logger.Debugln("RUNNING RESULT:", do.Result)
 	res = strings.Split(do.Result, "\n")
 	for _, r := range res {
 		logger.Debugf("Running =>\t\t\t%s\n", r)
@@ -345,7 +511,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 		} else {
 			logger.Infof("Found an existing instance of %s when I shouldn't have\n", chainName)
 		}
-		t.Fail()
+		fatal(t, nil)
 	}
 
 	if toRun != run {
@@ -354,7 +520,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 		} else {
 			logger.Infof("Found a running instance of %s when I shouldn't have\n", chainName)
 		}
-		t.Fail()
+		fatal(t, nil)
 	}
 
 	logger.Debugln("")
@@ -363,7 +529,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 func testsInit() error {
 	var err error
 	// TODO: make a reader/pipe so we can see what is written from tests.
-	util.GlobalConfig, err = util.SetGlobalObject(os.Stdout, os.Stderr)
+	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
@@ -372,7 +538,7 @@ func testsInit() error {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	util.ChangeErisDir(erisDir)
+	config.ChangeErisDir(erisDir)
 
 	// init dockerClient
 	util.DockerConnect(false, "eris")
@@ -383,7 +549,32 @@ func testsInit() error {
 		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
+	// lay a chain service def
+	testNewChain(chainName)
+
 	return nil
+}
+
+func testNewChain(chain string) {
+	do := def.NowDo()
+	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
+	do.Name = chain
+	do.Operations.ContainerNumber = 1
+	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
+	ifExit(NewChain(do))
+
+	// remove the data container
+	do.Args = []string{chain}
+	ifExit(data.RmData(do))
+}
+
+func removeDataContainer(t *testing.T, chainID string, cNum int) {
+	do := def.NowDo()
+	do.Name = chainID
+	do.Operations.ContainerNumber = cNum
+	if err := data.RmData(do); err != nil {
+		fatal(t, err)
+	}
 }
 
 func testsTearDown() error {
@@ -397,4 +588,15 @@ func ifExit(err error) {
 		testsTearDown()
 		os.Exit(1)
 	}
+}
+
+func trimResult(s string) string {
+	s = strings.TrimSpace(s)
+	s = strings.Trim(s, "\n")
+	spl := strings.Split(s, "\n")
+	for i, t := range spl {
+		t = strings.TrimSpace(t)
+		spl[i] = t
+	}
+	return strings.Trim(strings.Join(spl, "\n"), "\n")
 }

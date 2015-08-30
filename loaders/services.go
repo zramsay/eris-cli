@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -143,7 +144,7 @@ func ConnectToAService(srv *definitions.ServiceDefinition, dep string) {
 // helpers
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return util.LoadViperConfig(path.Join(ServicesPath), servName, "service")
+	return config.LoadViperConfig(path.Join(ServicesPath), servName, "service")
 }
 
 // Services must be given an image. Flame out if they do not.
@@ -156,7 +157,9 @@ func checkImage(srv *definitions.Service) error {
 }
 
 func addDependencyVolumesAndLinks(srv *definitions.ServiceDefinition) {
-	for _, dep := range srv.ServiceDeps {
-		ConnectToAService(srv, dep)
+	if srv.ServiceDeps != nil {
+		for _, dep := range srv.ServiceDeps.Dependencies {
+			ConnectToAService(srv, dep)
+		}
 	}
 }

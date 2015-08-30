@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/eris-ltd/eris-cli",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.5",
 	"Packages": [
 		"./..."
 	],
@@ -17,15 +17,19 @@
 		},
 		{
 			"ImportPath": "github.com/ebuchman/go-shell-pipes",
-			"Rev": "83e1324808622485314bff0fd97b8b944200a7a4"
+			"Rev": "2b9ded3b4c5b2b156a970522c2a820ab9afe628c"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
+			"Rev": "fecc9926047ff41db6185c8293ada3454a7031b1"
+		},
+		{
+			"ImportPath": "github.com/eris-ltd/common/go/ipfs",
+			"Rev": "fecc9926047ff41db6185c8293ada3454a7031b1"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
+			"Rev": "fecc9926047ff41db6185c8293ada3454a7031b1"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",

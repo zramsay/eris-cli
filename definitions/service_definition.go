@@ -5,18 +5,21 @@ type ServiceDefinition struct {
 	Name string `json:"name" yaml:"name" toml:"name"`
 	// id of the service
 	ServiceID string `mapstructure:"service_id,omitempty" json:"service_id,omitempty" yaml:"service_id,omitempty" toml:"service_id,omitempty"`
-	// array of strings of other services which should be started prior to this service starting
-	ServiceDeps []string `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
 	// a chain which must be started prior to this service starting. can take a `$chain` string
 	// which would then be passed in via a command line flag
 	Chain string `json:"chain,omitempty" yaml:"chain,omitempty" toml:"chain,omitempty"`
 
-	Service    *Service    `json:"service" yaml:"service" toml:"service"`
-	Maintainer *Maintainer `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
-	Location   *Location   `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
-	Machine    *Machine    `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
-	Srvs       []*Service
-	Operations *Operation
+	Service     *Service     `json:"service" yaml:"service" toml:"service"`
+	ServiceDeps *ServiceDeps `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
+	Maintainer  *Maintainer  `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
+	Location    *Location    `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+	Machine     *Machine     `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
+	Srvs        []*Service
+	Operations  *Operation
+}
+
+type ServiceDeps struct {
+	Dependencies []string `mapstructure:"dependencies" json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
 }
 
 func BlankServiceDefinition() *ServiceDefinition {

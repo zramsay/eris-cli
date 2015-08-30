@@ -14,17 +14,18 @@ import (
 var ListKnown = &cobra.Command{
 	Use:   "known",
 	Short: "List everything Eris knows about.",
-	Long: `Lists all the services, chains, & data containers which Eris has installed for you.
+	Long: `Lists all the services, chains, & data containers which Eris
+has installed locally as definition files.
 
 To install a new service, use: [eris services import].
+
 To install a new chain, use: [eris chains import].
 
 Services include all executable services supported by the Eris platform which are
 NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.
-
-todo: something about data containers, workers`,
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListAllKnown()
 	},
@@ -33,10 +34,15 @@ todo: something about data containers, workers`,
 var ListExisting = &cobra.Command{
 	Use:   "ls",
 	Short: "List everything that is installed and built.",
-	Long: `Lists the installed and built services, chains (data conts?) known to Eris.
+	Long: `Lists the built services and chains known to Eris.
 
-To list the known services: [eris services known]
-To list the running services: [eris services ps]
+To list the known services: [eris services known]. This will show
+all services which exist in the form of locally held service
+definition files.
+
+To list the running services: [eris services ps]. This is the service
+which are currently running.
+
 To start a service use: [eris services start serviceName].`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListAllExisting()

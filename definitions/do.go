@@ -1,7 +1,7 @@
 package definitions
 
 type Do struct {
-	Dev           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -17,21 +17,28 @@ type Do struct {
 	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","`
+	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
+	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
+	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// Generalized string slice
 	Args []string `mapstructure:"," json:"," yaml:"," toml:","`

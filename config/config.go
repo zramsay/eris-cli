@@ -1,4 +1,4 @@
-package util
+package config
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
 // Properly scope the globalConfig
@@ -148,4 +149,24 @@ func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
 	}
 
 	return nil
+}
+
+func GitConfigUser() (uName string, email string, err error) {
+	uName, err = gitconfig.Username()
+	if err != nil {
+		uName = ""
+	}
+	email, err = gitconfig.Email()
+	if err != nil {
+		email = ""
+	}
+
+	if uName == "" && email == "" {
+		err = fmt.Errorf("Can not find username or email in git config. Using \"\" for both\n")
+	} else if uName == "" {
+		err = fmt.Errorf("Can not find username in git config. Using \"\"\n")
+	} else if email == "" {
+		err = fmt.Errorf("Can not find email in git config. Using \"\"\n")
+	}
+	return
 }

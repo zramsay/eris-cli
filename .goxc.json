@@ -1,0 +1,46 @@
+{
+	"AppName": "eris",
+	"OutPath": "{{.Dest}}{{.PS}}{{.Version}}{{.PS}}{{.Os}}_{{.Arch}}{{.PS}}{{.ExeName}}{{.Ext}}",
+	"Tasks": [
+		"default",
+		"xc"
+	],
+	"TasksExclude": [
+		"go-test",
+		"archive-zip",
+		"archive-tar-gz",
+		"codesign",
+		"downloads-page"
+	],
+	"Arch": "amd64",
+	"Os": "linux,darwin,windows",
+	"PackageVersion": "0.10.1",
+	"TaskSettings": {
+		"deb": {
+			"armarch": "",
+			"bin-dir": "/usr/bin",
+			"go-sources-dir": ".",
+			"metadata": {
+				"maintainer": "Eris Industries, Ltd.",
+				"maintainerEmail": "support@erisindustries.com"
+			},
+			"metadata-deb": {
+				"Build-Depends": "debhelper (\u003e=4.0.0), golang-go, gcc",
+				"Depends": "docker"
+			},
+			"other-mappped-files": {},
+			"rmtemp": true
+		},
+		"publish-github": {
+			"owner": "eris-ltd",
+			"repository": "eris-cli"
+		},
+		"xc": {
+			"GOARM": "",
+			"autoRebuildToolchain": false,
+			"validateToolchain": false,
+			"verifyExe": true
+		}
+	},
+	"ConfigVersion": "0.9"
+}

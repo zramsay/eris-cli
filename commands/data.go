@@ -173,7 +173,7 @@ func InspectData(cmd *cobra.Command, args []string) {
 
 func RmData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
+	do.Args = args
 	IfExit(data.RmData(do))
 }
 
