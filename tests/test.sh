@@ -69,6 +69,7 @@ runTests(){
   else
     machine=eris-test-$swarm-$ver
     if [[ "$branch" == "master" ]]
+    then
       branch="latest"
     fi
     # only the last element in the backend array should cause this script to exit with
