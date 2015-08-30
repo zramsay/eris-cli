@@ -24,3 +24,5 @@ _testmain.go
 *.prof
 *.*~
 docs/eris-cli
+.goxc.local.json
+builds
