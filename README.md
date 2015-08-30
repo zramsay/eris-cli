@@ -21,7 +21,7 @@ eris init
 
 **No matter the blockchain**.
 
-[For the motivation behind this tool](docs/motivation.md).
+[For the motivation behind this tool](https://github.com/eris-ltd/eris-cli/blob/master/docs/motivation.md).
 
 # Eris: Today
 

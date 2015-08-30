@@ -52,8 +52,8 @@ func cloneRepo(name, location string) error {
 		//   simply clone in the directory.
 	} else {
 		c = exec.Command("git", "clone", src, location)
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
+		c.Stdout = config.GlobalConfig.Writer
+		c.Stderr = config.GlobalConfig.ErrorWriter
 		if err := c.Run(); err != nil {
 			return err
 		}
@@ -74,7 +74,8 @@ func pullRepo(location string) error {
 		}
 		c := exec.Command("git", "pull", "origin", "master")
 		// c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
+		c.Stdout = config.GlobalConfig.Writer
+		c.Stderr = config.GlobalConfig.ErrorWriter
 		if err := c.Run(); err != nil {
 			return err
 		}
