@@ -9,7 +9,7 @@ start=`pwd`
 repo=$GOPATH/src/github.com/eris-ltd/eris-cli
 declare -a distros=( precise trusty utopic vivid wheezy jessie stretch )
 package=eris
-version=0.10.1
+version=0.10.2
 aptmachine=eris-build-ams3-apt
 
 # -----------------------------------------------------------------

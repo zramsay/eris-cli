@@ -1,7 +1,7 @@
 #!/bin/bash
 
 release_maj="0.10"
-release_min="0.10.1"
+release_min="0.10.2"
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
 testimage=${testimage:="eris/eris"}
