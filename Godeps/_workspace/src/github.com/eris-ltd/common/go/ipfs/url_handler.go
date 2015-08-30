@@ -2,7 +2,7 @@ package ipfs
 
 import (
 	"fmt"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/config"
 	"os"
 )
 
@@ -34,7 +34,7 @@ func IPFSUrl() string {
 		if os.Getenv("ERIS_IPFS_HOST") != "" {
 			host = os.Getenv("ERIS_IPFS_HOST")
 		} else {
-			host = util.GetConfigValue("IpfsHost")
+			host = config.GetConfigValue("IpfsHost")
 		}
 	}
 	return host

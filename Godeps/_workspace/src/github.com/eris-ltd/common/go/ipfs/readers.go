@@ -14,13 +14,6 @@ import (
 	"time"
 )
 
-//had to be here because import cycle :(
-func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error {
-	url := "https://rawgit.com/" + strings.Join([]string{org, repo, branch, path}, "/")
-	w.Write([]byte("Will download from url -> " + url))
-	return DownloadFromUrlToFile(url, fileName, "", w)
-}
-
 func GetFromIPFS(hash, fileName, dirName string, w io.Writer) error {
 	url := IPFSBaseGatewayUrl("") + hash
 	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))

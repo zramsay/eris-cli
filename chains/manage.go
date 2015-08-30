@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/ipfs"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
@@ -135,7 +136,7 @@ func CurrentChain(do *definitions.Do) error {
 }
 
 func EditChain(do *definitions.Do) error {
-	chainConf, err := util.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
+	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {
 		return err
 	}
