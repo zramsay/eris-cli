@@ -35,11 +35,17 @@ func ImportService(do *definitions.Do) error {
 
 	if err != nil {
 		return err
+		//return fmt.Errorf("I do not know how to get that file. Sorry. %v\n", err)
 	}
-	return nil
+
+	_, err = loaders.LoadServiceDefinition(do.Name, false, 0)
+	//XXX add protections?
+	if err != nil {
+		return fmt.Errorf("Your service defintion file looks improperly formatted and will not marshal.")
+	}
 
 	do.Result = "success"
-	return fmt.Errorf("I do not know how to get that file. Sorry.")
+	return nil
 }
 
 func NewService(do *definitions.Do) error {
