@@ -134,7 +134,7 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
 		logger.Debugf("Telling Docker to start srv =>\t%s\n", srv.Name)
-		if err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
+		if _, err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
 			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
 		}
 	}
@@ -193,7 +193,8 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 // Wrappers we want to be able to call from Chains package (mostly)
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
-	return perform.DockerRun(srvMain, ops)
+	_, err := perform.DockerRun(srvMain, ops)
+	return err
 }
 
 func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, follow bool, tail string) error {

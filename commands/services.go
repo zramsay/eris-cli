@@ -34,6 +34,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
+	Services.AddCommand(servicesEnsureRunning)
 	Services.AddCommand(servicesInspect)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
@@ -146,6 +147,15 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
   eris services inspect ipfs name -> will display the name in machine readable format
   eris services inspect ipfs host_config.binds -> will display only that value`,
 	Run: InspectService,
+}
+
+var servicesEnsureRunning = &cobra.Command{
+	Use:   "ensure [serviceName]",
+	Short: "Ensures the named service is running",
+	Long: `Will check to make sure a service is running.
+
+If the names service is not runnint, command will boot it up`,
+	Run: EnsureService,
 }
 
 var servicesPorts = &cobra.Command{
@@ -340,6 +350,12 @@ func InspectService(cmd *cobra.Command, args []string) {
 	}
 
 	IfExit(srv.InspectService(do))
+}
+
+func EnsureService(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	IfExit(srv.EnsureRunning(do))
 }
 
 func PortsService(cmd *cobra.Command, args []string) {
