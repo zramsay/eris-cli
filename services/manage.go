@@ -162,6 +162,21 @@ func LogsService(do *definitions.Do) error {
 	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
+func ExecService(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsServiceExisting(service.Service, service.Operations) {
+		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
+	} else {
+		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
+	}
+
+	return nil
+}
+
 func ExportService(do *definitions.Do) error {
 	if parseKnown(do.Name) {
 		doNow := definitions.NowDo()
