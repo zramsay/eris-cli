@@ -19,7 +19,7 @@ func cloneRepo(name, location string) error {
 	//   then pull rather than clone.
 	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
 		logger.Debugf("The location is a git repository. Attempting to pull instead.\n")
-		if err := pullRepo(location); err != nil {
+		if err := pullRepo(location, false); err != nil {
 			return err
 		} else {
 			return nil
@@ -30,6 +30,12 @@ func cloneRepo(name, location string) error {
 	//   not have a .git directory (caught above), then init the dir
 	//   and pull the repo.
 	if _, err := os.Stat(location); !os.IsNotExist(err) {
+		if askToPull(location) {
+			if e2 := common.ClearDir(location); e2 != nil {
+				return e2
+			}
+		}
+
 		logger.Debugf("The location exists but is not a git repository.\nInit-ing git repository.\n")
 		c = exec.Command("git", "init", location)
 		c.Stdout = config.GlobalConfig.Writer
@@ -45,7 +51,7 @@ func cloneRepo(name, location string) error {
 		}
 
 		logger.Debugf("Pulling the repository.\n")
-		if err := pullRepo(location); err != nil {
+		if err := pullRepo(location, true); err != nil {
 			return err
 		} else {
 			return nil
@@ -65,12 +71,8 @@ func cloneRepo(name, location string) error {
 	return nil
 }
 
-func pullRepo(location string) error {
-	var input string
-	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (Y/n): ", location)
-	fmt.Scanln(&input)
-
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+func pullRepo(location string, alreadyAsked bool) error {
+	if alreadyAsked || askToPull(location) {
 		prevDir, _ := os.Getwd()
 		if err := os.Chdir(location); err != nil {
 			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
@@ -85,7 +87,20 @@ func pullRepo(location string) error {
 			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
 		}
 	}
+
 	return nil
+}
+
+func askToPull(location string) bool {
+	var input string
+
+	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (Y/n): ", location)
+	fmt.Scanln(&input)
+
+	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+		return true
+	}
+	return false
 }
 
 func dropDefaults() error {
