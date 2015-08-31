@@ -123,7 +123,7 @@ var chainsImport = &cobra.Command{
 By default, Eris will import from ipfs.
 
 To list known chains use: [eris chains known].`,
-	Example: "  eris chains import 2gather ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+	Example: "  eris chains import 2gather QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run: func(cmd *cobra.Command, args []string) {
 		ImportChain(cmd, args)
 	},
