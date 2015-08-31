@@ -111,10 +111,7 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(ini.Initialize(true, false))
-
-	// set ipfs endpoint
-	// os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") // conflicts with docker-machine based testing
+	ifExit(ini.Initialize(true))
 
 	// dump a test file with some stuff
 	f, err := os.Create(file)

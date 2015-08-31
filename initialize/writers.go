@@ -18,7 +18,7 @@ func cloneRepo(name, location string) error {
 	// if the .git directory exists within ~/.eris/services (or w/e)
 	//   then pull rather than clone.
 	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
-		logger.Debugf("The location exists. Attempting to pull instead.\n")
+		logger.Debugf("The location is a git repository. Attempting to pull instead.\n")
 		if err := pullRepo(location); err != nil {
 			return err
 		} else {
@@ -30,6 +30,7 @@ func cloneRepo(name, location string) error {
 	//   not have a .git directory (caught above), then init the dir
 	//   and pull the repo.
 	if _, err := os.Stat(location); !os.IsNotExist(err) {
+		logger.Debugf("The location exists but is not a git repository.\nInit-ing git repository.\n")
 		c = exec.Command("git", "init", location)
 		c.Stdout = config.GlobalConfig.Writer
 		c.Stderr = config.GlobalConfig.ErrorWriter
@@ -37,18 +38,20 @@ func cloneRepo(name, location string) error {
 			return e2
 		}
 
+		logger.Debugf("Adding the proper git remote.\n")
 		c = exec.Command("git", "remote", "add", "origin", src)
 		if e3 := c.Run(); e3 != nil {
 			return e3
 		}
 
+		logger.Debugf("Pulling the repository.\n")
 		if err := pullRepo(location); err != nil {
 			return err
 		} else {
 			return nil
 		}
 
-		// if no ~/.eris services (or w/e) directory exists, then it will
+		// if no ~/.eris/services (or w/e) directory exists, then it will
 		//   simply clone in the directory.
 	} else {
 		c = exec.Command("git", "clone", src, location)
@@ -73,7 +76,6 @@ func pullRepo(location string) error {
 			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
 		}
 		c := exec.Command("git", "pull", "origin", "master")
-		// c.Stdout = os.Stdout
 		c.Stdout = config.GlobalConfig.Writer
 		c.Stderr = config.GlobalConfig.ErrorWriter
 		if err := c.Run(); err != nil {

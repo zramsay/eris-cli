@@ -41,9 +41,6 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
-		// XXX: this has tragic consequences (eg. makes `services start --chain` not work)
-		// do it specifically where we need it
-		// do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
@@ -63,8 +60,6 @@ func Execute() {
 
 // Define the commands
 func AddCommands() {
-	// buildProjectsCommand()
-	// ErisCmd.AddCommand(Projects)
 	buildServicesCommand()
 	ErisCmd.AddCommand(Services)
 	buildChainsCommand()
@@ -77,13 +72,14 @@ func AddCommands() {
 	ErisCmd.AddCommand(Data)
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
+	// buildProjectsCommand()
+	// ErisCmd.AddCommand(Projects)
 	// buildRemotesCommand()
 	// ErisCmd.AddCommand(Remotes)
-	buildConfigCommand()
 	ErisCmd.AddCommand(ListKnown)
 	ErisCmd.AddCommand(ListExisting)
-	//	ErisCmd.AddCommand(ListRunning)
 
+	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(VerSion)
 	ErisCmd.AddCommand(Init)
@@ -99,9 +95,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag for when git is not installed")
-	// Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
-	// Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")
+	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag when git is not installed")
 }
 
 func InitializeConfig() {

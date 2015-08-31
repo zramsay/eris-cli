@@ -13,6 +13,6 @@ var Init = &cobra.Command{
 and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		ini.Initialize(do.Pull, do.Verbose)
+		ini.Initialize(do.Pull)
 	},
 }

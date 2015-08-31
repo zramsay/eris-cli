@@ -2,7 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"path"
 	"strings"
 
@@ -46,7 +46,8 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 		return nil, err
 	}
 
-	if os.Getenv("TEST_IN_CIRCLE") != "true" { // this really should be docker version < 1.7...?
+	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
+	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
 		addDependencyVolumesAndLinks(srv)
 	}
 
@@ -147,8 +148,10 @@ func connectToAService(srv *definitions.ServiceDefinition, typ, name, internalNa
 
 	if mount {
 		// Automagically mount VolumesFrom for serviceDeps so they can
-		// easily pass files back and forth
-		newVol := containerName + ":rw" // for now mounting as "rw"
+		// easily pass files back and forth. note that this is opinionated
+		// and will mount as read-write. we can revisit this if read-only
+		// mounting required for specific use cases
+		newVol := containerName + ":rw"
 		srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
 	}
 }

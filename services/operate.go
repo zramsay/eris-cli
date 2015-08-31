@@ -15,10 +15,8 @@ func StartService(do *definitions.Do) (err error) {
 
 	cNum := do.Operations.ContainerNumber
 	do.Args = append(do.Args, do.ServicesSlice...)
-	logger.Debugf("Building the Services Group =>\t%v\n", do.Args)
+	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
 	for _, srv := range do.Args {
-		// this forces CLI/Agent level overwrites of the Operations.
-		// if this needs to get reversed, we should discuss on GH.
 		s, e := BuildServicesGroup(srv, cNum)
 		if e != nil {
 			return e
@@ -26,7 +24,8 @@ func StartService(do *definitions.Do) (err error) {
 		services = append(services, s...)
 	}
 	for _, s := range services {
-		//XXX does AutoMagic elim need for this?
+		// XXX does AutoMagic elim need for this?
+		// [csk]: not totally we may need to have ops reconciliation, overwrite will, e.g., merge the maps and stuff
 		util.OverWriteOperations(s.Operations, do.Operations)
 	}
 
@@ -43,6 +42,7 @@ func StartService(do *definitions.Do) (err error) {
 		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
 	}
 
+	logger.Infof("Starting Services Group.\n")
 	return StartGroup(services)
 }
 
@@ -111,7 +111,6 @@ func BuildServicesGroup(srvName string, cNum int, services ...*definitions.Servi
 }
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
-// TODO: Add ONE Chain
 func StartGroup(group []*definitions.ServiceDefinition) error {
 	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
@@ -152,22 +151,27 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 		// flag overwrites whatever is in the service definition
 		chainName = chainFlag
 	} else if strings.HasPrefix(srv.Chain, "$chain") {
-		// if there's a $chain and no flag, we err
-		return nil, fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
-	} else {
-		// otherwise we just use the chainName in the service definition
+		// if there's a $chain and no flag or checked out chain, we err
+		var err error
+		chainName, err = util.GetHead()
+		if chainName == "" || err != nil {
+			return nil, fmt.Errorf("Marmot disapproval face.\nYou tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
+		}
 	}
 	s, err := loaders.ChainsAsAService(chainName, false, srv.Operations.ContainerNumber)
 	if err != nil {
 		return nil, err
 	}
 	// link the service container linked to the chain
-	loaders.ConnectToAChain(srv, chainName, internalName, link, mount)
 	// XXX: we may have name collision here if we're not careful.
+	loaders.ConnectToAChain(srv, chainName, internalName, link, mount)
 
 	util.OverWriteOperations(s.Operations, srv.Operations)
 	return s, nil
 }
+
+// ------------------------------------------------------------------------------------------
+// Wrappers we want to be able to call from Chains package (mostly)
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
 	return perform.DockerRun(srvMain, ops)
