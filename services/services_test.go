@@ -142,6 +142,27 @@ func TestLogsService(t *testing.T) {
 	}
 }
 
+func TestExecService(t *testing.T) {
+	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		return
+	}
+
+	testStartService(t, servName)
+	defer testKillService(t, servName, true)
+
+	do := def.NowDo()
+	do.Name = servName
+	do.Interactive = false
+	do.Args = strings.Fields("ls -la /root/")
+	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
+	e := ExecService(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+}
+
 func TestUpdateService(t *testing.T) {
 	testStartService(t, servName)
 	defer testKillService(t, servName, true)

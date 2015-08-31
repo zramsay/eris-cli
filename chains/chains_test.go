@@ -139,6 +139,23 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
+func TestExecChain(t *testing.T) {
+	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		return
+	}
+	do := def.NowDo()
+	do.Name = chainName
+	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
+	do.Interactive = false
+	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
+	e := ExecChain(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+}
+
 // eris chains new --dir _ -g _
 // the default chain_id is my_tests, so should be overwritten
 func TestChainsNewDirGen(t *testing.T) {

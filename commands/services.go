@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -34,6 +35,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesRename)
@@ -183,6 +185,15 @@ var servicesLogs = &cobra.Command{
 	},
 }
 
+var servicesExec = &cobra.Command{
+	Use:   "exec [serviceName]",
+	Short: "Run a command or interactive shell",
+	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Run: func(cmd *cobra.Command, args []string) {
+		ExecService(cmd, args)
+	},
+}
+
 // stop stops a running service
 var servicesStop = &cobra.Command{
 	Use:   "stop [name]",
@@ -255,6 +266,8 @@ func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
+	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
@@ -287,6 +300,19 @@ func LogService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(srv.LogsService(do))
+}
+
+func ExecService(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
+	do.Name = args[0]
+	args = args[1:]
+	if len(args) == 1 {
+		args = strings.Split(args[0], " ")
+	}
+	do.Args = args
+
+	IfExit(srv.ExecService(do))
 }
 
 func KillService(cmd *cobra.Command, args []string) {

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 
@@ -52,6 +53,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsEdit)
+	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsListRunning)
@@ -213,6 +215,16 @@ var chainsLogs = &cobra.Command{
 	},
 }
 
+var chainsExec = &cobra.Command{
+	Use:   "exec [serviceName]",
+	Short: "Run a command or interactive shell",
+	Long: `Run a command or interactive shell in a container
+	with volumes-from the data container`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ExecChain(cmd, args)
+	},
+}
+
 var chainsListRunning = &cobra.Command{
 	Use:   "ps",
 	Short: "List the running blockchains.",
@@ -347,6 +359,8 @@ func addChainsFlags() {
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
 
+	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
 
@@ -378,6 +392,24 @@ func LogChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
+}
+
+func ExecChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
+	do.Name = args[0]
+	// if interactive, we ignore args. if not, run args as command
+	if !do.Interactive {
+		if len(args) < 2 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+		args = args[1:]
+	}
+	if len(args) == 1 {
+		args = strings.Split(args[0], " ")
+	}
+	do.Args = args
+	IfExit(chns.ExecChain(do))
 }
 
 func KillChain(cmd *cobra.Command, args []string) {

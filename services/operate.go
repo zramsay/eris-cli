@@ -172,6 +172,10 @@ func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, 
 	return perform.DockerLogs(srv, ops, follow, tail)
 }
 
+func ExecServiceByService(srvMain *definitions.Service, ops *definitions.Operation, cmd []string, attach bool) error {
+	return perform.DockerExec(srvMain, ops, cmd, attach)
+}
+
 func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation, timeout uint) error {
 	return perform.DockerStop(srvMain, ops, timeout)
 }
