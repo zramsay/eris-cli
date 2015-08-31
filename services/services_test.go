@@ -143,10 +143,10 @@ func TestLogsService(t *testing.T) {
 }
 
 func TestExecService(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+	/*if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
-	}
+	}*/
 
 	testStartService(t, servName)
 	defer testKillService(t, servName, true)

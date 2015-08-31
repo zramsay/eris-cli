@@ -140,10 +140,14 @@ func TestStartKillChain(t *testing.T) {
 }
 
 func TestExecChain(t *testing.T) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
 		return
-	}
+	}*/
+
+	testStartChain(t, chainName)
+	defer testKillChain(t, chainName)
+
 	do := def.NowDo()
 	do.Name = chainName
 	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
