@@ -94,8 +94,7 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, err)
 	}
 
-	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
-	image := "eris/erisdb:" + vers
+	image := "eris/erisdb:" + version.VERSION
 	if srvDef.Service.Image != image {
 		fatal(t, fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}

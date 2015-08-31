@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
@@ -126,17 +128,10 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 // Service defs which don't specify a chain or $chain won't connect to a chain.
 // NOTE: chains have to be started before services that depend on them.
 func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) (servicesAndChains []*definitions.ServiceDefinition, err error) {
-	var s *definitions.ServiceDefinition
 	var chains = make(map[string]*definitions.ServiceDefinition)
 	for _, srv := range services {
 		if srv.Chain != "" {
-			if chainName != "" {
-				s, err = ConnectChainToService(chainName, srv)
-			} else if srv.Chain == "$chain" {
-				err = fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
-			} else {
-				s, err = ConnectChainToService(srv.Chain, srv)
-			}
+			s, err := ConnectChainToService(chainName, srv.Chain, srv)
 			if err != nil {
 				return nil, err
 			}
@@ -151,13 +146,23 @@ func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition
 	return append(servicesAndChains, services...), nil
 }
 
-func ConnectChainToService(chainName string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
+func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
+	chainName, internalName, link, mount := util.ParseDependency(chainNameAndOpts)
+	if chainFlag != "" {
+		// flag overwrites whatever is in the service definition
+		chainName = chainFlag
+	} else if strings.HasPrefix(srv.Chain, "$chain") {
+		// if there's a $chain and no flag, we err
+		return nil, fmt.Errorf("Marmot disapproval face. You tried to start a service which has a $chain variable but didn't give me a chain.")
+	} else {
+		// otherwise we just use the chainName in the service definition
+	}
 	s, err := loaders.ChainsAsAService(chainName, false, srv.Operations.ContainerNumber)
 	if err != nil {
 		return nil, err
 	}
 	// link the service container linked to the chain
-	loaders.ConnectToAChain(srv, chainName)
+	loaders.ConnectToAChain(srv, chainName, internalName, link, mount)
 	// XXX: we may have name collision here if we're not careful.
 
 	util.OverWriteOperations(s.Operations, srv.Operations)

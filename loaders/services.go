@@ -128,30 +128,29 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	}
 }
 
-func ConnectToAService(srv *definitions.ServiceDefinition, dep string) {
-	connectToAService(srv, dep, false)
+func ConnectToAService(srv *definitions.ServiceDefinition, name, internalName string, link, mount bool) {
+	connectToAService(srv, "service", name, internalName, link, mount)
 }
 
 // --------------------------------------------------------------------
 // helpers
 
-func connectToAService(srv *definitions.ServiceDefinition, dep string, isChain bool) {
-	// Automagically provide links to serviceDeps so they can easily
-	// find each other using Docker's automagical modifications to
-	// /etc/hosts
-	var containerName string
-	if isChain {
-		containerName = util.ChainContainersName(dep, srv.Operations.ContainerNumber)
-	} else {
-		containerName = util.ServiceContainersName(dep, srv.Operations.ContainerNumber)
-	}
-	newLink := containerName + ":" + dep
-	srv.Service.Links = append(srv.Service.Links, newLink)
+// links and mounts for service dependencies
+func connectToAService(srv *definitions.ServiceDefinition, typ, name, internalName string, link, mount bool) {
+	logger.Debugf("Connecting service %s to %s %s (%s) with link (%v) and volumes-from (%v)\n", srv.Service.Name, typ, name, internalName, link, mount)
+	containerName := util.ContainersName(typ, name, srv.Operations.ContainerNumber)
 
-	// Automagically mount VolumesFrom for serviceDeps so they can
-	// easily pass files back and forth
-	newVol := containerName + ":rw" // for now mounting as "rw"
-	srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+	if link {
+		newLink := containerName + ":" + internalName
+		srv.Service.Links = append(srv.Service.Links, newLink)
+	}
+
+	if mount {
+		// Automagically mount VolumesFrom for serviceDeps so they can
+		// easily pass files back and forth
+		newVol := containerName + ":rw" // for now mounting as "rw"
+		srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+	}
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
@@ -169,8 +168,10 @@ func checkImage(srv *definitions.Service) error {
 
 func addDependencyVolumesAndLinks(srv *definitions.ServiceDefinition) {
 	if srv.ServiceDeps != nil {
-		for _, dep := range srv.ServiceDeps.Dependencies {
-			ConnectToAService(srv, dep)
+		for i, dep := range srv.ServiceDeps.Dependencies {
+			name, internalName, link, mount := util.ParseDependency(dep)
+			ConnectToAService(srv, name, internalName, link, mount)
+			srv.ServiceDeps.Dependencies[i] = name
 		}
 	}
 }

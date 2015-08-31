@@ -3,7 +3,6 @@ package loaders
 import (
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -72,6 +71,8 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 	if err != nil {
 		return nil, err
 	}
+	// we keep the "eris_chain" prefix and set the CHAIN_ID var.
+	// the run command is set in ServiceDefFromChain
 	s.Operations.SrvContainerName = util.ChainContainersName(chainName, s.Operations.ContainerNumber)
 	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
 	return s, nil
@@ -79,7 +80,7 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	// chainID := chain.ChainID
-	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
+	vers := version.VERSION
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
 	chain.Service.Image = "eris/erisdb:" + vers
@@ -101,8 +102,8 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	return srv
 }
 
-func ConnectToAChain(srv *definitions.ServiceDefinition, dep string) {
-	connectToAService(srv, dep, true)
+func ConnectToAChain(srv *definitions.ServiceDefinition, name, internalName string, link, mount bool) {
+	connectToAService(srv, "chain", name, internalName, link, mount)
 }
 
 func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {
