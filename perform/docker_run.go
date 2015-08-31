@@ -556,7 +556,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 	if len(containers) != 0 {
 		for _, container := range containers {
 			if r.MatchString(container.Names[0]) {
-				logger.Debugf("Container Found =>\t\t%s\n", name)
+				// logger.Debugf("Container Found =>\t\t%s\n", name)
 				return container, true
 			} else {
 				logger.Debugf("No match =>\t\t\t%s:%s\n", name, container.Names[0])
@@ -576,7 +576,7 @@ func listContainers(all bool) []docker.APIContainers {
 		for _, c := range con.Names {
 			match := r.FindAllStringSubmatch(c, 1)
 			if len(match) != 0 {
-				logger.Debugf("Container Found =>\t\t%s\n", con.Names[0])
+				// logger.Debugf("Container Found =>\t\t%s\n", con.Names[0])
 				container = append(container, con)
 			}
 		}

@@ -135,7 +135,7 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 			}
 			if r.MatchString(c) {
 				c = strings.Replace(c, "/", "", 1) // Docker's leading slash
-				logger.Debugf("Found Eris Container =>\t\t%s\n", c)
+				// logger.Debugf("Found Eris Container =>\t\t%s\n", c)
 				cont := ContainerDisassemble(c)
 				cont.ContainerID = con.ID
 				containers = append(containers, cont)
@@ -174,13 +174,13 @@ func ServiceContainers(running bool) []*ContainerName {
 }
 
 func ServiceContainerNames(running bool) []string {
-	logger.Debugf("Populating current containrs =>\tall? %t\n", running)
+	// logger.Debugf("Populating current containrs =>\tall? %t\n", running)
 	a := ServiceContainers(running)
 	b := []string{}
 	for _, c := range a {
 		b = append(b, c.ShortName)
 	}
-	logger.Debugf("Containers I found =>\t\t%v\n", b)
+	// logger.Debugf("Containers I found =>\t\t%v\n", b)
 	return b
 }
 
