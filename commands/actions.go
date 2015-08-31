@@ -60,7 +60,7 @@ var actionsImport = &cobra.Command{
 By default, Eris will import from ipfs.
 
 To list known actions use: [eris actions known].`,
-	Example: "  eris actions import \"do not use\" ipfs:QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+	Example: "  eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run: func(cmd *cobra.Command, args []string) {
 		ImportAction(cmd, args)
 	},

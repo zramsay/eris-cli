@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -17,8 +17,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
 
 func ImportService(do *definitions.Do) error {
@@ -27,28 +26,26 @@ func ImportService(do *definitions.Do) error {
 		fileName = fileName + ".toml"
 	}
 
-	s := strings.Split(do.Path, ":")
-	if s[0] == "ipfs" {
-
-		var err error
-		if logger.Level > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", logger.Writer)
-		} else {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
-		}
-
-		if err != nil {
-			return err
-		}
-		return nil
+	var err error
+	if logger.Level > 0 {
+		err = ipfs.GetFromIPFS(do.Hash, fileName, "", logger.Writer)
+	} else {
+		err = ipfs.GetFromIPFS(do.Hash, fileName, "", bytes.NewBuffer([]byte{}))
 	}
 
-	if strings.Contains(s[0], "github") {
-		logger.Errorln("https://twitter.com/ryaneshea/status/595957712040628224")
-		return nil
+	if err != nil {
+		return err
+		//return fmt.Errorf("I do not know how to get that file. Sorry. %v\n", err)
 	}
+
+	_, err = loaders.LoadServiceDefinition(do.Name, false, 0)
+	//XXX add protections?
+	if err != nil {
+		return fmt.Errorf("Your service defintion file looks improperly formatted and will not marshal.")
+	}
+
 	do.Result = "success"
-	return fmt.Errorf("I do not know how to get that file. Sorry.")
+	return nil
 }
 
 func NewService(do *definitions.Do) error {
@@ -58,20 +55,12 @@ func NewService(do *definitions.Do) error {
 	srv.Service.Image = do.Args[0]
 	srv.Service.AutoData = true
 
+	var err error
 	//get maintainer info
-	uName, err := gitconfig.Username()
+	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
-		logger.Debugf("Could not find git user.name, setting service.Maintainer.Name = \"\"")
-		uName = ""
+		logger.Debugf(err.Error())
 	}
-	email, err := gitconfig.Email()
-	if err != nil {
-		logger.Debugf("Could not find git user.email, setting service.Maintainer.Email = \"\"")
-		email = ""
-	}
-
-	srv.Maintainer.Name = uName
-	srv.Maintainer.Email = email
 
 	logger.Debugf("Creating a new srv def file =>\t%s:%s\n", srv.Service.Name, srv.Service.Image)
 	err = WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
@@ -183,7 +172,6 @@ func ExportService(do *definitions.Do) error {
 		}
 
 		hash, err := exportFile(do.Name)
-
 		do.Result = hash
 		logger.Println(hash)
 
@@ -299,14 +287,17 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 }
 
 func exportFile(servName string) (string, error) {
-	fileName := FindServiceDefinitionFile(servName)
+	fileName := fmt.Sprintf("%s%s", FindServiceDefinitionFile(servName), ".toml")
+
+	fn := path.Join(ServicesPath, fileName)
 
 	var hash string
 	var err error
+
 	if logger.Level > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", logger.Writer)
+		hash, err = ipfs.SendToIPFS(fn, "", logger.Writer)
 	} else {
-		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fn, "", bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {

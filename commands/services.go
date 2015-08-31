@@ -61,14 +61,13 @@ Blockchains are handled using the [eris chains] command.`,
 }
 
 var servicesImport = &cobra.Command{
-	Use:   "import [name] [location]",
-	Short: "Import a service definition file from Github or IPFS.",
+	Use:   "import [name] [hash]",
+	Short: "Import a service definition file from IPFS.",
 	Long: `Import a service for your platform.
 
-By default, Eris will import from ipfs.
 
 To list known services use: [eris services known].`,
-	Example: "  eris services import eth ipfs:QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
+	Example: "  eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
 	Run: func(cmd *cobra.Command, args []string) {
 		ImportService(cmd, args)
 	},
@@ -81,8 +80,8 @@ var servicesNew = &cobra.Command{
 
 Command must be given a name and a Container Image using standard
 docker format of [repository/organization/image].`,
-	Example: `  eris new eth eris/eth
-  eris new mint tutum.co/tendermint/tendermint`,
+	Example: `  eris services new eth eris/eth
+  eris services new mint tutum.co/tendermint/tendermint`,
 	Run: func(cmd *cobra.Command, args []string) {
 		NewService(cmd, args)
 	},
@@ -299,7 +298,7 @@ func KillService(cmd *cobra.Command, args []string) {
 func ImportService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Path = args[1]
+	do.Hash = args[1]
 	IfExit(srv.ImportService(do))
 }
 
