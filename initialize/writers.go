@@ -6,85 +6,61 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/eris-ltd/eris-cli/config"
+	//"github.com/eris-ltd/eris-cli/config"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-func cloneRepo(name, location string) error {
+func cloneRepo(prompt bool, name, location string) error {
 	src := "https://github.com/eris-ltd/" + name
 	var c *exec.Cmd
 
 	// if the .git directory exists within ~/.eris/services (or w/e)
 	//   then pull rather than clone.
 	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
-		logger.Debugf("The location is a git repository. Attempting to pull instead.\n")
-		if err := pullRepo(location, false); err != nil {
+		logger.Printf("The location is a git repository. Attempting to pull instead.\n")
+		if err := pullRepo(location, prompt); err != nil {
 			return err
 		} else {
 			return nil
 		}
-	}
-
-	// if the ~/.eris/services (or w/e) directory exists, but it does
-	//   not have a .git directory (caught above), then init the dir
-	//   and pull the repo.
-	if _, err := os.Stat(location); !os.IsNotExist(err) {
+	} else {
+		// if the ~/.eris/services (or w/e) directory exists, but it does
+		// not have a .git directory (caught above), then clone the repo
 		if askToPull(location) {
 			if e2 := common.ClearDir(location); e2 != nil {
 				return e2
 			}
-		}
-
-		logger.Debugf("The location exists but is not a git repository.\nInit-ing git repository.\n")
-		c = exec.Command("git", "init", location)
-		c.Stdout = config.GlobalConfig.Writer
-		c.Stderr = config.GlobalConfig.ErrorWriter
-		if e2 := c.Run(); e2 != nil {
-			return e2
-		}
-
-		logger.Debugf("Adding the proper git remote.\n")
-		c = exec.Command("git", "remote", "add", "origin", src)
-		if e3 := c.Run(); e3 != nil {
-			return e3
-		}
-
-		logger.Debugf("Pulling the repository.\n")
-		if err := pullRepo(location, true); err != nil {
-			return err
-		} else {
-			return nil
-		}
-
-		// if no ~/.eris/services (or w/e) directory exists, then it will
-		//   simply clone in the directory.
-	} else {
-		c = exec.Command("git", "clone", src, location)
-		c.Stdout = config.GlobalConfig.Writer
-		c.Stderr = config.GlobalConfig.ErrorWriter
-		if err := c.Run(); err != nil {
-			return err
+			logger.Printf("Cloning git repository.\n")
+			c = exec.Command("git", "clone", src, location)
+			//c.Stdout = config.GlobalConfig.Writer
+			//c.Stderr = config.GlobalConfig.ErrorWriter
+			if e3 := c.Run(); e3 != nil {
+				return e3
+			}
 		}
 	}
-
 	return nil
 }
 
 func pullRepo(location string, alreadyAsked bool) error {
+	var c *exec.Cmd
 	if alreadyAsked || askToPull(location) {
 		prevDir, _ := os.Getwd()
 		if err := os.Chdir(location); err != nil {
 			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
 		}
-		c := exec.Command("git", "pull", "origin", "master")
-		c.Stdout = config.GlobalConfig.Writer
-		c.Stderr = config.GlobalConfig.ErrorWriter
+
+		logger.Printf("Pulling origin master.\n")
+		c = exec.Command("git", "pull", "origin", "master")
+		//c.Stdout = config.GlobalConfig.Writer
+		//c.Stderr = config.GlobalConfig.ErrorWriter
 		if err := c.Run(); err != nil {
+			logger.Printf("err: %v\n", err)
 			return err
 		}
 		if err := os.Chdir(prevDir); err != nil {
-			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
+			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", prevDir)
 		}
 	}
 

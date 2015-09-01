@@ -2,6 +2,7 @@ package definitions
 
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -15,6 +16,8 @@ type Do struct {
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Services      bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Tool          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
@@ -24,6 +27,7 @@ type Do struct {
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
