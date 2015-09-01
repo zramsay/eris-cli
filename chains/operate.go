@@ -79,6 +79,7 @@ func StartChain(do *definitions.Do) error {
 	}
 	util.OverWriteOperations(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
+	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
 
 	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
@@ -116,6 +117,22 @@ func KillChain(do *definitions.Do) error {
 		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func ExecChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsChainExisting(chain) {
+		logger.Infoln("Chain exists.")
+		return perform.DockerExec(chain.Service, chain.Operations, do.Args, do.Interactive)
+	} else {
+		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", do.Name)
 	}
 
 	return nil
@@ -263,10 +280,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("RUN=%v", do.Run),
-		fmt.Sprintf("CSV=%v", csvPath),
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
+		fmt.Sprintf("CSV=%v", csvPath),                 // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),      // config.toml
+		fmt.Sprintf("REGISTER_ADDRESS=%s", do.Address), // use to sign registration txs for etcb
 	}
+	envVars = append(envVars, do.Env...)
 
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
 	for _, eV := range envVars {
@@ -276,10 +294,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// TODO: if do.N > 1 ...
 
 	chain.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		chain.Operations.Remove = true
-	}
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)

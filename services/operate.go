@@ -42,6 +42,11 @@ func StartService(do *definitions.Do) (err error) {
 		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
 	}
 
+	// NOTE: the top level service should be at the end of the list
+	topService := services[len(services)-1]
+	topService.Service.Environment = append(topService.Service.Environment, do.Env...)
+	services[len(services)-1] = topService
+
 	logger.Infof("Starting Services Group.\n")
 	return StartGroup(services)
 }
@@ -57,12 +62,6 @@ func KillService(do *definitions.Do) error {
 		services = append(services, s...)
 	}
 
-	var err error
-	services, err = BuildChainGroup(do.ChainName, services)
-	if err != nil {
-		return err
-	}
-
 	// if force flag given, this will override any timeout flag
 	if do.Force {
 		do.Timeout = 0
@@ -76,7 +75,7 @@ func KillService(do *definitions.Do) error {
 			}
 
 		} else {
-			logger.Infoln("Service not currently running. Skipping.")
+			logger.Infof("Service (%s) not currently running. Skipping.\n", service.Service.Name)
 		}
 
 		if do.Rm {
@@ -84,6 +83,10 @@ func KillService(do *definitions.Do) error {
 				return err
 			}
 		}
+	}
+
+	if do.ChainName != "" {
+		// XXX: is it possible to delete the chain from here?
 	}
 
 	return nil

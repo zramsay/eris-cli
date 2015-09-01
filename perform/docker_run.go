@@ -901,7 +901,7 @@ func startExec(id string) error {
 	opts := docker.StartExecOptions{
 		Detach:       false,
 		Tty:          true,
-		InputStream:  os.Stdin,
+		InputStream:  nil,
 		OutputStream: os.Stdout,
 		ErrorStream:  os.Stderr,
 		RawTerminal:  true,

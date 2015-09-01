@@ -269,8 +269,10 @@ func addServicesFlags() {
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "<key>=<value> pairs to pass into the container's bash env")
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
+	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "<key>=<value> pairs to pass into the container's bash env")
 
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
