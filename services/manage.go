@@ -225,7 +225,7 @@ func ListExisting(do *definitions.Do) error {
 			logger.Printf("%s\n", "\n")
 		}
 	} else {
-		perform.PrintTableReport("service", false) // TODO: return this as a string.
+		perform.PrintTableReport("service", true) // TODO: return this as a string.
 	}
 	return nil
 }
