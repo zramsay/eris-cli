@@ -135,6 +135,22 @@ func CurrentChain(do *definitions.Do) error {
 	return nil
 }
 
+func PlopChain(do *definitions.Do) error {
+	do.Name = do.ChainID
+	rootDir := path.Join("/home/eris/.eris/blockchains", do.ChainID)
+	switch do.Type {
+	case "genesis":
+		do.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+	case "config":
+		do.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+	case "status":
+		do.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+	default:
+		return fmt.Errorf("unknown plop option %s", do.Type)
+	}
+	return ExecChain(do)
+}
+
 func EditChain(do *definitions.Do) error {
 	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {

@@ -52,6 +52,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
+	Chains.AddCommand(chainsPlop)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStart)
@@ -162,6 +163,15 @@ head and there will be no chain checked out.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		CheckoutChain(cmd, args)
+	},
+}
+
+var chainsPlop = &cobra.Command{
+	Use:   "plop",
+	Short: "Plop the genesis or config file",
+	Long:  "Plop the genesis or config file",
+	Run: func(cmd *cobra.Command, args []string) {
+		PlopChain(args)
 	},
 }
 
@@ -463,6 +473,15 @@ func CheckoutChain(cmd *cobra.Command, args []string) {
 
 func CurrentChain() {
 	IfExit(chns.CurrentChain(do))
+}
+
+func PlopChain(args []string) {
+	if len(args) != 2 {
+		Exit(fmt.Errorf("plop takes two arguments: chain id and item to plop (genesis or config)"))
+	}
+	do.ChainID = args[0]
+	do.Type = args[1]
+	IfExit(chns.PlopChain(do))
 }
 
 // edit a chain definition file
