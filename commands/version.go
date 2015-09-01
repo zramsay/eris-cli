@@ -7,7 +7,7 @@ import (
 var VerSion = &cobra.Command{
 	Use:   "version",
 	Short: "Display Eris's Platform Version.",
-	Long:  `Display the versions of what your platform.`,
+	Long:  `Display the current installed version of Eris.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Println("Eris CLI Version: " + VERSION)
 	},
