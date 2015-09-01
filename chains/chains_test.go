@@ -181,7 +181,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
@@ -246,7 +246,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -299,7 +299,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -588,11 +588,12 @@ func testNewChain(chain string) {
 	ifExit(data.RmData(do))
 }
 
-func removeDataContainer(t *testing.T, chainID string, cNum int) {
+func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	do := def.NowDo()
 	do.Name = chainID
+	do.Rm, do.Force, do.RmD = true, true, true
 	do.Operations.ContainerNumber = cNum
-	if err := data.RmData(do); err != nil {
+	if err := KillChain(do); err != nil {
 		fatal(t, err)
 	}
 }

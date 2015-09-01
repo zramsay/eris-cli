@@ -57,9 +57,7 @@ Services include all executable services supported by the Eris platform which ar
 NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ListKnownServices()
-	},
+	Run: ListKnownServices,
 }
 
 var servicesImport = &cobra.Command{
@@ -70,9 +68,7 @@ var servicesImport = &cobra.Command{
 
 To list known services use: [eris services known].`,
 	Example: "  eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
-	Run: func(cmd *cobra.Command, args []string) {
-		ImportService(cmd, args)
-	},
+	Run:     ImportService,
 }
 
 var servicesNew = &cobra.Command{
@@ -84,9 +80,7 @@ Command must be given a name and a Container Image using standard
 docker format of [repository/organization/image].`,
 	Example: `  eris services new eth eris/eth
   eris services new mint tutum.co/tendermint/tendermint`,
-	Run: func(cmd *cobra.Command, args []string) {
-		NewService(cmd, args)
-	},
+	Run: NewService,
 }
 
 var servicesListExisting = &cobra.Command{
@@ -97,9 +91,7 @@ var servicesListExisting = &cobra.Command{
 To list the known services: [eris services known]
 To list the running services: [eris services ps]
 To start a service use: [eris services start serviceName].`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ListExistingServices()
-	},
+	Run: ListExistingServices,
 }
 
 var servicesEdit = &cobra.Command{
@@ -117,9 +109,7 @@ How that service is used for a specific project is handled from project
 definition files.
 
 For more information on project definition files please see: [eris help projects].`,
-	Run: func(cmd *cobra.Command, args []string) {
-		EditService(cmd, args)
-	},
+	Run: EditService,
 }
 
 var servicesStart = &cobra.Command{
@@ -133,18 +123,14 @@ background so its logs will not be viewable from the command line.
 
 To stop the service use:      [eris services stop serviceName].
 To view a service's logs use: [eris services logs serviceName].`,
-	Run: func(cmd *cobra.Command, args []string) {
-		StartService(cmd, args)
-	},
+	Run: StartService,
 }
 
 var servicesListRunning = &cobra.Command{
 	Use:   "ps",
 	Short: "Lists the running services.",
 	Long:  `Lists the services which are currently running.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ListRunningServices()
-	},
+	Run:   ListRunningServices,
 }
 
 var servicesInspect = &cobra.Command{
@@ -158,9 +144,7 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 	Example: `  eris services inspect ipfs -> will display the entire information about ipfs containers
   eris services inspect ipfs name -> will display the name in machine readable format
   eris services inspect ipfs host_config.binds -> will display only that value`,
-	Run: func(cmd *cobra.Command, args []string) {
-		InspectService(cmd, args)
-	},
+	Run: InspectService,
 }
 
 var servicesExport = &cobra.Command{
@@ -170,27 +154,21 @@ var servicesExport = &cobra.Command{
 
 Command will return a machine readable version of the IPFS hash
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		ExportService(cmd, args)
-	},
+	Run: ExportService,
 }
 
 var servicesLogs = &cobra.Command{
 	Use:   "logs [name]",
 	Short: "Displays the logs of a running service.",
 	Long:  `Displays the logs of a running service.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		LogService(cmd, args)
-	},
+	Run:   LogService,
 }
 
 var servicesExec = &cobra.Command{
 	Use:   "exec [serviceName]",
 	Short: "Run a command or interactive shell",
 	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
-	Run: func(cmd *cobra.Command, args []string) {
-		ExecService(cmd, args)
-	},
+	Run:   ExecService,
 }
 
 // stop stops a running service
@@ -198,18 +176,14 @@ var servicesStop = &cobra.Command{
 	Use:   "stop [name]",
 	Short: "Stops a running service.",
 	Long:  `Stops a service which is currently running.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		KillService(cmd, args)
-	},
+	Run:   KillService,
 }
 
 var servicesRename = &cobra.Command{
 	Use:   "rename [oldName] [newName]",
 	Short: "Renames an installed service.",
 	Long:  `Renames an installed service.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		RenameService(cmd, args)
-	},
+	Run:   RenameService,
 }
 
 var servicesUpdate = &cobra.Command{
@@ -228,9 +202,7 @@ Functionally this command will perform the following sequence:
 
 **NOTE**: If the service uses data containers those will not be affected
 by the update command.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		UpdateService(cmd, args)
-	},
+	Run: UpdateService,
 }
 
 var servicesRm = &cobra.Command{
@@ -242,9 +214,7 @@ Command will remove the service's container but will not
 remove the service definition file.
 
 Use the --force flag to also remove the service definition file.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		RmService(cmd, args)
-	},
+	Run: RmService,
 }
 
 var servicesCat = &cobra.Command{
@@ -253,9 +223,7 @@ var servicesCat = &cobra.Command{
 	Long: `Displays service definition file.
 
 Command will cat local service definition file.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		CatService(cmd, args)
-	},
+	Run: CatService,
 }
 
 //----------------------------------------------------------------------
@@ -269,10 +237,10 @@ func addServicesFlags() {
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
-	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "<key>=<value> pairs to pass into the container's bash env")
+	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
-	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "<key>=<value> pairs to pass into the container's bash env")
+	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
@@ -377,7 +345,7 @@ func UpdateService(cmd *cobra.Command, args []string) {
 }
 
 // list known
-func ListKnownServices() {
+func ListKnownServices(cmd *cobra.Command, args []string) {
 	if err := srv.ListKnown(do); err != nil {
 		return
 	}
@@ -385,13 +353,13 @@ func ListKnownServices() {
 	fmt.Println(do.Result)
 }
 
-func ListRunningServices() {
+func ListRunningServices(cmd *cobra.Command, args []string) {
 	if err := srv.ListRunning(do); err != nil {
 		return
 	}
 }
 
-func ListExistingServices() {
+func ListExistingServices(cmd *cobra.Command, args []string) {
 	if err := srv.ListExisting(do); err != nil {
 		return
 	}
