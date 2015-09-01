@@ -11,8 +11,8 @@ import (
 	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -38,6 +38,8 @@ Complete documentation is available at https://docs.erisindustries.com
 			logLevel = 3
 		}
 		log.SetLoggers(logLevel, config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter)
+
+		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
 		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
