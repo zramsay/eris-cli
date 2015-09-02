@@ -17,6 +17,9 @@ data_container = true
 ports          = [ "1337", "46656", "46657" ]
 entry_point    = "erisdb-wrapper"
 
+[dependencies]
+services = [ "keys" ] 
+
 [maintainer]
 name = "Eris Industries"
 email = "support@erisindustries.com"
