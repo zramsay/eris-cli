@@ -235,6 +235,7 @@ func UpdateService(do *definitions.Do) error {
 		return err
 	}
 	service.Service.Environment = append(service.Service.Environment, do.Env...)
+	service.Service.Links = append(service.Service.Links, do.Links...)
 	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
 	if err != nil {
 		return err

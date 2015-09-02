@@ -80,6 +80,7 @@ func StartChain(do *definitions.Do) error {
 	util.OverWriteOperations(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
@@ -214,19 +215,36 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	var csvFile, csvPath string
+	// we accept two csvs: one for validators, one for accounts
+	// if there's only one, its for validators and accounts
+	var csvFiles []string
+	var csvPaths string
 	if do.CSV != "" {
-		csvFile = "genesis.csv"
-		csvPath = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile)
+		csvFiles = strings.Split(do.CSV, ",")
+		if len(csvFiles) > 1 {
+			csvPath1 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "validators.csv")
+			csvPath2 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "accounts.csv")
+			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
+		} else {
+			csvPaths = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "genesis.csv")
+		}
 	}
 
-	if err := copyFiles(dst, []stringPair{
+	filesToCopy := []stringPair{
 		{do.Path, ""},
 		{do.GenesisFile, "genesis.json"},
 		{do.ConfigFile, "config.toml"},
 		{do.Priv, "priv_validator.json"},
-		{do.CSV, csvFile},
-	}); err != nil {
+	}
+
+	if len(csvFiles) == 1 {
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
+	} else if len(csvFiles) > 1 {
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "validators.csv"})
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
+	}
+
+	if err := copyFiles(dst, filesToCopy); err != nil {
 		return err
 	}
 
@@ -280,16 +298,16 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPath),                 // for mintgen
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),      // config.toml
-		fmt.Sprintf("REGISTER_ADDRESS=%s", do.Address), // use to sign registration txs for etcb
+		fmt.Sprintf("CSV=%v", csvPaths),               // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),     // config.toml
+		fmt.Sprintf("REGISTER_PUBKEY=%s", do.Address), // use to sign registration txs for etcb
 	}
 	envVars = append(envVars, do.Env...)
 
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
-	for _, eV := range envVars {
-		chain.Service.Environment = append(chain.Service.Environment, eV)
-	}
+	chain.Service.Environment = append(chain.Service.Environment, envVars...)
+	logger.Debugf("Set links from setupChain =>\t%v\n", do.Links)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	// TODO: if do.N > 1 ...
 

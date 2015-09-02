@@ -303,10 +303,11 @@ func UpdateChain(do *definitions.Do) error {
 		return err
 	}
 
-	// if the chain is already running we need to set the right env vars and command
+	// set the right env vars and command
 	if IsChainRunning(chain) {
 		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
 		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+		chain.Service.Links = append(chain.Service.Links, do.Links...)
 		chain.Service.Command = loaders.ErisChainStart
 	}
 

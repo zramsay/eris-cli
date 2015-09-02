@@ -45,6 +45,7 @@ func StartService(do *definitions.Do) (err error) {
 	// NOTE: the top level service should be at the end of the list
 	topService := services[len(services)-1]
 	topService.Service.Environment = append(topService.Service.Environment, do.Env...)
+	topService.Service.Links = append(topService.Service.Links, do.Links...)
 	services[len(services)-1] = topService
 
 	logger.Infof("Starting Services Group.\n")
