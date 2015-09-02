@@ -50,7 +50,6 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 		enc := toml.NewEncoder(writer)
 		enc.Indent = ""
 		writer.Write([]byte("name = \"" + actDef.Name + "\"\n"))
-		writer.Write([]byte("services = [ \"" + strings.Join(actDef.ServiceDeps, "\",\"") + "\" ]\n"))
 		writer.Write([]byte("chain = \"" + actDef.Chain + "\"\n"))
 		writer.Write([]byte("steps = [ \n"))
 		for _, s := range actDef.Steps {
@@ -62,6 +61,12 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 		writer.Write([]byte("] \n"))
 		writer.Write([]byte("\n[environment]\n"))
 		enc.Encode(actDef.Environment)
+		writer.Write([]byte("[dependencies]\n"))
+		if actDef.Dependencies != nil {
+			if len(actDef.Dependencies.Services) != 0 || len(actDef.Dependencies.Chains) != 0 {
+				enc.Encode(actDef.Dependencies)
+			}
+		}
 		writer.Write([]byte("\n[maintainer]\n"))
 		enc.Encode(actDef.Maintainer)
 		writer.Write([]byte("\n[location]\n"))

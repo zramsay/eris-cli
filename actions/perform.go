@@ -41,10 +41,10 @@ func Do(do *definitions.Do) error {
 func StartServicesAndChains(do *definitions.Do) error {
 	// start the services and chains
 	doSrvs := definitions.NowDo()
-	doSrvs.Args = do.Action.ServiceDeps
-	if len(doSrvs.Args) == 0 {
+	if do.Action.Dependencies == nil || len(do.Action.Dependencies.Services) == 0 {
 		logger.Debugf("No services to start.\n")
 	} else {
+		doSrvs.Args = do.Action.Dependencies.Services
 		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
 		if err := services.StartService(doSrvs); err != nil {
 			return err
@@ -126,6 +126,8 @@ func resolveChain(do *definitions.Do) {
 }
 
 func resolveServices(do *definitions.Do) {
-	do.Action.ServiceDeps = append(do.Action.ServiceDeps, do.ServicesSlice...)
+	if do.Action.Dependencies != nil {
+		do.Action.Dependencies.Services = append(do.Action.Dependencies.Services, do.ServicesSlice...)
+	}
 	logger.Debugf("Services to start =>\t\t%v\n", do.Args)
 }

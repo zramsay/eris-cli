@@ -9,11 +9,12 @@ type Chain struct {
 	ChainType string `mapstructure:"chain_type" json:"chain_type" yaml:"chain_type" toml:"chain_type"`
 
 	// same fields as in the Service Struct/Service Specification
-	Service    *Service    `json:"service,omitempty" yaml:"service,omitempty" toml:"service,omitempty"`
-	Maintainer *Maintainer `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
-	Location   *Location   `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
-	Machine    *Machine    `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
-	Operations *Operation
+	Service      *Service      `json:"service,omitempty" yaml:"service,omitempty" toml:"service,omitempty"`
+	Dependencies *Dependencies `json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
+	Maintainer   *Maintainer   `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
+	Location     *Location     `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+	Machine      *Machine      `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
+	Operations   *Operation
 }
 
 func BlankChain() *Chain {
