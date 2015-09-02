@@ -111,7 +111,11 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(ini.Initialize(true))
+	do := definitions.NowDo()
+	do.Pull = true
+	do.Services = true
+	do.Actions = true
+	ifExit(ini.Initialize(do))
 
 	// dump a test file with some stuff
 	f, err := os.Create(file)
