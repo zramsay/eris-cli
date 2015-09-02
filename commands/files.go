@@ -34,9 +34,7 @@ var filesImport = &cobra.Command{
 	Long: `Pull files from IPFS via a hash and save them locally.
 	
 Optionally pass in a csv with: get --csv=[fileName]`,
-	Run: func(cmd *cobra.Command, args []string) {
-		Get(cmd, args)
-	},
+	Run: Get,
 }
 
 var filesExport = &cobra.Command{
@@ -45,9 +43,7 @@ var filesExport = &cobra.Command{
 	Long: `Post files to IPFS. 
 	
 Optionally post all contents of a directory with: put [dirName] --dir`,
-	Run: func(cmd *cobra.Command, args []string) {
-		Put(cmd, args)
-	},
+	Run: Put,
 }
 
 var filesCache = &cobra.Command{
@@ -58,18 +54,14 @@ var filesCache = &cobra.Command{
 Caches a files locally via IPFS pin, by hash.
 Optionally pass in a csv with: cache --csv=[fileName]
 Note: "put" will "cache" recursively by default`,
-	Run: func(cmd *cobra.Command, args []string) {
-		PinIt(cmd, args)
-	},
+	Run: PinIt,
 }
 
 var filesCat = &cobra.Command{
 	Use:   "cat [fileHash]",
 	Short: "Cat the contents of a file from IPFS.",
 	Long:  "Cat the contents of a file from IPFS.",
-	Run: func(cmd *cobra.Command, args []string) {
-		CatIt(cmd, args)
-	},
+	Run:   CatIt,
 }
 
 var filesList = &cobra.Command{
@@ -77,18 +69,14 @@ var filesList = &cobra.Command{
 	Short: "List links from an IPFS object.",
 	//TODO test listing up and down through DAG / Zach just learn the DAG.
 	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
-	Run: func(cmd *cobra.Command, args []string) {
-		ListIt(cmd, args)
-	},
+	Run:  ListIt,
 }
 
 var filesCached = &cobra.Command{
 	Use:   "cached",
 	Short: "Lists files cached locally.",
 	Long:  `Displays list of files cached locally.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ManageCached(cmd, args)
-	},
+	Run:   ManageCached,
 }
 
 //--------------------------------------------------------------

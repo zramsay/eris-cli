@@ -54,6 +54,13 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
+	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
+	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
+		if chain.Dependencies != nil {
+			addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
+		}
+	}
+
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
@@ -88,22 +95,22 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	chain.Service.Command = cmd
 
 	srv := &definitions.ServiceDefinition{
-		Name:        chain.Name,
-		ServiceID:   chain.ChainID,
-		ServiceDeps: &definitions.ServiceDeps{[]string{"keys"}},
-		Service:     chain.Service,
-		Operations:  chain.Operations,
-		Maintainer:  chain.Maintainer,
-		Location:    chain.Location,
-		Machine:     chain.Machine,
+		Name:         chain.Name,
+		ServiceID:    chain.ChainID,
+		Dependencies: &definitions.Dependencies{Services: []string{"keys"}},
+		Service:      chain.Service,
+		Operations:   chain.Operations,
+		Maintainer:   chain.Maintainer,
+		Location:     chain.Location,
+		Machine:      chain.Machine,
 	}
 	ServiceFinalizeLoad(srv) // these are mostly operational considerations that we want to ensure are met
 
 	return srv
 }
 
-func ConnectToAChain(srv *definitions.ServiceDefinition, name, internalName string, link, mount bool) {
-	connectToAService(srv, "chain", name, internalName, link, mount)
+func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
+	connectToAService(srv, ops, "chain", name, internalName, link, mount)
 }
 
 func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {

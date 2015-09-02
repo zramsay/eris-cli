@@ -85,7 +85,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 
 	// start the container (either interactive or one off command)
 	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
-	if err := startContainer(id_main, &opts); err != nil {
+	if err = startContainer(id_main, &opts); err != nil {
 		return nil, err
 	}
 
@@ -98,13 +98,13 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	}
 
 	logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
-	if err := waitContainer(id_main); err != nil {
+	if err = waitContainer(id_main); err != nil {
 		return nil, err
 	}
 
 	if !interactive {
 		logger.Debugf("Getting logs for container =>\t%s\n", id_main)
-		if err := logsContainer(id_main, true, "all"); err != nil {
+		if err = logsContainer(id_main, true, "all"); err != nil {
 			return nil, err
 		}
 		// now lets get the logs out
@@ -783,12 +783,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 
 	for _, port := range srv.Ports {
 		pS := strings.Split(port, ":")
-
-		pR := pS[len(pS)-1]
-		if len(strings.Split(pR, "/")) == 1 {
-			pR = pR + "/tcp"
-		}
-		pC := docker.Port(fmt.Sprintf("%s", pR))
+		pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
 
 		if len(pS) > 1 {
 			pH := docker.PortBinding{
@@ -901,7 +896,7 @@ func startExec(id string) error {
 	opts := docker.StartExecOptions{
 		Detach:       false,
 		Tty:          true,
-		InputStream:  os.Stdin,
+		InputStream:  nil,
 		OutputStream: os.Stdout,
 		ErrorStream:  os.Stderr,
 		RawTerminal:  true,

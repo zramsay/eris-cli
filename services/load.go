@@ -10,6 +10,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
+// EnsureRunning checks if a service is running and starts it if not
+// TODO: ping all exposed ports until at least one is available (issue #149)
+// NOTE: does not accept ENV vars
 func EnsureRunning(do *definitions.Do) error {
 	srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -23,7 +26,7 @@ func EnsureRunning(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		time.Sleep(time.Second * 5) // TODO: ping container until ready: issue #149
+		time.Sleep(time.Second * 5)
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
 	}

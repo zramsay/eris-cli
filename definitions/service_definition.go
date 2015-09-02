@@ -9,17 +9,18 @@ type ServiceDefinition struct {
 	// which would then be passed in via a command line flag
 	Chain string `json:"chain,omitempty" yaml:"chain,omitempty" toml:"chain,omitempty"`
 
-	Service     *Service     `json:"service" yaml:"service" toml:"service"`
-	ServiceDeps *ServiceDeps `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
-	Maintainer  *Maintainer  `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
-	Location    *Location    `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
-	Machine     *Machine     `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
-	Srvs        []*Service
-	Operations  *Operation
+	Service      *Service      `json:"service" yaml:"service" toml:"service"`
+	Dependencies *Dependencies `json:"dependencies,omitempty", yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
+	Maintainer   *Maintainer   `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
+	Location     *Location     `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+	Machine      *Machine      `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
+	Srvs         []*Service
+	Operations   *Operation
 }
 
-type ServiceDeps struct {
-	Dependencies []string `mapstructure:"dependencies" json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
+type Dependencies struct {
+	Chains   []string `json:"chains,omitempty" yaml:"chains,omitempty" toml:"chains,omitempty"`
+	Services []string `json:"services,omitempty" yaml:"services,omitempty" toml:"services,omitempty"`
 }
 
 func BlankServiceDefinition() *ServiceDefinition {

@@ -154,27 +154,26 @@ func InspectService(do *definitions.Do) error {
 	return nil
 }
 
-func LogsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
-}
-
-func ExecService(do *definitions.Do) error {
+func PortsService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
 	}
 
 	if IsServiceExisting(service.Service, service.Operations) {
-		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
+		logger.Debugf("Service exists, getting port mapping.\n")
+		return perform.PrintPortMappings(service.Operations.SrvContainerID, do.Args)
 	}
 
 	return nil
+}
+
+func LogsService(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
 func ExportService(do *definitions.Do) error {
@@ -235,6 +234,8 @@ func UpdateService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
+	service.Service.Environment = append(service.Service.Environment, do.Env...)
+	service.Service.Links = append(service.Service.Links, do.Links...)
 	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
 	if err != nil {
 		return err

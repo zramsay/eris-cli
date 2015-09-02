@@ -15,6 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -46,20 +47,6 @@ func InstallChain(do *definitions.Do) error {
 }
 
 func StartChain(do *definitions.Do) error {
-	logger.Infoln("Ensuring Key Server is Started.")
-	//should it take a flag? keys server may be running another cNum
-	// XXX: currently we don't use or need a key server.
-	// plus this should be specified in a service def anyways
-	keysService, err := loaders.LoadServiceDefinition("keys", false, 1)
-	if err != nil {
-		return err
-	}
-
-	err = perform.DockerRun(keysService.Service, keysService.Operations)
-	if err != nil {
-		return err
-	}
-
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		logger.Infoln("Cannot start a chain I cannot find.")
@@ -73,12 +60,19 @@ func StartChain(do *definitions.Do) error {
 		return nil
 	}
 
+	// boot the dependencies (eg. keys)
+	if err := bootDependencies(chain, do); err != nil {
+		return err
+	}
+
 	chain.Service.Command = loaders.ErisChainStart
 	if do.Run {
 		chain.Service.Command = loaders.ErisChainStartApi
 	}
 	util.OverWriteOperations(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
+	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
@@ -121,6 +115,22 @@ func KillChain(do *definitions.Do) error {
 	return nil
 }
 
+func ExecChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsChainExisting(chain) {
+		logger.Infoln("Chain exists.")
+		return perform.DockerExec(chain.Service, chain.Operations, do.Args, do.Interactive)
+	} else {
+		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", do.Name)
+	}
+
+	return nil
+}
+
 // Throw away chains are used for eris contracts
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
@@ -146,6 +156,33 @@ func ThrowAwayChain(do *definitions.Do) error {
 }
 
 //------------------------------------------------------------------------
+
+// boot chain dependencies
+// TODO: this currently only supports simple services (with no further dependencies)
+func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
+	if chain.Dependencies != nil {
+		name := do.Name
+		logger.Infoln("Booting chain dependencies", chain.Dependencies.Services, chain.Dependencies.Chains)
+		for _, srvName := range chain.Dependencies.Services {
+			do.Name = srvName
+			if err := services.EnsureRunning(do); err != nil {
+				return err
+			}
+		}
+		do.Name = name // undo side effects
+
+		for _, chainName := range chain.Dependencies.Chains {
+			chn, err := loaders.LoadChainDefinition(chainName, false, do.Operations.ContainerNumber)
+			if err != nil {
+				return err
+			}
+			if !IsChainRunning(chn) {
+				return fmt.Errorf("chain %s depends on chain %s but %s is not running", chain.Name, chainName, chainName)
+			}
+		}
+	}
+	return nil
+}
 
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
@@ -197,19 +234,36 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	var csvFile, csvPath string
+	// we accept two csvs: one for validators, one for accounts
+	// if there's only one, its for validators and accounts
+	var csvFiles []string
+	var csvPaths string
 	if do.CSV != "" {
-		csvFile = "genesis.csv"
-		csvPath = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, csvFile)
+		csvFiles = strings.Split(do.CSV, ",")
+		if len(csvFiles) > 1 {
+			csvPath1 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "validators.csv")
+			csvPath2 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "accounts.csv")
+			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
+		} else {
+			csvPaths = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "genesis.csv")
+		}
 	}
 
-	if err := copyFiles(dst, []stringPair{
+	filesToCopy := []stringPair{
 		{do.Path, ""},
 		{do.GenesisFile, "genesis.json"},
 		{do.ConfigFile, "config.toml"},
 		{do.Priv, "priv_validator.json"},
-		{do.CSV, csvFile},
-	}); err != nil {
+	}
+
+	if len(csvFiles) == 1 {
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
+	} else if len(csvFiles) > 1 {
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "validators.csv"})
+		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
+	}
+
+	if err := copyFiles(dst, filesToCopy); err != nil {
 		return err
 	}
 
@@ -263,22 +317,23 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("RUN=%v", do.Run),
-		fmt.Sprintf("CSV=%v", csvPath),
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
+		fmt.Sprintf("CSV=%v", csvPaths),               // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),     // config.toml
+		fmt.Sprintf("REGISTER_PUBKEY=%s", do.Address), // use to sign registration txs for etcb
 	}
+	envVars = append(envVars, do.Env...)
 
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
-	for _, eV := range envVars {
-		chain.Service.Environment = append(chain.Service.Environment, eV)
-	}
+	chain.Service.Environment = append(chain.Service.Environment, envVars...)
+	logger.Debugf("Set links from setupChain =>\t%v\n", do.Links)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	// TODO: if do.N > 1 ...
 
 	chain.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		chain.Operations.Remove = true
+	if err := bootDependencies(chain, do); err != nil {
+		return err
 	}
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)

@@ -82,22 +82,6 @@ func LogsChain(do *definitions.Do) error {
 	return nil
 }
 
-func ExecChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-
-	if IsChainExisting(chain) {
-		logger.Infoln("Chain exists.")
-		return perform.DockerExec(chain.Service, chain.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", do.Name)
-	}
-
-	return nil
-}
-
 // export a chain definition file
 func ExportChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
@@ -147,6 +131,36 @@ func CurrentChain(do *definitions.Do) error {
 
 	logger.Println(head)
 	do.Result = head
+
+	return nil
+}
+
+func PlopChain(do *definitions.Do) error {
+	do.Name = do.ChainID
+	rootDir := path.Join("/home/eris/.eris/blockchains", do.ChainID)
+	switch do.Type {
+	case "genesis":
+		do.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+	case "config":
+		do.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+	case "status":
+		do.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+	default:
+		return fmt.Errorf("unknown plop option %s", do.Type)
+	}
+	return ExecChain(do)
+}
+
+func PortsChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsChainExisting(chain) {
+		logger.Debugf("Chain exists, getting port mapping.\n")
+		return perform.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+	}
 
 	return nil
 }
@@ -289,9 +303,11 @@ func UpdateChain(do *definitions.Do) error {
 		return err
 	}
 
-	// if the chain is already running we need to set the right env vars and command
+	// set the right env vars and command
 	if IsChainRunning(chain) {
 		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
+		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+		chain.Service.Links = append(chain.Service.Links, do.Links...)
 		chain.Service.Command = loaders.ErisChainStart
 	}
 

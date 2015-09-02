@@ -61,9 +61,7 @@ By default, Eris will import from ipfs.
 
 To list known actions use: [eris actions known].`,
 	Example: "  eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
-	Run: func(cmd *cobra.Command, args []string) {
-		ImportAction(cmd, args)
-	},
+	Run:     ImportAction,
 }
 
 // flags to add: template
@@ -71,18 +69,14 @@ var actionsNew = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Create a new action definition file.",
 	Long:  `Create a new action definition file optionally from a template.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		NewAction(cmd, args)
-	},
+	Run:   NewAction,
 }
 
 var actionsList = &cobra.Command{
 	Use:   "ls",
 	Short: "List all registered action definition files.",
 	Long:  `List all registered action definition files.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ListActions(cmd, args)
-	},
+	Run:   ListActions,
 }
 
 var actionsDo = &cobra.Command{
@@ -113,18 +107,14 @@ definition file.
 	Example: `  eris actions do dns register -> will run the ~/.eris/actions/dns_register action def file
   eris actions do dns register name:cutemarm ip:111.111.111.111 -> will populate $name and $ip
   eris actions do dns register cutemarm 111.111.111.111 -> will populate $1 and $2`,
-	Run: func(cmd *cobra.Command, args []string) {
-		DoAction(cmd, args)
-	},
+	Run: DoAction,
 }
 
 var actionsEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit an action definition file.",
 	Long:  `Edit an action definition file in the default editor.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		EditAction(cmd, args)
-	},
+	Run:   EditAction,
 }
 
 var actionsExport = &cobra.Command{
@@ -134,9 +124,7 @@ var actionsExport = &cobra.Command{
 
 Command will return a machine readable version of the IPFS hash
 `,
-	Run: func(cmd *cobra.Command, args []string) {
-		ExportAction(cmd, args)
-	},
+	Run: ExportAction,
 }
 
 var actionsRename = &cobra.Command{
@@ -144,18 +132,14 @@ var actionsRename = &cobra.Command{
 	Short:   "Rename an action.",
 	Long:    `Rename an action.`,
 	Example: "  eris actions rename \"old action name\" \"new action name\"",
-	Run: func(cmd *cobra.Command, args []string) {
-		RenameAction(cmd, args)
-	},
+	Run:     RenameAction,
 }
 
 var actionsRemove = &cobra.Command{
 	Use:   "remove [name]",
 	Short: "Remove an action definition file.",
 	Long:  `Remove an action definition file.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		RmAction(cmd, args)
-	},
+	Run:   RmAction,
 }
 
 //----------------------------------------------------------------------

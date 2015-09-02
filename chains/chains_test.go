@@ -107,8 +107,8 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
 	}
 
-	if len(srvDef.ServiceDeps.Dependencies) != 1 {
-		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps))
+	if len(srvDef.Dependencies.Services) != 1 {
+		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.Dependencies.Services))
 	}
 }
 
@@ -181,7 +181,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
@@ -246,7 +246,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -299,7 +299,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -357,8 +357,7 @@ func TestUpdateChain(t *testing.T) {
 	do.Name = chainName
 	do.SkipPull = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
-	e := UpdateChain(do)
-	if e != nil {
+	if e := UpdateChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -374,8 +373,7 @@ func TestInspectChain(t *testing.T) {
 	do.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
 	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
-	e := InspectChain(do)
-	if e != nil {
+	if e := InspectChain(do); e != nil {
 		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
@@ -391,8 +389,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = oldName
 	do.NewName = newName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e := RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -402,8 +399,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = newName
 	do.NewName = chainName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e = RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -447,8 +443,7 @@ func TestRmChain(t *testing.T) {
 	do.Name = chainName
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
-	e := RmChain(do)
-	if e != nil {
+	if e := RmChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -463,8 +458,7 @@ func testStartChain(t *testing.T, chain string) {
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
-	e := StartChain(do)
-	if e != nil {
+	if e := StartChain(do); e != nil {
 		logger.Errorln(e)
 		fatal(t, nil)
 	}
@@ -588,17 +582,32 @@ func testNewChain(chain string) {
 	ifExit(data.RmData(do))
 }
 
-func removeDataContainer(t *testing.T, chainID string, cNum int) {
+func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	do := def.NowDo()
 	do.Name = chainID
+	do.Rm, do.Force, do.RmD = true, true, true
 	do.Operations.ContainerNumber = cNum
-	if err := data.RmData(do); err != nil {
+	if err := KillChain(do); err != nil {
 		fatal(t, err)
 	}
 }
 
 func testsTearDown() error {
+	killService("keys")
 	return os.RemoveAll(erisDir)
+}
+
+func killService(name string) {
+	do := def.NowDo()
+	do.Name = name
+	do.Args = []string{name}
+	do.Rm = true
+	do.RmD = true
+	e := services.KillService(do)
+	if e != nil {
+		logger.Errorln(e)
+		fatal(nil, e)
+	}
 }
 
 func ifExit(err error) {
