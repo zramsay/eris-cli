@@ -151,6 +151,20 @@ func PlopChain(do *definitions.Do) error {
 	return ExecChain(do)
 }
 
+func PortsChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsChainExisting(chain) {
+		logger.Debugf("Chain exists, getting port mapping.\n")
+		return perform.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+	}
+
+	return nil
+}
+
 func EditChain(do *definitions.Do) error {
 	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {

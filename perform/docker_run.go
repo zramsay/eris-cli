@@ -783,12 +783,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 
 	for _, port := range srv.Ports {
 		pS := strings.Split(port, ":")
-
-		pR := pS[len(pS)-1]
-		if len(strings.Split(pR, "/")) == 1 {
-			pR = pR + "/tcp"
-		}
-		pC := docker.Port(fmt.Sprintf("%s", pR))
+		pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
 
 		if len(pS) > 1 {
 			pH := docker.PortBinding{

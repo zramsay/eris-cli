@@ -35,6 +35,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesExport)
@@ -147,6 +148,13 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 	Run: InspectService,
 }
 
+var servicesPorts = &cobra.Command{
+	Use:   "ports [port]",
+	Short: "Print port mapping",
+	Long:  "Print port mapping",
+	Run:   PortsService,
+}
+
 var servicesExport = &cobra.Command{
 	Use:   "export [serviceName]",
 	Short: "Export a service definition file to IPFS.",
@@ -241,6 +249,7 @@ func addServicesFlags() {
 
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
+	servicesStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
@@ -329,6 +338,13 @@ func InspectService(cmd *cobra.Command, args []string) {
 	}
 
 	IfExit(srv.InspectService(do))
+}
+
+func PortsService(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))
+	do.Name = args[0]
+	do.Args = args[1:]
+	IfExit(srv.PortsService(do))
 }
 
 func ExportService(cmd *cobra.Command, args []string) {

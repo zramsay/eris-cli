@@ -53,6 +53,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPlop)
+	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStart)
@@ -159,6 +160,13 @@ var chainsPlop = &cobra.Command{
 	Short: "Plop the genesis or config file",
 	Long:  "Plop the genesis or config file",
 	Run:   PlopChain,
+}
+
+var chainsPorts = &cobra.Command{
+	Use:   "ports",
+	Short: "Print the port mapping",
+	Long:  "Print the port mapping",
+	Run:   PortsChain,
 }
 
 var chainsHead = &cobra.Command{
@@ -437,7 +445,17 @@ func PlopChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.ChainID = args[0]
 	do.Type = args[1]
+	if len(args) > 2 {
+		do.Args = args[2:]
+	}
 	IfExit(chns.PlopChain(do))
+}
+
+func PortsChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))
+	do.Name = args[0]
+	do.Args = args[1:]
+	IfExit(chns.PortsChain(do))
 }
 
 // edit a chain definition file
