@@ -47,6 +47,9 @@ type Do struct {
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`
 
+	// <container_name>:<internal_name> pairs
+	Links []string `mapstructure:"," json:"," yaml:"," toml:","`
+
 	// Objects
 	Action            *Action
 	Chain             *Chain

@@ -31,7 +31,7 @@ func StartService(do *definitions.Do) (err error) {
 
 	logger.Debugln("services before build chain")
 	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
+		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
 	services, err = BuildChainGroup(do.ChainName, services)
 	if err != nil {
@@ -39,12 +39,13 @@ func StartService(do *definitions.Do) (err error) {
 	}
 	logger.Debugln("services after build chain")
 	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.ServiceDeps, s.Service.Links, s.Service.VolumesFrom)
+		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
 
 	// NOTE: the top level service should be at the end of the list
 	topService := services[len(services)-1]
 	topService.Service.Environment = append(topService.Service.Environment, do.Env...)
+	topService.Service.Links = append(topService.Service.Links, do.Links...)
 	services[len(services)-1] = topService
 
 	logger.Infof("Starting Services Group.\n")
@@ -114,8 +115,8 @@ func BuildServicesGroup(srvName string, cNum int, services ...*definitions.Servi
 	if err != nil {
 		return nil, err
 	}
-	if srv.ServiceDeps != nil {
-		for _, sName := range srv.ServiceDeps.Dependencies {
+	if srv.Dependencies != nil {
+		for _, sName := range srv.Dependencies.Services {
 			logger.Debugf("Found service dependency =>\t%s\n", sName)
 			s, e := BuildServicesGroup(sName, cNum)
 			if e != nil {
@@ -182,7 +183,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 	}
 	// link the service container linked to the chain
 	// XXX: we may have name collision here if we're not careful.
-	loaders.ConnectToAChain(srv, chainName, internalName, link, mount)
+	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
 
 	util.OverWriteOperations(s.Operations, srv.Operations)
 	return s, nil

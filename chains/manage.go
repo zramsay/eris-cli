@@ -151,6 +151,20 @@ func PlopChain(do *definitions.Do) error {
 	return ExecChain(do)
 }
 
+func PortsChain(do *definitions.Do) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsChainExisting(chain) {
+		logger.Debugf("Chain exists, getting port mapping.\n")
+		return perform.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+	}
+
+	return nil
+}
+
 func EditChain(do *definitions.Do) error {
 	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
 	if err != nil {
@@ -289,10 +303,11 @@ func UpdateChain(do *definitions.Do) error {
 		return err
 	}
 
-	// if the chain is already running we need to set the right env vars and command
+	// set the right env vars and command
 	if IsChainRunning(chain) {
 		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
 		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+		chain.Service.Links = append(chain.Service.Links, do.Links...)
 		chain.Service.Command = loaders.ErisChainStart
 	}
 

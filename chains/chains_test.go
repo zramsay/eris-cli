@@ -107,8 +107,8 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
 	}
 
-	if len(srvDef.ServiceDeps.Dependencies) != 1 {
-		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps))
+	if len(srvDef.Dependencies.Services) != 1 {
+		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.Dependencies.Services))
 	}
 }
 
@@ -357,8 +357,7 @@ func TestUpdateChain(t *testing.T) {
 	do.Name = chainName
 	do.SkipPull = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
-	e := UpdateChain(do)
-	if e != nil {
+	if e := UpdateChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -374,8 +373,7 @@ func TestInspectChain(t *testing.T) {
 	do.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
 	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
-	e := InspectChain(do)
-	if e != nil {
+	if e := InspectChain(do); e != nil {
 		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
@@ -391,8 +389,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = oldName
 	do.NewName = newName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e := RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -402,8 +399,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = newName
 	do.NewName = chainName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e = RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -447,8 +443,7 @@ func TestRmChain(t *testing.T) {
 	do.Name = chainName
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
-	e := RmChain(do)
-	if e != nil {
+	if e := RmChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -463,8 +458,7 @@ func testStartChain(t *testing.T, chain string) {
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
-	e := StartChain(do)
-	if e != nil {
+	if e := StartChain(do); e != nil {
 		logger.Errorln(e)
 		fatal(t, nil)
 	}
@@ -599,7 +593,21 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 }
 
 func testsTearDown() error {
+	killService("keys")
 	return os.RemoveAll(erisDir)
+}
+
+func killService(name string) {
+	do := def.NowDo()
+	do.Name = name
+	do.Args = []string{name}
+	do.Rm = true
+	do.RmD = true
+	e := services.KillService(do)
+	if e != nil {
+		logger.Errorln(e)
+		fatal(nil, e)
+	}
 }
 
 func ifExit(err error) {

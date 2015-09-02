@@ -48,7 +48,7 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 
 	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
 	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
-		addDependencyVolumesAndLinks(srv)
+		addDependencyVolumesAndLinks(srv.Dependencies, srv.Service, srv.Operations)
 	}
 
 	ServiceFinalizeLoad(srv)
@@ -129,21 +129,21 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	}
 }
 
-func ConnectToAService(srv *definitions.ServiceDefinition, name, internalName string, link, mount bool) {
-	connectToAService(srv, "service", name, internalName, link, mount)
+func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
+	connectToAService(srv, ops, "service", name, internalName, link, mount)
 }
 
 // --------------------------------------------------------------------
 // helpers
 
 // links and mounts for service dependencies
-func connectToAService(srv *definitions.ServiceDefinition, typ, name, internalName string, link, mount bool) {
-	logger.Debugf("Connecting service %s to %s %s (%s) with link (%v) and volumes-from (%v)\n", srv.Service.Name, typ, name, internalName, link, mount)
-	containerName := util.ContainersName(typ, name, srv.Operations.ContainerNumber)
+func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ, name, internalName string, link, mount bool) {
+	logger.Debugf("Connecting service %s to %s %s (%s) with link (%v) and volumes-from (%v)\n", srv.Name, typ, name, internalName, link, mount)
+	containerName := util.ContainersName(typ, name, ops.ContainerNumber)
 
 	if link {
 		newLink := containerName + ":" + internalName
-		srv.Service.Links = append(srv.Service.Links, newLink)
+		srv.Links = append(srv.Links, newLink)
 	}
 
 	if mount {
@@ -152,7 +152,7 @@ func connectToAService(srv *definitions.ServiceDefinition, typ, name, internalNa
 		// and will mount as read-write. we can revisit this if read-only
 		// mounting required for specific use cases
 		newVol := containerName + ":rw"
-		srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+		srv.VolumesFrom = append(srv.VolumesFrom, newVol)
 	}
 }
 
@@ -169,12 +169,18 @@ func checkImage(srv *definitions.Service) error {
 	return nil
 }
 
-func addDependencyVolumesAndLinks(srv *definitions.ServiceDefinition) {
-	if srv.ServiceDeps != nil {
-		for i, dep := range srv.ServiceDeps.Dependencies {
+func addDependencyVolumesAndLinks(deps *definitions.Dependencies, srv *definitions.Service, ops *definitions.Operation) {
+	if deps != nil {
+		for i, dep := range deps.Services {
 			name, internalName, link, mount := util.ParseDependency(dep)
-			ConnectToAService(srv, name, internalName, link, mount)
-			srv.ServiceDeps.Dependencies[i] = name
+			ConnectToAService(srv, ops, name, internalName, link, mount)
+			deps.Services[i] = name
+		}
+
+		for i, dep := range deps.Chains {
+			name, internalName, link, mount := util.ParseDependency(dep)
+			ConnectToAChain(srv, ops, name, internalName, link, mount)
+			deps.Chains[i] = name
 		}
 	}
 }

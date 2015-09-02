@@ -20,12 +20,13 @@ ServiceID string `mapstructure:"service_id,omitempty" json:"service_id,omitempty
 Chain string `json:"chain,omitempty" yaml:"chain,omitempty" toml:"chain,omitempty"`
 
 Service     *Service     `json:"service" yaml:"service" toml:"service"`
-ServiceDeps *ServiceDeps `mapstructure:"services" json:"services,omitempty", yaml:"services,omitempty" toml:"services,omitempty"`
+Dependencies *Dependencies `mapstructure:"dependencies" json:"dependencies,omitempty", yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
 ```
 
 ```go
-type ServiceDeps struct {
-  Dependencies []string `mapstructure:"dependencies" json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
+type Dependenciesstruct {
+	Chains   []string `json:"chains,omitempty" yaml:"chains,omitempty" toml:"chains,omitempty"`
+	Services []string `json:"services,omitempty" yaml:"services,omitempty" toml:"services,omitempty"`
 }
 ```
 

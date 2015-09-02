@@ -53,6 +53,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPlop)
+	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStart)
@@ -159,6 +160,13 @@ var chainsPlop = &cobra.Command{
 	Short: "Plop the genesis or config file",
 	Long:  "Plop the genesis or config file",
 	Run:   PlopChain,
+}
+
+var chainsPorts = &cobra.Command{
+	Use:   "ports",
+	Short: "Print the port mapping",
+	Long:  "Print the port mapping",
+	Run:   PortsChain,
 }
 
 var chainsHead = &cobra.Command{
@@ -312,9 +320,11 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
+	chainsNew.PersistentFlags().StringVarP(&do.Address, "register", "r", "", "pubkey to use for registering the chain on etcb")
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
+	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
 	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
@@ -322,10 +332,12 @@ func addChainsFlags() {
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
 	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 	chainsInstall.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
+	chainsInstall.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
 	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
 	chainsStart.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
+	chainsStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
@@ -338,6 +350,7 @@ func addChainsFlags() {
 	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
+	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
 	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
@@ -437,7 +450,17 @@ func PlopChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.ChainID = args[0]
 	do.Type = args[1]
+	if len(args) > 2 {
+		do.Args = args[2:]
+	}
 	IfExit(chns.PlopChain(do))
+}
+
+func PortsChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))
+	do.Name = args[0]
+	do.Args = args[1:]
+	IfExit(chns.PortsChain(do))
 }
 
 // edit a chain definition file

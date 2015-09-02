@@ -154,6 +154,20 @@ func InspectService(do *definitions.Do) error {
 	return nil
 }
 
+func PortsService(do *definitions.Do) error {
+	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsServiceExisting(service.Service, service.Operations) {
+		logger.Debugf("Service exists, getting port mapping.\n")
+		return perform.PrintPortMappings(service.Operations.SrvContainerID, do.Args)
+	}
+
+	return nil
+}
+
 func LogsService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -221,6 +235,7 @@ func UpdateService(do *definitions.Do) error {
 		return err
 	}
 	service.Service.Environment = append(service.Service.Environment, do.Env...)
+	service.Service.Links = append(service.Service.Links, do.Links...)
 	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
 	if err != nil {
 		return err

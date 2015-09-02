@@ -317,3 +317,10 @@ func erisRegExpLinks(typ string) *regexp.Regexp {
 func NameAndNumber(name string, num int) string {
 	return fmt.Sprintf("%s_%d", name, num)
 }
+
+func PortAndProtocol(port string) docker.Port {
+	if len(strings.Split(port, "/")) == 1 {
+		port += "/tcp"
+	}
+	return docker.Port(port)
+}
