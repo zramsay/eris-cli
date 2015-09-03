@@ -31,11 +31,16 @@ func addInitFlags() {
 	Init.Flags().BoolVarP(&do.Services, "services", "", false, "only update the default services")
 	Init.Flags().BoolVarP(&do.Actions, "actions", "", false, "only update the default actions")
 	Init.Flags().BoolVarP(&do.All, "all", "", false, "update all the above")
+	Init.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts")
 }
 
 func Router(cmd *cobra.Command, args []string) {
-
-	if do.Services && do.Actions && !do.All {
+	if do.Yes {
+		do.Services = true
+		do.Actions = true
+		ini.Initialize(do)
+	} else if do.Services && do.Actions && !do.All {
+		do.Yes = true
 		ini.Initialize(do)
 	} else if do.All {
 		do.Services = true

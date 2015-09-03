@@ -20,6 +20,7 @@ type Do struct {
 	Tool          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`

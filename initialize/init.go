@@ -18,7 +18,7 @@ func Initialize(do *definitions.Do) error {
 		if err := common.InitErisDir(); err != nil {
 			return fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
 		}
-	} else if do.All {
+	} else if do.All || do.Yes {
 		//goes and does everything
 		if err := InitDefaultServices(do); err != nil {
 			return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
