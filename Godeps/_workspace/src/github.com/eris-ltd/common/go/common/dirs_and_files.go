@@ -6,21 +6,21 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"os/user"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log" // so we can flush logs on exit/ifexit
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/mitchellh/go-homedir"
 )
 
 var (
 	// Convenience Directories
-	GoPath   = os.Getenv("GOPATH")
-	ErisLtd  = path.Join(GoPath, "src", "github.com", "eris-ltd")
-	ErisGH   = "https://github.com/eris-ltd/"
-	usr, _   = user.Current() // error?!
+	GoPath  = os.Getenv("GOPATH")
+	ErisLtd = path.Join(GoPath, "src", "github.com", "eris-ltd")
+	ErisGH  = "https://github.com/eris-ltd/"
+	// usr, _   = user.Current() // error?!
 	ErisRoot = ResolveErisRoot()
 
 	// Major Directories
@@ -58,8 +58,8 @@ var MajorDirs = []string{
 // user and process
 
 func Usr() string {
-	u, _ := user.Current()
-	return u.HomeDir
+	u, _ := homedir.Dir()
+	return u
 }
 
 func Exit(err error) {
