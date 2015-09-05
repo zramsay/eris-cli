@@ -150,9 +150,9 @@ echo "Checking the Eris <-> Docker Connection"
 echo ""
 if [[ $machine == "eris-test-local" ]]
 then
-  eris init -dp
+  eris init -dp --yes
 else
-  eris init -dp --machine $machine
+  eris init -dp --yes --machine $machine
 fi
 passed Setup
 
