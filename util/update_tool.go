@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+
+	"github.com/eris-ltd/eris-cli/version"
 )
 
 func UpdateEris(branch string) {
@@ -24,7 +26,7 @@ func UpdateEris(branch string) {
 
 	InstallEris()
 
-	//fmt.Printf("Marmot update successful. Eris CLI Version is now: %s\n", VERSION)
+	fmt.Printf("The marmots have updated eris successful.\nEris CLI Version is now: %s\n", version.VERSION)
 }
 
 func CheckGitAndGo() {
@@ -43,13 +45,20 @@ func CheckGitAndGo() {
 
 func ChangeDirectory() {
 	goPath := os.Getenv("GOPATH")
+	if goPath == "" {
+		fmt.Printf("You do not have $GOPATH set. Please make sure this is set and rerun the command.\n")
+		os.Exit(1)
+	}
+
 	dir := path.Join(goPath, "src/github.com/eris-ltd/eris-cli/")
 	err := os.Chdir(dir)
+
 	if err != nil {
 		fmt.Printf("error changing directory\n%v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("directory changed to:\n%s\n", dir)
+
+	logger.Debugf("directory changed to:\n%s\n", dir)
 }
 
 func CheckoutBranch(branch string) {
@@ -60,7 +69,8 @@ func CheckoutBranch(branch string) {
 		fmt.Printf("error checking out %s:\n%s\n", branch, string(stdOut))
 		os.Exit(1)
 	}
-	fmt.Printf("%s checked-out\n", branch)
+
+	logger.Debugf("%s checked-out\n", branch)
 }
 
 func PullBranch(branch string) {
@@ -71,15 +81,18 @@ func PullBranch(branch string) {
 		fmt.Printf("error pulling from github:\n%s\n", string(stdOut))
 		os.Exit(1)
 	}
-	fmt.Printf("%s pulled successfully\n", branch)
+
+	logger.Debugf("%s pulled successfully\n", branch)
 }
 
 func InstallEris() {
 	goArgs := []string{"install", "./cmd/eris"}
+
 	stdOut, err := exec.Command("go", goArgs...).CombinedOutput()
 	if err != nil {
 		fmt.Printf("error with go install ./cmd/eris:\n%s\n", string(stdOut))
 		os.Exit(1)
 	}
 
+	logger.Debugf("Go install worked correctly.\n")
 }

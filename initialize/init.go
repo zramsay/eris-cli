@@ -10,33 +10,28 @@ import (
 )
 
 func Initialize(do *definitions.Do) error {
-	var input string
 	logger.Printf("The marmots have connected to Docker successfully.\nThey will now will install a few default services and actions for your use.\n\n")
-	_, err := os.Stat(common.ErisRoot)
-	if err != nil {
-		logger.Printf("Eris Root Directory does not exist, initializing it\n")
+
+	if _, err := os.Stat(common.ErisRoot); os.IsNotExist(err) {
+		logger.Printf("Eris Root Directory does not exist. The marmots will initialize this directory for you.\n")
 		if err := common.InitErisDir(); err != nil {
 			return fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
 		}
-	} else if do.All || do.Yes {
-		//goes and does everything
-		if err := InitDefaultServices(do); err != nil {
-			return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
-		}
-
+	} else if do.Yes {
+		logger.Debugf("Not requiring input. Proceeding.\n")
 	} else {
+		var input string
 		logger.Printf("Eris Root Directory (%s) already exists.\nContinuing may overwrite files in:\n%s\n%s\nDo you wish to continue? (Y/n): ", common.ErisRoot, common.ServicesPath, common.ActionsPath)
-
 		fmt.Scanln(&input)
 		if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-			//goes and does everything
-			if err := InitDefaultServices(do); err != nil {
-				return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
-			}
+			logger.Debugf("Confirmation verified. Proceeding.\n")
 		} else {
-			logger.Printf("Cannot proceed without permission to overwrite. Backup your files and try again")
+			logger.Printf("\nThe marmots will not proceed without your permission to overwrite.\nPlease backup your files and try again.\n")
+			return fmt.Errorf("Error:\tno permission given to overwrite services and actions.\n")
 		}
 	}
+
+	//goes and does everything
 	if err := InitDefaultServices(do); err != nil {
 		return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
 	}
@@ -45,12 +40,13 @@ func Initialize(do *definitions.Do) error {
 
 func InitDefaultServices(do *definitions.Do) error {
 	logger.Debugf("Adding default files\n")
+
 	//do
 	if !do.Pull {
 		if err := cloneRepo(do.Services, "eris-services.git", common.ServicesPath); err != nil {
 			logger.Errorf("Error cloning default services repository.\n%v\nTrying default defs.\n", err)
 			if err2 := dropDefaults(); err2 != nil {
-				return fmt.Errorf("Error:\tcannot clone services.\n%v\n%v", err, err2)
+				return fmt.Errorf("Error:\tcannot clone services.\n%v\nError:\tcannot drop default services.\n%v", err, err2)
 			}
 		} else {
 			if err2 := cloneRepo(do.Actions, "eris-actions.git", common.ActionsPath); err2 != nil {

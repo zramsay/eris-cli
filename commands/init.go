@@ -25,35 +25,33 @@ func buildInitCommand() {
 }
 
 func addInitFlags() {
-	Init.Flags().BoolVarP(&do.Pull, "pull", "p", false, "git clone the default services and actions; use the flag when git is not installed")
-	Init.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from")
-	Init.Flags().BoolVarP(&do.Tool, "tool", "", false, "only update the tool and nothing else")
-	Init.Flags().BoolVarP(&do.Services, "services", "", false, "only update the default services")
-	Init.Flags().BoolVarP(&do.Actions, "actions", "", false, "only update the default actions")
-	Init.Flags().BoolVarP(&do.All, "all", "", false, "update all the above")
-	Init.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts")
+	Init.Flags().BoolVarP(&do.Pull, "skip-pull", "p", false, "do not clone the default services and actions; use the flag when git is not installed")
+	Init.Flags().BoolVarP(&do.Services, "services", "", false, "only update the default services (requires git to be installed)")
+	Init.Flags().BoolVarP(&do.Actions, "actions", "", false, "only update the default actions (requires git to be installed)")
+	Init.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts (requires git to be installed)")
+	Init.Flags().BoolVarP(&do.Tool, "tool", "", false, "only update the eris cli tool and nothing else (requires git and go to be installed)")
+	Init.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from (mostly used for eris update) (requires git to be installed)")
+	Init.Flags().BoolVarP(&do.All, "all", "", false, "update all the above and skip command-line prompts (requires git and go to be installed)")
 }
 
 func Router(cmd *cobra.Command, args []string) {
-	if do.Yes {
+	switch {
+	case do.Yes:
 		do.Services = true
 		do.Actions = true
-		ini.Initialize(do)
-	} else if do.Services && do.Actions && !do.All {
-		do.Yes = true
-		ini.Initialize(do)
-	} else if do.All {
+	case do.All:
 		do.Services = true
 		do.Actions = true
-		ini.Initialize(do)
 		do.Tool = true
-	} else if !do.Tool {
-		do.Services = false
-		do.Actions = false
-		ini.Initialize(do)
 	}
 
 	if do.Tool {
 		util.UpdateEris(do.Branch)
+
+		if !do.All {
+			return
+		}
 	}
+
+	ini.Initialize(do)
 }
