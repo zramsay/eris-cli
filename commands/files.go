@@ -13,7 +13,18 @@ var Files = &cobra.Command{
 	Use:   "files",
 	Short: "Manage Files containers for your Application.",
 	Long: `The files subcommand is used to import, and export
-files into containers for use by your application.`,
+files to and from IPFS for use on the host machine.
+
+These commands are provided in addition to the various
+functionality which is included throughout the tool, such as
+services import or services export which operate more
+precisely. The eris files command is used as a general wrapper
+around an IPFS gateway which would be running as eris services ipfs.
+
+At times, due to the manner in which IPFS boots files commands
+will fail. If you get errors when running eris files commands
+then please run [eris services start ipfs] give that a second
+or two to boot and then retry the eris files command which failed.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -32,36 +43,36 @@ var filesImport = &cobra.Command{
 	Use:   "get [hash] [fileName]",
 	Short: "Pull files from IPFS via a hash and save them locally.",
 	Long: `Pull files from IPFS via a hash and save them locally.
-	
+
 Optionally pass in a csv with: get --csv=[fileName]`,
-	Run: Get,
+	Run: FilesGet,
 }
 
 var filesExport = &cobra.Command{
 	Use:   "put [fileName]",
 	Short: "Post files to IPFS.",
-	Long: `Post files to IPFS. 
-	
+	Long: `Post files to IPFS.
+
 Optionally post all contents of a directory with: put [dirName] --dir`,
-	Run: Put,
+	Run: FilesPut,
 }
 
 var filesCache = &cobra.Command{
 	Use:   "cache [fileHash]",
 	Short: "Cache files to IPFS.",
 	Long: `Cache files to IPFS' local daemon.
-	
+
 Caches a files locally via IPFS pin, by hash.
 Optionally pass in a csv with: cache --csv=[fileName]
 Note: "put" will "cache" recursively by default`,
-	Run: PinIt,
+	Run: FilesPin,
 }
 
 var filesCat = &cobra.Command{
 	Use:   "cat [fileHash]",
 	Short: "Cat the contents of a file from IPFS.",
 	Long:  "Cat the contents of a file from IPFS.",
-	Run:   CatIt,
+	Run:   FilesCat,
 }
 
 var filesList = &cobra.Command{
@@ -69,14 +80,14 @@ var filesList = &cobra.Command{
 	Short: "List links from an IPFS object.",
 	//TODO test listing up and down through DAG / Zach just learn the DAG.
 	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
-	Run:  ListIt,
+	Run:  FilesList,
 }
 
 var filesCached = &cobra.Command{
 	Use:   "cached",
 	Short: "Lists files cached locally.",
 	Long:  `Displays list of files cached locally.`,
-	Run:   ManageCached,
+	Run:   FilesManageCached,
 }
 
 //--------------------------------------------------------------
@@ -96,7 +107,7 @@ func addFilesFlags() {
 	filesCached.Flags().StringVarP(&do.Hash, "rm", "", "", "remove a cached file by hash")
 }
 
-func Get(cmd *cobra.Command, args []string) {
+func FilesGet(cmd *cobra.Command, args []string) {
 	if do.CSV == "" {
 		IfExit(ArgCheck(2, "eq", cmd, args))
 		do.Name = args[0]
@@ -108,7 +119,7 @@ func Get(cmd *cobra.Command, args []string) {
 	IfExit(files.GetFiles(do))
 }
 
-func Put(cmd *cobra.Command, args []string) {
+func FilesPut(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 
 	do.Name = args[0]
@@ -117,7 +128,7 @@ func Put(cmd *cobra.Command, args []string) {
 	logger.Println(do.Result)
 }
 
-func PinIt(cmd *cobra.Command, args []string) {
+func FilesPin(cmd *cobra.Command, args []string) {
 	if do.CSV == "" {
 		if len(args) != 1 {
 			cmd.Help()
@@ -132,7 +143,7 @@ func PinIt(cmd *cobra.Command, args []string) {
 	logger.Println(do.Result)
 }
 
-func CatIt(cmd *cobra.Command, args []string) {
+func FilesCat(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		cmd.Help()
 		return
@@ -144,7 +155,7 @@ func CatIt(cmd *cobra.Command, args []string) {
 
 }
 
-func ListIt(cmd *cobra.Command, args []string) {
+func FilesList(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		cmd.Help()
 		return
@@ -155,7 +166,7 @@ func ListIt(cmd *cobra.Command, args []string) {
 	logger.Println(do.Result)
 }
 
-func ManageCached(cmd *cobra.Command, args []string) {
+func FilesManageCached(cmd *cobra.Command, args []string) {
 	err := files.ManagePinned(do)
 	IfExit(err)
 	logger.Println(do.Result)

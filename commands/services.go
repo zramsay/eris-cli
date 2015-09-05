@@ -154,7 +154,7 @@ var servicesEnsureRunning = &cobra.Command{
 	Short: "Ensures the named service is running",
 	Long: `Will check to make sure a service is running.
 
-If the names service is not runnint, command will boot it up`,
+If the named service is not running, command will boot it up`,
 	Run: EnsureService,
 }
 
