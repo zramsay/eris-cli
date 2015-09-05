@@ -187,7 +187,7 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 func PerformDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
 	logger.Infof("Performing DAPP Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
-	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
+	if _, err := perform.DockerRun(do.Service, do.Operations); err != nil {
 		do.Result = "could not perform dapp action"
 		return err
 	}

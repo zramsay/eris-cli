@@ -226,6 +226,7 @@ func TestImportService(t *testing.T) {
 	//	testStartService(t, "ipfs")
 	//	defer testKillService(t, "ipfs", true)
 	//XXX above functions paniced; this worked
+
 	do := def.NowDo()
 	do.Name = "ipfs"
 	do.Operations.ContainerNumber = 1

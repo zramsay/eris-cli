@@ -78,7 +78,7 @@ func StartChain(do *definitions.Do) error {
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
 	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
-	if err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
+	if _, err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
 		do.Result = "error"
 		return err
 	}
@@ -338,7 +338,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
-	err = perform.DockerRun(chain.Service, chain.Operations)
+	_, err = perform.DockerRun(chain.Service, chain.Operations)
 	// this err is caught in the defer above
 
 	return
