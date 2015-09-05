@@ -10,7 +10,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -41,7 +40,6 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
-		common.InitErisDir()
 		util.DockerConnect(do.Verbose, do.MachineName)
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
@@ -84,6 +82,7 @@ func AddCommands() {
 	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(VerSion)
+	buildInitCommand()
 	ErisCmd.AddCommand(Init)
 }
 
@@ -97,7 +96,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag when git is not installed")
+
 }
 
 func InitializeConfig() {
