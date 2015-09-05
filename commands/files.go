@@ -11,7 +11,7 @@ import (
 // Flags to add: ipfsHost
 var Files = &cobra.Command{
 	Use:   "files",
-	Short: "Manage Files containers for your Application.",
+	Short: "Manage Files Needed for Your Application Using IPFS.",
 	Long: `The files subcommand is used to import, and export
 files to and from IPFS for use on the host machine.
 

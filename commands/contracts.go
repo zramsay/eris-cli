@@ -12,9 +12,9 @@ import (
 // Primary Contracts Sub-Command
 var Contracts = &cobra.Command{
 	Use:   "contracts",
-	Short: "Manage Files containers for your Application.",
-	Long: `The files subcommand is used to import, and export
-files into containers for use by your application.`,
+	Short: "Deploy, Test, and Manage Your Smart Contracts.",
+	Long: `The contracts subcommand is used to test and deploy
+smart contracts for use by your application.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
