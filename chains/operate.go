@@ -66,12 +66,12 @@ func StartChain(do *definitions.Do) error {
 	}
 
 	chain.Service.Command = loaders.ErisChainStart
-	if do.Run {
-		chain.Service.Command = loaders.ErisChainStartApi
-	}
 	util.OverWriteOperations(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+	if do.Run {
+		chain.Service.Environment = append(chain.Service.Environment, "ERISDB_API=true")
+	}
 	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
@@ -165,9 +165,18 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 		logger.Infoln("Booting chain dependencies", chain.Dependencies.Services, chain.Dependencies.Chains)
 		for _, srvName := range chain.Dependencies.Services {
 			do.Name = srvName
-			if err := services.EnsureRunning(do); err != nil {
+			srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+			if err != nil {
 				return err
 			}
+			if !services.IsServiceRunning(srv.Service, srv.Operations) {
+				name := strings.ToUpper(do.Name)
+				logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
+				if _, err = perform.DockerRun(srv.Service, srv.Operations); err != nil {
+					return err
+				}
+			}
+
 		}
 		do.Name = name // undo side effects
 
@@ -323,6 +332,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	envVars = append(envVars, do.Env...)
 
+	if do.Run {
+		// run erisdb instead of tendermint
+		envVars = append(envVars, "ERISDB_API=true")
+	}
+
 	logger.Debugf("Set env vars from setupChain =>\t%v\n", envVars)
 	chain.Service.Environment = append(chain.Service.Environment, envVars...)
 	logger.Debugf("Set links from setupChain =>\t%v\n", do.Links)
@@ -335,9 +349,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	if err := bootDependencies(chain, do); err != nil {
 		return err
 	}
-
-	logger.Debugf("Setting remove to true.\n")
-	chain.Operations.Remove = true
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
