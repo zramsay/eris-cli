@@ -156,7 +156,9 @@ echo "Getting machine definition files sorted."
 if [ "$circle" = true ]
 then
   docker pull erisindustries/test_machines &>/dev/null
-  docker run --name $machine_definitions -v $HOME/.docker:/home/eris/.docker erisindustries/test_machines
+  docker run --name $machine_definitions erisindustries/test_machines
+  rm -rf .docker
+  docker cp $machine_definitions:/home/eris/.docker $HOME
 else
   docker run --name $machine_definitions erisindustries/test_machines
 fi
