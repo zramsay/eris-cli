@@ -12,7 +12,6 @@ dependencies:
     - sudo service docker start
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
     - "sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && sudo chmod +x /usr/local/bin/docker-machine"
-    - "docker run --name matDef -v ~/.docker:/home/eris/.docker erisindustries/test_machines"
 
 test:
   override:
