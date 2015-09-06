@@ -36,46 +36,47 @@ packagesToTest() {
   sleep 3 # give node time to boot
 
   # Start the first series of tests
-  cd perform && go test
+  cd perform && go test -race
   passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../util && go test
+  cd ../util && go test -race
   passed Util
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../data && go test
+  cd ../data && go test -race
   passed Data
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../files && go test
+  cd ../files && go test -race
   passed Files
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../config && go test
+  cd ../config && go test -race
   passed Config
   if [ $? -ne 0 ]; then return 1; fi
 
   # The second series of tests expects ipfs to not be running
   eris services stop ipfs -rx
+  unset ERIS_IPFS_HOST
   if [ $? -ne 0 ]; then return 1; fi
 
   # Start the second series of tests
-  cd ../services && go test
+  cd ../services && go test -race
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../chains && go test
+  cd ../chains && go test -race
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../actions && go test
+  cd ../actions && go test -race
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../contracts && go test
+  cd ../contracts && go test -race
   passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
-  # cd ../projects && go test
+  # cd ../projects && go test -race
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
-  # cd ../remotes && go test
+  # cd ../remotes && go test -race
   # passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  cd ../commands && go test
+  cd ../commands && go test -race
   passed Commands
   if [ $? -ne 0 ]; then return 1; fi
 
@@ -134,6 +135,12 @@ else
   eval "$(docker-machine env $machine)"
   echo "Connected to Machine."
   echo ""
+  echo "Clearing images and containers for tests."
+  set +e
+  docker rm $(docker ps -a -q)
+  docker rmi $(docker images -q)
+  set -e
+  echo ""
 fi
 
 # Once machine is turned on, display docker information
@@ -165,7 +172,7 @@ then
     then
       packagesToTest
     else
-      cd $1 && go test && passed $1
+      cd $1 && go test -race && passed $1
     fi
   else
     packagesToTest
@@ -189,9 +196,15 @@ fi
 
 if [[ $machine != "eris-test-local" ]]
 then
+  set +e
+  echo "Cleaning up after ourselves."
+  docker rm $(docker ps -a -q)
+  docker rmi $(docker images -q)
+  echo "Containers and Images cleanup complete."
   echo "Stopping Machine."
   docker-machine kill $machine
   echo "Machine Stopped."
+  set -e
 fi
 
 cd $start

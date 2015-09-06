@@ -23,13 +23,13 @@ branch=${branch/-/_}
 #   installs by default on Linux"
 declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" )
-# declare -a docker_versions18=( "1.8.1" )
+# declare -a docker_versions18=( "1.8.0" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
 #   data centers. These boxes are on Digital Ocean.
-# swarm="ams3"
-swarm="nyc2"
+swarm="ams3"
+# swarm="nyc2"
 
 # Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="/home/eris/test_tool.sh"
