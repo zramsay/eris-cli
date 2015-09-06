@@ -21,8 +21,10 @@ branch=${branch/-/_}
 #   the array and just test against the authoritative one. If testing against a specific backend
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
+declare -a docker_versions16=( "1.6.2" )
 declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" )
+declare -a machine_results=()
 # declare -a docker_versions18=( "1.8.1" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
@@ -80,6 +82,15 @@ reset_swarm() {
   swarm=$swarm_prim
 }
 
+log_results() {
+  if [ "$test_exit" -eq 0 ]
+  then
+    machine_results+=("$machine is Green!")
+  else
+    machine_results+=("$machine is Red.  :(")
+  fi
+}
+
 # ----------------------------------------------------------------------------
 # Define how tests will run
 
@@ -106,6 +117,7 @@ runTests(){
 
     # logging the exit code
     test_exit=$(echo $?)
+    log_results
 
     # reset the swarm
     reset_swarm
@@ -122,7 +134,15 @@ runTests(){
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
     echo "Starting Eris Docker container."
-    if [[ "$1" == "1.7" ]]
+    if [[ "$1" == "1.6" ]]
+    then
+      if [ "$circle" = true ]
+      then
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
+      else
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
+      fi
+    elif  [[ "$1" == "1.7" ]]
     then
       if [ "$circle" = true ]
       then
@@ -141,6 +161,7 @@ runTests(){
 
     # logging the exit code
     test_exit=$(echo $?)
+    log_results
 
     # reset the swarm
     reset_swarm
@@ -156,11 +177,11 @@ echo "Getting machine definition files sorted."
 if [ "$circle" = true ]
 then
   docker pull erisindustries/test_machines &>/dev/null
-  docker run --name $machine_definitions erisindustries/test_machines
-  rm -rf .docker
-  docker cp $machine_definitions:/home/eris/.docker $HOME
+  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+  rm -rf .docker &>/dev/null
+  docker cp $machine_definitions:/home/eris/.docker $HOME &>/dev/null
 else
-  docker run --name $machine_definitions erisindustries/test_machines
+  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
 fi
 
 echo ""
@@ -191,6 +212,10 @@ else
     runTests "local"
   fi
 
+  for ver in "${docker_versions16[@]}"
+  do
+    runTests "1.6"
+  done
   for ver in "${docker_versions17[@]}"
   do
     runTests "1.7"
@@ -199,11 +224,16 @@ else
   do
     runTests
   done
+
 fi
 
 # ---------------------------------------------------------------------------
 # Cleaning up
 
+echo ""
+echo ""
+echo "Your summary good human...."
+printf '%s\n' "${machine_results[@]}"
 echo ""
 echo ""
 echo "Done. Exiting with code: $test_exit"

@@ -10,10 +10,14 @@ The Distributed Application Platform.
 
 Install Docker.
 
+Install Go.
+
 ```
 go get github.com/eris-ltd/eris-cli/cmd/eris
 eris init
 ```
+
+More details are below for those who require.
 
 # Introduction
 
@@ -62,7 +66,25 @@ We also have (experimental) downloadable builds from our [Github Releases Page](
 
 Installation requires that Docker be installed. Please see the [Docker](https://docs.docker.com/installation/) documentation for how to install.
 
-At the current time, `eris` requires `docker` >= 1.7.1. You can check your docker version with `docker version`.
+At the current time, `eris` requires `docker` >= 1.7.1. You can check your docker version with `docker version`. We do test against `docker` 1.6.2 (but at this time those tests are not passing). By `requires` in this paragraph, we mean that we ensure that our tests pass against that docker version. Use other docker versions at your own risk.
+
+At the current time, our test suite uses the concept of an "authentic backend". This is, by default, what is installed in the default docker setup. This will change over time as docker releases new software. By "authentic" we mean that our test suite will formally report an error for that backend. These errors will be prioritized over other backends which fall into the `required >=` camp which will in turn be prioritized over any other tested backends.
+
+#### Linux
+
+Follow the link above for the official way to install Docker on your Linux box. After you install docker, then you will want to make sure that the user you are using to develop with `eris` has access to docker. When you are logged in as the user you can do this:
+
+```
+sudo usermod -a -G $USER docker
+```
+
+That will add the current user to the docker group which will mean that docker will not need to be called from `sudo`. To check that this change has "taken":
+
+```
+docker version
+```
+
+If you would like to quickly provision a host, you can use the script found in tests/hack/host_provision.sh to provision the host for you. This has been tested against stock Ubuntu 14.04, if it does not work for other systems then we would happily accept pull requests to update it to make it more usable.
 
 #### OSX
 
@@ -70,11 +92,7 @@ If you are on OSX, we **strongly recommend** that you install the [Docker Toolbo
 
 If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
 
-See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
-
-Note: The Toolbox obfuscates Kitematic in a convenient manner.
-
-If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
+If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`. We strongly recommend that you update to docker-machine [following Docker's instructions](https://docs.docker.com/machine/migrate-to-machine/).
 
 #### Windows
 
@@ -82,11 +100,7 @@ If you are on Windows, we **strongly recommend** that you install the [Docker To
 
 If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
 
-See [here](https://eng.erisindustries.com/tutorials/2015/08/05/ipfs-as-a-service/) for configuring a Toolbox-ed container with `eris files` IPFS functionality.
-
-Note: The Toolbox obfuscates Kitematic in a convenient manner.
-
-If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`.
+If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`. We strongly recommend that you update to docker-machine [following Docker's instructions](https://docs.docker.com/machine/migrate-to-machine/).
 
 ### Go
 
@@ -95,6 +109,14 @@ If you installed Docker via boot2docker, these *may* be set by running: `eval "$
 Installation requires that Go be installed. Please see the [Golang](https://golang.org/doc/install) documentation for how to install.
 
 At the current time, `eris` requires `go` >= 1.4.2. You can check your go version with `go version`.
+
+Once you have go installed, then you will want to make sure that you also have your `$GOPATH` in your `$PATH`. Most gophers add the following line to their `~/.bashrc`, `~/.profile`, `~/.zshrc` file or other relevant file.
+
+```
+export PATH=$GOPATH/bin:$PATH
+```
+
+You can check that this change was added by `echo $PATH` and making sure that your path has been updated appropriately.
 
 ## Install Eris
 
