@@ -154,7 +154,12 @@ echo "Hello! I'm the testing suite for eris."
 echo ""
 echo "Getting machine definition files sorted."
 # suppressed by default as too chatty
-sh -c "docker run --name $machine_definitions erisindustries/test_machines" &>/dev/null
+if [ "$circle" = true ]
+then
+  docker run --name $machine_definitions -v $HOME/.docker:/home/eris/.docker erisindustries/test_machines &>/dev/null
+else
+  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+fi
 
 echo ""
 echo "Building eris in a docker container."
