@@ -264,7 +264,7 @@ func TestExportService(t *testing.T) {
 
 func TestNewService(t *testing.T) {
 	do := def.NowDo()
-	servName := "not-keys"
+	servName := "keys"
 	do.Name = servName
 	do.Args = []string{"eris/keys"}
 	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
@@ -284,27 +284,28 @@ func TestNewService(t *testing.T) {
 		logger.Errorln(e)
 		fatal(t, e)
 	}
-	defer testKillService(t, servName, true)
 
 	testExistAndRun(t, servName, 1, true, true)
 	testNumbersExistAndRun(t, servName, 1, 1)
+	testKillService(t, servName, true)
+	testExistAndRun(t, servName, 1, false, false)
 }
 
 func TestRenameService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "keys"
-	do.Args = []string{"eris/keys"}
-	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
-	if e := NewService(do); e != nil {
-		logger.Errorln(e)
-		fatal(t, nil)
-	}
+	// do := def.NowDo()
+	// do.Name = "keys"
+	// do.Args = []string{"eris/keys"}
+	// logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
+	// if e := NewService(do); e != nil {
+	// 	logger.Errorln(e)
+	// 	fatal(t, nil)
+	// }
 
 	testStartService(t, "keys")
-	defer testKillService(t, "keys", true)
+	testExistAndRun(t, "keys", 1, true, true)
+	testNumbersExistAndRun(t, "keys", 1, 1)
 
-	// log.SetLoggers(2, os.Stdout, os.Stderr)
-	do = def.NowDo()
+	do := def.NowDo()
 	do.Name = "keys"
 	do.NewName = "syek"
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
@@ -317,7 +318,6 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "syek", 1, true, true)
 	testExistAndRun(t, "keys", 1, false, false)
-
 	testNumbersExistAndRun(t, "syek", 1, 1)
 	testNumbersExistAndRun(t, "keys", 0, 0)
 
@@ -334,10 +334,11 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "keys", 1, true, true)
 	testExistAndRun(t, "syek", 1, false, false)
-
 	testNumbersExistAndRun(t, "syek", 0, 0)
 	testNumbersExistAndRun(t, "keys", 1, 1)
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
+
+	testKillService(t, "keys", true)
+	testExistAndRun(t, "keys", 1, false, false)
 }
 
 func TestCatService(t *testing.T) {

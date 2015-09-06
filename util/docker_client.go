@@ -258,7 +258,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 		return err
 	}
 
-	logger.Debugf("Connected over TLS.")
+	logger.Debugf("Connected over TLS.\n")
 	return nil
 }
 

@@ -227,8 +227,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
 
-	logger.Debugln("container destination:", containerDst)
-	logger.Debugln("local destination:", dst)
+	logger.Debugf("Container destination =>\t%s\n", containerDst)
+	logger.Debugf("Local destination =>\t\t%s\n", dst)
 
 	if err = os.MkdirAll(dst, 0700); err != nil {
 		return fmt.Errorf("Error making data directory: %v", err)
@@ -336,6 +336,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
+	logger.Debugf("Setting remove to true.\n")
+	chain.Operations.Remove = true
+
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
 	_, err = perform.DockerRun(chain.Service, chain.Operations)
@@ -386,7 +389,7 @@ type stringPair struct {
 func copyFiles(dst string, files []stringPair) error {
 	for _, f := range files {
 		if f.key != "" {
-			logger.Debugf("\tcopying files from %s to %s\n", f.key, path.Join(dst, f.value))
+			logger.Debugf("\tCopying files =>\t%s:%s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
 				return err
 			}
