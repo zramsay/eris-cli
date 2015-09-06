@@ -1,10 +1,15 @@
 #!/bin/bash
 
+if [ "$CIRCLE_BRANCH" ]
+then
+  repo=`pwd`
+else
+  repo=$GOPATH/src/github.com/eris-ltd/eris-cli
+fi
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
 testimage=${testimage:="eris/eris"}
 
-repo=${repo:=$GOPATH/src/github.com/eris-ltd/eris-cli}
 release_min=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
 release_maj=$(echo $release_min | cut -d . -f 1-2)
 
