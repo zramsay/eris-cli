@@ -237,7 +237,6 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
-
 	b, err := ioutil.ReadFile(do.ConfigFile)
 	if err != nil {
 		fatal(t, err)
@@ -271,19 +270,6 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	if !found {
 		fatal(t, fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
 	}
-}
-
-func runContainer(t *testing.T, name string, args []string) []byte {
-	oldWriter := config.GlobalConfig.Writer
-	newWriter := new(bytes.Buffer)
-	config.GlobalConfig.Writer = newWriter
-	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
-	if err != nil {
-		fatal(t, err)
-	}
-
-	config.GlobalConfig.Writer = oldWriter
-	return b
 }
 
 // eris chains new --options
@@ -322,16 +308,6 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	if !found {
 		fatal(t, fmt.Errorf("failed to find fields: %s", result))
 	}
-}
-
-func ensureTomlValue(t *testing.T, s, field, value string) bool {
-	if strings.Contains(s, field) {
-		if !strings.Contains(s, value) {
-			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
-		}
-		return true
-	}
-	return false
 }
 
 func TestLogsChain(t *testing.T) {
@@ -597,7 +573,10 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 }
 
 func testsTearDown() error {
+	DEAD = true
 	killService("keys")
+	testKillChain(nil, chainName)
+	log.Flush()
 	return os.RemoveAll(erisDir)
 }
 
@@ -605,13 +584,34 @@ func killService(name string) {
 	do := def.NowDo()
 	do.Name = name
 	do.Args = []string{name}
-	do.Rm = true
-	do.RmD = true
-	e := services.KillService(do)
-	if e != nil {
+	do.Rm, do.RmD, do.Force = true, true, true
+	if e := services.KillService(do); e != nil {
 		logger.Errorln(e)
 		fatal(nil, e)
 	}
+}
+
+func runContainer(t *testing.T, name string, args []string) []byte {
+	oldWriter := config.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	config.GlobalConfig.Writer = oldWriter
+	return b
+}
+
+func ensureTomlValue(t *testing.T, s, field, value string) bool {
+	if strings.Contains(s, field) {
+		if !strings.Contains(s, value) {
+			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
+		}
+		return true
+	}
+	return false
 }
 
 func ifExit(err error) {
