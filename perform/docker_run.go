@@ -556,7 +556,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 	if len(containers) != 0 {
 		for _, container := range containers {
 			if r.MatchString(container.Names[0]) {
-				// logger.Debugf("Container Found =>\t\t%s\n", name)
+				logger.Debugf("Container Found =>\t\t%s\n", name)
 				return container, true
 			} else {
 				logger.Debugf("No match =>\t\t\t%s:%s\n", name, container.Names[0])
@@ -589,7 +589,20 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		if err == docker.ErrNoSuchImage {
-			logger.Infof("Image (%s) not found. Pulling from repository. This could take a second.\n", opts.Config.Image)
+			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
+				var input string
+				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (Y/n) ", opts.Config.Image)
+				fmt.Scanln(&input)
+
+				if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+					logger.Debugf("\nUser assented to pull.\n")
+				} else {
+					logger.Debugf("\nUser refused to pull.\n")
+					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
+				}
+			} else {
+				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a second.\n", opts.Config.Image)
+			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
 			}

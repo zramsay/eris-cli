@@ -27,28 +27,33 @@ cd $repo
 
 packagesToTest() {
 
+  # For testing we want to override the Greg Slepak required ask before pull ;)
+  export ERIS_PULL_APPROVE="true"
+
   # The first run of tests expect ipfs to be running
   eris services start ipfs
   if [ $? -ne 0 ]; then return 1; fi
   ERIS_IPFS_HOST="http://$(docker inspect --format='{{.NetworkSettings.IPAddress}}' eris_service_ipfs_1)"
   if [ $? -ne 0 ]; then return 1; fi
   export ERIS_IPFS_HOST
-  sleep 3 # give node time to boot
+  sleep 3 # give ipfs node time to boot
+  echo ""
+  echo ""
 
   # Start the first series of tests
-  cd perform && go test -race
+  go test ./perform/...
   passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../util && go test -race
+  go test ./util/...
   passed Util
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../data && go test -race
+  go test ./data/...
   passed Data
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../files && go test -race
+  go test ./files/...
   passed Files
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../config && go test -race
+  go test ./config/...
   passed Config
   if [ $? -ne 0 ]; then return 1; fi
 
@@ -58,28 +63,29 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
 
   # Start the second series of tests
-  cd ../services && go test -race
+  go test ./services/...
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../chains && go test -race
+  go test ./chains/...
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../actions && go test -race
+  go test ./actions/...
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi
-  cd ../contracts && go test -race
+  go test ./contracts/...
   passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
-  # cd ../projects && go test -race
+  # go test ./projects/...
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
-  # cd ../remotes && go test -race
+  # go test ./remotes/...
   # passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  cd ../commands && go test -race
+  go test ./commands/...
   passed Commands
-  if [ $? -ne 0 ]; then return 1; fi
 
+  # The final push....
+  if [ $? -ne 0 ]; then return 1; fi
   return 0
 }
 
@@ -88,7 +94,7 @@ passed() {
   then
     echo ""
     echo ""
-    echo "Congratulations! $1 Package Level Tests Have Passed"
+    echo "Congratulations! $1 Package Level Tests Have Passed on Machine: $machine"
     echo ""
     echo ""
     return 0
@@ -120,7 +126,7 @@ else
   echo -e "\tMachine name:\t$machine"
   echo ""
   echo "Starting Machine."
-  docker-machine start $machine
+  docker-machine start $machine &> /dev/null
   until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 5 ]
   do
      ping_times=$[$ping_times +1]
@@ -128,17 +134,18 @@ else
   done
   if [[ $(docker-machine status $machine) != "Running" ]]
   then
+    echo "Could not start the machine. Exiting this test."
     exit 1
   fi
   echo "Machine Started."
   echo "Connecting to Machine."
-  eval "$(docker-machine env $machine)"
+  eval "$(docker-machine env $machine)" &> /dev/null
   echo "Connected to Machine."
   echo ""
   echo "Clearing images and containers for tests."
   set +e
-  docker rm $(docker ps -a -q)
-  docker rmi $(docker images -q)
+  docker rm $(docker ps -a -q) &> /dev/null
+  docker rmi $(docker images -q) &> /dev/null
   set -e
   echo ""
 fi
@@ -172,7 +179,7 @@ then
     then
       packagesToTest
     else
-      cd $1 && go test -race && passed $1
+      go test ./$1/... && passed $1
     fi
   else
     packagesToTest
@@ -181,30 +188,33 @@ fi
 test_exit=$(echo $?)
 set -e
 
-if [ $test_exit -eq 0 ]
-then
-  echo "Congratulations! All Package Level Tests Passed."
-  echo ""
-else
-  echo ""
-  echo "Boo :( A Package Level Test has failed."
-  echo ""
-fi
-
 # ---------------------------------------------------------------------------
-# Cleaning up
+# Clean up and report
 
 if [[ $machine != "eris-test-local" ]]
 then
   set +e
   echo "Cleaning up after ourselves."
-  docker rm $(docker ps -a -q)
-  docker rmi $(docker images -q)
+  docker rm -f $(docker ps -a -q) &> /dev/null
+  docker rmi -f $(docker images -q) &> /dev/null
   echo "Containers and Images cleanup complete."
   echo "Stopping Machine."
   docker-machine kill $machine
   echo "Machine Stopped."
   set -e
+fi
+
+if [ $test_exit -eq 0 ]
+then
+  echo ""
+  echo "Congratulations! All Package Level Tests Passed."
+  echo "Machine: $machine is green."
+  echo ""
+else
+  echo ""
+  echo "Boo :( A Package Level Test has failed."
+  echo "Machine: $machine is red."
+  echo ""
 fi
 
 cd $start

@@ -26,7 +26,7 @@ import (
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
-var chainName string = "my_tests" // :(
+var chainName string = "my_testing_chain_dot_com" // :(
 var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
@@ -84,7 +84,7 @@ func TestKnownChain(t *testing.T) {
 func TestChainGraduate(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
-	logger.Infof("Graduating chain (from tests) ==>\t%s\n", do.Name)
+	logger.Infof("Graduate chain (from tests) =>\t%s\n", do.Name)
 	if err := GraduateChain(do); err != nil {
 		fatal(t, err)
 	}
