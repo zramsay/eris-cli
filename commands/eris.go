@@ -10,9 +10,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -39,9 +38,9 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 		log.SetLoggers(logLevel, config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter)
 
-		common.InitErisDir()
+		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
+
 		util.DockerConnect(do.Verbose, do.MachineName)
-		do.ChainName, _ = util.GetHead()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
@@ -61,8 +60,6 @@ func Execute() {
 
 // Define the commands
 func AddCommands() {
-	// buildProjectsCommand()
-	// ErisCmd.AddCommand(Projects)
 	buildServicesCommand()
 	ErisCmd.AddCommand(Services)
 	buildChainsCommand()
@@ -75,15 +72,17 @@ func AddCommands() {
 	ErisCmd.AddCommand(Data)
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
+	// buildProjectsCommand()
+	// ErisCmd.AddCommand(Projects)
 	// buildRemotesCommand()
 	// ErisCmd.AddCommand(Remotes)
-	buildConfigCommand()
 	ErisCmd.AddCommand(ListKnown)
 	ErisCmd.AddCommand(ListExisting)
-	//	ErisCmd.AddCommand(ListRunning)
 
+	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(VerSion)
+	buildInitCommand()
 	ErisCmd.AddCommand(Init)
 }
 
@@ -97,9 +96,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-	Init.Flags().BoolVarP(&do.Pull, "pull", "p", true, "git clone the default services and actions; use the flag for when git is not installed")
-	// Init.Flags().BoolVarP(&do.Dev, "dev", "", false, "pull development images")
-	// Init.Flags().BoolVarP(&do.SkipImages, "no-pull", "", false, "skip pulling default images")
+
 }
 
 func InitializeConfig() {

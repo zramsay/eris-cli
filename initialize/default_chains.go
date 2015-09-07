@@ -1,21 +1,24 @@
 package initialize
 
 import (
-  "fmt"
+	"fmt"
 
-  "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/version"
 )
 
 func DefChainService() string {
-  ver := version.VERSION
-  return fmt.Sprintf(`
+	ver := version.VERSION
+	return fmt.Sprintf(`
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 [service]
 image          = "eris/erisdb:%s"
 data_container = true
-ports          = [ "1337:1337", "46656:46656", "46657:46657" ]
+ports          = [ "1337", "46656", "46657" ]
 entry_point    = "erisdb-wrapper"
+
+[dependencies]
+services = [ "keys" ] 
 
 [maintainer]
 name = "Eris Industries"
@@ -24,7 +27,7 @@ email = "support@erisindustries.com"
 }
 
 func DefChainConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -39,7 +42,7 @@ rpc_laddr = "0.0.0.0:46657"
 }
 
 func DefChainGen() string {
-  return `
+	return `
 {
   "chain_id": "my_tests",
   "accounts": [
@@ -87,11 +90,11 @@ func DefChainGen() string {
 var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
 
 func DefChainCSV() string {
-  return fmt.Sprintf("%s,", DefaultPubKeys[0])
+	return fmt.Sprintf("%s,", DefaultPubKeys[0])
 }
 
 func DefChainKeys() string {
-  return `
+	return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -110,7 +113,7 @@ func DefChainKeys() string {
 }
 
 func DefChainServConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 

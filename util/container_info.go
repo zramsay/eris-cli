@@ -135,7 +135,7 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 			}
 			if r.MatchString(c) {
 				c = strings.Replace(c, "/", "", 1) // Docker's leading slash
-				logger.Debugf("Found Eris Container =>\t\t%s\n", c)
+				// logger.Debugf("Found Eris Container =>\t\t%s\n", c)
 				cont := ContainerDisassemble(c)
 				cont.ContainerID = con.ID
 				containers = append(containers, cont)
@@ -174,13 +174,13 @@ func ServiceContainers(running bool) []*ContainerName {
 }
 
 func ServiceContainerNames(running bool) []string {
-	logger.Debugf("Populating current containrs =>\tall? %t\n", running)
+	// logger.Debugf("Populating current containrs =>\tall? %t\n", running)
 	a := ServiceContainers(running)
 	b := []string{}
 	for _, c := range a {
 		b = append(b, c.ShortName)
 	}
-	logger.Debugf("Containers I found =>\t\t%v\n", b)
+	// logger.Debugf("Containers I found =>\t\t%v\n", b)
 	return b
 }
 
@@ -246,7 +246,7 @@ func FindServiceContainer(srvName string, number int, running bool) *ContainerNa
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", srvName, number)
+	logger.Infof("Could not find service cont =>\t%s:%d\n", srvName, number)
 	return nil
 }
 
@@ -267,7 +267,7 @@ func FindChainContainer(name string, number int, running bool) *ContainerName {
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
+	logger.Infof("Could not find chain cont =>\t%s:%d\n", name, number)
 	return nil
 }
 
@@ -287,7 +287,7 @@ func FindDataContainer(name string, number int) *ContainerName {
 			}
 		}
 	}
-	logger.Infof("Could not find container =>\t%s:%d\n", name, number)
+	logger.Infof("Could not find data cont =>\t%s:%d\n", name, number)
 	return nil
 }
 
@@ -316,4 +316,11 @@ func erisRegExpLinks(typ string) *regexp.Regexp {
 // here temporarily
 func NameAndNumber(name string, num int) string {
 	return fmt.Sprintf("%s_%d", name, num)
+}
+
+func PortAndProtocol(port string) docker.Port {
+	if len(strings.Split(port, "/")) == 1 {
+		port += "/tcp"
+	}
+	return docker.Port(port)
 }

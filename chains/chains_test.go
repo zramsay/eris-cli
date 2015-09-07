@@ -26,7 +26,7 @@ import (
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
-var chainName string = "my_tests" // :(
+var chainName string = "my_testing_chain_dot_com" // :(
 var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
@@ -84,7 +84,7 @@ func TestKnownChain(t *testing.T) {
 func TestChainGraduate(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
-	logger.Infof("Graduating chain (from tests) ==>\t%s\n", do.Name)
+	logger.Infof("Graduate chain (from tests) =>\t%s\n", do.Name)
 	if err := GraduateChain(do); err != nil {
 		fatal(t, err)
 	}
@@ -94,8 +94,7 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, err)
 	}
 
-	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
-	image := "eris/erisdb:" + vers
+	image := "eris/erisdb:" + version.VERSION
 	if srvDef.Service.Image != image {
 		fatal(t, fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}
@@ -108,8 +107,8 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
 	}
 
-	if len(srvDef.ServiceDeps.Dependencies) != 1 {
-		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.ServiceDeps))
+	if len(srvDef.Dependencies.Services) != 1 {
+		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.Dependencies.Services))
 	}
 }
 
@@ -139,6 +138,27 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
+func TestExecChain(t *testing.T) {
+	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		return
+	}*/
+
+	testStartChain(t, chainName)
+	defer testKillChain(t, chainName)
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
+	do.Interactive = false
+	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
+	e := ExecChain(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+}
+
 // eris chains new --dir _ -g _
 // the default chain_id is my_tests, so should be overwritten
 func TestChainsNewDirGen(t *testing.T) {
@@ -161,7 +181,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
@@ -217,7 +237,6 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
-
 	b, err := ioutil.ReadFile(do.ConfigFile)
 	if err != nil {
 		fatal(t, err)
@@ -226,7 +245,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -253,19 +272,6 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	}
 }
 
-func runContainer(t *testing.T, name string, args []string) []byte {
-	oldWriter := config.GlobalConfig.Writer
-	newWriter := new(bytes.Buffer)
-	config.GlobalConfig.Writer = newWriter
-	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
-	if err != nil {
-		fatal(t, err)
-	}
-
-	config.GlobalConfig.Writer = oldWriter
-	return b
-}
-
 // eris chains new --options
 func TestChainsNewConfigOpts(t *testing.T) {
 	// XXX: need to use a different chainID or remove the local tmp/eris/data/chainID dir with each test!
@@ -279,7 +285,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	defer removeDataContainer(t, chainID, do.Operations.ContainerNumber)
+	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
 	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -302,16 +308,6 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	if !found {
 		fatal(t, fmt.Errorf("failed to find fields: %s", result))
 	}
-}
-
-func ensureTomlValue(t *testing.T, s, field, value string) bool {
-	if strings.Contains(s, field) {
-		if !strings.Contains(s, value) {
-			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
-		}
-		return true
-	}
-	return false
 }
 
 func TestLogsChain(t *testing.T) {
@@ -337,8 +333,7 @@ func TestUpdateChain(t *testing.T) {
 	do.Name = chainName
 	do.SkipPull = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
-	e := UpdateChain(do)
-	if e != nil {
+	if e := UpdateChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -354,8 +349,7 @@ func TestInspectChain(t *testing.T) {
 	do.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
 	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
-	e := InspectChain(do)
-	if e != nil {
+	if e := InspectChain(do); e != nil {
 		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
@@ -371,8 +365,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = oldName
 	do.NewName = newName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e := RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -382,8 +375,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = newName
 	do.NewName = chainName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
-	e = RenameChain(do)
-	if e != nil {
+	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -427,8 +419,7 @@ func TestRmChain(t *testing.T) {
 	do.Name = chainName
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
-	e := RmChain(do)
-	if e != nil {
+	if e := RmChain(do); e != nil {
 		fatal(t, e)
 	}
 
@@ -443,8 +434,7 @@ func testStartChain(t *testing.T, chain string) {
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
-	e := StartChain(do)
-	if e != nil {
+	if e := StartChain(do); e != nil {
 		logger.Errorln(e)
 		fatal(t, nil)
 	}
@@ -541,11 +531,15 @@ func testsInit() error {
 	config.ChangeErisDir(erisDir)
 
 	// init dockerClient
-	util.DockerConnect(false, "eris")
+	util.DockerConnect(false, "eris-test-nyc2-1.8.1")
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	if err := ini.Initialize(true, false); err != nil {
+	do := def.NowDo()
+	do.Pull = true
+	do.Services = true
+	do.Actions = true
+	if err := ini.Initialize(do); err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
@@ -568,17 +562,56 @@ func testNewChain(chain string) {
 	ifExit(data.RmData(do))
 }
 
-func removeDataContainer(t *testing.T, chainID string, cNum int) {
+func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	do := def.NowDo()
 	do.Name = chainID
+	do.Rm, do.Force, do.RmD = true, true, true
 	do.Operations.ContainerNumber = cNum
-	if err := data.RmData(do); err != nil {
+	if err := KillChain(do); err != nil {
 		fatal(t, err)
 	}
 }
 
 func testsTearDown() error {
+	DEAD = true
+	killService("keys")
+	testKillChain(nil, chainName)
+	log.Flush()
 	return os.RemoveAll(erisDir)
+}
+
+func killService(name string) {
+	do := def.NowDo()
+	do.Name = name
+	do.Args = []string{name}
+	do.Rm, do.RmD, do.Force = true, true, true
+	if e := services.KillService(do); e != nil {
+		logger.Errorln(e)
+		fatal(nil, e)
+	}
+}
+
+func runContainer(t *testing.T, name string, args []string) []byte {
+	oldWriter := config.GlobalConfig.Writer
+	newWriter := new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	if err != nil {
+		fatal(t, err)
+	}
+
+	config.GlobalConfig.Writer = oldWriter
+	return b
+}
+
+func ensureTomlValue(t *testing.T, s, field, value string) bool {
+	if strings.Contains(s, field) {
+		if !strings.Contains(s, value) {
+			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
+		}
+		return true
+	}
+	return false
 }
 
 func ifExit(err error) {

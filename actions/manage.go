@@ -46,7 +46,7 @@ func ImportAction(do *definitions.Do) error {
 			return err
 		}
 
-		err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+		_, err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func ExportAction(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+	_, err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
 	if err != nil {
 		return err
 	}

@@ -21,15 +21,22 @@ branch=${branch/-/_}
 #   the array and just test against the authoritative one. If testing against a specific backend
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
+declare -a docker_versions16=( "1.6.2" )
 declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" )
+declare -a machine_results=()
 # declare -a docker_versions18=( "1.8.1" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
 #   data centers. These boxes are on Digital Ocean.
-swarm="ams3"
-# swarm="nyc2"
+swarm_prim="ams3"
+swarm_back="nyc2"
+swarm=$swarm_prim
+if [[ $1 == "sec_swarm" ]]
+then
+  swarm="nyc2"
+fi
 
 # Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="/home/eris/test_tool.sh"
@@ -40,16 +47,60 @@ localsocket=/var/run/docker.sock
 machine_definitions=matDef
 
 # ----------------------------------------------------------------------------
+# Check swarm and machine stuff
+
+set_machine() {
+  echo "eris-test-$swarm-$ver"
+}
+
+check_swarm() {
+  machine=$(set_machine)
+
+  if [[ $(docker-machine status $machine) == "Running" ]]
+  then
+    echo "Machine Running. Switching Swarm."
+    if [[ "$swarm" == "$swarm_back" ]]
+    then
+      swarm=$swarm_prim
+    else
+      swarm=$swarm_back
+    fi
+
+    machine=$(set_machine)
+    if [[ $(docker-machine status $machine) == "Running" ]]
+    then
+      echo "Backup Swarm Machine Also Running."
+      return 1
+    fi
+  else
+    echo "Machine not Running. Keeping Swarm."
+    machine=$(set_machine)
+  fi
+}
+
+reset_swarm() {
+  swarm=$swarm_prim
+}
+
+log_results() {
+  if [ "$test_exit" -eq 0 ]
+  then
+    machine_results+=("$machine is Green!")
+  else
+    machine_results+=("$machine is Red.  :(")
+  fi
+}
+
+# ----------------------------------------------------------------------------
 # Define how tests will run
 
 runTests(){
   if [[ $1 == "local" ]]
   then
     machine="eris-test-local"
-    # need to save this value when called with "all"
-    swarmb4=$swarm
     swarm=solo
     ver=$(docker version | grep "Client version" | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')
+
     # Note NEVER do this in circle. It will explode.
     echo -e "Starting Eris Docker container.\n"
     if [ "$circle" = false ]
@@ -58,40 +109,62 @@ runTests(){
       then
         docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage
       else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage
       fi
     else
       echo "Don't run local in Circle environment."
     fi
-    # when doing "tests/test.sh all" we want to use the swarm despite changing above
+
+    # logging the exit code
     test_exit=$(echo $?)
-    swarm=$swarmb4
+    log_results
+
+    # reset the swarm
+    reset_swarm
   else
-    machine=eris-test-$swarm-$ver
+    check_swarm
+    if [ $? -ne 0 ]; then return 1; fi
+
+    # Correct for docker build stuff
     if [[ "$branch" == "master" ]]
     then
       branch="latest"
     fi
+
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
     echo "Starting Eris Docker container."
-    if [[ "$1" == "1.7" ]]
+    if [[ "$1" == "1.6" ]]
     then
       if [ "$circle" = true ]
       then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:docker17
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
       else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:docker17
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
+      fi
+    elif  [[ "$1" == "1.7" ]]
+    then
+      if [ "$circle" = true ]
+      then
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
+      else
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
       fi
     else
       if [ "$circle" = true ]
       then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage:$branch
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$branch
       else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket:$remotesocket --user $testuser $testimage
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage
       fi
     fi
+
+    # logging the exit code
     test_exit=$(echo $?)
+    log_results
+
+    # reset the swarm
+    reset_swarm
   fi
 }
 
@@ -101,8 +174,15 @@ runTests(){
 echo "Hello! I'm the testing suite for eris."
 echo ""
 echo "Getting machine definition files sorted."
-# suppressed by default as too chatty
-sh -c "docker run --name $machine_definitions erisindustries/test_machines" &>/dev/null
+if [ "$circle" = true ]
+then
+  docker pull erisindustries/test_machines &>/dev/null
+  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+  rm -rf .docker &>/dev/null
+  docker cp $machine_definitions:/home/eris/.docker $HOME &>/dev/null
+else
+  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+fi
 
 echo ""
 echo "Building eris in a docker container."
@@ -125,7 +205,6 @@ fi
 echo ""
 if [[ $1 == "local" ]]
 then
-  # We don't wan't purely local tests to exit the script or it will preempt teardown
   runTests 'local'
 else
   if [[ $1 == "all" ]]
@@ -133,18 +212,19 @@ else
     runTests "local"
   fi
 
-  # The last API in the array should be the *authoritative* one that will get reported to circle
-  run_count=0
-  run_len=${#docker_versions18[@]}
+  for ver in "${docker_versions16[@]}"
+  do
+    runTests "1.6"
+  done
   for ver in "${docker_versions17[@]}"
   do
     runTests "1.7"
   done
   for ver in "${docker_versions18[@]}"
   do
-    run_count=$[$run_count +1]
     runTests
   done
+
 fi
 
 # ---------------------------------------------------------------------------
@@ -152,11 +232,10 @@ fi
 
 echo ""
 echo ""
-echo "Cleaning up"
-if [ "$circle" = false ]
-then
-  sh -c "docker rm $machine_definitions" &>/dev/null
-fi
-
+echo "Your summary good human...."
+printf '%s\n' "${machine_results[@]}"
+echo ""
+echo ""
+echo "Done. Exiting with code: $test_exit"
 cd $strt
 exit $test_exit

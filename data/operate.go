@@ -134,19 +134,21 @@ func ExportData(do *definitions.Do) error {
 		//   that it *was* `_data` but in case docker changes later
 		//   we'll just keep it for now. this is specific to 1.7 and
 		//   below. For 1.8 we do not need to do this.
-		os.Chdir(exportPath)
-		var unTarDestination string
-		for k, v := range cont.Volumes {
-			if k == do.Path {
-				unTarDestination = filepath.Base(v)
-			}
-		}
-		logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
-
+		// os.Chdir(exportPath)
 		if dVer <= 1.7 {
+			var unTarDestination string
+			logger.Debugf("Container's Volumes =>\t\t%v\n", cont.Volumes)
+			for k, v := range cont.Volumes {
+				if k == do.Path {
+					unTarDestination = filepath.Base(v)
+				}
+			}
+			logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
 			if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
 				return err
 			}
+		} else {
+			logger.Debugf("Untarring to =>\t\t\t%s\n", exportPath)
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
@@ -155,15 +157,15 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 
-		// finally remove everything in the data directory and move
-		//   the temp contents there
+		// // finally remove everything in the data directory and move
+		// //   the temp contents there
 		prevDir := filepath.Join(DataContainersPath, do.Name)
 		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
-			if e2 := os.MkdirAll(prevDir, 0666); e2 != nil {
+			if e2 := os.MkdirAll(prevDir, 0755); e2 != nil {
 				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)
 			}
 		}
-		ClearDir(prevDir)
+		// ClearDir(prevDir)
 		if err := moveOutOfDirAndRmDir(exportPath, prevDir); err != nil {
 			return err
 		}
@@ -190,7 +192,7 @@ func moveOutOfDirAndRmDir(src, dest string) error {
 	}
 
 	for _, f := range toMove {
-		logger.Debugf("Moving file [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
+		logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
 
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead

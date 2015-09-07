@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"sync"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/data"
@@ -72,15 +71,8 @@ func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error
 		srvs = append(srvs, t...)
 	}
 
-	// TODO: refactor this logic, should only need to call services.StartGroup(srvs)
 	if len(srvs) >= 1 {
-		wg, ch := new(sync.WaitGroup), make(chan error, 1)
-		services.StartGroup(ch, wg, srvs)
-		go func() {
-			wg.Wait()
-			ch <- nil
-		}()
-		if err := <-ch; err != nil {
+		if err := services.StartGroup(srvs); err != nil {
 			return err
 		}
 	}
@@ -195,7 +187,7 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 func PerformDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
 	logger.Infof("Performing DAPP Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
-	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
+	if _, err := perform.DockerRun(do.Service, do.Operations); err != nil {
 		do.Result = "could not perform dapp action"
 		return err
 	}

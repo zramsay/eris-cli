@@ -3,7 +3,6 @@ package loaders
 import (
 	"fmt"
 	"path"
-	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -55,6 +54,13 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
+	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
+	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
+		if chain.Dependencies != nil {
+			addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
+		}
+	}
+
 	checkChainNames(chain)
 	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
@@ -62,17 +68,26 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	return chain, nil
 }
 
+// Convert the chain def to a service def but keep the "eris_chains" containers prefix and set the chain id
 func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
 	chain, err := LoadChainDefinition(chainName, newCont, cNum...)
 	if err != nil {
 		return nil, err
 	}
-	return ServiceDefFromChain(chain, ErisChainStart), nil
+	s, err := ServiceDefFromChain(chain, ErisChainStart), nil
+	if err != nil {
+		return nil, err
+	}
+	// we keep the "eris_chain" prefix and set the CHAIN_ID var.
+	// the run command is set in ServiceDefFromChain
+	s.Operations.SrvContainerName = util.ChainContainersName(chainName, s.Operations.ContainerNumber)
+	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
+	return s, nil
 }
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	// chainID := chain.ChainID
-	vers := strings.Join(strings.Split(version.VERSION, ".")[0:2], ".")
+	vers := version.VERSION
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
 	chain.Service.Image = "eris/erisdb:" + vers
@@ -80,18 +95,22 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	chain.Service.Command = cmd
 
 	srv := &definitions.ServiceDefinition{
-		Name:        chain.Name,
-		ServiceID:   chain.ChainID,
-		ServiceDeps: &definitions.ServiceDeps{[]string{"keys"}},
-		Service:     chain.Service,
-		Operations:  chain.Operations,
-		Maintainer:  chain.Maintainer,
-		Location:    chain.Location,
-		Machine:     chain.Machine,
+		Name:         chain.Name,
+		ServiceID:    chain.ChainID,
+		Dependencies: &definitions.Dependencies{Services: []string{"keys"}},
+		Service:      chain.Service,
+		Operations:   chain.Operations,
+		Maintainer:   chain.Maintainer,
+		Location:     chain.Location,
+		Machine:      chain.Machine,
 	}
 	ServiceFinalizeLoad(srv) // these are mostly operational considerations that we want to ensure are met
 
 	return srv
+}
+
+func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
+	connectToAService(srv, ops, "chain", name, internalName, link, mount)
 }
 
 func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {

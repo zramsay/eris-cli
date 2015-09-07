@@ -9,7 +9,7 @@ import (
 	// "strings"
 	"testing"
 
-	// def "github.com/eris-ltd/eris-cli/definitions"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	// "github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/config"
@@ -69,7 +69,11 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(ini.Initialize(true, false))
+	do := def.NowDo()
+	do.Pull = true
+	do.Services = true
+	do.Actions = true
+	ifExit(ini.Initialize(do))
 
 	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil

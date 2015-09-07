@@ -12,9 +12,9 @@ import (
 // Primary Contracts Sub-Command
 var Contracts = &cobra.Command{
 	Use:   "contracts",
-	Short: "Manage Files containers for your Application.",
-	Long: `The files subcommand is used to import, and export
-files into containers for use by your application.`,
+	Short: "Deploy, Test, and Manage Your Smart Contracts.",
+	Long: `The contracts subcommand is used to test and deploy
+smart contracts for use by your application.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -35,18 +35,14 @@ var contractsImport = &cobra.Command{
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
 via its hash and save it locally.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ContractsImport(cmd, args)
-	},
+	Run: ContractsImport,
 }
 
 var contractsExport = &cobra.Command{
 	Use:   "export",
 	Short: "Post a package of smart contracts to IPFS.",
 	Long:  `Post a package of smart contracts to IPFS.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ContractsExport(cmd, args)
-	},
+	Run:   ContractsExport,
 }
 
 var contractsTest = &cobra.Command{
@@ -63,9 +59,7 @@ ethereum style chains.
 may be tested via solUnit test framework.
 3. manual -- a simple gulp task can be given to the
 test environment.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ContractsTest(cmd, args)
-	},
+	Run: ContractsTest,
 }
 
 var contractsDeploy = &cobra.Command{
@@ -82,9 +76,7 @@ ethereum style blockchain simply.
 to an ethereum style blockchain.
 3. manual -- a simple gulp task can be given to the
 deployer.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ContractsDeploy(cmd, args)
-	},
+	Run: ContractsDeploy,
 }
 
 //----------------------------------------------------

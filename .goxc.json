@@ -12,7 +12,6 @@
 	],
 	"Arch": "amd64",
 	"Os": "linux,darwin,windows",
-	"PackageVersion": "0.10.1",
 	"TaskSettings": {
 		"deb": {
 			"armarch": "",

@@ -52,18 +52,14 @@ var dataImport = &cobra.Command{
 	Use:   "import [name]",
 	Short: "Import ~/.eris/data/name folder to a named data container",
 	Long:  `Import ~/.eris/data/name folder to a named data container`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ImportData(cmd, args)
-	},
+	Run:   ImportData,
 }
 
 var dataList = &cobra.Command{
 	Use:   "ls",
 	Short: "List the data containers eris manages for you",
 	Long:  `List the data containers eris manages for you`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ListKnownData(cmd, args)
-	},
+	Run:   ListKnownData,
 }
 
 var dataExec = &cobra.Command{
@@ -88,45 +84,35 @@ of the data container mounted to it.`,
 	Example: `  eris data exec name ls /home/eris/.eris -> will list the eris dir
   eris data exec name "ls -la /home/eris/.eris" -> will pass flags to the ls command
   eris data exec --interactive name -> will start interactive console`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ExecData(cmd, args)
-	},
+	Run: ExecData,
 }
 
 var dataRename = &cobra.Command{
 	Use:   "rename [oldName] [newName]",
 	Short: "Rename a data container",
 	Long:  `Rename a data container`,
-	Run: func(cmd *cobra.Command, args []string) {
-		RenameData(cmd, args)
-	},
+	Run:   RenameData,
 }
 
 var dataInspect = &cobra.Command{
 	Use:   "inspect [name] [key]",
 	Short: "Machine readable details.",
 	Long:  `Displays machine readable details about running containers.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		InspectData(cmd, args)
-	},
+	Run:   InspectData,
 }
 
 var dataExport = &cobra.Command{
 	Use:   "export [name] [folder]",
 	Short: "Export a named data container's volumes to ~/.eris/data/name",
 	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ExportData(cmd, args)
-	},
+	Run:   ExportData,
 }
 
 var dataRm = &cobra.Command{
 	Use:   "rm [name]",
 	Short: "Remove a data container",
 	Long:  `Remove a data container`,
-	Run: func(cmd *cobra.Command, args []string) {
-		RmData(cmd, args)
-	},
+	Run:   RmData,
 }
 
 //----------------------------------------------------

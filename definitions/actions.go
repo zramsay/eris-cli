@@ -5,7 +5,7 @@ type Action struct {
 	Name string `json:"name" yaml:"name" toml:"name"`
 	// an array of strings listing the services which eris should start prior
 	// to running the steps required for the action
-	ServiceDeps []string `json:"services" yaml:"services" toml:"services"`
+	Dependencies *Dependencies `json:"dependencies" yaml:"dependencies" toml:"dependencies"`
 	// a chain which should be started by eris prior to running the steps
 	// required for the action. can take a `$chain` string which would then
 	// be passed in via a command line flag

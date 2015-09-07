@@ -1,7 +1,7 @@
 package initialize
 
 func DefaultKeys() string {
-  return `[service]
+	return `[service]
 name = "keys"
 
 image = "eris/keys"
@@ -10,7 +10,7 @@ data_container = true
 }
 
 func DefaultIpfs() string {
-  return `name = "ipfs"
+	return `name = "ipfs"
 
 [service]
 name = "ipfs"
@@ -33,7 +33,7 @@ requires = [""]
 }
 
 func DefaultIpfs2() string {
-  return `name = "ipfs"
+	return `name = "ipfs"
 
 [service]
 name = "ipfs"
@@ -42,8 +42,8 @@ data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"
 
-[services]
-dependencies = ["keys"]
+[dependencies]
+services = ["keys"]
 
 [maintainer]
 name = "Eris Industries"

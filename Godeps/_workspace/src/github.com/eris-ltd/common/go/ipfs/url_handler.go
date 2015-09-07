@@ -2,11 +2,11 @@ package ipfs
 
 import (
 	"fmt"
-	"github.com/eris-ltd/eris-cli/config"
 	"os"
 )
 
-//XXX url funcs can take flags for which host to go to.
+var IpfsHost string = "http://0.0.0.0"
+
 func IPFSBaseGatewayUrl(gateway string) string {
 	if gateway == "eris" {
 		return fmt.Sprintf("%s%s", sexyUrl(), ":8080/ipfs/")
@@ -34,7 +34,7 @@ func IPFSUrl() string {
 		if os.Getenv("ERIS_IPFS_HOST") != "" {
 			host = os.Getenv("ERIS_IPFS_HOST")
 		} else {
-			host = config.GetConfigValue("IpfsHost")
+			host = IpfsHost
 		}
 	}
 	return host

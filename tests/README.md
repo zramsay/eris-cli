@@ -13,17 +13,17 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 * test the tool from a multitude of host environments
   * debian (not implemented)
   * rhel (not implemented)
-  * ubuntu (circle CI provides natively)
+  * ubuntu (running the tests in docker provides natively)
   * OSX (not implemented)
   * windows (not implemented)
 
 ## Goal 1: Test The Tool Itself
 
-Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool.
+Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container (but I also use it for quick testing of the package level tests locally -- see below).
 
-## Goal 2: Test The Minimum Viable Stack Connection and Sequencing
+## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (DApps and Contract Suites)
 
-TODO (will fill in as we collaboratively build [eris-dl](https://github.com/eris-ltd/eris-dl)).
+TODO (will fill in as we collaboratively build [toadserver](https://github.com/eris-ltd/toadserver)). Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the eris/eris container.
 
 ## Goal 3: Test the Tool Against a Multitue of docker-engine APIs
 
@@ -31,7 +31,7 @@ Testing at this level is performed from the `tests/test.sh` script. This script 
 
 ## Goal 4: Test the Tool From a Multitude of Host Environments
 
-Currently hosts must be manually built. There is a rudimentary setup script (for Ubuntu) in `tests/host_provision.sh`. It could be fleshed out. Eventually this should be turned into one of the cloud_init happy yamls.
+Currently hosts must be manually built. There is a rudimentary setup script (for Ubuntu) in `tests/host_provision.sh`. It could be fleshed out. Eventually this should be turned into one of the cloud_init happy yamls. For now I have the machines built and all that needs to happen is to turn them on or off.
 
 # How To Use It
 
@@ -51,9 +51,11 @@ machine=eris-test-$swarm-$ver
 
 This convention makes it much easier to pass machine on or off instructions around the testing suite as necessary.
 
-When the test suite boots up (meaning the full `tests/test.sh` is ran), the suite will get the machine connections container, make sure that is accessible to the main portion of the test, which focuses on running the eris tool (step 3) tests against the definitive backends list (step 2) for that eris <-> host connection.
+When the test suite boots up (meaning the full `tests/test.sh` is ran), the suite will get the machine connections container, make sure that is accessible to the main portion of the test, which focuses on running the eris tool (step 3) tests against the definitive backends list (step 2) for that eris <-> host connection. On circle we do this via running the eris tests from within a container and then mounting docker's unix socket (we don't need it other than to start the eris/eris container).
 
-Circle takes care of this for ubuntu. But we still will have to figure out how to broaden this. This connection should be local to the machine, as we test the tool <-> docker connection in the next step.
+This takes of ubuntu host environment running the (step 3) tests against the (step 2) backends from within the eris/eris container. But we still will have to figure out how to broaden this -- probably with additional docker files like we have to do to build eris with docker 1.7 client.
+
+This connection should be local to the machine, as we test the tool <-> docker server in the next step.
 
 The test suite will turn on and off docker-machines as needed.
 
@@ -102,7 +104,6 @@ docker run --rm --entrypoint "/home/eris/test_tool.sh" -e MACHINE_NAME="eris-tes
 # ToDos
 
 * Figure out what breaks when OSX is 'local'
-* Figure out what to have circle report (relates to next)
 * Get the metrics on the array of hosts and api versions into a consumable form
 * Figure out the deployment paths for build artifacts
 * moar package level testing

@@ -142,6 +142,27 @@ func TestLogsService(t *testing.T) {
 	}
 }
 
+func TestExecService(t *testing.T) {
+	/*if os.Getenv("TEST_IN_CIRCLE") == "true" {
+		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
+		return
+	}*/
+
+	testStartService(t, servName)
+	defer testKillService(t, servName, true)
+
+	do := def.NowDo()
+	do.Name = servName
+	do.Interactive = false
+	do.Args = strings.Fields("ls -la /root/")
+	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
+	e := ExecService(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+}
+
 func TestUpdateService(t *testing.T) {
 	testStartService(t, servName)
 	defer testKillService(t, servName, true)
@@ -201,9 +222,49 @@ func TestKillRmService(t *testing.T) {
 	testNumbersExistAndRun(t, servName, 0, 0)
 }
 
+func TestImportService(t *testing.T) {
+	//	testStartService(t, "ipfs")
+	//	defer testKillService(t, "ipfs", true)
+	//XXX above functions paniced; this worked
+
+	do := def.NowDo()
+	do.Name = "ipfs"
+	do.Operations.ContainerNumber = 1
+	err := EnsureRunning(do)
+	if err != nil {
+		logger.Errorln(err)
+		fatal(t, err)
+	}
+
+	servName := "eth"
+	do.Name = servName
+	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
+
+	e := ImportService(do)
+	if e != nil {
+		logger.Errorln(e)
+		fatal(t, e)
+	}
+
+	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
+func TestExportService(t *testing.T) {
+	do := def.NowDo()
+	do.Name = "ipfs"
+	err := ExportService(do) //ExportService has EnsureRunning builtin
+	if err != nil {
+		logger.Errorln(err)
+		fatal(t, err)
+	}
+
+	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
 func TestNewService(t *testing.T) {
 	do := def.NowDo()
-	servName := "not-keys"
+	servName := "keys"
 	do.Name = servName
 	do.Args = []string{"eris/keys"}
 	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
@@ -223,27 +284,28 @@ func TestNewService(t *testing.T) {
 		logger.Errorln(e)
 		fatal(t, e)
 	}
-	defer testKillService(t, servName, true)
 
 	testExistAndRun(t, servName, 1, true, true)
 	testNumbersExistAndRun(t, servName, 1, 1)
+	testKillService(t, servName, true)
+	testExistAndRun(t, servName, 1, false, false)
 }
 
 func TestRenameService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "keys"
-	do.Args = []string{"eris/keys"}
-	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
-	if e := NewService(do); e != nil {
-		logger.Errorln(e)
-		fatal(t, nil)
-	}
+	// do := def.NowDo()
+	// do.Name = "keys"
+	// do.Args = []string{"eris/keys"}
+	// logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
+	// if e := NewService(do); e != nil {
+	// 	logger.Errorln(e)
+	// 	fatal(t, nil)
+	// }
 
 	testStartService(t, "keys")
-	defer testKillService(t, "keys", true)
+	testExistAndRun(t, "keys", 1, true, true)
+	testNumbersExistAndRun(t, "keys", 1, 1)
 
-	// log.SetLoggers(2, os.Stdout, os.Stderr)
-	do = def.NowDo()
+	do := def.NowDo()
 	do.Name = "keys"
 	do.NewName = "syek"
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
@@ -256,7 +318,6 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "syek", 1, true, true)
 	testExistAndRun(t, "keys", 1, false, false)
-
 	testNumbersExistAndRun(t, "syek", 1, 1)
 	testNumbersExistAndRun(t, "keys", 0, 0)
 
@@ -273,10 +334,11 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "keys", 1, true, true)
 	testExistAndRun(t, "syek", 1, false, false)
-
 	testNumbersExistAndRun(t, "syek", 0, 0)
 	testNumbersExistAndRun(t, "keys", 1, 1)
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
+
+	testKillService(t, "keys", true)
+	testExistAndRun(t, "keys", 1, false, false)
 }
 
 func TestCatService(t *testing.T) {
@@ -287,7 +349,7 @@ func TestCatService(t *testing.T) {
 	}
 
 	if do.Result != ini.DefaultIpfs2() {
-		fatal(t, fmt.Errorf("CatService on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
+		fatal(t, fmt.Errorf("Cat Service on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
 	}
 }
 
@@ -452,13 +514,17 @@ func testsInit() error {
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
-	ifExit(ini.Initialize(true, false))
+	do := def.NowDo()
+	do.Pull = true
+	do.Services = true
+	do.Actions = true
+	ifExit(ini.Initialize(do))
 
 	// set ipfs endpoint
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
 
 	// make sure ipfs not running
-	do := def.NowDo()
+	do = def.NowDo()
 	do.Quiet = true
 	logger.Debugln("Finding the running services.")
 	if err := ListRunning(do); err != nil {

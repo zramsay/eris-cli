@@ -91,6 +91,28 @@ func PrintLineByContainerID(containerID string) ([]string, error) {
 	return printLine(cont)
 }
 
+func PrintPortMappings(id string, ports []string) error {
+	cont, err := util.DockerClient.InspectContainer(id)
+	if err != nil {
+		return err
+	}
+	exposedPorts := cont.NetworkSettings.Ports
+
+	for _, p := range ports {
+		port := util.PortAndProtocol(p)
+		mappedPort, ok := exposedPorts[port]
+		if !ok {
+			return fmt.Errorf("%s is not an exposed port for container", port)
+		}
+		if len(ports) == 1 {
+			logger.Printf("%s\n", mappedPort[0].HostPort)
+		} else {
+			logger.Printf("%s:%s\n", mappedPort[0].HostPort, port)
+		}
+	}
+	return nil
+}
+
 // this function populates the listing functions
 func printLine(container *docker.Container) ([]string, error) {
 	tmp, err := reflections.GetField(container, "Name")
@@ -118,9 +140,10 @@ func printField(container interface{}, field string) error {
 	FieldCamel := strings.Join(lineSplit, ".")
 
 	f, _ := reflections.GetFieldKind(container, FieldCamel)
+	logger.Debugln("field type", f.String())
 	switch f.String() {
 	case "ptr":
-		// we don't recurse into to gain a bit more control... this function will be rarely used and doesn't have to be perfectly parseable.
+		//we don't recurse into to gain a bit more control... this function will be rarely used and doesn't have to be perfectly parseable.
 	case "map":
 		line = fmt.Sprintf("{{ range $key, $val := .%v }}{{ $key }}->{{ $val }}\n{{ end }}\n", FieldCamel)
 	case "slice":
@@ -184,6 +207,7 @@ func formulatePortsOutput(container *docker.Container) string {
 }
 
 func camelize(field string) string {
+	return snaker.SnakeToCamel(field)
 	if !startsUp(field) {
 		return snaker.SnakeToCamel(field)
 	}

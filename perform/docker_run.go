@@ -85,7 +85,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 
 	// start the container (either interactive or one off command)
 	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
-	if err := startContainer(id_main, &opts); err != nil {
+	if err = startContainer(id_main, &opts); err != nil {
 		return nil, err
 	}
 
@@ -98,13 +98,13 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	}
 
 	logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
-	if err := waitContainer(id_main); err != nil {
+	if err = waitContainer(id_main); err != nil {
 		return nil, err
 	}
 
 	if !interactive {
 		logger.Debugf("Getting logs for container =>\t%s\n", id_main)
-		if err := logsContainer(id_main, true, "all"); err != nil {
+		if err = logsContainer(id_main, true, "all"); err != nil {
 			return nil, err
 		}
 		// now lets get the logs out
@@ -147,7 +147,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	return nil, nil
 }
 
-func DockerRun(srv *def.Service, ops *def.Operation) error {
+func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	var id_main, id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
@@ -156,7 +156,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	_, running := ContainerRunning(ops)
 	if running {
 		logger.Infof("Service already Started. Skipping.\n\tService Name=>\t\t%s\n", srv.Name)
-		return nil
+		return "", nil
 	}
 
 	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
@@ -164,13 +164,13 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	// copy service config into docker client config
 	optsServ, err := configureServiceContainer(srv, ops)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// fix volume paths
 	srv.Volumes, err = fixDirs(srv.Volumes)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// setup data container
@@ -178,7 +178,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	if srv.AutoData {
 		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -194,7 +194,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err := createContainer(optsData)
 				if err != nil {
-					return err
+					return "", err
 				}
 				id_data = dataContCreated.ID
 			}
@@ -213,16 +213,15 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err = createContainer(optsData)
 				if err != nil {
-					return err
+					return "", err
 				}
 				id_data = dataContCreated.ID
 			}
 		}
 
-		logger.Infoln("Service container does not exist, creating.")
 		servContCreated, err := createContainer(optsServ)
 		if err != nil {
-			return err
+			return "", err
 		}
 		id_main = servContCreated.ID
 	}
@@ -238,7 +237,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	if err := startContainer(id_main, &optsServ); err != nil {
-		return err
+		return "", err
 	}
 
 	// XXX: setting Remove causes us to block here!
@@ -257,7 +256,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 
 		logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
 		if err := waitContainer(id_main); err != nil {
-			return err
+			return "", err
 		}
 
 		logger.Debugln("DockerRun. Waiting for logs to finish.")
@@ -266,14 +265,14 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 
 		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
 		if err := removeContainer(id_main); err != nil {
-			return err
+			return "", err
 		}
 
 	} else {
 		logger.Infof("Successfully started service =>\t%s\n", srv.Name)
 	}
 
-	return nil
+	return id_main, nil
 }
 
 func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive bool) error {
@@ -397,7 +396,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if wasRunning {
-		err := DockerRun(srv, ops)
+		_, err := DockerRun(srv, ops)
 		if err != nil {
 			return err
 		}
@@ -556,11 +555,13 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 	if len(containers) != 0 {
 		for _, container := range containers {
-			if r.MatchString(container.Names[0]) {
-				logger.Debugf("Container Found =>\t\t%s\n", name)
-				return container, true
-			} else {
-				logger.Debugf("No match =>\t\t\t%s:%s\n", name, container.Names[0])
+			for _, n := range container.Names {
+				if r.MatchString(n) {
+					logger.Debugf("Container Found =>\t\t%s\n", name)
+					return container, true
+				} else {
+					logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
+				}
 			}
 		}
 	}
@@ -577,7 +578,6 @@ func listContainers(all bool) []docker.APIContainers {
 		for _, c := range con.Names {
 			match := r.FindAllStringSubmatch(c, 1)
 			if len(match) != 0 {
-				logger.Debugf("Container Found =>\t\t%s\n", con.Names[0])
 				container = append(container, con)
 			}
 		}
@@ -589,9 +589,21 @@ func listContainers(all bool) []docker.APIContainers {
 func createContainer(opts docker.CreateContainerOptions) (*docker.Container, error) {
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
-		// TODO: better error handling
-		if strings.Contains(err.Error(), "no such image") {
-			fmt.Printf("Pulling image (%s) from repository. This could take a second.\n", opts.Config.Image)
+		if err == docker.ErrNoSuchImage {
+			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
+				var input string
+				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (Y/n) ", opts.Config.Image)
+				fmt.Scanln(&input)
+
+				if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+					logger.Debugf("\nUser assented to pull.\n")
+				} else {
+					logger.Debugf("\nUser refused to pull.\n")
+					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
+				}
+			} else {
+				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a second.\n", opts.Config.Image)
+			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
 			}
@@ -785,12 +797,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 
 	for _, port := range srv.Ports {
 		pS := strings.Split(port, ":")
-
-		pR := pS[len(pS)-1]
-		if len(strings.Split(pR, "/")) == 1 {
-			pR = pR + "/tcp"
-		}
-		pC := docker.Port(fmt.Sprintf("%s", pR))
+		pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
 
 		if len(pS) > 1 {
 			pH := docker.PortBinding{
@@ -903,7 +910,7 @@ func startExec(id string) error {
 	opts := docker.StartExecOptions{
 		Detach:       false,
 		Tty:          true,
-		InputStream:  os.Stdin,
+		InputStream:  nil,
 		OutputStream: os.Stdout,
 		ErrorStream:  os.Stderr,
 		RawTerminal:  true,

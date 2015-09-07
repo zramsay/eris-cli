@@ -2,7 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	"os"
+	// "os"
 	"path"
 	"strings"
 
@@ -46,8 +46,9 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 		return nil, err
 	}
 
-	if os.Getenv("TEST_IN_CIRCLE") != "true" { // this really should be docker version < 1.7...?
-		addDependencyVolumesAndLinks(srv)
+	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
+	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
+		addDependencyVolumesAndLinks(srv.Dependencies, srv.Service, srv.Operations)
 	}
 
 	ServiceFinalizeLoad(srv)
@@ -90,14 +91,15 @@ func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.Service
 func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	// If no name use image name
 	if srv.Name == "" {
+		logger.Debugf("Service definition has no name. ")
 		if srv.Service.Name != "" {
-			logger.Debugf("Service definition has no name.\nDefaulting to service name =>\t%s\n", srv.Service.Name)
+			logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
 			srv.Name = srv.Service.Name
 		} else {
 			if srv.Service.Image != "" {
 				srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
 				srv.Service.Name = srv.Name
-				logger.Debugf("Service definition has no name.\nDefaulting to image name =>\t%s\n", srv.Name)
+				logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
 			} else {
 				panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
 			}
@@ -127,21 +129,32 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	}
 }
 
-func ConnectToAService(srv *definitions.ServiceDefinition, dep string) {
-	// Automagically provide links to serviceDeps so they can easily
-	// find each other using Docker's automagical modifications to
-	// /etc/hosts
-	newLink := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":" + dep
-	srv.Service.Links = append(srv.Service.Links, newLink)
-
-	// Automagically mount VolumesFrom for serviceDeps so they can
-	// easily pass files back and forth
-	newVol := util.ServiceContainersName(dep, srv.Operations.ContainerNumber) + ":rw" // for now mounting as "rw"
-	srv.Service.VolumesFrom = append(srv.Service.VolumesFrom, newVol)
+func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
+	connectToAService(srv, ops, "service", name, internalName, link, mount)
 }
 
 // --------------------------------------------------------------------
 // helpers
+
+// links and mounts for service dependencies
+func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ, name, internalName string, link, mount bool) {
+	logger.Debugf("Connecting service %s to %s %s (%s) with link (%v) and volumes-from (%v)\n", srv.Name, typ, name, internalName, link, mount)
+	containerName := util.ContainersName(typ, name, ops.ContainerNumber)
+
+	if link {
+		newLink := containerName + ":" + internalName
+		srv.Links = append(srv.Links, newLink)
+	}
+
+	if mount {
+		// Automagically mount VolumesFrom for serviceDeps so they can
+		// easily pass files back and forth. note that this is opinionated
+		// and will mount as read-write. we can revisit this if read-only
+		// mounting required for specific use cases
+		newVol := containerName + ":rw"
+		srv.VolumesFrom = append(srv.VolumesFrom, newVol)
+	}
+}
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
 	return config.LoadViperConfig(path.Join(ServicesPath), servName, "service")
@@ -156,10 +169,18 @@ func checkImage(srv *definitions.Service) error {
 	return nil
 }
 
-func addDependencyVolumesAndLinks(srv *definitions.ServiceDefinition) {
-	if srv.ServiceDeps != nil {
-		for _, dep := range srv.ServiceDeps.Dependencies {
-			ConnectToAService(srv, dep)
+func addDependencyVolumesAndLinks(deps *definitions.Dependencies, srv *definitions.Service, ops *definitions.Operation) {
+	if deps != nil {
+		for i, dep := range deps.Services {
+			name, internalName, link, mount := util.ParseDependency(dep)
+			ConnectToAService(srv, ops, name, internalName, link, mount)
+			deps.Services[i] = name
+		}
+
+		for i, dep := range deps.Chains {
+			name, internalName, link, mount := util.ParseDependency(dep)
+			ConnectToAChain(srv, ops, name, internalName, link, mount)
+			deps.Chains[i] = name
 		}
 	}
 }

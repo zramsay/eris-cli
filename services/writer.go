@@ -57,9 +57,11 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		}
 		writer.Write([]byte("[service]\n"))
 		enc.Encode(serviceDef.Service)
-		writer.Write([]byte("[services]\n"))
-		if serviceDef.ServiceDeps != nil && len(serviceDef.ServiceDeps.Dependencies) != 0 {
-			enc.Encode(serviceDef.ServiceDeps)
+		writer.Write([]byte("[dependencies]\n"))
+		if serviceDef.Dependencies != nil {
+			if len(serviceDef.Dependencies.Services) != 0 || len(serviceDef.Dependencies.Chains) != 0 {
+				enc.Encode(serviceDef.Dependencies)
+			}
 		}
 		writer.Write([]byte("\n[maintainer]\n"))
 		enc.Encode(serviceDef.Maintainer)

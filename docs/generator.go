@@ -109,7 +109,7 @@ func GenerateSingle(cmd *cobra.Command, out *bytes.Buffer, linkHandler func(stri
 		spec = strings.Replace(spec, RENDER_DIR, "", 1)
 		title := strings.Replace(spec, "_", " ", -1)
 		title = strings.Replace(title, ".md", "", 1)
-		title = strings.Replace(title, "spec", "specification", 1)
+		// title = strings.Replace(title, "spec", "specification", 1)
 		title = strings.Title(title)
 		fmt.Fprintf(out, "* [%s](%s)\n", title, linkHandler(spec))
 	}
