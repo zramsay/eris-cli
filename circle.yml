@@ -26,7 +26,7 @@ deployment:
       - docker push eris/eris
       - docs/build.sh
 
-  develop:
-    branch: develop
-    commands:
-      - docker push eris/eris
+  # develop:
+  #   branch: develop
+  #   commands:
+  #     - docker push eris/eris
