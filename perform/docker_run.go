@@ -531,7 +531,7 @@ func pullImage(name string, writer io.Writer) error {
 		Repository:   name,
 		Registry:     reg,
 		Tag:          tag,
-		OutputStream: writer,
+		OutputStream: os.Stdout,
 	}
 
 	auth := docker.AuthConfiguration{}
