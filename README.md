@@ -75,7 +75,7 @@ At the current time, our test suite uses the concept of an "authentic backend". 
 Follow the link above for the official way to install Docker on your Linux box. After you install docker, then you will want to make sure that the user you are using to develop with `eris` has access to docker. When you are logged in as the user you can do this:
 
 ```
-sudo usermod -a -G $USER docker
+sudo usermod -a -G docker $USER
 ```
 
 That will add the current user to the docker group which will mean that docker will not need to be called from `sudo`. To check that this change has "taken":
