@@ -1,15 +1,12 @@
 package services
 
 import (
+	"errors"
 	"fmt"
-	"net"
-	"net/http"
 	"strings"
-	"time"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -22,44 +19,10 @@ func EnsureRunning(do *definitions.Do) error {
 		return err
 	}
 
-	var id string
 	if !IsServiceRunning(srv.Service, srv.Operations) {
-		name := strings.ToUpper(do.Name)
-		logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
-		if id, err = perform.DockerRun(srv.Service, srv.Operations); err != nil {
-			return err
-		}
-		// TODO: to do this right we have to get the bound port
-		// which might be randomly assigned!
-
-		cont, err := util.DockerClient.InspectContainer(id)
-		if err != nil {
-			return err
-		}
-		exposedPorts := cont.NetworkSettings.Ports
-
-	MAIN_LOOP:
-		for {
-			// give it a half second and then try all the ports
-			var endpoint string
-			time.Sleep(500 * time.Millisecond)
-			for _, ep := range exposedPorts {
-				for _, p := range ep {
-					endpoint = fmt.Sprintf("%s:%s", p.HostIP, p.HostPort)
-					if _, err := net.Dial("tcp", endpoint); err != nil {
-						time.Sleep(500 * time.Millisecond)
-					}
-				}
-				if _, err := http.Post(endpoint, "", nil); err != nil {
-					time.Sleep(500 * time.Millisecond)
-				}
-				if _, err := http.Get(endpoint); err != nil {
-					time.Sleep(500 * time.Millisecond)
-				}
-			}
-			time.Sleep(500 * time.Millisecond)
-			break MAIN_LOOP
-		}
+		errmsg := fmt.Sprintf("%s is not running, start it with `eris services start %s`\n", strings.ToUpper(do.Name), do.Name)
+		err := errors.New(errmsg)
+		return err
 
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))

@@ -7,6 +7,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/config"
@@ -121,6 +122,12 @@ func testsInit() error {
 	f, err := os.Create(file)
 	ifExit(err)
 	f.Write([]byte(content))
+
+	do1 := definitions.NowDo()
+	do1.Args = []string{"ipfs"}
+	err = services.StartService(do1)
+	time.Sleep(3 * time.Second)
+	ifExit(err)
 
 	return nil
 }

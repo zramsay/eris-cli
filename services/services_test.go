@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -223,25 +224,32 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestImportService(t *testing.T) {
-	//	testStartService(t, "ipfs")
+	testStartService(t, "ipfs")
 	//	defer testKillService(t, "ipfs", true)
 	//XXX above functions paniced; this worked
+	/*
+		do.Operations.ContainerNumber = 1
+		err := EnsureRunning(do)
+		if err != nil {
+			logger.Errorln(err)
+			fatal(t, err)
+		}*/
 
 	do := def.NowDo()
-	do.Name = "ipfs"
-	do.Operations.ContainerNumber = 1
-	err := EnsureRunning(do)
-	if err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
+	do.Args = []string{"ipfs"}
+	e := StartService(do)
+	if e != nil {
+		logger.Infof("Error starting service =>\t%v\n", e)
+		fatal(t, e)
 	}
+	time.Sleep(3 * time.Second)
 
 	servName := "eth"
 	do.Name = servName
 	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
 	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
 
-	e := ImportService(do)
+	e = ImportService(do)
 	if e != nil {
 		logger.Errorln(e)
 		fatal(t, e)
