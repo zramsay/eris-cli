@@ -207,6 +207,24 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
+	//check in given path else check in config
+	if do.Path != "" {
+		src, err := os.Stat(do.Path)
+		if err != nil {
+			logger.Printf("path: %s does not exist, trying $HOME/.eris/blockchains/config/%s\n", do.Path, do.Name)
+			do.Path, err = util.PathChecker("chain", do.Name)
+			if err != nil {
+				return err
+			}
+		} else if !src.IsDir() {
+			logger.Printf("path: %s is not a directory, trying $HOME/.eris/blockchains/config/%s\n", do.Path, do.Name)
+			do.Path, err = util.PathChecker("chain", do.Name)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// ensure/create data container
 	if !data.IsKnown(containerName) {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
