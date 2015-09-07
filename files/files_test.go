@@ -126,7 +126,7 @@ func testsInit() error {
 	do1 := definitions.NowDo()
 	do1.Args = []string{"ipfs"}
 	err = services.StartService(do1)
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 	ifExit(err)
 
 	return nil

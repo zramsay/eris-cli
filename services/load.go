@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -23,6 +24,7 @@ func EnsureRunning(do *definitions.Do) error {
 		errmsg := fmt.Sprintf("%s is not running, start it with `eris services start %s`\n", strings.ToUpper(do.Name), do.Name)
 		err := errors.New(errmsg)
 		return err
+		os.Exit(1)
 
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))

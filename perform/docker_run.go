@@ -147,7 +147,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	return nil, nil
 }
 
-func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
+func DockerRun(srv *def.Service, ops *def.Operation) error {
 	var id_main, id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
@@ -156,7 +156,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	_, running := ContainerRunning(ops)
 	if running {
 		logger.Infof("Service already Started. Skipping.\n\tService Name=>\t\t%s\n", srv.Name)
-		return "", nil
+		return nil
 	}
 
 	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
@@ -164,13 +164,13 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	// copy service config into docker client config
 	optsServ, err := configureServiceContainer(srv, ops)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// fix volume paths
 	srv.Volumes, err = fixDirs(srv.Volumes)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// setup data container
@@ -178,7 +178,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	if srv.AutoData {
 		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
@@ -194,7 +194,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err := createContainer(optsData)
 				if err != nil {
-					return "", err
+					return err
 				}
 				id_data = dataContCreated.ID
 			}
@@ -213,7 +213,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err = createContainer(optsData)
 				if err != nil {
-					return "", err
+					return err
 				}
 				id_data = dataContCreated.ID
 			}
@@ -221,7 +221,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		servContCreated, err := createContainer(optsServ)
 		if err != nil {
-			return "", err
+			return err
 		}
 		id_main = servContCreated.ID
 	}
@@ -237,7 +237,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	if err := startContainer(id_main, &optsServ); err != nil {
-		return "", err
+		return err
 	}
 
 	// XXX: setting Remove causes us to block here!
@@ -256,7 +256,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
 		if err := waitContainer(id_main); err != nil {
-			return "", err
+			return err
 		}
 
 		logger.Debugln("DockerRun. Waiting for logs to finish.")
@@ -265,14 +265,14 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
 		if err := removeContainer(id_main); err != nil {
-			return "", err
+			return err
 		}
 
 	} else {
 		logger.Infof("Successfully started service =>\t%s\n", srv.Name)
 	}
 
-	return id_main, nil
+	return nil
 }
 
 func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive bool) error {
@@ -396,7 +396,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if wasRunning {
-		_, err := DockerRun(srv, ops)
+		err := DockerRun(srv, ops)
 		if err != nil {
 			return err
 		}
