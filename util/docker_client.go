@@ -27,6 +27,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" { // this means we aren't gonna use docker-machine
 			endpoint := "unix:///var/run/docker.sock"
 
+			logger.Debugf("Checking The Linux Docker Socket =>%s\n", endpoint)
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
@@ -34,7 +35,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				os.Exit(1)
 			}
 
-			logger.Debugln("Connecting to the Docker Client via:", endpoint)
+			logger.Debugf("Connecting to the Docker Client via =>\t%s\n", endpoint)
 			DockerClient, err = docker.NewClient(endpoint)
 			if err != nil {
 				logger.Printf("%v\n", mustInstallError())
@@ -42,18 +43,21 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			}
 
 		} else {
+			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH"))
+			logger.Debugf("Checking Details via Docker-Machine =>\t%s\n", machName)
 			dockerHost, dockerCertPath, err = getMachineDeets(machName)
 			if err != nil {
 				logger.Printf("Error getting Docker-Machine Details for connection over TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err)
 				os.Exit(1)
 			}
 
+			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
 			if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
 				logger.Printf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err)
 				os.Exit(1)
 			}
+			logger.Debugln("Successfully connected to Docker daemon.")
 
-			logger.Debugln("Successfully connected to Docker daemon")
 			logger.Debugln("Setting IPFS Host")
 			setIPFSHostViaDockerHost(dockerHost)
 		}
@@ -61,6 +65,8 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		logger.Debugln("Successfully connected to Docker daemon.")
 
 	} else {
+		logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH"))
+		logger.Debugf("Checking Details via Docker-Machine =>\t%s\n", machName)
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
 
 		if err != nil {
@@ -79,12 +85,13 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 		}
 
+		logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
 			logger.Printf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err)
 			os.Exit(1)
 		}
+		logger.Debugln("Successfully connected to Docker daemon.")
 
-		logger.Debugln("Successfully connected to Docker daemon")
 		logger.Debugln("Setting IPFS Host")
 		setIPFSHostViaDockerHost(dockerHost)
 	}
@@ -289,7 +296,7 @@ func mustInstallError() error {
 
 	switch runtime.GOOS {
 	case "linux":
-		return fmt.Errorf("%s%s\nDo you have docker installed and running?\nIf not please [sudo services start docker] on Ubuntu.\n", errBase, dInst)
+		return fmt.Errorf("%s%s\nDo you have docker installed and running?\nIf not please [sudo services start docker] on Ubuntu.\nAlso check that your user is in the docker group (or rerun with sudo).\nTo fix this please run [sudo usermod -a -G docker $USER] on Ubuntu with your user substituted.", errBase, dInst)
 	case "darwin":
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "mac/"))
 	case "windows":
