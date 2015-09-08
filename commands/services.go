@@ -249,7 +249,7 @@ Command will cat local service definition file.`,
 
 func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
-	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
+	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 
