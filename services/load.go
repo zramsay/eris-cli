@@ -2,8 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -11,9 +9,11 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-// EnsureRunning checks if a service is running and starts it if not
-// TODO: ping all exposed ports until at least one is available (issue #149)
-// NOTE: does not accept ENV vars
+var (
+	ErrServiceNotRunning = errors.New("The requested service is not running, start it with `eris services start [serviceName]`")
+)
+
+//checks that a service is running. if not, tells user to start it
 func EnsureRunning(do *definitions.Do) error {
 	srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -21,11 +21,7 @@ func EnsureRunning(do *definitions.Do) error {
 	}
 
 	if !IsServiceRunning(srv.Service, srv.Operations) {
-		errmsg := fmt.Sprintf("%s is not running, start it with `eris services start %s`\n", strings.ToUpper(do.Name), do.Name)
-		err := errors.New(errmsg)
-		return err
-		os.Exit(1)
-
+		return ErrServiceNotRunning
 	} else {
 		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
 	}
