@@ -207,18 +207,12 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
-	//check in given path else check in config
+	//if given path does not exist, see if its a reference to something in ~/.eris/blockchains/config/chainName
 	if do.Path != "" {
 		src, err := os.Stat(do.Path)
-		if err != nil {
-			logger.Printf("path: %s does not exist, trying $HOME/.eris/blockchains/config/%s\n", do.Path, do.Name)
-			do.Path, err = util.PathChecker("chain", do.Name)
-			if err != nil {
-				return err
-			}
-		} else if !src.IsDir() {
-			logger.Printf("path: %s is not a directory, trying $HOME/.eris/blockchains/config/%s\n", do.Path, do.Name)
-			do.Path, err = util.PathChecker("chain", do.Name)
+		if err != nil || !src.IsDir() {
+			logger.Infof("path: %s does not exist or is not a directory, trying $HOME/.eris/blockchains/config/%s\n", do.Path, do.Path)
+			do.Path, err = util.PathChecker(do.Path)
 			if err != nil {
 				return err
 			}
