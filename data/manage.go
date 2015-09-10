@@ -86,7 +86,8 @@ func RmData(do *definitions.Do) (err error) {
 }
 
 func ListKnown(do *definitions.Do) error {
-	do.Result = strings.Join(util.DataContainerNames(), "\n")
+	do.Args = util.DataContainerNames()
+	do.Result = strings.Join(do.Args, "\n")
 	return nil
 }
 

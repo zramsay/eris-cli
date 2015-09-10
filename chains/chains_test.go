@@ -189,7 +189,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
-	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -207,7 +207,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter = new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
-	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -593,7 +593,7 @@ func runContainer(t *testing.T, name string, args []string) []byte {
 	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
-	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}

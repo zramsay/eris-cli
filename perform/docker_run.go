@@ -56,9 +56,9 @@ func DockerCreateDataContainer(srvName string, containerNumber int) error {
 // create a container with volumes-from the srvName data container
 // and either attach interactively or execute a command
 // container should be destroyed on exit
-func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) (result []byte, err error) {
+func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) (result []byte, err error) {
 	logger.Infof("DockerRunVolumesFromContnr =>\t%s:%v\n", volumesFrom, args)
-	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
+	opts := configureVolumesFromContainer(volumesFrom, interactive, args, service)
 	cont, err := createContainer(opts)
 	if err != nil {
 		return nil, err
@@ -845,7 +845,8 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	return opts, nil
 }
 
-func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string) docker.CreateContainerOptions {
+func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) docker.CreateContainerOptions {
+	// set the defaults
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + volumesFrom,
 		Config: &docker.Config{
@@ -867,6 +868,16 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
 		opts.Config.Cmd = args
+	}
+
+	// overwrite some things
+	if service != nil {
+		opts.Config.NetworkDisabled = false
+		opts.Config.Image = service.Image
+		opts.Config.User = service.User
+		opts.Config.Env = service.Environment
+		opts.HostConfig.Links = service.Links
+		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
 	return opts
