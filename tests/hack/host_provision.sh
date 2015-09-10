@@ -15,7 +15,7 @@
 
 default_docker="1.8.1"
 
-read -p "This script only works on Ubuntu (and does no checking). It may work on some debians. Do you wish to proceed? (Y/n) " -n 1 -r
+read -p "This script only works on Ubuntu (and does no checking). It may work on some debians. Do you wish to proceed? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
@@ -26,7 +26,7 @@ echo "You confirmed you are on Ubuntu (or waived compatibility)."
 
 if [[ "$USER" != "root" ]]
 then
-  read -p "You are not the root user. Did you run this as (sudo). (Y/n) " -n 1 -r
+  read -p "You are not the root user. Did you run this as (sudo). (y/n) " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]
   then
@@ -42,7 +42,7 @@ then
   export DOCKER_VERSION=$(hostname | cut -d'-' -f4)
   if [[ "$DOCKER_VERSION" == `hostname` ]]
   then
-    read -p "I cannot find the Docker Version to Install. You can rerun me with \$DOCKER_VERSION set or use the defaults. Would you like the defaults? (Y/n) " -n 1 -r
+    read -p "I cannot find the Docker Version to Install. You can rerun me with \$DOCKER_VERSION set or use the defaults. Would you like the defaults? (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
@@ -89,7 +89,7 @@ echo ""
 echo ""
 if [[ "$USER" != "root" ]]
 then
-  read -p "Would you like to add this user to the docker group? (Y/n) " -n 1 -r
+  read -p "Would you like to add this user to the docker group? (y/n) " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]
   then

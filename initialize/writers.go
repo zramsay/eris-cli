@@ -84,7 +84,7 @@ func pullRepo(location string, alreadyAsked bool) error {
 func askToPull(location string) bool {
 	var input string
 
-	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (Y/n): ", location)
+	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (y/n): ", location)
 	fmt.Scanln(&input)
 
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {

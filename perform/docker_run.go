@@ -592,7 +592,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 		if err == docker.ErrNoSuchImage {
 			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
 				var input string
-				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (Y/n) ", opts.Config.Image)
+				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (y/n) ", opts.Config.Image)
 				fmt.Scanln(&input)
 
 				if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {

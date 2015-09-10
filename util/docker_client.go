@@ -116,7 +116,7 @@ func CheckDockerClient() error {
 
 		if _, _, err := getMachineDeets("default"); err == nil {
 
-			fmt.Print("A docker-machine virtual machine exists, which eris can use.\nHowever, our marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (Y/n): ")
+			fmt.Print("A docker-machine virtual machine exists, which eris can use.\nHowever, our marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
@@ -135,7 +135,7 @@ func CheckDockerClient() error {
 
 		} else {
 
-			fmt.Print("The marmots could not find a docker-machine virtual machine they could connect to.\nOur marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (Y/n): ")
+			fmt.Print("The marmots could not find a docker-machine virtual machine they could connect to.\nOur marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {

@@ -26,7 +26,7 @@ start=`pwd`
 # -----------------------------------------------------------------
 # Prerequisites
 
-read -p "Have you done the [git tag -a v$version] and filled out the changelog yet? (Y/n) " -n 1 -r
+read -p "Have you done the [git tag -a v$version] and filled out the changelog yet? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
