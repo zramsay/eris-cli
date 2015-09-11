@@ -182,7 +182,6 @@ then
   docker cp $machine_definitions:/home/eris/.docker $HOME &>/dev/null
 else
   docker run --name $machine_definitions quay.io/eris/test_machines &>/dev/null
-
 fi
 
 echo ""
