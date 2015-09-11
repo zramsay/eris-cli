@@ -8,7 +8,7 @@ import (
 )
 
 func PathChecker(name string) (string, error) {
-	pathS := filepath.Join(BlockchainsPath, "config", name)
+	pathS := filepath.Join(BlockchainsPath, name)
 	src, err := os.Stat(pathS)
 	if err != nil || !src.IsDir() {
 		logger.Infof("path: %s does not exist or is not a directory, please pass in a valid path or ensure a dir was created and has the correct files in it\n", pathS)
