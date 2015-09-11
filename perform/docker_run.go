@@ -836,7 +836,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 			AttachStderr:    true,
 			AttachStdin:     true,
 			Tty:             true,
-			NetworkDisabled: true,
+			NetworkDisabled: false,
 		},
 		HostConfig: &docker.HostConfig{
 			VolumesFrom: []string{volumesFrom},

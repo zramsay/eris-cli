@@ -23,7 +23,7 @@ branch=${branch/-/_}
 #   installs by default on Linux"
 declare -a docker_versions16=( "1.6.2" )
 declare -a docker_versions17=( "1.7.1" )
-declare -a docker_versions18=( "1.8.0" "1.8.1" )
+declare -a docker_versions18=( "1.8.0" "1.8.2" "1.8.1" )
 declare -a machine_results=()
 # declare -a docker_versions18=( "1.8.1" )
 
