@@ -534,6 +534,10 @@ func pullImage(name string, writer io.Writer) error {
 		OutputStream: os.Stdout,
 	}
 
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+		opts.OutputStream = nil
+	}
+
 	auth := docker.AuthConfiguration{}
 
 	err := util.DockerClient.PullImage(opts, auth)
