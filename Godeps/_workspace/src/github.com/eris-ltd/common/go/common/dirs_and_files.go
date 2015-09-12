@@ -160,18 +160,21 @@ func Copy(src, dst string) error {
 		return err
 	}
 	if f.IsDir() {
-		tmpDir, err := ioutil.TempDir(os.TempDir(), "golang-copy")
+		tmpDir, err := ioutil.TempDir(os.TempDir(), "eris_copy")
 		if err != nil {
 			return err
 		}
 		if err := copyDir(src, tmpDir); err != nil {
 			return err
 		}
-		fi, err := os.Stat(src)
-		if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		if err := copyDir(tmpDir, dst); err != nil {
 			return err
 		}
-		return os.Rename(tmpDir, dst)
+		// fi, err := os.Stat(src)
+		// if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		// 	return err
+		// }
+		// return os.Rename(tmpDir, dst)
 	}
 	return copyFile(src, dst)
 }

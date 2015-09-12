@@ -217,6 +217,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 				return err
 			}
 		}
+	} else {
+		do.Path, err = util.PathChecker("default")
+		if err != nil {
+			return err
+		}
 	}
 
 	// ensure/create data container
