@@ -16,6 +16,11 @@
 			"Rev": "056c9bc7be7190eaa7715723883caffa5f8fa3e4"
 		},
 		{
+			"ImportPath": "github.com/cpuguy83/go-md2man/md2man",
+			"Comment": "v1.0.4",
+			"Rev": "71acacd42f85e5e82f70a55327789582a5200a90"
+		},
+		{
 			"ImportPath": "github.com/ebuchman/go-shell-pipes",
 			"Rev": "2b9ded3b4c5b2b156a970522c2a820ab9afe628c"
 		},
@@ -71,8 +76,17 @@
 			"Rev": "bc39950e081b457853031334b3c8b95cdfe428ba"
 		},
 		{
+			"ImportPath": "github.com/russross/blackfriday",
+			"Comment": "v1.2-80-g8cec3a8",
+			"Rev": "8cec3a854e68dba10faabbe31c089abf4a3e57a6"
+		},
+		{
 			"ImportPath": "github.com/serenize/snaker",
 			"Rev": "d88cc11617e4f179fa2c821a60908d5fabd7bdad"
+		},
+		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "244f5ac324cb97e1987ef901a0081a77bfd8e845"
 		},
 		{
 			"ImportPath": "github.com/spf13/cast",
@@ -80,7 +94,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/cobra",
-			"Rev": "db0518444643a7b170abb78164bbeaf5a2bb816f"
+			"Rev": "6d7031177028ad8c5b4b428ac9a2288fbc1c0649"
 		},
 		{
 			"ImportPath": "github.com/spf13/jwalterweatherman",
@@ -88,7 +102,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
-			"Rev": "112aaa578dfdd0e913663b05153be974bd72497a"
+			"Rev": "f735fdff4ffb34299727eb2e3c9abab588742d41"
 		},
 		{
 			"ImportPath": "github.com/spf13/viper",

@@ -58,7 +58,7 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
 
   # The second series of tests expects ipfs to not be running
-  eris services stop ipfs -rx
+  eris services stop ipfs -frx
   unset ERIS_IPFS_HOST
   if [ $? -ne 0 ]; then return 1; fi
 
@@ -127,7 +127,7 @@ else
   echo ""
   echo "Starting Machine."
   docker-machine start $machine &> /dev/null
-  until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 5 ]
+  until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
   do
      ping_times=$[$ping_times +1]
      sleep 3
@@ -137,15 +137,16 @@ else
     echo "Could not start the machine. Exiting this test."
     exit 1
   fi
+  sleep 5
   echo "Machine Started."
   echo "Connecting to Machine."
-  eval "$(docker-machine env $machine)" &> /dev/null
+  eval "$(docker-machine env $machine)" &>/dev/null
   echo "Connected to Machine."
   echo ""
   echo "Clearing images and containers for tests."
   set +e
-  docker rm $(docker ps -a -q) &> /dev/null
-  docker rmi $(docker images -q) &> /dev/null
+  docker rm $(docker ps -a -q) &>/dev/null
+  docker rmi $(docker images -q) &>/dev/null
   set -e
   echo ""
 fi

@@ -2,16 +2,7 @@
 #
 # how to use......
 # for reference only. it takes forever to provision these
-#
-# docker-machine create --driver digitalocean \
-#   --digitalocean-access-token $DO_TOKEN \
-#   --digitalocean-region ams3 \
-#   --engine-env DOCKER_VERSION=1.8.1 \
-#   eris-test-ams3-1.8.1
-#
-# docker-machine scp host_provision.sh eris-test-ams3-1.8.1:~
-# docker-machine ssh eris-test-ams3-1.8.1
-# ./host_provision.sh && exit
+
 
 default_docker="1.8.1"
 
@@ -56,14 +47,14 @@ echo ""
 echo ""
 
 # very dumb pre 1.7 install
-if [[ "$DOCKER_VERSION" == "1.6.2" ]]
+if [[ "$DOCKER_VERSION" != 1.8* ]]
 then
   echo "You're docker version is seriously old. Please consider upgrading."
   echo ""
   sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
   sudo sh -c "echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
   sudo apt-get update -qq
-  sudo apt-get install -qqy lxc-docker-1.6.2
+  sudo apt-get install -qqy lxc-docker-$DOCKER_VERSION
   echo ""
   echo "Docker installed"
 else

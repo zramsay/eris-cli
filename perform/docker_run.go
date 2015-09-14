@@ -407,7 +407,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infof("Getting Logs for Service ID =>\t%s\n", service.ID)
+		logger.Infof("Getting Logs for Service ID =>\t%s:%v:%v\n", service.ID, follow, tail)
 		if err := logsContainer(service.ID, follow, tail); err != nil {
 			return err
 		}
@@ -670,20 +670,21 @@ func logsContainer(id string, follow bool, tail string) error {
 
 	opts := docker.LogsOptions{
 		Container:    id,
-		Follow:       follow,
-		Tail:         tail,
-		Stdout:       true,
-		Stderr:       true,
-		Timestamps:   false,
 		OutputStream: writer,
 		ErrorStream:  eWriter,
-		RawTerminal:  true, // Usually true when the container contains a TTY.
+		Follow:       follow,
+		Stdout:       true,
+		Stderr:       true,
+		Since:        0,
+		Timestamps:   false,
+		Tail:         tail,
+
+		RawTerminal: true, // Usually true when the container contains a TTY.
 	}
 
 	if err := util.DockerClient.Logs(opts); err != nil {
 		return err
 	}
-
 	return nil
 }
 

@@ -729,6 +729,21 @@ func TestDeprecatedFlagInDocs(t *testing.T) {
 	}
 }
 
+func TestDeprecatedFlagShorthandInDocs(t *testing.T) {
+	f := NewFlagSet("bob", ContinueOnError)
+	name := "noshorthandflag"
+	f.BoolP(name, "n", true, "always true")
+	f.MarkShorthandDeprecated("noshorthandflag", fmt.Sprintf("use --%s instead", name))
+
+	out := new(bytes.Buffer)
+	f.SetOutput(out)
+	f.PrintDefaults()
+
+	if strings.Contains(out.String(), "-n,") {
+		t.Errorf("found deprecated flag shorthand in usage!")
+	}
+}
+
 func parseReturnStderr(t *testing.T, f *FlagSet, args []string) (string, error) {
 	oldStderr := os.Stderr
 	r, w, _ := os.Pipe()
@@ -768,6 +783,24 @@ func TestDeprecatedFlagUsage(t *testing.T) {
 	}
 }
 
+func TestDeprecatedFlagShorthandUsage(t *testing.T) {
+	f := NewFlagSet("bob", ContinueOnError)
+	name := "noshorthandflag"
+	f.BoolP(name, "n", true, "always true")
+	usageMsg := fmt.Sprintf("use --%s instead", name)
+	f.MarkShorthandDeprecated(name, usageMsg)
+
+	args := []string{"-n"}
+	out, err := parseReturnStderr(t, f, args)
+	if err != nil {
+		t.Fatal("expected no error; got ", err)
+	}
+
+	if !strings.Contains(out, usageMsg) {
+		t.Errorf("usageMsg not printed when using a deprecated flag!")
+	}
+}
+
 func TestDeprecatedFlagUsageNormalized(t *testing.T) {
 	f := NewFlagSet("bob", ContinueOnError)
 	f.Bool("bad-double_flag", true, "always true")
@@ -796,5 +829,37 @@ func TestMultipleNormalizeFlagNameInvocations(t *testing.T) {
 
 	if normalizeFlagNameInvocations != 1 {
 		t.Fatal("Expected normalizeFlagNameInvocations to be 1; got ", normalizeFlagNameInvocations)
+	}
+}
+
+//
+func TestHiddenFlagInUsage(t *testing.T) {
+	f := NewFlagSet("bob", ContinueOnError)
+	f.Bool("secretFlag", true, "shhh")
+	f.MarkHidden("secretFlag")
+
+	out := new(bytes.Buffer)
+	f.SetOutput(out)
+	f.PrintDefaults()
+
+	if strings.Contains(out.String(), "secretFlag") {
+		t.Errorf("found hidden flag in usage!")
+	}
+}
+
+//
+func TestHiddenFlagUsage(t *testing.T) {
+	f := NewFlagSet("bob", ContinueOnError)
+	f.Bool("secretFlag", true, "shhh")
+	f.MarkHidden("secretFlag")
+
+	args := []string{"--secretFlag"}
+	out, err := parseReturnStderr(t, f, args)
+	if err != nil {
+		t.Fatal("expected no error; got ", err)
+	}
+
+	if strings.Contains(out, "shhh") {
+		t.Errorf("usage message printed when using a hidden flag!")
 	}
 }

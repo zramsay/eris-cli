@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 
 	logLevel = 0
-	//logLevel = 1
+	// logLevel = 1
 	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
@@ -134,7 +134,7 @@ func TestLogsService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Follow = false
-	do.Tail = "all"
+	do.Tail = "5"
 	logger.Debugf("Inspect logs (via tests) =>\t%s:%v\n", servName, do.Tail)
 	e := LogsService(do)
 	if e != nil {
