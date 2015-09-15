@@ -4,6 +4,7 @@ set -e
 # ---------------------------------------------------------------------------
 # Defaults
 
+start=`pwd`
 base=github.com/eris-ltd/eris-cli
 repo=$GOPATH/src/$base
 ver=$APIVERSION
