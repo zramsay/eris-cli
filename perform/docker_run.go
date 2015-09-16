@@ -81,6 +81,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		if err2 := removeContainer(id_main); err2 != nil {
 			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 		}
+		logger.Infof("Container removed =>\t\t%s\n", id_main)
 	}()
 
 	// start the container (either interactive or one off command)
@@ -121,7 +122,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 			go func() {
 				// TODO: this routine will hang forever if  ReadAll doesn't complete
 				// need to be smarter
-				logger.Debugln("attempting to read log reader")
+				logger.Debugln("Attempting to read log reader.")
 				b, err = ioutil.ReadAll(reader)
 				done <- struct{}{}
 			}()

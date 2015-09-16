@@ -212,7 +212,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		src, err := os.Stat(do.Path)
 		if err != nil || !src.IsDir() {
 			logger.Infof("path: %s does not exist or is not a directory, trying $HOME/.eris/blockchains/%s\n", do.Path, do.Path)
-			do.Path, err = util.PathChecker(do.Path)
+			do.Path, err = util.ChainsPathChecker(do.Path)
 			if err != nil {
 				return err
 			}
@@ -284,6 +284,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
 	}
 
+	logger.Infof("Copying chain files into the correct location.\n")
 	if err := copyFiles(dst, filesToCopy); err != nil {
 		return err
 	}
@@ -414,7 +415,8 @@ func copyFiles(dst string, files []stringPair) error {
 		if f.key != "" {
 			logger.Debugf("\tCopying files =>\t%s:%s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
-				return err
+				logger.Debugf("Error copying files =>\t\t%v\n", err)
+				// return err
 			}
 		}
 	}

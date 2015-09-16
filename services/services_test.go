@@ -242,7 +242,7 @@ func TestImportService(t *testing.T) {
 		logger.Infof("Error starting service =>\t%v\n", e)
 		fatal(t, e)
 	}
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	servName := "eth"
 	do.Name = servName

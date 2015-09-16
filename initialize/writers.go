@@ -110,7 +110,7 @@ func dropDefaults() error {
 }
 
 func dropChainDefaults() error {
-	defChainDir := filepath.Join(common.BlockchainsPath, "config", "default")
+	defChainDir := filepath.Join(common.BlockchainsPath, "default")
 	if err := writeDefaultFile(common.BlockchainsPath, "default.toml", DefChainService); err != nil {
 		return fmt.Errorf("Cannot add default chain definition: %s.\n", err)
 	}

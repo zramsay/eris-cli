@@ -7,7 +7,7 @@ import (
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-func PathChecker(name string) (string, error) {
+func ChainsPathChecker(name string) (string, error) {
 	pathS := filepath.Join(BlockchainsPath, name)
 	src, err := os.Stat(pathS)
 	if err != nil || !src.IsDir() {

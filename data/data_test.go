@@ -196,6 +196,7 @@ func testsInit() error {
 	do.Pull = true
 	do.Services = true
 	do.Actions = true
+	do.Yes = true
 	ifExit(ini.Initialize(do))
 
 	return nil
