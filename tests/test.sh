@@ -176,12 +176,13 @@ echo ""
 echo "Getting machine definition files sorted."
 if [ "$circle" = true ]
 then
-  docker pull erisindustries/test_machines &>/dev/null
-  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+  docker pull quay.io/eris/test_machines &>/dev/null
+  docker run --name $machine_definitions quay.io/eris/test_machines &>/dev/null
   rm -rf .docker &>/dev/null
   docker cp $machine_definitions:/home/eris/.docker $HOME &>/dev/null
 else
-  docker run --name $machine_definitions erisindustries/test_machines &>/dev/null
+  docker run --name $machine_definitions quay.io/eris/test_machines &>/dev/null
+
 fi
 
 echo ""
