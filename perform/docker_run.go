@@ -555,18 +555,24 @@ func pullImage(name string, writer io.Writer) error {
 func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
 	containers := listContainers(all)
+	logger.Debugln("ALL:", all)
+	for _, c := range containers {
+		logger.Debugln("\tcontainer:", c.Image, c.Names)
+	}
 
 	r := regexp.MustCompile(name)
 
 	if len(containers) != 0 {
 		for _, container := range containers {
 			for _, n := range container.Names {
-				if r.MatchString(n) {
-					logger.Debugf("Container Found =>\t\t%s\n", name)
-					return container, true
-				} else {
-					logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
+				// we need to filter out linked containers by only getting names with no "/"
+				if spl := strings.Split(strings.Trim(n, "/"), "/"); len(spl) == 1 {
+					if r.MatchString(n) {
+						logger.Debugf("Container Found =>\t\t%s\n", name)
+						return container, true
+					}
 				}
+				logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 			}
 		}
 	}
@@ -576,7 +582,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 func listContainers(all bool) []docker.APIContainers {
 	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
+	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`) // NOTE: this will match the linked containers!
 
 	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
 	for _, con := range contns {
