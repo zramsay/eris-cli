@@ -827,6 +827,13 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 			opts.Config.ExposedPorts[pC] = struct{}{}
 			opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
 		} else {
+			if !ops.PublishAllPorts {
+				// if -p not given, we use the default port
+				pH := docker.PortBinding{
+					HostPort: pS[0],
+				}
+				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
+			}
 			opts.Config.ExposedPorts[pC] = struct{}{}
 		}
 	}
