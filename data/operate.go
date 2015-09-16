@@ -18,8 +18,25 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
+//var serv *definitions.Service
+
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+
+		//need version to pick API or hack below
+		dVer, err := util.DockerClientVersion()
+		if err != nil {
+			return err
+		}
+
+		//need service.ID for PutContainerArchive()
+		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
+		service, exists := perform.ContainerExists(srv.Operations)
+
+		if !exists {
+			return fmt.Errorf("There is no data container for that service.")
+		}
+
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		importPath := filepath.Join(DataContainersPath, do.Name)
 
@@ -33,20 +50,47 @@ func ImportData(do *definitions.Do) error {
 		//         start a container with its Stdin open, connect to an io.Writer
 		//         connect them up with io.Pipe
 		//         this will free us from any quirks that the cli has
-		if do.Path != "" {
-			do.Path = do.Path
-		} else {
-			do.Path = "/home/eris/.eris"
+
+		// do.Path is the destination
+		// if nothing is given we assume
+		if do.Path == "" {
+			do.Path = ErisContainerRoot
 		}
 
 		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Path)
-		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
-		_, err := pipes.RunString(cmd)
-		if err != nil {
-			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
-			_, e2 := pipes.RunString(cmd)
-			if e2 != nil {
-				return fmt.Errorf("Could not import the data container.\nTried with docker --rm =>\t%v\nTried without docker --rm =>\t%v", err, e2)
+		if dVer >= 1.8 {
+			reader, err := util.Tar(importPath, 0)
+			if err != nil {
+				return err
+			}
+			defer reader.Close()
+
+			opts := docker.UploadToContainerOptions{
+				InputStream:          reader,
+				Path:                 do.Path,
+				NoOverwriteDirNonDir: false,
+			}
+
+			logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)
+			logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
+			if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
+				return err
+			}
+
+			chown := []string{"chown", "--recursive", "eris:", do.Path}
+			_, err = perform.DockerRunVolumesFromContainer(containerName, false, chown, nil)
+			if err != nil {
+				return fmt.Errorf("fack: %v\n", err)
+			}
+		} else {
+			cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
+			_, err := pipes.RunString(cmd)
+			if err != nil {
+				cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
+				_, e2 := pipes.RunString(cmd)
+				if e2 != nil {
+					return fmt.Errorf("Could not import the data container.\nTried with docker --rm =>\t%v\nTried without docker --rm =>\t%v", err, e2)
+				}
 			}
 		}
 	} else {
@@ -112,16 +156,16 @@ func ExportData(do *definitions.Do) error {
 		} else {
 			do.Path = "/home/eris/.eris"
 		}
-		opts := docker.CopyFromContainerOptions{
+		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
-			Container:    service.ID,
-			Resource:     do.Path,
+			//	Container:    service.ID,
+			Path: do.Path,
 		}
 
 		go func() {
 			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
 			logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
-			IfExit(util.DockerClient.CopyFromContainer(opts))
+			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
 			writer.Close()
 		}()
 
