@@ -158,12 +158,6 @@ func RenameAction(do *definitions.Do) error {
 	return nil
 }
 
-func ListKnown(do *definitions.Do) error {
-	chns := util.GetGlobalLevelConfigFilesByType("actions", false)
-	do.Result = strings.Join(chns, "\n")
-	return nil
-}
-
 func RmAction(do *definitions.Do) error {
 	do.Name = strings.Join(do.Args, "_")
 	if do.File {

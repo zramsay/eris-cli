@@ -205,7 +205,7 @@ func PortsChain(do *definitions.Do) error {
 
 	if IsChainExisting(chain) {
 		logger.Debugf("Chain exists, getting port mapping.\n")
-		return perform.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
 	}
 
 	return nil
@@ -216,56 +216,6 @@ func EditChain(do *definitions.Do) error {
 	logger.Infof("Editing Service =>\t\t%s\n", chainDefFile)
 	do.Result = "success"
 	return Editor(chainDefFile)
-}
-
-func ListKnown(do *definitions.Do) error {
-	head, _ := util.GetHead()
-	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
-	var chainsNew []string
-	for _, c := range chns {
-		switch c {
-		case "default":
-			continue
-		case head:
-			chainsNew = append(chainsNew, fmt.Sprintf("*\t%s", c))
-		default:
-			chainsNew = append(chainsNew, fmt.Sprintf("\t%s", c))
-		}
-		// if c == head {
-		// } else {
-		// }
-	}
-	do.Result = strings.Join(chainsNew, "\n")
-	return nil
-}
-
-func ListRunning(do *definitions.Do) error {
-	logger.Debugf("Quiet? =>\t\t\t%v\n", do.Quiet)
-	if do.Quiet {
-		do.Result = strings.Join(util.ChainContainerNames(false), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		logger.Debugf("ListRunningRaw:PrintTable =>\t%s:%v\n", "chain", false)
-		perform.PrintTableReport("chain", false)
-	}
-
-	return nil
-}
-
-func ListExisting(do *definitions.Do) error {
-	if do.Quiet {
-		do.Result = strings.Join(util.ChainContainerNames(true), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		logger.Debugf("ListExistingRaw:PrintTable =>\t%s:%v\n", "chain", true)
-		perform.PrintTableReport("chain", true)
-	}
-
-	return nil
 }
 
 // XXX: What's going on here? => [csk]: magic

@@ -163,7 +163,7 @@ func PortsService(do *definitions.Do) error {
 
 	if IsServiceExisting(service.Service, service.Operations) {
 		logger.Debugf("Service exists, getting port mapping.\n")
-		return perform.PrintPortMappings(service.Operations.SrvContainerID, do.Args)
+		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Args)
 	}
 
 	return nil
@@ -194,38 +194,6 @@ func ExportService(do *definitions.Do) error {
 		return fmt.Errorf(`I don't known of that service.
 Please retry with a known service.
 To find known services use: eris services known`)
-	}
-	return nil
-}
-
-func ListKnown(do *definitions.Do) error {
-	srvs := util.GetGlobalLevelConfigFilesByType("services", false)
-	do.Result = strings.Join(srvs, "\n")
-	return nil
-}
-
-func ListRunning(do *definitions.Do) error {
-	logger.Debugf("Asking Docker Client for the Running Containers. Quiet? %v\n", do.Quiet)
-	if do.Quiet {
-		do.Result = strings.Join(util.ServiceContainerNames(false), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		perform.PrintTableReport("service", false) // TODO: return this as a string.
-	}
-	return nil
-}
-
-func ListExisting(do *definitions.Do) error {
-	logger.Debugln("Asking Docker Client for the Existing Containers.")
-	if do.Quiet {
-		do.Result = strings.Join(util.ServiceContainerNames(true), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		perform.PrintTableReport("service", true) // TODO: return this as a string.
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -127,7 +128,8 @@ func addDataFlags() {
 
 //----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
-	if err := data.ListKnown(do); err != nil {
+	do.Existing = true
+	if err := util.ListAll(do, "data"); err != nil {
 		return
 	}
 

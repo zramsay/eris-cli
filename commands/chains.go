@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -49,9 +50,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsRegister)
 	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsImport)
-	Chains.AddCommand(chainsListKnown)
-	Chains.AddCommand(chainsList)
-	Chains.AddCommand(chainsListRunning)
+	Chains.AddCommand(chainsListAll)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPlop)
@@ -134,23 +133,26 @@ Still a WIP.`,
 	Run: InstallChain,
 }
 
-var chainsListKnown = &cobra.Command{
-	Use:   "known",
-	Short: "List all the blockchains Eris knows about.",
-	Long: `Lists the blockchains which Eris has installed for you.
+//lists all or specify a flag
+var chainsListAll = &cobra.Command{
+	Use:   "ls",
+	Short: "Lists everything chain related.",
+	Long: `Lists all:
 
-To create a new blockchain, use:
+	- chain definition files (--known)
+	- current existing containers for each chain (--existing)
+	- current running containers for each chain (--running)
 
-[eris chains new]
+If no known chains exist yet, create a new blockchain with:
+
+	$ eris chains new chainName
 
 To install and fetch a blockchain from a chain definition file, use:
+	
+	$ eris chains install chainName
 
-[eris chains install]
-
-Services include all other chain types (btc, eth, etc.) supported by the
-Eris platform. Services are handled using the [eris services] command.
-`,
-	Run: ListKnownChains,
+Services are handled using the [eris services] command.`,
+	Run: ListAllChains,
 }
 
 var chainsImport = &cobra.Command{
@@ -163,18 +165,6 @@ By default, Eris will import from ipfs.
 To list known chains use: [eris chains known].`,
 	Example: "  eris chains import 2gather QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run:     ImportChain,
-}
-
-var chainsList = &cobra.Command{
-	Use:   "ls",
-	Short: "Lists all known blockchains in the Eris tree.",
-	Long: `Lists all known blockchains in the Eris tree.
-
-To list the known chains: [eris chains known]
-To list the running chains: [eris chains ps]
-To start a chain use: [eris chains start chainName].
-`,
-	Run: ListChains,
 }
 
 var chainsCheckout = &cobra.Command{
@@ -274,13 +264,6 @@ var chainsExec = &cobra.Command{
 	Long: `Run a command or interactive shell in a container
 with volumes-from the data container`,
 	Run: ExecChain,
-}
-
-var chainsListRunning = &cobra.Command{
-	Use:   "ps",
-	Short: "List the running blockchains.",
-	Long:  `List the running blockchains.`,
-	Run:   ListRunningChains,
 }
 
 var chainsStop = &cobra.Command{
@@ -438,9 +421,10 @@ func addChainsFlags() {
 	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
 	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
-	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
-
-	chainsListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+	chainsListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the chain definition files that exist")
+	chainsListAll.Flags().BoolVarP(&do.Existing, "existing", "e", false, "list all the all current containers which exist for a chain")
+	chainsListAll.Flags().BoolVarP(&do.Running, "running", "r", false, "list all the current containers which are running for a chain")
+	chainsListAll.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 }
 
 //----------------------------------------------------------------------
@@ -586,23 +570,28 @@ func ExportChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.ExportChain(do))
 }
 
-func ListKnownChains(cmd *cobra.Command, args []string) {
-	if err := chns.ListKnown(do); err != nil {
-		return
+func ListAllChains(cmd *cobra.Command, args []string) {
+	//if no flags are set, list all the things
+	//otherwise, allow only a single flag
+	if !(do.Known || do.Running || do.Existing) {
+		do.All = true
+	} else {
+		flargs := []bool{do.Known, do.Running, do.Existing}
+		flags := []string{}
+
+		for _, f := range flargs {
+			if f == true {
+				flags = append(flags, "true")
+			}
+		}
+		IfExit(FlagCheck(1, "eq", cmd, flags))
 	}
 
-	fmt.Println(do.Result)
-}
-
-func ListChains(cmd *cobra.Command, args []string) {
-	if err := chns.ListExisting(do); err != nil {
+	if err := util.ListAll(do, "chains"); err != nil {
 		return
 	}
-}
-
-func ListRunningChains(cmd *cobra.Command, args []string) {
-	if err := chns.ListRunning(do); err != nil {
-		return
+	if !do.All { //do.All will output a pretty table on its own
+		fmt.Println(do.Result)
 	}
 }
 

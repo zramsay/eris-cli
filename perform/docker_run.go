@@ -9,7 +9,6 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -202,7 +201,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		logger.Infoln("Service Container already exists, am not creating.")
 
 		if srv.AutoData {
-			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
+			if dataCont, exists = util.ParseContainers(ops.DataContainerName, true); exists {
 				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
 			} else {
@@ -221,7 +220,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		logger.Infof("Service Container does not exist, creating from image (%s).\n", srv.Image)
 
 		if srv.AutoData {
-			if dataCont, exists = parseContainers(ops.DataContainerName, true); exists {
+			if dataCont, exists = util.ParseContainers(ops.DataContainerName, true); exists {
 				logger.Infoln("Data Container already exists, am not creating.")
 				id_data = dataCont.ID
 			} else {
@@ -325,7 +324,7 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, i
 		if err != nil {
 			return err
 		}
-		if dataCont, exists := parseContainers(ops.DataContainerName, true); exists {
+		if dataCont, exists := util.ParseContainers(ops.DataContainerName, true); exists {
 			logger.Infoln("Data Container already exists, am not creating.")
 			id_data = dataCont.ID
 		} else {
@@ -592,15 +591,15 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData bool) error {
 }
 
 func ContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
-	return parseContainers(ops.SrvContainerName, true)
+	return util.ParseContainers(ops.SrvContainerName, true)
 }
 
 func ContainerRunning(ops *def.Operation) (docker.APIContainers, bool) {
-	return parseContainers(ops.SrvContainerName, false)
+	return util.ParseContainers(ops.SrvContainerName, false)
 }
 
 func ContainerDataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
-	return parseContainers(ops.DataContainerName, true)
+	return util.ParseContainers(ops.DataContainerName, true)
 }
 
 // ----------------------------------------------------------------------------
@@ -648,51 +647,6 @@ func pullImage(name string, writer io.Writer) error {
 // ----------------------------------------------------------------------------
 // ---------------------    Container Core ------------------------------------
 // ----------------------------------------------------------------------------
-func parseContainers(name string, all bool) (docker.APIContainers, bool) {
-	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
-	containers := listContainers(all)
-	logger.Debugln("ALL:", all)
-	for _, c := range containers {
-		logger.Debugln("\tcontainer:", c.Image, c.Names)
-	}
-
-	r := regexp.MustCompile(name)
-
-	if len(containers) != 0 {
-		for _, container := range containers {
-			for _, n := range container.Names {
-				// we need to filter out linked containers by only getting names with no "/"
-				if spl := strings.Split(strings.Trim(n, "/"), "/"); len(spl) == 1 {
-					if r.MatchString(n) {
-						logger.Debugf("Container Found =>\t\t%s\n", name)
-						return container, true
-					}
-				}
-				logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
-			}
-		}
-	}
-	logger.Debugf("Container Not Found =>\t\t%s\n", name)
-	return docker.APIContainers{}, false
-}
-
-func listContainers(all bool) []docker.APIContainers {
-	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`) // NOTE: this will match the linked containers!
-
-	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
-	for _, con := range contns {
-		for _, c := range con.Names {
-			match := r.FindAllStringSubmatch(c, 1)
-			if len(match) != 0 {
-				container = append(container, con)
-			}
-		}
-	}
-
-	return container
-}
-
 func createContainer(opts docker.CreateContainerOptions) (*docker.Container, error) {
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
@@ -797,7 +751,7 @@ func inspectContainer(id, field string) error {
 	if err != nil {
 		return err
 	}
-	PrintInspectionReport(cont, field)
+	util.PrintInspectionReport(cont, field)
 
 	return nil
 }

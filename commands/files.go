@@ -78,7 +78,7 @@ var filesCat = &cobra.Command{
 var filesList = &cobra.Command{
 	Use:   "ls [objectHash]",
 	Short: "List links from an IPFS object.",
-	//TODO test listing up and down through DAG / Zach just learn the DAG.
+	//TODO [zr] test listing up and down through DAG
 	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
 	Run:  FilesList,
 }

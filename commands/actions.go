@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	act "github.com/eris-ltd/eris-cli/actions"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -72,6 +73,7 @@ var actionsNew = &cobra.Command{
 	Run:   NewAction,
 }
 
+//TODO [zr] (eventually) list all + flags, see issue #231
 var actionsList = &cobra.Command{
 	Use:   "ls",
 	Short: "List all registered action definition files.",
@@ -171,7 +173,12 @@ func NewAction(cmd *cobra.Command, args []string) {
 
 func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
-	act.ListKnown(do)
+	do.Known = true
+	do.Running = false
+	do.Existing = false
+	if err := util.ListAll(do, "actions"); err != nil {
+		return
+	}
 	for _, s := range strings.Split(do.Result, "\n") {
 		logger.Println(strings.Replace(s, "_", " ", -1))
 	}

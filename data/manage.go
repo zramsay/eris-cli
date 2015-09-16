@@ -2,13 +2,14 @@ package data
 
 import (
 	"fmt"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"os"
+	"path"
+
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-	"os"
-	"path"
-	"strings"
+
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func RenameData(do *definitions.Do) error {
@@ -83,12 +84,6 @@ func RmData(do *definitions.Do) (err error) {
 
 	do.Result = "success"
 	return err
-}
-
-func ListKnown(do *definitions.Do) error {
-	do.Args = util.DataContainerNames()
-	do.Result = strings.Join(do.Args, "\n")
-	return nil
 }
 
 func IsKnown(name string) bool {

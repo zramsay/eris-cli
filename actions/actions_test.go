@@ -44,7 +44,11 @@ func TestMain(m *testing.M) {
 
 func TestListActions(t *testing.T) {
 	do := definitions.NowDo()
-	ifExit(ListKnown(do))
+	do.Known = true
+	do.Running = false
+	do.Existing = false
+	do.Args = []string{"testing"}
+	ifExit(util.ListAll(do, "actions"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 1 {
@@ -173,8 +177,12 @@ func testExist(t *testing.T, name string, toExist bool) {
 	name = util.DataContainersName(name, 1)
 
 	do := definitions.NowDo()
+	do.Known = true
+	do.Running = false
+	do.Existing = false
 	do.Quiet = true
-	if err := ListKnown(do); err != nil {
+	do.Args = []string{"testing"}
+	if err := util.ListAll(do, "actions"); err != nil {
 		logger.Errorln(err)
 		t.Fail()
 	}
