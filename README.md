@@ -54,6 +54,8 @@ These concepts (along with a few other goodies) provide the core functionality o
 
 We haven't perfected the installation path yet. We will ensure that this path is a bit smoother prior to our 0.11 release.
 
+At this time, we **highly** recommend using `eris` on a remote Ubuntu 14.04 installation. Debug support for other OSs is not currently provided. 
+
 ## Dependencies
 
 **N.B.** We will be distributing `eris` via binary builds by September or so. Until such time we do require it be built.
@@ -72,7 +74,12 @@ At the current time, our test suite uses the concept of an "authentic backend". 
 
 #### Linux
 
-Follow the link above for the official way to install Docker on your Linux box. After you install docker, then you will want to make sure that the user you are using to develop with `eris` has access to docker. When you are logged in as the user you can do this:
+Follow the link above for the official way to install Docker on your Linux box. For Ubuntu 14.04, run 
+```
+$ curl -sSL https://get.docker.com/ | sh
+```
+
+After you install docker, then you will want to make sure that the user you are using to develop with `eris` has access to docker. When you are logged in as the user you can do this:
 
 ```
 sudo usermod -a -G docker $USER
@@ -84,11 +91,19 @@ That will add the current user to the docker group which will mean that docker w
 docker version
 ```
 
+If the last two lines of output from this command are:
+```
+* Are you trying to connect to a TLS-enabled daemon without TLS?
+* Is your docker daemon up and running?
+```
+
+then a variety of things could have gone wrong during setup. Please consult the docker documentation to debug.
+
 If you would like to quickly provision a host, you can use the script found in tests/hack/host_provision.sh to provision the host for you. This has been tested against stock Ubuntu 14.04, if it does not work for other systems then we would happily accept pull requests to update it to make it more usable.
 
 #### OSX
 
-If you are on OSX, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
+If you are on OSX, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon. Upon launching the VM, follow the stdout carefully for setup instructions.
 
 If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
 
@@ -98,7 +113,7 @@ If you installed Docker via boot2docker, these *may* be set by running: `eval "$
 
 If you are on Windows, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
 
-If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
+If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed. Upon launching the VM, follow the stdout carefully for setup instructions.
 
 If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`. We strongly recommend that you update to docker-machine [following Docker's instructions](https://docs.docker.com/machine/migrate-to-machine/).
 
