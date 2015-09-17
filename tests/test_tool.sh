@@ -36,9 +36,7 @@ packagesToTest() {
   ERIS_IPFS_HOST="http://$(docker inspect --format='{{.NetworkSettings.IPAddress}}' eris_service_ipfs_1)"
   if [ $? -ne 0 ]; then return 1; fi
   export ERIS_IPFS_HOST
-  sleep 3 # give ipfs node time to boot
-  echo ""
-  echo ""
+  sleep 5 # give ipfs node time to boot
 
   # Start the first series of tests
   go test ./perform/...
@@ -66,11 +64,11 @@ packagesToTest() {
   go test ./services/...
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  # go test ./chains/...
-  cd chains && go test
+  go test ./chains/...
+  # cd chains && go test
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  cd ..
+  # cd ..
   go test ./actions/...
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi

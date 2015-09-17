@@ -838,6 +838,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		Config: &docker.Config{
 			Image:           "eris/base",
 			User:            "root",
+			WorkingDir:      dirs.ErisRoot,
 			AttachStdout:    true,
 			AttachStderr:    true,
 			AttachStdin:     true,

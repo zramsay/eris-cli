@@ -27,7 +27,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" { // this means we aren't gonna use docker-machine
 			endpoint := "unix:///var/run/docker.sock"
 
-			logger.Debugf("Checking The Linux Docker Socket =>%s\n", endpoint)
+			logger.Debugf("Checking The Linux Docker Socket =>\t%s\n", endpoint)
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
