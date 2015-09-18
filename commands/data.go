@@ -139,14 +139,14 @@ func ListKnownData(cmd *cobra.Command, args []string) {
 }
 
 func RenameData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
 	IfExit(data.RenameData(do))
 }
 
 func InspectData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(2, "ge", cmd, args))
 
 	if len(args) == 1 {
 		args = append(args, "all")
