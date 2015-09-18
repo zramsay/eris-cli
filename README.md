@@ -153,6 +153,7 @@ Eris allows you to make and develop against numerous blockchains. You can
 ```
 eris
 ```
+Confused by a command or error message? [Drop us a line here](https://github.com/eris-ltd/eris-cli/issues/225) for clarification.
 
 # Architecture of the Tool
 
