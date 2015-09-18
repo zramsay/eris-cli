@@ -178,8 +178,8 @@ if [ "$circle" = true ]
 then
   docker pull quay.io/eris/test_machines &>/dev/null
   docker run --name $machine_definitions quay.io/eris/test_machines &>/dev/null
-  rm -rf $HOME/.docker &>/dev/null
-  docker cp $machine_definitions:/home/eris/.docker/machine/machines $HOME/.docker/machine &>/dev/null
+  rm -rf .docker &>/dev/null
+  docker cp $machine_definitions:/home/eris/.docker $HOME &>/dev/null
 else
   docker run --name $machine_definitions quay.io/eris/test_machines &>/dev/null
 fi

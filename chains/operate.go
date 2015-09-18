@@ -218,7 +218,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 			}
 		}
 	} else {
-		do.Path, err = util.PathChecker("default")
+		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
 			return err
 		}
