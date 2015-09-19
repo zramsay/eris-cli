@@ -20,6 +20,9 @@ else
 fi
 
 start=`pwd`
+declare -a images
+declare -a checks
+
 cd $repo
 
 # ---------------------------------------------------------------------------
@@ -103,6 +106,28 @@ passed() {
   fi
 }
 
+set_procs() {
+  checks[$1]=$!
+}
+
+wait_procs() {
+  for chk in "${!checks[@]}"
+  do
+    wait ${checks[$chk]}
+  done
+}
+
+pull_images() {
+  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "eris/erisdb:$eris_version" )
+  for im in "${images[@]}"
+  do
+    echo -e "Pulling image =>\t\t$im"
+    docker pull $im 1>/dev/null &
+    set_procs
+  done
+  wait_procs
+}
+
 # ---------------------------------------------------------------------------
 # Go!
 
@@ -168,6 +193,12 @@ then
   eris init -dp --yes
 else
   eris init -dp --yes --machine $machine
+  echo
+  eris version
+  echo
+  eris_version=$(eris version | cut -d ':' -f2 | tr -d ' ')
+  pull_images
+  echo "Image Pulling Complete."
 fi
 passed Setup
 

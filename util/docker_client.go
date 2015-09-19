@@ -235,20 +235,40 @@ func DockerAPIVersion() (float64, error) {
 }
 
 func setupErisMachine(driver string) error {
+	cmd := "docker-machine"
+	args := []string{"status", "eris"}
+	if err := exec.Command(cmd, args...).Run(); err == nil {
+		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
+		logger.Debugf("Eris docker-machine exists. Starting.\n")
+		return startErisMachine()
+	}
+	logger.Debugf("Eris docker-machine doesn't exist.\n")
+
+	return createErisMachine(driver)
+}
+
+func createErisMachine(driver string) error {
 	logger.Printf("Creating the eris docker-machine.\nThis will take some time, please feel free to go feed your marmot.\n")
-	cmd := exec.Command("docker-machine", "create", "--driver", driver, "eris")
-	if err := cmd.Run(); err != nil {
+	logger.Debugf("\tDriver =>\t\t\t%s\n", driver)
+	cmd := "docker-machine"
+	args := []string{"create", "--driver", driver, "eris"}
+	if err := exec.Command(cmd, args...).Run(); err != nil {
 		logger.Debugf("There was an error creating the eris docker-machine.\nError:\t%v\n", err)
 		return mustInstallError()
 	}
 	logger.Debugf("Eris docker-machine created.\n")
 
+	return startErisMachine()
+}
+
+func startErisMachine() error {
 	logger.Infof("Starting eris docker-machine.\n")
-	cmd = exec.Command("docker-machine", "start", "eris")
-	if err := cmd.Run(); err != nil {
+	cmd := "docker-machine"
+	args := []string{"start", "eris"}
+	if err := exec.Command(cmd, args...).Run(); err != nil {
 		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
 	}
-	logger.Infof("Eris docker-machine started.\n")
+	logger.Debugf("Eris docker-machine started.\n")
 
 	return nil
 }
