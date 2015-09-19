@@ -217,7 +217,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 				return err
 			}
 		}
-	} else {
+	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
 			return err
