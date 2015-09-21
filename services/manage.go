@@ -73,6 +73,7 @@ func NewService(do *definitions.Do) error {
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
+	logger.Infof("Editing Service =>\t\t%s\n", servDefFile)
 	do.Result = "success"
 	return Editor(servDefFile)
 }

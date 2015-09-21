@@ -98,9 +98,10 @@ func ExportAction(do *definitions.Do) error {
 }
 
 func EditAction(do *definitions.Do) error {
-	f := filepath.Join(ActionsPath, do.Name) + ".toml"
-	Editor(f)
-	return nil
+	actDefFile := util.GetFileByNameAndType("actions", do.Name)
+	logger.Infof("Editing Action =>\t\t%s\n", actDefFile)
+	do.Result = "success"
+	return Editor(actDefFile)
 }
 
 func RenameAction(do *definitions.Do) error {
