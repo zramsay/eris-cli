@@ -10,12 +10,15 @@ repo=$GOPATH/src/$base
 ver=$APIVERSION
 swarm=$SWARM
 ping_times=0
+declare -a images
 
 # If an arg is passed to the script we will assume that only local
 #   tests will be ran.
 if [ $1 ]
 then
   machine="eris-test-local"
+  swarm="local"
+  ver=$(docker version | grep -A 1 Client | tail -n 1 | cut -d ':' -f 2 | tr -s ' ' | sed -e 's/[[:space:]]//')
 else
   machine=$MACHINE_NAME
 fi
@@ -28,6 +31,103 @@ cd $repo
 
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
+
+announce() {
+  echo ""
+  echo ""
+  echo "Testing against"
+  echo -e "\tDocker version:\t$ver"
+  echo -e "\tIn Data Center:\t$swarm"
+  echo -e "\tMachine name:\t$machine"
+  echo ""
+}
+
+connect() {
+  echo "Starting Machine."
+  docker-machine start $machine 1> /dev/null
+  until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
+  do
+     ping_times=$[$ping_times +1]
+     sleep 3
+  done
+  if [[ $(docker-machine status $machine) != "Running" ]]
+  then
+    echo "Could not start the machine. Exiting this test."
+    exit 1
+  else
+    docker-machine regenerate-certs -f $machine
+  fi
+  sleep 5
+  echo "Machine Started."
+  echo "Connecting to Machine."
+  eval "$(docker-machine env $machine)" &>/dev/null
+  echo "Connected to Machine."
+  echo ""
+  clear_stuff
+}
+
+clear_stuff() {
+  echo "Clearing images and containers."
+  set +e
+  docker rm $(docker ps -a -q) &>/dev/null
+  docker rmi $(docker images -q) &>/dev/null
+  set -e
+  echo ""
+}
+
+setup_machine() {
+  if [[ $machine == "eris-test-local" ]]
+  then
+    eris init -dp --yes
+    echo
+    eris version
+    echo
+  else
+    eris init -dp --yes
+    echo
+    eris version
+    echo
+    eris_version=$(eris version | cut -d ':' -f2 | tr -d ' ')
+    pull_images
+    echo "Image Pulling Complete."
+  fi
+}
+
+set_procs() {
+  checks[$1]=$!
+}
+
+wait_procs() {
+  for chk in "${!checks[@]}"
+  do
+    wait ${checks[$chk]}
+  done
+}
+
+pull_images() {
+  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "eris/erisdb:$eris_version" )
+  for im in "${images[@]}"
+  do
+    echo -e "Pulling image =>\t\t$im"
+    docker pull $im 1>/dev/null &
+    set_procs
+  done
+  wait_procs
+}
+
+passed() {
+  if [ $? -eq 0 ]
+  then
+    echo ""
+    echo ""
+    echo "*** Congratulations! *** $1 Package Level Tests Have Passed on Machine: $machine"
+    echo ""
+    echo ""
+    return 0
+  else
+    return 1
+  fi
+}
 
 packagesToTest() {
 
@@ -85,96 +185,35 @@ packagesToTest() {
   # go test ./remotes/...
   # passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  go test ./commands/...
-  passed Commands
 
   # The final push....
+  go test ./commands/...
+  passed Commands
   if [ $? -ne 0 ]; then return 1; fi
   return 0
 }
 
-passed() {
-  if [ $? -eq 0 ]
-  then
-    echo ""
-    echo ""
-    echo "*** Congratulations! *** $1 Package Level Tests Have Passed on Machine: $machine"
-    echo ""
-    echo ""
-    return 0
-  else
-    return 1
-  fi
-}
-
-set_procs() {
-  checks[$1]=$!
-}
-
-wait_procs() {
-  for chk in "${!checks[@]}"
-  do
-    wait ${checks[$chk]}
-  done
-}
-
-pull_images() {
-  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "eris/erisdb:$eris_version" )
-  for im in "${images[@]}"
-  do
-    echo -e "Pulling image =>\t\t$im"
-    docker pull $im 1>/dev/null &
-    set_procs
-  done
-  wait_procs
+turn_off() {
+  echo "Cleaning up after ourselves."
+  clear_stuff
+  echo "Containers and Images cleanup complete."
+  echo "Stopping Machine."
+  set +e
+  docker-machine kill $machine
+  set -e
+  echo "Machine Stopped."
 }
 
 # ---------------------------------------------------------------------------
 # Go!
 
 echo "Hello! The marmots will begin testing now."
-
 if [[ "$machine" == "eris-test-local" ]]
 then
-  echo ""
-  echo ""
-  echo "Testing (locally) against"
-  echo -e "\tDocker version:\t$ver"
-  echo -e "\tIn Data Center:\t$swarm"
-  echo -e "\tMachine name:\t$machine"
-  echo ""
+  announce
 else
-  echo ""
-  echo ""
-  echo "Testing against"
-  echo -e "\tDocker version:\t$ver"
-  echo -e "\tIn Data Center:\t$swarm"
-  echo -e "\tMachine name:\t$machine"
-  echo ""
-  echo "Starting Machine."
-  docker-machine start $machine &> /dev/null
-  until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
-  do
-     ping_times=$[$ping_times +1]
-     sleep 3
-  done
-  if [[ $(docker-machine status $machine) != "Running" ]]
-  then
-    echo "Could not start the machine. Exiting this test."
-    exit 1
-  fi
-  sleep 5
-  echo "Machine Started."
-  echo "Connecting to Machine."
-  eval "$(docker-machine env $machine)" &>/dev/null
-  echo "Connected to Machine."
-  echo ""
-  echo "Clearing images and containers for tests."
-  set +e
-  docker rm $(docker ps -a -q) &>/dev/null
-  docker rmi $(docker images -q) &>/dev/null
-  set -e
-  echo ""
+  announce
+  connect
 fi
 
 # Once machine is turned on, display docker information
@@ -189,18 +228,7 @@ set +e
 echo ""
 echo "Checking the Eris <-> Docker Connection"
 echo ""
-if [[ $machine == "eris-test-local" ]]
-then
-  eris init -dp --yes
-else
-  eris init -dp --yes --machine $machine
-  echo
-  eris version
-  echo
-  eris_version=$(eris version | cut -d ':' -f2 | tr -d ' ')
-  pull_images
-  echo "Image Pulling Complete."
-fi
+setup_machine
 passed Setup
 
 # Perform package level tests run only if eris init ran without problem
@@ -226,15 +254,7 @@ set -e
 
 if [[ $machine != "eris-test-local" ]]
 then
-  set +e
-  echo "Cleaning up after ourselves."
-  docker rm -f $(docker ps -a -q) &> /dev/null
-  docker rmi -f $(docker images -q) &> /dev/null
-  echo "Containers and Images cleanup complete."
-  echo "Stopping Machine."
-  docker-machine kill $machine
-  echo "Machine Stopped."
-  set -e
+  turn_off
 fi
 
 if [ $test_exit -eq 0 ]
