@@ -25,17 +25,19 @@ declare -a docker_versions16=( "1.6.2" )
 declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" )
 declare -a machine_results=()
-# declare -a docker_versions18=( "1.8.1" )
+# declare -a docker_versions18=( "1.8.2" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
 #   data centers. These boxes are on Digital Ocean.
-swarm_prim="ams3"
-swarm_back="nyc2"
+swarm_prim="dca1"
+swarm_back="ams3"
+# swarm_back="nyc2"
 swarm=$swarm_prim
+
 if [[ $1 == "sec_swarm" ]]
 then
-  swarm="nyc2"
+  swarm=$swarm_back
 fi
 
 # Define now the tool tests within the Docker container will be booted from docker run
