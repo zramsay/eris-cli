@@ -56,9 +56,9 @@ func DockerCreateDataContainer(srvName string, containerNumber int) error {
 // create a container with volumes-from the srvName data container
 // and either attach interactively or execute a command
 // container should be destroyed on exit
-func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) (result []byte, err error) {
+func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) (result []byte, err error) {
 	logger.Infof("DockerRunVolumesFromContnr =>\t%s:%v\n", volumesFrom, args)
-	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
+	opts := configureVolumesFromContainer(volumesFrom, interactive, args, service)
 	cont, err := createContainer(opts)
 	if err != nil {
 		return nil, err
@@ -555,18 +555,24 @@ func pullImage(name string, writer io.Writer) error {
 func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
 	containers := listContainers(all)
+	logger.Debugln("ALL:", all)
+	for _, c := range containers {
+		logger.Debugln("\tcontainer:", c.Image, c.Names)
+	}
 
 	r := regexp.MustCompile(name)
 
 	if len(containers) != 0 {
 		for _, container := range containers {
 			for _, n := range container.Names {
-				if r.MatchString(n) {
-					logger.Debugf("Container Found =>\t\t%s\n", name)
-					return container, true
-				} else {
-					logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
+				// we need to filter out linked containers by only getting names with no "/"
+				if spl := strings.Split(strings.Trim(n, "/"), "/"); len(spl) == 1 {
+					if r.MatchString(n) {
+						logger.Debugf("Container Found =>\t\t%s\n", name)
+						return container, true
+					}
 				}
+				logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 			}
 		}
 	}
@@ -576,7 +582,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 func listContainers(all bool) []docker.APIContainers {
 	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
+	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`) // NOTE: this will match the linked containers!
 
 	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
 	for _, con := range contns {
@@ -821,6 +827,13 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 			opts.Config.ExposedPorts[pC] = struct{}{}
 			opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
 		} else {
+			if !ops.PublishAllPorts {
+				// if -p not given, we use the default port
+				pH := docker.PortBinding{
+					HostPort: pS[0],
+				}
+				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
+			}
 			opts.Config.ExposedPorts[pC] = struct{}{}
 		}
 	}
@@ -832,7 +845,8 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	return opts, nil
 }
 
-func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string) docker.CreateContainerOptions {
+func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) docker.CreateContainerOptions {
+	// set the defaults
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + volumesFrom,
 		Config: &docker.Config{
@@ -854,6 +868,16 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
 		opts.Config.Cmd = args
+	}
+
+	// overwrite some things
+	if service != nil {
+		opts.Config.NetworkDisabled = false
+		opts.Config.Image = service.Image
+		opts.Config.User = service.User
+		opts.Config.Env = service.Environment
+		opts.HostConfig.Links = service.Links
+		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
 	return opts

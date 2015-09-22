@@ -218,6 +218,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 			}
 		}
 	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
+		// NOTE: this expects you to have ~/.eris/blockchains/default/ (ie. to have run `eris init`)
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
 			return err
@@ -225,7 +226,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	if !data.IsKnown(containerName) {
+	if !data.IsKnown(do.Name) {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data containr =>\t%v", err)
 		}
@@ -344,9 +345,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),               // for mintgen
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),     // config.toml
-		fmt.Sprintf("REGISTER_PUBKEY=%s", do.Address), // use to sign registration txs for etcb
+		fmt.Sprintf("CSV=%v", csvPaths),           // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts), // for config.toml
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),   // etcb host
 	}
 	envVars = append(envVars, do.Env...)
 

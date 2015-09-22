@@ -46,6 +46,7 @@ away!`,
 // Build the chains subcommand
 func buildChainsCommand() {
 	Chains.AddCommand(chainsNew)
+	Chains.AddCommand(chainsRegister)
 	Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListKnown)
@@ -73,18 +74,25 @@ func buildChainsCommand() {
 // Chains Sub-sub-Commands
 var chainsNew = &cobra.Command{
 	Use:   "new [name]",
-	Short: "Hashes a new blockchain.",
-	Long: `Hashes a new blockchain.
+	Short: "Creates a new blockhain.",
+	Long: `Creates a new blockchain.
 
 Will use a default genesis.json unless a --genesis flag is passed.
 Still a WIP.`,
 	Run: NewChain,
 }
 
+var chainsRegister = &cobra.Command{
+	Use:   "register [name]",
+	Short: "Registers a blockchain on etcb (a blockchain for registering other blockchains",
+	Long:  "Registers a blockchain on etcb (a blockchain for registering other blockchains",
+	Run:   RegisterChain,
+}
+
 var chainsInstall = &cobra.Command{
 	Use:   "install [chainID]",
-	Short: "Install a blockchain.",
-	Long: `Install a blockchain.
+	Short: "Install a blockchain from the etcb registry.",
+	Long: `Install a blockchain from the etcb registry.
 
 Install an existing erisdb based blockchain for use locally.
 
@@ -320,22 +328,29 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
-	chainsNew.PersistentFlags().StringVarP(&do.Address, "register", "r", "", "pubkey to use for registering the chain on etcb")
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
-	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", true, "publish all ports")
+	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
+
+	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
+	chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
+	chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
+	chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
 
 	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
-	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", true, "publish all ports")
+	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsInstall.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	chainsInstall.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
+	chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
 
-	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", true, "publish all ports")
+	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsStart.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	chainsStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
@@ -423,6 +438,14 @@ func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.NewChain(do))
+}
+
+// register a chain in the etcb chain registry
+func RegisterChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))
+	do.Name = args[0]
+	do.Args = args[1:]
+	IfExit(chns.RegisterChain(do))
 }
 
 // import a chain definition file

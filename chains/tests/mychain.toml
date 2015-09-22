@@ -1,0 +1,13 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "mychain"
+chain_id = "mychain"
+
+[service]
+name = "mychain"
+data_container = true
+
+[maintainer]
+name = "Ethan Buchman"
+email = "ethan@coinculture.info"

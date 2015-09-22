@@ -19,6 +19,7 @@ const (
 	ErisChainStartApi = "api"
 	ErisChainInstall  = "install"
 	ErisChainNew      = "new"
+	ErisChainRegister = "register"
 )
 
 // viper read config file, marshal to definition struct,
