@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -19,6 +17,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
 
 func RegisterChain(do *definitions.Do) error {
@@ -213,16 +212,10 @@ func PortsChain(do *definitions.Do) error {
 }
 
 func EditChain(do *definitions.Do) error {
-	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
-	if err != nil {
-		return err
-	}
-	if err := util.Edit(chainConf, do.Args); err != nil {
-		return err
-	}
-	var chain definitions.Chain
-	loaders.MarshalChainDefinition(chainConf, &chain)
-	return WriteChainDefinitionFile(&chain, chainConf.ConfigFileUsed())
+	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
+	logger.Infof("Editing Service =>\t\t%s\n", chainDefFile)
+	do.Result = "success"
+	return Editor(chainDefFile)
 }
 
 func ListKnown(do *definitions.Do) error {
