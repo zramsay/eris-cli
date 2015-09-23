@@ -34,7 +34,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesListRunning)
-	Services.AddCommand(servicesEnsureRunning)
 	Services.AddCommand(servicesInspect)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
@@ -149,15 +148,6 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 	Run: InspectService,
 }
 
-var servicesEnsureRunning = &cobra.Command{
-	Use:   "ensure [serviceName]",
-	Short: "Ensures the named service is running",
-	Long: `Will check to make sure a service is running.
-
-If the named service is not running, command will boot it up`,
-	Run: EnsureService,
-}
-
 var servicesPorts = &cobra.Command{
 	Use:   "ports [port]",
 	Short: "Print port mapping",
@@ -249,7 +239,7 @@ Command will cat local service definition file.`,
 
 func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
-	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "all", "number of lines to show from end of logs")
+	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 
@@ -258,7 +248,7 @@ func addServicesFlags() {
 	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
-	servicesStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish all ports")
+	servicesStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	servicesStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
@@ -350,12 +340,6 @@ func InspectService(cmd *cobra.Command, args []string) {
 	}
 
 	IfExit(srv.InspectService(do))
-}
-
-func EnsureService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(srv.EnsureRunning(do))
 }
 
 func PortsService(cmd *cobra.Command, args []string) {

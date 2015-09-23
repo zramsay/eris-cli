@@ -56,9 +56,9 @@ func DockerCreateDataContainer(srvName string, containerNumber int) error {
 // create a container with volumes-from the srvName data container
 // and either attach interactively or execute a command
 // container should be destroyed on exit
-func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string) (result []byte, err error) {
+func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) (result []byte, err error) {
 	logger.Infof("DockerRunVolumesFromContnr =>\t%s:%v\n", volumesFrom, args)
-	opts := configureVolumesFromContainer(volumesFrom, interactive, args)
+	opts := configureVolumesFromContainer(volumesFrom, interactive, args, service)
 	cont, err := createContainer(opts)
 	if err != nil {
 		return nil, err
@@ -81,6 +81,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		if err2 := removeContainer(id_main); err2 != nil {
 			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 		}
+		logger.Infof("Container removed =>\t\t%s\n", id_main)
 	}()
 
 	// start the container (either interactive or one off command)
@@ -121,7 +122,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 			go func() {
 				// TODO: this routine will hang forever if  ReadAll doesn't complete
 				// need to be smarter
-				logger.Debugln("attempting to read log reader")
+				logger.Debugln("Attempting to read log reader.")
 				b, err = ioutil.ReadAll(reader)
 				done <- struct{}{}
 			}()
@@ -147,7 +148,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 	return nil, nil
 }
 
-func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
+func DockerRun(srv *def.Service, ops *def.Operation) error {
 	var id_main, id_data string
 	var optsData docker.CreateContainerOptions
 	var dataCont docker.APIContainers
@@ -156,7 +157,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	_, running := ContainerRunning(ops)
 	if running {
 		logger.Infof("Service already Started. Skipping.\n\tService Name=>\t\t%s\n", srv.Name)
-		return "", nil
+		return nil
 	}
 
 	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
@@ -164,13 +165,13 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	// copy service config into docker client config
 	optsServ, err := configureServiceContainer(srv, ops)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// fix volume paths
 	srv.Volumes, err = fixDirs(srv.Volumes)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// setup data container
@@ -178,7 +179,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	if srv.AutoData {
 		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
 
@@ -194,7 +195,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err := createContainer(optsData)
 				if err != nil {
-					return "", err
+					return err
 				}
 				id_data = dataContCreated.ID
 			}
@@ -213,7 +214,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 				logger.Infoln("Data Container does not exist, creating.")
 				dataContCreated, err = createContainer(optsData)
 				if err != nil {
-					return "", err
+					return err
 				}
 				id_data = dataContCreated.ID
 			}
@@ -221,7 +222,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		servContCreated, err := createContainer(optsServ)
 		if err != nil {
-			return "", err
+			return err
 		}
 		id_main = servContCreated.ID
 	}
@@ -237,7 +238,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	if err := startContainer(id_main, &optsServ); err != nil {
-		return "", err
+		return err
 	}
 
 	// XXX: setting Remove causes us to block here!
@@ -256,7 +257,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
 		if err := waitContainer(id_main); err != nil {
-			return "", err
+			return err
 		}
 
 		logger.Debugln("DockerRun. Waiting for logs to finish.")
@@ -265,14 +266,14 @@ func DockerRun(srv *def.Service, ops *def.Operation) (string, error) {
 
 		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
 		if err := removeContainer(id_main); err != nil {
-			return "", err
+			return err
 		}
 
 	} else {
 		logger.Infof("Successfully started service =>\t%s\n", srv.Name)
 	}
 
-	return id_main, nil
+	return nil
 }
 
 func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive bool) error {
@@ -396,7 +397,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if wasRunning {
-		_, err := DockerRun(srv, ops)
+		err := DockerRun(srv, ops)
 		if err != nil {
 			return err
 		}
@@ -407,7 +408,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
 	if service, exists := ContainerExists(ops); exists {
-		logger.Infof("Getting Logs for Service ID =>\t%s\n", service.ID)
+		logger.Infof("Getting Logs for Service ID =>\t%s:%v:%v\n", service.ID, follow, tail)
 		if err := logsContainer(service.ID, follow, tail); err != nil {
 			return err
 		}
@@ -531,7 +532,11 @@ func pullImage(name string, writer io.Writer) error {
 		Repository:   name,
 		Registry:     reg,
 		Tag:          tag,
-		OutputStream: writer,
+		OutputStream: os.Stdout,
+	}
+
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+		opts.OutputStream = nil
 	}
 
 	auth := docker.AuthConfiguration{}
@@ -550,18 +555,24 @@ func pullImage(name string, writer io.Writer) error {
 func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
 	containers := listContainers(all)
+	logger.Debugln("ALL:", all)
+	for _, c := range containers {
+		logger.Debugln("\tcontainer:", c.Image, c.Names)
+	}
 
 	r := regexp.MustCompile(name)
 
 	if len(containers) != 0 {
 		for _, container := range containers {
 			for _, n := range container.Names {
-				if r.MatchString(n) {
-					logger.Debugf("Container Found =>\t\t%s\n", name)
-					return container, true
-				} else {
-					logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
+				// we need to filter out linked containers by only getting names with no "/"
+				if spl := strings.Split(strings.Trim(n, "/"), "/"); len(spl) == 1 {
+					if r.MatchString(n) {
+						logger.Debugf("Container Found =>\t\t%s\n", name)
+						return container, true
+					}
 				}
+				logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 			}
 		}
 	}
@@ -571,7 +582,7 @@ func parseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 func listContainers(all bool) []docker.APIContainers {
 	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
+	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`) // NOTE: this will match the linked containers!
 
 	contns, _ := util.DockerClient.ListContainers(docker.ListContainersOptions{All: all})
 	for _, con := range contns {
@@ -592,7 +603,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 		if err == docker.ErrNoSuchImage {
 			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
 				var input string
-				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (Y/n) ", opts.Config.Image)
+				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (y/n) ", opts.Config.Image)
 				fmt.Scanln(&input)
 
 				if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
@@ -666,20 +677,21 @@ func logsContainer(id string, follow bool, tail string) error {
 
 	opts := docker.LogsOptions{
 		Container:    id,
-		Follow:       follow,
-		Tail:         tail,
-		Stdout:       true,
-		Stderr:       true,
-		Timestamps:   false,
 		OutputStream: writer,
 		ErrorStream:  eWriter,
-		RawTerminal:  true, // Usually true when the container contains a TTY.
+		Follow:       follow,
+		Stdout:       true,
+		Stderr:       true,
+		Since:        0,
+		Timestamps:   false,
+		Tail:         tail,
+
+		RawTerminal: true, // Usually true when the container contains a TTY.
 	}
 
 	if err := util.DockerClient.Logs(opts); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -815,6 +827,13 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 			opts.Config.ExposedPorts[pC] = struct{}{}
 			opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
 		} else {
+			if !ops.PublishAllPorts {
+				// if -p not given, we use the default port
+				pH := docker.PortBinding{
+					HostPort: pS[0],
+				}
+				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
+			}
 			opts.Config.ExposedPorts[pC] = struct{}{}
 		}
 	}
@@ -826,17 +845,19 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	return opts, nil
 }
 
-func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string) docker.CreateContainerOptions {
+func configureVolumesFromContainer(volumesFrom string, interactive bool, args []string, service *def.Service) docker.CreateContainerOptions {
+	// set the defaults
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + volumesFrom,
 		Config: &docker.Config{
 			Image:           "eris/base",
 			User:            "root",
+			WorkingDir:      dirs.ErisRoot,
 			AttachStdout:    true,
 			AttachStderr:    true,
 			AttachStdin:     true,
 			Tty:             true,
-			NetworkDisabled: true,
+			NetworkDisabled: false,
 		},
 		HostConfig: &docker.HostConfig{
 			VolumesFrom: []string{volumesFrom},
@@ -847,6 +868,16 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
 		opts.Config.Cmd = args
+	}
+
+	// overwrite some things
+	if service != nil {
+		opts.Config.NetworkDisabled = false
+		opts.Config.Image = service.Image
+		opts.Config.User = service.User
+		opts.Config.Env = service.Environment
+		opts.HostConfig.Links = service.Links
+		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
 	return opts

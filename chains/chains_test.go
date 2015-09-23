@@ -26,14 +26,13 @@ import (
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
-var chainName string = "my_testing_chain_dot_com" // :(
+var chainName string = "my_testing_chain_dot_com" // :( [csk]-> :)
 var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		log.Flush()
 		testsTearDown()
 		DEAD = true
 		panic(err)
@@ -173,7 +172,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	}
 
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
+	do.GenesisFile = path.Join(common.BlockchainsPath, "default", "genesis.json")
 	do.Name = chainID
 	do.Path = myDir
 	do.Operations.ContainerNumber = 1
@@ -190,7 +189,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
-	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -208,7 +207,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	newWriter = new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
-	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args)
+	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -232,8 +231,8 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	chainID := "testChainsNewConfigAndCSV"
 	do := def.NowDo()
 	do.Name = chainID
-	do.ConfigFile = path.Join(common.BlockchainsPath, "config", "default", "config.toml")
-	do.CSV = path.Join(common.BlockchainsPath, "config", "default", "genesis.csv")
+	do.ConfigFile = path.Join(common.BlockchainsPath, "default", "config.toml")
+	do.CSV = path.Join(common.BlockchainsPath, "default", "genesis.csv")
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
@@ -259,7 +258,6 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	// verify the contents of genesis.json (should have the validator from the csv)
 	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
 	result = string(runContainer(t, do.Name, args))
-
 	var found bool
 	for _, s := range strings.Split(result, "\n") {
 		if strings.Contains(s, ini.DefaultPubKeys[0]) {
@@ -551,7 +549,7 @@ func testsInit() error {
 
 func testNewChain(chain string) {
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "config", "default", "genesis.json")
+	do.GenesisFile = path.Join(common.BlockchainsPath, "default", "genesis.json")
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
@@ -595,11 +593,11 @@ func runContainer(t *testing.T, name string, args []string) []byte {
 	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
-	b, err := perform.DockerRunVolumesFromContainer(name, false, args)
+	b, err := perform.DockerRunVolumesFromContainer(name, false, args, nil)
 	if err != nil {
 		fatal(t, err)
 	}
-
+	logger.Debugf("Container ran =>\t\t%s:%v\n", name, args)
 	config.GlobalConfig.Writer = oldWriter
 	return b
 }

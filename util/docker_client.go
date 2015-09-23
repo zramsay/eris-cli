@@ -27,7 +27,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" { // this means we aren't gonna use docker-machine
 			endpoint := "unix:///var/run/docker.sock"
 
-			logger.Debugf("Checking The Linux Docker Socket =>%s\n", endpoint)
+			logger.Debugf("Checking The Linux Docker Socket =>\t%s\n", endpoint)
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
@@ -116,7 +116,7 @@ func CheckDockerClient() error {
 
 		if _, _, err := getMachineDeets("default"); err == nil {
 
-			fmt.Print("A docker-machine virtual machine exists, which eris can use.\nHowever, our marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (Y/n): ")
+			fmt.Print("A docker-machine virtual machine exists, which eris can use.\nHowever, our marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
@@ -135,7 +135,7 @@ func CheckDockerClient() error {
 
 		} else {
 
-			fmt.Print("The marmots could not find a docker-machine virtual machine they could connect to.\nOur marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (Y/n): ")
+			fmt.Print("The marmots could not find a docker-machine virtual machine they could connect to.\nOur marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
@@ -235,20 +235,40 @@ func DockerAPIVersion() (float64, error) {
 }
 
 func setupErisMachine(driver string) error {
+	cmd := "docker-machine"
+	args := []string{"status", "eris"}
+	if err := exec.Command(cmd, args...).Run(); err == nil {
+		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
+		logger.Debugf("Eris docker-machine exists. Starting.\n")
+		return startErisMachine()
+	}
+	logger.Debugf("Eris docker-machine doesn't exist.\n")
+
+	return createErisMachine(driver)
+}
+
+func createErisMachine(driver string) error {
 	logger.Printf("Creating the eris docker-machine.\nThis will take some time, please feel free to go feed your marmot.\n")
-	cmd := exec.Command("docker-machine", "create", "--driver", driver, "eris")
-	if err := cmd.Run(); err != nil {
+	logger.Debugf("\tDriver =>\t\t\t%s\n", driver)
+	cmd := "docker-machine"
+	args := []string{"create", "--driver", driver, "eris"}
+	if err := exec.Command(cmd, args...).Run(); err != nil {
 		logger.Debugf("There was an error creating the eris docker-machine.\nError:\t%v\n", err)
 		return mustInstallError()
 	}
 	logger.Debugf("Eris docker-machine created.\n")
 
+	return startErisMachine()
+}
+
+func startErisMachine() error {
 	logger.Infof("Starting eris docker-machine.\n")
-	cmd = exec.Command("docker-machine", "start", "eris")
-	if err := cmd.Run(); err != nil {
+	cmd := "docker-machine"
+	args := []string{"start", "eris"}
+	if err := exec.Command(cmd, args...).Run(); err != nil {
 		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
 	}
-	logger.Infof("Eris docker-machine started.\n")
+	logger.Debugf("Eris docker-machine started.\n")
 
 	return nil
 }

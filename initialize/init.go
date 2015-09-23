@@ -21,7 +21,7 @@ func Initialize(do *definitions.Do) error {
 		logger.Debugf("Not requiring input. Proceeding.\n")
 	} else {
 		var input string
-		logger.Printf("Eris Root Directory (%s) already exists.\nContinuing may overwrite files in:\n%s\n%s\nDo you wish to continue? (Y/n): ", common.ErisRoot, common.ServicesPath, common.ActionsPath)
+		logger.Printf("Eris Root Directory (%s) already exists.\nContinuing may overwrite files in:\n%s\n%s\nDo you wish to continue? (y/n): ", common.ErisRoot, common.ServicesPath, common.ActionsPath)
 		fmt.Scanln(&input)
 		if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
 			logger.Debugf("Confirmation verified. Proceeding.\n")

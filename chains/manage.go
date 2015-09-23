@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -19,7 +17,55 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
+
+func RegisterChain(do *definitions.Do) error {
+	// do.Name is mandatory
+	if do.Name == "" {
+		return fmt.Errorf("RegisterChain requires a chainame")
+	}
+	etcbChain := do.ChainID
+	do.ChainID = do.Name
+
+	// NOTE: registration expects you to have the data container
+	if !data.IsKnown(do.Name) {
+		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
+	}
+
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	logger.Debugf("Chain Loaded. Image =>\t\t%v\n", chain.Service.Image)
+
+	// set chainid and other vars
+	envVars := []string{
+		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),      // of the etcb chain
+		fmt.Sprintf("PUBKEY=%s", do.Pubkey),         // pubkey to register chain with
+		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),  // chain id of the etcb chain
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),     // etcb node to send the register tx to
+		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
+	}
+	envVars = append(envVars, do.Env...)
+
+	logger.Debugf("Set env vars from RegisterChain =>\t%v\n", envVars)
+	chain.Service.Environment = append(chain.Service.Environment, envVars...)
+	logger.Debugf("Set links from RegisterChain =>\t%v\n", do.Links)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
+
+	if err := bootDependencies(chain, do); err != nil {
+		return err
+	}
+
+	logger.Debugf("Starting chain container via Docker =>\t%s\n", chain.Service.Name)
+	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
+	cmd := []string{loaders.ErisChainRegister}
+	dataContainerName := util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
+	_, err = perform.DockerRunVolumesFromContainer(dataContainerName, false, cmd, chain.Service)
+
+	return err
+}
 
 func ImportChain(do *definitions.Do) error {
 	fileName := filepath.Join(BlockchainsPath, do.Name)
@@ -166,16 +212,10 @@ func PortsChain(do *definitions.Do) error {
 }
 
 func EditChain(do *definitions.Do) error {
-	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), do.Name, "chain")
-	if err != nil {
-		return err
-	}
-	if err := util.Edit(chainConf, do.Args); err != nil {
-		return err
-	}
-	var chain definitions.Chain
-	loaders.MarshalChainDefinition(chainConf, &chain)
-	return WriteChainDefinitionFile(&chain, chainConf.ConfigFileUsed())
+	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
+	logger.Infof("Editing Service =>\t\t%s\n", chainDefFile)
+	do.Result = "success"
+	return Editor(chainDefFile)
 }
 
 func ListKnown(do *definitions.Do) error {

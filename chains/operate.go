@@ -78,7 +78,7 @@ func StartChain(do *definitions.Do) error {
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
 	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
-	if _, err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
+	if err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
 		do.Result = "error"
 		return err
 	}
@@ -172,7 +172,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 			if !services.IsServiceRunning(srv.Service, srv.Operations) {
 				name := strings.ToUpper(do.Name)
 				logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
-				if _, err = perform.DockerRun(srv.Service, srv.Operations); err != nil {
+				if err = perform.DockerRun(srv.Service, srv.Operations); err != nil {
 					return err
 				}
 			}
@@ -207,8 +207,26 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
+	//if given path does not exist, see if its a reference to something in ~/.eris/blockchains/chainName
+	if do.Path != "" {
+		src, err := os.Stat(do.Path)
+		if err != nil || !src.IsDir() {
+			logger.Infof("path: %s does not exist or is not a directory, trying $HOME/.eris/blockchains/%s\n", do.Path, do.Path)
+			do.Path, err = util.ChainsPathChecker(do.Path)
+			if err != nil {
+				return err
+			}
+		}
+	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
+		// NOTE: this expects you to have ~/.eris/blockchains/default/ (ie. to have run `eris init`)
+		do.Path, err = util.ChainsPathChecker("default")
+		if err != nil {
+			return err
+		}
+	}
+
 	// ensure/create data container
-	if !data.IsKnown(containerName) {
+	if !data.IsKnown(do.Name) {
 		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
 			return fmt.Errorf("Error creating data containr =>\t%v", err)
 		}
@@ -272,6 +290,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
 	}
 
+	logger.Infof("Copying chain files into the correct location.\n")
 	if err := copyFiles(dst, filesToCopy); err != nil {
 		return err
 	}
@@ -326,9 +345,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),               // for mintgen
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),     // config.toml
-		fmt.Sprintf("REGISTER_PUBKEY=%s", do.Address), // use to sign registration txs for etcb
+		fmt.Sprintf("CSV=%v", csvPaths),           // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts), // for config.toml
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),   // etcb host
 	}
 	envVars = append(envVars, do.Env...)
 
@@ -352,7 +371,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
-	_, err = perform.DockerRun(chain.Service, chain.Operations)
+	err = perform.DockerRun(chain.Service, chain.Operations)
 	// this err is caught in the defer above
 
 	return
@@ -402,7 +421,8 @@ func copyFiles(dst string, files []stringPair) error {
 		if f.key != "" {
 			logger.Debugf("\tCopying files =>\t%s:%s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
-				return err
+				logger.Debugf("Error copying files =>\t\t%v\n", err)
+				// return err
 			}
 		}
 	}
