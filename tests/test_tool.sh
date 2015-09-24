@@ -105,7 +105,7 @@ wait_procs() {
 }
 
 pull_images() {
-  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "eris/erisdb:$eris_version" )
+  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "quay.io/eris/erisdb:$eris_version" )
   for im in "${images[@]}"
   do
     echo -e "Pulling image =>\t\t$im"

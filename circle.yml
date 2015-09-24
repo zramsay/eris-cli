@@ -22,11 +22,5 @@ deployment:
   master:
     branch: master
     commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      - docker push eris/eris
+      - docker push quay.io/eris/eris
       - docs/build.sh
-
-  # develop:
-  #   branch: develop
-  #   commands:
-  #     - docker push eris/eris

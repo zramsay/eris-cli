@@ -93,7 +93,7 @@ func TestChainGraduate(t *testing.T) {
 		fatal(t, err)
 	}
 
-	image := "eris/erisdb:" + version.VERSION
+	image := "quay.io/eris/erisdb:" + version.VERSION
 	if srvDef.Service.Image != image {
 		fatal(t, fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}

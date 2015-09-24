@@ -91,7 +91,7 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	vers := version.VERSION
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
-	chain.Service.Image = "eris/erisdb:" + vers
+	chain.Service.Image = "quay.io/eris/erisdb:" + vers
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
 	chain.Service.Command = cmd
 
