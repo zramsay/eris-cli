@@ -31,8 +31,7 @@ declare -a machine_results=()
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
 #   data centers. These boxes are on Digital Ocean.
 swarm_prim="dca1"
-swarm_back="ams3"
-# swarm_back="nyc2"
+swarm_back="fra1"
 swarm=$swarm_prim
 
 if [[ $1 == "sec_swarm" ]]
