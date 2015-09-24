@@ -44,7 +44,7 @@ announce() {
 
 connect() {
   echo "Starting Machine."
-  docker-machine start $machine 1> /dev/null
+  docker-machine start $machine 1>/dev/null
   until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
   do
      ping_times=$[$ping_times +1]
@@ -55,10 +55,10 @@ connect() {
     echo "Could not start the machine. Exiting this test."
     exit 1
   else
-    docker-machine regenerate-certs -f $machine
+    echo "Machine Started."
+    docker-machine regenerate-certs -f $machine 2>/dev/null
   fi
   sleep 5
-  echo "Machine Started."
   echo "Connecting to Machine."
   eval "$(docker-machine env $machine)" &>/dev/null
   echo "Connected to Machine."

@@ -41,7 +41,7 @@ fi
 
 # Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="/home/eris/test_tool.sh"
-testimage=eris/eris
+testimage=quay.io/eris/eris
 testuser=eris
 remotesocket=2376
 localsocket=/var/run/docker.sock
