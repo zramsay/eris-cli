@@ -109,10 +109,13 @@ pull_images() {
   for im in "${images[@]}"
   do
     echo -e "Pulling image =>\t\t$im"
-    docker pull $im 1>/dev/null &
-    set_procs
+    # Async // parallel pulling not working consistently.
+    #   see: https://github.com/docker/docker/issues/9718
+    docker pull $im 1>/dev/null
+    # docker pull $im 1>/dev/null &
+    # set_procs
   done
-  wait_procs
+  # wait_procs
 }
 
 passed() {
