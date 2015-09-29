@@ -9,9 +9,8 @@ import (
 
 // flags to add: --no-clone
 var Init = &cobra.Command{
-	Use:     "init",
-	Aliases: []string{"update"},
-	Short:   "Initialize the ~/.eris directory with default files or update to latest version",
+	Use:   "init",
+	Short: "Initialize the ~/.eris directory with default files or update to latest version",
 	Long: `Create the ~/.eris directory with actions and services subfolders
 and clone eris-ltd/eris-actions eris-ltd/eris-services into them, respectively.
 `,
@@ -29,28 +28,16 @@ func addInitFlags() {
 	Init.Flags().BoolVarP(&do.Services, "services", "", false, "only update the default services (requires git to be installed)")
 	Init.Flags().BoolVarP(&do.Actions, "actions", "", false, "only update the default actions (requires git to be installed)")
 	Init.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts (requires git to be installed)")
-	Init.Flags().BoolVarP(&do.Tool, "tool", "", false, "only update the eris cli tool and nothing else (requires git and go to be installed)")
-	Init.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from (mostly used for eris update) (requires git to be installed)")
-	Init.Flags().BoolVarP(&do.All, "all", "", false, "update all the above and skip command-line prompts (requires git and go to be installed)")
 }
 
 func Router(cmd *cobra.Command, args []string) {
-	switch {
-	case do.Yes:
+	if do.Yes {
 		do.Services = true
 		do.Actions = true
-	case do.All:
-		do.Services = true
-		do.Actions = true
-		do.Tool = true
 	}
 
-	if do.Tool {
-		util.UpdateEris(do.Branch)
-
-		if !do.All {
-			return
-		}
+	if !do.Pull {
+		util.CheckGitAndGo(true, false)
 	}
 
 	ini.Initialize(do)
