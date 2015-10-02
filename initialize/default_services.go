@@ -1,12 +1,18 @@
 package initialize
 
-func DefaultKeys() string {
-	return `[service]
-name = "keys"
+import (
+	"fmt"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+)
+
+func DefaultKeys() string {
+	return fmt.Sprintf(`[service]
+name = "keys"
 image = "eris/keys"
-data_container = true
-`
+data_container = false
+volumes = [ "%s:/home/eris/.eris/keys" ]
+`, common.KeysPath)
 }
 
 func DefaultIpfs() string {

@@ -173,8 +173,21 @@ var chainsPlop = &cobra.Command{
 var chainsPorts = &cobra.Command{
 	Use:   "ports",
 	Short: "Print the port mapping",
-	Long:  "Print the port mapping",
-	Run:   PortsChain,
+	Long: `Print the port mapping
+
+eris chains ports is mostly a developer convenience function.
+It returns a machine readable port mapping of a port which is
+exposed inside the container to what that port is mapped to
+on the host.
+
+This is useful when stitching together chain networks which
+need to know how to connect into a specific chain (perhaps
+with or without a container number) container.
+`,
+	Example: `  eris chains ports myChain 1337 -> will display what port on the host is mapped to the eris:db API port
+  eris chains ports myChain 46656 -> will display what port on the host is mapped to the eris:db peer port
+  eris chains ports myChain 46657 -> will display what port on the host is mapped to the eris:db rpc port`,
+	Run: PortsChain,
 }
 
 var chainsHead = &cobra.Command{
@@ -191,7 +204,6 @@ var chainsEdit = &cobra.Command{
 	Use:   "edit [name]",
 	Short: "Edit a blockchain.",
 	Long: `Edit a blockchain definition file.
-
 
 Edit will utilize your default editor.
 `,
