@@ -4,22 +4,11 @@
 
 # Eris
 
-The Distributed Application Platform.
-
-# Go Vroom
-
-Install Docker.
-
-Install Go.
-
 ```
-go get github.com/eris-ltd/eris-cli/cmd/eris
-eris init
+Eris is a platform for building, testing, maintaining, and operating distributed
+applications with a blockchain backend. Eris makes it easy and simple to wrangle
+the dragons of smart contract blockchains.
 ```
-
-More details are below for those who require.
-
-# Introduction
 
 `eris` is a tool which makes it easy for developers to build, test, manage, and operate distributed applications.
 
@@ -27,143 +16,32 @@ More details are below for those who require.
 
 [For the motivation behind this tool](https://github.com/eris-ltd/eris-cli/blob/master/docs/motivation.md).
 
-# Eris: Today
+# Install
 
-```
-Eris is a platform for building, testing, maintaining, and operating distributed
-applications with a blockchain backend. Eris makes it easy and simple to wrangle
-the dragons of smart contract blockchains.
-```
-
-The `eris` tool is centered around a very few concepts:
-
-* `services` -- things that you turn on or off
-* `chains` -- develop permissioned chains
-* `actions` -- step by step processes
-* `contracts` (still a WIP) -- the newest iteration of our smart contract tool chain
-
-We intend to add the following concepts over time:
-
-* `projects` -- actions, workers, agents, contracts scoping feature
-* `agents` -- local or remote agents which can adjust the settings of any node running `eris`
-* `workers` -- scripted processes which need more logic than actions allow
-
-These concepts (along with a few other goodies) provide the core functionality of what we think a true distributed application would look like.
-
-# Installation
-
-We haven't perfected the installation path yet. We will ensure that this path is a bit smoother prior to our 0.11 release.
-
-At this time, we **highly** recommend using `eris` on a remote Ubuntu 14.04 installation. Debug support for other OSs is not currently provided. 
-
-## Dependencies
-
-**N.B.** We will be distributing `eris` via binary builds by September or so. Until such time we do require it be built.
-
-We have prototyped an apt-get -able binary installation. **Warning, could break**. If you would like to protoype please run [this script](tests/hack/install_deb.sh) (as sudo).
-
-We also have (experimental) downloadable builds from our [Github Releases Page](https://github.com/eris-ltd/eris-cli/releases).
-
-### Docker
-
-Installation requires that Docker be installed. Please see the [Docker](https://docs.docker.com/installation/) documentation for how to install.
-
-At the current time, `eris` requires `docker` >= 1.7.1. You can check your docker version with `docker version`. We do test against `docker` 1.6.2 (but at this time those tests are not passing). By `requires` in this paragraph, we mean that we ensure that our tests pass against that docker version. Use other docker versions at your own risk.
-
-At the current time, our test suite uses the concept of an "authentic backend". This is, by default, what is installed in the default docker setup. This will change over time as docker releases new software. By "authentic" we mean that our test suite will formally report an error for that backend. These errors will be prioritized over other backends which fall into the `required >=` camp which will in turn be prioritized over any other tested backends.
-
-#### Linux
-
-Follow the link above for the official way to install Docker on your Linux box. For Ubuntu 14.04, run 
-```
-$ curl -sSL https://get.docker.com/ | sh
-```
-
-After you install docker, then you will want to make sure that the user you are using to develop with `eris` has access to docker. When you are logged in as the user you can do this:
-
-```
-sudo usermod -a -G docker $USER
-```
-
-That will add the current user to the docker group which will mean that docker will not need to be called from `sudo`. To check that this change has "taken":
-
-```
-docker version
-```
-
-If the last two lines of output from this command are:
-```
-* Are you trying to connect to a TLS-enabled daemon without TLS?
-* Is your docker daemon up and running?
-```
-
-then a variety of things could have gone wrong during setup. Please consult the docker documentation to debug.
-
-If you would like to quickly provision a host, you can use the script found in tests/hack/host_provision.sh to provision the host for you. This has been tested against stock Ubuntu 14.04, if it does not work for other systems then we would happily accept pull requests to update it to make it more usable.
-
-#### OSX
-
-If you are on OSX, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon. Upon launching the VM, follow the stdout carefully for setup instructions.
-
-If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed.
-
-If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`. We strongly recommend that you update to docker-machine [following Docker's instructions](https://docs.docker.com/machine/migrate-to-machine/).
-
-#### Windows
-
-If you are on Windows, we **strongly recommend** that you install the [Docker Toolbox](https://www.docker.com/toolbox). The Toolbox will build Docker in a predictable way so that `eris` is able to connect into the Docker daemon.
-
-If you do not install the Toolbox, then you will need to make sure that the `DOCKER_CERT_PATH` and the `DOCKER_HOST` environment variables have been set to wherever the certificates for connection to the Docker Daemon API's have been installed. Upon launching the VM, follow the stdout carefully for setup instructions.
-
-If you installed Docker via boot2docker, these *may* be set by running: `eval "$(boot2docker shellinit)"`. We strongly recommend that you update to docker-machine [following Docker's instructions](https://docs.docker.com/machine/migrate-to-machine/).
-
-### Go
-
-**Note** if you are one of the intrepid `apt-get` -ers then you do not need to have Go installed.
-
-Installation requires that Go be installed. Please see the [Golang](https://golang.org/doc/install) documentation for how to install.
-
-At the current time, `eris` requires `go` >= 1.4.2. You can check your go version with `go version`.
-
-Once you have go installed, then you will want to make sure that you also have your `$GOPATH` in your `$PATH`. Most gophers add the following line to their `~/.bashrc`, `~/.profile`, `~/.zshrc` file or other relevant file.
-
-```
-export PATH=$GOPATH/bin:$PATH
-```
-
-You can check that this change was added by `echo $PATH` and making sure that your path has been updated appropriately.
-
-## Install Eris
+* Install Docker.
+* Install Go.
 
 ```
 go get github.com/eris-ltd/eris-cli/cmd/eris
 eris init
 ```
 
-That's it. You can now operate any of the services pre-built in the [eris:services](https://github.com/eris-ltd/eris-services) repository, among many others which are simply a single config file away.
+Please see our [getting started page](https://docs.erisindustries.com/tutorials/getting-started/) for those who no familiar with go and/or docker.
 
-Eris allows you to make and develop against numerous blockchains. You can
+# Eris: Overview
 
-* import existing permissioned chains
-* connect to public as well as permissioned blockchains
-* perform many other functions which we have found useful in developing blockchain backed applications.
+The `eris` tool is centered around a very few concepts:
 
-[For a further overview of this tool, please see here.](http://www.slideshare.net/CaseyKuhlman/erisplatform-introduction) or simply type:
+* `services` -- things that you turn on or off
+* `chains` -- develop permissioned chains
+* `actions` -- step by step processes
+* `contracts` -- the newest iteration of our smart contract tool chain
 
-```
-eris
-```
-Confused by a command or error message? [Drop us a line here](https://github.com/eris-ltd/eris-cli/issues/225) for clarification.
+These concepts (along with a few other goodies) provide the core functionality of what we think a true distributed application would look like.
 
 # Architecture of the Tool
 
-From here on out, we're gonna go full nerd. Be forewarned.
-
-The Eris CLI tool is mostly an opinionated wrapper around Docker's API.
-
-We have found that running applications locally which require sophisticated installation paths and/or complex configuration work best when used from Docker's Container based system.
-
-During our 0.9 series we have learned both the benefits of using Docker, as well as the challenges that using Docker present to distributed application developers and users. This learning, along with our user's feedback, have led directly the the current architecture. Each of the `concepts` listed above is described in a bit more detail below.
+The Eris CLI tool is mostly an opinionated wrapper around Docker's API. We have found that running applications locally which require sophisticated installation paths and/or complex configuration work best when used from Docker's Container based system. Each of the `concepts` listed above is described in a bit more detail below.
 
 ## Services
 
