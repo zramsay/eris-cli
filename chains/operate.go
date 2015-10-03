@@ -24,18 +24,6 @@ import (
 )
 
 func NewChain(do *definitions.Do) error {
-	// read chainID from genesis. genesis may be in dir
-	// if no genesis or no genesis.chain_id, chainID = name
-	/*var err error
-	if do.GenesisFile = resolveGenesisFile(do.GenesisFile, do.Path); do.GenesisFile == "" {
-		do.ChainID = do.Name
-	} else {
-		do.ChainID, err = getChainIDFromGenesis(do.GenesisFile, do.Name)
-		if err != nil {
-			return err
-		}
-	}*/
-
 	// for now we just let setupChain force do.ChainID = do.Name
 	// and we overwrite using jq in the container
 	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.ChainID)

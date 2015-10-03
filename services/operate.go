@@ -51,10 +51,9 @@ func StartService(do *definitions.Do) (err error) {
 	return StartGroup(services)
 }
 
-func KillService(do *definitions.Do) error {
+func KillService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	do.Args = append(do.Args, do.ServicesSlice...)
 	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
 	for _, servName := range do.Args {
 		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
@@ -62,19 +61,6 @@ func KillService(do *definitions.Do) error {
 			return e
 		}
 		services = append(services, s...)
-	}
-
-	logger.Debugln("Services before build chain =>")
-	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
-	}
-	services, err = BuildChainGroup(do.ChainName, services)
-	if err != nil {
-		return err
-	}
-	logger.Debugln("Services after build chain =>")
-	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
 
 	// if force flag given, this will override any timeout flag

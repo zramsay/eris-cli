@@ -38,6 +38,7 @@ db_backend = "leveldb"
 log_level = "debug"
 node_laddr = "0.0.0.0:46656"
 rpc_laddr = "0.0.0.0:46657"
+vm_log = false
 `
 }
 
