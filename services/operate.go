@@ -13,23 +13,22 @@ import (
 func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	cNum := do.Operations.ContainerNumber
 	do.Args = append(do.Args, do.ServicesSlice...)
 	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
 	for _, srv := range do.Args {
-		s, e := BuildServicesGroup(srv, cNum)
+		s, e := BuildServicesGroup(srv, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
 	}
+
+	// [csk]: controls for ops reconciliation, overwrite will, e.g., merge the maps and stuff
 	for _, s := range services {
-		// XXX does AutoMagic elim need for this?
-		// [csk]: not totally we may need to have ops reconciliation, overwrite will, e.g., merge the maps and stuff
 		util.OverWriteOperations(s.Operations, do.Operations)
 	}
 
-	logger.Debugln("services before build chain")
+	logger.Debugln("Services before build chain =>")
 	for _, s := range services {
 		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
@@ -37,7 +36,7 @@ func StartService(do *definitions.Do) (err error) {
 	if err != nil {
 		return err
 	}
-	logger.Debugln("services after build chain")
+	logger.Debugln("Services after build chain =>")
 	for _, s := range services {
 		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
@@ -55,12 +54,27 @@ func StartService(do *definitions.Do) (err error) {
 func KillService(do *definitions.Do) error {
 	var services []*definitions.ServiceDefinition
 
+	do.Args = append(do.Args, do.ServicesSlice...)
+	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
 	for _, servName := range do.Args {
 		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
+	}
+
+	logger.Debugln("Services before build chain =>")
+	for _, s := range services {
+		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
+	}
+	services, err = BuildChainGroup(do.ChainName, services)
+	if err != nil {
+		return err
+	}
+	logger.Debugln("Services after build chain =>")
+	for _, s := range services {
+		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
 
 	// if force flag given, this will override any timeout flag
@@ -84,10 +98,6 @@ func KillService(do *definitions.Do) error {
 				return err
 			}
 		}
-	}
-
-	if do.ChainName != "" {
-		// XXX: is it possible to delete the chain from here?
 	}
 
 	return nil
