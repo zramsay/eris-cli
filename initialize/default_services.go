@@ -9,7 +9,7 @@ import (
 func DefaultKeys() string {
 	return fmt.Sprintf(`[service]
 name = "keys"
-image = "eris/keys"
+image = "quay.io/eris/keys"
 data_container = true
 `)
 }
