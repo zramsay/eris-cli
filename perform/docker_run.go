@@ -23,12 +23,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-// Build against Docker cli...
-//   Client version: 1.6.2, 1.7
-//   Client API version: 1.18, 1.19
-// Verified against ...
-//   Client version: 1.6.2, 1.7
-//   Client API version: 1.18, 1.19
+// Tested against Docker API versions: 1.18, 1.19, 1.20
 func DockerCreateDataContainer(srvName string, containerNumber int) error {
 	logger.Infof("Creating Data Container for =>\t%s\n", srvName)
 
