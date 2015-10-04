@@ -18,11 +18,17 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-// Tested against Docker API versions: 1.18, 1.19, 1.20
+// Build against Docker cli...
+//   Client version: 1.6.2, 1.7
+//   Client API version: 1.18, 1.19
+// Verified against ...
+//   Client version: 1.6.2, 1.7
+//   Client API version: 1.18, 1.19
 func DockerCreateDataContainer(srvName string, containerNumber int) error {
 	logger.Infof("Creating Data Container for =>\t%s\n", srvName)
 
@@ -87,6 +93,14 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 
 	if interactive {
 		logger.Debugf("Attaching to container =>\t%s\n", id_main)
+
+		savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+		if err != nil {
+			logger.Errorln("Cannot set the terminal into raw mode")
+		} else {
+			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+		}
+
 		// attachContainer uses hijack so we need to run this in a goroutine
 		go func() {
 			attachContainer(id_main)
@@ -284,6 +298,13 @@ func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive 
 		// Create the execution
 		logger.Infof("Non-Attaching Exec =>\t\t%s:contID:%s\n", strings.Join(cmd, " "), servCont.ID)
 
+		savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+		if err != nil {
+			logger.Errorln("Cannot set the terminal into raw mode")
+		} else {
+			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+		}
+
 		exec, err := createExec(servCont.ID, cmd, srv)
 		if err != nil {
 			return err
@@ -291,6 +312,7 @@ func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive 
 
 		return startExec(exec.ID)
 	} else {
+
 		logger.Infof("Attaching to Container =>\t\t%s\n", servCont.ID)
 		return attachContainer(servCont.ID)
 	}
