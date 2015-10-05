@@ -130,15 +130,7 @@ func ThrowAwayChain(do *definitions.Do) error {
 	}
 
 	logger.Debugf("ThrowAwayChain created =>\t%s\n", do.Name)
-
-	// fakeId := strings.Split(uuid.New(), "-")[0]
-	// srv, err := loaders.MockChainDefinition(do.Name, fakeId, true, 1)
-	// if err != nil {
-	// 	return err
-	// }
-
-	StartChain(do)
-
+	StartChain(do) // XXX [csk]: may not need to do this now that New starts....
 	logger.Debugf("ThrowAwayChain started =>\t%s\n", do.Name)
 	return nil
 }

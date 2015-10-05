@@ -19,7 +19,7 @@ func DefaultIpfs() string {
 
 [service]
 name = "ipfs"
-image = "eris/ipfs"
+image = "quay.io/eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"
@@ -42,7 +42,7 @@ func DefaultIpfs2() string {
 
 [service]
 name = "ipfs"
-image = "eris/ipfs"
+image = "quay.io/eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"

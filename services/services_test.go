@@ -274,7 +274,7 @@ func TestNewService(t *testing.T) {
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Args = []string{"eris/keys"}
+	do.Args = []string{"quay.io/eris/keys"}
 	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
 	e := NewService(do)
 	if e != nil {
@@ -302,7 +302,7 @@ func TestNewService(t *testing.T) {
 func TestRenameService(t *testing.T) {
 	// do := def.NowDo()
 	// do.Name = "keys"
-	// do.Args = []string{"eris/keys"}
+	// do.Args = []string{"quay.io/eris/keys"}
 	// logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
 	// if e := NewService(do); e != nil {
 	// 	logger.Errorln(e)

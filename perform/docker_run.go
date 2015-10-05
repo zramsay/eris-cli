@@ -862,7 +862,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + volumesFrom,
 		Config: &docker.Config{
-			Image:           "eris/base",
+			Image:           "quay.io/eris/base",
 			User:            "root",
 			WorkingDir:      dirs.ErisRoot,
 			AttachStdout:    true,
@@ -901,7 +901,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = "eris/data"
+		srv.Image = "quay.io/eris/data"
 	}
 
 	opts := docker.CreateContainerOptions{
