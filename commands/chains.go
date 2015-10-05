@@ -24,20 +24,20 @@ blockchain networks. The name is not perfect, as eris is able
 to operate a wide variety of blockchains out of the box. Most
 of those existing blockchains should be ran via the
 
-eris services ...
+[eris services ...]
 
 commands. As they fall under the rubric of "things I just want
 to turn on or off". While you can develop against those
 blockchains, you generally aren't developing those blockchains
 themselves.
 
-Eris chains is built to help you build blockchains. It is our
+[eris chains ...] is built to help you build blockchains. It is our
 opinionated gateway to the wonderful world of permissioned
 smart contract networks.
 
-Your own baby blockchain/smart contract machine is just an
+Your own blockchain/smart contract machine is just an
 
-eris chains new
+[eris chains new]
 
 away!`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
@@ -51,42 +51,76 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListKnown)
 	Chains.AddCommand(chainsList)
+	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPlop)
 	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsEdit)
-	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
-	Chains.AddCommand(chainsListRunning)
 	Chains.AddCommand(chainsInspect)
 	Chains.AddCommand(chainsStop)
+	Chains.AddCommand(chainsExec)
+	Chains.AddCommand(chainsCat)
 	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
-	Chains.AddCommand(chainsCat)
 	addChainsFlags()
 }
 
 // Chains Sub-sub-Commands
 var chainsNew = &cobra.Command{
 	Use:   "new [name]",
-	Short: "Creates a new blockhain.",
+	Short: "Create a new blockhain.",
 	Long: `Creates a new blockchain.
 
-Will use a default genesis.json unless a --genesis flag is passed.
-Still a WIP.`,
+The creation process will both create a blockchain on the current machine
+as well as start running that chain.
+
+If you need to update a chain after creation, you can update any of the
+appropriate settings in the chains definition file for the named chain
+(which will be located at ~/.eris/blockchains/CHAINNAME.toml) and then
+utilize [eris chains update CHAINNAME -p] to update the blockchain appropriately
+(using the -p flag will force eris not to pull the most recent docker image
+for eris:db).
+
+Will use a default genesis.json from ~/.eris/blockchains/default/genesis.json
+unless a --genesis flag is passed.
+
+Will use a default config.toml from ~/.eris/blockchains/default/config.toml
+unless the --options flag is passed.
+
+Will use a default eris:db server config from ~/.eris/blockchains/default/server_conf.toml
+unless the --serverconf flag is passed.
+
+For more complex blockchain creation, you will want to "hand craft" a genesis.json
+see our tutorial for chain creation here:
+https://docs.erisindustries.com/tutorials/chainmaking/
+`,
 	Run: NewChain,
 }
 
 var chainsRegister = &cobra.Command{
 	Use:   "register [name]",
 	Short: "Registers a blockchain on etcb (a blockchain for registering other blockchains",
-	Long:  "Registers a blockchain on etcb (a blockchain for registering other blockchains",
-	Run:   RegisterChain,
+	Long: `Registers a blockchain on etcb
+
+etcb is Eris's blockchain which is a public blockchain that can be used to
+register *other* blockchains. In other words it is an easy way to "share"
+your blockchains with others. [eris chains register] is made to work
+seemlessly with [eris chains install] so that other users and/or colleagues
+should be able to use your registered blockchain by simply using the install
+command.
+
+register it is not the *only* way to share your blockchains (you can) also
+export your chain definition file and genesis.json to IPFS and share the
+hash of the chain definition file and genesis.json with any colleagues or
+users who need to be able to connect into the blockchain.
+`,
+	Run: RegisterChain,
 }
 
 var chainsInstall = &cobra.Command{
@@ -105,19 +139,17 @@ var chainsListKnown = &cobra.Command{
 	Short: "List all the blockchains Eris knows about.",
 	Long: `Lists the blockchains which Eris has installed for you.
 
-To hash a new blockchain, use:
+To create a new blockchain, use:
 
-eris chains new
+[eris chains new]
 
-To install and fetch a blockchain from a chain definition
-file, use:
+To install and fetch a blockchain from a chain definition file, use:
 
-eris chains install
+[eris chains install]
 
-Services include all other chain types supported by the
-Eris platform.
-
-Services are handled using the [eris services] command.`,
+Services include all other chain types (btc, eth, etc.) supported by the
+Eris platform. Services are handled using the [eris services] command.
+`,
 	Run: ListKnownChains,
 }
 
@@ -150,15 +182,13 @@ var chainsCheckout = &cobra.Command{
 	Short: "Checks out a chain.",
 	Long: `Checks out a chain.
 
-Checkout if a convenience features. For any eris command
-which accepts a --chain or $chain variable, the checked
-out chain can replace manually passing in a --chain flag.
-If a --chain is passed to any command accepting --chain,
-the --chain which is passed will overwrite any checked
-out chain.
+Checkout is a convenience feature. For any eris command which accepts a
+--chain or $chain variable, the checked out chain can replace manually
+passing in a --chain flag. If a --chain is passed to any command accepting
+--chain, the --chain which is passed will overwrite any checked out chain.
 
-If command is given without arguments it will clear the
-head and there will be no chain checked out.
+If command is given without arguments it will clear the head and there will
+be no chain checked out.
 `,
 	Run: CheckoutChain,
 }
@@ -166,7 +196,7 @@ head and there will be no chain checked out.
 var chainsPlop = &cobra.Command{
 	Use:   "plop",
 	Short: "Plop the genesis or config file",
-	Long:  "Plop the genesis or config file",
+	Long:  "Display the genesis or config file in a machine readable output",
 	Run:   PlopChain,
 }
 
@@ -193,9 +223,12 @@ with or without a container number) container.
 var chainsHead = &cobra.Command{
 	Use:   "current",
 	Short: "The currently checked out chain.",
-	Long: `The currently checked out chain.
+	Long: `Displays the name of the currently checked out chain.
 
-To checkout a new chain use eris chains checkout
+To checkout a new chain use [eris chains checkout CHAINNAME]
+
+To "uncheckout" a chain use [eris chains checkout] without any
+arguments.
 `,
 	Run: CurrentChain,
 }
@@ -205,7 +238,11 @@ var chainsEdit = &cobra.Command{
 	Short: "Edit a blockchain.",
 	Long: `Edit a blockchain definition file.
 
-Edit will utilize your default editor.
+Edit will utilize the default editor set for your current shell
+or if none is set, it will use *vim*. Sorry for the bias emacs
+users, but we had to pick one and more marmots are known vim
+users ¯\_(ツ)_/¯ . Emacs users can set their $EDITOR variable
+and eris will default to that if you wise.
 `,
 	Run: EditChain,
 }
@@ -213,7 +250,7 @@ Edit will utilize your default editor.
 var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
-	Long: `Start a blockchain.
+	Long: `Start running a blockchain.
 
 [eris chains start name] by default will put the chain into the
 background so its logs will not be viewable from the command line.
@@ -235,7 +272,7 @@ var chainsExec = &cobra.Command{
 	Use:   "exec [serviceName]",
 	Short: "Run a command or interactive shell",
 	Long: `Run a command or interactive shell in a container
-	with volumes-from the data container`,
+with volumes-from the data container`,
 	Run: ExecChain,
 }
 
@@ -310,15 +347,30 @@ Functionally this command will perform the following sequence:
 5. Restart the chain (if it was previously running)
 
 **NOTE**: If the chain uses data containers those will not be affected
-by the update command.`,
+by the update command.
+`,
 	Run: UpdateChain,
 }
 
 var chainsGraduate = &cobra.Command{
 	Use:   "graduate",
 	Short: "Graduates a chain to a service.",
-	Long:  `Graduates a chain to a service by laying a service definition file with the chain_id`,
-	Run:   GraduateChain,
+	Long: `Graduates a chain to a service.
+
+Graduate works by translating the chain's definition into a service definition
+file with the chain_id set as the service name and everything set for you to
+more simply turn the chain on or off.
+
+Graduate should be used whenever you are "finished" working "on" the chain and
+you feel the chain is stable. While chains work just fine by turning them "on"
+or "off" with [eris chains start] and [eris chains stop], some feel that it is
+easier to work with chains as a service rather than as a chain when they are
+stable and not longer need to be worked "on" which is why this functionality
+exists. Ultimately, graduate is a convenience function as there is little to
+no difference in how chains and services "run", however the [eris chains]
+functions have more convenience functions for working "on" chains themselves.
+`,
+	Run: GraduateChain,
 }
 
 var chainsCat = &cobra.Command{
