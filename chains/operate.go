@@ -122,7 +122,7 @@ func ExecChain(do *definitions.Do) error {
 // Throw away chains are used for eris contracts
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
-	do.Path = filepath.Join(ChainsConfigPath, "default")
+	do.Path = filepath.Join(BlockchainsPath, "default")
 	logger.Debugf("Making a ThrowAwayChain =>\t%s:%s\n", do.Name, do.Path)
 
 	if err := NewChain(do); err != nil {

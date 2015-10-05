@@ -45,13 +45,12 @@ var (
 	SerpScratchPath = path.Join(ScratchPath, "ser")
 
 	// Blockchains stuff
-	ChainsConfigPath = path.Join(BlockchainsPath, "config")
-	HEAD             = path.Join(BlockchainsPath, "HEAD")
-	Refs             = path.Join(BlockchainsPath, "refs")
+	HEAD = path.Join(BlockchainsPath, "HEAD")
+	Refs = path.Join(BlockchainsPath, "refs")
 )
 
 var MajorDirs = []string{
-	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath, ChainsConfigPath,
+	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
 }
 
 //---------------------------------------------
