@@ -169,13 +169,13 @@ packagesToTest() {
 
   # Start the second series of tests
   go test ./services/...
+  # cd services && go test && cd ..
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
   go test ./chains/...
-  # cd chains && go test
+  # cd chains && go test && cd ..
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  # cd ..
   go test ./actions/...
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi
