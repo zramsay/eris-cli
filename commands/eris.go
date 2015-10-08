@@ -84,6 +84,9 @@ func AddCommands() {
 	ErisCmd.AddCommand(VerSion)
 	buildInitCommand()
 	ErisCmd.AddCommand(Init)
+	buildUpdateCommand()
+	ErisCmd.AddCommand(Update)
+
 }
 
 // Global Do struct
