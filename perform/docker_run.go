@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -80,12 +81,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 		logger.Infof("Container removed =>\t\t%s\n", id_main)
 	}()
 
-	// start the container (either interactive or one off command)
-	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
-	if err = startContainer(id_main, &opts); err != nil {
-		return nil, err
-	}
-
+	attached := make(chan struct{})
 	if interactive {
 		logger.Debugf("Attaching to container =>\t%s\n", id_main)
 
@@ -96,10 +92,24 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
 		}
 
-		// attachContainer uses hijack so we need to run this in a goroutine
-		go func() {
-			attachContainer(id_main)
-		}()
+		// attachContainer uses hijack so we need to run this in a goroutine.
+		go func(chan struct{}) {
+			attachContainer(id_main, attached)
+		}(attached)
+	}
+
+	// start the container (either interactive or one off command)
+	logger.Infof("Exec Container ID =>\t\t%s\n", id_main)
+	if err = startContainer(id_main, &opts); err != nil {
+		return nil, err
+	}
+
+	if interactive {
+		// Wait for the console prompt to appear.
+		_, ok := <-attached
+		if ok {
+			attached <- struct{}{}
+		}
 	}
 
 	logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
@@ -280,37 +290,111 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	return nil
 }
 
-func DockerExec(srv *def.Service, ops *def.Operation, cmd []string, interactive bool) error {
-	logger.Infof("Starting Docker Exec =>\t\t%s\n", srv.Name)
+func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, interactive bool, volume string) error {
+	var id_main, id_data string
+	var optsData docker.CreateContainerOptions
+	var dataContCreated *docker.Container
 
-	// check existence || create the container
-	servCont, exists := ContainerExists(ops)
-	if !exists {
-		return fmt.Errorf("Cannot exec a service which is not created. Please start the service: %s.\n", srv.Name)
+	// Prevent from running the same container due to a conflict between exposed ports.
+	_, running := ContainerRunning(ops)
+	if running {
+		logger.Errorf("Service %q is already started, aborting.\n", srv.Name)
+		return nil
 	}
 
-	if !interactive {
-		// Create the execution
-		logger.Infof("Non-Attaching Exec =>\t\t%s:contID:%s\n", strings.Join(cmd, " "), servCont.ID)
-
-		savedState, err := term.SetRawTerminal(os.Stdin.Fd())
-		if err != nil {
-			logger.Errorln("Cannot set the terminal into raw mode")
-		} else {
-			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+	defer func() {
+		logger.Infof("Removing container =>\t\t%s\n", id_main)
+		if err := removeContainer(id_main); err != nil {
+			fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", id_main, err)
 		}
+		logger.Infof("Container removed =>\t\t%s\n", id_main)
+	}()
 
-		exec, err := createExec(servCont.ID, cmd, srv)
+	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
+	optsServ, err := configureInteractiveContainer(srv, ops, args, interactive, volume)
+
+	// Fix volume paths.
+	srv.Volumes, err = fixDirs(srv.Volumes)
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("Creating from image (%s)\n", srv.Image)
+	if srv.AutoData {
+		optsData, err = configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
 			return err
 		}
-
-		return startExec(exec.ID)
-	} else {
-
-		logger.Infof("Attaching to Container =>\t\t%s\n", servCont.ID)
-		return attachContainer(servCont.ID)
+		if dataCont, exists := parseContainers(ops.DataContainerName, true); exists {
+			logger.Infoln("Data Container already exists, am not creating.")
+			id_data = dataCont.ID
+		} else {
+			logger.Infoln("Data Container does not exist, creating.")
+			dataContCreated, err = createContainer(optsData)
+			if err != nil {
+				return err
+			}
+			id_data = dataContCreated.ID
+		}
 	}
+
+	servContCreated, err := createContainer(optsServ)
+	if err != nil {
+		return err
+	}
+	id_main = servContCreated.ID
+
+	// Set terminal into row mode, and restore upon container exit.
+	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+	if err != nil {
+		fmt.Println("Cannot set the terminal into raw mode")
+	} else {
+		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+	}
+
+	// Trap signals so we can drop out of the container.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		<-c
+		logger.Infof("\nCaught signal. Stopping container %s\n", id_main)
+		if err = stopContainer(id_main, 5); err != nil {
+			logger.Errorf("Error stopping container: %v\n", err)
+		}
+	}()
+
+	// This channel receives an event that the container is attached.
+	attached := make(chan struct{})
+	go func(chan struct{}) {
+		attachContainer(id_main, attached)
+	}(attached)
+
+	// Start the container.
+	logger.Infof("Starting Service Contanr ID =>\t%s:%s\n", optsServ.Name, id_main)
+	if srv.AutoData {
+		logger.Infof("\twith DataContanr ID =>\t%s\n", id_data)
+	}
+	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
+	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
+	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
+	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
+
+	if err := startContainer(id_main, &optsServ); err != nil {
+		return err
+	}
+
+	// Wait for a console prompt to appear.
+	_, ok := <-attached
+	if ok {
+		attached <- struct{}{}
+	}
+
+	logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
+	if err := waitContainer(id_main); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout uint) error {
@@ -645,7 +729,7 @@ func startContainer(id string, opts *docker.CreateContainerOptions) error {
 	return util.DockerClient.StartContainer(id, opts.HostConfig)
 }
 
-func attachContainer(id string) error {
+func attachContainer(id string, attached chan struct{}) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
 		InputStream:  os.Stdin,
@@ -657,6 +741,7 @@ func attachContainer(id string) error {
 		Stdout:       true,
 		Stderr:       true,
 		RawTerminal:  true,
+		Success:      attached,
 	}
 
 	return util.DockerClient.AttachToContainer(opts)
@@ -754,6 +839,37 @@ func removeContainer(id string) error {
 	}
 
 	return nil
+}
+
+func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []string, interactive bool, volume string) (docker.CreateContainerOptions, error) {
+	opts, err := configureServiceContainer(srv, ops)
+	if err != nil {
+		return docker.CreateContainerOptions{}, err
+	}
+
+	opts.Name = "eris_interactive_" + opts.Name
+	opts.Config.User = "root"
+	opts.Config.OpenStdin = true
+	opts.Config.Tty = true
+	opts.Config.Entrypoint = []string{"/bin/bash"}
+	opts.Config.Cmd = nil
+	if len(args) > 0 {
+		opts.Config.Entrypoint = args
+	}
+
+	// Mount a volume.
+	if volume != "" {
+		bind := filepath.Join(util.HostErisHome(), volume) + ":" +
+			filepath.Join(util.ContainerErisHome(opts.Config.User), volume)
+
+		if opts.HostConfig.Binds == nil {
+			opts.HostConfig.Binds = []string{bind}
+		} else {
+			opts.HostConfig.Binds = append(opts.HostConfig.Binds, bind)
+		}
+	}
+
+	return opts, nil
 }
 
 func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.CreateContainerOptions, error) {

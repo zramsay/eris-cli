@@ -43,6 +43,7 @@ type Do struct {
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 

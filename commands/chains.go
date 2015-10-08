@@ -464,11 +464,11 @@ func ExecChain(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 	// if interactive, we ignore args. if not, run args as command
+	args = args[1:]
 	if !do.Interactive {
-		if len(args) < 2 {
+		if len(args) == 0 {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
-		args = args[1:]
 	}
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")

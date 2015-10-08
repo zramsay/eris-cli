@@ -242,6 +242,7 @@ func addServicesFlags() {
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+	servicesExec.Flags().StringVarP(&do.Volume, "volume", "m", "", "mount a volume $HOME/.eris/VOLUME on a host machine to a /home/eris/.eris/VOLUME on a container")
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
@@ -286,12 +287,17 @@ func ExecService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
+	// if interactive, we ignore args. if not, run args as command
 	args = args[1:]
+	if !do.Interactive {
+		if len(args) == 0 {
+			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+		}
+	}
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
 	do.Args = args
-
 	IfExit(srv.ExecService(do))
 }
 
