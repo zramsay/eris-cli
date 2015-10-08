@@ -24,9 +24,24 @@ import (
 )
 
 func NewChain(do *definitions.Do) error {
+
+	//overwrites directory if --force
+	dir := path.Join(DataContainersPath, do.Name)
+	if _, err := os.Stat(dir); err == nil {
+		logger.Debugf("Chain data already exists in %s\n", dir)
+		if do.Force {
+			logger.Debugln("Overwriting with new data")
+			if os.RemoveAll(dir); err != nil {
+				return err
+			}
+		} else {
+			logger.Debugln("Using existing data; --force flag not given")
+		}
+	}
+
 	// for now we just let setupChain force do.ChainID = do.Name
 	// and we overwrite using jq in the container
-	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.ChainID)
+	logger.Debugf("Starting Setup for ChnID =>\t%s\n", do.Name)
 	return setupChain(do, loaders.ErisChainNew)
 }
 
@@ -81,9 +96,7 @@ func KillChain(do *definitions.Do) error {
 	}
 
 	if do.Force {
-		if do.Timeout == 10 { // default set by flags
-			do.Timeout = 0
-		}
+		do.Timeout = 0 //overrides 10 sec default
 	}
 
 	if IsChainRunning(chain) {

@@ -395,6 +395,7 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
+	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
 	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
 
