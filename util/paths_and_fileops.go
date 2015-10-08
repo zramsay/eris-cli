@@ -107,5 +107,8 @@ func HostErisHome() string {
 // ContainerErisHome returns the Eris directory on a container machine
 // for a particular user.
 func ContainerErisHome(user string) string {
+	if user == "root" {
+		return filepath.Join("/root", ".eris")
+	}
 	return filepath.Join("/home", user, ".eris")
 }
