@@ -377,7 +377,6 @@ func RmChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		oldFile = path.Join(BlockchainsPath, oldFile) + ".toml"
 		logger.Printf("Removing file =>\t\t%s\n", oldFile)
 		if err := os.Remove(oldFile); err != nil {
 			return err

@@ -94,14 +94,7 @@ func ExecService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-
-	if IsServiceExisting(service.Service, service.Operations) {
-		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
-	}
-
-	return nil
+	return StartServiceInteractiveByService(service.Service, service.Operations, do.Args, do.Interactive, do.Volume)
 }
 
 // TODO: test this recursion and service deps generally
@@ -187,6 +180,9 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 
 // ------------------------------------------------------------------------------------------
 // Wrappers we want to be able to call from Chains package (mostly)
+func StartServiceInteractiveByService(srvMain *definitions.Service, ops *definitions.Operation, args []string, interactive bool, volume string) error {
+	return perform.DockerRunInteractive(srvMain, ops, args, interactive, volume)
+}
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
 	return perform.DockerRun(srvMain, ops)
@@ -196,13 +192,6 @@ func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, 
 	return perform.DockerLogs(srv, ops, follow, tail)
 }
 
-func ExecServiceByService(srvMain *definitions.Service, ops *definitions.Operation, cmd []string, attach bool) error {
-	return perform.DockerExec(srvMain, ops, cmd, attach)
-}
-
 func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation, timeout uint) error {
 	return perform.DockerStop(srvMain, ops, timeout)
 }
-
-// ------------------------------------------------------------------------------------------
-// Helpers

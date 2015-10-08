@@ -49,46 +49,6 @@ func InstallChain(do *definitions.Do) error {
 	return setupChain(do, loaders.ErisChainInstall)
 }
 
-func StartChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
-	if err != nil {
-		logger.Infoln("Cannot start a chain I cannot find.")
-		do.Result = "no file"
-		return nil
-	}
-
-	if chain.Name == "" {
-		logger.Infoln("Cannot start a chain without a name.")
-		do.Result = "no name"
-		return nil
-	}
-
-	// boot the dependencies (eg. keys)
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
-	chain.Service.Command = loaders.ErisChainStart
-	util.OverWriteOperations(chain.Operations, do.Operations)
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
-	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
-	if do.Run {
-		chain.Service.Environment = append(chain.Service.Environment, "ERISDB_API=true")
-	}
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
-	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
-	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
-	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
-	if err := perform.DockerRun(chain.Service, chain.Operations); err != nil {
-		do.Result = "error"
-		return err
-	}
-
-	return nil
-}
-
 func KillChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -116,20 +76,12 @@ func KillChain(do *definitions.Do) error {
 	return nil
 }
 
+func StartChain(do *definitions.Do) error {
+	return startChain(do, false)
+}
+
 func ExecChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
-	if err != nil {
-		return err
-	}
-
-	if IsChainExisting(chain) {
-		logger.Infoln("Chain exists.")
-		return perform.DockerExec(chain.Service, chain.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Chain does not exist. Please start the chain container with eris chains start %s.\n", do.Name)
-	}
-
-	return nil
+	return startChain(do, true)
 }
 
 // Throw away chains are used for eris contracts
@@ -149,6 +101,51 @@ func ThrowAwayChain(do *definitions.Do) error {
 }
 
 //------------------------------------------------------------------------
+func startChain(do *definitions.Do, exec bool) error {
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		logger.Errorln("Cannot start a chain I cannot find.")
+		do.Result = "no file"
+		return nil
+	}
+
+	if chain.Name == "" {
+		logger.Errorln("Cannot start a chain without a name.")
+		do.Result = "no name"
+		return nil
+	}
+
+	// boot the dependencies (eg. keys)
+	if err := bootDependencies(chain, do); err != nil {
+		return err
+	}
+
+	chain.Service.Command = loaders.ErisChainStart
+	util.OverWriteOperations(chain.Operations, do.Operations)
+	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
+	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
+	if do.Run {
+		chain.Service.Environment = append(chain.Service.Environment, "ERISDB_API=true")
+	}
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
+
+	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
+	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
+	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
+	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
+
+	if exec {
+		err = perform.DockerRunInteractive(chain.Service, chain.Operations, do.Args, do.Interactive, "")
+	} else {
+		err = perform.DockerRun(chain.Service, chain.Operations)
+	}
+	if err != nil {
+		do.Result = "error"
+		return err
+	}
+
+	return nil
+}
 
 // boot chain dependencies
 // TODO: this currently only supports simple services (with no further dependencies)
