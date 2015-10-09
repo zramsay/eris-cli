@@ -398,6 +398,7 @@ func testStartService(t *testing.T, serviceName string) {
 	do := def.NowDo()
 	do.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
+	do.Operations.PublishAllPorts = true
 	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
 	e := StartService(do)
 	if e != nil {
