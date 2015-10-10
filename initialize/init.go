@@ -45,13 +45,12 @@ func InitDefaultServices(do *definitions.Do) error {
 	if !do.Pull {
 		if err := cloneRepo(do.Services, "eris-services.git", common.ServicesPath); err != nil {
 			logger.Errorf("Error cloning default services repository.\n%v\nTrying default defs.\n", err)
-			if err2 := dropDefaults(); err2 != nil {
-				return fmt.Errorf("Error:\tcannot clone services.\n%v\nError:\tcannot drop default services.\n%v", err, err2)
-			}
-		} else {
-			if err2 := cloneRepo(do.Actions, "eris-actions.git", common.ActionsPath); err2 != nil {
-				return fmt.Errorf("Error:\tcannot clone actions.\n%v", err2)
-			}
+		}
+		if err2 := dropDefaults(); err2 != nil {
+			return fmt.Errorf("Error:\tcannot clone services.\nError:\tcannot drop default services.\n%v", err2)
+		}
+		if err2 := cloneRepo(do.Actions, "eris-actions.git", common.ActionsPath); err2 != nil {
+			return fmt.Errorf("Error:\tcannot clone actions.\n%v", err2)
 		}
 	} else {
 		logger.Printf("Skip pull param given. Complying.\n")
