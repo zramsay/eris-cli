@@ -180,6 +180,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	do.Name = chainID
 	do.Path = myDir
 	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
 
@@ -238,6 +239,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.ConfigFile = path.Join(common.BlockchainsPath, "default", "config.toml")
 	do.CSV = path.Join(common.BlockchainsPath, "default", "genesis.csv")
 	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
 	b, err := ioutil.ReadFile(do.ConfigFile)
@@ -283,6 +285,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	do.Name = chainID
 	do.ConfigOpts = []string{"moniker=satoshi", "p2p=1.1.1.1:42", "fast-sync=true"}
 	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
 
@@ -334,6 +337,7 @@ func TestUpdateChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
 	do.SkipPull = true
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
 	if e := UpdateChain(do); e != nil {
 		fatal(t, e)
@@ -435,6 +439,7 @@ func testStartChain(t *testing.T, chain string) {
 	do := def.NowDo()
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
 	if e := StartChain(do); e != nil {
 		logger.Errorln(e)
@@ -562,6 +567,7 @@ func testNewChain(chain string) {
 	do.GenesisFile = path.Join(common.BlockchainsPath, "default", "genesis.json")
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
 	ifExit(NewChain(do))
 
