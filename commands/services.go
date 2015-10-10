@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -28,12 +29,10 @@ exception of blockchain services.`,
 func buildServicesCommand() {
 	Services.AddCommand(servicesNew)
 	Services.AddCommand(servicesImport)
-	Services.AddCommand(servicesListKnown)
-	Services.AddCommand(servicesListExisting)
+	Services.AddCommand(servicesListAll)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
-	Services.AddCommand(servicesListRunning)
 	Services.AddCommand(servicesInspect)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
@@ -47,18 +46,30 @@ func buildServicesCommand() {
 }
 
 // Services Sub-sub-Commands
-var servicesListKnown = &cobra.Command{
-	Use:   "known",
-	Short: "List all the services Eris knows about.",
-	Long: `Lists the services which Eris has installed for you.
 
-To install a new service, use: [eris services import].
+//lists all or specify flag
+var servicesListAll = &cobra.Command{
+	Use:   "ls",
+	Short: "Lists everything service related.",
+	Long: `Lists all:
 
-Services include all executable services supported by the Eris platform which are
-NOT blockchains or key managers.
+	- service definition files (--known)
+	- current existing containers for each service (--existing)
+	- current running containers for each service (--running)
+
+Known services can be started with:
+
+	$ eris services start serviceName
+
+To install a new service, use: 
+
+	$ eris services import
+
+Services include all executable services supported by the 
+Eris platform which are NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,
-	Run: ListKnownServices,
+	Run: ListAllServices,
 }
 
 var servicesImport = &cobra.Command{
@@ -82,17 +93,6 @@ docker format of [repository/organization/image].`,
 	Example: `  eris services new eth eris/eth
   eris services new mint tutum.co/tendermint/tendermint`,
 	Run: NewService,
-}
-
-var servicesListExisting = &cobra.Command{
-	Use:   "ls",
-	Short: "List the installed and built services.",
-	Long: `Lists the installed and built services which Eris knows about.
-
-To list the known services: [eris services known]
-To list the running services: [eris services ps]
-To start a service use: [eris services start serviceName].`,
-	Run: ListExistingServices,
 }
 
 var servicesEdit = &cobra.Command{
@@ -125,13 +125,6 @@ background so its logs will not be viewable from the command line.
 To stop the service use:      [eris services stop serviceName].
 To view a service's logs use: [eris services logs serviceName].`,
 	Run: StartService,
-}
-
-var servicesListRunning = &cobra.Command{
-	Use:   "ps",
-	Short: "Lists the running services.",
-	Long:  `Lists the services which are currently running.`,
-	Run:   ListRunningServices,
 }
 
 var servicesInspect = &cobra.Command{
@@ -264,8 +257,11 @@ func addServicesFlags() {
 	servicesRm.Flags().BoolVarP(&do.File, "file", "f", false, "remove service definition file as well as service container")
 	servicesRm.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers as well")
 
-	servicesListExisting.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
-	servicesListRunning.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+	servicesListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the service definition files that exist")
+	servicesListAll.Flags().BoolVarP(&do.Running, "running", "r", false, "list all the current containers which are running for a service")
+	servicesListAll.Flags().BoolVarP(&do.Existing, "existing", "e", false, "list all the all current containers which exist for a service")
+	servicesListAll.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+
 }
 
 //----------------------------------------------------------------------
@@ -368,24 +364,28 @@ func UpdateService(cmd *cobra.Command, args []string) {
 	IfExit(srv.UpdateService(do))
 }
 
-// list known
-func ListKnownServices(cmd *cobra.Command, args []string) {
-	if err := srv.ListKnown(do); err != nil {
-		return
+func ListAllServices(cmd *cobra.Command, args []string) {
+	//if no flags are set, list all the things
+	//otherwise, allow only a single flag
+	if !(do.Known || do.Running || do.Existing) {
+		do.All = true
+	} else {
+		flargs := []bool{do.Known, do.Running, do.Existing}
+		flags := []string{}
+
+		for _, f := range flargs {
+			if f == true {
+				flags = append(flags, "true")
+			}
+		}
+		IfExit(FlagCheck(1, "eq", cmd, flags))
 	}
 
-	fmt.Println(do.Result)
-}
-
-func ListRunningServices(cmd *cobra.Command, args []string) {
-	if err := srv.ListRunning(do); err != nil {
+	if err := util.ListAll(do, "services"); err != nil {
 		return
 	}
-}
-
-func ListExistingServices(cmd *cobra.Command, args []string) {
-	if err := srv.ListExisting(do); err != nil {
-		return
+	if !do.All { //do.All will output a pretty table on its own
+		fmt.Println(do.Result)
 	}
 }
 

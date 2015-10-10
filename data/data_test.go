@@ -216,8 +216,10 @@ func testExist(t *testing.T, name string, toExist bool) {
 	name = util.DataContainersName(name, 1)
 
 	do := definitions.NowDo()
+	do.Existing = true
 	do.Quiet = true
-	if err := ListKnown(do); err != nil {
+	do.Args = []string{"testing"}
+	if err := util.ListAll(do, "data"); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
 	}

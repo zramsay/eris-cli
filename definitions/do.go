@@ -3,10 +3,13 @@ package definitions
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Existing      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Known         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Running       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	SkipPull      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	SkipImages    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`

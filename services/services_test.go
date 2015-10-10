@@ -56,7 +56,11 @@ func TestMain(m *testing.M) {
 
 func TestKnownService(t *testing.T) {
 	do := def.NowDo()
-	ifExit(ListKnown(do))
+	do.Known = true
+	do.Existing = false
+	do.Running = false
+	do.Args = []string{"testing"}
+	ifExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 3 {
@@ -434,9 +438,12 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	servName = util.ServiceContainersName(servName, containerNumber)
 
 	do := def.NowDo()
+	do.Known = false
+	do.Existing = true
+	do.Running = false
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListExisting(do); err != nil {
+	if err := util.ListAll(do, "services"); err != nil {
 		logger.Errorln(err)
 		fatal(t, err)
 	}
@@ -449,12 +456,15 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	}
 
 	do = def.NowDo()
+	do.Known = false
+	do.Existing = false
+	do.Running = true
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListRunning(do); err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
+	if err := util.ListAll(do, "services"); err != nil {
+		ifExit(err)
 	}
+
 	res = strings.Split(do.Result, "\n")
 	for _, r := range res {
 		logger.Debugf("Running =>\t\t\t%s\n", r)
@@ -532,10 +542,15 @@ func testsInit() error {
 	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
 
 	// make sure ipfs not running
+
 	do = def.NowDo()
+	do.Known = false
+	do.Existing = false
+	do.Running = true
 	do.Quiet = true
+	do.Args = []string{"testing"}
 	logger.Debugln("Finding the running services.")
-	if err := ListRunning(do); err != nil {
+	if err := util.ListAll(do, "services"); err != nil {
 		ifExit(err)
 	}
 	res := strings.Split(do.Result, "\n")
@@ -546,8 +561,13 @@ func testsInit() error {
 	}
 	// make sure ipfs container does not exist
 	do = def.NowDo()
+	do.Known = false
+	do.Existing = true
+	do.Running = false
 	do.Quiet = true
-	if err := ListExisting(do); err != nil {
+	do.Args = []string{"testing"}
+	logger.Debugln("Finding the existing services.")
+	if err := util.ListAll(do, "services"); err != nil {
 		ifExit(err)
 	}
 	res = strings.Split(do.Result, "\n")

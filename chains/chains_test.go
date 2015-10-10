@@ -69,7 +69,11 @@ func TestMain(m *testing.M) {
 
 func TestKnownChain(t *testing.T) {
 	do := def.NowDo()
-	ifExit(ListKnown(do))
+	do.Known = true
+	do.Existing = false
+	do.Running = false
+	do.Args = []string{"testing"}
+	ifExit(util.ListAll(do, "chains"))
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
@@ -465,9 +469,12 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	chainName = util.ChainContainersName(chainName, 1) // not worried about containerNumbers, deal with multiple containers in services tests
 
 	do := def.NowDo()
+	do.Known = false
+	do.Existing = true
+	do.Running = false
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListExisting(do); err != nil {
+	if err := util.ListAll(do, "chains"); err != nil {
 		fatal(t, err)
 	}
 	res := strings.Split(do.Result, "\n")
@@ -479,9 +486,12 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	}
 
 	do = def.NowDo()
+	do.Known = false
+	do.Existing = false
+	do.Running = true
 	do.Quiet = true
 	do.Args = []string{"testing"}
-	if err := ListRunning(do); err != nil {
+	if err := util.ListAll(do, "chains"); err != nil {
 		fatal(t, err)
 	}
 	logger.Debugln("RUNNING RESULT:", do.Result)
