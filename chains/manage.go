@@ -70,7 +70,7 @@ func RegisterChain(do *definitions.Do) error {
 }
 
 func ImportChain(do *definitions.Do) error {
-	fileName := filepath.Join(BlockchainsPath, do.Name)
+	fileName := filepath.Join(ChainsPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -264,7 +264,7 @@ func RenameChain(do *definitions.Do) error {
 		if filepath.Ext(do.NewName) == "" {
 			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
 		} else {
-			newFile = filepath.Join(BlockchainsPath, do.NewName)
+			newFile = filepath.Join(ChainsPath, do.NewName)
 		}
 
 		chainDef.Name = newNameBase
@@ -357,7 +357,7 @@ func GraduateChain(do *definitions.Do) error {
 }
 
 func CatChain(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(path.Join(BlockchainsPath, do.Name+".toml"))
+	cat, err := ioutil.ReadFile(path.Join(ChainsPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}

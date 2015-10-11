@@ -21,7 +21,6 @@ func buildUpdateCommand() {
 }
 
 func addUpdateFlags() {
-
 	Update.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from")
 }
 

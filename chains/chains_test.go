@@ -181,7 +181,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	}
 
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "default", "genesis.json")
+	do.GenesisFile = path.Join(common.ChainsPath, "default", "genesis.json")
 	do.Name = chainID
 	do.Path = myDir
 	do.Operations.ContainerNumber = 1
@@ -245,8 +245,8 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	chainID := "testChainsNewConfigAndCSV"
 	do := def.NowDo()
 	do.Name = chainID
-	do.ConfigFile = path.Join(common.BlockchainsPath, "default", "config.toml")
-	do.CSV = path.Join(common.BlockchainsPath, "default", "genesis.csv")
+	do.ConfigFile = path.Join(common.ChainsPath, "default", "config.toml")
+	do.CSV = path.Join(common.ChainsPath, "default", "genesis.csv")
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
@@ -498,7 +498,7 @@ func testsInit() error {
 
 func testNewChain(chain string) {
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.BlockchainsPath, "default", "genesis.json")
+	do.GenesisFile = path.Join(common.ChainsPath, "default", "genesis.json")
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true

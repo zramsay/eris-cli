@@ -201,9 +201,9 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		doRm.RmD = true
 		chains.KillChain(doRm)
 
-		logger.Debugf("Removing latent files/dirs =>\t%s:%s\n", path.Join(common.DataContainersPath, do.Chain.Name), path.Join(common.BlockchainsPath, do.Chain.Name+".toml"))
+		logger.Debugf("Removing latent files/dirs =>\t%s:%s\n", path.Join(common.DataContainersPath, do.Chain.Name), path.Join(common.ChainsPath, do.Chain.Name+".toml"))
 		os.RemoveAll(path.Join(common.DataContainersPath, do.Chain.Name))
-		os.Remove(path.Join(common.BlockchainsPath, do.Chain.Name+".toml"))
+		os.Remove(path.Join(common.ChainsPath, do.Chain.Name+".toml"))
 	} else {
 		logger.Debugf("No Throwaway Chain to destroy.\n")
 	}

@@ -20,7 +20,7 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 
 	if filepath.Ext(fileName) == "" {
 		fileName = chainDef.Name + ".toml"
-		fileName = filepath.Join(BlockchainsPath, fileName)
+		fileName = filepath.Join(ChainsPath, fileName)
 	}
 
 	writer, err := os.Create(fileName)
