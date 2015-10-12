@@ -89,21 +89,18 @@ func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.Service
 // These are things we want to *always* control. Should be last
 // called before a return...
 func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
-	// If no name use image name
-	if srv.Name == "" {
-		logger.Debugf("Service definition has no name. ")
-		if srv.Service.Name != "" {
-			logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
-			srv.Name = srv.Service.Name
-		} else {
-			if srv.Service.Image != "" {
-				srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
-				srv.Service.Name = srv.Name
-				logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
-			} else {
-				panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
-			}
-		}
+	if srv.Name == "" && srv.Service.Name == "" && srv.Service.Image == "" { // If no name or image, panic
+		panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
+	} else if srv.Name == "" && srv.Service.Name == "" && srv.Service.Image != "" { // If no name use image
+		srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
+		srv.Service.Name = srv.Name
+		logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
+	} else if srv.Service.Name != "" && srv.Name == "" { // harmonize names
+		srv.Name = srv.Service.Name
+		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
+	} else if srv.Service.Name == "" && srv.Name != "" {
+		srv.Service.Name = srv.Name
+		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Name)
 	}
 
 	container := util.FindServiceContainer(srv.Name, srv.Operations.ContainerNumber, true)
