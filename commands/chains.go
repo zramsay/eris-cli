@@ -410,6 +410,7 @@ func addChainsFlags() {
 
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
+	chainsRemove.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 
 	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
@@ -420,6 +421,7 @@ func addChainsFlags() {
 	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
 	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+	chainsStop.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
 
 	chainsListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the chain definition files that exist")
 	chainsListAll.Flags().BoolVarP(&do.Existing, "existing", "e", false, "list all the all current containers which exist for a chain")

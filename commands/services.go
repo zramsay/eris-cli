@@ -250,12 +250,14 @@ func addServicesFlags() {
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
 	servicesStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
+	servicesStop.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
 	servicesStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 	servicesStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
 	servicesStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 
 	servicesRm.Flags().BoolVarP(&do.File, "file", "f", false, "remove service definition file as well as service container")
 	servicesRm.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers as well")
+	servicesRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 
 	servicesListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the service definition files that exist")
 	servicesListAll.Flags().BoolVarP(&do.Running, "running", "r", false, "list all the current containers which are running for a service")
