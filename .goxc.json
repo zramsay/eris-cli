@@ -10,7 +10,7 @@
 		"codesign",
 		"downloads-page"
 	],
-	"Arch": "amd64",
+	"Arch": "amd64,386,arm",
 	"Os": "linux,darwin,windows",
 	"TaskSettings": {
 		"deb": {
