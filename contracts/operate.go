@@ -219,7 +219,7 @@ func CleanUp(do *definitions.Do, dapp *definitions.Contracts) error {
 	os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
 
 	logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
-	perform.DockerRemove(do.Service, do.Operations, true)
+	perform.DockerRemove(do.Service, do.Operations, true, true)
 	return nil
 }
 

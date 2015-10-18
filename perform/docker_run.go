@@ -74,7 +74,7 @@ func DockerRunVolumesFromContainer(volumesFrom string, interactive bool, args []
 
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", id_main)
-		if err2 := removeContainer(id_main); err2 != nil {
+		if err2 := removeContainer(id_main, true); err2 != nil {
 			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 		}
 		logger.Infof("Container removed =>\t\t%s\n", id_main)
@@ -278,7 +278,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		<-doneLogs
 
 		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
-		if err := removeContainer(id_main); err != nil {
+		if err := removeContainer(id_main, false); err != nil {
 			return err
 		}
 
@@ -303,7 +303,7 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, i
 
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", id_main)
-		if err := removeContainer(id_main); err != nil {
+		if err := removeContainer(id_main, false); err != nil {
 			fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", id_main, err)
 		}
 		logger.Infof("Container removed =>\t\t%s\n", id_main)
@@ -412,7 +412,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 		}
 
 		logger.Infof("Removing old container =>\t%s\n", service.ID)
-		err := removeContainer(service.ID)
+		err := removeContainer(service.ID, true)
 		if err != nil {
 			return err
 		}
@@ -473,7 +473,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 				return err
 			}
 		}
-		err := removeContainer(service.ID)
+		err := removeContainer(service.ID, false)
 		if err != nil {
 			return err
 		}
@@ -569,16 +569,16 @@ func DockerRename(srv *def.Service, ops *def.Operation, oldName, newName string)
 	return nil
 }
 
-func DockerRemove(srv *def.Service, ops *def.Operation, withData bool) error {
+func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes bool) error {
 	if service, exists := ContainerExists(ops); exists {
 		logger.Infof("Removing Service ID =>\t\t%s\n", service.ID)
-		if err := removeContainer(service.ID); err != nil {
+		if err := removeContainer(service.ID, volumes); err != nil {
 			return err
 		}
 		if withData {
 			if srv, ext := ContainerDataContainerExists(ops); ext {
 				logger.Infof("\t with DataContanr ID =>\t%s\n", srv.ID)
-				if err := removeContainer(srv.ID); err != nil {
+				if err := removeContainer(srv.ID, volumes); err != nil {
 					return err
 				}
 			}
@@ -780,10 +780,10 @@ func renameContainer(id, newName string) error {
 	return nil
 }
 
-func removeContainer(id string) error {
+func removeContainer(id string, volumes bool) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            id,
-		RemoveVolumes: false,
+		RemoveVolumes: volumes,
 		Force:         false,
 	}
 

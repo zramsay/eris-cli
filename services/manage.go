@@ -220,7 +220,7 @@ func RmService(do *definitions.Do) error {
 			return err
 		}
 		if IsServiceExisting(service.Service, service.Operations) {
-			err = perform.DockerRemove(service.Service, service.Operations, do.RmD)
+			err = perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes)
 			if err != nil {
 				return err
 			}

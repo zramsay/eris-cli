@@ -315,7 +315,7 @@ func RmChain(do *definitions.Do) error {
 	}
 
 	if IsChainExisting(chain) {
-		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD); err != nil {
+		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes); err != nil {
 			return err
 		}
 	} else {

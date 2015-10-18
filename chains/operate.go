@@ -68,7 +68,7 @@ func KillChain(do *definitions.Do) error {
 	}
 
 	if do.Rm {
-		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD); err != nil {
+		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes); err != nil {
 			return err
 		}
 	}

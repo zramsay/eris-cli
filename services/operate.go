@@ -80,7 +80,7 @@ func KillService(do *definitions.Do) (err error) {
 		}
 
 		if do.Rm {
-			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD); err != nil {
+			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes); err != nil {
 				return err
 			}
 		}
