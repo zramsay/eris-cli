@@ -1,10 +1,13 @@
 %{define} erisbuilddir /var/tmp/eris-rpmbuild.tmp
 
+%{define} version %{getenv:ERIS_VERSION}
+%{define} release %{getenv:ERIS_RELEASE}
+
 Summary: Eris is a platform for building, testing, maintaining, and operating distributed applications with a blockchain backend. Eris makes it easy and simple to wrangle the dragons of smart contract blockchains.
 Name: eris-tools
-Version: 0.10.4
-Release: 1
 License: GPL-3
+Version: %{version}
+Release: %{release}
 Group: Applications/Productivity
 URL: https://docs.erisindustries.com
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
@@ -20,6 +23,7 @@ mkdir %{erisbuilddir}
 git clone https://github.com/eris-ltd/eris-cli %{erisbuilddir}
 
 %build
+echo %{suffix:%{version}}
 pushd %{erisbuilddir}/cmd/eris
 GOPATH=%{erisbuilddir} go get
 GOPATH=%{erisbuilddir} go build
