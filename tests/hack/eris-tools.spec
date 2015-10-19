@@ -23,7 +23,6 @@ mkdir %{erisbuilddir}
 git clone https://github.com/eris-ltd/eris-cli %{erisbuilddir}
 
 %build
-echo %{suffix:%{version}}
 pushd %{erisbuilddir}/cmd/eris
 GOPATH=%{erisbuilddir} go get
 GOPATH=%{erisbuilddir} go build
