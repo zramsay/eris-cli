@@ -412,7 +412,7 @@ func copyFiles(dst string, files []stringPair) error {
 			logger.Debugf("\tCopying files =>\t%s:%s\n", f.key, path.Join(dst, f.value))
 			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
 				logger.Debugf("Error copying files =>\t\t%v\n", err)
-				// return err
+				return err
 			}
 		}
 	}
