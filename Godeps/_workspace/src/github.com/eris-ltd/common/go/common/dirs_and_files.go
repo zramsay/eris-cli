@@ -21,13 +21,14 @@ var (
 	ErisLtd = path.Join(GoPath, "src", "github.com", "eris-ltd")
 	ErisGH  = "https://github.com/eris-ltd/"
 	// usr, _   = user.Current() // error?!
-	ErisRoot = ResolveErisRoot()
+	ErisRoot          = ResolveErisRoot()
+	ErisContainerRoot = "/home/eris/.eris" // XXX: this is used as root in the `eris/base` image
 
 	// Major Directories
 	ActionsPath        = path.Join(ErisRoot, "actions")
-	BlockchainsPath    = path.Join(ErisRoot, "blockchains")
+	BlockchainsPath    = path.Join(ErisRoot, "chains")
 	DataContainersPath = path.Join(ErisRoot, "data")
-	DappsPath          = path.Join(ErisRoot, "dapps")
+	AppsPath           = path.Join(ErisRoot, "apps")
 	FilesPath          = path.Join(ErisRoot, "files")
 	KeysPath           = path.Join(ErisRoot, "keys")
 	LanguagesPath      = path.Join(ErisRoot, "languages")
@@ -50,7 +51,7 @@ var (
 )
 
 var MajorDirs = []string{
-	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
+	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, AppsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
 }
 
 //---------------------------------------------
@@ -159,18 +160,22 @@ func Copy(src, dst string) error {
 		return err
 	}
 	if f.IsDir() {
-		tmpDir, err := ioutil.TempDir(os.TempDir(), "golang-copy")
+		tmpDir, err := ioutil.TempDir(os.TempDir(), "eris_copy")
 		if err != nil {
 			return err
 		}
 		if err := copyDir(src, tmpDir); err != nil {
 			return err
 		}
-		fi, err := os.Stat(src)
-		if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		if err := copyDir(tmpDir, dst); err != nil {
 			return err
 		}
-		return os.Rename(tmpDir, dst)
+		// fi, err := os.Stat(src)
+		// if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		// 	return err
+		// }
+		// return os.Rename(tmpDir, dst)
+		return nil
 	}
 	return copyFile(src, dst)
 }

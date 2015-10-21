@@ -128,7 +128,7 @@ func ChangeErisDir(erisDir string) {
 	dir.ActionsPath = path.Join(dir.ErisRoot, "actions")
 	dir.BlockchainsPath = path.Join(dir.ErisRoot, "blockchains")
 	dir.DataContainersPath = path.Join(dir.ErisRoot, "data")
-	dir.DappsPath = path.Join(dir.ErisRoot, "dapps")
+	dir.AppsPath = path.Join(dir.ErisRoot, "dapps")
 	dir.FilesPath = path.Join(dir.ErisRoot, "files")
 	dir.KeysPath = path.Join(dir.ErisRoot, "keys")
 	dir.LanguagesPath = path.Join(dir.ErisRoot, "languages")
