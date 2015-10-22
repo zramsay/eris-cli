@@ -295,11 +295,11 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, i
 	var dataContCreated *docker.Container
 
 	// Prevent from running the same container due to a conflict between exposed ports.
-	_, running := ContainerRunning(ops)
-	if running {
-		logger.Errorf("Service %q is already started, aborting.\n", srv.Name)
-		return nil
-	}
+	// _, running := ContainerRunning(ops)
+	// if running {
+	// 	logger.Errorf("Service %q is already started, aborting.\n", srv.Name)
+	// 	return nil
+	// }
 
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", id_main)
@@ -822,6 +822,9 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 			opts.HostConfig.Binds = append(opts.HostConfig.Binds, bind)
 		}
 	}
+
+	// temporary hack.
+	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
 
 	return opts, nil
 }
