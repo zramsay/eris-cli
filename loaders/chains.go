@@ -204,4 +204,5 @@ func mergeDefaultsAndChain(chain *definitions.Chain, service *definitions.Servic
 	chain.Service.DomainName = util.OverWriteString(chain.Service.DomainName, service.DomainName)
 	chain.Service.User = util.OverWriteString(chain.Service.User, service.User)
 	chain.Service.MemLimit = util.OverWriteInt64(chain.Service.MemLimit, service.MemLimit)
+	chain.Service.ExecHost = util.OverWriteString(chain.Service.ExecHost, service.ExecHost)
 }

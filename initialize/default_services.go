@@ -11,6 +11,7 @@ func DefaultKeys() string {
 name = "keys"
 image = "quay.io/eris/keys"
 data_container = true
+exec_host = "ERIS_KEYS_HOST"
 `)
 }
 

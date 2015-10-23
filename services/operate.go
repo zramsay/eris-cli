@@ -95,6 +95,18 @@ func ExecService(do *definitions.Do) error {
 		return err
 	}
 	util.OverWriteOperations(service.Operations, do.Operations)
+
+	// get main service containers name
+	cname := util.ContainersName("service", do.Name, 1) // TODO: N
+	if service.Service.ExecHost == "" {
+		logger.Errorf("Warning: exec_host not found in service definition file. May not be able to communicate with %s\n", cname)
+	} else {
+		service.Service.Environment = append(service.Service.Environment, fmt.Sprintf("%s=localhosty", service.Service.ExecHost))
+	}
+
+	// link us to the main service container (TODO: use something better than localhosty)
+	service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:localhosty", cname))
+
 	return StartServiceInteractiveByService(service.Service, service.Operations, do.Args, do.Interactive, do.Volume)
 }
 

@@ -799,8 +799,13 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
 	if interactive {
-		// start an interactive shell
-		opts.Config.Entrypoint = []string{"/bin/bash"}
+		// if there are args, we overwrite the entrypoint
+		// else we just start an interactive shell
+		if len(args) > 0 {
+			opts.Config.Entrypoint = args
+		} else {
+			opts.Config.Entrypoint = []string{"/bin/bash"}
+		}
 	} else {
 		// use the image's own entrypoint
 		opts.Config.Cmd = args
@@ -817,6 +822,12 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 			opts.HostConfig.Binds = append(opts.HostConfig.Binds, bind)
 		}
 	}
+
+	// we expect to link to the main service container
+	opts.HostConfig.Links = srv.Links
+
+	// temporary hack.
+	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
 
 	return opts, nil
 }
