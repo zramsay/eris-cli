@@ -55,8 +55,8 @@ func _parseKnown(name string) bool {
 	do := def.NowDo()
 	do.Existing = true
 	util.ListAll(do, "data")
-	if len(do.Args) != 0 {
-		for _, srv := range do.Args {
+	if len(do.Operations.Args) != 0 {
+		for _, srv := range do.Operations.Args {
 			if srv == name {
 				return true
 			}

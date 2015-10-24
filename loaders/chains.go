@@ -30,7 +30,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	}
 
 	if cNum[0] == 0 {
-		cNum[0] = util.AutoMagic(0, "chain", newCont)
+		cNum[0] = util.AutoMagic(0, definitions.TypeChain, newCont)
 		logger.Debugf("Loading Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
 	} else {
 		logger.Debugf("Loading Chain Definition =>\t%s:%d\n", chainName, cNum[0])
@@ -39,6 +39,8 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	chain := definitions.BlankChain()
 	chain.Name = chainName
 	chain.Operations.ContainerNumber = cNum[0]
+	chain.Operations.ContainerType = definitions.TypeChain
+	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
 	if err := setChainDefaults(chain); err != nil {
 		return nil, err
 	}
@@ -111,7 +113,7 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 }
 
 func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
-	connectToAService(srv, ops, "chain", name, internalName, link, mount)
+	connectToAService(srv, ops, definitions.TypeChain, name, internalName, link, mount)
 }
 
 func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {
@@ -121,12 +123,15 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 	chn.Service.AutoData = true
 
 	if len(cNum) == 0 {
-		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], "chain", newCont)
+		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeChain, newCont)
 		logger.Debugf("Mocking Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
 	} else {
 		chn.Operations.ContainerNumber = cNum[0]
 		logger.Debugf("Mocking Chain Definition =>\t%s:%d\n", chainName, cNum[0])
 	}
+
+	chn.Operations.ContainerType = definitions.TypeChain
+	chn.Operations.Labels = util.Labels(chainName, chn.Operations)
 
 	checkChainNames(chn)
 	return chn
@@ -143,7 +148,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	}
 	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
-	mergeDefaultsAndChain(chain, chnTemp.Service)
+	util.Merge(chain, chnTemp.Service)
 	chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well
@@ -179,30 +184,4 @@ func checkChainNames(chain *definitions.Chain) {
 	chain.Service.Name = chain.Name
 	chain.Operations.SrvContainerName = util.ChainContainersName(chain.Name, chain.Operations.ContainerNumber)
 	chain.Operations.DataContainerName = util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
-}
-
-// overwrite service attributes with chain config
-func mergeDefaultsAndChain(chain *definitions.Chain, service *definitions.Service) {
-	chain.Service.Name = chain.Name
-	chain.Service.Image = util.OverWriteString(chain.Service.Image, service.Image)
-	chain.Service.Command = util.OverWriteString(chain.Service.Command, service.Command)
-	chain.Service.Links = util.OverWriteSlice(chain.Service.Links, service.Links)
-	chain.Service.Ports = util.OverWriteSlice(chain.Service.Ports, service.Ports)
-	chain.Service.Expose = util.OverWriteSlice(chain.Service.Expose, service.Expose)
-	chain.Service.Volumes = util.OverWriteSlice(chain.Service.Volumes, service.Volumes)
-	chain.Service.VolumesFrom = util.OverWriteSlice(chain.Service.VolumesFrom, service.VolumesFrom)
-	chain.Service.Environment = util.MergeSlice(chain.Service.Environment, service.Environment)
-	chain.Service.EnvFile = util.OverWriteSlice(chain.Service.EnvFile, service.EnvFile)
-	chain.Service.Net = util.OverWriteString(chain.Service.Net, service.Net)
-	chain.Service.PID = util.OverWriteString(chain.Service.PID, service.PID)
-	chain.Service.DNS = util.OverWriteSlice(chain.Service.DNS, service.DNS)
-	chain.Service.DNSSearch = util.OverWriteSlice(chain.Service.DNSSearch, service.DNSSearch)
-	chain.Service.CPUShares = util.OverWriteInt64(chain.Service.CPUShares, service.CPUShares)
-	chain.Service.WorkDir = util.OverWriteString(chain.Service.WorkDir, service.WorkDir)
-	chain.Service.EntryPoint = util.OverWriteString(chain.Service.EntryPoint, service.EntryPoint)
-	chain.Service.HostName = util.OverWriteString(chain.Service.HostName, service.HostName)
-	chain.Service.DomainName = util.OverWriteString(chain.Service.DomainName, service.DomainName)
-	chain.Service.User = util.OverWriteString(chain.Service.User, service.User)
-	chain.Service.MemLimit = util.OverWriteInt64(chain.Service.MemLimit, service.MemLimit)
-	chain.Service.ExecHost = util.OverWriteString(chain.Service.ExecHost, service.ExecHost)
 }

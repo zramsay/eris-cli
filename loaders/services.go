@@ -21,14 +21,16 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 	}
 
 	if cNum[0] == 0 {
-		cNum[0] = util.AutoMagic(0, "service", newCont)
+		cNum[0] = util.AutoMagic(0, definitions.TypeService, newCont)
 		logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		logger.Debugf("Loading Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
 
 	srv := definitions.BlankServiceDefinition()
+	srv.Operations.ContainerType = definitions.TypeService
 	srv.Operations.ContainerNumber = cNum[0]
+	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
 		return nil, err
@@ -60,12 +62,15 @@ func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definiti
 	srv.Name = servName
 
 	if len(cNum) == 0 {
-		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], "service", newCont)
+		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeService, newCont)
 		logger.Debugf("Mocking Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		srv.Operations.ContainerNumber = cNum[0]
 		logger.Debugf("Mocking Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
+
+	srv.Operations.ContainerType = definitions.TypeService
+	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 
 	ServiceFinalizeLoad(srv)
 	return srv
@@ -127,7 +132,7 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 }
 
 func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
-	connectToAService(srv, ops, "service", name, internalName, link, mount)
+	connectToAService(srv, ops, definitions.TypeService, name, internalName, link, mount)
 }
 
 // --------------------------------------------------------------------

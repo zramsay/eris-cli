@@ -72,7 +72,7 @@ func TestKnownChain(t *testing.T) {
 	do.Known = true
 	do.Existing = false
 	do.Running = false
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	ifExit(util.ListAll(do, "chains"))
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
@@ -152,8 +152,8 @@ func TestExecChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = chainName
-	do.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
-	do.Interactive = false
+	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
+	do.Operations.Interactive = false
 	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
 	e := ExecChain(do)
 	if e != nil {
@@ -189,12 +189,13 @@ func TestChainsNewDirGen(t *testing.T) {
 
 	// verify the contents of file.file - swap config writer with bytes.Buffer
 	// TODO: functions for facilitating this
-	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
-	b, err := perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
+	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	util.Merge(ops, do.Operations)
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
+	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -211,8 +212,10 @@ func TestChainsNewDirGen(t *testing.T) {
 	oldWriter = config.GlobalConfig.Writer
 	newWriter = new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
-	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
-	b, err = perform.DockerRunVolumesFromContainer(do.Name, false, args, nil)
+	ops = loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	util.Merge(ops, do.Operations)
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
+	b, err = perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -253,17 +256,20 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
-	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
-	result := trimResult(string(runContainer(t, do.Name, args)))
+	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	util.Merge(ops, do.Operations)
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	result := trimResult(string(runContainer(t, ops)))
 	contents := trimResult(ini.DefChainConfig())
 	if result != contents {
 		fatal(t, fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
 	}
 
 	// verify the contents of genesis.json (should have the validator from the csv)
-	args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
-	result = string(runContainer(t, do.Name, args))
+	ops = loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	util.Merge(ops, do.Operations)
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
+	result = string(runContainer(t, ops))
 	var found bool
 	for _, s := range strings.Split(result, "\n") {
 		if strings.Contains(s, ini.DefaultPubKeys[0]) {
@@ -293,9 +299,10 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
 
 	// verify the contents of config.toml
-	do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
-	result := string(runContainer(t, do.Name, args))
+	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	util.Merge(ops, do.Operations)
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	result := string(runContainer(t, ops))
 
 	spl := strings.Split(result, "\n")
 	var found bool
@@ -352,9 +359,9 @@ func TestInspectChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = chainName
-	do.Args = []string{"name"}
+	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Args)
+	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Operations.Args)
 	if e := InspectChain(do); e != nil {
 		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
@@ -371,6 +378,7 @@ func TestRenameChain(t *testing.T) {
 	do.Name = oldName
 	do.NewName = newName
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+
 	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
@@ -392,7 +400,7 @@ func TestRenameChain(t *testing.T) {
 // func TestServiceWithChainDependencies(t *testing.T) {
 // 	do := definitions.NowDo()
 // 	do.Name = "keys"
-// 	do.Args = []string{"eris/keys"}
+// 	do.Operations.Args = []string{"eris/keys"}
 // 	err := services.NewService(do)
 // 	if err != nil {
 // 		logger.Errorln(err)
@@ -407,7 +415,7 @@ func TestRmChain(t *testing.T) {
 	testStartChain(t, chainName)
 
 	do := def.NowDo()
-	do.Args, do.Rm, do.RmD = []string{"keys"}, true, true
+	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
 	if e := services.KillService(do); e != nil {
 		fatal(t, e)
@@ -453,7 +461,7 @@ func testKillChain(t *testing.T, chain string) {
 	testExistAndRun(t, chain, true, true)
 
 	do := def.NowDo()
-	do.Args, do.Rm, do.RmD = []string{"keys"}, true, true
+	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	logger.Infof("Killing keys (from tests) =>\n%s\n", do.Name)
 	if e := services.KillService(do); e != nil {
 		fatal(t, e)
@@ -478,7 +486,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do.Existing = true
 	do.Running = false
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "chains"); err != nil {
 		fatal(t, err)
 	}
@@ -495,7 +503,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	do.Existing = false
 	do.Running = true
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "chains"); err != nil {
 		fatal(t, err)
 	}
@@ -572,7 +580,7 @@ func testNewChain(chain string) {
 	ifExit(NewChain(do))
 
 	// remove the data container
-	do.Args = []string{chain}
+	do.Operations.Args = []string{chain}
 	ifExit(data.RmData(do))
 }
 
@@ -597,7 +605,7 @@ func testsTearDown() error {
 func killService(name string) {
 	do := def.NowDo()
 	do.Name = name
-	do.Args = []string{name}
+	do.Operations.Args = []string{name}
 	do.Rm, do.RmD, do.Force = true, true, true
 	if e := services.KillService(do); e != nil {
 		logger.Errorln(e)
@@ -605,15 +613,16 @@ func killService(name string) {
 	}
 }
 
-func runContainer(t *testing.T, name string, args []string) []byte {
+func runContainer(t *testing.T, ops *def.Operation) []byte {
 	oldWriter := config.GlobalConfig.Writer
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
-	b, err := perform.DockerRunVolumesFromContainer(name, false, args, nil)
+
+	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}
-	logger.Debugf("Container ran =>\t\t%s:%v\n", name, args)
+	logger.Debugf("Container ran =>\t\t%s:%v\n", ops.DataContainerName, ops.Args)
 	config.GlobalConfig.Writer = oldWriter
 	return b
 }

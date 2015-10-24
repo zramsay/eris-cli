@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -19,7 +20,6 @@ import (
 
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		importPath := filepath.Join(DataContainersPath, do.Name)
 
@@ -50,7 +50,8 @@ func ImportData(do *definitions.Do) error {
 			}
 		}
 	} else {
-		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		if err := perform.DockerCreateDataContainer(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
 		return ImportData(do)
@@ -61,9 +62,11 @@ func ImportData(do *definitions.Do) error {
 
 func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
-		if _, err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args, nil); err != nil {
+		logger.Infoln("Running exec on container with volumes from data container " + do.Operations.DataContainerName)
+
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		util.Merge(ops, do.Operations)
+		if _, err := perform.DockerRunVolumesFromContainer(ops, nil); err != nil {
 			return err
 		}
 	} else {

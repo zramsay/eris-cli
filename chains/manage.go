@@ -41,11 +41,11 @@ func RegisterChain(do *definitions.Do) error {
 
 	// set chainid and other vars
 	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),      // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),         // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),  // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),     // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
+		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
+		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
+		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
+		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
 	}
 	envVars = append(envVars, do.Env...)
 
@@ -60,9 +60,11 @@ func RegisterChain(do *definitions.Do) error {
 
 	logger.Debugf("Starting chain container via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
-	cmd := []string{loaders.ErisChainRegister}
-	dataContainerName := util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
-	_, err = perform.DockerRunVolumesFromContainer(dataContainerName, false, cmd, chain.Service)
+	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
+	chain.Operations.Interactive = do.Operations.Interactive
+	chain.Operations.Args = []string{loaders.ErisChainRegister}
+
+	_, err = perform.DockerRunVolumesFromContainer(chain.Operations, chain.Service)
 
 	return err
 }
@@ -105,7 +107,7 @@ func InspectChain(do *definitions.Do) error {
 
 	if IsChainExisting(chain) {
 		logger.Debugf("Chain exists, calling services.InspectServiceByService.\n")
-		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Args[0])
+		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
 			return err
 		}
@@ -186,11 +188,11 @@ func PlopChain(do *definitions.Do) error {
 	rootDir := path.Join("/home/eris/.eris/blockchains", do.ChainID)
 	switch do.Type {
 	case "genesis":
-		do.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
-		do.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
 	default:
 		return fmt.Errorf("unknown plop option %s", do.Type)
 	}
@@ -205,7 +207,7 @@ func PortsChain(do *definitions.Do) error {
 
 	if IsChainExisting(chain) {
 		logger.Debugf("Chain exists, getting port mapping.\n")
-		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Operations.Args)
 	}
 
 	return nil
@@ -238,7 +240,7 @@ func RenameChain(do *definitions.Do) error {
 
 		if !transformOnly {
 			logger.Debugln("Embarking on DockerRename.")
-			err = perform.DockerRename(chainDef.Service, chainDef.Operations, do.Name, newNameBase)
+			err = perform.DockerRename(chainDef.Operations, do.NewName)
 			if err != nil {
 				return err
 			}
@@ -263,6 +265,7 @@ func RenameChain(do *definitions.Do) error {
 		}
 
 		chainDef.Name = newNameBase
+		// [pv]: why are these emptied at rename?
 		chainDef.Service.Name = ""
 		chainDef.Service.Image = ""
 		err = WriteChainDefinitionFile(chainDef, newFile)

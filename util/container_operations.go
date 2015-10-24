@@ -1,26 +1,86 @@
 package util
 
 import (
+	"errors"
+	"os"
+	"path"
+	"reflect"
+	"runtime"
 	"strings"
 
-	def "github.com/eris-ltd/eris-cli/definitions"
+	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-// need to be alot smarter with this
-func OverWriteOperations(opsBase, opsOver *def.Operation) {
-	opsBase.SrvContainerName = OverWriteString(opsBase.SrvContainerName, opsOver.SrvContainerName)
-	opsBase.SrvContainerID = OverWriteString(opsBase.SrvContainerID, opsOver.SrvContainerID)
-	opsBase.DataContainerName = OverWriteString(opsBase.DataContainerName, opsOver.DataContainerName)
-	opsBase.DataContainerID = OverWriteString(opsBase.DataContainerID, opsOver.DataContainerID)
-	opsBase.ContainerNumber = OverWriteInt(opsBase.ContainerNumber, opsOver.ContainerNumber)
-	opsBase.Restart = OverWriteString(opsBase.Restart, opsOver.Restart)
-	opsBase.Remove = OverWriteBool(opsBase.Remove, opsOver.Remove)
-	opsBase.Privileged = OverWriteBool(opsBase.Privileged, opsOver.Privileged)
-	opsBase.Attach = OverWriteBool(opsBase.Attach, opsOver.Attach)
-	opsBase.AppName = OverWriteString(opsBase.AppName, opsOver.AppName)
-	opsBase.DockerHostConn = OverWriteString(opsBase.DockerHostConn, opsOver.DockerHostConn)
-	opsBase.Labels = MergeMap(opsBase.Labels, opsOver.Labels)
-	opsBase.PublishAllPorts = OverWriteBool(opsBase.PublishAllPorts, opsOver.PublishAllPorts)
+var (
+	ErrMergeParameters = errors.New("parameters are not pointers to struct")
+)
+
+// Merge replaces blank fields of base with those from over; also merges maps
+// and slices of both. Base and over are pointers to structs. The result is stored
+// in base. Merge returns ErrMergeParameters if either base or over are not
+// pointers to structs.
+func Merge(base, over interface{}) error {
+	if base == nil || over == nil {
+		return ErrMergeParameters
+	}
+
+	// If not pointers, it won't be possible to store the result in base.
+	if reflect.ValueOf(base).Kind() != reflect.Ptr ||
+		reflect.ValueOf(over).Kind() != reflect.Ptr {
+		return ErrMergeParameters
+	}
+
+	// Not structs.
+	if reflect.ValueOf(base).Elem().Kind() != reflect.Struct ||
+		reflect.ValueOf(over).Elem().Kind() != reflect.Struct {
+		return ErrMergeParameters
+	}
+
+	// Structs, but varying number of fields.
+	baseFields := reflect.TypeOf(base).Elem().NumField()
+	overFields := reflect.TypeOf(over).Elem().NumField()
+	if baseFields != overFields {
+		return ErrMergeParameters
+	}
+
+	for i := 0; i < baseFields; i++ {
+		a := reflect.ValueOf(base).Elem().Field(i)
+		b := reflect.ValueOf(over).Elem().Field(i)
+
+		switch a.Kind() {
+		case reflect.Slice:
+			if b.IsNil() {
+				continue
+			}
+
+			if a.IsNil() {
+				a.Set(b)
+				continue
+			}
+
+			a.Set(reflect.AppendSlice(a, b))
+		case reflect.Map:
+			if b.IsNil() {
+				continue
+			}
+
+			if a.IsNil() {
+				a.Set(b)
+				continue
+			}
+
+			for _, key := range b.MapKeys() {
+				a.SetMapIndex(key, b.MapIndex(key))
+			}
+		default:
+			// Don't overwrite with zero values (0, "", false).
+			if a.Interface() != reflect.Zero(b.Type()).Interface() {
+				continue
+			}
+			a.Set(b)
+		}
+	}
+	return nil
 }
 
 // AutoMagic will return the highest container number which would represent the most recent
@@ -56,55 +116,6 @@ func AutoMagic(cNum int, typ string, newCont bool) int {
 	return result
 }
 
-func OverWriteBool(trumpEr, toOver bool) bool {
-	if trumpEr {
-		return trumpEr
-	}
-	return toOver
-}
-
-func OverWriteString(trumpEr, toOver string) string {
-	if trumpEr != "" {
-		return trumpEr
-	}
-	return toOver
-}
-
-func OverWriteInt(trumpEr, toOver int) int {
-	if trumpEr != 0 {
-		return trumpEr
-	}
-	return toOver
-}
-
-func OverWriteInt64(trumpEr, toOver int64) int64 {
-	if trumpEr != 0 {
-		return trumpEr
-	}
-	return toOver
-}
-
-func OverWriteSlice(trumpEr, toOver []string) []string {
-	if len(trumpEr) != 0 {
-		return trumpEr
-	}
-	return toOver
-}
-
-func MergeSlice(mapOne, mapTwo []string) []string {
-	for _, v := range mapOne {
-		mapTwo = append(mapTwo, v)
-	}
-	return mapTwo
-}
-
-func MergeMap(mapOne, mapTwo map[string]string) map[string]string {
-	for k, v := range mapOne {
-		mapTwo[k] = v
-	}
-	return mapTwo
-}
-
 // Parse dependencies for internalName (ie. in /etc/hosts), whether to link, and whether to mount volumes-from
 // eg. `tinydns:tiny:l` to link to the tinydns container as tiny
 func ParseDependency(nameAndOpts string) (name, internalName string, link, mount bool) {
@@ -131,4 +142,33 @@ func ParseDependency(nameAndOpts string) (name, internalName string, link, mount
 		}
 	}
 	return
+}
+
+// $(pwd) doesn't execute properly in golangs subshells; replace it
+// use $eris as a shortcut
+func FixDirs(arg []string) ([]string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return []string{}, err
+	}
+
+	for n, a := range arg {
+		if strings.Contains(a, "$eris") {
+			tmp := strings.Split(a, ":")[0]
+			keep := strings.Replace(a, tmp+":", "", 1)
+			if runtime.GOOS == "windows" {
+				winTmp := strings.Split(tmp, "/")
+				tmp = path.Join(winTmp...)
+			}
+			tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
+			arg[n] = strings.Join([]string{tmp, keep}, ":")
+			continue
+		}
+
+		if strings.Contains(a, "$pwd") {
+			arg[n] = strings.Replace(a, "$pwd", dir, 1)
+		}
+	}
+
+	return arg, nil
 }

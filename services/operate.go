@@ -13,9 +13,9 @@ import (
 func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	do.Args = append(do.Args, do.ServicesSlice...)
-	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
-	for _, srv := range do.Args {
+	do.Operations.Args = append(do.Operations.Args, do.ServicesSlice...)
+	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	for _, srv := range do.Operations.Args {
 		s, e := BuildServicesGroup(srv, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
@@ -25,7 +25,7 @@ func StartService(do *definitions.Do) (err error) {
 
 	// [csk]: controls for ops reconciliation, overwrite will, e.g., merge the maps and stuff
 	for _, s := range services {
-		util.OverWriteOperations(s.Operations, do.Operations)
+		util.Merge(s.Operations, do.Operations)
 	}
 
 	logger.Debugln("Services before build chain =>")
@@ -54,8 +54,8 @@ func StartService(do *definitions.Do) (err error) {
 func KillService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
-	for _, servName := range do.Args {
+	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	for _, servName := range do.Operations.Args {
 		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
@@ -94,7 +94,8 @@ func ExecService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	util.OverWriteOperations(service.Operations, do.Operations)
+
+	util.Merge(service.Operations, do.Operations)
 
 	// get main service containers name
 	cname := util.ContainersName("service", do.Name, 1) // TODO: N
@@ -107,7 +108,7 @@ func ExecService(do *definitions.Do) error {
 	// link us to the main service container (TODO: use something better than localhosty)
 	service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:localhosty", cname))
 
-	return StartServiceInteractiveByService(service.Service, service.Operations, do.Args, do.Interactive, do.Volume)
+	return StartServiceInteractiveByService(service.Service, service.Operations)
 }
 
 // TODO: test this recursion and service deps generally
@@ -187,14 +188,14 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 	// XXX: we may have name collision here if we're not careful.
 	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
 
-	util.OverWriteOperations(s.Operations, srv.Operations)
+	util.Merge(s.Operations, srv.Operations)
 	return s, nil
 }
 
 // ------------------------------------------------------------------------------------------
 // Wrappers we want to be able to call from Chains package (mostly)
-func StartServiceInteractiveByService(srvMain *definitions.Service, ops *definitions.Operation, args []string, interactive bool, volume string) error {
-	return perform.DockerRunInteractive(srvMain, ops, args, interactive, volume)
+func StartServiceInteractiveByService(srvMain *definitions.Service, ops *definitions.Operation) error {
+	return perform.DockerRunInteractive(srvMain, ops)
 }
 
 func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {

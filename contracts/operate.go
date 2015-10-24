@@ -187,6 +187,7 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 func PerformDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
 	logger.Infof("Performing DAPP Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
+	do.Operations.ContainerType = definitions.TypeService
 	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
 		do.Result = "could not perform dapp action"
 		return err
@@ -234,7 +235,7 @@ func bootChain(name string, do *definitions.Do) error {
 		if util.IsServiceContainer(name, do.Operations.ContainerNumber, true) {
 			startService := definitions.NowDo()
 			startService.Operations = do.Operations
-			startService.Args = []string{name}
+			startService.Operations.Args = []string{name}
 			err = services.StartService(startService)
 			if err != nil {
 				return err

@@ -121,7 +121,7 @@ var dataRm = &cobra.Command{
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 	dataRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
-	dataExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+	dataExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 
 	dataImport.Flags().StringVarP(&do.Path, "dest", "", "", "destination for import into data container")
 	dataExport.Flags().StringVarP(&do.Path, "src", "", "", "source inside data container to export from")
@@ -163,7 +163,7 @@ func InspectData(cmd *cobra.Command, args []string) {
 
 func RmData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(data.RmData(do))
 }
 
@@ -187,7 +187,7 @@ func ExecData(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 
 	// if interactive, we ignore args. if not, run args as command
-	if !do.Interactive {
+	if !do.Operations.Interactive {
 		if len(args) < 2 {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
@@ -197,7 +197,7 @@ func ExecData(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(data.ExecData(do))
 }
 

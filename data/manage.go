@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -17,11 +18,10 @@ func RenameData(do *definitions.Do) error {
 	logger.Debugf("\twith ContainerNumber =>\t%d\n", do.Operations.ContainerNumber)
 
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		util.Merge(ops, do.Operations)
 
-		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
-
-		err := perform.DockerRename(srv.Service, srv.Operations, do.Name, do.NewName)
+		err := perform.DockerRename(ops, do.NewName)
 		if err != nil {
 			return err
 		}
@@ -37,9 +37,9 @@ func InspectData(do *definitions.Do) error {
 		logger.Infoln("Inspecting data container" + do.Name)
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
+		srv.Operations.SrvContainerName = util.ContainersName(definitions.TypeData, do.Name, do.Operations.ContainerNumber)
 
-		err := perform.DockerInspect(srv.Service, srv.Operations, do.Args[0])
+		err := perform.DockerInspect(srv.Service, srv.Operations, do.Operations.Args[0])
 		if err != nil {
 			return err
 		}
@@ -52,10 +52,10 @@ func InspectData(do *definitions.Do) error {
 
 // TODO: skip errors flag
 func RmData(do *definitions.Do) (err error) {
-	if len(do.Args) == 0 {
-		do.Args = []string{do.Name}
+	if len(do.Operations.Args) == 0 {
+		do.Operations.Args = []string{do.Name}
 	}
-	for _, name := range do.Args {
+	for _, name := range do.Operations.Args {
 		do.Name = name
 		if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 			logger.Infoln("Removing data container " + do.Name)

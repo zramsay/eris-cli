@@ -124,7 +124,7 @@ func testsInit() error {
 	f.Write([]byte(content))
 
 	do1 := definitions.NowDo()
-	do1.Args = []string{"ipfs"}
+	do1.Operations.Args = []string{"ipfs"}
 	err = services.StartService(do1)
 	ifExit(err)
 	time.Sleep(5 * time.Second)
@@ -146,7 +146,7 @@ func testKillIPFS(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = serviceName
-	do.Args = []string{serviceName}
+	do.Operations.Args = []string{serviceName}
 	do.Rm = true
 	do.RmD = true
 	if e := services.KillService(do); e != nil {

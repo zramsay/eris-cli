@@ -24,7 +24,6 @@ import (
 )
 
 func NewChain(do *definitions.Do) error {
-
 	//overwrites directory if --force
 	dir := path.Join(DataContainersPath, do.Name)
 	if _, err := os.Stat(dir); err == nil {
@@ -121,7 +120,7 @@ func startChain(do *definitions.Do, exec bool) error {
 	}
 
 	chain.Service.Command = loaders.ErisChainStart
-	util.OverWriteOperations(chain.Operations, do.Operations)
+	util.Merge(chain.Operations, do.Operations)
 	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
 	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
 	if do.Run {
@@ -138,7 +137,8 @@ func startChain(do *definitions.Do, exec bool) error {
 		if do.Image != "" {
 			chain.Service.Image = do.Image
 		}
-		err = perform.DockerRunInteractive(chain.Service, chain.Operations, do.Args, do.Interactive, "")
+		chain.Operations.Args = do.Operations.Args
+		err = perform.DockerRunInteractive(chain.Service, chain.Operations)
 	} else {
 		err = perform.DockerRun(chain.Service, chain.Operations)
 	}
@@ -162,6 +162,8 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
+
+			// Start corresponding service.
 			if !services.IsServiceRunning(srv.Service, srv.Operations) {
 				name := strings.ToUpper(do.Name)
 				logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
@@ -220,8 +222,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	// ensure/create data container
 	if !data.IsKnown(do.Name) {
-		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
-			return fmt.Errorf("Error creating data containr =>\t%v", err)
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		if err := perform.DockerCreateDataContainer(ops); err != nil {
+			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
 	} else {
 		logger.Debugln("Data container already exists for", do.Name)
@@ -364,6 +367,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
+
 	err = perform.DockerRun(chain.Service, chain.Operations)
 	// this err is caught in the defer above
 
