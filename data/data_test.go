@@ -1,7 +1,6 @@
 package data
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -84,7 +83,6 @@ func TestExecData(t *testing.T) {
 
 	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	if err := ExecData(do); err != nil {
-		fmt.Println("DATA EXEC", err)
 		logger.Errorln(err)
 		t.Fail()
 	}

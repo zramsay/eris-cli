@@ -1164,13 +1164,22 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 		srv.Image = "quay.io/eris/data"
 	}
 
+	// Manipulate labels locally.
+	labels := make(map[string]string)
+	for k, v := range ops.Labels {
+		labels[k] = v
+	}
+
 	// If connected to a service.
 	if mainContOpts != nil {
 		// Set the service container's VolumesFrom pointing to the data container.
 		mainContOpts.HostConfig.VolumesFrom = append(mainContOpts.HostConfig.VolumesFrom, ops.DataContainerName)
 
+		// Operations are inherited from the service container.
+		labels = util.SetLabel(labels, def.LabelType, def.TypeData)
+
 		// Set the data container service label pointing to the service.
-		ops.Labels = util.SetLabel(ops.Labels, def.LabelService, mainContOpts.Name)
+		labels = util.SetLabel(labels, def.LabelService, mainContOpts.Name)
 	}
 
 	opts := docker.CreateContainerOptions{
@@ -1183,7 +1192,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 			AttachStderr: false,
 			Tty:          false,
 			OpenStdin:    false,
-			Labels:       ops.Labels,
+			Labels:       labels,
 
 			// Data containers do not need to talk to the outside world.
 			NetworkDisabled: true,
