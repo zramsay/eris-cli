@@ -407,6 +407,7 @@ func addChainsFlags() {
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
 
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
