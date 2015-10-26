@@ -98,17 +98,3 @@ func MoveOutOfDirAndRmDir(src, dest string) error {
 
 	return nil
 }
-
-// HostErisHome returns the Eris directory on a host machine.
-func HostErisHome() string {
-	return filepath.Join(os.Getenv("HOME"), ".eris")
-}
-
-// ContainerErisHome returns the Eris directory on a container machine
-// for a particular user.
-func ContainerErisHome(user string) string {
-	if user == "root" {
-		return filepath.Join("/root", ".eris")
-	}
-	return filepath.Join("/home", user, ".eris")
-}
