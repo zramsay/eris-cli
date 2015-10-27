@@ -149,14 +149,15 @@ func RenameData(cmd *cobra.Command, args []string) {
 }
 
 func InspectData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-
-	if len(args) == 1 {
-		args = append(args, "all")
-	}
+	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
-	do.Path = args[1]
+	if len(args) == 1 {
+		do.Args = []string{"all"}
+	} else {
+		do.Args = []string{args[1]}
+	}
+
 	IfExit(data.InspectData(do))
 }
 
