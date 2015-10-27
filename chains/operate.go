@@ -135,6 +135,9 @@ func startChain(do *definitions.Do, exec bool) error {
 	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
 
 	if exec {
+		if do.Image != "" {
+			chain.Service.Image = do.Image
+		}
 		err = perform.DockerRunInteractive(chain.Service, chain.Operations, do.Args, do.Interactive, "")
 	} else {
 		err = perform.DockerRun(chain.Service, chain.Operations)
