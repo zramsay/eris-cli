@@ -17,7 +17,7 @@ test:
   override:
     - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
     - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0":
-      timeout: 1200
+        timeout: 1200
 
 deployment:
   master:
