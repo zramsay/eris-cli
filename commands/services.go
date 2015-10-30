@@ -234,6 +234,7 @@ func addServicesFlags() {
 	servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
+	servicesExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 	servicesExec.Flags().StringVarP(&do.Volume, "volume", "m", "", "mount a volume $HOME/.eris/VOLUME on a host machine to a /home/eris/.eris/VOLUME on a container")
 

@@ -94,6 +94,7 @@ func ExecService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
+	util.OverWriteOperations(service.Operations, do.Operations)
 	return StartServiceInteractiveByService(service.Service, service.Operations, do.Args, do.Interactive, do.Volume)
 }
 
