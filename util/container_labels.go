@@ -7,13 +7,12 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
-// Labels returns map with container labels, based on the container
+// Labels returns a map with container labels, based on the container
 // short name and ops settings.
 //
-// ops
-//   SrvContainerName  - container name
-//   ContainerNumber   - container number
-//   ContainerType     - container type
+//  ops.SrvContainerName  - container name
+//  ops.ContainerNumber   - container number
+//  ops.ContainerType     - container type
 //
 func Labels(name string, ops *def.Operation) map[string]string {
 	labels := ops.Labels

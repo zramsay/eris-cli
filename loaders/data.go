@@ -5,8 +5,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-// LoadDataDefinitions returns returns a container operations structure for
-// a blank data container specified by a name dataName and a cNum number.
+// LoadDataDefinition returns an Operation structure for a blank data container
+// specified by a name dataName and a cNum number.
 func LoadDataDefinition(dataName string, cNum int) *definitions.Operation {
 	if cNum == 0 {
 		cNum = 1

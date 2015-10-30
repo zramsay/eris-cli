@@ -265,8 +265,10 @@ func RenameChain(do *definitions.Do) error {
 		}
 
 		chainDef.Name = newNameBase
-		// [pv]: why are these emptied at rename?
+		// Generally we won't want to use Service.Name
+		// as it will be confused with the Name.
 		chainDef.Service.Name = ""
+		// Service.Image should be taken from the default.toml.
 		chainDef.Service.Image = ""
 		err = WriteChainDefinitionFile(chainDef, newFile)
 		if err != nil {
