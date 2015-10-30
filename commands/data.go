@@ -153,9 +153,9 @@ func InspectData(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 	if len(args) == 1 {
-		do.Args = []string{"all"}
+		do.Operations.Args = []string{"all"}
 	} else {
-		do.Args = []string{args[1]}
+		do.Operations.Args = []string{args[1]}
 	}
 
 	IfExit(data.InspectData(do))
