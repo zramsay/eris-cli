@@ -101,12 +101,12 @@ func TestLoadServiceDefinition(t *testing.T) {
 }
 
 func TestStartKillService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	testKillService(t, servName, true)
 }
 
 func TestInspectService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
@@ -133,7 +133,7 @@ func TestInspectService(t *testing.T) {
 }
 
 func TestLogsService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 	do := def.NowDo()
 	do.Name = servName
@@ -153,7 +153,7 @@ func TestExecService(t *testing.T) {
 		return
 	}*/
 
-	testStartService(t, servName)
+	testStartService(t, servName, true)
 	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
@@ -169,7 +169,7 @@ func TestExecService(t *testing.T) {
 }
 
 func TestUpdateService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
@@ -192,7 +192,7 @@ func TestUpdateService(t *testing.T) {
 }
 
 func TestKillRmService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	do := def.NowDo()
 	do.Name = servName
 	do.Rm = false
@@ -228,7 +228,7 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestImportService(t *testing.T) {
-	testStartService(t, "ipfs")
+	testStartService(t, "ipfs", false)
 	//	defer testKillService(t, "ipfs", true)
 	//XXX above functions paniced; this worked
 	/*
@@ -313,7 +313,7 @@ func TestRenameService(t *testing.T) {
 	// 	fatal(t, nil)
 	// }
 
-	testStartService(t, "keys")
+	testStartService(t, "keys", false)
 	testExistAndRun(t, "keys", 1, true, true)
 	testNumbersExistAndRun(t, "keys", 1, 1)
 
@@ -398,11 +398,11 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 //----------------------------------------------------------------------
 // test utils!
 
-func testStartService(t *testing.T, serviceName string) {
+func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
 	do.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
-	do.Operations.PublishAllPorts = true
+	do.Operations.PublishAllPorts = publishAll
 	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
 	e := StartService(do)
 	if e != nil {

@@ -294,13 +294,6 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, i
 	var optsData docker.CreateContainerOptions
 	var dataContCreated *docker.Container
 
-	// Prevent from running the same container due to a conflict between exposed ports.
-	// _, running := ContainerRunning(ops)
-	// if running {
-	// 	logger.Errorf("Service %q is already started, aborting.\n", srv.Name)
-	// 	return nil
-	// }
-
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", id_main)
 		if err := removeContainer(id_main, false); err != nil {
@@ -346,7 +339,7 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation, args []string, i
 	// Set terminal into row mode, and restore upon container exit.
 	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
 	if err != nil {
-		fmt.Println("Cannot set the terminal into raw mode")
+		logger.Errorln("Cannot set the terminal into raw mode")
 	} else {
 		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
 	}
@@ -823,9 +816,6 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 		}
 	}
 
-	// temporary hack.
-	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
-
 	return opts, nil
 }
 
@@ -892,34 +882,33 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
 	opts.Config.Volumes = make(map[string]struct{})
 
-	for _, port := range srv.Ports {
-		pS := strings.Split(port, ":")
-		pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
-
-		if len(pS) > 1 {
-			pH := docker.PortBinding{
-				HostPort: pS[len(pS)-2],
-			}
-
-			if len(pS) == 3 {
-				// ipv4
-				pH.HostIP = pS[0]
-			} else if len(pS) > 3 {
-				// ipv6
-				pH.HostIP = strings.Join(pS[:len(pS)-2], ":")
-			}
+	// Don't fill in port bindings if randomizing the ports.
+	if !ops.PublishAllPorts {
+		for _, port := range srv.Ports {
+			pS := strings.Split(port, ":")
+			pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
 
 			opts.Config.ExposedPorts[pC] = struct{}{}
-			opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
-		} else {
-			if !ops.PublishAllPorts {
-				// if -p not given, we use the default port
+			if len(pS) > 1 {
+				pH := docker.PortBinding{
+					HostPort: pS[len(pS)-2],
+				}
+
+				if len(pS) == 3 {
+					// ipv4
+					pH.HostIP = pS[0]
+				} else if len(pS) > 3 {
+					// ipv6
+					pH.HostIP = strings.Join(pS[:len(pS)-2], ":")
+				}
+
+				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
+			} else {
 				pH := docker.PortBinding{
 					HostPort: pS[0],
 				}
 				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
 			}
-			opts.Config.ExposedPorts[pC] = struct{}{}
 		}
 	}
 

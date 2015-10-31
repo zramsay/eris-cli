@@ -406,6 +406,7 @@ func addChainsFlags() {
 	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
+	chainsExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
 
