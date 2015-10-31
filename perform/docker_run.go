@@ -806,8 +806,8 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 
 	// Mount a volume.
 	if volume != "" {
-		bind := filepath.Join(util.HostErisHome(), volume) + ":" +
-			filepath.Join(util.ContainerErisHome(opts.Config.User), volume)
+		bind := filepath.Join(dirs.ErisRoot, volume) + ":" +
+			filepath.Join(dirs.ErisContainerRoot, volume)
 
 		if opts.HostConfig.Binds == nil {
 			opts.HostConfig.Binds = []string{bind}
@@ -926,7 +926,7 @@ func configureVolumesFromContainer(volumesFrom string, interactive bool, args []
 		Config: &docker.Config{
 			Image:           "quay.io/eris/base",
 			User:            "root",
-			WorkingDir:      dirs.ErisRoot,
+			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
 			AttachStderr:    true,
 			AttachStdin:     true,
