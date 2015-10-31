@@ -70,7 +70,8 @@ RUN groupadd --system $USER && \
 RUN mkdir $ERIS && \
   mkdir /home/$USER/.docker
 RUN mv $BASE/tests/* /home/$USER
-RUN chown --recursive $USER /home/$USER
+RUN chown --recursive $USER:$USER /home/$USER
+RUN chown --recursive $USER:$USER /go
 
 USER $USER
 WORKDIR /home/$USER

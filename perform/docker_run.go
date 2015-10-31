@@ -798,10 +798,17 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 	opts.Config.User = "root"
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
-	opts.Config.Entrypoint = []string{"/bin/bash"}
-	opts.Config.Cmd = nil
-	if len(args) > 0 {
-		opts.Config.Entrypoint = args
+	if interactive {
+		// if there are args, we overwrite the entrypoint
+		// else we just start an interactive shell
+		if len(args) > 0 {
+			opts.Config.Entrypoint = args
+		} else {
+			opts.Config.Entrypoint = []string{"/bin/bash"}
+		}
+	} else {
+		// use the image's own entrypoint
+		opts.Config.Cmd = args
 	}
 
 	// Mount a volume.
@@ -815,6 +822,12 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation, args []
 			opts.HostConfig.Binds = append(opts.HostConfig.Binds, bind)
 		}
 	}
+
+	// we expect to link to the main service container
+	opts.HostConfig.Links = srv.Links
+
+	// temporary hack.
+	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
 
 	return opts, nil
 }
@@ -839,10 +852,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 			OpenStdin:       false,
 			Env:             srv.Environment,
 			Labels:          ops.Labels,
-			Cmd:             strings.Fields(srv.Command),
-			Entrypoint:      strings.Fields(srv.EntryPoint),
 			Image:           srv.Image,
-			WorkingDir:      srv.WorkDir,
 			NetworkDisabled: false,
 		},
 		HostConfig: &docker.HostConfig{
@@ -859,6 +869,17 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 			RestartPolicy:   docker.NeverRestart(),
 			NetworkMode:     "bridge",
 		},
+	}
+
+	// some fields may be set in the dockerfile and we only want to overwrite if they are present in the service def
+	if srv.EntryPoint != "" {
+		opts.Config.Entrypoint = strings.Fields(srv.EntryPoint)
+	}
+	if srv.Command != "" {
+		opts.Config.Cmd = strings.Fields(srv.Command)
+	}
+	if srv.WorkDir != "" {
+		opts.Config.WorkingDir = srv.WorkDir
 	}
 
 	if ops.Attach {
