@@ -94,6 +94,7 @@ func ThrowAwayChain(do *definitions.Do) error {
 	}
 
 	logger.Debugf("ThrowAwayChain created =>\t%s\n", do.Name)
+	do.Run = true  // turns on edb api
 	StartChain(do) // XXX [csk]: may not need to do this now that New starts....
 	logger.Debugf("ThrowAwayChain started =>\t%s\n", do.Name)
 	return nil
@@ -138,6 +139,11 @@ func startChain(do *definitions.Do, exec bool) error {
 			chain.Service.Image = do.Image
 		}
 		chain.Operations.Args = do.Operations.Args
+		logger.Debugf("\twith Args =>\t\t%v:%v\n", chain.Operations.Args, do.Interactive)
+		// This override is necessary because erisdb uses an entryPoint and
+		// the perform package will respect the images entryPoint if it
+		// exists.
+		chain.Service.EntryPoint = ""
 		err = perform.DockerRunInteractive(chain.Service, chain.Operations)
 	} else {
 		err = perform.DockerRun(chain.Service, chain.Operations)
@@ -202,18 +208,18 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
-	//if given path does not exist, see if its a reference to something in ~/.eris/blockchains/chainName
+	//if given path does not exist, see if its a reference to something in ~/.eris/chains/chainName
 	if do.Path != "" {
 		src, err := os.Stat(do.Path)
 		if err != nil || !src.IsDir() {
-			logger.Infof("path: %s does not exist or is not a directory, trying $HOME/.eris/blockchains/%s\n", do.Path, do.Path)
+			logger.Infof("Path (%s) does not exist or is not a directory, trying $HOME/.eris/chains/%s\n", do.Path, do.Path)
 			do.Path, err = util.ChainsPathChecker(do.Path)
 			if err != nil {
 				return err
 			}
 		}
 	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
-		// NOTE: this expects you to have ~/.eris/blockchains/default/ (ie. to have run `eris init`)
+		// NOTE: this expects you to have ~/.eris/chains/default/ (ie. to have run `eris init`)
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
 			return err
@@ -245,7 +251,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}()
 
 	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
-	containerDst := path.Join("blockchains", do.Name)           // path in container
+	containerDst := path.Join("chains", do.Name)                // path in container
 	dst := path.Join(DataContainersPath, do.Name, containerDst) // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
@@ -264,11 +270,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	if do.CSV != "" {
 		csvFiles = strings.Split(do.CSV, ",")
 		if len(csvFiles) > 1 {
-			csvPath1 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "validators.csv")
-			csvPath2 := fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "accounts.csv")
+			csvPath1 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "validators.csv")
+			csvPath2 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "accounts.csv")
 			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
 		} else {
-			csvPaths = fmt.Sprintf("/home/eris/.eris/blockchains/%s/%s", do.ChainID, "genesis.csv")
+			csvPaths = fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "genesis.csv")
 		}
 	}
 
@@ -341,9 +347,10 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),           // for mintgen
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts), // for config.toml
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),   // etcb host
+		fmt.Sprintf("CSV=%v", csvPaths),                                          // for mintgen
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),                                // for config.toml
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                                  // etcb host
+		fmt.Sprintf("DOCKER_FIX=%s", "                                        "), // https://github.com/docker/docker/issues/14203
 	}
 	envVars = append(envVars, do.Env...)
 

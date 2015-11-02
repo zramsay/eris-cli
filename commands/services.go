@@ -61,11 +61,11 @@ Known services can be started with:
 
 	$ eris services start serviceName
 
-To install a new service, use: 
+To install a new service, use:
 
 	$ eris services import
 
-Services include all executable services supported by the 
+Services include all executable services supported by the
 Eris platform which are NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,

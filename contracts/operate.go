@@ -17,39 +17,39 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
-	logger.Debugf("Welcome! Say the Marmots. Running DApp package.\n")
+	logger.Debugf("Welcome! Say the Marmots. Running App package.\n")
 	pwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("Could not get the present working directory. Are you on Mars?\nError: %v\n", err)
 	}
 
 	logger.Debugf("\twith Host Path =>\t%s:%s\n", do.Path, pwd)
-	dapp, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
+	app, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
 	if err != nil {
 		do.Result = "could not load package"
 		return err
 	}
 
-	if err := BootServicesAndChain(do, dapp); err != nil {
+	if err := BootServicesAndChain(do, app); err != nil {
 		do.Result = "could not boot chain or services"
-		CleanUp(do, dapp)
+		CleanUp(do, app)
 		return err
 	}
 
 	do.Path = pwd
-	if err := DefineDappActionService(do, dapp); err != nil {
-		do.Result = "could not define dapp action service"
-		CleanUp(do, dapp)
+	if err := DefineAppActionService(do, app); err != nil {
+		do.Result = "could not define app action service"
+		CleanUp(do, app)
 		return err
 	}
 
-	if err := PerformDappActionService(do, dapp); err != nil {
-		do.Result = "could not perform dapp action service"
-		CleanUp(do, dapp)
+	if err := PerformAppActionService(do, app); err != nil {
+		do.Result = "could not perform app action service"
+		CleanUp(do, app)
 		return err
 	}
 
-	if err := CleanUp(do, dapp); err != nil {
+	if err := CleanUp(do, app); err != nil {
 		do.Result = "could not cleanup"
 		return err
 	}
@@ -58,7 +58,7 @@ func RunPackage(do *definitions.Do) error {
 	return nil
 }
 
-func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error {
+func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error {
 	var err error
 	var srvs []*definitions.ServiceDefinition
 
@@ -80,22 +80,23 @@ func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error
 	// boot the chain
 	switch do.ChainName {
 	case "":
-		if dapp.ChainName == "" {
+		if app.ChainName == "" {
+			// TODO [csk]: first check if there is a chain checked out. if not, then use throwAway
 			logger.Infof("No chain was given, booting a throwaway chain.\n")
-			err = bootThrowAwayChain(dapp.Name, do)
+			err = bootThrowAwayChain(app.Name, do)
 		} else {
-			logger.Infof("Booting chain =>\t\t%s\n", dapp.ChainName)
-			err = bootChain(dapp.ChainName, do)
+			logger.Infof("Booting chain =>\t\t%s\n", app.ChainName)
+			err = bootChain(app.ChainName, do)
 		}
 	case "t", "tmp", "temp":
 		logger.Infof("No chain was given, booting a throwaway chain.\n")
-		err = bootThrowAwayChain(dapp.Name, do)
+		err = bootThrowAwayChain(app.Name, do)
 	default:
 		logger.Infof("Booting chain =>\t\t%s\n", do.ChainName)
 		err = bootChain(do.ChainName, do)
 	}
 
-	dapp.ChainName = do.Chain.Name
+	app.ChainName = do.Chain.Name
 	if err != nil {
 		return err
 	}
@@ -103,52 +104,53 @@ func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error
 	return nil
 }
 
-func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
+func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) error {
 	var cmd string
 
 	switch do.Name {
 	case "test":
-		cmd = dapp.DappType.TestCmd
+		cmd = app.AppType.TestCmd
 	case "deploy":
-		cmd = dapp.DappType.DeployCmd
+		cmd = app.AppType.DeployCmd
 	default:
 		return fmt.Errorf("I do not know how to perform that task (%s)\nPlease check what you can do with contracts by typing [eris contracts].\n", do.Name)
 	}
 
 	// if manual, set task
-	if dapp.DappType.Name == "manual" {
+	if app.AppType.Name == "manual" {
 		switch do.Name {
 		case "test":
-			cmd = dapp.TestTask
+			cmd = app.TestTask
 		case "deploy":
-			cmd = dapp.DeployTask
+			cmd = app.DeployTask
 		}
 	}
 
 	// task flag override
 	if do.Task != "" {
-		dapp.DappType = definitions.GulpDapp()
+		app.AppType = definitions.GulpApp()
 		cmd = do.Task
 	}
 
 	if cmd == "nil" {
-		return fmt.Errorf("I cannot perform that task against that dapp type.\n")
+		return fmt.Errorf("I cannot perform that task against that app type.\n")
 	}
 
-	// dapp-specific tests
-	if dapp.DappType.Name == "pyepm" {
-		if do.ConfigFile == "" {
-			return fmt.Errorf("The pyepm dapp type requires a --yaml flag for the package definition you would like to deploy.\n")
-		} else {
-			cmd = do.ConfigFile
-		}
+	// app-specific tests
+	if app.AppType.Name == "epm" {
+		// TODO: require EPM instructions to exist as a check before we send it....
+		// if do.ConfigFile == "" {
+		// 	return fmt.Errorf("The epm app type requires a --yaml flag for the package definition you would like to deploy.\n")
+		// } else {
+		// 	cmd = do.ConfigFile
+		// }
 	}
 
 	// build service that will run
-	do.Service.Name = dapp.Name + "_tmp_" + do.Name
-	do.Service.Image = dapp.DappType.BaseImage
+	do.Service.Name = app.Name + "_tmp_" + do.Name
+	do.Service.Image = app.AppType.BaseImage
 	do.Service.AutoData = true
-	do.Service.EntryPoint = dapp.DappType.EntryPoint
+	do.Service.EntryPoint = app.AppType.EntryPoint
 	do.Service.Command = cmd
 	if do.NewName != "" {
 		do.Service.WorkDir = do.NewName // do.NewName is actually where the workdir inside the container goes
@@ -163,7 +165,7 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 	do.Operations = srv.Operations
 	do.Operations.Remove = true
 
-	linkDappToChain(do, dapp)
+	linkAppToChain(do, app)
 
 	// make data container and import do.Path to do.NewName (if exists)
 	doData := definitions.NowDo()
@@ -174,30 +176,30 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 	}
 
 	loca := path.Join(common.DataContainersPath, doData.Name)
-	logger.Debugf("Creating Dapp Data Cont =>\t%s:%s\n", do.Path, loca)
+	logger.Debugf("Creating App Data Cont =>\t%s:%s\n", do.Path, loca)
 	common.Copy(do.Path, loca)
 	data.ImportData(doData)
 	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
 
-	logger.Debugf("DApp Action Built.\n")
+	logger.Debugf("App Action Built.\n")
 
 	return nil
 }
 
-func PerformDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
-	logger.Infof("Performing DAPP Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
+func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
+	logger.Infof("Performing App Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
 	do.Operations.ContainerType = definitions.TypeService
 	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
-		do.Result = "could not perform dapp action"
+		do.Result = "could not perform app action"
 		return err
 	}
 
-	logger.Infof("Finished performing DAPP Action.\n")
+	logger.Infof("Finished performing App Action.\n")
 	return nil
 }
 
-func CleanUp(do *definitions.Do, dapp *definitions.Contracts) error {
+func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	logger.Infof("Commensing CleanUp.\n")
 
 	if do.Chain.ChainType == "throwaway" {
@@ -266,13 +268,13 @@ func bootThrowAwayChain(name string, do *definitions.Do) error {
 	return nil
 }
 
-func linkDappToChain(do *definitions.Do, dapp *definitions.Contracts) {
+func linkAppToChain(do *definitions.Do, app *definitions.Contracts) {
 	var newLink string
 
 	if do.Chain.ChainType == "service" {
-		newLink = util.ServiceContainersName(dapp.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ServiceContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainersName(dapp.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ChainContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	}
 	do.Service.Links = append(do.Service.Links, newLink)
 }

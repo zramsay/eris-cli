@@ -48,7 +48,7 @@ func DefChainGen() string {
   "chain_id": "my_tests",
   "accounts": [
     {
-      "address": "F81CB9ED0A868BD961C4F5BBC0E39B763B89FCB6",
+      "address": "0000000000000000000000000000000000000001",
       "amount": 690000000000
     },
     {
@@ -56,7 +56,7 @@ func DefChainGen() string {
       "amount": 565000000000
     },
     {
-      "address": "9E54C9ECA9A3FD5D4496696818DA17A9E17F69DA",
+      "address": "0000000000000000000000000000000000000003",
       "amount": 525000000000
     },
     {
@@ -65,7 +65,7 @@ func DefChainGen() string {
     },
     {
       "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
-      "amount": 110000000000
+      "amount": 999999999999
     }
   ],
   "validators": [
@@ -77,7 +77,7 @@ func DefChainGen() string {
       "amount": 5000000000,
       "unbond_to": [
         {
-          "address": "93E243AC8A01F723DE353A4FA1ED911529CCB6E5",
+          "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
           "amount": 5000000000
         }
       ]
@@ -87,8 +87,8 @@ func DefChainGen() string {
 `
 }
 
-// different from genesis above!
-var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
+// different from genesis above! -- used for testing
+var DefaultPubKeys = []string{"CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
 
 func DefChainCSV() string {
   return fmt.Sprintf("%s,", DefaultPubKeys[0])

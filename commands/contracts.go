@@ -53,11 +53,14 @@ var contractsTest = &cobra.Command{
 Tests can be structured using three different
 test types.
 
-1. embark -- embark dapps can be tested against
-ethereum style chains.
-2. solUnit -- pure solidity smart contract packages
+* epm -- epm apps can be tested against tendermint
+style blockchains.
+* embark -- embark apps can be tested against
+ethereum style blockchains.
+* truffle -- HELP WANTED!
+* solUnit -- pure solidity smart contract packages
 may be tested via solUnit test framework.
-3. manual -- a simple gulp task can be given to the
+* manual -- a simple gulp task can be given to the
 test environment.`,
 	Run: ContractsTest,
 }
@@ -70,12 +73,15 @@ var contractsDeploy = &cobra.Command{
 Deployments can be structured using three different
 deploy types.
 
-1. embark -- embark dapps can be deployed to an
+* epm -- epm apps can be deployed to tendermint style
+blockchains simply.
+* embark -- embark apps can be deployed to an
 ethereum style blockchain simply.
-2. pyepm -- pyepm contract packages can be deployed
-to an ethereum style blockchain.
-3. manual -- a simple gulp task can be given to the
-deployer.`,
+* truffle -- HELP WANTED!
+* pyepm -- IF THIS IS STILL A THING, HELP WANTED!
+* manual -- a simple gulp task can be given to the
+deployer.
+`,
 	Run: ContractsDeploy,
 }
 
@@ -84,18 +90,18 @@ deployer.`,
 func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for testing")
 	contractsTest.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	contractsTest.Flags().StringVarP(&do.Type, "type", "t", "", "dapp type paradigm to be used for testing (overrides package.json)")
+	contractsTest.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for testing (overrides package.json)")
 	contractsTest.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsTest.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of dapp (will use $pwd by default)")
+	contractsTest.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of app (will use $pwd by default)")
 	contractsTest.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for testing")
 
 	contractsDeploy.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	contractsDeploy.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "", "dapp type paradigm to be used for deployment (overrides package.json)")
+	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for deployment (overrides package.json)")
 	contractsDeploy.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of dapp (will use $pwd by default)")
+	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of app (will use $pwd by default)")
 	contractsDeploy.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for deployment")
-	contractsDeploy.Flags().StringVarP(&do.ConfigFile, "yaml", "y", "", "yaml file for deployment. pyepm dapps require this; other dapps ignore")
+	contractsDeploy.Flags().StringVarP(&do.ConfigFile, "yaml", "y", "", "yaml file for deployment. epm apps require this; other apps ignore")
 }
 
 //----------------------------------------------------

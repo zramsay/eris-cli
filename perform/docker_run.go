@@ -1149,6 +1149,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
+	logger.Debugf("cfigureVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
 	return opts
 }
 

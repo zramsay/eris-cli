@@ -1,5 +1,4 @@
 // +build windows
-
 package term
 
 import (
@@ -7,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/docker/docker/pkg/term/winconsole"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term/winconsole"
 )
 
 // State holds the console mode for the terminal.

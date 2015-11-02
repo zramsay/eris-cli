@@ -1,0 +1,2 @@
+deploy:
+    testract.sol => testract

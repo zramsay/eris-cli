@@ -2,8 +2,6 @@
 
 [![GoDoc](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris?status.png)](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris)
 
-# Eris
-
 ```
 Eris is a platform for building, testing, maintaining, and operating distributed
 applications with a blockchain backend. Eris makes it easy and simple to wrangle

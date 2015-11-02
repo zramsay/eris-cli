@@ -185,7 +185,7 @@ func CurrentChain(do *definitions.Do) error {
 
 func PlopChain(do *definitions.Do) error {
 	do.Name = do.ChainID
-	rootDir := path.Join("/home/eris/.eris/blockchains", do.ChainID)
+	rootDir := path.Join("/home/eris/.eris/chains", do.ChainID)
 	switch do.Type {
 	case "genesis":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
@@ -193,9 +193,12 @@ func PlopChain(do *definitions.Do) error {
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+	case "validators":
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown plop option %s", do.Type)
 	}
+	logger.Debugf("Execing =>\t\t\t%v\n", do.Args)
 	return ExecChain(do)
 }
 

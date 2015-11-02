@@ -152,7 +152,7 @@ func TestExecChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = chainName
-	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris/blockchains")
+	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris/chains")
 	do.Operations.Interactive = false
 	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
 	e := ExecChain(do)
@@ -171,7 +171,7 @@ func TestChainsNewDirGen(t *testing.T) {
 		fatal(t, err)
 	}
 	contents := "this is a file in the directory\n"
-	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0600); err != nil {
+	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0664); err != nil {
 		fatal(t, err)
 	}
 
@@ -194,7 +194,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	config.GlobalConfig.Writer = newWriter
 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/file.file", chainID)}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/file.file", chainID)}
 	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)
@@ -214,7 +214,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	config.GlobalConfig.Writer = newWriter
 	ops = loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
 	b, err = perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)
@@ -258,7 +258,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	// verify the contents of config.toml
 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chainID)}
 	result := trimResult(string(runContainer(t, ops)))
 	contents := trimResult(ini.DefChainConfig())
 	if result != contents {
@@ -268,7 +268,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	// verify the contents of genesis.json (should have the validator from the csv)
 	ops = loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/genesis.json", chainID)}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chainID)}
 	result = string(runContainer(t, ops))
 	var found bool
 	for _, s := range strings.Split(result, "\n") {
@@ -301,7 +301,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	// verify the contents of config.toml
 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/blockchains/%s/config.toml", chainID)}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chainID)}
 	result := string(runContainer(t, ops))
 
 	spl := strings.Split(result, "\n")
