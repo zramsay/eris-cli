@@ -1002,9 +1002,6 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) (docker
 	// we expect to link to the main service container
 	opts.HostConfig.Links = srv.Links
 
-	// temporary hack.
-	opts.HostConfig.PortBindings = make(map[docker.Port][]docker.PortBinding)
-
 	return opts, nil
 }
 
