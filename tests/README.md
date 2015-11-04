@@ -7,7 +7,6 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 * test the tool itself
 * test minimum viable stack connection and sequencing
 * test the tool against a multitude of docker-engine APIs
-  * docker 1.7.1 (implemented)
   * docker 1.8.0 (implemented)
   * docker 1.8.1 (implemented)
   * docker 1.8.2 (implemented)

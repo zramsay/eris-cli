@@ -38,6 +38,7 @@ then
 fi
 
 # Define now the tool tests within the Docker container will be booted from docker run
+host_docker="docker18"
 entrypoint="/home/eris/test_tool.sh"
 testimage=quay.io/eris/eris
 testuser=eris
@@ -98,7 +99,6 @@ runTests(){
   then
     machine="eris-test-local"
     swarm=solo
-    ver=$(docker version | grep "Client version" | cut -d':' -f2 | sed -e 's/^[[:space:]]*//')
 
     # Note NEVER do this in circle. It will explode.
     echo -e "Starting Eris Docker container.\n"
@@ -106,9 +106,9 @@ runTests(){
     then
       if [[ $(uname -s) == "Linux" ]]
       then
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage:$host_docker
       else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$host_docker
       fi
     else
       echo "Don't run local in Circle environment."
@@ -176,7 +176,7 @@ fi
 echo ""
 if [[ $1 == "local" ]]
 then
-  runTests 'local'
+  runTests "local"
 else
   if [[ $1 == "all" ]]
   then
