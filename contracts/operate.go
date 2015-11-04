@@ -49,13 +49,8 @@ func RunPackage(do *definitions.Do) error {
 		return err
 	}
 
-	if err := CleanUp(do, app); err != nil {
-		do.Result = "could not cleanup"
-		return err
-	}
-
 	do.Result = "success"
-	return nil
+	return CleanUp(do, app)
 }
 
 func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error {
@@ -153,9 +148,18 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	loaders.ServiceFinalizeLoad(srv)
 	do.Service = srv.Service
 	do.Operations = srv.Operations
-	do.Operations.Remove = do.Rm
+	do.Operations.Follow = true
 
 	linkAppToChain(do, app)
+
+	if app.AppType.Name == "epm" {
+		if do.Verbose {
+			do.Service.Environment = append(do.Service.Environment, "EPM_VERBOSE=true")
+		}
+		if do.Debug {
+			do.Service.Environment = append(do.Service.Environment, "EPM_DEBUG=true")
+		}
+	}
 
 	// make data container and import do.Path to do.NewName (if exists)
 	doData := definitions.NowDo()
@@ -212,7 +216,9 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
 
 	logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
-	perform.DockerRemove(do.Service, do.Operations, true, true)
+	if !do.Rm {
+		perform.DockerRemove(do.Service, do.Operations, true, true)
+	}
 	return nil
 }
 

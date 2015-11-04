@@ -298,12 +298,14 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
 	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
+	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
 	if err := startContainer(id_main, &optsServ); err != nil {
 		return err
 	}
 
 	// XXX: setting Remove causes us to block here!
-	if ops.Remove {
+	if ops.Remove || ops.Follow {
+
 		// dump the logs (TODO: options about this)
 		doneLogs := make(chan struct{}, 1)
 		go func() {
@@ -315,7 +317,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 			doneLogs <- struct{}{}
 		}()
 
-		logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
+		logger.Infof("Waiting to exit =>\t\t%s\n", id_main)
 		if err := waitContainer(id_main); err != nil {
 			return err
 		}
@@ -324,9 +326,11 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		// let the logs finish
 		<-doneLogs
 
-		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
-		if err := removeContainer(id_main, false); err != nil {
-			return err
+		if ops.Remove {
+			logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
+			if err := removeContainer(id_main, false); err != nil {
+				return err
+			}
 		}
 
 	} else {
