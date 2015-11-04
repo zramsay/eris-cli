@@ -136,16 +136,6 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 		return fmt.Errorf("I cannot perform that task against that app type.\n")
 	}
 
-	// app-specific tests
-	if app.AppType.Name == "epm" {
-		// TODO: require EPM instructions to exist as a check before we send it....
-		// if do.ConfigFile == "" {
-		// 	return fmt.Errorf("The epm app type requires a --yaml flag for the package definition you would like to deploy.\n")
-		// } else {
-		// 	cmd = do.ConfigFile
-		// }
-	}
-
 	// build service that will run
 	do.Service.Name = app.Name + "_tmp_" + do.Name
 	do.Service.Image = app.AppType.BaseImage
@@ -163,7 +153,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	loaders.ServiceFinalizeLoad(srv)
 	do.Service = srv.Service
 	do.Operations = srv.Operations
-	do.Operations.Remove = true
+	do.Operations.Remove = do.Rm
 
 	linkAppToChain(do, app)
 
@@ -276,5 +266,7 @@ func linkAppToChain(do *definitions.Do, app *definitions.Contracts) {
 	} else {
 		newLink = util.ChainContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	}
+	newLink2 := util.ServiceContainersName("keys", do.Operations.ContainerNumber) + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
+	do.Service.Links = append(do.Service.Links, newLink2)
 }

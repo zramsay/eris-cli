@@ -92,16 +92,18 @@ func addContractsFlags() {
 	contractsTest.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
 	contractsTest.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for testing (overrides package.json)")
 	contractsTest.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsTest.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of app (will use $pwd by default)")
+	contractsTest.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
 	contractsTest.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for testing")
+	contractsTest.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
 
 	contractsDeploy.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	contractsDeploy.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
 	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for deployment (overrides package.json)")
 	contractsDeploy.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of app (will use $pwd by default)")
+	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
 	contractsDeploy.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for deployment")
 	contractsDeploy.Flags().StringVarP(&do.ConfigFile, "yaml", "y", "", "yaml file for deployment. epm apps require this; other apps ignore")
+	contractsDeploy.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
 }
 
 //----------------------------------------------------

@@ -43,7 +43,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestContractsTest(t *testing.T) {
-
 	// TODO: test more app types once we have
 	// canonical apps + eth throwaway chains
 }

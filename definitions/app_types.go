@@ -22,9 +22,9 @@ func EPMApp() *AppType {
 	app := BlankAppType()
 	app.Name = "epm"
 	app.BaseImage = "quay.io/eris/epm"
-	app.EntryPoint = "epm"
-	app.DeployCmd = "deploy"
-	app.TestCmd = "test"
+	app.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
+	app.DeployCmd = ""
+	app.TestCmd = ""
 	app.ChainTypes = []string{"mint"}
 	return app
 }
