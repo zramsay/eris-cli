@@ -3,19 +3,15 @@ package data
 import (
 	"os"
 	"path"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	ini "github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/util"
+	tests "github.com/eris-ltd/eris-cli/testings"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
@@ -28,19 +24,12 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	if err := testsInit(); err != nil {
-		logger.Errorln(err)
-		os.Exit(1)
-	}
+	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		if err := testsTearDown(); err != nil {
-			logger.Errorln(err)
-			log.Flush()
-			os.Exit(1)
-		}
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -177,76 +166,14 @@ func TestRmData(t *testing.T) {
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := definitions.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	do.Yes = true
-	ifExit(ini.Initialize(do))
-
-	return nil
-}
-
-func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
+	if err := tests.TestsInit("data"); err != nil {
+		return err
 	}
-
 	return nil
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	var exist bool
-	logger.Infof("\nTesting whether (%s) existing? (%t)\n", name, toExist)
-	name = util.DataContainersName(name, 1)
-
-	do := definitions.NowDo()
-	do.Existing = true
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	if err := util.ListAll(do, "data"); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(name) {
-			exist = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", name)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", name)
-		}
+	if tests.TestExistAndRun(name, "data", 1, toExist, false) {
 		t.Fail()
-	}
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
 	}
 }

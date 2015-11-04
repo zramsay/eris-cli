@@ -18,6 +18,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
+	tests "github.com/eris-ltd/eris-cli/testings"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -53,7 +54,8 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	testsInit()
+	ifExit(testsInit())
+	testNewChain(chainName) //from testsInit;
 	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
 	var exitCode int
@@ -401,6 +403,7 @@ func TestRenameChain(t *testing.T) {
 }
 
 // TODO: finish this....
+//[zr] this'll be a good one for toadserver ...
 // func TestServiceWithChainDependencies(t *testing.T) {
 // 	do := definitions.NowDo()
 // 	do.Name = "keys"
@@ -481,96 +484,15 @@ func testKillChain(t *testing.T, chain string) {
 }
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
-	var exist, run bool
-	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", chainName, toRun, toExist)
-	chainName = util.ChainContainersName(chainName, 1) // not worried about containerNumbers, deal with multiple containers in services tests
-
-	do := def.NowDo()
-	do.Known = false
-	do.Existing = true
-	do.Running = false
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	if err := util.ListAll(do, "chains"); err != nil {
-		fatal(t, err)
+	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
+		fatal(t, nil) //error thrown in func (logger.Errorln)
 	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(chainName) {
-			exist = true
-		}
-	}
-
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	if err := util.ListAll(do, "chains"); err != nil {
-		fatal(t, err)
-	}
-	logger.Debugln("RUNNING RESULT:", do.Result)
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Running =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(chainName) {
-			run = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", chainName)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", chainName)
-		}
-		fatal(t, nil)
-	}
-
-	if toRun != run {
-		if toRun {
-			logger.Infof("Could not find a running =>\t%s\n", chainName)
-		} else {
-			logger.Infof("Found a running instance of %s when I shouldn't have\n", chainName)
-		}
-		fatal(t, nil)
-	}
-
-	logger.Debugln("")
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	if err != nil {
-		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
+	if err := tests.TestsInit("chain"); err != nil {
+		return err
 	}
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris-test-nyc2-1.8.1")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := def.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	if err := ini.Initialize(do); err != nil {
-		ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
-	}
-
-	// lay a chain service def
-	testNewChain(chainName)
-
 	return nil
 }
 
@@ -598,6 +520,7 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	}
 }
 
+//TODO use tests.TestsTearDown (or not??)
 func testsTearDown() error {
 	DEAD = true
 	killService("keys")
