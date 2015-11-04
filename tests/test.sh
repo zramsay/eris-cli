@@ -21,7 +21,6 @@ branch=${branch/-/_}
 #   the array and just test against the authoritative one. If testing against a specific backend
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
-declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" "1.8.3" )
 declare -a docker_versions19=( "1.9.0" )
 declare -a machine_results=()
@@ -134,29 +133,11 @@ runTests(){
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
     echo "Starting Eris Docker container."
-    if  [[ "$1" == "1.7" ]]
+    if [ "$circle" = true ]
     then
-      if [ "$circle" = true ]
-      then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
-      else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
-      fi
-    elif [[ "$1" == "1.8" ]]
-    then
-      if [ "$circle" = true ]
-      then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker18
-      else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker18
-      fi
+      docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$1
     else
-      if [ "$circle" = true ]
-      then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$branch
-      else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage
-      fi
+      docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$1
     fi
 
     # logging the exit code
@@ -190,9 +171,7 @@ strt=`pwd`
 cd $repo
 export testimage
 export repo
-# suppressed by default as too chatty
-tests/build_tool.sh > /dev/null
-# tests/build_tool.sh
+tests/build_tool.sh 1>/dev/null
 if [ $? -ne 0 ]
 then
   echo "Could not build eris. Debug via by directly running [`pwd`/tests/build_tool.sh]"
@@ -212,17 +191,13 @@ else
     runTests "local"
   fi
 
-  for ver in "${docker_versions17[@]}"
+  for ver in "${docker_versions19[@]}"
   do
-    runTests "1.7"
+    runTests $branch
   done
   for ver in "${docker_versions18[@]}"
   do
-    runTests "1.8"
-  done
-  for ver in "${docker_versions19[@]}"
-  do
-    runTests
+    runTests "docker18"
   done
 
 fi
