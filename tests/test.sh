@@ -124,14 +124,6 @@ runTests(){
     check_swarm
     if [ $? -ne 0 ]; then return 1; fi
 
-    # Correct for docker build stuff
-    if [[ "$branch" == "master" ]]
-    then
-      branch="latest"
-    fi
-
-    # only the last element in the backend array should cause this script to exit with
-    #   a non-zero exit code
     echo "Starting Eris Docker container."
     if [ "$circle" = true ]
     then
@@ -193,8 +185,23 @@ else
 
   for ver in "${docker_versions19[@]}"
   do
+
+    # Correct for docker build stuff
+    if [[ "$branch" == "master" ]]
+    then
+      branch="latest"
+    fi
+
     runTests $branch
+
+    # Correct for docker build stuff
+    if [[ "$branch" == "latest" ]]
+    then
+      branch="master"
+    fi
+
   done
+
   for ver in "${docker_versions18[@]}"
   do
     runTests "docker18"
