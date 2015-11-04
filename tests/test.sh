@@ -21,11 +21,10 @@ branch=${branch/-/_}
 #   the array and just test against the authoritative one. If testing against a specific backend
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
-declare -a docker_versions16=( "1.6.2" )
 declare -a docker_versions17=( "1.7.1" )
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" "1.8.3" )
+declare -a docker_versions19=( "1.9.0" )
 declare -a machine_results=()
-# declare -a docker_versions18=( "1.8.2" )
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
 #   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
@@ -135,21 +134,21 @@ runTests(){
     # only the last element in the backend array should cause this script to exit with
     #   a non-zero exit code
     echo "Starting Eris Docker container."
-    if [[ "$1" == "1.6" ]]
-    then
-      if [ "$circle" = true ]
-      then
-        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
-      else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker16
-      fi
-    elif  [[ "$1" == "1.7" ]]
+    if  [[ "$1" == "1.7" ]]
     then
       if [ "$circle" = true ]
       then
         docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
       else
         docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker17
+      fi
+    elif [[ "$1" == "1.8" ]]
+    then
+      if [ "$circle" = true ]
+      then
+        docker run --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker18
+      else
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:docker18
       fi
     else
       if [ "$circle" = true ]
@@ -213,15 +212,15 @@ else
     runTests "local"
   fi
 
-  for ver in "${docker_versions16[@]}"
-  do
-    runTests "1.6"
-  done
   for ver in "${docker_versions17[@]}"
   do
     runTests "1.7"
   done
   for ver in "${docker_versions18[@]}"
+  do
+    runTests "1.8"
+  done
+  for ver in "${docker_versions19[@]}"
   do
     runTests
   done
