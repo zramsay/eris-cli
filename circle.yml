@@ -12,7 +12,6 @@ dependencies:
     - sudo service docker start
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
     - "sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && sudo chmod +x /usr/local/bin/docker-machine"
-    - "go get github.com/eris-ltd/eris-keys; cd ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys && git checkout develop && go install"
 
 test:
   override:
