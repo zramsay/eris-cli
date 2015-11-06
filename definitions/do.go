@@ -47,6 +47,15 @@ type Do struct {
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Compiler      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAddr   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultFee    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 
