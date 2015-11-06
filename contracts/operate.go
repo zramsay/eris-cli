@@ -325,7 +325,7 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --set " + toAdd
 	}
 
-	if do.Running {
+	if do.OutputTable {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --summary "
 	}
 
