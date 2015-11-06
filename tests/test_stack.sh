@@ -28,7 +28,7 @@ else
   cd ..
   git clone https://github.com/eris-ltd/eris-pm.git 1>/dev/null
   cd eris-pm
-  git checkout origin/$epm_branch 1>/dev/null
+  git checkout origin/$epm_branch &>/dev/null
   cd $epm_test_dir
 fi
 
