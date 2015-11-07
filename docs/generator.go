@@ -17,7 +17,7 @@ var BASE_URL = fmt.Sprintf("https://docs.erisindustries.com/documentation/eris-c
 
 const FRONT_MATTER = `---
 
-layout:     content
+layout:     documentation
 title:      "Documentation | eris:cli | {{}}"
 
 ---
