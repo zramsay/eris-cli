@@ -255,8 +255,10 @@ func Editor(file string) error {
 		return vi(file)
 	case "emacs":
 		return emacs(file)
+	default:
+		return editor(file)
 	}
-	return fmt.Errorf("Unknown editor %s", editr)
+	// return fmt.Errorf("Unknown editor %s", editr)
 }
 
 func emacs(file string) error {
@@ -269,6 +271,14 @@ func emacs(file string) error {
 
 func vi(file string) error {
 	cmd := exec.Command("vim", file)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func editor(file string) error {
+	cmd := exec.Command(os.Getenv("EDITOR"), file)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
