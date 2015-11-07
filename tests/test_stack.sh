@@ -16,7 +16,7 @@ fi
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
 epm_test_dir=$repo/../eris-pm/tests
-epm_branch="develop"
+epm_branch="master"
 
 start=`pwd`
 
