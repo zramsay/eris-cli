@@ -240,7 +240,7 @@ func TestChainsNewDirGen(t *testing.T) {
 }
 
 // eris chains new -c _ -csv _
-func _TestChainsNewConfigAndCSV(t *testing.T) {
+func TestChainsNewConfigAndCSV(t *testing.T) {
 	chainID := "testChainsNewConfigAndCSV"
 	do := def.NowDo()
 	do.Name = chainID
@@ -288,7 +288,7 @@ func _TestChainsNewConfigAndCSV(t *testing.T) {
 }
 
 // eris chains new --options
-func _TestChainsNewConfigOpts(t *testing.T) {
+func TestChainsNewConfigOpts(t *testing.T) {
 	// XXX: need to use a different chainID or remove the local tmp/eris/data/chainID dir with each test!
 	chainID := "testChainsNewConfigOpts"
 	do := def.NowDo()
@@ -327,7 +327,7 @@ func _TestChainsNewConfigOpts(t *testing.T) {
 	}
 }
 
-func _TestLogsChain(t *testing.T) {
+func TestLogsChain(t *testing.T) {
 	testStartChain(t, chainName)
 	defer testKillChain(t, chainName)
 
@@ -342,7 +342,7 @@ func _TestLogsChain(t *testing.T) {
 	}
 }
 
-func _TestUpdateChain(t *testing.T) {
+func TestUpdateChain(t *testing.T) {
 	testStartChain(t, chainName)
 	defer testKillChain(t, chainName)
 
@@ -358,7 +358,7 @@ func _TestUpdateChain(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
-func _TestInspectChain(t *testing.T) {
+func TestInspectChain(t *testing.T) {
 	testStartChain(t, chainName)
 	defer testKillChain(t, chainName)
 
@@ -373,7 +373,7 @@ func _TestInspectChain(t *testing.T) {
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
-func _TestRenameChain(t *testing.T) {
+func TestRenameChain(t *testing.T) {
 	oldName := chainName
 	newName := "niahctset"
 	testStartChain(t, oldName)
@@ -416,7 +416,7 @@ func _TestRenameChain(t *testing.T) {
 
 // }
 
-func _TestRmChain(t *testing.T) {
+func TestRmChain(t *testing.T) {
 	testStartChain(t, chainName)
 
 	do := def.NowDo()
