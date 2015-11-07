@@ -10,15 +10,16 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/commands"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-const RENDER_DIR = "./docs/eris-cli/"
+var RENDER_DIR = fmt.Sprintf("./docs/eris-cli/%s/", version.VERSION)
 
-const SPECS_DIR = "./docs/"
+var SPECS_DIR = "./docs/"
 
-const BASE_URL = "https://docs.erisindustries.com/documentation/eris-cli/"
+var BASE_URL = fmt.Sprintf("https://docs.erisindustries.com/documentation/eris-cli/%s/", version.VERSION)
 
 const FRONT_MATTER = `---
 
@@ -183,6 +184,10 @@ func GenerateSpecs(dir string) []string {
 		}
 
 		out := append(pre, txt...)
+
+		if _, err := os.Stat(RENDER_DIR); os.IsNotExist(err) {
+			os.MkdirAll(RENDER_DIR, 0755)
+		}
 
 		outFile := RENDER_DIR + fileBase
 		err = ioutil.WriteFile(outFile, out, 0644)
