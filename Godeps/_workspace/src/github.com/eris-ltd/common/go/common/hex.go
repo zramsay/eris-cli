@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -49,6 +50,24 @@ func Coerce2Hex(s string) string {
 	ret := "0x" + hex.EncodeToString([]byte(pad))
 	//fmt.Println("result:", ret)
 	return ret
+}
+
+func CoerceHexAndPad(aa string, padright bool) string {
+	if !IsHex(aa) {
+		//first try and convert to int
+		n, err := strconv.Atoi(aa)
+		if err != nil {
+			// right pad strings
+			if padright {
+				aa = "0x" + fmt.Sprintf("%x", aa) + fmt.Sprintf("%0"+strconv.Itoa(64-len(aa)*2)+"s", "")
+			} else {
+				aa = "0x" + fmt.Sprintf("%x", aa)
+			}
+		} else {
+			aa = "0x" + fmt.Sprintf("%x", n)
+		}
+	}
+	return aa
 }
 
 func IsHex(s string) bool {
