@@ -175,6 +175,7 @@ func Copy(src, dst string) error {
 		// 	return err
 		// }
 		// return os.Rename(tmpDir, dst)
+		return nil
 	}
 	return copyFile(src, dst)
 }
