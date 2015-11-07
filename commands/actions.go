@@ -192,7 +192,7 @@ func EditAction(cmd *cobra.Command, args []string) {
 
 func DoAction(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(act.Do(do))
 }
 
@@ -211,6 +211,6 @@ func RenameAction(cmd *cobra.Command, args []string) {
 
 func RmAction(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(act.RmAction(do))
 }

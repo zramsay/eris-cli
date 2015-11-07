@@ -407,7 +407,7 @@ func addChainsFlags() {
 	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	chainsExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	chainsExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
+	chainsExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
 
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
@@ -454,7 +454,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	// if interactive, we ignore args. if not, run args as command
 	args = args[1:]
-	if !do.Interactive {
+	if !do.Operations.Interactive {
 		if len(args) == 0 {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
@@ -462,7 +462,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(chns.ExecChain(do))
 }
 
@@ -497,7 +497,7 @@ func NewChain(cmd *cobra.Command, args []string) {
 func RegisterChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Args = args[1:]
+	do.Operations.Args = args[1:]
 	IfExit(chns.RegisterChain(do))
 }
 
@@ -528,7 +528,7 @@ func PlopChain(cmd *cobra.Command, args []string) {
 	do.ChainID = args[0]
 	do.Type = args[1]
 	if len(args) > 2 {
-		do.Args = args[2:]
+		do.Operations.Args = args[2:]
 	}
 	IfExit(chns.PlopChain(do))
 }
@@ -536,7 +536,7 @@ func PlopChain(cmd *cobra.Command, args []string) {
 func PortsChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Args = args[1:]
+	do.Operations.Args = args[1:]
 	IfExit(chns.PortsChain(do))
 }
 
@@ -549,7 +549,7 @@ func EditChain(cmd *cobra.Command, args []string) {
 		configVals = args[1:]
 	}
 	do.Name = args[0]
-	do.Args = configVals
+	do.Operations.Args = configVals
 	IfExit(chns.EditChain(do))
 }
 
@@ -559,9 +559,9 @@ func InspectChain(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 	if len(args) == 1 {
-		do.Args = []string{"all"}
+		do.Operations.Args = []string{"all"}
 	} else {
-		do.Args = []string{args[1]}
+		do.Operations.Args = []string{args[1]}
 	}
 
 	IfExit(chns.InspectChain(do))

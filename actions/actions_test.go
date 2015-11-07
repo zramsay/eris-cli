@@ -47,7 +47,7 @@ func TestListActions(t *testing.T) {
 	do.Known = true
 	do.Running = false
 	do.Existing = false
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	ifExit(util.ListAll(do, "actions"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
@@ -78,9 +78,9 @@ func TestLoadActionDefinition(t *testing.T) {
 
 func TestDoAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(actionName)
+	do.Operations.Args = strings.Fields(actionName)
 	do.Quiet = true
-	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Args)
+	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Operations.Args)
 	if err := Do(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
@@ -89,8 +89,8 @@ func TestDoAction(t *testing.T) {
 
 func TestNewAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(oldName)
-	logger.Infof("New Action (from tests) =>\t%v\n", do.Args)
+	do.Operations.Args = strings.Fields(oldName)
+	logger.Infof("New Action (from tests) =>\t%v\n", do.Operations.Args)
 	if err := NewAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
@@ -127,7 +127,7 @@ func TestRenameAction(t *testing.T) {
 
 func TestRemoveAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(oldName)
+	do.Operations.Args = strings.Fields(oldName)
 	do.File = true
 	if err := RmAction(do); err != nil {
 		logger.Errorln(err)
@@ -181,7 +181,7 @@ func testExist(t *testing.T, name string, toExist bool) {
 	do.Running = false
 	do.Existing = false
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "actions"); err != nil {
 		logger.Errorln(err)
 		t.Fail()

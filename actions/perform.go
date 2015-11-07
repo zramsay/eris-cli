@@ -12,13 +12,13 @@ import (
 )
 
 func Do(do *definitions.Do) error {
-	logger.Infof("Performing Action =>\t\t%v\n", do.Args)
+	logger.Infof("Performing Action =>\t\t%v\n", do.Operations.Args)
 	logger.Debugf("CLI Chain to turn on =>\t\t%v\n", do.ChainName)
 	logger.Debugf("CLI Services to turn on =>\t%v\n", do.ServicesSlice)
 
 	var err error
 	var actionVars []string
-	do.Action, actionVars, err = LoadActionDefinition(strings.Join(do.Args, "_"))
+	do.Action, actionVars, err = LoadActionDefinition(strings.Join(do.Operations.Args, "_"))
 	if err != nil {
 		return err
 	}
@@ -44,8 +44,8 @@ func StartServicesAndChains(do *definitions.Do) error {
 	if do.Action.Dependencies == nil || len(do.Action.Dependencies.Services) == 0 {
 		logger.Debugf("No services to start.\n")
 	} else {
-		doSrvs.Args = do.Action.Dependencies.Services
-		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Args)
+		doSrvs.Operations.Args = do.Action.Dependencies.Services
+		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Operations.Args)
 		if err := services.StartService(doSrvs); err != nil {
 			return err
 		}
@@ -129,5 +129,5 @@ func resolveServices(do *definitions.Do) {
 	if do.Action.Dependencies != nil {
 		do.Action.Dependencies.Services = append(do.Action.Dependencies.Services, do.ServicesSlice...)
 	}
-	logger.Debugf("Services to start =>\t\t%v\n", do.Args)
+	logger.Debugf("Services to start =>\t\t%v\n", do.Operations.Args)
 }

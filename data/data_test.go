@@ -74,6 +74,35 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	testExist(t, dataName, true)
 }
 
+func TestExecData(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
+	do.Operations.Interactive = false
+	do.Operations.ContainerNumber = 1
+
+	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
+	if err := ExecData(do); err != nil {
+		logger.Errorln(err)
+		t.Fail()
+	}
+}
+
+func TestExportData(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Operations.ContainerNumber = 1
+	if err := ExportData(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+
+	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
+		logger.Errorf("Tragic! Exported file does not exist: %s\n", err)
+		t.Fail()
+	}
+}
+
 func TestRenameData(t *testing.T) {
 	testExist(t, dataName, true)
 	testExist(t, newName, false)
@@ -108,9 +137,9 @@ func TestRenameData(t *testing.T) {
 func TestInspectData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Args = []string{"name"}
+	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
+	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -118,39 +147,11 @@ func TestInspectData(t *testing.T) {
 
 	do = definitions.NowDo()
 	do.Name = dataName
-	do.Args = []string{"config.network_disabled"}
+	do.Operations.Args = []string{"config.network_disabled"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
+	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
-		t.Fail()
-	}
-}
-
-func TestExecData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
-	do.Interactive = false
-	do.Operations.ContainerNumber = 1
-	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
-	if err := ExecData(do); err != nil {
-		logger.Errorln(err)
-		t.Fail()
-	}
-}
-
-func TestExportData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Operations.ContainerNumber = 1
-	if err := ExportData(do); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-	}
-
-	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
-		logger.Errorf("Tragic! Exported file does not exist: %s\n", err)
 		t.Fail()
 	}
 }
@@ -218,7 +219,7 @@ func testExist(t *testing.T, name string, toExist bool) {
 	do := definitions.NowDo()
 	do.Existing = true
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "data"); err != nil {
 		logger.Errorln(err)
 		t.FailNow()

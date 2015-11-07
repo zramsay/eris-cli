@@ -6,7 +6,6 @@ type Do struct {
 	Existing      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Known         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Running       bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -48,12 +47,8 @@ type Do struct {
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
-
-	// Generalized string slice
-	Args []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`

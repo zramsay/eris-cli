@@ -19,7 +19,7 @@ func ListAll(do *definitions.Do, typ string) (err error) {
 		fmt.Println(result)
 	} else {
 
-		testing := len(do.Args) != 0 && do.Args[0] == "testing"
+		testing := len(do.Operations.Args) != 0 && do.Operations.Args[0] == "testing"
 
 		var resK, resR, resE string
 

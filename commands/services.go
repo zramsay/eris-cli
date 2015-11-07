@@ -235,8 +235,8 @@ func addServicesFlags() {
 	servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	servicesExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	servicesExec.Flags().BoolVarP(&do.Interactive, "interactive", "i", false, "interactive shell")
-	servicesExec.Flags().StringVarP(&do.Volume, "volume", "m", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
+	servicesExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "m", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
@@ -272,7 +272,7 @@ func addServicesFlags() {
 
 func StartService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(srv.StartService(do))
 }
 
@@ -288,7 +288,7 @@ func ExecService(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	// if interactive, we ignore args. if not, run args as command
 	args = args[1:]
-	if !do.Interactive {
+	if !do.Operations.Interactive {
 		if len(args) == 0 {
 			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
@@ -296,13 +296,13 @@ func ExecService(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(srv.ExecService(do))
 }
 
 func KillService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(srv.KillService(do))
 }
 
@@ -317,7 +317,7 @@ func ImportService(cmd *cobra.Command, args []string) {
 func NewService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Args = []string{args[1]}
+	do.Operations.Args = []string{args[1]}
 	IfExit(srv.NewService(do))
 }
 
@@ -339,9 +339,9 @@ func InspectService(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 	if len(args) == 1 {
-		do.Args = []string{"all"}
+		do.Operations.Args = []string{"all"}
 	} else {
-		do.Args = []string{args[1]}
+		do.Operations.Args = []string{args[1]}
 	}
 
 	IfExit(srv.InspectService(do))
@@ -350,7 +350,7 @@ func InspectService(cmd *cobra.Command, args []string) {
 func PortsService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Args = args[1:]
+	do.Operations.Args = args[1:]
 	IfExit(srv.PortsService(do))
 }
 
@@ -394,7 +394,7 @@ func ListAllServices(cmd *cobra.Command, args []string) {
 
 func RmService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Args = args
+	do.Operations.Args = args
 	IfExit(srv.RmService(do))
 }
 

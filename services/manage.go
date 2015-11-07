@@ -52,7 +52,7 @@ func NewService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
 	srv.Service.Name = do.Name
-	srv.Service.Image = do.Args[0]
+	srv.Service.Image = do.Operations.Args[0]
 	srv.Service.AutoData = true
 
 	var err error
@@ -98,7 +98,7 @@ func RenameService(do *definitions.Do) error {
 
 		if !transformOnly {
 			logger.Debugf("Asking Docker to Service =>\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
-			err = perform.DockerRename(serviceDef.Service, serviceDef.Operations, do.Name, do.NewName)
+			err = perform.DockerRename(serviceDef.Operations, do.NewName)
 			if err != nil {
 				return err
 			}
@@ -148,7 +148,7 @@ func InspectService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = InspectServiceByService(service.Service, service.Operations, do.Args[0])
+	err = InspectServiceByService(service.Service, service.Operations, do.Operations.Args[0])
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func PortsService(do *definitions.Do) error {
 
 	if IsServiceExisting(service.Service, service.Operations) {
 		logger.Debugf("Service exists, getting port mapping.\n")
-		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Args)
+		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Operations.Args)
 	}
 
 	return nil
@@ -214,7 +214,7 @@ func UpdateService(do *definitions.Do) error {
 }
 
 func RmService(do *definitions.Do) error {
-	for _, servName := range do.Args {
+	for _, servName := range do.Operations.Args {
 		service, err := loaders.LoadServiceDefinition(servName, false, do.Operations.ContainerNumber)
 		if err != nil {
 			return err
@@ -260,14 +260,11 @@ func CatService(do *definitions.Do) error {
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
-	// if IsServiceExisting(srv, ops) {
 	err := perform.DockerInspect(srv, ops, field)
 	if err != nil {
 		return err
 	}
-	// } else {
-	// 	return fmt.Errorf("No service matching that name.\n")
-	// }
+
 	return nil
 }
 

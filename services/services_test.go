@@ -59,7 +59,7 @@ func TestKnownService(t *testing.T) {
 	do.Known = true
 	do.Existing = false
 	do.Running = false
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	ifExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
@@ -111,9 +111,9 @@ func TestInspectService(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = servName
-	do.Args = []string{"name"}
+	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Args, do.Operations.ContainerNumber)
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Operations.Args, do.Operations.ContainerNumber)
 	e := InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
@@ -122,9 +122,9 @@ func TestInspectService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Name = servName
-	do.Args = []string{"config.user"}
+	do.Operations.Args = []string{"config.user"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Operations.Args)
 	e = InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
@@ -158,9 +158,9 @@ func TestExecService(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = servName
-	do.Interactive = false
-	do.Args = strings.Fields("ls -la /root/")
-	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
+	do.Operations.Interactive = false
+	do.Operations.Args = strings.Fields("ls -la /root/")
+	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Operations.Args, " "))
 	e := ExecService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -197,7 +197,7 @@ func TestKillRmService(t *testing.T) {
 	do.Name = servName
 	do.Rm = false
 	do.RmD = false
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
 	if e := KillService(do); e != nil {
 		logger.Errorln(e)
@@ -214,7 +214,7 @@ func TestKillRmService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Name = servName
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	do.File = false
 	do.RmD = true
 	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
@@ -240,7 +240,7 @@ func TestImportService(t *testing.T) {
 		}*/
 
 	do := def.NowDo()
-	do.Args = []string{"ipfs"}
+	do.Operations.Args = []string{"ipfs"}
 	e := StartService(do)
 	if e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
@@ -278,8 +278,8 @@ func TestNewService(t *testing.T) {
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Args = []string{"quay.io/eris/keys"}
-	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
+	do.Operations.Args = []string{"quay.io/eris/keys"}
+	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	e := NewService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -287,10 +287,10 @@ func TestNewService(t *testing.T) {
 	}
 
 	do = def.NowDo()
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
+	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Operations.Args, do.Operations.ContainerNumber)
 	e = StartService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -304,15 +304,6 @@ func TestNewService(t *testing.T) {
 }
 
 func TestRenameService(t *testing.T) {
-	// do := def.NowDo()
-	// do.Name = "keys"
-	// do.Args = []string{"quay.io/eris/keys"}
-	// logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
-	// if e := NewService(do); e != nil {
-	// 	logger.Errorln(e)
-	// 	fatal(t, nil)
-	// }
-
 	testStartService(t, "keys", false)
 	testExistAndRun(t, "keys", 1, true, true)
 	testNumbersExistAndRun(t, "keys", 1, 1)
@@ -346,8 +337,8 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "keys", 1, true, true)
 	testExistAndRun(t, "syek", 1, false, false)
-	testNumbersExistAndRun(t, "syek", 0, 0)
 	testNumbersExistAndRun(t, "keys", 1, 1)
+	testNumbersExistAndRun(t, "syek", 0, 0)
 
 	testKillService(t, "keys", true)
 	testExistAndRun(t, "keys", 1, false, false)
@@ -367,7 +358,7 @@ func TestCatService(t *testing.T) {
 
 func TestStartKillServiceWithDependencies(t *testing.T) {
 	do := def.NowDo()
-	do.Args = []string{"do_not_use"}
+	do.Operations.Args = []string{"do_not_use"}
 	//do.Operations.ContainerNumber = 1
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
@@ -400,7 +391,7 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 
 func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
-	do.Args = []string{serviceName}
+	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
 	do.Operations.PublishAllPorts = publishAll
 	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
@@ -419,7 +410,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 
 	do := def.NowDo()
 	do.Name = serviceName
-	do.Args = []string{serviceName}
+	do.Operations.Args = []string{serviceName}
 	if wipe {
 		do.Rm = true
 		do.RmD = true
@@ -443,7 +434,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	do.Existing = true
 	do.Running = false
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "services"); err != nil {
 		logger.Errorln(err)
 		fatal(t, err)
@@ -461,7 +452,7 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 	do.Existing = false
 	do.Running = true
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	if err := util.ListAll(do, "services"); err != nil {
 		ifExit(err)
 	}
@@ -549,7 +540,7 @@ func testsInit() error {
 	do.Existing = false
 	do.Running = true
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	logger.Debugln("Finding the running services.")
 	if err := util.ListAll(do, "services"); err != nil {
 		ifExit(err)
@@ -557,7 +548,7 @@ func testsInit() error {
 	res := strings.Split(do.Result, "\n")
 	for _, r := range res {
 		if r == "ipfs" {
-			ifExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
+			ifExit(fmt.Errorf("IPFS service is running.\nPlease stop it with: eris services stop -rx ipfs\n"))
 		}
 	}
 	// make sure ipfs container does not exist
@@ -566,7 +557,7 @@ func testsInit() error {
 	do.Existing = true
 	do.Running = false
 	do.Quiet = true
-	do.Args = []string{"testing"}
+	do.Operations.Args = []string{"testing"}
 	logger.Debugln("Finding the existing services.")
 	if err := util.ListAll(do, "services"); err != nil {
 		ifExit(err)
