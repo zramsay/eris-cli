@@ -99,7 +99,9 @@ func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (re
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", id_main)
 		if err2 := removeContainer(id_main, true); err2 != nil {
-			err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+			if os.Getenv("CIRCLE_BRANCH") != "" {
+				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+			}
 		}
 		logger.Infof("Container removed =>\t\t%s\n", id_main)
 	}()
