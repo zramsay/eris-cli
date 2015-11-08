@@ -61,11 +61,11 @@ Known services can be started with:
 
 	$ eris services start serviceName
 
-To install a new service, use: 
+To install a new service, use:
 
 	$ eris services import
 
-Services include all executable services supported by the 
+Services include all executable services supported by the
 Eris platform which are NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,
@@ -236,7 +236,7 @@ func addServicesFlags() {
 
 	servicesExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	servicesExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "m", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "l", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")

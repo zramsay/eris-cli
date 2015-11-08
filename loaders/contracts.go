@@ -2,6 +2,8 @@ package loaders
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"regexp"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -11,30 +13,41 @@ import (
 )
 
 func LoadContractPackage(path, chainName, command, typ string) (*definitions.Contracts, error) {
+	var app *definitions.Contracts
 	contConf, err := loadContractPackage(path)
+
 	if err != nil {
-		// return a custom error message because config.LoadViperConfig's message
-		// will be unhelpful in this context.
-		return nil, fmt.Errorf("The marmots could not read that package.json.")
+		logger.Infoln("The marmots could not read that package.json. Will use defaults.")
+		app, _ = DefaultContractPackage()
+
+		_, err := LoadEPMInstructions(path)
+		if err != nil {
+			// TODO [csk]: rework this logic
+		}
+	} else {
+		// marshal chain and always reset the operational requirements
+		// this will make sure to sync with docker so that if changes
+		// have occured in the interim they are caught.
+		app, err = marshalContractPackage(contConf)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// marshal chain and always reset the operational requirements
-	// this will make sure to sync with docker so that if changes
-	// have occured in the interim they are caught.
-	dapp, err := marshalContractPackage(contConf)
-	if err != nil {
+	logger.Debugf("Package testType =>\t\t%s\n", app.TestType)
+	logger.Debugf("\tdeployType =>\t\t%s\n", app.DeployType)
+	logger.Debugf("\ttestTask =>\t\t%s\n", app.TestTask)
+	logger.Debugf("\tdeployTask =>\t\t%s\n", app.DeployTask)
+
+	if err := setAppType(app, chainName, command, typ); err != nil {
 		return nil, err
 	}
 
-	if err := setDappType(dapp, chainName, command, typ); err != nil {
+	if err := checkAppAndChain(app, chainName); err != nil {
 		return nil, err
 	}
 
-	if err := checkDappAndChain(dapp, chainName); err != nil {
-		return nil, err
-	}
-
-	return dapp, nil
+	return app, nil
 }
 
 // read the config file into viper
@@ -42,30 +55,47 @@ func loadContractPackage(path string) (*viper.Viper, error) {
 	return config.LoadViperConfig(path, "package", "contracts")
 }
 
+// read the epm file into viper. probably only need to check the error here.... still WIP
+func LoadEPMInstructions(path string) (*viper.Viper, error) {
+	// return config.LoadViperConfig(path, "eris", "epm")
+	return nil, nil
+}
+
+// set's the defaults
+func DefaultContractPackage() (*definitions.Contracts, error) {
+	pkg := definitions.BlankPackage()
+	app := pkg.Contracts
+	// we don't catch the directory error here as it should be caught prior to
+	//   calling this function.
+	pwd, _ := os.Getwd()
+	app.Name = path.Base(pwd)
+	app.ChainName = ""
+	app.TestType = "epm"
+	app.DeployType = "epm"
+	app.TestTask = "default"
+	app.DeployTask = "default"
+	return app, nil
+}
+
 func marshalContractPackage(contConf *viper.Viper) (*definitions.Contracts, error) {
 	pkg := definitions.BlankPackage()
 	err := contConf.Marshal(pkg)
-	dapp := pkg.Contracts
-	dapp.Name = pkg.Name
-
-	logger.Debugf("Package marshalled, testType =>\t%s\n", dapp.TestType)
-	logger.Debugf("\tdeployType =>\t\t%s\n", dapp.DeployType)
-	logger.Debugf("\ttestTask =>\t\t%s\n", dapp.TestTask)
-	logger.Debugf("\tdeployTask =>\t\t%s\n", dapp.DeployTask)
+	app := pkg.Contracts
+	app.Name = pkg.Name
 
 	if err != nil {
 		// Viper's error messages are atrocious.
 		return nil, fmt.Errorf("Sorry, the marmots could not figure that package.json out.\nPlease check your package.json is properly formatted.\n")
 	}
 
-	return dapp, nil
+	return app, nil
 }
 
-func setDappType(dapp *definitions.Contracts, name, command, typ string) error {
+func setAppType(app *definitions.Contracts, name, command, typ string) error {
 	var t string
 
-	logger.Debugf("Setting Dapp Type. Task =>\t%s\n", command)
-	logger.Debugf("\tType =>\t\t%s\n", typ)
+	logger.Debugf("Setting App Type. Task =>\t%s\n", command)
+	logger.Debugf("\tChainType =>\t\t%s\n", typ)
 	logger.Debugf("\tChainName =>\t\t%s\n", name)
 
 	if typ != "" {
@@ -73,41 +103,39 @@ func setDappType(dapp *definitions.Contracts, name, command, typ string) error {
 	} else {
 		switch command {
 		case "test":
-			t = dapp.TestType
+			t = app.TestType
 		case "deploy":
-			t = dapp.DeployType
+			t = app.DeployType
 		}
 	}
 
 	switch t {
 	case "embark":
-		dapp.DappType = definitions.EmbarkDapp()
-	case "pyepm":
-		dapp.DappType = definitions.PyEpmDapp()
+		app.AppType = definitions.EmbarkApp()
 	case "sunit":
-		dapp.DappType = definitions.SUnitDapp()
+		app.AppType = definitions.SUnitApp()
 	case "manual":
-		dapp.DappType = definitions.GulpDapp()
+		app.AppType = definitions.GulpApp()
 	default:
-		return fmt.Errorf("Unregistered DappType.\nUnfortunately our marmots cannot deal with that.\nPlease ensure that the dapp type is set in the package.json.")
+		app.AppType = definitions.EPMApp()
 	}
 
-	logger.Debugf("\tDapp Type =>\t\t%s\n", dapp.DappType.Name)
+	logger.Debugf("\tApp Type =>\t\t%s\n", app.AppType.Name)
 
 	return nil
 }
 
-func checkDappAndChain(dapp *definitions.Contracts, name string) error {
+func checkAppAndChain(app *definitions.Contracts, name string) error {
 	var chain string
 
 	// name is pulled in from the do struct. need to work with both
-	// it (as an override) and the dapp.ChainName
+	// it (as an override) and the app.ChainName
 	switch name {
 	case "":
-		if dapp.ChainName == "" {
+		if app.ChainName == "" {
 			return nil
 		} else {
-			chain = dapp.ChainName
+			chain = app.ChainName
 		}
 	case "t", "tmp", "temp":
 		return nil
@@ -116,11 +144,11 @@ func checkDappAndChain(dapp *definitions.Contracts, name string) error {
 	}
 
 	// this is hacky.... at best.
-	if len(dapp.DappType.ChainTypes) == 1 && dapp.DappType.ChainTypes[0] == "eth" {
+	if len(app.AppType.ChainTypes) == 1 && app.AppType.ChainTypes[0] == "eth" {
 		if r := regexp.MustCompile("eth"); r.MatchString(chain) {
 			return nil
 		} else {
-			return fmt.Errorf("The marmots detected a disturbance in the force.\n\nYou asked them to run the Dapp Type: (%s).\nBut the chainName (%s) doesn't contain the name (%s).\nPlease rename the chain or service to contain the name (%s)", dapp.DappType.Name, chain, "eth", "eth")
+			return fmt.Errorf("The marmots detected a disturbance in the force.\n\nYou asked them to run the App Type: (%s).\nBut the chainName (%s) doesn't contain the name (%s).\nPlease rename the chain or service to contain the name (%s)", app.AppType.Name, chain, "eth", "eth")
 		}
 	}
 

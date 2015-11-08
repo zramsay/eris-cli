@@ -14,7 +14,7 @@ func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
 }
 
 func Untar(reader io.Reader, name, dest string) error {
-	return archive.Untar(reader, dest, &archive.TarOptions{NoLchown: true, Name: name})
+	return archive.Untar(reader, dest, &archive.TarOptions{NoLchown: true}) //, Name: name})
 }
 
 func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error {

@@ -75,9 +75,10 @@ func DockerCreateDataContainer(ops *def.Operation) error {
 //  ops.Args              - if specified, run these args in a container
 //
 func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (result []byte, err error) {
-	logger.Infof("DockerRunVolumesFromContainer =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+	logger.Infof("DockerRunVolumesFromContner =>\t%s:%v\n", ops.DataContainerName, ops.Args)
 
 	opts := configureVolumesFromContainer(ops, service)
+	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
 	cont, err := createContainer(opts)
 	if err != nil {
 		return nil, err
@@ -298,12 +299,14 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
 	// logger.Debugf("\twith Environment =>\t%s\n", optsServ.Config.Env)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
+	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
 	if err := startContainer(id_main, &optsServ); err != nil {
 		return err
 	}
 
 	// XXX: setting Remove causes us to block here!
-	if ops.Remove {
+	if ops.Remove || ops.Follow {
+
 		// dump the logs (TODO: options about this)
 		doneLogs := make(chan struct{}, 1)
 		go func() {
@@ -315,7 +318,7 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 			doneLogs <- struct{}{}
 		}()
 
-		logger.Infof("Waiting to exit for removal =>\t%s\n", id_main)
+		logger.Infof("Waiting to exit =>\t\t%s\n", id_main)
 		if err := waitContainer(id_main); err != nil {
 			return err
 		}
@@ -324,9 +327,11 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		// let the logs finish
 		<-doneLogs
 
-		logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
-		if err := removeContainer(id_main, false); err != nil {
-			return err
+		if ops.Remove {
+			logger.Infof("DockerRun. Removing cont =>\t%s\n", id_main)
+			if err := removeContainer(id_main, false); err != nil {
+				return err
+			}
 		}
 
 	} else {
@@ -1132,6 +1137,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 			VolumesFrom: []string{ops.DataContainerName},
 		},
 	}
+
 	if ops.Interactive {
 		opts.Config.OpenStdin = true
 		opts.Config.Cmd = []string{"/bin/bash"}
@@ -1149,6 +1155,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
+	logger.Debugf("cfigureVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
 	return opts
 }
 

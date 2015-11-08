@@ -81,18 +81,18 @@ as well as start running that chain.
 
 If you need to update a chain after creation, you can update any of the
 appropriate settings in the chains definition file for the named chain
-(which will be located at ~/.eris/blockchains/CHAINNAME.toml) and then
+(which will be located at ~/.eris/chains/CHAINNAME.toml) and then
 utilize [eris chains update CHAINNAME -p] to update the blockchain appropriately
 (using the -p flag will force eris not to pull the most recent docker image
 for eris:db).
 
-Will use a default genesis.json from ~/.eris/blockchains/default/genesis.json
+Will use a default genesis.json from ~/.eris/chains/default/genesis.json
 unless a --genesis flag is passed.
 
-Will use a default config.toml from ~/.eris/blockchains/default/config.toml
+Will use a default config.toml from ~/.eris/chains/default/config.toml
 unless the --options flag is passed.
 
-Will use a default eris:db server config from ~/.eris/blockchains/default/server_conf.toml
+Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
 unless the --serverconf flag is passed.
 
 For more complex blockchain creation, you will want to "hand craft" a genesis.json
@@ -148,7 +148,7 @@ If no known chains exist yet, create a new blockchain with:
 	$ eris chains new chainName
 
 To install and fetch a blockchain from a chain definition file, use:
-	
+
 	$ eris chains install chainName
 
 Services are handled using the [eris services] command.`,

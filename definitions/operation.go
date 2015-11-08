@@ -13,6 +13,7 @@ type Operation struct {
 	Privileged        bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Attach            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Interactive       bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Follow            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	AppName           string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DockerHostConn    string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Volume            string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`

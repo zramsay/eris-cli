@@ -266,8 +266,8 @@ func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
 				if r.MatchString(n) {
 					logger.Debugf("Container Found =>\t\t%s\n", name)
 					return container, true
-				} else {
-					logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
+				// } else {
+					// logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 				}
 			}
 		}

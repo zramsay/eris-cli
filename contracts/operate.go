@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/data"
@@ -17,48 +18,43 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
-	logger.Debugf("Welcome! Say the Marmots. Running DApp package.\n")
+	logger.Debugf("Welcome! Say the Marmots. Running App package.\n")
 	pwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("Could not get the present working directory. Are you on Mars?\nError: %v\n", err)
 	}
 
 	logger.Debugf("\twith Host Path =>\t%s:%s\n", do.Path, pwd)
-	dapp, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
+	app, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
 	if err != nil {
 		do.Result = "could not load package"
 		return err
 	}
 
-	if err := BootServicesAndChain(do, dapp); err != nil {
+	if err := BootServicesAndChain(do, app); err != nil {
 		do.Result = "could not boot chain or services"
-		CleanUp(do, dapp)
+		CleanUp(do, app)
 		return err
 	}
 
 	do.Path = pwd
-	if err := DefineDappActionService(do, dapp); err != nil {
-		do.Result = "could not define dapp action service"
-		CleanUp(do, dapp)
+	if err := DefineAppActionService(do, app); err != nil {
+		do.Result = "could not define app action service"
+		CleanUp(do, app)
 		return err
 	}
 
-	if err := PerformDappActionService(do, dapp); err != nil {
-		do.Result = "could not perform dapp action service"
-		CleanUp(do, dapp)
-		return err
-	}
-
-	if err := CleanUp(do, dapp); err != nil {
-		do.Result = "could not cleanup"
+	if err := PerformAppActionService(do, app); err != nil {
+		do.Result = "could not perform app action service"
+		CleanUp(do, app)
 		return err
 	}
 
 	do.Result = "success"
-	return nil
+	return CleanUp(do, app)
 }
 
-func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error {
+func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error {
 	var err error
 	var srvs []*definitions.ServiceDefinition
 
@@ -80,22 +76,23 @@ func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error
 	// boot the chain
 	switch do.ChainName {
 	case "":
-		if dapp.ChainName == "" {
+		if app.ChainName == "" {
+			// TODO [csk]: first check if there is a chain checked out. if not, then use throwAway
 			logger.Infof("No chain was given, booting a throwaway chain.\n")
-			err = bootThrowAwayChain(dapp.Name, do)
+			err = bootThrowAwayChain(app.Name, do)
 		} else {
-			logger.Infof("Booting chain =>\t\t%s\n", dapp.ChainName)
-			err = bootChain(dapp.ChainName, do)
+			logger.Infof("Booting chain =>\t\t%s\n", app.ChainName)
+			err = bootChain(app.ChainName, do)
 		}
 	case "t", "tmp", "temp":
 		logger.Infof("No chain was given, booting a throwaway chain.\n")
-		err = bootThrowAwayChain(dapp.Name, do)
+		err = bootThrowAwayChain(app.Name, do)
 	default:
 		logger.Infof("Booting chain =>\t\t%s\n", do.ChainName)
 		err = bootChain(do.ChainName, do)
 	}
 
-	dapp.ChainName = do.Chain.Name
+	app.ChainName = do.Chain.Name
 	if err != nil {
 		return err
 	}
@@ -103,52 +100,43 @@ func BootServicesAndChain(do *definitions.Do, dapp *definitions.Contracts) error
 	return nil
 }
 
-func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
+func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) error {
 	var cmd string
 
 	switch do.Name {
 	case "test":
-		cmd = dapp.DappType.TestCmd
+		cmd = app.AppType.TestCmd
 	case "deploy":
-		cmd = dapp.DappType.DeployCmd
+		cmd = app.AppType.DeployCmd
 	default:
 		return fmt.Errorf("I do not know how to perform that task (%s)\nPlease check what you can do with contracts by typing [eris contracts].\n", do.Name)
 	}
 
 	// if manual, set task
-	if dapp.DappType.Name == "manual" {
+	if app.AppType.Name == "manual" {
 		switch do.Name {
 		case "test":
-			cmd = dapp.TestTask
+			cmd = app.TestTask
 		case "deploy":
-			cmd = dapp.DeployTask
+			cmd = app.DeployTask
 		}
 	}
 
 	// task flag override
 	if do.Task != "" {
-		dapp.DappType = definitions.GulpDapp()
+		app.AppType = definitions.GulpApp()
 		cmd = do.Task
 	}
 
 	if cmd == "nil" {
-		return fmt.Errorf("I cannot perform that task against that dapp type.\n")
-	}
-
-	// dapp-specific tests
-	if dapp.DappType.Name == "pyepm" {
-		if do.ConfigFile == "" {
-			return fmt.Errorf("The pyepm dapp type requires a --yaml flag for the package definition you would like to deploy.\n")
-		} else {
-			cmd = do.ConfigFile
-		}
+		return fmt.Errorf("I cannot perform that task against that app type.\n")
 	}
 
 	// build service that will run
-	do.Service.Name = dapp.Name + "_tmp_" + do.Name
-	do.Service.Image = dapp.DappType.BaseImage
+	do.Service.Name = app.Name + "_tmp_" + do.Name
+	do.Service.Image = app.AppType.BaseImage
 	do.Service.AutoData = true
-	do.Service.EntryPoint = dapp.DappType.EntryPoint
+	do.Service.EntryPoint = app.AppType.EntryPoint
 	do.Service.Command = cmd
 	if do.NewName != "" {
 		do.Service.WorkDir = do.NewName // do.NewName is actually where the workdir inside the container goes
@@ -161,9 +149,13 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 	loaders.ServiceFinalizeLoad(srv)
 	do.Service = srv.Service
 	do.Operations = srv.Operations
-	do.Operations.Remove = true
+	do.Operations.Follow = true
 
-	linkDappToChain(do, dapp)
+	linkAppToChain(do, app)
+
+	if app.AppType.Name == "epm" {
+		prepareEpmAction(do, app)
+	}
 
 	// make data container and import do.Path to do.NewName (if exists)
 	doData := definitions.NowDo()
@@ -174,30 +166,30 @@ func DefineDappActionService(do *definitions.Do, dapp *definitions.Contracts) er
 	}
 
 	loca := path.Join(common.DataContainersPath, doData.Name)
-	logger.Debugf("Creating Dapp Data Cont =>\t%s:%s\n", do.Path, loca)
+	logger.Debugf("Creating App Data Cont =>\t%s:%s\n", do.Path, loca)
 	common.Copy(do.Path, loca)
 	data.ImportData(doData)
 	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
 
-	logger.Debugf("DApp Action Built.\n")
+	logger.Debugf("App Action Built.\n")
 
 	return nil
 }
 
-func PerformDappActionService(do *definitions.Do, dapp *definitions.Contracts) error {
-	logger.Infof("Performing DAPP Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
+func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
+	logger.Infof("Performing App Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
 	do.Operations.ContainerType = definitions.TypeService
 	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
-		do.Result = "could not perform dapp action"
+		do.Result = "could not perform app action"
 		return err
 	}
 
-	logger.Infof("Finished performing DAPP Action.\n")
+	logger.Infof("Finished performing App Action.\n")
 	return nil
 }
 
-func CleanUp(do *definitions.Do, dapp *definitions.Contracts) error {
+func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	logger.Infof("Commensing CleanUp.\n")
 
 	if do.Chain.ChainType == "throwaway" {
@@ -216,11 +208,36 @@ func CleanUp(do *definitions.Do, dapp *definitions.Contracts) error {
 		logger.Debugf("No Throwaway Chain to destroy.\n")
 	}
 
-	logger.Debugf("Removing data dir on host =>\t%s\n", path.Join(common.DataContainersPath, do.Service.Name))
-	os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
+	doData := definitions.NowDo()
+	doData.Name = do.Service.Name
+	doData.Operations = do.Operations
+	if do.NewName != "" {
+		doData.Path = do.NewName
+	}
+	loca := path.Join(common.DataContainersPath, doData.Name)
 
-	logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
-	perform.DockerRemove(do.Service, do.Operations, true, true)
+	logger.Debugf("Exporting Results =>\t\t%s:%s\n", loca, do.Path)
+	data.ExportData(doData)
+
+	if app.AppType.Name == "epm" {
+		files, _ := filepath.Glob(filepath.Join(loca, "epm*"))
+		for _, f := range files {
+			dest := filepath.Join(do.Path, filepath.Base(f))
+			logger.Debugf("Moving file =>\t\t\t%s:%s\n", f, dest)
+			common.Copy(f, dest)
+		}
+	}
+
+	if do.RmD {
+		logger.Debugf("Removing data dir on host =>\t%s\n", path.Join(common.DataContainersPath, do.Service.Name))
+		os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
+	}
+
+	if !do.Rm {
+		logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
+		perform.DockerRemove(do.Service, do.Operations, true, true)
+	}
+
 	return nil
 }
 
@@ -266,13 +283,77 @@ func bootThrowAwayChain(name string, do *definitions.Do) error {
 	return nil
 }
 
-func linkDappToChain(do *definitions.Do, dapp *definitions.Contracts) {
+func linkAppToChain(do *definitions.Do, app *definitions.Contracts) {
 	var newLink string
 
 	if do.Chain.ChainType == "service" {
-		newLink = util.ServiceContainersName(dapp.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ServiceContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainersName(dapp.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ChainContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	}
+	newLink2 := util.ServiceContainersName("keys", do.Operations.ContainerNumber) + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
+	do.Service.Links = append(do.Service.Links, newLink2)
+}
+
+func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
+	if do.Verbose {
+		do.Service.Environment = append(do.Service.Environment, "EPM_VERBOSE=true")
+	}
+	if do.Debug {
+		do.Service.Environment = append(do.Service.Environment, "EPM_DEBUG=true")
+	}
+
+	if do.CSV != "" {
+		logger.Debugf("Setting output format to =>\t%s\n", do.CSV)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --output " + do.CSV
+	} else {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --output json"
+	}
+
+	if do.EPMConfigFile != "" {
+		logger.Debugf("Setting config file to =>\t%s\n", do.EPMConfigFile)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + do.EPMConfigFile
+	}
+
+	if len(do.ConfigOpts) != 0 {
+		var toAdd string
+		logger.Debugf("Setting sets file to =>\t%v\n", do.ConfigOpts)
+		for _, s := range do.ConfigOpts {
+			toAdd = toAdd + "," + s
+		}
+		do.Service.EntryPoint = do.Service.EntryPoint + " --set " + toAdd
+	}
+
+	if do.OutputTable {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --summary "
+	}
+
+	if do.ContractsPath != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + do.ContractsPath
+	}
+
+	if do.ABIPath != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + do.ABIPath
+	}
+
+	if do.DefaultGas != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --gas " + do.DefaultGas
+	}
+
+	if do.Compiler != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --compiler " + do.Compiler
+	}
+
+	if do.DefaultAddr != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --address " + do.DefaultAddr
+	}
+
+	if do.DefaultFee != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --fee " + do.DefaultFee
+	}
+
+	if do.DefaultAmount != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --amount " + do.DefaultAmount
+	}
 }

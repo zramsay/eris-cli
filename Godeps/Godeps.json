@@ -21,24 +21,25 @@
 			"Rev": "71acacd42f85e5e82f70a55327789582a5200a90"
 		},
 		{
-			"ImportPath": "github.com/ebuchman/go-shell-pipes",
-			"Rev": "2b9ded3b4c5b2b156a970522c2a820ab9afe628c"
+			"ImportPath": "github.com/docker/docker/pkg/term",
+			"Comment": "v1.4.1-4216-gc782be0",
+			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "324a0f7f32835c860d59e6efdba466790f1c6cc9"
+			"Rev": "67701ac1ab12bd5356dbd6d36fc15363481dfac4"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/ipfs",
-			"Rev": "324a0f7f32835c860d59e6efdba466790f1c6cc9"
+			"Rev": "67701ac1ab12bd5356dbd6d36fc15363481dfac4"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "324a0f7f32835c860d59e6efdba466790f1c6cc9"
+			"Rev": "67701ac1ab12bd5356dbd6d36fc15363481dfac4"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "42d06e2b125654477366c320dcea99107a86e9c2"
+			"Rev": "ef410296f87750305e1e1acf9ad2ba3833dcb004"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",

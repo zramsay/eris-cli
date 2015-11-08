@@ -23,6 +23,7 @@ type Do struct {
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -47,6 +48,15 @@ type Do struct {
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Compiler      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAddr   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultFee    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 

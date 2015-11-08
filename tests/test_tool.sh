@@ -182,6 +182,7 @@ packagesToTest() {
   go test ./contracts/...
   passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
+
   # go test ./projects/...
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
@@ -193,7 +194,16 @@ packagesToTest() {
   go test ./commands/...
   passed Commands
   if [ $? -ne 0 ]; then return 1; fi
-  return 0
+
+  # Now! Stack based tests
+  if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+  then
+    $HOME/test_stack.sh
+  else
+    tests/test_stack.sh
+  fi
+  passed Stack
+  return $?
 }
 
 turn_off() {
@@ -249,7 +259,7 @@ then
     packagesToTest
   fi
 fi
-test_exit=$(echo $?)
+test_exit=$?
 set -e
 
 # ---------------------------------------------------------------------------
