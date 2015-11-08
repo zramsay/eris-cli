@@ -75,9 +75,10 @@ func DockerCreateDataContainer(ops *def.Operation) error {
 //  ops.Args              - if specified, run these args in a container
 //
 func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (result []byte, err error) {
-	logger.Infof("DockerRunVolumesFromContainer =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+	logger.Infof("DockerRunVolumesFromContner =>\t%s:%v\n", ops.DataContainerName, ops.Args)
 
 	opts := configureVolumesFromContainer(ops, service)
+	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
 	cont, err := createContainer(opts)
 	if err != nil {
 		return nil, err
@@ -1136,6 +1137,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 			VolumesFrom: []string{ops.DataContainerName},
 		},
 	}
+
 	if ops.Interactive {
 		opts.Config.OpenStdin = true
 		opts.Config.Cmd = []string{"/bin/bash"}

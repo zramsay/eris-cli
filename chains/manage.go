@@ -198,7 +198,7 @@ func PlopChain(do *definitions.Do) error {
 	default:
 		return fmt.Errorf("unknown plop option %s", do.Type)
 	}
-	logger.Debugf("Execing =>\t\t\t%v\n", do.Args)
+	logger.Debugf("Execing =>\t\t\t%v\n", do.Operations.Args)
 	return ExecChain(do)
 }
 

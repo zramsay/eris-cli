@@ -50,7 +50,6 @@ func TestMain(m *testing.M) {
 	logLevel = 0
 	// logLevel = 1
 	// logLevel = 3
-	//	logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -198,7 +197,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	config.GlobalConfig.Writer = newWriter
 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
-	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/file.file", chainID)}
+	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/file.file")}
 	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
 	if err != nil {
 		fatal(t, err)

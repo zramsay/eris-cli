@@ -139,7 +139,7 @@ func startChain(do *definitions.Do, exec bool) error {
 			chain.Service.Image = do.Image
 		}
 		chain.Operations.Args = do.Operations.Args
-		logger.Debugf("\twith Args =>\t\t%v:%v\n", chain.Operations.Args, do.Interactive)
+		logger.Debugf("\twith Args =>\t\t%v:%v\n", chain.Operations.Args, chain.Operations.Interactive)
 		// This override is necessary because erisdb uses an entryPoint and
 		// the perform package will respect the images entryPoint if it
 		// exists.

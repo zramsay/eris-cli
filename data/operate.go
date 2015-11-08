@@ -61,8 +61,12 @@ func ImportData(do *definitions.Do) error {
 			return err
 		}
 
-		chown := []string{"chown", "--recursive", "eris:", do.Path}
-		_, err = perform.DockerRunVolumesFromContainer(containerName, false, chown, nil)
+		doStuff := definitions.NowDo()
+		doStuff.Operations.DataContainerName = containerName
+		doStuff.Operations.ContainerType = "data"
+		doStuff.Operations.ContainerNumber = 1
+		doStuff.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
+		_, err = perform.DockerRunVolumesFromContainer(doStuff.Operations, nil)
 		if err != nil {
 			return fmt.Errorf("fack: %v\n", err)
 		}
