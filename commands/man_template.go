@@ -152,22 +152,30 @@ var manHelpers = map[string]interface{}{
 		text = strings.Replace(text, `"`, `\[dq]`, -1)
 
 		// Replace empty strings with an empty string formatter.
+		//
+		// Regexp flags:
+		//  (?m) - match begin of line and end of line in a multiline buffer.
+		//  (?s) - match newlines in a long buffer.
+		//
 		text = regexp.MustCompile(`(?m)^$`).ReplaceAllString(text, ".Pp")
+
+		// Some Ad-hoc formatting:
 
 		// Reformat example description (as in "$ eris command -- description").
 		text = strings.Replace(text, " -- ", "\n.D1 ", -1)
 
-		// Some Ad-hoc formatting:
-
 		// Highlight "[eris command ...]".
-		text = regexp.MustCompile(`\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
+		text = regexp.MustCompile(`(?s)\n?\ *\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
 
 		// Highlight "NOTE:".
-		text = regexp.MustCompile(`(NOTE):\ *`).ReplaceAllString(text, "\n.Em $1  :\n")
+		text = regexp.MustCompile(`(NOTE):[[:space:]]*`).ReplaceAllString(text, "\n.Em $1  :\n")
 
 		// Insert a line break before a line which starts with a number and a period
 		// (prevent numbered lists to be reformatted).
-		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\..+)`).ReplaceAllString(text, "\n$1")
+		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\..+)`).ReplaceAllString(text, "\n.Dl $1")
+
+		// Replace double new lines with single new lines (if any).
+		text = regexp.MustCompile(`(?s)\n\n`).ReplaceAllString(text, "\n")
 
 		return text
 	},

@@ -63,7 +63,8 @@ var filesCache = &cobra.Command{
 	Long: `Cache files to IPFS' local daemon.
 
 It caches files locally via IPFS pin, by hash.
-Optionally pass in a CSV with: cache --csv=[FILE]
+Optionally pass in a CSV with: cache --csv=[FILE].
+
 NOTE: "put" will "cache" recursively by default.`,
 	Run: FilesPin,
 }
