@@ -105,10 +105,10 @@ seemlessly with [eris chains install] so that other users and/or colleagues
 should be able to use your registered blockchain by simply using the install
 command.
 
-[eris chains register] is not the *only* way to share your blockchains.
-You can also export your chain definition file and genesis.json to IPFS 
-and share the hash of the chain definition file and genesis.json 
-with any colleagues or users who need to be able to connect 
+The [eris chains register] command is not the *only* way to 
+share your blockchains. You can also export your chain definition file and 
+genesis.json to IPFS, and share the hash of the chain definition file and 
+genesis.json with any colleagues or users who need to be able to connect 
 into the blockchain.`,
 	Run: RegisterChain,
 }
@@ -172,14 +172,14 @@ be no chain checked out.`,
 var chainsPlop = &cobra.Command{
 	Use:   "plop",
 	Short: "Plop the genesis or config file",
-	Long:  "Display the genesis or config file in a machine readable output",
+	Long:  "Display the genesis or config file in a machine readable output.",
 	Run:   PlopChain,
 }
 
 var chainsPorts = &cobra.Command{
 	Use:   "ports",
-	Short: "Print the port mapping",
-	Long: `Print the port mapping
+	Short: "Print the port mappings.",
+	Long: `Print the port mappings.
 
 eris chains ports is mostly a developer convenience function.
 It returns a machine readable port mapping of a port which is
@@ -301,11 +301,11 @@ var chainsUpdate = &cobra.Command{
 
 Functionally this command will perform the following sequence:
 
-1. Stop the chain (if it is running)
-2. Remove the container which ran the chain
-3. Pull the image the container uses from a hub
-4. Rebuild the container from the updated image
-5. Restart the chain (if it was previously running)
+1. Stop the chain (if it is running).
+2. Remove the container which ran the chain.
+3. Pull the image the container uses from a hub.
+4. Rebuild the container from the updated image.
+5. Restart the chain (if it was previously running).
 
 NOTE: If the chain uses data containers those will not be affected
 by the update command.

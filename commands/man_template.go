@@ -35,30 +35,29 @@ To list available commands, ether run
 with no parameters or run
 .Cm eris help .
 .Ed
-{{range .Commands}}
-{{template "command prologue" .}}{{end}}
-{{end}}
+{{range .Commands}}.Pp
+{{template "command prologue" .}}{{end}}{{end}}
 
 {{define "command prologue"}}.Ss {{.Name}}
-{{if .HasSubCommands}}
+{{if .HasSubCommands}}.Pp
 .Bd -filled
 {{escape .Long}}
 .Ed
-{{range .Commands}}{{template "command" .}}{{end}}{{else}}
+{{range .Commands}}.D1 \~
+{{template "command" .}}{{end}}{{else}}.Pp
 {{template "command" .}}{{end}}{{end}}
 
-{{define "command"}}
+{{define "command"}}.Pp
 .Bd -ragged
 .Cm {{.UseLine}}
-
+.Pp
 {{escape .Long}}{{if .Aliases}}{{template "aliases" .Aliases}}{{end}}{{if .HasFlags}}
 {{template "flags" .NonInheritedFlags}}{{end}}{{if .HasExample}}{{template "examples" .Example}}{{end}}
 .Ed
 {{end}}
 
 {{define "flags"}}.Bl -ohang
-{{range escapeFlags .}}.It
-{{if .Shorthand}}.Fl {{.Shorthand}} , Fl Ns Fl {{.Name}}{{else}}.Fl Ns Fl {{.Name}}{{end}}{{if .DefValue}} Ns Op ={{.DefValue}}{{end}}
+{{range escapeFlags .}}.It {{if .Shorthand}}Fl {{.Shorthand}} , Fl Ns Fl {{.Name}}{{else}}Fl Ns Fl {{.Name}}{{end}}{{if .DefValue}} Ns Op ={{.DefValue}}{{end}}
 .D1 {{escape .Usage}}
 {{end}}.El{{end}}
 
@@ -66,8 +65,7 @@ with no parameters or run
 .Pp
 .Em Examples :
 .Bl -ohang -offset indent
-{{range splitExamples .}}.It
-{{escape .}}
+{{range splitExamples .}}.It {{escape .}}
 {{end}}.El{{end}}
 
 {{define "aliases"}}
@@ -139,12 +137,11 @@ http://erisindustries.com
 Team of marmots.
 .Sh COPYRIGHT
 Copyright \[co] 2014-{{date "2006"}} by Eris Industries, Ltd.
-
+.Pp
 The software is distributed under the terms of the
 .Em GNU General Public License Version 3 .
 .Sh BUGS
-http://github.com/eris-ltd/eris-cli/issues
-`
+http://github.com/eris-ltd/eris-cli/issues`
 
 var manHelpers = map[string]interface{}{
 	"escape": func(text string) string {
@@ -154,20 +151,23 @@ var manHelpers = map[string]interface{}{
 		text = strings.Replace(text, `'`, `\[aq]`, -1)
 		text = strings.Replace(text, `"`, `\[dq]`, -1)
 
+		// Replace empty strings with an empty string formatter.
+		text = regexp.MustCompile(`(?m)^$`).ReplaceAllString(text, ".Pp")
+
 		// Reformat example description (as in "$ eris command -- description").
 		text = strings.Replace(text, " -- ", "\n.D1 ", -1)
 
 		// Some Ad-hoc formatting:
 
 		// Highlight "[eris command ...]".
-		text = regexp.MustCompile(`\[(eris\ [^]]+)\]([.,;:]?)`).ReplaceAllString(text, "\n.Cm $1 $2 No")
+		text = regexp.MustCompile(`\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
 
 		// Highlight "NOTE:".
 		text = regexp.MustCompile(`(NOTE):\ *`).ReplaceAllString(text, "\n.Em $1  :\n")
 
 		// Insert a line break before a line which starts with a number and a period
-		// (prevent numbered lists to be reformatted). Applicable for this:
-		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\.)`).ReplaceAllString(text, ".It\n$1")
+		// (prevent numbered lists to be reformatted).
+		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\..+)`).ReplaceAllString(text, "\n$1")
 
 		return text
 	},

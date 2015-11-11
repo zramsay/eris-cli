@@ -16,8 +16,8 @@ Eris platform and for the platform itself.
 The [eris config] command is only for configuring the Eris platform:
 it will not work to configure any of the blockchains, services
 or projects which are managed by the Eris platform. To configure
-blockchains use [eris chains config]; to configure services
-use [eris services config]; to configure projects use [eris projects config].`,
+blockchains use [eris chains config]; to configure services use [eris services config]; 
+to configure projects use [eris projects config] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -38,7 +38,8 @@ var configSet = &cobra.Command{
 	Long: `Set a config value.
 NOTE: the [eris config set] command only operates on the settings 
 for the eris CLI. To set the config for a blockchain use [eris chains config]
-command, and to set the config for a service use [eris services config].`,
+command, and to set the config for a service use [eris services config] 
+command.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		config.Set(args)
 	},

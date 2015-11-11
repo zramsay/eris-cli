@@ -105,8 +105,9 @@ var servicesStart = &cobra.Command{
 	Long: `Start a service according to the service definition file which
 eris stores in the ~/.eris/services directory.
 
-[eris services start NAME] by default will put the service into the
-background so its logs will not be viewable from the command line.
+The [eris services start NAME] command by default will put the 
+service into the background so its logs will not be viewable 
+from the command line.
 
 To stop the service use:      [eris services stop NAME].
 To view a service's logs use: [eris services logs NAME].`,
@@ -180,11 +181,11 @@ var servicesUpdate = &cobra.Command{
 
 Functionally this command will perform the following sequence of steps:
 
-1. Stop the service (if it is running)
-2. Remove the container which ran the service
-3. Pull the image the container uses from a hub
-4. Rebuild the container from the updated image
-5. Restart the service (if it was previously running)
+1. Stop the service (if it is running).
+2. Remove the container which ran the service.
+3. Pull the image the container uses from a hub.
+4. Rebuild the container from the updated image.
+5. Restart the service (if it was previously running).
 
 NOTE: If the service uses data containers, those will not be affected
 by the [eris update] command.`,
