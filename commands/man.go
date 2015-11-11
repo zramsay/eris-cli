@@ -84,7 +84,7 @@ func DisplayManPage(in *bytes.Buffer) {
 	// handles SIGINT, but ignoring it doesn't harm.
 	// Ignoring the interrupt signal is important, because interrupting
 	// less(1) leaves the terminal in a broken state.
-	signal.Ignore(os.Interrupt)
+	signal.Notify(make(chan os.Signal, 1), os.Interrupt)
 
 	// Use PAGER value if set, or less(1) by default.
 	pagerCommand := os.Getenv("PAGER")
