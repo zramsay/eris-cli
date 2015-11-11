@@ -165,7 +165,7 @@ var manHelpers = map[string]interface{}{
 		text = strings.Replace(text, " -- ", "\n.D1 ", -1)
 
 		// Highlight "[eris command ...]".
-		text = regexp.MustCompile(`(?s)\n?\ *\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
+		text = regexp.MustCompile(`\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
 
 		// Highlight "NOTE:".
 		text = regexp.MustCompile(`(NOTE):[[:space:]]*`).ReplaceAllString(text, "\n.Em $1  :\n")
