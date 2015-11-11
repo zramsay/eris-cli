@@ -2,15 +2,14 @@ package commands
 
 import "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 
-const helpTemplate = `Usage: {{.UseLine}}{{if .Runnable}}{{if .HasSubCommands}} COMMAND{{end}}{{if .HasFlags}} [FLAG...]{{end}}{{end}}{{if gt .Aliases 0}}
+const helpTemplate = `Usage: {{.UseLine}}{{if .Runnable}}{{if .HasSubCommands}} COMMAND{{end}}{{if .HasFlags}} [FLAG...]{{end}}{{end}}
 
+{{.Long}}
+{{if gt .Aliases 0}}
 Aliases:
-  {{.NameAndAliases}}
-{{end}}{{if .HasExample}}
-
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
 Examples:
 {{ .Example }}{{end}}{{ if .HasAvailableSubCommands}}
-
 Available Commands:{{range .Commands}}{{if .IsAvailableCommand}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{ if .HasLocalFlags}}
 
