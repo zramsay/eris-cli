@@ -31,7 +31,7 @@ func buildContractsCommand() {
 }
 
 var contractsImport = &cobra.Command{
-	Use:   "import [hash] [packageName]",
+	Use:   "import HASH PACKAGE",
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
 via its hash and save it locally.`,
@@ -53,14 +53,14 @@ var contractsTest = &cobra.Command{
 Tests can be structured using three different
 test types.
 
-* epm -- epm apps can be tested against tendermint
+1. epm - epm apps can be tested against tendermint
 style blockchains.
-* embark -- embark apps can be tested against
+2. embark - embark apps can be tested against
 ethereum style blockchains.
-* truffle -- HELP WANTED!
-* solUnit -- pure solidity smart contract packages
+3. truffle - HELP WANTED!
+4. solUnit - pure solidity smart contract packages
 may be tested via solUnit test framework.
-* manual -- a simple gulp task can be given to the
+5. manual - a simple gulp task can be given to the
 test environment.`,
 	Run: ContractsTest,
 }
@@ -73,15 +73,14 @@ var contractsDeploy = &cobra.Command{
 Deployments can be structured using three different
 deploy types.
 
-* epm -- epm apps can be deployed to tendermint style
+1. epm - epm apps can be deployed to tendermint style
 blockchains simply.
-* embark -- embark apps can be deployed to an
+2. embark - embark apps can be deployed to an
 ethereum style blockchain simply.
-* truffle -- HELP WANTED!
-* pyepm -- IF THIS IS STILL A THING, HELP WANTED!
-* manual -- a simple gulp task can be given to the
-deployer.
-`,
+3. truffle - HELP WANTED!
+4. pyepm - IF THIS IS STILL A THING, HELP WANTED!
+5. manual - a simple gulp task can be given to the
+deployer.`,
 	Run: ContractsDeploy,
 }
 

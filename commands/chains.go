@@ -17,29 +17,21 @@ import (
 // Primary Chains Sub-Command
 var Chains = &cobra.Command{
 	Use:   "chains",
-	Short: "Start, Stop, and Manage Blockchains.",
-	Long: `Start, Stop, and Manage Blockchains.
+	Short: "Start, stop, and manage blockchains.",
+	Long: `Start, stop, and manage blockchains.
 
 The chains subcommand is used to work on erisdb smart contract
 blockchain networks. The name is not perfect, as eris is able
 to operate a wide variety of blockchains out of the box. Most
-of those existing blockchains should be ran via the
-
-[eris services ...]
-
+of those existing blockchains should be ran via the [eris services ...]
 commands. As they fall under the rubric of "things I just want
 to turn on or off". While you can develop against those
 blockchains, you generally aren't developing those blockchains
-themselves.
+themselves. [eris chains ...] commands are built to help you build
+blockchains. It is our opinionated gateway to the wonderful world
+of permissioned smart contract networks.
 
-[eris chains ...] is built to help you build blockchains. It is our
-opinionated gateway to the wonderful world of permissioned
-smart contract networks.
-
-Your own blockchain/smart contract machine is just an
-
-[eris chains new]
-
+Your own blockchain/smart contract machine is just an [eris chains new]
 away!`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
@@ -72,9 +64,9 @@ func buildChainsCommand() {
 
 // Chains Sub-sub-Commands
 var chainsNew = &cobra.Command{
-	Use:   "new [name]",
+	Use:   "new NAME",
 	Short: "Create a new blockhain.",
-	Long: `Creates a new blockchain.
+	Long: `Create a new blockchain.
 
 The creation process will both create a blockchain on the current machine
 as well as start running that chain.
@@ -97,15 +89,14 @@ unless the --serverconf flag is passed.
 
 For more complex blockchain creation, you will want to "hand craft" a genesis.json
 see our tutorial for chain creation here:
-https://docs.erisindustries.com/tutorials/chainmaking/
-`,
+https://docs.erisindustries.com/tutorials/chainmaking/`,
 	Run: NewChain,
 }
 
 var chainsRegister = &cobra.Command{
-	Use:   "register [name]",
-	Short: "Registers a blockchain on etcb (a blockchain for registering other blockchains",
-	Long: `Registers a blockchain on etcb
+	Use:   "register NAME",
+	Short: "Register a blockchain on etcb (a blockchain for registering other blockchains).",
+	Long: `Register a blockchain on etcb.
 
 etcb is Eris's blockchain which is a public blockchain that can be used to
 register *other* blockchains. In other words it is an easy way to "share"
@@ -114,22 +105,22 @@ seemlessly with [eris chains install] so that other users and/or colleagues
 should be able to use your registered blockchain by simply using the install
 command.
 
-register it is not the *only* way to share your blockchains (you can) also
-export your chain definition file and genesis.json to IPFS and share the
-hash of the chain definition file and genesis.json with any colleagues or
-users who need to be able to connect into the blockchain.
-`,
+[eris chains register] is not the *only* way to share your blockchains.
+You can also export your chain definition file and genesis.json to IPFS 
+and share the hash of the chain definition file and genesis.json 
+with any colleagues or users who need to be able to connect 
+into the blockchain.`,
 	Run: RegisterChain,
 }
 
 var chainsInstall = &cobra.Command{
-	Use:   "install [chainID]",
+	Use:   "install NAME",
 	Short: "Install a blockchain from the etcb registry.",
 	Long: `Install a blockchain from the etcb registry.
 
 Install an existing erisdb based blockchain for use locally.
 
-Still a WIP.`,
+(Currently a work in progress.)`,
 	Run: InstallChain,
 }
 
@@ -137,49 +128,44 @@ Still a WIP.`,
 var chainsListAll = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists everything chain related.",
-	Long: `Lists all:
+	Long: `Lists all: chain definition files (--known), current existing
+containers for each chain (--existing), current running containers for each
+chain (--running).
 
-	- chain definition files (--known)
-	- current existing containers for each chain (--existing)
-	- current running containers for each chain (--running)
+If no known chains exist yet, create a new blockchain with: [eris chains new NAME]
+command.
 
-If no known chains exist yet, create a new blockchain with:
-
-	$ eris chains new chainName
-
-To install and fetch a blockchain from a chain definition file, use:
-
-	$ eris chains install chainName
+To install and fetch a blockchain from a chain definition file, 
+use [eris chains install NAME] command.
 
 Services are handled using the [eris services] command.`,
 	Run: ListAllChains,
 }
 
 var chainsImport = &cobra.Command{
-	Use:   "import [name] [location]",
+	Use:   "import NAME LOCATION",
 	Short: "Import a chain definition file from Github or IPFS.",
 	Long: `Import a chain definition for your platform.
 
-By default, Eris will import from ipfs.
+By default, Eris will import from IPFS.
 
-To list known chains use: [eris chains known].`,
-	Example: "  eris chains import 2gather QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+To list known chains use: [eris chains ls --known].`,
+	Example: "$ eris chains import 2gather QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run:     ImportChain,
 }
 
 var chainsCheckout = &cobra.Command{
-	Use:   "checkout",
-	Short: "Checks out a chain.",
-	Long: `Checks out a chain.
+	Use:   "checkout [NAME]",
+	Short: "Check out a chain.",
+	Long: `Check out a chain.
 
-Checkout is a convenience feature. For any eris command which accepts a
+Checkout is a convenience feature. For any Eris command which accepts a
 --chain or $chain variable, the checked out chain can replace manually
 passing in a --chain flag. If a --chain is passed to any command accepting
 --chain, the --chain which is passed will overwrite any checked out chain.
 
 If command is given without arguments it will clear the head and there will
-be no chain checked out.
-`,
+be no chain checked out.`,
 	Run: CheckoutChain,
 }
 
@@ -202,11 +188,10 @@ on the host.
 
 This is useful when stitching together chain networks which
 need to know how to connect into a specific chain (perhaps
-with or without a container number) container.
-`,
-	Example: `  eris chains ports myChain 1337 -> will display what port on the host is mapped to the eris:db API port
-  eris chains ports myChain 46656 -> will display what port on the host is mapped to the eris:db peer port
-  eris chains ports myChain 46657 -> will display what port on the host is mapped to the eris:db rpc port`,
+with or without a container number) container.`,
+	Example: `$ eris chains ports myChain 1337 -- will display what port on the host is mapped to the eris:db API port
+$ eris chains ports myChain 46656 -- will display what port on the host is mapped to the eris:db peer port
+$ eris chains ports myChain 46657 -- will display what port on the host is mapped to the eris:db rpc port`,
 	Run: PortsChain,
 }
 
@@ -215,25 +200,22 @@ var chainsHead = &cobra.Command{
 	Short: "The currently checked out chain.",
 	Long: `Displays the name of the currently checked out chain.
 
-To checkout a new chain use [eris chains checkout CHAINNAME]
+To checkout a new chain use [eris chains checkout NAME].
 
-To "uncheckout" a chain use [eris chains checkout] without any
-arguments.
-`,
+To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
 }
 
 var chainsEdit = &cobra.Command{
-	Use:   "edit [name]",
+	Use:   "edit NAME",
 	Short: "Edit a blockchain.",
 	Long: `Edit a blockchain definition file.
 
 Edit will utilize the default editor set for your current shell
-or if none is set, it will use *vim*. Sorry for the bias emacs
+or if none is set, it will use *vim*. Sorry for the bias Emacs
 users, but we had to pick one and more marmots are known vim
-users ¯\_(ツ)_/¯ . Emacs users can set their $EDITOR variable
-and eris will default to that if you wise.
-`,
+users. Emacs users can set their EDITOR variable and eris 
+will default to that if you wise.`,
 	Run: EditChain,
 }
 
@@ -241,25 +223,24 @@ var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
 	Long: `Start running a blockchain.
-
-[eris chains start name] by default will put the chain into the
+	
+[eris chains start NAME] by default will put the chain into the
 background so its logs will not be viewable from the command line.
 
-To stop the chain use:      [eris chains stop chainName].
-To view a chain's logs use: [eris chains logs chainName].
-`,
+To stop the chain use:      [eris chains stop NAME].
+To view a chain's logs use: [eris chains logs NAME].`,
 	Run: StartChain,
 }
 
 var chainsLogs = &cobra.Command{
-	Use:   "logs",
+	Use:   "logs NAME",
 	Short: "Display the logs of a blockchain.",
 	Long:  `Display the logs of a blockchain.`,
 	Run:   LogChain,
 }
 
 var chainsExec = &cobra.Command{
-	Use:   "exec [serviceName]",
+	Use:   "exec NAME",
 	Short: "Run a command or interactive shell",
 	Long: `Run a command or interactive shell in a container
 with volumes-from the data container`,
@@ -267,59 +248,56 @@ with volumes-from the data container`,
 }
 
 var chainsStop = &cobra.Command{
-	Use:   "stop [name]",
+	Use:   "stop NAME",
 	Short: "Stop a running blockchain.",
 	Long:  `Stop a running blockchain.`,
 	Run:   KillChain,
 }
 
 var chainsInspect = &cobra.Command{
-	Use:   "inspect [chainName] [key]",
+	Use:   "inspect NAME [KEY]",
 	Short: "Machine readable chain operation details.",
-	Long: `Displays machine readable details about running containers.
+	Long: `Display machine readable details about running containers.
 
 Information available to the inspect command is provided by the
 Docker API. For more information about return values,
 see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `  eris chains inspect 2gather -> will display the entire information about 2gather containers
-  eris chains inspect 2gather name -> will display the name in machine readable format
-  eris chains inspect 2gather host_config.binds -> will display only that value`,
+	Example: `$ eris chains inspect 2gather -- will display the entire information about 2gather containers
+$ eris chains inspect 2gather name -- will display the name in machine readable format
+$ eris chains inspect 2gather host_config.binds -- will display only that value`,
 	Run: InspectChain,
 }
 
 var chainsExport = &cobra.Command{
-	Use:   "export [chainName]",
+	Use:   "export NAME",
 	Short: "Export a chain definition file to IPFS.",
 	Long: `Export a chain definition file to IPFS.
 
-Command will return a machine readable version of the IPFS hash
-`,
+Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportChain,
 }
 
 var chainsRename = &cobra.Command{
-	Use:   "rename [old] [new]",
+	Use:   "rename OLD_NAME NEW_NAME",
 	Short: "Rename a blockchain.",
 	Long:  `Rename a blockchain.`,
 	Run:   RenameChain,
 }
 
 var chainsRemove = &cobra.Command{
-	Use:   "rm [name]",
-	Short: "Removes an installed chain.",
-	Long: `Removes an installed chain.
+	Use:   "rm NAME",
+	Short: "Remove an installed chain.",
+	Long: `Remove an installed chain.
 
 Command will remove the chain's container but will not
-remove the chain definition file.
-
-Use the --force flag to also remove the chain definition file.`,
+remove the chain definition file.`,
 	Run: RmChain,
 }
 
 var chainsUpdate = &cobra.Command{
-	Use:   "update [name]",
-	Short: "Updates an installed chain.",
-	Long: `Updates an installed chain, or installs it if it has not been installed.
+	Use:   "update NAME",
+	Short: "Update an installed chain.",
+	Long: `Update an installed chain, or install it if it has not been installed.
 
 Functionally this command will perform the following sequence:
 
@@ -329,16 +307,16 @@ Functionally this command will perform the following sequence:
 4. Rebuild the container from the updated image
 5. Restart the chain (if it was previously running)
 
-**NOTE**: If the chain uses data containers those will not be affected
+NOTE: If the chain uses data containers those will not be affected
 by the update command.
 `,
 	Run: UpdateChain,
 }
 
 var chainsGraduate = &cobra.Command{
-	Use:   "graduate",
-	Short: "Graduates a chain to a service.",
-	Long: `Graduates a chain to a service.
+	Use:   "graduate NAME",
+	Short: "Graduate a chain to a service.",
+	Long: `Graduate a chain to a service.
 
 Graduate works by translating the chain's definition into a service definition
 file with the chain_id set as the service name and everything set for you to
@@ -351,15 +329,14 @@ easier to work with chains as a service rather than as a chain when they are
 stable and not longer need to be worked "on" which is why this functionality
 exists. Ultimately, graduate is a convenience function as there is little to
 no difference in how chains and services "run", however the [eris chains]
-functions have more convenience functions for working "on" chains themselves.
-`,
+functions have more convenience functions for working "on" chains themselves.`,
 	Run: GraduateChain,
 }
 
 var chainsCat = &cobra.Command{
-	Use:   "cat [name]",
-	Short: "Displays chains definition file.",
-	Long: `Displays chains definition file.
+	Use:   "cat NAME",
+	Short: "Display chains definition file.",
+	Long: `Display chains definition file.
 
 Command will cat local chains definition file.`,
 	Run: CatChain,
@@ -379,12 +356,12 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
+	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
+	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val2 syntax")
 
 	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
-	chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
-	chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val2 syntax")
+	chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val2 syntax")
 	chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 	chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
 
@@ -415,14 +392,14 @@ func addChainsFlags() {
 	chainsRemove.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 
 	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
-	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
-	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; can be overridden by --force")
+	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
+	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 
 	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
-	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; can be overridden by --force")
 	chainsStop.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
 
 	chainsListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the chain definition files that exist")

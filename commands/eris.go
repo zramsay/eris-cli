@@ -19,13 +19,13 @@ const VERSION = version.VERSION
 
 // Defining the root command
 var ErisCmd = &cobra.Command{
-	Use:   "eris [command] [flags]",
+	Use:   "eris COMMAND [FLAG ...]",
 	Short: "The Blockchain Application Platform",
 	Long: `Eris is a platform for building, testing, maintaining, and operating
 distributed applications with a blockchain backend. Eris makes it easy
 and simple to wrangle the dragons of smart contract blockchains.
 
-Made with <3 by Eris Industries.
+Made with ♥ by Eris Industries.
 
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
@@ -85,6 +85,10 @@ func AddCommands() {
 	ErisCmd.AddCommand(Init)
 	buildUpdateCommand()
 	ErisCmd.AddCommand(Update)
+	ErisCmd.AddCommand(ManPage)
+
+	ErisCmd.SetHelpCommand(Help)
+	ErisCmd.SetHelpTemplate(helpTemplate)
 
 }
 
@@ -98,7 +102,6 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
-
 }
 
 func InitializeConfig() {

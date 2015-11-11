@@ -17,8 +17,8 @@ import (
 // Primary Services Sub-Command
 var Services = &cobra.Command{
 	Use:   "services",
-	Short: "Start, Stop, and Manage Services Required for your Application.",
-	Long: `Start, Stop, and Manage Services Required for your Application.
+	Short: "Start, stop, and manage services required for your application.",
+	Long: `Start, stop, and manage services required for your application.
 
 Services are all services known and used by the Eris platform with the
 exception of blockchain services.`,
@@ -51,122 +51,107 @@ func buildServicesCommand() {
 var servicesListAll = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists everything service related.",
-	Long: `Lists all:
+	Long: `Lists all: service definition files (--known), current existing containers
+for each service (--existing), and current running containers
+for each service (--running).
 
-	- service definition files (--known)
-	- current existing containers for each service (--existing)
-	- current running containers for each service (--running)
-
-Known services can be started with:
-
-	$ eris services start serviceName
-
-To install a new service, use:
-
-	$ eris services import
-
-Services include all executable services supported by the
-Eris platform which are NOT blockchains or key managers.
+Known services can be started with the [eris services start NAME] command.
+To install a new service, use [eris services import]. Services include
+all executable services supported by the Eris platform which are
+NOT blockchains or key managers.
 
 Blockchains are handled using the [eris chains] command.`,
 	Run: ListAllServices,
 }
 
 var servicesImport = &cobra.Command{
-	Use:   "import [name] [hash]",
-	Short: "Import a service definition file from IPFS.",
-	Long: `Import a service for your platform.
-
-
-To list known services use: [eris services known].`,
-	Example: "  eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
+	Use:     "import NAME HASH",
+	Short:   "Import a service definition file from IPFS.",
+	Long:    `Import a service for your platform.`,
+	Example: "$ eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
 	Run:     ImportService,
 }
 
 var servicesNew = &cobra.Command{
-	Use:   "new [name] [image]",
-	Short: "Creates a new service.",
-	Long: `Creates a new service.
+	Use:   "new NAME IMAGE",
+	Short: "Create a new service.",
+	Long: `Create a new service.
 
-Command must be given a name and a Container Image using standard
+Command must be given a NAME and a container IMAGE using the standard
 docker format of [repository/organization/image].`,
-	Example: `  eris services new eth eris/eth
-  eris services new mint tutum.co/tendermint/tendermint`,
+	Example: "$ eris services new eth eris/eth\n" +
+		"$ eris services new mint tutum.co/tendermint/tendermint",
 	Run: NewService,
 }
 
 var servicesEdit = &cobra.Command{
-	Use:   "edit [name]",
+	Use:   "edit NAME",
 	Short: "Edit a service.",
 	Long: `Edit a service definition file which is kept in ~/.eris/services.
-
-Edit will utilize your default editor.
+Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
 command will only operate on *service configuration file* which tell Eris
 how to start and stop a specific service.
 
 How that service is used for a specific project is handled from project
-definition files.
-
-For more information on project definition files please see: [eris help projects].`,
+definition files.`,
 	Run: EditService,
 }
 
 var servicesStart = &cobra.Command{
-	Use:   "start [name]",
+	Use:   "start NAME",
 	Short: "Start a service.",
-	Long: `Starts a service according to the service definition file which
+	Long: `Start a service according to the service definition file which
 eris stores in the ~/.eris/services directory.
 
-[eris services start name] by default will put the service into the
+[eris services start NAME] by default will put the service into the
 background so its logs will not be viewable from the command line.
 
-To stop the service use:      [eris services stop serviceName].
-To view a service's logs use: [eris services logs serviceName].`,
+To stop the service use:      [eris services stop NAME].
+To view a service's logs use: [eris services logs NAME].`,
 	Run: StartService,
 }
 
 var servicesInspect = &cobra.Command{
-	Use:   "inspect [serviceName] [key]",
+	Use:   "inspect NAME [KEY]",
 	Short: "Machine readable service operation details.",
-	Long: `Displays machine readable details about running containers.
+	Long: `Display machine readable details about running containers.
 
-Information available to the inspect command is provided by the
-Docker API. For more information about return values,
-see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `  eris services inspect ipfs -> will display the entire information about ipfs containers
-  eris services inspect ipfs name -> will display the name in machine readable format
-  eris services inspect ipfs host_config.binds -> will display only that value`,
+Information available to the inspect command is provided by the Docker API.
+For more information about return values, see:
+https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
+	Example: `$ eris services inspect ipfs -- will display the entire information about ipfs containers
+$ eris services inspect ipfs name -- will display the name in machine readable format
+$ eris services inspect ipfs host_config.binds -- will display only that value`,
 	Run: InspectService,
 }
 
 var servicesPorts = &cobra.Command{
-	Use:   "ports [port]",
-	Short: "Print port mapping",
-	Long:  "Print port mapping",
+	Use:   "ports PORT",
+	Short: "Print port mappings",
+	Long:  "Print port mappings",
 	Run:   PortsService,
 }
 
 var servicesExport = &cobra.Command{
-	Use:   "export [serviceName]",
+	Use:   "export NAME",
 	Short: "Export a service definition file to IPFS.",
 	Long: `Export a service definition file to IPFS.
 
-Command will return a machine readable version of the IPFS hash
-`,
+Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportService,
 }
 
 var servicesLogs = &cobra.Command{
-	Use:   "logs [name]",
-	Short: "Displays the logs of a running service.",
-	Long:  `Displays the logs of a running service.`,
+	Use:   "logs NAME",
+	Short: "Display the logs of a running service.",
+	Long:  `Display the logs of a running service.`,
 	Run:   LogService,
 }
 
 var servicesExec = &cobra.Command{
-	Use:   "exec [serviceName]",
+	Use:   "exec NAME",
 	Short: "Run a command or interactive shell",
 	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
 	Run:   ExecService,
@@ -174,26 +159,26 @@ var servicesExec = &cobra.Command{
 
 // stop stops a running service
 var servicesStop = &cobra.Command{
-	Use:   "stop [name]",
-	Short: "Stops a running service.",
-	Long:  `Stops a service which is currently running.`,
+	Use:   "stop NAME",
+	Short: "Stop a running service.",
+	Long:  `Stop a service which is currently running.`,
 	Run:   KillService,
 }
 
 var servicesRename = &cobra.Command{
-	Use:   "rename [oldName] [newName]",
-	Short: "Renames an installed service.",
-	Long:  `Renames an installed service.`,
+	Use:   "rename OLD_NAME NEW_NAME",
+	Short: "Rename an installed service.",
+	Long:  `Rename an installed service.`,
 	Run:   RenameService,
 }
 
 var servicesUpdate = &cobra.Command{
-	Use:     "update [name]",
+	Use:     "update NAME",
 	Aliases: []string{"restart"},
-	Short:   "Updates an installed service.",
-	Long: `Updates an installed service, or installs it if it has not been installed.
+	Short:   "Update an installed service.",
+	Long: `Update an installed service, or install it if it has not been installed.
 
-Functionally this command will perform the following sequence:
+Functionally this command will perform the following sequence of steps:
 
 1. Stop the service (if it is running)
 2. Remove the container which ran the service
@@ -201,27 +186,25 @@ Functionally this command will perform the following sequence:
 4. Rebuild the container from the updated image
 5. Restart the service (if it was previously running)
 
-**NOTE**: If the service uses data containers those will not be affected
-by the update command.`,
+NOTE: If the service uses data containers, those will not be affected
+by the [eris update] command.`,
 	Run: UpdateService,
 }
 
 var servicesRm = &cobra.Command{
-	Use:   "rm [name]",
-	Short: "Removes an installed service.",
-	Long: `Removes an installed service.
+	Use:   "rm NAME",
+	Short: "Remove an installed service.",
+	Long: `Remove an installed service.
 
-Command will remove the service's container but will not
-remove the service definition file.
-
-Use the --force flag to also remove the service definition file.`,
+Command will remove the service's container but will not remove
+the service definition file.`,
 	Run: RmService,
 }
 
 var servicesCat = &cobra.Command{
-	Use:   "cat [name]",
-	Short: "Displays service definition file.",
-	Long: `Displays service definition file.
+	Use:   "cat NAME",
+	Short: "Display the service definition file.",
+	Long: `Display the service definition file.
 
 Command will cat local service definition file.`,
 	Run: CatService,
@@ -240,13 +223,13 @@ func addServicesFlags() {
 
 	servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
 	servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
-	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
+	servicesUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 
 	servicesStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
-	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	servicesStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
+	servicesStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
