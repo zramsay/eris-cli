@@ -172,7 +172,7 @@ var manHelpers = map[string]interface{}{
 
 		// Insert a line break before a line which starts with a number and a period
 		// (prevent numbered lists to be reformatted).
-		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\..+)`).ReplaceAllString(text, ".Bd -literal -compact\n$1\n.Ed\n")
+		text = regexp.MustCompile(`(?m)^(\ ?[[:digit:]]+\..+)`).ReplaceAllString(text, ".Bd -ragged -compact\n$1\n.Ed\n")
 
 		// Replace double new lines with single new lines (if any).
 		text = regexp.MustCompile(`(?s)\n\n`).ReplaceAllString(text, "\n")
