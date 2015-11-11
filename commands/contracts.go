@@ -53,15 +53,11 @@ var contractsTest = &cobra.Command{
 Tests can be structured using three different
 test types.
 
-1. epm - epm apps can be tested against tendermint
-style blockchains.
-2. embark - embark apps can be tested against
-ethereum style blockchains.
+1. epm - epm apps can be tested against tendermint style blockchains.
+2. embark - embark apps can be tested against ethereum style blockchains.
 3. truffle - HELP WANTED!
-4. solUnit - pure solidity smart contract packages
-may be tested via solUnit test framework.
-5. manual - a simple gulp task can be given to the
-test environment.`,
+4. solUnit - pure solidity smart contract packages may be tested via solUnit test framework.
+5. manual - a simple gulp task can be given to the test environment.`,
 	Run: ContractsTest,
 }
 
@@ -73,14 +69,11 @@ var contractsDeploy = &cobra.Command{
 Deployments can be structured using three different
 deploy types.
 
-1. epm - epm apps can be deployed to tendermint style
-blockchains simply.
-2. embark - embark apps can be deployed to an
-ethereum style blockchain simply.
+1. epm - epm apps can be deployed to tendermint style blockchains simply.
+2. embark - embark apps can be deployed to an ethereum style blockchain simply.
 3. truffle - HELP WANTED!
 4. pyepm - IF THIS IS STILL A THING, HELP WANTED!
-5. manual - a simple gulp task can be given to the
-deployer.`,
+5. manual - a simple gulp task can be given to the deployer.`,
 	Run: ContractsDeploy,
 }
 

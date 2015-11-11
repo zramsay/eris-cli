@@ -73,8 +73,8 @@ as well as start running that chain.
 
 If you need to update a chain after creation, you can update any of the
 appropriate settings in the chains definition file for the named chain
-(which will be located at ~/.eris/chains/CHAINNAME.toml) and then
-utilize [eris chains update CHAINNAME -p] to update the blockchain appropriately
+(which will be located at ~/.eris/chains/NAME.toml) and then
+utilize [eris chains update NAME -p] to update the blockchain appropriately
 (using the -p flag will force eris not to pull the most recent docker image
 for eris:db).
 
