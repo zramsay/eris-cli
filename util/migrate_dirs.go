@@ -8,12 +8,9 @@ import (
 )
 
 //XXX this command absolutely needs a good test!!
-func MigrateDeprecatedDirs(depDirs, newDirs []string, prompt bool) error {
-	if len(depDirs) != len(newDirs) {
-		return fmt.Errorf("Number of dirs to deprecate (%d) does not match # of new dirs (%d)\n", depDirs, newDirs)
-	}
+func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 
-	dirsMap, isMigNeed := dirCheckMaker(depDirs, newDirs)
+	dirsMap, isMigNeed := dirCheckMaker(dirsToMigrate)
 	if isMigNeed {
 		logger.Println("deprecated directories detected, marmot migration commencing")
 	}
@@ -31,12 +28,8 @@ func MigrateDeprecatedDirs(depDirs, newDirs []string, prompt bool) error {
 	return nil
 }
 
-//check that migration is actually needed and make map
-func dirCheckMaker(depDirs, newDirs []string) (map[string]string, bool) {
-	dirsToMigrate := make(map[string]string)
-	for i, d := range depDirs {
-		dirsToMigrate[d] = newDirs[i]
-	}
+//check that migration is actually needed
+func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 
 	for depDir, newDir := range dirsToMigrate {
 		if !DoesDirExist(depDir) && DoesDirExist(newDir) { //already migrated, nothing to see here

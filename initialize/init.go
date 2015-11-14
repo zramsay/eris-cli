@@ -37,15 +37,13 @@ func Initialize(do *definitions.Do) error {
 		return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
 	}
 
-	depDirs := common.DeprecatedDirs
-	newDirs := common.RenamedDirs
 	var prompt bool
-	if do.Yes || os.Getenv("ERIS_PULL_APPROVE") == "true" {
+	if do.Yes || os.Getenv("ERIS_MIGRATE_APPROVE") == "true" {
 		prompt = false
 	} else {
 		prompt = true
 	}
-	if err := util.MigrateDeprecatedDirs(depDirs, newDirs, prompt); err != nil {
+	if err := util.MigrateDeprecatedDirs(common.DirsToMigrate, prompt); err != nil {
 		return fmt.Errorf("Error:\tcould not migrate directories.\n%s\n", err)
 	}
 	return nil

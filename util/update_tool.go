@@ -15,9 +15,7 @@ func UpdateEris(branch string) {
 	CheckGitAndGo(true, true)
 
 	//checks for deprecated dir names and renames them
-	depDirs := common.DeprecatedDirs
-	newDirs := common.RenamedDirs
-	err := MigrateDeprecatedDirs(depDirs, newDirs, false) // false = no prompt
+	err := MigrateDeprecatedDirs(common.DirsToMigrate, false) // false = no prompt
 	if err != nil {
 		logger.Printf("directory migration error: %v\ncontinuing with update without migration\n", err)
 	}

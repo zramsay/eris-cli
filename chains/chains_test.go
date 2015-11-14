@@ -520,7 +520,7 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	}
 }
 
-//TODO use tests.TestsTearDown (or not??)
+//TODO use tests.TestsTearDown (or not? -> only once clean is refactored)
 func testsTearDown() error {
 	DEAD = true
 	killService("keys")

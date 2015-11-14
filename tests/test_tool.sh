@@ -136,6 +136,7 @@ packagesToTest() {
 
   # For testing we want to override the Greg Slepak required ask before pull ;)
   export ERIS_PULL_APPROVE="true"
+  export ERIS_MIGRATE_APPROVE="true"
 
   # The first run of tests expect ipfs to be running
   eris services start ipfs

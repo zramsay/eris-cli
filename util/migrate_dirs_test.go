@@ -56,8 +56,14 @@ func TestMigrationSimple(t *testing.T) {
 	testsSetupDirs(depDirs, newDirs, true, false)
 	defer testsRemoveDirs(depDirs, newDirs)
 
+	dirsToMigrate := make(map[string]string, len(depDirs))
+
+	for n, d := range depDirs {
+		dirsToMigrate[d] = newDirs[n]
+	}
+
 	//migrate them
-	if err := MigrateDeprecatedDirs(depDirs, newDirs, false); err != nil { //false = don't prompt
+	if err := MigrateDeprecatedDirs(dirsToMigrate, false); err != nil { //false = don't prompt
 		ifExit(err) //but some errors are ok ?
 	}
 
@@ -93,7 +99,13 @@ func TestMigrationMoveFile(t *testing.T) {
 		ifExit(err)
 	}
 
-	if err := MigrateDeprecatedDirs(depDirs, newDirs, false); err != nil { //false = don't prompt
+	dirsToMigrate := make(map[string]string, len(depDirs))
+
+	for n, d := range depDirs {
+		dirsToMigrate[d] = newDirs[n]
+	}
+
+	if err := MigrateDeprecatedDirs(dirsToMigrate, false); err != nil { //false = don't prompt
 		ifExit(err)
 	}
 

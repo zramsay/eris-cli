@@ -30,8 +30,7 @@ func TestsInit(testType string) error {
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
-		fmt.Errorf("TRAGIC. Could not set global config.\n")
-		//ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
+		IfExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
 
 	// common is initialized on import so
@@ -54,10 +53,14 @@ func TestsInit(testType string) error {
 	do.Services = true
 	do.Actions = true
 	if err := ini.Initialize(do); err != nil {
-		fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n")
-		//ifExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
+		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
 
+	if testType == "services" {
+		checkIPFSnotRunning() //TODO make more general & use for other things?
+	}
+
+	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil
 }
 
@@ -114,7 +117,7 @@ func TestExistAndRun(name, typ string, contNum int, toExist, toRun bool) bool {
 		do.Running = true
 		do.Existing = false //unset
 		if err := util.ListAll(do, typ); err != nil {
-			return true //	fatal(t, err)
+			return true
 		}
 		logger.Debugln("RUNNING RESULT:", do.Result)
 		res = strings.Split(do.Result, "\n")
@@ -131,14 +134,14 @@ func TestExistAndRun(name, typ string, contNum int, toExist, toRun bool) bool {
 			} else {
 				logger.Infof("Found a running instance of %s when I shouldn't have\n", name)
 			}
-			return true //	fatal(t, nil)
+			return true
 		}
 	}
 
 	return false
 }
 
-// each pacakge will need its own custom shit if need be
+// each pacakge will need its own custom stuff if need be
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
 func TestsTearDown() error {
@@ -157,4 +160,44 @@ func IfExit(err error) {
 		}
 		os.Exit(1)
 	}
+}
+
+//------- helpers --------
+func checkIPFSnotRunning() {
+
+	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
+	do := def.NowDo()
+	do.Known = false
+	do.Existing = false
+	do.Running = true
+	do.Quiet = true
+	do.Operations.Args = []string{"testing"}
+	logger.Debugln("Finding the running services.")
+	if err := util.ListAll(do, "services"); err != nil {
+		IfExit(err)
+	}
+	res := strings.Split(do.Result, "\n")
+	for _, r := range res {
+		if r == "ipfs" {
+			IfExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
+		}
+	}
+	// make sure ipfs container does not exist
+	do = def.NowDo()
+	do.Known = false
+	do.Existing = true
+	do.Running = false
+	do.Quiet = true
+	do.Operations.Args = []string{"testing"}
+	logger.Debugln("Finding the existing services.")
+	if err := util.ListAll(do, "services"); err != nil {
+		IfExit(err)
+	}
+	res = strings.Split(do.Result, "\n")
+	for _, r := range res {
+		if r == "ipfs" {
+			IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
+		}
+	}
+
 }

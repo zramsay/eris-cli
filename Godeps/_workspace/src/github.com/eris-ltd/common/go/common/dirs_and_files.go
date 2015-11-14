@@ -58,9 +58,11 @@ var MajorDirs = []string{
 	ErisRoot, ActionsPath, ChainsPath, DataContainersPath, AppsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
 }
 
-//these ought always len() == len()
-var DeprecatedDirs = []string{BlockchainsPath, DappsPath}
-var RenamedDirs = []string{ChainsPath, AppsPath}
+//eris update checks if old dirs exist & migrates them
+var DirsToMigrate = map[string]string{
+	BlockchainsPath: ChainsPath,
+	DappsPath:       AppsPath,
+}
 
 //---------------------------------------------
 // user and process

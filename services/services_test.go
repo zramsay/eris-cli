@@ -460,45 +460,5 @@ func testsInit() error {
 	if err := tests.TestsInit("services"); err != nil {
 		return err
 	}
-
-	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
-
-	// make sure ipfs not running
-	//TODO move to TestsInit
-	do := def.NowDo()
-	do.Known = false
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the running services.")
-	if err := util.ListAll(do, "services"); err != nil {
-		tests.IfExit(err)
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			tests.IfExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
-		}
-	}
-	// make sure ipfs container does not exist
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = true
-	do.Running = false
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the existing services.")
-	if err := util.ListAll(do, "services"); err != nil {
-		tests.IfExit(err)
-	}
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			tests.IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
-		}
-	}
-
-	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil
 }
