@@ -95,14 +95,16 @@ var filesCached = &cobra.Command{
 // cli flags
 func addFilesFlags() {
 
-	filesImport.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: HASH,FILE")
+	buildFlag(filesImport, do, "csv", "files")
+	//filesImport.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
 	filesImport.Flags().StringVarP(&do.NewName, "dirname", "", "", "name of new directory to dump IPFS files from --csv")
 	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"eris\" for our gateway, or use your own with \"http://yourhost\"")
 	//TODO `put files --dir -r` once pr to ipfs is merged
 	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add all files from a directory (note: this will not create an ipfs object). returns a log file (ipfs_hashes.csv) to pass into `eris files get`")
 
 	//command will ignore fileName but that's ok
-	filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: HASH,FILE")
+	buildFlag(filesCache, do, "csv", "files")
+	//filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
 
 	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
 	filesCached.Flags().StringVarP(&do.Hash, "rm", "", "", "remove a cached file by hash")

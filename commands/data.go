@@ -121,8 +121,12 @@ var dataRm = &cobra.Command{
 
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
-	dataRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
-	dataExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
+
+	buildFlag(dataRm, do, "rm-volumes", "data")
+	//dataRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
+
+	buildFlag(dataExec, do, "interactive", "data")
+	//dataExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 
 	dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
 	//	dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
