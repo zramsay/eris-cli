@@ -45,7 +45,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
-	chainConf, err := config.LoadViperConfig(path.Join(BlockchainsPath), chainName, "chain")
+	chainConf, err := config.LoadViperConfig(path.Join(ChainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(path.Join(BlockchainsPath), "default", "chain")
+	cfg, err := config.LoadViperConfig(path.Join(ChainsPath), "default", "chain")
 	if err != nil {
 		return err
 	}

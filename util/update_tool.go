@@ -5,12 +5,20 @@ import (
 	"os"
 	"os/exec"
 	"path"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func UpdateEris(branch string) {
 
 	//check that git/go are installed
 	CheckGitAndGo(true, true)
+
+	//checks for deprecated dir names and renames them
+	err := MigrateDeprecatedDirs(common.DirsToMigrate, false) // false = no prompt
+	if err != nil {
+		logger.Printf("directory migration error: %v\ncontinuing with update without migration\n", err)
+	}
 
 	//change pwd to eris/cli
 	ChangeDirectory()
@@ -25,7 +33,7 @@ func UpdateEris(branch string) {
 	InstallEris()
 	ver := version() //because version.Version will be in RAM.
 
-	logger.Printf("The marmots have updated eris successfully.\n%s", ver)
+	logger.Printf("The marmots have updated eris successfully.\n%s\n", ver)
 }
 
 func CheckGitAndGo(git, gO bool) {

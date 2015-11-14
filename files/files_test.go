@@ -9,12 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
+	tests "github.com/eris-ltd/eris-cli/testings"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -27,7 +26,7 @@ func fatal(t *testing.T, err error) {
 	if !DEAD {
 		log.Flush()
 		testKillIPFS(t)
-		testsTearDown()
+		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
 	}
@@ -48,13 +47,12 @@ func TestMain(m *testing.M) {
 
 	file = path.Join(erisDir, "temp")
 
-	ifExit(testsInit())
-
+	tests.IfExit(testsInit())
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		testKillIPFS(nil)
-		ifExit(testsTearDown())
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -96,46 +94,19 @@ func TestGetFiles(t *testing.T) {
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
+	if err := tests.TestsInit("files"); err != nil {
+		return err
+	}
 
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := definitions.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	ifExit(ini.Initialize(do))
-
-	// dump a test file with some stuff
 	f, err := os.Create(file)
-	ifExit(err)
+	tests.IfExit(err)
 	f.Write([]byte(content))
 
 	do1 := definitions.NowDo()
 	do1.Operations.Args = []string{"ipfs"}
 	err = services.StartService(do1)
-	ifExit(err)
+	tests.IfExit(err)
 	time.Sleep(5 * time.Second)
-
-	return nil
-}
-
-func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
-	}
 
 	return nil
 }
@@ -151,14 +122,5 @@ func testKillIPFS(t *testing.T) {
 	do.RmD = true
 	if e := services.KillService(do); e != nil {
 		t.Fatal(e)
-	}
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
 	}
 }

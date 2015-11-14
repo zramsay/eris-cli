@@ -3,31 +3,31 @@ package services
 import (
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	tests "github.com/eris-ltd/eris-cli/testings"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var srv *def.ServiceDefinition
-var erisDir string = path.Join(os.TempDir(), "eris")
+
 var servName string = "ipfs"
 var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 
+//[zr] is basically a weird version of ifExit ..?
 func fatal(t *testing.T, err error) {
 	if !DEAD {
 		log.Flush()
-		testsTearDown()
+		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
 	}
@@ -42,13 +42,13 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(testsInit())
+	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
 	logger.Infoln("Commensing with Tests Tear Down.")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		ifExit(testsTearDown())
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -60,15 +60,15 @@ func TestKnownService(t *testing.T) {
 	do.Existing = false
 	do.Running = false
 	do.Operations.Args = []string{"testing"}
-	ifExit(util.ListAll(do, "services"))
+	tests.IfExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 3 {
-		ifExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
+		tests.IfExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
 	}
 
 	if k[1] != "ipfs" {
-		ifExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
+		tests.IfExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
 	}
 }
 
@@ -246,7 +246,7 @@ func TestImportService(t *testing.T) {
 		logger.Infof("Error starting service =>\t%v\n", e)
 		fatal(t, e)
 	}
-	time.Sleep(5 * time.Second)
+	time.Sleep(7 * time.Second)
 
 	servName := "eth"
 	do.Name = servName
@@ -430,65 +430,9 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	var exist, run bool
-	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", servName, toRun, toExist)
-	servName = util.ServiceContainersName(servName, containerNumber)
-
-	do := def.NowDo()
-	do.Known = false
-	do.Existing = true
-	do.Running = false
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	if err := util.ListAll(do, "services"); err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			exist = true
-		}
-	}
-
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	if err := util.ListAll(do, "services"); err != nil {
-		ifExit(err)
-	}
-
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Running =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			run = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Printf("Could not find an existing =>\t%s\n", servName)
-		} else {
-			logger.Printf("Found an existing instance of %s when I shouldn't have\n", servName)
-		}
+	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
 		fatal(t, nil)
 	}
-
-	if toRun != run {
-		if toRun {
-			logger.Printf("Could not find a running =>\t%s\n", servName)
-		} else {
-			logger.Printf("Found a running instance of %s when I shouldn't have\n", servName)
-		}
-		fatal(t, nil)
-	}
-
-	logger.Infoln("All good.\n")
 }
 
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
@@ -513,81 +457,8 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := def.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	ifExit(ini.Initialize(do))
-
-	// set ipfs endpoint
-	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
-
-	// make sure ipfs not running
-
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the running services.")
-	if err := util.ListAll(do, "services"); err != nil {
-		ifExit(err)
+	if err := tests.TestsInit("services"); err != nil {
+		return err
 	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			ifExit(fmt.Errorf("IPFS service is running.\nPlease stop it with: eris services stop -rx ipfs\n"))
-		}
-	}
-	// make sure ipfs container does not exist
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = true
-	do.Running = false
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the existing services.")
-	if err := util.ListAll(do, "services"); err != nil {
-		ifExit(err)
-	}
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			ifExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
-		}
-	}
-
-	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil
-}
-
-func testsTearDown() error {
-	return os.RemoveAll(erisDir)
-	// return nil
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
-	}
 }

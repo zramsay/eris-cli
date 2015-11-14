@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
@@ -35,6 +36,16 @@ func Initialize(do *definitions.Do) error {
 	if err := InitDefaultServices(do); err != nil {
 		return fmt.Errorf("Error:\tcould not Instantiate default services.\n%s\n", err)
 	}
+
+	var prompt bool
+	if do.Yes || os.Getenv("ERIS_MIGRATE_APPROVE") == "true" {
+		prompt = false
+	} else {
+		prompt = true
+	}
+	if err := util.MigrateDeprecatedDirs(common.DirsToMigrate, prompt); err != nil {
+		return fmt.Errorf("Error:\tcould not migrate directories.\n%s\n", err)
+	}
 	return nil
 }
 
@@ -49,8 +60,8 @@ func InitDefaultServices(do *definitions.Do) error {
 		if err2 := dropDefaults(); err2 != nil {
 			return fmt.Errorf("Error:\tcannot clone services.\nError:\tcannot drop default services.\n%v", err2)
 		}
-		if err2 := cloneRepo(do.Actions, "eris-actions.git", common.ActionsPath); err2 != nil {
-			return fmt.Errorf("Error:\tcannot clone actions.\n%v", err2)
+		if err3 := cloneRepo(do.Actions, "eris-actions.git", common.ActionsPath); err3 != nil {
+			return fmt.Errorf("Error:\tcannot clone actions.\n%v", err3)
 		}
 	} else {
 		logger.Printf("Skip pull param given. Complying.\n")
