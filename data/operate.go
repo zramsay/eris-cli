@@ -99,10 +99,6 @@ func ExecData(do *definitions.Do) error {
 
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		dVer, err := util.DockerClientVersion()
-		if err != nil {
-			return err
-		}
 
 		logger.Infoln("Exporting data container", do.Name)
 
@@ -118,11 +114,6 @@ func ExportData(do *definitions.Do) error {
 
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
-		}
-
-		cont, err := util.DockerClient.InspectContainer(service.ID)
-		if err != nil {
-			return err
 		}
 
 		reader, writer := io.Pipe()
@@ -149,30 +140,6 @@ func ExportData(do *definitions.Do) error {
 		logger.Debugf("Untarring Package from Cont =>\t%s\n", exportPath)
 		if err = util.Untar(reader, do.Name, exportPath); err != nil {
 			return err
-		}
-
-		// docker actually exports to a `_data` folder for volumes
-		//   this section of the function moves whatever docker dumps
-		//   into exportPath/_data into export. ranging through the
-		//   volumes is probably overkill as we could just assume
-		//   that it *was* `_data` but in case docker changes later
-		//   we'll just keep it for now. this is specific to 1.7 and
-		//   below. For 1.8 we do not need to do this.
-		// os.Chdir(exportPath)
-		if dVer <= 1.7 {
-			var unTarDestination string
-			logger.Debugf("Container's Volumes =>\t\t%v\n", cont.Volumes)
-			for k, v := range cont.Volumes {
-				if k == do.Path {
-					unTarDestination = filepath.Base(v)
-				}
-			}
-			logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
-			if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
-				return err
-			}
-		} else {
-			logger.Debugf("Untarring to =>\t\t\t%s\n", exportPath)
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
