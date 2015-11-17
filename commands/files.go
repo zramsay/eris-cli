@@ -11,7 +11,7 @@ import (
 // Flags to add: ipfsHost
 var Files = &cobra.Command{
 	Use:   "files",
-	Short: "Manage Files Needed for Your Application Using IPFS.",
+	Short: "Manage files needed for your application using IPFS.",
 	Long: `The files subcommand is used to import, and export
 files to and from IPFS for use on the host machine.
 
@@ -40,53 +40,54 @@ func buildFilesCommand() {
 }
 
 var filesImport = &cobra.Command{
-	Use:   "get [hash] [fileName]",
+	Use:   "get HASH [FILE]",
 	Short: "Pull files from IPFS via a hash and save them locally.",
 	Long: `Pull files from IPFS via a hash and save them locally.
 
-Optionally pass in a csv with: get --csv=[fileName]`,
+Optionally pass in a CSV with: get --csv=FILE`,
 	Run: FilesGet,
 }
 
 var filesExport = &cobra.Command{
-	Use:   "put [fileName]",
+	Use:   "put FILE",
 	Short: "Post files to IPFS.",
 	Long: `Post files to IPFS.
 
-Optionally post all contents of a directory with: put [dirName] --dir`,
+Optionally post all contents of a directory with: put --dir=DIRNAME`,
 	Run: FilesPut,
 }
 
 var filesCache = &cobra.Command{
-	Use:   "cache [fileHash]",
+	Use:   "cache HASH",
 	Short: "Cache files to IPFS.",
 	Long: `Cache files to IPFS' local daemon.
 
-Caches a files locally via IPFS pin, by hash.
-Optionally pass in a csv with: cache --csv=[fileName]
-Note: "put" will "cache" recursively by default`,
+It caches files locally via IPFS pin, by hash.
+Optionally pass in a CSV with: cache --csv=[FILE].
+
+NOTE: "put" will "cache" recursively by default.`,
 	Run: FilesPin,
 }
 
 var filesCat = &cobra.Command{
-	Use:   "cat [fileHash]",
+	Use:   "cat HASH",
 	Short: "Cat the contents of a file from IPFS.",
 	Long:  "Cat the contents of a file from IPFS.",
 	Run:   FilesCat,
 }
 
 var filesList = &cobra.Command{
-	Use:   "ls [objectHash]",
+	Use:   "ls HASH",
 	Short: "List links from an IPFS object.",
 	//TODO [zr] test listing up and down through DAG
-	Long: "Lists object named by [objectHash/Path] and displays the link it contains.",
+	Long: "List an object named by HASH/FILE and display the link it contains.",
 	Run:  FilesList,
 }
 
 var filesCached = &cobra.Command{
 	Use:   "cached",
-	Short: "Lists files cached locally.",
-	Long:  `Displays list of files cached locally.`,
+	Short: "List files cached locally.",
+	Long:  `Display list of files cached locally.`,
 	Run:   FilesManageCached,
 }
 
@@ -94,14 +95,14 @@ var filesCached = &cobra.Command{
 // cli flags
 func addFilesFlags() {
 
-	filesImport.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
+	filesImport.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: HASH,FILE")
 	filesImport.Flags().StringVarP(&do.NewName, "dirname", "", "", "name of new directory to dump IPFS files from --csv")
 	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"eris\" for our gateway, or use your own with \"http://yourhost\"")
 	//TODO `put files --dir -r` once pr to ipfs is merged
 	filesExport.Flags().BoolVarP(&do.AddDir, "dir", "", false, "add all files from a directory (note: this will not create an ipfs object). returns a log file (ipfs_hashes.csv) to pass into `eris files get`")
 
 	//command will ignore fileName but that's ok
-	filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
+	filesCache.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: HASH,FILE")
 
 	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
 	filesCached.Flags().StringVarP(&do.Hash, "rm", "", "", "remove a cached file by hash")

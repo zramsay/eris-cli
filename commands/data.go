@@ -16,24 +16,24 @@ import (
 // Primary Data Sub-Command
 var Data = &cobra.Command{
 	Use:   "data",
-	Short: "Manage Data Containers for your Application.",
+	Short: "Manage data containers for your application.",
 	Long: `The data subcommand is used to import, and export
 data into containers for use by your application.
 
-eris data import and eris data export should be thought of from
-the point of view of the container.
+The [eris data import] and [eris data export] commands should be 
+thought of from the point of view of the container.
 
-eris data import sends files *as is* from ~/.eris/data/NAME on
-the host to ~/.eris/ inside of the data container.
+The [eris data import] command sends files *as is* from 
+~/.eris/data/NAME on the host to ~/.eris/ inside 
+of the data container.
 
-eris data export performs this process in the reverse. It sucks
-out whatever is in the volumes of the data container and sticks
-it back into ~/.eris/data/NAME on the host.
+The [eris data export] command performs this process in the reverse. 
+It sucks out whatever is in the volumes of the data container 
+and sticks it back into ~/.eris/data/NAME on the host.
 
-At eris, we use this functionality to formulate little jsons
+At Eris, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
-containers"
-`,
+containers"`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -50,7 +50,7 @@ func buildDataCommand() {
 }
 
 var dataImport = &cobra.Command{
-	Use:   "import [name]",
+	Use:   "import NAME",
 	Short: "Import ~/.eris/data/name folder to a named data container",
 	Long:  `Import ~/.eris/data/name folder to a named data container`,
 	Run:   ImportData,
@@ -82,35 +82,35 @@ Exec can also be used as an interactive shell. When put in
 this mode, you can "get inside of" your containers. You will
 have root access to a throwaway container which has the volumes
 of the data container mounted to it.`,
-	Example: `  eris data exec name ls /home/eris/.eris -> will list the eris dir
-  eris data exec name "ls -la /home/eris/.eris" -> will pass flags to the ls command
-  eris data exec --interactive name -> will start interactive console`,
+	Example: `$ eris data exec name ls /home/eris/.eris -- will list the eris dir
+$ eris data exec name "ls -la /home/eris/.eris" -- will pass flags to the ls command
+$ eris data exec --interactive name -- will start interactive console`,
 	Run: ExecData,
 }
 
 var dataRename = &cobra.Command{
-	Use:   "rename [oldName] [newName]",
+	Use:   "rename OLD_NAME NEW_NAME",
 	Short: "Rename a data container",
 	Long:  `Rename a data container`,
 	Run:   RenameData,
 }
 
 var dataInspect = &cobra.Command{
-	Use:   "inspect [name] [key]",
-	Short: "Machine readable details.",
-	Long:  `Displays machine readable details about running containers.`,
+	Use:   "inspect NAME [KEY]",
+	Short: "Show machine readable details.",
+	Long:  `Display machine readable details about running containers.`,
 	Run:   InspectData,
 }
 
 var dataExport = &cobra.Command{
-	Use:   "export [name] [folder]",
+	Use:   "export NAME DIRECTORY",
 	Short: "Export a named data container's volumes to ~/.eris/data/name",
 	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
 	Run:   ExportData,
 }
 
 var dataRm = &cobra.Command{
-	Use:   "rm [name]",
+	Use:   "rm NAME",
 	Short: "Remove a data container",
 	Long:  `Remove a data container`,
 	Run:   RmData,

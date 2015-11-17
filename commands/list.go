@@ -8,18 +8,14 @@ import (
 
 var ListEverything = &cobra.Command{
 	Use:   "ls",
-	Short: "Lists all the things eris knows about.",
-	Long: `Lists all known definition files for services
-and chains. Also lists all existing and running services and 
-chains and, data containers. 
+	Short: "List all the things eris knows about.",
+	Long: `List all known definition files for services
+and chains. Also lists all existing and running services and
+chains and, data containers.
 
-For more specific output, use:
-
-	$ eris services ls
-	$ eris chains ls
-	$ eris data ls
-
-with respective flags (--known, --existing, --running).`,
+For more detailed output, use [eris services ls], [eris chains ls], 
+and [eris data ls] commands with respective flags (--known, --existing, 
+--running).`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		ListAllTheThings()

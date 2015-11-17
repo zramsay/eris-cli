@@ -17,8 +17,8 @@ import (
 // flags to add: --global --project
 var Actions = &cobra.Command{
 	Use:   "actions",
-	Short: "Manage and Perform Structured Actions.",
-	Long: `Display and Manage actions for various components of the
+	Short: "Manage and perform structured actions.",
+	Long: `Display and manage actions for various components of the
 Eris platform and for the platform itself.
 
 Actions are bundles of commands which rely upon a project
@@ -54,20 +54,18 @@ func buildActionsCommand() {
 
 // Actions Sub-sub-Commands
 var actionsImport = &cobra.Command{
-	Use:   "import [name] [location]",
+	Use:   "import NAME LOCATION",
 	Short: "Import an action definition file from Github or IPFS.",
 	Long: `Import an action definition for your platform.
 
-By default, Eris will import from ipfs.
-
-To list known actions use: [eris actions known].`,
-	Example: "  eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
+By default, Eris will import from ipfs.`,
+	Example: "$ eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run:     ImportAction,
 }
 
 // flags to add: template
 var actionsNew = &cobra.Command{
-	Use:   "new [name]",
+	Use:   "new NAME",
 	Short: "Create a new action definition file.",
 	Long:  `Create a new action definition file optionally from a template.`,
 	Run:   NewAction,
@@ -82,7 +80,7 @@ var actionsList = &cobra.Command{
 }
 
 var actionsDo = &cobra.Command{
-	Use:   "do [name]",
+	Use:   "do NAME",
 	Short: "Perform an action.",
 	Long: `Perform an action according to the action definition file.
 
@@ -104,41 +102,39 @@ command line.
 
 The shells will be passed the host's environment as
 well as any additional env vars added to the action
-definition file.
-`,
-	Example: `  eris actions do dns register -> will run the ~/.eris/actions/dns_register action def file
-  eris actions do dns register name:cutemarm ip:111.111.111.111 -> will populate $name and $ip
-  eris actions do dns register cutemarm 111.111.111.111 -> will populate $1 and $2`,
+definition file.`,
+	Example: `$ eris actions do dns register -- will run the ~/.eris/actions/dns_register action def file
+$ eris actions do dns register name:cutemarm ip:111.111.111.111 -- will populate $name and $ip
+$ eris actions do dns register cutemarm 111.111.111.111 -- will populate $1 and $2`,
 	Run: DoAction,
 }
 
 var actionsEdit = &cobra.Command{
-	Use:   "edit [name]",
+	Use:   "edit NAME",
 	Short: "Edit an action definition file.",
 	Long:  `Edit an action definition file in the default editor.`,
 	Run:   EditAction,
 }
 
 var actionsExport = &cobra.Command{
-	Use:   "export [chainName]",
+	Use:   "export NAME",
 	Short: "Export an action definition file to IPFS.",
 	Long: `Export an action definition file to IPFS.
 
-Command will return a machine readable version of the IPFS hash
-`,
+Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportAction,
 }
 
 var actionsRename = &cobra.Command{
-	Use:     "rename [old] [new]",
+	Use:     "rename OLD_NAME NEW_NAME",
 	Short:   "Rename an action.",
 	Long:    `Rename an action.`,
-	Example: "  eris actions rename \"old action name\" \"new action name\"",
+	Example: "$ eris actions rename OLD_NAME NEW_NAME",
 	Run:     RenameAction,
 }
 
 var actionsRemove = &cobra.Command{
-	Use:   "remove [name]",
+	Use:   "remove NAME",
 	Short: "Remove an action definition file.",
 	Long:  `Remove an action definition file.`,
 	Run:   RmAction,
