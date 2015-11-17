@@ -119,11 +119,10 @@ func ExportData(do *definitions.Do) error {
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
-		if do.Path != "" {
-			do.Path = do.Path
-		} else {
-			do.Path = "/home/eris/.eris"
+		if do.Path == "" {
+			do.Path = ErisContainerRoot
 		}
+
 		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
 			//	Container:    service.ID,
@@ -150,7 +149,13 @@ func ExportData(do *definitions.Do) error {
 
 		// // finally remove everything in the data directory and move
 		// //   the temp contents there
-		prevDir := filepath.Join(DataContainersPath, do.Name)
+		var prevDir string
+		if do.Name == "keys" { //hack for `eris keys export`
+			prevDir = do.ErisPath
+		} else {
+			prevDir = filepath.Join(do.ErisPath, do.Name)
+		}
+
 		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
 			if e2 := os.MkdirAll(prevDir, 0755); e2 != nil {
 				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)

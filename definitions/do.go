@@ -44,6 +44,7 @@ type Do struct {
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Image         string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ErisPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`

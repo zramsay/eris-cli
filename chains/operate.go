@@ -432,3 +432,43 @@ func copyFiles(dst string, files []stringPair) error {
 	}
 	return nil
 }
+
+func CleanUp(do *definitions.Do) error {
+	logger.Infof("Commensing CleanUp.\n")
+	do.Force = true
+
+	if do.Chain.ChainType == "throwaway" {
+		logger.Debugf("Destroying Throwaway Chain =>\t%s\n", do.Chain.Name)
+		doRm := definitions.NowDo()
+		doRm.Operations = do.Operations
+		doRm.Name = do.Chain.Name
+		doRm.Rm = true
+		doRm.RmD = true
+		doRm.Volumes = true
+		KillChain(doRm)
+
+		if doRm.Name == "default" {
+			logger.Debugf("Removing latent files/dirs =>\t%s\n", path.Join(DataContainersPath, do.Chain.Name))
+			os.RemoveAll(path.Join(DataContainersPath, do.Chain.Name))
+		} else {
+			logger.Debugf("Removing latent files/dirs =>\t%s:%s\n", path.Join(DataContainersPath, do.Chain.Name), path.Join(ChainsPath, do.Chain.Name+".toml"))
+			os.RemoveAll(path.Join(DataContainersPath, do.Chain.Name))
+			os.Remove(path.Join(ChainsPath, do.Chain.Name+".toml"))
+		}
+
+	} else {
+		logger.Debugf("No Throwaway Chain to destroy.\n")
+	}
+
+	if do.RmD {
+		logger.Debugf("Removing data dir on host =>\t%s\n", path.Join(DataContainersPath, do.Service.Name))
+		os.RemoveAll(path.Join(DataContainersPath, do.Service.Name))
+	}
+
+	if do.Rm {
+		logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
+		perform.DockerRemove(do.Service, do.Operations, true, true)
+	}
+
+	return nil
+}

@@ -177,6 +177,7 @@ func ImportData(cmd *cobra.Command, args []string) {
 func ExportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	do.ErisPath = DataContainersPath
 	setDefaultDir()
 	IfExit(data.ExportData(do))
 }

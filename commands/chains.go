@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
+	def "github.com/eris-ltd/eris-cli/definitions"
+	srv "github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -59,6 +61,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
+	Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
 
@@ -342,6 +345,21 @@ Command will cat local chains definition file.`,
 	Run: CatChain,
 }
 
+var chainsMakeGenesis = &cobra.Command{
+	Use:   "make-genesis NAME KEY",
+	Short: "Generates a genesis file.",
+	Long: `Generates a genesis file with chainNAME and a single pubkey.
+
+	Command is equivalent to:
+		$ eris chains exec someChain "mintgen known NAME [KEY]"
+
+	but does not require a pre-existing chain to execute.
+
+	see https://github.com/eris-ltd/mint-client 
+	for more info on the mint client tools`,
+	Run: MakeGenesisFile,
+}
+
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
@@ -608,4 +626,43 @@ func CatChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.CatChain(do))
+}
+
+func MakeGenesisFile(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))
+
+	//otherwise it'll start its own keys server that won't have the key needed...
+	do.Name = "keys"
+	IfExit(srv.EnsureRunning(do))
+
+	doThr := def.NowDo()
+	doThr.Chain.ChainType = "throwaway" //for teardown
+	doThr.Name = "default"
+	doThr.Operations.ContainerNumber = 1
+	doThr.Operations.PublishAllPorts = true
+
+	logger.Infof("Starting chain from MakeGenesisFile =>\t%s\n", doThr.Name)
+	if er := chns.StartChain(doThr); er != nil {
+		fmt.Printf("error starting chain %v\n", er)
+	}
+
+	chainName := strings.TrimSpace(args[0])
+	pubkey := strings.TrimSpace(args[1])
+
+	doThr.Operations.Args = []string{"mintgen", "known", chainName, fmt.Sprintf("--pub=%s", pubkey)}
+	doThr.Chain.Name = "default" //for teardown
+
+	// pipe this output to /chains/chainName/genesis.json
+	err := chns.ExecChain(doThr)
+	if err != nil {
+		fmt.Printf("exec chain err: %v\n", err)
+		do.Rm = true
+		do.RmD = true
+		IfExit(chns.CleanUp(doThr))
+	}
+
+	do.Rm = true
+	do.RmD = true
+	defer chns.CleanUp(doThr) // doesn't clean up keys but that's ~ ok b/c it's about to be used...
+
 }

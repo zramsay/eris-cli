@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 
 	logLevel = 0
 	// logLevel = 1
-	// logLevel = 3
+	//logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -80,6 +80,7 @@ func TestExecData(t *testing.T) {
 func TestExportData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
+	do.ErisPath = common.DataContainersPath
 	do.Operations.ContainerNumber = 1
 	if err := ExportData(do); err != nil {
 		logger.Errorln(err)
