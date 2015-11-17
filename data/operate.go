@@ -68,7 +68,7 @@ func ImportData(do *definitions.Do) error {
 		doStuff.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
 		_, err = perform.DockerRunVolumesFromContainer(doStuff.Operations, nil)
 		if err != nil {
-			return fmt.Errorf("fack: %v\n", err)
+			return fmt.Errorf("Error changing owner: %v\n", err)
 		}
 	} else {
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
