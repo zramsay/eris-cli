@@ -208,7 +208,6 @@ func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (re
 //  ops.CapAdd            - add linux capabilities (similar to `docker run --cap-add=[]`)
 //  ops.CapDrop           - add linux capabilities (similar to `docker run --cap-drop=[]`)
 //  ops.Privileged        - if true, give extended privileges
-//  ops.Attach            - if true, attach terminal
 //  ops.Restart           - container restart policy ("always", "max:<#attempts>"
 //                          or never if unspecified)
 //
@@ -874,9 +873,16 @@ func startContainer(id string, opts *docker.CreateContainerOptions) error {
 }
 
 func attachContainer(id string, attached chan struct{}) error {
+	// Use a proxy pipe between os.Stdin and an attached container, so that
+	// when the reader end of the pipe is closed, os.Stdin is still open.
+	reader, writer := io.Pipe()
+	go func() {
+		io.Copy(writer, os.Stdin)
+	}()
+
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
-		InputStream:  os.Stdin,
+		InputStream:  reader,
 		OutputStream: config.GlobalConfig.Writer,
 		ErrorStream:  config.GlobalConfig.ErrorWriter,
 		Logs:         true,
@@ -981,6 +987,7 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) (docker
 	opts.Config.User = "root"
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
+
 	if ops.Interactive {
 		// if there are args, we overwrite the entrypoint
 		// else we just start an interactive shell
@@ -1060,13 +1067,6 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	}
 	if srv.WorkDir != "" {
 		opts.Config.WorkingDir = srv.WorkDir
-	}
-
-	if ops.Attach {
-		opts.Config.AttachStdin = true
-		opts.Config.AttachStdout = true
-		opts.Config.AttachStderr = true
-		opts.Config.OpenStdin = true
 	}
 
 	if ops.Restart == "always" {
