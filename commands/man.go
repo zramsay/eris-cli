@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/docker/docker/pkg/term"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
