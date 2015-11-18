@@ -25,6 +25,7 @@ type Do struct {
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`

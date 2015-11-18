@@ -10,20 +10,24 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
+	"github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 var ManPage = &cobra.Command{
 	Use:   "man",
 	Short: "Display a man page.",
-	Long:  `Display or dump the Eris man page.`,
+	Long:  `Display the Eris man page.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		man := new(bytes.Buffer)
 
 		GenerateManPage(man)
 		DisplayManPage(man)
 	},
+}
+
+func buildManCommand() {
+	ManPage.Flags().BoolVarP(&do.Dump, "dump", "", false, "dump the man page source")
 }
 
 // GenerateManPages uses the Cobra commands' info to construct a man page.
@@ -59,17 +63,14 @@ func generateEpilogue(man *bytes.Buffer) {
 // DisplayManPage runs the groff(1) formatter on a buffer
 // and then starts a pager to display the result.
 func DisplayManPage(in *bytes.Buffer) {
-	// If not a terminal, just dump the man page to stdout:
-	//
-	//  $ eris man > eris.1
-	//
-	if !term.IsTerminal(os.Stdout.Fd()) {
+	// Dump the man page source.
+	if do.Dump {
 		fmt.Println(in)
 		return
 	}
 
 	out := new(bytes.Buffer)
-	nroff := exec.Command("nroff", "-mdoc")
+	nroff := exec.Command("nroff", "-mdoc", "-Tascii")
 	nroff.Stdin = in
 	nroff.Stdout = out
 	nroff.Run()
@@ -80,8 +81,14 @@ func DisplayManPage(in *bytes.Buffer) {
 		w.Close()
 	}(w, out)
 
+	// If not a terminal, don't run less(1).
+	if !term.IsTerminal(os.Stdout.Fd()) {
+		fmt.Println(out)
+		return
+	}
+
 	// Behave like less(1), which ignores SIGINT. more(1), on the other hand,
-	// handles SIGINT, but ignoring it doesn't harm.
+	// handles SIGINT, but ignoring it doesn't harm here.
 	// Ignoring the interrupt signal is important, because interrupting
 	// less(1) leaves the terminal in a broken state.
 	signal.Notify(make(chan os.Signal, 1), os.Interrupt)
