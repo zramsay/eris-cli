@@ -7,12 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	//chn "github.com/eris-ltd/eris-cli/chains"
-	//"github.com/eris-ltd/eris-cli/data"
-	//"github.com/eris-ltd/eris-cli/definitions"
-	//srv "github.com/eris-ltd/eris-cli/services"
-	//"github.com/eris-ltd/eris-cli/util"
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -64,7 +58,7 @@ func defaultClean(prompt bool) error {
 		fmt.Printf("List containers error: %v\n", err)
 	}
 
-	if prompt || canWeRemove([]string{}, "all") {
+	if !prompt || canWeRemove([]string{}, "all") {
 		for _, container := range contns {
 			if container.Labels["eris:ERIS"] == "true" {
 
