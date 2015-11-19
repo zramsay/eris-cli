@@ -177,7 +177,8 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 }
 
 func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
-	logger.Infof("Performing App Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
+	logger.Println("Performing Action. This can sometimes take a wee while.")
+	logger.Infof("\t=>\t\t\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
 	do.Operations.ContainerType = definitions.TypeService
 	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
