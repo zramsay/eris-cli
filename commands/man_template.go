@@ -147,9 +147,10 @@ var manHelpers = map[string]interface{}{
 	"escape": func(text string) string {
 		// See groff_char(7).
 		text = strings.Replace(text, `\`, `\\`, -1)
-		text = strings.Replace(text, `♥`, `\[HE]`, -1)
 		text = strings.Replace(text, `'`, `\[aq]`, -1)
 		text = strings.Replace(text, `"`, `\[dq]`, -1)
+		text = strings.Replace(text, `<`, `\[la]`, -1)
+		text = strings.Replace(text, `>`, `\[ra]`, -1)
 
 		// Replace empty strings with an empty string formatter.
 		//

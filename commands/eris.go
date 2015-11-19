@@ -25,7 +25,7 @@ var ErisCmd = &cobra.Command{
 distributed applications with a blockchain backend. Eris makes it easy
 and simple to wrangle the dragons of smart contract blockchains.
 
-Made with ♥ by Eris Industries.
+Made with <3 by Eris Industries.
 
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
@@ -86,10 +86,10 @@ func AddCommands() {
 	buildUpdateCommand()
 	ErisCmd.AddCommand(Update)
 	ErisCmd.AddCommand(ManPage)
+	buildManCommand()
 
 	ErisCmd.SetHelpCommand(Help)
 	ErisCmd.SetHelpTemplate(helpTemplate)
-
 }
 
 // Global Do struct
