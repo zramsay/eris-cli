@@ -24,7 +24,6 @@ type Do struct {
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Volumes       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -60,6 +59,10 @@ type Do struct {
 	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
+	//clean
+	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Uninstall bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Volumes   bool `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`
