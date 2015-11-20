@@ -32,7 +32,7 @@ type Parts struct {
 func PrintInspectionReport(cont *docker.Container, field string) error {
 	switch field {
 	case "line":
-		parts, err := printLine(cont)
+		parts, err := printLine(cont, false) //can only inspect a running container...?
 		if err != nil {
 			return err
 		}
@@ -73,7 +73,7 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 		}
 	} else {
 		for _, c := range conts {
-			n, _ := PrintLineByContainerName(c.FullName)
+			n, _ := PrintLineByContainerName(c.FullName, existing)
 			if typ == "chain" {
 				head, _ := GetHead()
 				if n[0] == head {
@@ -95,20 +95,20 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 	return buf.String(), nil
 }
 
-func PrintLineByContainerName(containerName string) ([]string, error) {
+func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
 	cont, exists := ParseContainers(containerName, true)
 	if exists {
-		return PrintLineByContainerID(cont.ID)
+		return PrintLineByContainerID(cont.ID, existing)
 	}
 	return nil, nil //fail silently
 }
 
-func PrintLineByContainerID(containerID string) ([]string, error) {
+func PrintLineByContainerID(containerID string, existing bool) ([]string, error) {
 	cont, err := DockerClient.InspectContainer(containerID)
 	if err != nil {
 		return nil, err
 	}
-	return printLine(cont)
+	return printLine(cont, existing)
 }
 
 func PrintPortMappings(id string, ports []string) error {
@@ -134,16 +134,23 @@ func PrintPortMappings(id string, ports []string) error {
 }
 
 // this function populates the listing functions only for flags/tests
-func printLine(container *docker.Container) ([]string, error) {
+func printLine(container *docker.Container, existing bool) ([]string, error) {
 	tmp, err := reflections.GetField(container, "Name")
 	if err != nil {
 		return nil, err
 	}
 	n := tmp.(string)
 
+	var running string
+	if !existing {
+		running = "Yes"
+	} else {
+		running = "No"
+	}
+
 	Names := ContainerDisassemble(n)
 
-	parts := []string{Names.ShortName, Names.Type, Names.FullName, fmt.Sprintf("%d", Names.Number), formulatePortsOutput(container)}
+	parts := []string{Names.ShortName, Names.Type, running, Names.FullName, fmt.Sprintf("%d", Names.Number), formulatePortsOutput(container)}
 	return parts, nil
 }
 
@@ -266,7 +273,7 @@ func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
 				if r.MatchString(n) {
 					logger.Debugf("Container Found =>\t\t%s\n", name)
 					return container, true
-				// } else {
+					// } else {
 					// logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 				}
 			}
