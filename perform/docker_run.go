@@ -379,6 +379,14 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation) error {
 		}
 	}
 
+	defer func() {
+		logger.Infof("Removing container =>\t\t%s\n", optsServ.Name)
+		if err := removeContainer(optsServ.Name, false); err != nil {
+			fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", optsServ.Name, err)
+		}
+		logger.Infof("Container removed =>\t\t%s\n", optsServ.Name)
+	}()
+
 	_, err = createContainer(optsServ)
 	if err != nil {
 		return err
@@ -422,14 +430,6 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation) error {
 	if err := startContainer(optsServ.Name, &optsServ); err != nil {
 		return err
 	}
-
-	defer func() {
-		logger.Infof("Removing container =>\t\t%s\n", optsServ.Name)
-		if err := removeContainer(optsServ.Name, false); err != nil {
-			fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", optsServ.Name, err)
-		}
-		logger.Infof("Container removed =>\t\t%s\n", optsServ.Name)
-	}()
 
 	// Wait for a console prompt to appear.
 	_, ok := <-attached

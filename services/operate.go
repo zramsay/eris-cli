@@ -97,16 +97,24 @@ func ExecService(do *definitions.Do) error {
 
 	util.Merge(service.Operations, do.Operations)
 
-	// get main service containers name
-	cname := util.ContainersName("service", do.Name, 1) // TODO: N
-	if service.Service.ExecHost == "" {
-		logger.Errorf("Warning: exec_host not found in service definition file. May not be able to communicate with %s\n", cname)
-	} else {
-		service.Service.Environment = append(service.Service.Environment, fmt.Sprintf("%s=localhosty", service.Service.ExecHost))
+	// Get the main service container name, check if it's running.
+	main := util.FindServiceContainer(do.Name, do.Operations.ContainerNumber, false)
+	if main != nil {
+		if service.Service.ExecHost == "" {
+			logger.Infof("Warning: exec_host not found in service definition file. May not be able to communicate with %q service\n", do.Name)
+		} else {
+			service.Service.Environment = append(service.Service.Environment,
+				fmt.Sprintf("%s=%s", service.Service.ExecHost, do.Name))
+		}
+
+		// Use service's short name as a link alias.
+		service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:%s", main.FullName, do.Name))
 	}
 
-	// link us to the main service container (TODO: use something better than localhosty)
-	service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:localhosty", cname))
+	// Override links on the command line.
+	if len(do.Links) > 0 {
+		service.Service.Links = do.Links
+	}
 
 	return StartServiceInteractiveByService(service.Service, service.Operations)
 }
