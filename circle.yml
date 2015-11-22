@@ -24,4 +24,8 @@ deployment:
     branch: master
     commands:
       - docker push quay.io/eris/eris
+      - docs/build.sh master
+  develop:
+    branch: develop
+    commands:
       - docs/build.sh

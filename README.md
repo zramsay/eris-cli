@@ -8,11 +8,9 @@ applications with a blockchain backend. Eris makes it easy and simple to wrangle
 the dragons of smart contract blockchains.
 ```
 
-`eris` is a tool which makes it easy for developers to build, test, manage, and operate distributed applications.
+`eris:cli` is a tool which makes it easy for developers to build, test, manage, and operate smart contract applications. **No matter the blockchain**.
 
-**No matter the blockchain**.
-
-[For the motivation behind this tool](https://github.com/eris-ltd/eris-cli/blob/master/docs/motivation.md).
+[For the motivation behind this tool see this post](https://docs.erisindustries.com/documentation/eris-cli/latest/motivation/).
 
 # Install
 
@@ -26,14 +24,14 @@ eris init
 
 Please see our [getting started page](https://docs.erisindustries.com/tutorials/getting-started/) for those who no familiar with go and/or docker.
 
-# Eris: Overview
+# Overview
 
 The `eris` tool is centered around a very few concepts:
 
 * `services` -- things that you turn on or off
 * `chains` -- develop permissioned chains
+* `contracts` -- our smart contract tool chain
 * `actions` -- step by step processes
-* `contracts` -- the newest iteration of our smart contract tool chain
 
 These concepts (along with a few other goodies) provide the core functionality of what we think a true distributed application would look like.
 
