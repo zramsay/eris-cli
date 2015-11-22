@@ -22,7 +22,7 @@ branch=${branch/-/_}
 #   then change the authoritative one to use that. We define "authoritative" to mean "what docker
 #   installs by default on Linux"
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" "1.8.3" )
-declare -a docker_versions19=( "1.9.0" )
+declare -a docker_versions19=( "1.9.0" "1.9.1" )
 declare -a machine_results=()
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
@@ -183,6 +183,11 @@ else
     runTests "local"
   fi
 
+  for ver in "${docker_versions18[@]}"
+  do
+    runTests "docker18"
+  done
+
   for ver in "${docker_versions19[@]}"
   do
 
@@ -200,11 +205,6 @@ else
       branch="master"
     fi
 
-  done
-
-  for ver in "${docker_versions18[@]}"
-  do
-    runTests "docker18"
   done
 
 fi
