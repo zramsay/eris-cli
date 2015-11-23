@@ -32,6 +32,7 @@ eris cli to manipulate blockchains smartcontracts
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}/%{_bindir}
+%{home}/eris man --dump > %{_mandir}/man1/eris.1
 install %{home}/eris ${RPM_BUILD_ROOT}/%{_bindir}
 
 %files

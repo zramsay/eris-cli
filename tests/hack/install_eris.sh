@@ -39,16 +39,16 @@ echo_docker_as_nonroot() {
   your_user=your-user
   [ "$user" != 'root' ] && your_user="$user"
   # intentionally mixed spaces and tabs here -- tabs are stripped by "<<-EOF", spaces are kept in the output
-  cat <<-EOF
+  # cat <<-EOF
 
-  If you would like to use Docker as a non-root user, you should now consider
-  adding your user to the "docker" group with something like:
+  # If you would like to use Docker as a non-root user, you should now consider
+  # adding your user to the "docker" group with something like:
 
-    sudo usermod -aG docker $your_user
+  #   sudo usermod -aG docker $your_user
 
-  Remember that you will have to log out and back in for this to take effect!
+  # Remember that you will have to log out and back in for this to take effect!
 
-  EOF
+  # EOF
 
 }
 
