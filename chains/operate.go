@@ -129,7 +129,7 @@ func startChain(do *definitions.Do, exec bool) error {
 	}
 	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
-	logger.Infof("StartChainRaw to DockerRun =>\t%s\n", chain.Service.Name)
+	logger.Infof("StartChainRaw to DockerRunService =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith ChainID =>\t\t%v\n", chain.ChainID)
 	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
 	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
@@ -144,9 +144,9 @@ func startChain(do *definitions.Do, exec bool) error {
 		// the perform package will respect the images entryPoint if it
 		// exists.
 		chain.Service.EntryPoint = ""
-		err = perform.DockerRunInteractive(chain.Service, chain.Operations)
+		err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
-		err = perform.DockerRun(chain.Service, chain.Operations)
+		err = perform.DockerRunService(chain.Service, chain.Operations)
 	}
 	if err != nil {
 		do.Result = "error"
@@ -173,7 +173,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 			if !services.IsServiceRunning(srv.Service, srv.Operations) {
 				name := strings.ToUpper(do.Name)
 				logger.Infof("%s is not running. Starting now. Waiting for %s to become available \n", name, name)
-				if err = perform.DockerRun(srv.Service, srv.Operations); err != nil {
+				if err = perform.DockerRunService(srv.Service, srv.Operations); err != nil {
 					return err
 				}
 			}
@@ -229,7 +229,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// ensure/create data container
 	if !data.IsKnown(do.Name) {
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
-		if err := perform.DockerCreateDataContainer(ops); err != nil {
+		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
 	} else {
@@ -375,7 +375,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	logger.Debugf("Starting chain via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
 
-	err = perform.DockerRun(chain.Service, chain.Operations)
+	err = perform.DockerRunService(chain.Service, chain.Operations)
 	// this err is caught in the defer above
 
 	return

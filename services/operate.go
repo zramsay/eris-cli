@@ -116,7 +116,7 @@ func ExecService(do *definitions.Do) error {
 		service.Service.Links = do.Links
 	}
 
-	return StartServiceInteractiveByService(service.Service, service.Operations)
+	return perform.DockerExecService(service.Service, service.Operations)
 }
 
 // TODO: test this recursion and service deps generally
@@ -145,7 +145,7 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
 		logger.Debugf("Telling Docker to start srv =>\t%s\n", srv.Name)
-		if err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
+		if err := perform.DockerRunService(srv.Service, srv.Operations); err != nil {
 			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
 		}
 	}
@@ -198,22 +198,4 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 
 	util.Merge(s.Operations, srv.Operations)
 	return s, nil
-}
-
-// ------------------------------------------------------------------------------------------
-// Wrappers we want to be able to call from Chains package (mostly)
-func StartServiceInteractiveByService(srvMain *definitions.Service, ops *definitions.Operation) error {
-	return perform.DockerRunInteractive(srvMain, ops)
-}
-
-func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
-	return perform.DockerRun(srvMain, ops)
-}
-
-func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, follow bool, tail string) error {
-	return perform.DockerLogs(srv, ops, follow, tail)
-}
-
-func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation, timeout uint) error {
-	return perform.DockerStop(srvMain, ops, timeout)
 }

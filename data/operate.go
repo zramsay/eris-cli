@@ -66,13 +66,13 @@ func ImportData(do *definitions.Do) error {
 		doStuff.Operations.ContainerType = "data"
 		doStuff.Operations.ContainerNumber = 1
 		doStuff.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
-		_, err = perform.DockerRunVolumesFromContainer(doStuff.Operations, nil)
+		_, err = perform.DockerRunData(doStuff.Operations, nil)
 		if err != nil {
 			return fmt.Errorf("Error changing owner: %v\n", err)
 		}
 	} else {
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
-		if err := perform.DockerCreateDataContainer(ops); err != nil {
+		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
 		return ImportData(do)
@@ -87,7 +87,7 @@ func ExecData(do *definitions.Do) error {
 
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		util.Merge(ops, do.Operations)
-		if _, err := perform.DockerRunVolumesFromContainer(ops, nil); err != nil {
+		if err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
 	} else {

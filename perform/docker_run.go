@@ -26,21 +26,16 @@ var (
 	ErrContainerExists = errors.New("container exists")
 )
 
-// DockerCreateDataContainer creates a Docker container of type data specified
-// by a short name and a number. It returns ErrContainerExists if such a data
-// container exists or Docker library errors. DockerCreateDataContainer returns
-// Docker errors on exit if not successful.
+// DockerCreateData creates a blank data container. It returns ErrContainerExists
+// if such a container exists or other Docker errors.
 //
 //  ops.DataContainerName  - data container name to be created
 //  ops.ContainerType      - container type
 //  ops.ContainerNumber    - container number
 //  ops.Labels             - container creation time labels (use LoadDataDefinition)
 //
-func DockerCreateDataContainer(ops *def.Operation) error {
+func DockerCreateData(ops *def.Operation) error {
 	logger.Infof("Creating Data Container for =>\t%s\n", ops.DataContainerName)
-
-	// Mock for the query function.
-	ops.SrvContainerName = ops.DataContainerName
 
 	if _, exists := ContainerExists(ops); exists {
 		logger.Infoln("Data container exists. Not creating.")
@@ -52,49 +47,38 @@ func DockerCreateDataContainer(ops *def.Operation) error {
 		return err
 	}
 
-	cont, err := createContainer(optsData)
+	_, err = createContainer(optsData)
 	if err != nil {
 		return err
 	}
 
-	logger.Infof("Data Container ID =>\t\t%s\n", cont.ID)
+	logger.Infof("Data Container ID =>\t\t%s\n", optsData.Name)
 	return nil
 }
 
-// DockerRunVolumesFromContainer creates a container with volumes-from field set to
-// the data container specified by DataContainerName in ops, and either
-// attaches it interactively or executes a command in it. The container is
-// destroyed on exit. If service parameter is specified, the command inherits
-// the service settings from that container.
+// DockerRunData runs a data container with the volumes-from option set.
+// The container is destroyed on exit; the container log is returned as a byte stream.
+// If service parameter is specified, the command inherits the service settings
+// from that container.
 //
 //  ops.DataContainerName - container name to be mount with `--volumes-from=[]` option.
 //  ops.ContainerType     - container type
 //  ops.ContainerNumber   - container number
 //  ops.Labels            - container creation time labels (use LoadDataDefinition)
-//  ops.Interactive       - if true, run the container interactively
 //  ops.Args              - if specified, run these args in a container
 //
-func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (result []byte, err error) {
-	logger.Infof("DockerRunVolumesFromContner =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err error) {
+	logger.Infof("DockerRunData =>\t%s:%v\n", ops.DataContainerName, ops.Args)
 
 	opts := configureVolumesFromContainer(ops, service)
 	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
+
 	_, err = createContainer(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	// trap signals so we can drop out of the container
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-	go func() {
-		<-c
-		logger.Infof("\nCaught signal. Stopping container %s\n", opts.Name)
-		if err = stopContainer(opts.Name, 5); err != nil {
-			logger.Errorf("Error stopping container: %v\n", err)
-		}
-	}()
-
+	// Clean up the container.
 	defer func() {
 		logger.Infof("Removing container =>\t\t%s\n", opts.Name)
 		if err2 := removeContainer(opts.Name, true); err2 != nil {
@@ -105,80 +89,49 @@ func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (re
 		logger.Infof("Container removed =>\t\t%s\n", opts.Name)
 	}()
 
-	attached := make(chan struct{})
-	if ops.Interactive {
-		logger.Debugf("Attaching to container =>\t%s\n", opts.Name)
-
-		savedState, err := term.SetRawTerminal(os.Stdin.Fd())
-		if err != nil {
-			logger.Errorln("Cannot set the terminal into raw mode")
-		} else {
-			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
-		}
-
-		// attachContainer uses hijack so we need to run this in a goroutine.
-		go func(chan struct{}) {
-			attachContainer(opts.Name, attached)
-		}(attached)
-	}
-
-	// Start the container (either interactive or one off command).
-	logger.Infof("Exec Container ID =>\t\t%s\n", opts.Name)
-	if err = startContainer(opts.Name, &opts); err != nil {
+	// Start the container.
+	logger.Infof("Run Container =>\t\t%s\n", opts.Name)
+	if err = startContainer(opts); err != nil {
 		return nil, err
 	}
 
-	if ops.Interactive {
-		// Wait for the console prompt to appear.
-		_, ok := <-attached
-		if ok {
-			attached <- struct{}{}
-		}
-	}
-
-	logger.Infof("Waiting to exit for removal =>\t%s\n", opts.Name)
-	if err = waitContainer(opts.Name); err != nil {
+	logger.Debugf("Getting logs for container =>\t%s\n", opts.Name)
+	if err = logsContainer(opts.Name, true, "all"); err != nil {
 		return nil, err
 	}
 
-	if !ops.Interactive {
-		logger.Debugf("Getting logs for container =>\t%s\n", opts.Name)
-		if err = logsContainer(opts.Name, true, "all"); err != nil {
-			return nil, err
+	// now lets get the logs out
+	// XXX: we only do this if the global config writer is a bytes.Buffer
+	if config.GlobalConfig.Writer != nil {
+		writer := config.GlobalConfig.Writer
+		reader, ok := writer.(*bytes.Buffer)
+		if !ok {
+			return nil, nil
 		}
-		// now lets get the logs out
-		// XXX: we only do this if the global config writer is a bytes.Buffer
-		if config.GlobalConfig.Writer != nil {
-			writer := config.GlobalConfig.Writer
-			reader, ok := writer.(*bytes.Buffer)
-			if !ok {
-				return nil, nil
-			}
 
-			done := make(chan struct{}, 1)
-			var b []byte
-			go func() {
-				// TODO: this routine will hang forever if  ReadAll doesn't complete
-				// need to be smarter
-				logger.Debugln("Attempting to read log reader.")
-				b, err = ioutil.ReadAll(reader)
-				done <- struct{}{}
-			}()
-			ticker := time.NewTicker(time.Second * 2)
-		LOOP:
-			for {
-				select {
-				case <-ticker.C:
-					logger.Debugln("tick!")
-					if reader.Len() == 0 {
-						// nothing to read means dont bother waiting
-						break LOOP
-					} else {
-						logger.Debugln("Read something", reader.Len())
-					}
-				case <-done:
-					return b, err
+		done := make(chan struct{}, 1)
+		var b []byte
+		go func() {
+			// TODO: this routine will hang forever if  ReadAll doesn't complete
+			// need to be smarter
+			logger.Debugln("Attempting to read log reader.")
+			b, err = ioutil.ReadAll(reader)
+			done <- struct{}{}
+		}()
+		ticker := time.NewTicker(time.Second * 2)
+	LOOP:
+		for {
+			select {
+			case <-ticker.C:
+				logger.Debugln("tick!")
+				if reader.Len() == 0 {
+					// nothing to read means dont bother waiting
+					break LOOP
+				} else {
+					logger.Debugln("Read something", reader.Len())
 				}
+			case <-done:
+				return b, err
 			}
 		}
 	}
@@ -186,11 +139,47 @@ func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (re
 	return nil, nil
 }
 
-// DockerRun creates and runs a chain or a service container with srv settings
-// template. It also creates dependent data containers if srv.AutoData is true.
-// DockerRun returns Docker errors if not successful.
-// LoadServiceDefinition and LoadChainDefinition functions could be useful
-// to populate the srv and ops structures.
+// DockerExecData runs a data container with volumes-from field set interactively.
+//
+//  ops.Args         - command line parameters
+//  ops.Interactive  - if true, set Entrypoint to ops.Args,
+//                     if false, set Cmd to ops.Args
+//
+// See parameter description for DockerRunData.
+func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
+	logger.Infof("DockerExecData =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+
+	opts := configureVolumesFromContainer(ops, service)
+	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
+
+	_, err = createContainer(opts)
+	if err != nil {
+		return err
+	}
+
+	// Clean up the container.
+	defer func() {
+		logger.Infof("Removing container =>\t\t%s\n", opts.Name)
+		if err2 := removeContainer(opts.Name, true); err2 != nil {
+			if os.Getenv("CIRCLE_BRANCH") == "" {
+				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+			}
+		}
+		logger.Infof("Container removed =>\t\t%s\n", opts.Name)
+	}()
+
+	// Start the container.
+	logger.Infof("Run Container =>\t\t%s\n", opts.Name)
+	if err = startInteractiveContainer(opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DockerRunService creates and runs a chain or a service container with the srv
+// settings template. It also creates dependent data containers if srv.AutoData
+// is true. DockerRunService returns Docker errors if not successful.
 //
 //  srv.AutoData          - if true, create or use existing data container
 //
@@ -210,8 +199,8 @@ func DockerRunVolumesFromContainer(ops *def.Operation, service *def.Service) (re
 //  ops.Restart           - container restart policy ("always", "max:<#attempts>"
 //                          or never if unspecified)
 //
-func DockerRun(srv *def.Service, ops *def.Operation) error {
-	var optsData docker.CreateContainerOptions
+func DockerRunService(srv *def.Service, ops *def.Operation) error {
+	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
 
 	_, running := ContainerRunning(ops)
 	if running {
@@ -219,58 +208,39 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		return nil
 	}
 
-	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
+	optsServ := configureServiceContainer(srv, ops)
 
-	// copy service config into docker client config
-	optsServ, err := configureServiceContainer(srv, ops)
-	if err != nil {
-		return err
-	}
-
-	// fix volume paths
+	// Fix volume paths.
+	var err error
 	srv.Volumes, err = util.FixDirs(srv.Volumes)
 	if err != nil {
 		return err
 	}
 
-	// setup data container
+	// Setup data container.
 	logger.Infof("Manage data containers? =>\t%t\n", srv.AutoData)
 	if srv.AutoData {
-		optsData, err = configureDataContainer(srv, ops, &optsServ)
+		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
 			return err
 		}
+
+		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
+			logger.Infoln("Data Container already exists, am not creating.")
+		} else {
+			logger.Infoln("Data Container does not exist, creating.")
+			_, err := createContainer(optsData)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	// check existence || create the container
+	// Check existence || create the container.
 	if _, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service Container already exists, am not creating.")
-
-		if srv.AutoData {
-			if _, exists = util.ParseContainers(ops.DataContainerName, true); exists {
-				logger.Infoln("Data Container already exists, am not creating.")
-			} else {
-				logger.Infoln("Data Container does not exist, creating.")
-				_, err := createContainer(optsData)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		logger.Infoln("Service container already exists, am not creating.")
 	} else {
-		logger.Infof("Service Container does not exist, creating from image (%s).\n", srv.Image)
-
-		if srv.AutoData {
-			if _, exists = util.ParseContainers(ops.DataContainerName, true); exists {
-				logger.Infoln("Data Container already exists, am not creating.")
-			} else {
-				logger.Infoln("Data Container does not exist, creating.")
-				_, err = createContainer(optsData)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		logger.Infof("Service container does not exist, creating from image (%s).\n", srv.Image)
 
 		_, err := createContainer(optsServ)
 		if err != nil {
@@ -278,105 +248,74 @@ func DockerRun(srv *def.Service, ops *def.Operation) error {
 		}
 	}
 
-	// start the container
-	logger.Infof("Starting Service Contanr ID =>\t%s\n", optsServ.Name)
+	// Start the container.
+	logger.Infof("Starting service container =>\t%s\n", optsServ.Name)
 	if srv.AutoData {
-		logger.Infof("\twith DataContanr ID =>\t%s\n", optsData.Name)
+		logger.Infof("\twith data container =>\t%s\n", ops.DataContainerName)
 	}
 	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
 	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
 	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
-	if err := startContainer(optsServ.Name, &optsServ); err != nil {
+	if err := startContainer(optsServ); err != nil {
 		return err
 	}
 
-	// XXX: setting Remove causes us to block here!
-	if ops.Remove || ops.Follow {
-		// dump the logs (TODO: options about this)
-		doneLogs := make(chan struct{}, 1)
-		go func() {
-			logger.Debugln("DockerRun. Following logs.")
-			if err := logsContainer(optsServ.Name, true, "all"); err != nil {
-				logger.Errorf("Unable to follow logs for %s\n", optsServ.Name)
-			}
-			logger.Debugln("DockerRun. Finished following logs.")
-			doneLogs <- struct{}{}
-		}()
-
-		logger.Infof("Waiting to exit =>\t\t%s\n", optsServ.Name)
-		if err := waitContainer(optsServ.Name); err != nil {
+	if ops.Remove {
+		logger.Infof("Removing container =>\t%s\n", optsServ.Name)
+		if err := removeContainer(optsServ.Name, false); err != nil {
 			return err
 		}
-
-		logger.Debugln("DockerRun. Waiting for logs to finish.")
-		// let the logs finish
-		<-doneLogs
-
-		if ops.Remove {
-			logger.Infof("DockerRun. Removing cont =>\t%s\n", optsServ.Name)
-			if err := removeContainer(optsServ.Name, false); err != nil {
-				return err
-			}
-		}
-
-	} else {
-		logger.Infof("Successfully started service =>\t%s\n", optsServ.Name)
 	}
+
+	logger.Infof("Successfully started service =>\t%s\n", optsServ.Name)
 
 	return nil
 }
 
-// DockerRun creates and runs a chain or a service container with srv settings
-// template interactively. It also creates dependent data containers
-// if srv.AutoData is true.  DockerRun returns Docker errors if not successful.
-// LoadServiceDefinition and LoadChainDefinition functions could be useful
-// to populate the srv and ops structures.
+// DockerExecService creates and runs a chain or a service container interactively.
 //
-//  srv.AutoData          - if true, create or use existing data container
+//  ops.Args         - command line parameters
+//  ops.Interactive  - if true, set Entrypoint to ops.Args,
+//                     if false, set Cmd to ops.Args
 //
-//  ops.SrvContainerName  - service or a chain container name
-//  ops.DataContainerName - dependent data container name
-//  ops.ContainerNumber   - container number
-//  ops.ContainerType     - container type
-//  ops.Labels            - container creation time labels
-//  ops.Interactive       - if true, run /bin/bash or use Args as ENTRYPOINT;
-//                          if false, use srv template ENTRYPOINT and use Args as CMD.
-//  ops.Args              - if specified, run these args in a container
-//
-// (Also see container parameters for DockerRun.)
-//
-func DockerRunInteractive(srv *def.Service, ops *def.Operation) error {
-	var optsData docker.CreateContainerOptions
-
+// See parameter description for DockerRunService.
+func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
-	optsServ, err := configureInteractiveContainer(srv, ops)
-	if err != nil {
-		return err
-	}
+
+	optsServ := configureInteractiveContainer(srv, ops)
 
 	// Fix volume paths.
+	var err error
 	srv.Volumes, err = util.FixDirs(srv.Volumes)
 	if err != nil {
 		return err
 	}
 
-	logger.Infof("Creating from image (%s)\n", srv.Image)
+	// Setup data container.
+	logger.Infof("Manage data containers? =>\t%t\n", srv.AutoData)
 	if srv.AutoData {
-		optsData, err = configureDataContainer(srv, ops, &optsServ)
+		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
 			return err
 		}
+
 		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
-			logger.Infoln("Data Container already exists, am not creating.")
+			logger.Infoln("Data container already exists, am not creating.")
 		} else {
-			logger.Infoln("Data Container does not exist, creating.")
-			_, err = createContainer(optsData)
+			logger.Infoln("Data container does not exist, creating.")
+			_, err := createContainer(optsData)
 			if err != nil {
 				return err
 			}
 		}
+	}
+
+	logger.Infof("Service container does not exist, creating from image (%s).\n", srv.Image)
+	_, err = createContainer(optsServ)
+	if err != nil {
+		return err
 	}
 
 	defer func() {
@@ -387,58 +326,17 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation) error {
 		logger.Infof("Container removed =>\t\t%s\n", optsServ.Name)
 	}()
 
-	_, err = createContainer(optsServ)
-	if err != nil {
-		return err
-	}
-
-	// Set terminal into raw mode, and restore upon container exit.
-	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
-	if err != nil {
-		logger.Errorln("Cannot set the terminal into raw mode")
-	} else {
-		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
-	}
-
-	// Trap signals so we can drop out of the container.
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-	go func() {
-		<-c
-		logger.Infof("\nCaught signal. Stopping container %s\n", optsServ.Name)
-		if err = stopContainer(optsServ.Name, 5); err != nil {
-			logger.Errorf("Error stopping container: %v\n", err)
-		}
-	}()
-
-	// This channel receives an event that the container is attached.
-	attached := make(chan struct{})
-	go func(chan struct{}) {
-		attachContainer(optsServ.Name, attached)
-	}(attached)
-
 	// Start the container.
-	logger.Infof("Starting Service Contanr ID =>\t%s\n", optsServ.Name)
+	logger.Infof("Starting service container =>\t%s\n", optsServ.Name)
 	if srv.AutoData {
-		logger.Infof("\twith DataContanr ID =>\t%s\n", optsData.Name)
+		logger.Infof("\twith data container =>\t%s\n", ops.DataContainerName)
 	}
 	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
 	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
 	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
 	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
-
-	if err := startContainer(optsServ.Name, &optsServ); err != nil {
-		return err
-	}
-
-	// Wait for a console prompt to appear.
-	_, ok := <-attached
-	if ok {
-		attached <- struct{}{}
-	}
-
-	logger.Infof("Waiting to exit for removal =>\t%s\n", optsServ.Name)
-	if err := waitContainer(optsServ.Name); err != nil {
+	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
+	if err := startInteractiveContainer(optsServ); err != nil {
 		return err
 	}
 
@@ -455,10 +353,8 @@ func DockerRunInteractive(srv *def.Service, ops *def.Operation) error {
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
-// (Also see container parameters for DockerRun.)
-//
+// Also see container parameters for DockerRunService.
 func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout uint) error {
-	var id string
 	var wasRunning bool = false
 
 	logger.Infof("Starting Docker Rebuild =>\t%s\n", srv.Name)
@@ -491,25 +387,22 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 		}
 	}
 
-	opts, err := configureServiceContainer(srv, ops)
-	if err != nil {
-		return err
-	}
+	opts := configureServiceContainer(srv, ops)
+	var err error
 	srv.Volumes, err = util.FixDirs(srv.Volumes)
 	if err != nil {
 		return err
 	}
 
 	logger.Infof("Creating new cont for srv =>\t%s\n", srv.Name)
-	cont, err := createContainer(opts)
+	_, err = createContainer(opts)
 	if err != nil {
 		return err
 	}
-	id = cont.ID
 
 	if wasRunning {
-		logger.Infof("Restarting srv with new ID =>\t%s\n", id)
-		err := startContainer(id, &opts)
+		logger.Infof("Restarting srv with new ID =>\t%s\n", opts.Name)
+		err := startContainer(opts)
 		if err != nil {
 			return err
 		}
@@ -528,8 +421,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
-// (Also see container parameters for DockerRun.)
-//
+// Also see container parameters for DockerRunService.
 func DockerPull(srv *def.Service, ops *def.Operation) error {
 	logger.Infof("Pulling an image (%s) for the service (%s)\n", srv.Image, srv.Name)
 
@@ -563,7 +455,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if wasRunning {
-		err := DockerRun(srv, ops)
+		err := DockerRunService(srv, ops)
 		if err != nil {
 			return err
 		}
@@ -611,16 +503,15 @@ func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
 // It returns Docker errors on exit if not successful. DockerStop doesn't return
 // an error if the container isn't running.
 func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
-	// don't limit this to verbose because it takes a few seconds
+	// Don't limit this to verbose because it takes a few seconds.
 	logger.Printf("Docker is Stopping =>\t\t%s\tThis may take a few seconds.\n", srv.Name)
 	logger.Debugf("\twith ContainerNumber =>\t%d\n", ops.ContainerNumber)
 	logger.Debugf("\twith SrvContnerName =>\t%s\n", ops.SrvContainerName)
 
-	dockerAPIContainer, running := ContainerExists(ops)
-
+	container, running := ContainerExists(ops)
 	if running {
 		logger.Infof("Service is running =>\t\t%s:%d\n", srv.Name, ops.ContainerNumber)
-		err := stopContainer(dockerAPIContainer.ID, timeout)
+		err := stopContainer(container.ID, timeout)
 		if err != nil {
 			return err
 		}
@@ -629,6 +520,7 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 	}
 
 	logger.Infof("Finished stopping service =>\t%s\n", srv.Name)
+
 	return nil
 }
 
@@ -738,7 +630,7 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes bool) 
 			return err
 		}
 		if withData {
-			if srv, ext := ContainerDataContainerExists(ops); ext {
+			if srv, ext := DataContainerExists(ops); ext {
 				logger.Infof("\t with DataContanr ID =>\t%s\n", srv.ID)
 				if err := removeContainer(srv.ID, volumes); err != nil {
 					return err
@@ -768,7 +660,7 @@ func ContainerRunning(ops *def.Operation) (docker.APIContainers, bool) {
 // ContainerExists returns APIContainers containers list and true
 // if the container ops.DataContainerName exists and running,
 // otherwise false.
-func ContainerDataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
+func DataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
 	return util.ParseContainers(ops.DataContainerName, true)
 }
 
@@ -849,8 +741,51 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	return dockerContainer, nil
 }
 
-func startContainer(id string, opts *docker.CreateContainerOptions) error {
-	return util.DockerClient.StartContainer(id, opts.HostConfig)
+func startContainer(opts docker.CreateContainerOptions) error {
+	return util.DockerClient.StartContainer(opts.Name, opts.HostConfig)
+}
+
+func startInteractiveContainer(opts docker.CreateContainerOptions) error {
+	// Set terminal into raw mode, and restore upon container exit.
+	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+	if err != nil {
+		logger.Errorln("Cannot set the terminal into raw mode")
+	} else {
+		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+	}
+
+	// Trap signals so we can drop out of the container.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		<-c
+		logger.Infof("\nCaught signal. Stopping container %s\n", opts.Name)
+		if err = stopContainer(opts.Name, 5); err != nil {
+			logger.Errorf("Error stopping container: %v\n", err)
+		}
+	}()
+
+	attached := make(chan struct{})
+	go func(chan struct{}) {
+		attachContainer(opts.Name, attached)
+	}(attached)
+
+	if err := startContainer(opts); err != nil {
+		return err
+	}
+
+	// Wait for a console prompt to appear.
+	_, ok := <-attached
+	if ok {
+		attached <- struct{}{}
+	}
+
+	logger.Infof("Waiting to exit for removal =>\t%s\n", opts.Name)
+	if err := waitContainer(opts.Name); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func attachContainer(id string, attached chan struct{}) error {
@@ -958,11 +893,8 @@ func removeContainer(id string, volumes bool) error {
 	return nil
 }
 
-func configureInteractiveContainer(srv *def.Service, ops *def.Operation) (docker.CreateContainerOptions, error) {
-	opts, err := configureServiceContainer(srv, ops)
-	if err != nil {
-		return docker.CreateContainerOptions{}, err
-	}
+func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
+	opts := configureServiceContainer(srv, ops)
 
 	opts.Name = "eris_interactive_" + opts.Name
 	opts.Config.User = "root"
@@ -997,10 +929,10 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) (docker
 	// we expect to link to the main service container
 	opts.HostConfig.Links = srv.Links
 
-	return opts, nil
+	return opts
 }
 
-func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.CreateContainerOptions, error) {
+func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
 	if ops.ContainerNumber == 0 {
 		ops.ContainerNumber = 1
 	}
@@ -1055,7 +987,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 	} else if strings.Contains(ops.Restart, "max") {
 		times, err := strconv.Atoi(strings.Split(ops.Restart, ":")[1])
 		if err != nil {
-			return docker.CreateContainerOptions{}, err
+			return docker.CreateContainerOptions{}
 		}
 		opts.HostConfig.RestartPolicy = docker.RestartOnFailure(times)
 	}
@@ -1098,7 +1030,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) (docker.Cre
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
-	return opts, nil
+	return opts
 }
 
 func configureVolumesFromContainer(ops *def.Operation, service *def.Service) docker.CreateContainerOptions {
@@ -1138,7 +1070,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
-	logger.Debugf("cfigureVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
+	logger.Debugf("configureVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
 	return opts
 }
 

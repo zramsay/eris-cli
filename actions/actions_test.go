@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	tests "github.com/eris-ltd/eris-cli/testings"
+	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"

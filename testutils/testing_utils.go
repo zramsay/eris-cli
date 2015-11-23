@@ -6,17 +6,15 @@ import (
 	"path"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
-//var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 var erisDir = path.Join(os.TempDir(), "eris")
-
 var logger = log.AddLogger("tests")
 
 //hold things...?
@@ -141,6 +139,26 @@ func TestExistAndRun(name, typ string, contNum int, toExist, toRun bool) bool {
 	return false
 }
 
+// Remove a container of some name, type, and number.
+func RemoveContainer(name string, t string, n int) error {
+	opts := docker.RemoveContainerOptions{
+		ID:            util.ContainersName(t, name, n),
+		RemoveVolumes: true,
+		Force:         true,
+	}
+
+	if err := util.DockerClient.RemoveContainer(opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Remove everything Eris.
+func RemoveAllContainers() error {
+	return util.Clean(false, false, false, false)
+}
+
 // each pacakge will need its own custom stuff if need be
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
@@ -164,7 +182,6 @@ func IfExit(err error) {
 
 //------- helpers --------
 func checkIPFSnotRunning() {
-
 	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
 	do := def.NowDo()
 	do.Known = false

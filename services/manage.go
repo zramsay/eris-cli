@@ -174,7 +174,7 @@ func LogsService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	return LogsServiceByService(service.Service, service.Operations, do.Follow, do.Tail)
+	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
 func ExportService(do *definitions.Do) error {
