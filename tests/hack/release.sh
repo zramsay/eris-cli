@@ -20,8 +20,17 @@ cmd_path="cmd/eris"
 pkg_name="eris"
 repo=$GOPATH/src/github.com/$this_user/$this_repo
 version=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
-
 start=`pwd`
+
+if [[ "$1" == "pre" ]]
+then
+  if [[ "$2" == "" ]]
+  then
+    echo "you must tell me which release candidate this is... 1, 2, 3, etc. exiting."
+    exit 1
+  fi
+  version=version+"-rc$2"
+fi
 
 # -----------------------------------------------------------------
 # Prerequisites
@@ -51,12 +60,23 @@ fi
 echo "Tag check looks good. Sending the info to Github."
 git push origin --tags
 desc=$(git show v$version)
-github-release release \
-  --user $this_user \
-  --repo $this_repo \
-  --tag v$version \
-  --name "Release of Version: $version" \
-  --description "$desc"
+if [[ "$1" == "pre" ]]
+then
+  github-release release \
+    --user $this_user \
+    --repo $this_repo \
+    --tag v$version \
+    --name "Release of Version: $version" \
+    --description "$desc" \
+    --pre-release
+else
+  github-release release \
+    --user $this_user \
+    --repo $this_repo \
+    --tag v$version \
+    --name "Release of Version: $version" \
+    --description "$desc"
+fi
 echo "Finished sending tags and release info to Github."
 echo ""
 echo ""
@@ -99,6 +119,7 @@ echo ""
 # Send deb packages to APT repository
 
 echo "Moving on to APT relase. Uploading files to APT server."
+docker-machine scp $repo/tests/hack/release_deb.sh $aptmachine:~
 docker-machine scp $build_dir/$version/eris_"$version"_amd64.deb $aptmachine:~
 docker-machine ssh $aptmachine
 echo "Finished with APT release."
@@ -107,9 +128,12 @@ echo "Finished with APT release."
 # Send rpm packages to YUM repository
 
 echo "Moving on to YUM relase. Uploading files to YUM server."
-echo "TODO........."
-# docker-machine scp $build_dir/$version/eris_"$version"_amd64.rpm $yummachine:~
-# docker-machine ssh $yummachine
+docker-machine scp $repo/tests/hack/eris-cli.spec $yummachine:~
+docker-machine scp $repo/tests/hack/eris.repo $yummachine:~
+docker-machine scp $repo/tests/hack/release_rpm.sh $yummachine:~
+docker-machine scp $build_dir/$version/linux_amd64/eris $yummachine:~
+docker-machine ssh $yummachine "echo \"$version\" > version"
+docker-machine ssh $yummachine
 echo "Finished with YUM release."
 
 echo "Cleaning up and exiting... Billings Shipit!"
