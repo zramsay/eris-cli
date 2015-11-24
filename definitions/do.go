@@ -28,6 +28,7 @@ type Do struct {
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
+	Address       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Pubkey        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
