@@ -37,12 +37,8 @@ func TestsInit(testType string) error {
 	// run correctly.
 	config.ChangeErisDir(erisDir)
 
-	// init dockerClient
-	if testType == "chain" {
-		util.DockerConnect(false, "eris-test-nyc2-1.8.1") //hmm -> for local tests
-	} else {
-		util.DockerConnect(false, "eris")
-	}
+	// init dockerClient (for chains use "eris-test-nyc2-1.8.1"?)
+	util.DockerConnect(false, "eris")
 
 	// this dumps the ipfs service def into the temp dir which
 	// has been set as the erisRoot
