@@ -11,19 +11,25 @@ import (
 )
 
 func Initialize(do *definitions.Do) error {
-	logger.Printf("The marmots have connected to Docker successfully.\nThey will now will install a few default services and actions for your use.\n\n")
-
-	if _, err := os.Stat(common.ErisRoot); os.IsNotExist(err) {
-		logger.Printf("Eris Root Directory does not exist. The marmots will initialize this directory for you.\n")
-		if err := common.InitErisDir(); err != nil {
-			return fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
+	if _, err := os.Stat(common.ErisRoot); err != nil {
+		if os.IsNotExist(err) {
+			logger.Infoln("Eris Root Directory does not exist. The marmots will initialize this directory for you.\n")
+			if err := common.InitErisDir(); err != nil {
+				return fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
+			}
+		} else {
+			panic(err)
 		}
-	} else if do.Yes {
+	}
+
+	if do.Yes {
 		logger.Debugf("Not requiring input. Proceeding.\n")
 	} else {
 		var input string
 		logger.Printf("Eris Root Directory (%s) already exists.\nContinuing may overwrite files in:\n%s\n%s\nDo you wish to continue? (y/n): ", common.ErisRoot, common.ServicesPath, common.ActionsPath)
-		fmt.Scanln(&input)
+		if _, err := fmt.Scanln(&input); err != nil {
+			return fmt.Errorf("Error reading from stdin: %v\n", err)
+		}
 		if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
 			logger.Debugf("Confirmation verified. Proceeding.\n")
 		} else {
@@ -70,14 +76,11 @@ func InitDefaultServices(do *definitions.Do) error {
 		}
 	}
 
-	logger.Printf("Service defaults written.\n")
-	logger.Printf("Action defaults written.\n")
 	if err := dropChainDefaults(); err != nil { //moved b/c cleaner stdout for user
 		return err
 	}
-	logger.Printf("Chain defaults written.\n")
 
-	logger.Printf("Initialized eris root directory (%s) with default actions and service files.\n", common.ErisRoot)
+	logger.Infof("Initialized eris root directory (%s) with default action, service, and chain files.\n", common.ErisRoot)
 
 	//TODO: when called from cli provide option to go on tour, like `ipfs tour`
 	logger.Printf("\nThe marmots have everything set up for you.\nIf you are just getting started please type [eris] to get an overview of the tool.\n")

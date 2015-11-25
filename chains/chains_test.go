@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
+	//"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -29,18 +30,11 @@ import (
 var erisDir string = path.Join(os.TempDir(), "eris")
 var chainName string = "my_testing_chain_dot_com" // :( [csk]-> :)
 
-//"my_tests" //"testChainsNewDirGen"
-
 var hash string
 
-var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
-
 func fatal(t *testing.T, err error) {
-	if !DEAD {
-		testsTearDown()
-		DEAD = true
-		panic(err)
-	}
+	testsTearDown()
+	panic(err)
 }
 
 func TestMain(m *testing.M) {
@@ -50,16 +44,18 @@ func TestMain(m *testing.M) {
 
 	logLevel = 0
 	// logLevel = 1
-	// logLevel = 3
+	//logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(testsInit())
-	testNewChain(chainName) //from testsInit;
+	ifExit(tests.TestsInit("chain"))
 	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
+	layTestChainToml(chainName)
+
+	_ = err
 	var exitCode int
-	defer func() {
+	/*defer func() {
 		logger.Infoln("Commensing with Tests Tear Down.")
 		if err = testsTearDown(); err != nil {
 			logger.Errorln(err)
@@ -67,9 +63,10 @@ func TestMain(m *testing.M) {
 		}
 		os.Exit(exitCode)
 
-	}()
+	}()*/
 
 	exitCode = m.Run()
+	fmt.Println(exitCode)
 }
 
 func TestKnownChain(t *testing.T) {
@@ -146,6 +143,7 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
+// TODO: this isn't actually testing much!
 func TestExecChain(t *testing.T) {
 	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
@@ -157,12 +155,50 @@ func TestExecChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = chainName
-	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris/chains")
+	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris")
 	do.Operations.Interactive = false
 	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
 	e := ExecChain(do)
 	if e != nil {
 		logger.Errorln(e)
+		t.Fail()
+	}
+}
+
+func TestPlopChain(t *testing.T) {
+	cfgFilePath := path.Join(common.ChainsPath, "default", "config.toml")
+
+	do := def.NowDo()
+	do.ConfigFile = cfgFilePath
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
+	logger.Infof("Creating chain (from tests) =>\t%s\n", chainName)
+	ifExit(NewChain(do))
+	defer testKillChain(t, chainName)
+
+	do = def.NowDo()
+	do.Type = "config"
+	do.ChainID = chainName
+
+	newWriter := new(bytes.Buffer)
+	config.GlobalConfig.Writer = newWriter
+	e := PlopChain(do)
+	if e != nil {
+		logger.Errorln(e)
+		t.Fail()
+	}
+
+	cfgFile, err := ioutil.ReadFile(cfgFilePath)
+	ifExit(err)
+	cfgFilePlop := newWriter.Bytes()
+
+	// remove [13] that shows up everywhere ...
+	cfgFile = bytes.Replace(cfgFile, []byte{13}, []byte{}, -1)
+	cfgFilePlop = bytes.Replace(cfgFilePlop, []byte{13}, []byte{}, -1)
+
+	if !bytes.Equal(cfgFile, cfgFilePlop) {
+		logger.Errorf("Got:\n%s\n\nExpected:\n%s", cfgFilePlop, cfgFile)
 		t.Fail()
 	}
 }
@@ -251,12 +287,10 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
 	ifExit(NewChain(do))
-	b, err := ioutil.ReadFile(do.ConfigFile)
+	_, err := ioutil.ReadFile(do.ConfigFile)
 	if err != nil {
 		fatal(t, err)
 	}
-
-	fmt.Println("CONFIG CONFIG CONFIG:", string(b))
 
 	// remove the data container
 	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
@@ -375,25 +409,26 @@ func TestInspectChain(t *testing.T) {
 }
 
 func TestRenameChain(t *testing.T) {
-	oldName := chainName
-	newName := "niahctset"
-	testStartChain(t, oldName)
-	defer testKillChain(t, oldName)
+	aChain := "hichain"
+	rename1 := "niahctset"
+	rename2 := chainName
+	testNewChain(aChain)
+	defer testKillChain(t, rename2)
 
 	do := def.NowDo()
-	do.Name = oldName
-	do.NewName = newName
+	do.Name = aChain
+	do.NewName = rename1
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 
 	if e := RenameChain(do); e != nil {
 		fatal(t, e)
 	}
 
-	testExistAndRun(t, newName, true, true)
+	testExistAndRun(t, rename1, true, true)
 
 	do = def.NowDo()
-	do.Name = newName
-	do.NewName = chainName
+	do.Name = rename1
+	do.NewName = rename2
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 	if e := RenameChain(do); e != nil {
 		fatal(t, e)
@@ -489,13 +524,6 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	}
 }
 
-func testsInit() error {
-	if err := tests.TestsInit("chain"); err != nil {
-		return err
-	}
-	return nil
-}
-
 func testNewChain(chain string) {
 	do := def.NowDo()
 	do.GenesisFile = path.Join(common.ChainsPath, "default", "genesis.json")
@@ -504,10 +532,6 @@ func testNewChain(chain string) {
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
 	ifExit(NewChain(do))
-
-	// remove the data container
-	do.Operations.Args = []string{chain}
-	ifExit(data.RmData(do))
 }
 
 func removeChainContainer(t *testing.T, chainID string, cNum int) {
@@ -522,7 +546,6 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 
 //TODO use tests.TestsTearDown (or not? -> only once clean is refactored)
 func testsTearDown() error {
-	DEAD = true
 	killService("keys")
 	testKillChain(nil, chainName)
 	log.Flush()
@@ -568,7 +591,6 @@ func ifExit(err error) {
 	if err != nil {
 		logger.Errorln(err)
 		log.Flush()
-		testsTearDown()
 		os.Exit(1)
 	}
 }
@@ -582,4 +604,16 @@ func trimResult(s string) string {
 		spl[i] = t
 	}
 	return strings.Trim(strings.Join(spl, "\n"), "\n")
+}
+
+func layTestChainToml(name string) {
+	chain := loaders.MockChainDefinition(name, name, false, 1)
+
+	// write the chain definition file ...
+	fileName := filepath.Join(erisDir, "chains", name) + ".toml"
+	if _, err := os.Stat(fileName); err != nil {
+		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
+			panic(fmt.Errorf("error writing chain definition to file: %v", err))
+		}
+	}
 }

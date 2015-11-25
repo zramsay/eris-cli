@@ -23,8 +23,7 @@ type TestingInfo struct {
 
 //testType = one of each package, will switch over it for
 //make additional tempDirs and vars as needed -> [zr] or not, TBD
-func TestsInit(testType string) error {
-	var err error
+func TestsInit(testType string) (err error) {
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
@@ -46,6 +45,7 @@ func TestsInit(testType string) error {
 	do.Pull = true
 	do.Services = true
 	do.Actions = true
+	do.Yes = true
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
@@ -168,10 +168,10 @@ func TestsTearDown() error {
 func IfExit(err error) {
 	if err != nil {
 		logger.Errorln(err)
-		log.Flush()
 		if err := TestsTearDown(); err != nil {
 			logger.Errorln(err)
 		}
+		log.Flush()
 		os.Exit(1)
 	}
 }
@@ -212,5 +212,4 @@ func checkIPFSnotRunning() {
 			IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
 		}
 	}
-
 }
