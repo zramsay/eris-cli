@@ -61,10 +61,9 @@ func RegisterChain(do *definitions.Do) error {
 	logger.Debugf("Starting chain container via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
 	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
-	chain.Operations.Interactive = do.Operations.Interactive
 	chain.Operations.Args = []string{loaders.ErisChainRegister}
 
-	_, err = perform.DockerRunVolumesFromContainer(chain.Operations, chain.Service)
+	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
 	return err
 }

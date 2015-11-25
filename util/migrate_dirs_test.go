@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 
 	logLevel = 0
 	// logLevel = 1
-	logLevel = 3
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
@@ -131,8 +131,6 @@ func testsInit() error {
 	}
 	config.ChangeErisDir(erisDir)
 
-	// init dockerClient
-	DockerConnect(false, "eris")
 	return nil
 }
 

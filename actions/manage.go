@@ -47,7 +47,7 @@ func ImportAction(do *definitions.Do) error {
 		}
 
 		ipfsService.Operations.ContainerType = definitions.TypeService
-		err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+		err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
 		if err != nil {
 			return err
 		}
@@ -84,7 +84,7 @@ func ExportAction(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+	err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
 	if err != nil {
 		return err
 	}

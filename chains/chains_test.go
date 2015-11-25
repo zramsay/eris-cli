@@ -18,7 +18,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
-	tests "github.com/eris-ltd/eris-cli/testings"
+	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -200,7 +200,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/file.file")}
-	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
+	b, err := perform.DockerRunData(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -220,7 +220,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ops = loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 	util.Merge(ops, do.Operations)
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
-	b, err = perform.DockerRunVolumesFromContainer(ops, nil)
+	b, err = perform.DockerRunData(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}
@@ -545,7 +545,7 @@ func runContainer(t *testing.T, ops *def.Operation) []byte {
 	newWriter := new(bytes.Buffer)
 	config.GlobalConfig.Writer = newWriter
 
-	b, err := perform.DockerRunVolumesFromContainer(ops, nil)
+	b, err := perform.DockerRunData(ops, nil)
 	if err != nil {
 		fatal(t, err)
 	}

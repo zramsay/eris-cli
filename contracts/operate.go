@@ -180,7 +180,7 @@ func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) err
 	logger.Infof("Performing App Action =>\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
 
 	do.Operations.ContainerType = definitions.TypeService
-	if err := perform.DockerRun(do.Service, do.Operations); err != nil {
+	if err := perform.DockerRunService(do.Service, do.Operations); err != nil {
 		do.Result = "could not perform app action"
 		return err
 	}
