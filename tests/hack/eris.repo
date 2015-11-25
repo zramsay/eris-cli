@@ -1,0 +1,15 @@
+[eris]
+name=Eris
+baseurl=https://yum.eris.industries/x86_64/
+metadata_expire=1d
+enabled=1
+gpgkey=https://yum.eris.industries/RPM-GPG-KEY
+gpgcheck=1
+
+[eris-source]
+name=Eris Source
+baseurl=https://yum.eris.industries/source/
+metadata_expire=1d
+enabled=1
+gpgkey=https://yum.eris.industries/RPM-GPG-KEY
+gpgcheck=1

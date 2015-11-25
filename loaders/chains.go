@@ -148,7 +148,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	}
 	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
-	util.Merge(chain, chnTemp.Service)
+	util.Merge(chain.Service, chnTemp.Service)
 	chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well

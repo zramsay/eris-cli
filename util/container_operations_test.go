@@ -23,7 +23,7 @@ var BasicTests = []struct {
 	{"s1", &S{}, &S{}, &S{}},
 	{"s2", &S{String: "a"}, &S{}, &S{String: "a"}},
 	{"s3", &S{}, &S{String: "a"}, &S{String: "a"}},
-	{"s4", &S{String: "a"}, &S{String: "b"}, &S{String: "a"}},
+	{"s4", &S{String: "a"}, &S{String: "b"}, &S{String: "b"}},
 
 	{"b1", &S{}, &S{}, &S{}},
 	{"b2", &S{Bool: true}, &S{}, &S{Bool: true}},
@@ -34,12 +34,12 @@ var BasicTests = []struct {
 	{"i1", &S{}, &S{}, &S{}},
 	{"i2", &S{Int: 10}, &S{}, &S{Int: 10}},
 	{"i3", &S{}, &S{Int: 10}, &S{Int: 10}},
-	{"i4", &S{Int: 10}, &S{Int: 12}, &S{Int: 10}},
+	{"i4", &S{Int: 10}, &S{Int: 12}, &S{Int: 12}},
 
 	{"f1", &S{}, &S{}, &S{}},
 	{"f2", &S{Float: 10.0}, &S{}, &S{Float: 10.0}},
 	{"f3", &S{}, &S{Float: 10.0}, &S{Float: 10.0}},
-	{"f4", &S{Float: 10.0}, &S{Float: 12.0}, &S{Float: 10.0}},
+	{"f4", &S{Float: 10.0}, &S{Float: 12.0}, &S{Float: 12.0}},
 
 	{"m1",
 		&S{Map: nil},

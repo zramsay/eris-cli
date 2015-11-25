@@ -74,7 +74,7 @@ func Merge(base, over interface{}) error {
 			}
 		default:
 			// Don't overwrite with zero values (0, "", false).
-			if a.Interface() != reflect.Zero(b.Type()).Interface() {
+			if b.Interface() == reflect.Zero(b.Type()).Interface() {
 				continue
 			}
 			a.Set(b)
