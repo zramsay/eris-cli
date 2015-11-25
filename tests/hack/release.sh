@@ -177,13 +177,15 @@ fullRun() {
 main() {
   if [[ "$1" == "build" ]]
   then
-    return cross_compile "$@"
+    cross_compile "$@"
+    return $?
   fi
   if [[ "$1" == "pre" ]]
   then
-    return preRun "$@"
+    preRun "$@"
+    return $?
   fi
-  return fullRun "$@"
+  fullRun "$@"
 }
 
 main "$@"
