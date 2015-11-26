@@ -41,7 +41,7 @@ func ImportData(do *definitions.Do) error {
 		opts := docker.UploadToContainerOptions{
 			InputStream:          reader,
 			Path:                 do.Destination,
-			NoOverwriteDirNonDir: false,
+			NoOverwriteDirNonDir: true,
 		}
 
 		logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)

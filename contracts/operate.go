@@ -164,6 +164,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	if do.NewName != "" {
 		doData.Destination = do.NewName
 	}
+	doData.Source = filepath.Join(common.DataContainersPath, doData.Name)
 
 	loca := path.Join(common.DataContainersPath, doData.Name)
 	logger.Debugf("Creating App Data Cont =>\t%s:%s\n", do.Path, loca)
@@ -212,9 +213,12 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
+	doData.Source = common.ErisContainerRoot
+	doData.Destination = filepath.Join(common.DataContainersPath, doData.Name)
 	if do.NewName != "" {
 		doData.Source = do.NewName
 	}
+
 	loca := path.Join(common.DataContainersPath, doData.Name)
 
 	logger.Debugf("Exporting Results =>\t\t%s:%s\n", loca, do.Path)

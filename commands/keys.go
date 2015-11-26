@@ -15,8 +15,8 @@ var Keys = &cobra.Command{
 	Long: `The keys subcommand is an opiniated wrapper around
 eris-keys and requires a keys container to be running. 
 
-It is for development only. Advanced functionality is available via:
-$ eris services exec keys "eris-keys CMD"
+It is for development only. 
+Advanced functionality is available via: [eris services exec keys "eris-keys CMD"]
 	
 see https://docs.erisindustries.com/documentation/eris-keys/ for more info`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
@@ -26,6 +26,7 @@ func buildKeysCommand() {
 	Keys.AddCommand(keysGen)
 	Keys.AddCommand(keysPub)
 	Keys.AddCommand(keysExport)
+	Keys.AddCommand(keysImport)
 	Keys.AddCommand(keysConvert)
 	addKeysFlags()
 }
@@ -119,12 +120,14 @@ func GetPubKey(cmd *cobra.Command, args []string) {
 
 //from /home/eris/.eris/keys/data/ to /home/user/.eris/keys/data/
 func ExportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args)) // all keys for now; TODO specify addr
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	do.Address = strings.TrimSpace(do.Address)
 	IfExit(keys.ExportKey(do))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args)) // all keys for now; TODO specify addr
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	do.Address = strings.TrimSpace(do.Address)
 	IfExit(keys.ImportKey(do))
 }
 
