@@ -54,7 +54,6 @@ Command is equivalent to: [eris services exec keys "eris-keys pub --addr ADDR"]`
 	Run: GetPubKey,
 }
 
-//TODO optional ADDR
 var keysExport = &cobra.Command{
 	Use:   "export",
 	Short: "Export keys from container to host.",
@@ -66,11 +65,11 @@ Takes the contents (or a single key via addr flag) of
 in the keys container and copies everything (by default) to
 $HOME/user/.eris/keys/data/
 
-on the host. Use the addr flag to export single keys.`,
+on the host. Use --addr to export single keys.
+Optionally specify host destination with --dest.`,
 	Run: ExportKey,
 }
 
-//TODO optional ADDR & cmd description
 var keysImport = &cobra.Command{
 	Use:   "import",
 	Short: "Import keys to container from host.",
@@ -82,7 +81,7 @@ $HOME/user/.eris/keys/data/
 on the host and copies everything (by default) to
 /home/eris/.eris/keys/data/
 
-in the keys container. Use the addr flag to import single keys.`,
+in the keys container. Use --addr to import single keys.`,
 	Run: ImportKey,
 }
 
@@ -98,10 +97,11 @@ $HOME/.eris/chains/newChain/priv_validator.json`,
 	Run: ConvertKey,
 }
 
+//the container path is always hardcoded to /home/eris/.eris/keys/data
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
-	keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	//keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 
 }

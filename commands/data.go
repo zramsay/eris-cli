@@ -211,18 +211,18 @@ func ExecData(cmd *cobra.Command, args []string) {
 func setDefaultDir(typ string) {
 	switch typ {
 	case "import":
-		//		if do.Source == "" {
+		//if do.Source == "" {
 		do.Source = filepath.Join(DataContainersPath, do.Name)
-		//		}
+		//}
 		if do.Destination == "" {
 			do.Destination = ErisContainerRoot
 		}
 	case "export":
-		//		if do.Source == "" {
-		do.Source = ErisContainerRoot
-		//		}
-		if do.Destination == "" {
-			do.Destination = filepath.Join(DataContainersPath, do.Name)
+		if do.Source == "" {
+			do.Source = ErisContainerRoot
 		}
+		//if do.Destination == "" {
+		do.Destination = filepath.Join(DataContainersPath, do.Name)
+		//}
 	}
 }

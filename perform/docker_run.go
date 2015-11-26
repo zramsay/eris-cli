@@ -504,7 +504,7 @@ func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
 // an error if the container isn't running.
 func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 	// don't limit this to verbose because it takes a few seconds
-	//unless force sets timeout to 0
+	// [zr] unless force sets timeout to 0 (for, eg. stdout)
 	if timeout != 0 {
 		logger.Printf("Docker is Stopping =>\t\t%s\tThis may take a few seconds.\n", srv.Name)
 	}

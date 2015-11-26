@@ -56,7 +56,6 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	do.Name = dataName
 	do.Source = filepath.Join(common.DataContainersPath, do.Name)
 	do.Destination = common.ErisContainerRoot
-
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Importing Data (from tests) =>\t%s\n", do.Name)
 	if err := ImportData(do); err != nil {

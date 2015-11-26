@@ -74,7 +74,7 @@ func MakeGenesisFile(do *def.Do) error {
 
 	logger.Infof("Starting chain from MakeGenesisFile =>\t%s\n", doThr.Name)
 	if er := StartChain(doThr); er != nil {
-		fmt.Printf("error starting chain %v\n", er)
+		return fmt.Errorf("error starting chain %v\n", er)
 	}
 
 	doThr.Operations.Args = []string{"mintgen", "known", do.Chain.Name, fmt.Sprintf("--pub=%s", do.Pubkey)}
@@ -83,15 +83,15 @@ func MakeGenesisFile(do *def.Do) error {
 	// pipe this output to /chains/chainName/genesis.json
 	err := ExecChain(doThr)
 	if err != nil {
-		fmt.Printf("exec chain err: %v\n", err)
-		do.Rm = true
-		do.RmD = true
-		IfExit(CleanUp(doThr))
+		logger.Printf("exec chain err: %v\nCleaning up...\n", err)
+		doThr.Rm = true
+		doThr.RmD = true
+		if err := CleanUp(doThr); err != nil {
+			return err
+		}
 	}
 
-	do.Rm = true
-	do.RmD = true
-	CleanUp(doThr) // doesn't clean up keys but that's ~ ok b/c it's about to be used...
-	return nil     //TODO throw errors!
-
+	doThr.Rm = true
+	doThr.RmD = true
+	return CleanUp(doThr) // doesn't clean up keys but that's ~ ok b/c it's about to be used...
 }

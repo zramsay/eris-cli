@@ -24,7 +24,6 @@ func GenerateKey(do *definitions.Do) error {
 	if err := srv.ExecService(do); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -44,10 +43,9 @@ func GetPubKey(do *definitions.Do) error {
 	return nil
 }
 
-//from /home/eris/.eris/keys/data/ to /home/user/.eris/keys/data/
 func ExportKey(do *definitions.Do) error {
 
-	do.Name = "keys" //for cont as well as path-joined for final dir
+	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
@@ -55,7 +53,7 @@ func ExportKey(do *definitions.Do) error {
 	if do.Destination == "" {
 		do.Destination = path.Join(KeysPath, "data")
 	}
-	//src in container (hardcoded)
+	//src in container
 	if do.Address != "" {
 		do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address, do.Address)
 	} else {
@@ -70,33 +68,27 @@ func ExportKey(do *definitions.Do) error {
 
 func ImportKey(do *definitions.Do) error {
 
-	do.Name = "keys" //for cont as well as path-joined for final dir
+	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	//destination in container (harcode; ~ same as do.Source from Export)
 	if do.Address != "" {
 		do.Operations.Interactive = false
 		dir := path.Join(ErisContainerRoot, "keys", "data", do.Address)
-		do.Operations.Args = []string{"mkdir", dir}
+		do.Operations.Args = []string{"mkdir", dir} //need to mkdir for import
 		if err := srv.ExecService(do); err != nil {
 			return err
 		}
-
+		//src on host
+		//dest in container
+		do.Source = path.Join(KeysPath, "data", do.Address, do.Address)
 		do.Destination = dir
 
 	} else {
+		do.Source = path.Join(KeysPath, "data")
 		do.Destination = path.Join(ErisContainerRoot, "keys", "data")
 	}
-	//src on host
-	if do.Source == "" {
-		if do.Address != "" {
-			do.Source = path.Join(KeysPath, "data", do.Address, do.Address)
-		} else {
-			do.Source = path.Join(KeysPath, "data")
-		}
-	}
-	//if full filepath given on --src, -addr not needed / How to better deal with this?
+	//TODO [zr] src flag
 
 	if err := data.ImportData(do); err != nil {
 		return err
