@@ -56,7 +56,11 @@ func ExportKey(do *definitions.Do) error {
 		do.Destination = KeysPath
 	}
 	//src in container (hardcoded)
-	do.Source = path.Join(ErisContainerRoot, "keys", "data")
+	if do.Address != "" {
+		do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address, do.Address)
+	} else {
+		do.Source = path.Join(ErisContainerRoot, "keys", "data")
+	}
 
 	if err := data.ExportData(do); err != nil {
 		return err
@@ -71,7 +75,11 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 	//destination in container (harcode; same as do.Source from Export)
-	do.Destination = path.Join(ErisContainerRoot, "keys", "data")
+	if do.Address != "" {
+		do.Destination = path.Join(ErisContainerRoot, "keys", "data", do.Address, do.Address)
+	} else {
+		do.Destination = path.Join(ErisContainerRoot, "keys", "data")
+	}
 	//src on host
 	if do.Source == "" {
 		do.Source = KeysPath

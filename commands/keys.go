@@ -37,11 +37,10 @@ var keysGen = &cobra.Command{
 WARNING: this command is not safe for production.
 For development only.
 
-Key is saved in keys data container and can be exported to host with:
-$ eris keys export
+Key is saved in keys data container and can be 
+exported to host with: [eris keys export]
 
-Command is equivalent to:
-$ eris services exec keys "eris-keys gen --no-pass"`,
+Command is equivalent to: [eris services exec keys "eris-keys gen --no-pass"]`,
 	Run: GenerateKey,
 }
 
@@ -50,35 +49,39 @@ var keysPub = &cobra.Command{
 	Short: "Returns a machine readable pubkey given an address.",
 	Long: `Returns a machine readable pubkey given an address.
 	
-Command is equivalent to:
-$ eris services exec keys "eris-keys pub --addr ADDR"`,
+Command is equivalent to: [eris services exec keys "eris-keys pub --addr ADDR"]`,
 	Run: GetPubKey,
 }
 
 //TODO optional ADDR
 var keysExport = &cobra.Command{
 	Use:   "export",
-	Short: "Export all keys from container to host.",
-	Long: `Export all keys from container to host.
+	Short: "Export keys from container to host.",
+	Long: `Export keys from container to host.
 	
-Takes the contents of 
-$HOME/.eris/keys/data/ 
+Takes the contents (or a single key via addr flag) of
+/home/eris/.eris/keys/data/
 
-in the keys container and copies everything to
+in the keys container and copies everything (by default) to
 $HOME/user/.eris/keys/data/
 
-on the host.`,
+on the host. Use the addr flag to export single keys.`,
 	Run: ExportKey,
 }
 
 //TODO optional ADDR & cmd description
 var keysImport = &cobra.Command{
 	Use:   "import",
-	Short: "Import all keys to container from host.",
-	Long: `Import all keys to container from host.
-	
+	Short: "Import keys to container from host.",
+	Long: `Import keys to container from host.
 
-	`,
+Takes the contents (or a single key via addr flag) of
+$HOME/user/.eris/keys/data/
+
+on the host and copies everything (by default) to
+/home/eris/.eris/keys/data/
+
+in the keys container. Use the addr flag to import single keys.`,
 	Run: ImportKey,
 }
 
@@ -87,17 +90,18 @@ var keysConvert = &cobra.Command{
 	Short: "Convert and eris-keys key to tendermint key",
 	Long: `Convert and eris-keys key to tendermint key
 
-Command is equivalent to:	
-$ eris services exec keys "mintkey mint ADDR"
+Command is equivalent to: [eris services exec keys "mintkey mint ADDR"]
 
-Usually, it's output will be piped into 
+Usually, it's output will be piped into
 $HOME/.eris/chains/newChain/priv_validator.json`,
 	Run: ConvertKey,
 }
 
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 
 }
 
@@ -116,13 +120,11 @@ func GetPubKey(cmd *cobra.Command, args []string) {
 //from /home/eris/.eris/keys/data/ to /home/user/.eris/keys/data/
 func ExportKey(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args)) // all keys for now; TODO specify addr
-	//do.Dir ?
 	IfExit(keys.ExportKey(do))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args)) // all keys for now; TODO specify addr
-	//do.Dir ?
 	IfExit(keys.ImportKey(do))
 }
 

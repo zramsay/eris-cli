@@ -104,7 +104,7 @@ var dataInspect = &cobra.Command{
 }
 
 var dataExport = &cobra.Command{
-	Use:   "export NAME DIRECTORY",
+	Use:   "export NAME",
 	Short: "Export a named data container's volumes to ~/.eris/data/name",
 	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
 	Run:   ExportData,
@@ -124,10 +124,9 @@ func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 	dataExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 
-	//TODO modify helper to reflect these changes...
 	dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
-	dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
-	dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	//	dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	//	dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
 	dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
 }
 
@@ -212,16 +211,16 @@ func ExecData(cmd *cobra.Command, args []string) {
 func setDefaultDir(typ string) {
 	switch typ {
 	case "import":
-		if do.Source == "" {
-			do.Source = filepath.Join(DataContainersPath, do.Name)
-		}
+		//		if do.Source == "" {
+		do.Source = filepath.Join(DataContainersPath, do.Name)
+		//		}
 		if do.Destination == "" {
 			do.Destination = ErisContainerRoot
 		}
 	case "export":
-		if do.Source == "" {
-			do.Source = ErisContainerRoot
-		}
+		//		if do.Source == "" {
+		do.Source = ErisContainerRoot
+		//		}
 		if do.Destination == "" {
 			do.Destination = filepath.Join(DataContainersPath, do.Name)
 		}

@@ -348,8 +348,7 @@ var chainsMakeGenesis = &cobra.Command{
 	Short: "Generates a genesis file.",
 	Long: `Generates a genesis file with chainNAME and a single pubkey.
 
-Command is equivalent to:
-$ eris chains exec someChain "mintgen known NAME KEY"
+Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
 
 but does not require a pre-existing chain to execute.
 
