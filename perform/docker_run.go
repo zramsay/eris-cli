@@ -93,13 +93,13 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 		return nil, err
 	}
 
-	logger.Debugf("Getting logs for container =>\t%s\n", opts.Name)
-	if err = logsContainer(opts.Name, true, "all"); err != nil {
+	logger.Infof("Waiting to exit =>\t%s\n", opts.Name)
+	if err := waitContainer(opts.Name); err != nil {
 		return nil, err
 	}
 
-	logger.Infof("Waiting to exit =>\t%s\n", opts.Name)
-	if err := waitContainer(opts.Name); err != nil {
+	logger.Debugf("Getting logs for container =>\t%s\n", opts.Name)
+	if err = logsContainer(opts.Name, true, "all"); err != nil {
 		return nil, err
 	}
 
