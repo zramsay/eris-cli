@@ -162,7 +162,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
 	if do.NewName != "" {
-		doData.Path = do.NewName
+		doData.Destination = do.NewName
 	}
 
 	loca := path.Join(common.DataContainersPath, doData.Name)
@@ -213,7 +213,7 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
 	if do.NewName != "" {
-		doData.Path = do.NewName
+		doData.Source = do.NewName
 	}
 	loca := path.Join(common.DataContainersPath, doData.Name)
 

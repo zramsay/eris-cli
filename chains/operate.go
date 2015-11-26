@@ -302,6 +302,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	importDo := definitions.NowDo()
 	importDo.Name = do.Name
 	importDo.Operations = do.Operations
+	importDo.Destination = ErisContainerRoot
+	importDo.Source = filepath.Join(DataContainersPath, do.Name)
 	if err = data.ImportData(importDo); err != nil {
 		return err
 	}

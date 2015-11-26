@@ -54,7 +54,7 @@ func ImportData(do *definitions.Do) error {
 		doChown.Operations.DataContainerName = containerName
 		doChown.Operations.ContainerType = "data"
 		doChown.Operations.ContainerNumber = 1
-		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
+		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
 		_, err = perform.DockerRunData(doChown.Operations, nil)
 		if err != nil {
 			return fmt.Errorf("Error changing owner: %v\n", err)
