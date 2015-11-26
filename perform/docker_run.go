@@ -5,13 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -100,42 +98,16 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 		return nil, err
 	}
 
-	// now lets get the logs out
-	// XXX: we only do this if the global config writer is a bytes.Buffer
-	if config.GlobalConfig.Writer != nil {
-		writer := config.GlobalConfig.Writer
-		reader, ok := writer.(*bytes.Buffer)
-		if !ok {
-			return nil, nil
-		}
-
-		done := make(chan struct{}, 1)
-		var b []byte
-		go func() {
-			// TODO: this routine will hang forever if  ReadAll doesn't complete
-			// need to be smarter
-			logger.Debugln("Attempting to read log reader.")
-			b, err = ioutil.ReadAll(reader)
-			done <- struct{}{}
-		}()
-		ticker := time.NewTicker(time.Second * 2)
-	LOOP:
-		for {
-			select {
-			case <-ticker.C:
-				logger.Debugln("tick!")
-				if reader.Len() == 0 {
-					// nothing to read means dont bother waiting
-					break LOOP
-				} else {
-					logger.Debugln("Read something", reader.Len())
-				}
-			case <-done:
-				return b, err
-			}
-		}
+	logger.Infof("Waiting to exit =>\t%s\n", opts.Name)
+	if err := waitContainer(opts.Name); err != nil {
+		return nil, err
 	}
 
+	// Return the logs as a byte slice, if possible.
+	reader, ok := config.GlobalConfig.Writer.(*bytes.Buffer)
+	if ok {
+		return reader.Bytes(), nil
+	}
 	return nil, nil
 }
 
