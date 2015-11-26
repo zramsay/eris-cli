@@ -140,13 +140,10 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 // marshal from viper to definitions struct
 func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
 	chnTemp := definitions.BlankChain()
-	// logger.Debugf("Loader.Chain: ChainID =>\t\t%v\n", chain.ChainID)
-	// logger.Debugf("Loader.Chain. Conf =>\t\t%v\n", chainConf)
 	err := chainConf.Marshal(chnTemp)
 	if err != nil {
 		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
 	}
-	// logger.Debugf("Loader.Chain.Marshal: ChanID =>\t%v\n", chnTemp.ChainID)
 
 	util.Merge(chain.Service, chnTemp.Service)
 	chain.ChainID = chnTemp.ChainID
