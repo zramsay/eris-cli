@@ -17,12 +17,9 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-//var serv *definitions.Service
-
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
-		//need service.ID for PutContainerArchive()
 		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
 		service, exists := perform.ContainerExists(srv.Operations)
 
@@ -31,19 +28,11 @@ func ImportData(do *definitions.Do) error {
 		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		importPath := filepath.Join(DataContainersPath, do.Name)
+		logger.Debugf("Importing FROM =>\t\t%s\n", do.Source)
+		os.Chdir(do.Source)
 
-		logger.Debugf("Importing FROM =>\t\t%s\n", importPath)
-		os.Chdir(importPath)
-
-		// do.Path is the destination
-		// if nothing is given we assume
-		if do.Path == "" {
-			do.Path = ErisContainerRoot
-		}
-
-		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Path)
-		reader, err := util.Tar(importPath, 0)
+		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Destination)
+		reader, err := util.Tar(do.Source, 0)
 		if err != nil {
 			return err
 		}
@@ -51,22 +40,22 @@ func ImportData(do *definitions.Do) error {
 
 		opts := docker.UploadToContainerOptions{
 			InputStream:          reader,
-			Path:                 do.Path,
+			Path:                 do.Destination,
 			NoOverwriteDirNonDir: false,
 		}
 
 		logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)
-		logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
+		logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
 		if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
 			return err
 		}
 
-		doStuff := definitions.NowDo()
-		doStuff.Operations.DataContainerName = containerName
-		doStuff.Operations.ContainerType = "data"
-		doStuff.Operations.ContainerNumber = 1
-		doStuff.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
-		_, err = perform.DockerRunData(doStuff.Operations, nil)
+		doChown := definitions.NowDo()
+		doChown.Operations.DataContainerName = containerName
+		doChown.Operations.ContainerType = "data"
+		doChown.Operations.ContainerNumber = 1
+		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Path}
+		_, err = perform.DockerRunData(doChown.Operations, nil)
 		if err != nil {
 			return fmt.Errorf("Error changing owner: %v\n", err)
 		}
@@ -119,19 +108,14 @@ func ExportData(do *definitions.Do) error {
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
-		if do.Path == "" {
-			do.Path = ErisContainerRoot
-		}
-
 		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
-			//	Container:    service.ID,
-			Path: do.Path,
+			Path:         do.Source,
 		}
 
 		go func() {
 			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
-			logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
+			logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
 			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
 			writer.Close()
 		}()
@@ -149,20 +133,13 @@ func ExportData(do *definitions.Do) error {
 
 		// // finally remove everything in the data directory and move
 		// //   the temp contents there
-		var prevDir string
-		if do.Name == "keys" { //hack for `eris keys export`
-			prevDir = do.ErisPath
-		} else {
-			prevDir = filepath.Join(do.ErisPath, do.Name)
-		}
-
-		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
-			if e2 := os.MkdirAll(prevDir, 0755); e2 != nil {
-				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)
+		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
+			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
+				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
 			}
 		}
-		// ClearDir(prevDir)
-		if err := moveOutOfDirAndRmDir(exportPath, prevDir); err != nil {
+		// ClearDir(do.Destionation)
+		if err := moveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
 			return err
 		}
 

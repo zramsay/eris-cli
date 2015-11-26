@@ -45,7 +45,6 @@ type Do struct {
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Image         string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ErisPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -65,6 +64,9 @@ type Do struct {
 	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes   bool `mapstructure:"," json:"," yaml:"," toml:","`
+	//data import/export
+	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
+	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`

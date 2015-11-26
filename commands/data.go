@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
@@ -123,8 +124,11 @@ func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 	dataExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 
-	dataImport.Flags().StringVarP(&do.Path, "dest", "", "", "destination for import into data container")
-	dataExport.Flags().StringVarP(&do.Path, "src", "", "", "source inside data container to export from")
+	//TODO modify helper to reflect these changes...
+	dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
+	dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
 }
 
 //----------------------------------------------------
@@ -170,15 +174,14 @@ func RmData(cmd *cobra.Command, args []string) {
 func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	setDefaultDir()
+	setDefaultDir("import")
 	IfExit(data.ImportData(do))
 }
 
 func ExportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	do.ErisPath = DataContainersPath
-	setDefaultDir()
+	setDefaultDir("export")
 	IfExit(data.ExportData(do))
 }
 
@@ -205,8 +208,22 @@ func ExecData(cmd *cobra.Command, args []string) {
 // we don't set this as the default for the flag because it overwrites
 // the unified do.Path script with other packages expect to be able to
 // provide their own defaults for.
-func setDefaultDir() {
-	if do.Path == "" {
-		do.Path = "/home/eris/.eris"
+// [zr] perhaps now we can set default in flag...?
+func setDefaultDir(typ string) {
+	switch typ {
+	case "import":
+		if do.Source == "" {
+			do.Source = filepath.Join(DataContainersPath, do.Name)
+		}
+		if do.Destination == "" {
+			do.Destination = ErisContainerRoot
+		}
+	case "export":
+		if do.Source == "" {
+			do.Source = ErisContainerRoot
+		}
+		if do.Destination == "" {
+			do.Destination = filepath.Join(DataContainersPath, do.Name)
+		}
 	}
 }

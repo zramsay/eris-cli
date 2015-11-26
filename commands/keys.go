@@ -27,17 +27,21 @@ func buildKeysCommand() {
 	Keys.AddCommand(keysPub)
 	Keys.AddCommand(keysExport)
 	Keys.AddCommand(keysConvert)
+	addKeysFlags()
 }
 
 var keysGen = &cobra.Command{
 	Use:   "gen",
 	Short: "Generates an unsafe key using the keys container.",
 	Long: `Generates a key using the keys container.
+WARNING: this command is not safe for production.
+For development only.
+
 Key is saved in keys data container and can be exported to host with:
 $ eris keys export
 
 Command is equivalent to:
-$ eris services exec keys "eris-keys gen --no-pass"`, //more on using keys
+$ eris services exec keys "eris-keys gen --no-pass"`,
 	Run: GenerateKey,
 }
 
@@ -52,7 +56,6 @@ $ eris services exec keys "eris-keys pub --addr ADDR"`,
 }
 
 //TODO optional ADDR
-//destination flag
 var keysExport = &cobra.Command{
 	Use:   "export",
 	Short: "Export all keys from container to host.",
@@ -90,6 +93,12 @@ $ eris services exec keys "mintkey mint ADDR"
 Usually, it's output will be piped into 
 $HOME/.eris/chains/newChain/priv_validator.json`,
 	Run: ConvertKey,
+}
+
+func addKeysFlags() {
+	keysExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+
 }
 
 func GenerateKey(cmd *cobra.Command, args []string) {

@@ -51,9 +51,12 @@ func ExportKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	do.ErisPath = KeysPath
-	//src in container
-	do.Path = path.Join(ErisContainerRoot, "keys", "data")
+	//destination on host
+	if do.Destination == "" {
+		do.Destination = KeysPath
+	}
+	//src in container (hardcoded)
+	do.Source = path.Join(ErisContainerRoot, "keys", "data")
 
 	if err := data.ExportData(do); err != nil {
 		return err
@@ -67,7 +70,12 @@ func ImportKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	//TODO add some stuff
+	//destination in container (harcode; same as do.Source from Export)
+	do.Destination = path.Join(ErisContainerRoot, "keys", "data")
+	//src on host
+	if do.Source == "" {
+		do.Source = KeysPath
+	}
 
 	if err := data.ImportData(do); err != nil {
 		return err
