@@ -21,16 +21,11 @@ var srv *def.ServiceDefinition
 var servName string = "ipfs"
 var hash string
 
-var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
-
 //[zr] is basically a weird version of ifExit ..?
 func fatal(t *testing.T, err error) {
-	if !DEAD {
-		log.Flush()
-		tests.TestsTearDown()
-		DEAD = true
-		panic(err)
-	}
+	log.Flush()
+	tests.TestsTearDown()
+	panic(err)
 }
 
 func TestMain(m *testing.M) {
