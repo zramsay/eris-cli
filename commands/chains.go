@@ -367,14 +367,14 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 
 	buildFlag(chainsNew, do, "csv", "chain")
-	//chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
+	//chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 
 	buildFlag(chainsNew, do, "publish", "chain")
-	//chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsNew.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
+	//chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 
 	buildFlag(chainsNew, do, "env", "chain")
 	//chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
@@ -382,26 +382,24 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "links", "chain")
 	//chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
 
-	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
-
 	buildFlag(chainsRegister, do, "links", "chain")
-	//chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
-
 	buildFlag(chainsRegister, do, "env", "chain")
-	//chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val1 syntax")
+	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
 	chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 	chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
+	//chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val1 syntax")
+	//chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val1 syntax")
 
+	buildFlag(chainsInstall, do, "publish", "chain")
 	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
 	chainsInstall.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
-	buildFlag(chainsInstall, do, "publish", "chain")
-	//chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsInstall.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	chainsInstall.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 	chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 	chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
+	//chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
@@ -434,7 +432,6 @@ func addChainsFlags() {
 	buildFlag(chainsUpdate, do, "timeout", "chain")
 	buildFlag(chainsUpdate, do, "env", "chain")
 	buildFlag(chainsUpdate, do, "links", "chain")
-
 	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 	//chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 	//chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")

@@ -227,7 +227,7 @@ func addServicesFlags() {
 
 	servicesExec.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
 	servicesExec.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "l", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
 	//servicesExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")

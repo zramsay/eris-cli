@@ -79,10 +79,6 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 			cmd.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 		} else if typ == "files" {
 			cmd.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
-		} else if typ == "contracts" {
-			cmd.Flags().StringVarP(&do.CSV, "output", "o", "", "results output type (EPM only)")
 		}
-	case "services": // contracts
-		cmd.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
 	}
 }
