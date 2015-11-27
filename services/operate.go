@@ -196,6 +196,5 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 	// XXX: we may have name collision here if we're not careful.
 	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
 
-	util.Merge(s.Operations, srv.Operations)
 	return s, nil
 }
