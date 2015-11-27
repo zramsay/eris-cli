@@ -66,7 +66,7 @@ func DockerCreateData(ops *def.Operation) error {
 //  ops.Args              - if specified, run these args in a container
 //
 func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err error) {
-	logger.Infof("DockerRunData =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+	logger.Infof("DockerRunData =>\t\t%s:%v\n", ops.DataContainerName, ops.Args)
 
 	opts := configureVolumesFromContainer(ops, service)
 	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
@@ -1045,7 +1045,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
-	logger.Debugf("configureVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
+	logger.Debugf("configurVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
 	return opts
 }
 
