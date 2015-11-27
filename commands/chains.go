@@ -59,6 +59,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
+	Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
 
@@ -342,6 +343,19 @@ Command will cat local chains definition file.`,
 	Run: CatChain,
 }
 
+var chainsMakeGenesis = &cobra.Command{
+	Use:   "make-genesis NAME KEY",
+	Short: "Generates a genesis file.",
+	Long: `Generates a genesis file with chainNAME and a single pubkey.
+
+Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
+
+but does not require a pre-existing chain to execute.
+
+see https://github.com/eris-ltd/mint-client for more info`,
+	Run: MakeGenesisFile,
+}
+
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
@@ -608,4 +622,12 @@ func CatChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.CatChain(do))
+}
+
+func MakeGenesisFile(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "ge", cmd, args))       //eq doesn't fly...
+	do.Chain.Name = strings.TrimSpace(args[0]) //trim for bash
+	do.Pubkey = strings.TrimSpace(args[1])
+	IfExit(chns.MakeGenesisFile(do))
+
 }

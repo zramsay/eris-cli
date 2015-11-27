@@ -3,6 +3,7 @@ package data
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -53,6 +54,8 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
+	do.Source = filepath.Join(common.DataContainersPath, do.Name)
+	do.Destination = common.ErisContainerRoot
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Importing Data (from tests) =>\t%s\n", do.Name)
 	if err := ImportData(do); err != nil {
@@ -80,6 +83,8 @@ func TestExecData(t *testing.T) {
 func TestExportData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
+	do.Source = common.ErisContainerRoot
+	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
 	do.Operations.ContainerNumber = 1
 	if err := ExportData(do); err != nil {
 		logger.Errorln(err)
