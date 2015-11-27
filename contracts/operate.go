@@ -17,9 +17,12 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
+var pwd string
+
 func RunPackage(do *definitions.Do) error {
 	logger.Debugf("Welcome! Say the Marmots. Running App package.\n")
-	pwd, err := os.Getwd()
+	var err error
+	pwd, err = os.Getwd()
 	if err != nil {
 		return fmt.Errorf("Could not get the present working directory. Are you on Mars?\nError: %v\n", err)
 	}
@@ -138,8 +141,10 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	do.Service.AutoData = true
 	do.Service.EntryPoint = app.AppType.EntryPoint
 	do.Service.Command = cmd
-	if do.NewName != "" {
-		do.Service.WorkDir = do.NewName // do.NewName is actually where the workdir inside the container goes
+	if do.Path != pwd {
+		do.Service.WorkDir = do.Path // do.Path is actually where the workdir inside the container goes
+	} else {
+		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", app.Name)
 	}
 	do.Service.User = "eris"
 
@@ -157,31 +162,39 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 		prepareEpmAction(do, app)
 	}
 
-	// make data container and import do.Path to do.NewName (if exists)
+	// make data container and import do.Path to do.Path (if exists)
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
-	if do.NewName != "" {
-		doData.Path = do.NewName
+	if do.Path != pwd {
+		doData.Path = do.Path
+	} else {
+		doData.Path = path.Join(common.ErisContainerRoot)
 	}
-
-	loca := path.Join(common.DataContainersPath, doData.Name)
+	var loca string
+	if do.Path != pwd {
+		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+	} else {
+		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+	}
 	logger.Debugf("Creating App Data Cont =>\t%s:%s\n", do.Path, loca)
 	common.Copy(do.Path, loca)
-	data.ImportData(doData)
+	if err := data.ImportData(doData); err != nil {
+		return err
+	}
 	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
 
 	logger.Debugf("App Action Built.\n")
-
 	return nil
 }
 
 func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
 	logger.Println("Performing Action. This can sometimes take a wee while.")
-	logger.Infof("\t=>\t\t\t%s:%s:%s\n", do.Service.Name, do.Service.Image, do.Service.Command)
+	logger.Infof("\t=>\t\t\t%s:%s\n", do.Service.Name, do.Service.Image)
+	logger.Debugf("\t=>\t\t\t%s:%s\n", do.Service.WorkDir, do.Service.EntryPoint)
 
 	do.Operations.ContainerType = definitions.TypeService
-	if err := perform.DockerRunService(do.Service, do.Operations); err != nil {
+	if err := perform.DockerExecService(do.Service, do.Operations); err != nil {
 		do.Result = "could not perform app action"
 		return err
 	}
@@ -212,12 +225,19 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
-	if do.NewName != "" {
-		doData.Path = do.NewName
+	if do.Path != pwd {
+		doData.Path = do.Path
+	} else {
+		doData.Path = path.Join(common.ErisContainerRoot, "apps", app.Name)
 	}
-	loca := path.Join(common.DataContainersPath, doData.Name)
+	var loca string
+	if do.Path != pwd {
+		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+	} else {
+		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+	}
 
-	logger.Debugf("Exporting Results =>\t\t%s:%s\n", loca, do.Path)
+	logger.Debugf("Exporting Results =>\t\t%s:%s\n", doData.Path, loca)
 	data.ExportData(doData)
 
 	if app.AppType.Name == "epm" {
@@ -229,14 +249,18 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		}
 	}
 
-	if do.RmD {
+	if !do.RmD {
 		logger.Debugf("Removing data dir on host =>\t%s\n", path.Join(common.DataContainersPath, do.Service.Name))
 		os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
 	}
 
 	if !do.Rm {
-		logger.Debugf("Removing tmp srv contnr =>\t%s\n", do.Operations.SrvContainerName)
-		perform.DockerRemove(do.Service, do.Operations, true, true)
+		doRemove := definitions.NowDo()
+		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
+		logger.Debugf("Removing data contnr =>\t\t%s\n", doRemove.Operations.SrvContainerName)
+		if err := perform.DockerRemove(nil, doRemove.Operations, false, true); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -314,7 +338,7 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 
 	if do.EPMConfigFile != "" {
 		logger.Debugf("Setting config file to =>\t%s\n", do.EPMConfigFile)
-		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + do.EPMConfigFile
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(do.Service.WorkDir, do.EPMConfigFile)
 	}
 
 	if len(do.ConfigOpts) != 0 {
@@ -331,11 +355,11 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	}
 
 	if do.ContractsPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + do.ContractsPath
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.ContractsPath)
 	}
 
 	if do.ABIPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + do.ABIPath
+		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + path.Join(do.Service.WorkDir, do.ABIPath)
 	}
 
 	if do.DefaultGas != "" {

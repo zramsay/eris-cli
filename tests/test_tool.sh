@@ -87,7 +87,7 @@ setup_machine() {
     echo
     eris version
     echo
-    eris_version=$(eris version | cut -d ':' -f2 | tr -d ' ')
+    eris_version=$(eris version --quiet)
     pull_images
     echo "Image Pulling Complete."
   fi
@@ -194,6 +194,8 @@ packagesToTest() {
   # The final push....
   go test ./commands/...
   passed Commands
+
+  # Now, for stack level tests
   if [ $? -ne 0 ]; then return 1; fi
 
   # Now! Stack based tests
