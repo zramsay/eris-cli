@@ -163,7 +163,8 @@ func ImportAction(cmd *cobra.Command, args []string) {
 func NewAction(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	do.Path = args[1]
+	//do.Path = args[1] else index out of range...
+	do.Operations.Args = args
 	IfExit(act.NewAction(do))
 }
 
