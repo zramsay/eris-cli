@@ -91,6 +91,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Init)
 	buildUpdateCommand()
 	ErisCmd.AddCommand(Update)
+	buildVerSionCommand()
+	ErisCmd.AddCommand(VerSion)
 	ErisCmd.AddCommand(ManPage)
 	buildManCommand()
 
