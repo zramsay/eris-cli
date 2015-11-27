@@ -16,11 +16,12 @@ func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 	}
 
 	if !isMigNeed {
+		logger.Infoln("nothing to migrate")
 		return nil
 	} else if !prompt {
-		Migrate(dirsMap)
+		return Migrate(dirsMap)
 	} else if canWeMigrate() {
-		Migrate(dirsMap)
+		return Migrate(dirsMap)
 	} else {
 		return fmt.Errorf("permission to migrate not given")
 	}
@@ -66,7 +67,11 @@ func Migrate(dirsToMigrate map[string]string) error {
 			if err := checkFileNamesAndMigrate(depDir, newDir); err != nil {
 				return err
 			}
-
+			// [csk] once the files are migrated we need to remove the dir or
+			// the DoesDirExist function will return.
+			if err := os.Remove(depDir); err != nil {
+				return err
+			}
 		} else { //should never throw
 			return fmt.Errorf("unknown and unresolveable conflict between directory to deprecate (%s) and new directory (%s)\n", depDir, newDir)
 		}
@@ -102,9 +107,9 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 		if fileNamesToCheck[file.Name()] == true { //conflict!
 			return fmt.Errorf("identical file name in deprecated dir (%s) and new dir to migrate to (%s)\nplease resolve and re-run command", depFile, newFile)
 		} else { //filenames don't match, move file from depDir to newDir
-			logger.Printf("File migration NOT succesful:\t%s ====> %s\n", depFile, newFile)
 
 			if err := os.Rename(depFile, newFile); err != nil {
+				logger.Errorf("File migration NOT succesful:\t%s ====> %s\n", depFile, newFile)
 				return err
 			}
 			logger.Printf("File migration succesful:\t%s ====> %s\n", depFile, newFile)
