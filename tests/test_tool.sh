@@ -162,6 +162,9 @@ packagesToTest() {
   go test ./config/...
   passed Config
   if [ $? -ne 0 ]; then return 1; fi
+  go test ./keys/...
+  passed Keys
+  if [ $? -ne 0 ]; then return 1; fi
 
   # The second series of tests expects ipfs to not be running
   eris services stop ipfs -frx

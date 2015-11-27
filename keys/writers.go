@@ -34,6 +34,7 @@ func GetPubKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
+
 	do.Operations.Interactive = false
 	do.Operations.Args = []string{"eris-keys", "pub", "--addr", do.Address}
 
@@ -46,6 +47,7 @@ func GetPubKey(do *definitions.Do) error {
 func ExportKey(do *definitions.Do) error {
 
 	do.Name = "keys"
+	do.Operations.ContainerNumber = 1
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
@@ -54,12 +56,7 @@ func ExportKey(do *definitions.Do) error {
 		do.Destination = path.Join(KeysPath, "data")
 	}
 	//src in container
-	if do.Address != "" {
-		do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address, do.Address)
-	} else {
-		do.Source = path.Join(ErisContainerRoot, "keys", "data")
-	}
-
+	do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address)
 	if err := data.ExportData(do); err != nil {
 		return err
 	}
@@ -69,26 +66,24 @@ func ExportKey(do *definitions.Do) error {
 func ImportKey(do *definitions.Do) error {
 
 	do.Name = "keys"
+	do.Operations.ContainerNumber = 1
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	if do.Address != "" {
-		do.Operations.Interactive = false
-		dir := path.Join(ErisContainerRoot, "keys", "data", do.Address)
-		do.Operations.Args = []string{"mkdir", dir} //need to mkdir for import
-		if err := srv.ExecService(do); err != nil {
-			return err
-		}
-		//src on host
-		//dest in container
-		do.Source = path.Join(KeysPath, "data", do.Address, do.Address)
-		do.Destination = dir
 
-	} else {
-		do.Source = path.Join(KeysPath, "data")
-		do.Destination = path.Join(ErisContainerRoot, "keys", "data")
+	do.Operations.Interactive = false
+	dir := path.Join(ErisContainerRoot, "keys", "data", do.Address)
+	do.Operations.Args = []string{"mkdir", dir} //need to mkdir for import
+	if err := srv.ExecService(do); err != nil {
+		return err
 	}
-	//TODO [zr] src flag
+	//src on host
+
+	if do.Source == "" {
+		do.Source = path.Join(KeysPath, "data", do.Address, do.Address)
+	}
+	//dest in container
+	do.Destination = dir
 
 	if err := data.ImportData(do); err != nil {
 		return err

@@ -37,7 +37,6 @@ func TestsInit(testType string) error {
 	// run correctly.
 	config.ChangeErisDir(erisDir)
 
-	// init dockerClient (for chains use "eris-test-nyc2-1.8.1"?)
 	util.DockerConnect(false, "eris")
 
 	// this dumps the ipfs service def into the temp dir which

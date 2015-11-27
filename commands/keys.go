@@ -55,33 +55,33 @@ Command is equivalent to: [eris services exec keys "eris-keys pub --addr ADDR"]`
 }
 
 var keysExport = &cobra.Command{
-	Use:   "export",
-	Short: "Export keys from container to host.",
-	Long: `Export keys from container to host.
+	Use:   "export ADDR",
+	Short: "Export a key from container to host.",
+	Long: `Export a key from container to host.
 	
-Takes the contents (or a single key via addr flag) of
-/home/eris/.eris/keys/data/
 
-in the keys container and copies everything (by default) to
-$HOME/user/.eris/keys/data/
+Takes a key from:
+/home/eris/.eris/keys/data/ADDR/ADDR
 
-on the host. Use --addr to export single keys.
-Optionally specify host destination with --dest.`,
+in the keys container and copies it to
+$HOME/user/.eris/keys/data/ADDR/ADDR
+
+on the host. Optionally specify host destination with --dest.`,
 	Run: ExportKey,
 }
 
 var keysImport = &cobra.Command{
-	Use:   "import",
-	Short: "Import keys to container from host.",
-	Long: `Import keys to container from host.
+	Use:   "import ADDR",
+	Short: "Import a key to container from host.",
+	Long: `Import a key to container from host.
 
-Takes the contents (or a single key via addr flag) of
-$HOME/user/.eris/keys/data/
+Takes a key from:
+$HOME/user/.eris/keys/data/ADDR/ADDR
 
-on the host and copies everything (by default) to
-/home/eris/.eris/keys/data/
+on the host and copies it to
+/home/eris/.eris/keys/data/ADDR/ADDR
 
-in the keys container. Use --addr to import single keys.`,
+in the keys container.`,
 	Run: ImportKey,
 }
 
@@ -101,38 +101,37 @@ $HOME/.eris/chains/newChain/priv_validator.json`,
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
-	//keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from. give full filepath to key")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 
 }
 
 func GenerateKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args)) // no args needed!
+	IfExit(ArgCheck(0, "eq", cmd, args))
 
 	IfExit(keys.GenerateKey(do))
 }
 
 func GetPubKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args)) // the addr
+	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Address = strings.TrimSpace(args[0])
 	IfExit(keys.GetPubKey(do))
 }
 
-//from /home/eris/.eris/keys/data/ to /home/user/.eris/keys/data/
 func ExportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args))
-	do.Address = strings.TrimSpace(do.Address)
+	IfExit(ArgCheck(1, "eq", cmd, args))
+	do.Address = strings.TrimSpace(args[0])
 	IfExit(keys.ExportKey(do))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args))
-	do.Address = strings.TrimSpace(do.Address)
+	IfExit(ArgCheck(1, "eq", cmd, args))
+	do.Address = strings.TrimSpace(args[0])
 	IfExit(keys.ImportKey(do))
 }
 
 func ConvertKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args)) // the addr
+	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Address = strings.TrimSpace(args[0])
 	IfExit(keys.ConvertKey(do))
 }
