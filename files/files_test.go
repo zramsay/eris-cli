@@ -62,9 +62,26 @@ func TestPutFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = file
 	logger.Infof("Putting File =>\t\t\t%s\n", do.Name)
-	if err := PutFiles(do); err != nil {
-		fatal(t, err)
+
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := testPutFiles(do); err != nil {
+			time.Sleep(3 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
 	}
+	if !passed {
+		// final time will throw
+		if err := testPutFiles(do); err != nil {
+			fatal(t, err)
+		}
+	}
+
 	hash = do.Result
 	logger.Debugf("My Result =>\t\t\t%s\n", do.Result)
 }
@@ -106,7 +123,7 @@ func testsInit() error {
 	do1.Operations.Args = []string{"ipfs"}
 	err = services.StartService(do1)
 	tests.IfExit(err)
-	time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second) // boot time
 
 	return nil
 }
@@ -123,4 +140,11 @@ func testKillIPFS(t *testing.T) {
 	if e := services.KillService(do); e != nil {
 		t.Fatal(e)
 	}
+}
+
+func testPutFiles(do *definitions.Do) error {
+	if err := PutFiles(do); err != nil {
+		return err
+	}
+	return nil
 }

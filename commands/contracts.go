@@ -91,7 +91,6 @@ func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which EPM should use (EPM only)")
 	contractsTest.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address (EPM only)")
 	contractsTest.Flags().BoolVarP(&do.OutputTable, "summary", "u", true, "output a table summarizing epm jobs (EPM only)")
-
 	contractsTest.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use (EPM only)")
 	contractsTest.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory EPM should use when saving ABIs after the compile process (EPM only)")
 	contractsTest.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job (EPM only)")
@@ -111,7 +110,6 @@ func addContractsFlags() {
 	contractsDeploy.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which EPM should use (EPM only)")
 	contractsDeploy.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address (EPM only)")
 	contractsDeploy.Flags().BoolVarP(&do.OutputTable, "summary", "u", true, "output a table summarizing epm jobs (EPM only)")
-
 	contractsDeploy.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use (EPM only)")
 	contractsDeploy.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory EPM should use when saving ABIs after the compile process (EPM only)")
 	contractsDeploy.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job (EPM only)")
