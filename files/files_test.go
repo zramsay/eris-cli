@@ -91,8 +91,23 @@ func TestGetFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = hash
 	do.Path = fileName
-	if err := GetFiles(do); err != nil {
-		fatal(t, err)
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := testGetFiles(do); err != nil {
+			time.Sleep(3 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := testGetFiles(do); err != nil {
+			fatal(t, err)
+		}
 	}
 
 	f, err := os.Open(fileName)
@@ -144,6 +159,13 @@ func testKillIPFS(t *testing.T) {
 
 func testPutFiles(do *definitions.Do) error {
 	if err := PutFiles(do); err != nil {
+		return err
+	}
+	return nil
+}
+
+func testGetFiles(do *definitions.Do) error {
+	if err := GetFiles(do); err != nil {
 		return err
 	}
 	return nil
