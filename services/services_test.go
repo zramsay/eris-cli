@@ -229,38 +229,29 @@ func TestKillRmService(t *testing.T) {
 
 func TestImportService(t *testing.T) {
 	testStartService(t, "ipfs", false)
-	//	defer testKillService(t, "ipfs", true)
-	//XXX above functions paniced; this worked
-	/*
-		do.Operations.ContainerNumber = 1
-		err := EnsureRunning(do)
-		if err != nil {
-			logger.Errorln(err)
-			fatal(t, err)
-		}*/
+	time.Sleep(5 * time.Second)
 
 	do := def.NowDo()
-	do.Operations.Args = []string{"ipfs"}
-	e := StartService(do)
-	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
-		fatal(t, e)
-	}
-	time.Sleep(7 * time.Second)
-
-	servName := "eth"
-	do.Name = servName
+	do.Name = "eth"
 	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
 	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
 
-	e = ImportService(do)
-	if e != nil {
-		logger.Errorln(e)
-		// i dislike thee sometimes ipfs....
-		if strings.Contains(fmt.Sprintf("%v", e), "connection refused") || strings.Contains(fmt.Sprintf("%v", e), "connection reset by peer") {
-			logger.Errorln("IPFS reset, but not reaping the error.")
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ImportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
 		} else {
-			fatal(t, e)
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ImportService(do); err != nil {
+			fatal(t, err)
 		}
 	}
 
@@ -268,12 +259,27 @@ func TestImportService(t *testing.T) {
 }
 
 func TestExportService(t *testing.T) {
+	//ExportService has EnsureRunning builtin
 	do := def.NowDo()
 	do.Name = "ipfs"
-	err := ExportService(do) //ExportService has EnsureRunning builtin
-	if err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
+
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ExportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ExportService(do); err != nil {
+			fatal(t, err)
+		}
 	}
 
 	testExistAndRun(t, "ipfs", 1, true, true)

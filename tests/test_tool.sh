@@ -197,8 +197,6 @@ packagesToTest() {
   # The final push....
   go test ./commands/...
   passed Commands
-
-  # Now, for stack level tests
   if [ $? -ne 0 ]; then return 1; fi
 
   # Now! Stack based tests
