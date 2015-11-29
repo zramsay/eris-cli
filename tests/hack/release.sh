@@ -138,7 +138,7 @@ release_yum() {
   docker-machine scp $repo/tests/hack/eris-cli.spec $yummachine:~
   docker-machine scp $repo/tests/hack/eris.repo $yummachine:~
   docker-machine scp $repo/tests/hack/release_rpm.sh $yummachine:~
-  docker-machine scp $build_dir/$version/linux_amd64/eris $yummachine:~
+  docker-machine scp $build_dir/$version/eris_"$version"_linux_amd64.tar.gz $yummachine:~
   docker-machine ssh $yummachine "echo \"$version\" > version"
   docker-machine ssh $yummachine
   echo "Finished with YUM release."
