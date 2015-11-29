@@ -32,6 +32,8 @@ repodir=$erisbuilddir/src/github.com/$this_user/$this_repo
 
 echo "Checking version..."
 version=$(cat version)
+tar -xzvf $HOME/eris_"$version"_linux_amd64.tar.gz
+mv eris_"$version"_linux_amd64/eris $HOME/.
 
 # -----------------------------------------------------------------
 # Build it
