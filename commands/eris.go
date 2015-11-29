@@ -19,7 +19,7 @@ const VERSION = version.VERSION
 
 // Defining the root command
 var ErisCmd = &cobra.Command{
-	Use:   "eris [command] [flags]",
+	Use:   "eris COMMAND [FLAG ...]",
 	Short: "The Blockchain Application Platform",
 	Long: `Eris is a platform for building, testing, maintaining, and operating
 distributed applications with a blockchain backend. Eris makes it easy
@@ -72,18 +72,32 @@ func AddCommands() {
 	ErisCmd.AddCommand(Data)
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
+
+	buildKeysCommand()
+	ErisCmd.AddCommand(Keys)
 	// buildProjectsCommand()
 	// ErisCmd.AddCommand(Projects)
 	// buildRemotesCommand()
 	// ErisCmd.AddCommand(Remotes)
-	ErisCmd.AddCommand(ListKnown)
-	ErisCmd.AddCommand(ListExisting)
 
+	ErisCmd.AddCommand(ListEverything)
+
+	buildCleanCommand()
+	ErisCmd.AddCommand(Clean)
 	buildConfigCommand()
 	ErisCmd.AddCommand(Config)
 	ErisCmd.AddCommand(VerSion)
 	buildInitCommand()
 	ErisCmd.AddCommand(Init)
+	buildUpdateCommand()
+	ErisCmd.AddCommand(Update)
+	buildVerSionCommand()
+	ErisCmd.AddCommand(VerSion)
+	ErisCmd.AddCommand(ManPage)
+	buildManCommand()
+
+	ErisCmd.SetHelpCommand(Help)
+	ErisCmd.SetHelpTemplate(helpTemplate)
 }
 
 // Global Do struct
@@ -95,8 +109,7 @@ func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
 	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
-	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "", "eris", "machine name for docker-machine that is running VM")
-
+	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
 }
 
 func InitializeConfig() {
@@ -144,6 +157,23 @@ func ArgCheck(num int, comp string, cmd *cobra.Command, args []string) error {
 		if len(args) < num {
 			cmd.Help()
 			return fmt.Errorf("\n**Note** you sent our marmots the wrong number of arguments.\nPlease send the marmots at least %d argument(s).", num)
+		}
+	}
+	return nil
+}
+
+//restrict flag behaviour when needed (rare but used sometimes)
+func FlagCheck(num int, comp string, cmd *cobra.Command, flags []string) error {
+	switch comp {
+	case "eq":
+		if len(flags) != num {
+			cmd.Help()
+			return fmt.Errorf("\n**Note** you sent our marmots the wrong number of flags.\nPlease send the marmots %d flags only.", num)
+		}
+	case "ge":
+		if len(flags) < num {
+			cmd.Help()
+			return fmt.Errorf("\n**Note** you sent our marmots the wrong number of flags.\nPlease send the marmots at least %d flag(s).", num)
 		}
 	}
 	return nil

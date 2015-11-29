@@ -21,14 +21,16 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 	}
 
 	if cNum[0] == 0 {
-		cNum[0] = util.AutoMagic(0, "service", newCont)
+		cNum[0] = util.AutoMagic(0, definitions.TypeService, newCont)
 		logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		logger.Debugf("Loading Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
 
 	srv := definitions.BlankServiceDefinition()
+	srv.Operations.ContainerType = definitions.TypeService
 	srv.Operations.ContainerNumber = cNum[0]
+	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
 		return nil, err
@@ -60,12 +62,15 @@ func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definiti
 	srv.Name = servName
 
 	if len(cNum) == 0 {
-		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], "service", newCont)
+		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeService, newCont)
 		logger.Debugf("Mocking Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
 	} else {
 		srv.Operations.ContainerNumber = cNum[0]
 		logger.Debugf("Mocking Service Definition =>\t%s:%d\n", servName, cNum[0])
 	}
+
+	srv.Operations.ContainerType = definitions.TypeService
+	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 
 	ServiceFinalizeLoad(srv)
 	return srv
@@ -89,21 +94,18 @@ func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.Service
 // These are things we want to *always* control. Should be last
 // called before a return...
 func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
-	// If no name use image name
-	if srv.Name == "" {
-		logger.Debugf("Service definition has no name. ")
-		if srv.Service.Name != "" {
-			logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
-			srv.Name = srv.Service.Name
-		} else {
-			if srv.Service.Image != "" {
-				srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
-				srv.Service.Name = srv.Name
-				logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
-			} else {
-				panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
-			}
-		}
+	if srv.Name == "" && srv.Service.Name == "" && srv.Service.Image == "" { // If no name or image, panic
+		panic("Service's Image should have been set before reaching ServiceFinalizeLoad")
+	} else if srv.Name == "" && srv.Service.Name == "" && srv.Service.Image != "" { // If no name use image
+		srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
+		srv.Service.Name = srv.Name
+		logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
+	} else if srv.Service.Name != "" && srv.Name == "" { // harmonize names
+		srv.Name = srv.Service.Name
+		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
+	} else if srv.Service.Name == "" && srv.Name != "" {
+		srv.Service.Name = srv.Name
+		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Name)
 	}
 
 	container := util.FindServiceContainer(srv.Name, srv.Operations.ContainerNumber, true)
@@ -130,7 +132,7 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 }
 
 func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
-	connectToAService(srv, ops, "service", name, internalName, link, mount)
+	connectToAService(srv, ops, definitions.TypeService, name, internalName, link, mount)
 }
 
 // --------------------------------------------------------------------

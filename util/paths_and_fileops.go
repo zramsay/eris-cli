@@ -9,7 +9,7 @@ import (
 )
 
 func ChainsPathChecker(name string) (string, error) {
-	pathS := filepath.Join(BlockchainsPath, name)
+	pathS := filepath.Join(ChainsPath, name)
 	src, err := os.Stat(pathS)
 	if err != nil || !src.IsDir() {
 		logger.Infof("path: %s does not exist or is not a directory, please pass in a valid path or ensure a dir was created and has the correct files in it\n", pathS)
@@ -41,7 +41,7 @@ func GetGlobalLevelConfigFilesByType(typ string, withExt bool) []string {
 	case "services":
 		path = ServicesPath
 	case "chains":
-		path = BlockchainsPath
+		path = ChainsPath
 	case "actions":
 		path = ActionsPath
 	case "files":

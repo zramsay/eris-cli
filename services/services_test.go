@@ -3,31 +3,31 @@ package services
 import (
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var srv *def.ServiceDefinition
-var erisDir string = path.Join(os.TempDir(), "eris")
+
 var servName string = "ipfs"
 var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 
+//[zr] is basically a weird version of ifExit ..?
 func fatal(t *testing.T, err error) {
 	if !DEAD {
 		log.Flush()
-		testsTearDown()
+		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
 	}
@@ -42,13 +42,13 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(testsInit())
+	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
 	logger.Infoln("Commensing with Tests Tear Down.")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		ifExit(testsTearDown())
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -56,15 +56,19 @@ func TestMain(m *testing.M) {
 
 func TestKnownService(t *testing.T) {
 	do := def.NowDo()
-	ifExit(ListKnown(do))
+	do.Known = true
+	do.Existing = false
+	do.Running = false
+	do.Operations.Args = []string{"testing"}
+	tests.IfExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 3 {
-		ifExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
+		tests.IfExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
 	}
 
 	if k[1] != "ipfs" {
-		ifExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
+		tests.IfExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
 	}
 }
 
@@ -97,19 +101,19 @@ func TestLoadServiceDefinition(t *testing.T) {
 }
 
 func TestStartKillService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	testKillService(t, servName, true)
 }
 
 func TestInspectService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
 	do.Name = servName
-	do.Args = []string{"name"}
+	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Args, do.Operations.ContainerNumber)
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Operations.Args, do.Operations.ContainerNumber)
 	e := InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
@@ -118,9 +122,9 @@ func TestInspectService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Name = servName
-	do.Args = []string{"config.user"}
+	do.Operations.Args = []string{"config.user"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Args)
+	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Operations.Args)
 	e = InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
@@ -129,7 +133,7 @@ func TestInspectService(t *testing.T) {
 }
 
 func TestLogsService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 	do := def.NowDo()
 	do.Name = servName
@@ -149,14 +153,14 @@ func TestExecService(t *testing.T) {
 		return
 	}*/
 
-	testStartService(t, servName)
+	testStartService(t, servName, true)
 	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
 	do.Name = servName
-	do.Interactive = false
-	do.Args = strings.Fields("ls -la /root/")
-	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Args, " "))
+	do.Operations.Interactive = false
+	do.Operations.Args = strings.Fields("ls -la /root/")
+	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Operations.Args, " "))
 	e := ExecService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -165,7 +169,7 @@ func TestExecService(t *testing.T) {
 }
 
 func TestUpdateService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
@@ -174,7 +178,7 @@ func TestUpdateService(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = servName
-	do.SkipPull = true
+	do.Pull = false
 	do.Timeout = 1
 	logger.Debugf("Update serv (via tests) =>\t%s\n", servName)
 	e := UpdateService(do)
@@ -188,12 +192,12 @@ func TestUpdateService(t *testing.T) {
 }
 
 func TestKillRmService(t *testing.T) {
-	testStartService(t, servName)
+	testStartService(t, servName, false)
 	do := def.NowDo()
 	do.Name = servName
 	do.Rm = false
 	do.RmD = false
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
 	if e := KillService(do); e != nil {
 		logger.Errorln(e)
@@ -210,7 +214,7 @@ func TestKillRmService(t *testing.T) {
 
 	do = def.NowDo()
 	do.Name = servName
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	do.File = false
 	do.RmD = true
 	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
@@ -224,47 +228,58 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestImportService(t *testing.T) {
-	testStartService(t, "ipfs")
-	//	defer testKillService(t, "ipfs", true)
-	//XXX above functions paniced; this worked
-	/*
-		do.Operations.ContainerNumber = 1
-		err := EnsureRunning(do)
-		if err != nil {
-			logger.Errorln(err)
-			fatal(t, err)
-		}*/
-
-	do := def.NowDo()
-	do.Args = []string{"ipfs"}
-	e := StartService(do)
-	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
-		fatal(t, e)
-	}
+	testStartService(t, "ipfs", false)
 	time.Sleep(5 * time.Second)
 
-	servName := "eth"
-	do.Name = servName
+	do := def.NowDo()
+	do.Name = "eth"
 	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
 	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
 
-	e = ImportService(do)
-	if e != nil {
-		logger.Errorln(e)
-		fatal(t, e)
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ImportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ImportService(do); err != nil {
+			fatal(t, err)
+		}
 	}
 
 	testExistAndRun(t, "ipfs", 1, true, true)
 }
 
 func TestExportService(t *testing.T) {
+	//ExportService has EnsureRunning builtin
 	do := def.NowDo()
 	do.Name = "ipfs"
-	err := ExportService(do) //ExportService has EnsureRunning builtin
-	if err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
+
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ExportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ExportService(do); err != nil {
+			fatal(t, err)
+		}
 	}
 
 	testExistAndRun(t, "ipfs", 1, true, true)
@@ -274,8 +289,8 @@ func TestNewService(t *testing.T) {
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Args = []string{"eris/keys"}
-	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
+	do.Operations.Args = []string{"quay.io/eris/keys"}
+	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	e := NewService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -283,10 +298,10 @@ func TestNewService(t *testing.T) {
 	}
 
 	do = def.NowDo()
-	do.Args = []string{servName}
+	do.Operations.Args = []string{servName}
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Args, do.Operations.ContainerNumber)
+	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Operations.Args, do.Operations.ContainerNumber)
 	e = StartService(do)
 	if e != nil {
 		logger.Errorln(e)
@@ -300,16 +315,7 @@ func TestNewService(t *testing.T) {
 }
 
 func TestRenameService(t *testing.T) {
-	// do := def.NowDo()
-	// do.Name = "keys"
-	// do.Args = []string{"eris/keys"}
-	// logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Args)
-	// if e := NewService(do); e != nil {
-	// 	logger.Errorln(e)
-	// 	fatal(t, nil)
-	// }
-
-	testStartService(t, "keys")
+	testStartService(t, "keys", false)
 	testExistAndRun(t, "keys", 1, true, true)
 	testNumbersExistAndRun(t, "keys", 1, 1)
 
@@ -342,8 +348,8 @@ func TestRenameService(t *testing.T) {
 
 	testExistAndRun(t, "keys", 1, true, true)
 	testExistAndRun(t, "syek", 1, false, false)
-	testNumbersExistAndRun(t, "syek", 0, 0)
 	testNumbersExistAndRun(t, "keys", 1, 1)
+	testNumbersExistAndRun(t, "syek", 0, 0)
 
 	testKillService(t, "keys", true)
 	testExistAndRun(t, "keys", 1, false, false)
@@ -363,7 +369,7 @@ func TestCatService(t *testing.T) {
 
 func TestStartKillServiceWithDependencies(t *testing.T) {
 	do := def.NowDo()
-	do.Args = []string{"do_not_use"}
+	do.Operations.Args = []string{"do_not_use"}
 	//do.Operations.ContainerNumber = 1
 	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
@@ -394,10 +400,11 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 //----------------------------------------------------------------------
 // test utils!
 
-func testStartService(t *testing.T, serviceName string) {
+func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
-	do.Args = []string{serviceName}
+	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
+	do.Operations.PublishAllPorts = publishAll
 	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
 	e := StartService(do)
 	if e != nil {
@@ -414,7 +421,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 
 	do := def.NowDo()
 	do.Name = serviceName
-	do.Args = []string{serviceName}
+	do.Operations.Args = []string{serviceName}
 	if wipe {
 		do.Rm = true
 		do.RmD = true
@@ -429,59 +436,9 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	var exist, run bool
-	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", servName, toRun, toExist)
-	servName = util.ServiceContainersName(servName, containerNumber)
-
-	do := def.NowDo()
-	do.Quiet = true
-	do.Args = []string{"testing"}
-	if err := ListExisting(do); err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			exist = true
-		}
-	}
-
-	do = def.NowDo()
-	do.Quiet = true
-	do.Args = []string{"testing"}
-	if err := ListRunning(do); err != nil {
-		logger.Errorln(err)
-		fatal(t, err)
-	}
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Running =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(servName) {
-			run = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Printf("Could not find an existing =>\t%s\n", servName)
-		} else {
-			logger.Printf("Found an existing instance of %s when I shouldn't have\n", servName)
-		}
+	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
 		fatal(t, nil)
 	}
-
-	if toRun != run {
-		if toRun {
-			logger.Printf("Could not find a running =>\t%s\n", servName)
-		} else {
-			logger.Printf("Found a running instance of %s when I shouldn't have\n", servName)
-		}
-		fatal(t, nil)
-	}
-
-	logger.Infoln("All good.\n")
 }
 
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
@@ -506,71 +463,8 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := def.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	ifExit(ini.Initialize(do))
-
-	// set ipfs endpoint
-	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
-
-	// make sure ipfs not running
-	do = def.NowDo()
-	do.Quiet = true
-	logger.Debugln("Finding the running services.")
-	if err := ListRunning(do); err != nil {
-		ifExit(err)
+	if err := tests.TestsInit("services"); err != nil {
+		return err
 	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			ifExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
-		}
-	}
-	// make sure ipfs container does not exist
-	do = def.NowDo()
-	do.Quiet = true
-	if err := ListExisting(do); err != nil {
-		ifExit(err)
-	}
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			ifExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
-		}
-	}
-
-	logger.Infoln("Test init completed. Starting main test sequence now.")
 	return nil
-}
-
-func testsTearDown() error {
-	return os.RemoveAll(erisDir)
-	// return nil
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
-	}
 }

@@ -45,6 +45,9 @@ type Service struct {
 	CPUShares int64 `mapstructure:"cpu_shares" json:"cpu_shares,omitempty,omitzero" yaml:"cpu_shares,omitempty" toml:"cpu_shares,omitempty,omitzero"`
 	// maps directly to docker mem_limit
 	MemLimit int64 `mapstructure:"mem_limit" json:"memory,omitempty,omitzero" yaml:"memory,omitempty" toml:"memory,omitempty,omitzero"`
+
+	// an env variable to set for when we are running `eris exec` so we can find the main container
+	ExecHost string `mapstructure:"exec_host" json:"memory,omitempty,omitzero" yaml:"memory,omitempty" toml:"memory,omitempty,omitzero"`
 }
 
 func BlankService() *Service {

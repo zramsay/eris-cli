@@ -17,7 +17,7 @@ import (
 )
 
 func NewAction(do *definitions.Do) error {
-	do.Name = strings.Join(do.Args, "_")
+	do.Name = strings.Join(do.Operations.Args, "_")
 	path := filepath.Join(ActionsPath, do.Name)
 	logger.Debugf("NewActionRaw to MockAction =>\t%v:%s\n", do.Name, path)
 	act, _ := MockAction(do.Name)
@@ -29,9 +29,9 @@ func NewAction(do *definitions.Do) error {
 
 func ImportAction(do *definitions.Do) error {
 	if do.Name == "" {
-		do.Name = strings.Join(do.Args, "_")
+		do.Name = strings.Join(do.Operations.Args, "_")
 	}
-	fileName := filepath.Join(ActionsPath, strings.Join(do.Args, " "))
+	fileName := filepath.Join(ActionsPath, strings.Join(do.Operations.Args, " "))
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -46,7 +46,8 @@ func ImportAction(do *definitions.Do) error {
 			return err
 		}
 
-		err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+		ipfsService.Operations.ContainerType = definitions.TypeService
+		err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
 		if err != nil {
 			return err
 		}
@@ -83,7 +84,7 @@ func ExportAction(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = perform.DockerRun(ipfsService.Service, ipfsService.Operations)
+	err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
 	if err != nil {
 		return err
 	}
@@ -158,14 +159,8 @@ func RenameAction(do *definitions.Do) error {
 	return nil
 }
 
-func ListKnown(do *definitions.Do) error {
-	chns := util.GetGlobalLevelConfigFilesByType("actions", false)
-	do.Result = strings.Join(chns, "\n")
-	return nil
-}
-
 func RmAction(do *definitions.Do) error {
-	do.Name = strings.Join(do.Args, "_")
+	do.Name = strings.Join(do.Operations.Args, "_")
 	if do.File {
 		oldFile := util.GetFileByNameAndType("actions", do.Name)
 		if oldFile == "" {

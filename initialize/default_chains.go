@@ -1,24 +1,24 @@
 package initialize
 
 import (
-	"fmt"
+  "fmt"
 
-	"github.com/eris-ltd/eris-cli/version"
+  "github.com/eris-ltd/eris-cli/version"
 )
 
 func DefChainService() string {
-	ver := version.VERSION
-	return fmt.Sprintf(`
+  ver := version.VERSION
+  return fmt.Sprintf(`
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 [service]
-image          = "eris/erisdb:%s"
+image          = "quay.io/eris/erisdb:%s"
 data_container = true
 ports          = [ "1337", "46656", "46657" ]
 entry_point    = "erisdb-wrapper"
 
 [dependencies]
-services = [ "keys" ] 
+services = [ "keys" ]
 
 [maintainer]
 name = "Eris Industries"
@@ -27,7 +27,7 @@ email = "support@erisindustries.com"
 }
 
 func DefChainConfig() string {
-	return `
+  return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -38,16 +38,17 @@ db_backend = "leveldb"
 log_level = "debug"
 node_laddr = "0.0.0.0:46656"
 rpc_laddr = "0.0.0.0:46657"
+vm_log = false
 `
 }
 
 func DefChainGen() string {
-	return `
+  return `
 {
   "chain_id": "my_tests",
   "accounts": [
     {
-      "address": "F81CB9ED0A868BD961C4F5BBC0E39B763B89FCB6",
+      "address": "0000000000000000000000000000000000000001",
       "amount": 690000000000
     },
     {
@@ -55,7 +56,7 @@ func DefChainGen() string {
       "amount": 565000000000
     },
     {
-      "address": "9E54C9ECA9A3FD5D4496696818DA17A9E17F69DA",
+      "address": "0000000000000000000000000000000000000003",
       "amount": 525000000000
     },
     {
@@ -64,7 +65,7 @@ func DefChainGen() string {
     },
     {
       "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
-      "amount": 110000000000
+      "amount": 999999999999
     }
   ],
   "validators": [
@@ -76,7 +77,7 @@ func DefChainGen() string {
       "amount": 5000000000,
       "unbond_to": [
         {
-          "address": "93E243AC8A01F723DE353A4FA1ED911529CCB6E5",
+          "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
           "amount": 5000000000
         }
       ]
@@ -86,15 +87,15 @@ func DefChainGen() string {
 `
 }
 
-// different from genesis above!
-var DefaultPubKeys = []string{"BB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
+// different from genesis above! -- used for testing
+var DefaultPubKeys = []string{"CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
 
 func DefChainCSV() string {
-	return fmt.Sprintf("%s,", DefaultPubKeys[0])
+  return fmt.Sprintf("%s,", DefaultPubKeys[0])
 }
 
 func DefChainKeys() string {
-	return `
+  return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -113,7 +114,7 @@ func DefChainKeys() string {
 }
 
 func DefChainServConfig() string {
-	return `
+  return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 

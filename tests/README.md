@@ -7,21 +7,23 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 * test the tool itself
 * test minimum viable stack connection and sequencing
 * test the tool against a multitude of docker-engine APIs
-  * docker 1.7.1 (implemented)
   * docker 1.8.0 (implemented)
   * docker 1.8.1 (implemented)
+  * docker 1.8.2 (implemented)
+  * docker 1.8.3 (implemented)
+  * docker 1.9.0 (implemented)
 * test the tool from a multitude of host environments
-  * debian (not implemented)
-  * rhel (not implemented)
+  * debian (not implemented. is this necessary?)
+  * rhel (not implemented. is this necessary?)
   * ubuntu (running the tests in docker provides natively)
-  * OSX (not implemented)
-  * windows (not implemented)
+  * OSX (not implemented. is this necessary?)
+  * windows (not implemented. is this necessary?)
 
 ## Goal 1: Test The Tool Itself
 
 Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container (but I also use it for quick testing of the package level tests locally -- see below).
 
-## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (DApps and Contract Suites)
+## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (Apps and Contract Suites)
 
 TODO (will fill in as we collaboratively build [toadserver](https://github.com/eris-ltd/toadserver)). Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the eris/eris container.
 
@@ -103,8 +105,9 @@ docker run --rm --entrypoint "/home/eris/test_tool.sh" -e MACHINE_NAME="eris-tes
 
 # ToDos
 
-* Figure out what breaks when OSX is 'local'
-* Get the metrics on the array of hosts and api versions into a consumable form
-* Figure out the deployment paths for build artifacts
+* Get the metrics on the array of hosts and api versions into a consumable form.
+* Route logs to papertrail using Ethan's paradigm for integration tests.
+* Only display the machine backend results for circle. Pipe these into slack so we can see them.
+* Figure out the deployment paths for build artifacts.
 * moar package level testing
-* finalize the dapp level testing
+* finalize the app level testing

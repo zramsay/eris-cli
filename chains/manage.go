@@ -41,11 +41,11 @@ func RegisterChain(do *definitions.Do) error {
 
 	// set chainid and other vars
 	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),      // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),         // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),  // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),     // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
+		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
+		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
+		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
+		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
 	}
 	envVars = append(envVars, do.Env...)
 
@@ -60,15 +60,16 @@ func RegisterChain(do *definitions.Do) error {
 
 	logger.Debugf("Starting chain container via Docker =>\t%s\n", chain.Service.Name)
 	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
-	cmd := []string{loaders.ErisChainRegister}
-	dataContainerName := util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
-	_, err = perform.DockerRunVolumesFromContainer(dataContainerName, false, cmd, chain.Service)
+	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
+	chain.Operations.Args = []string{loaders.ErisChainRegister}
+
+	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
 	return err
 }
 
 func ImportChain(do *definitions.Do) error {
-	fileName := filepath.Join(BlockchainsPath, do.Name)
+	fileName := filepath.Join(ChainsPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
@@ -105,7 +106,7 @@ func InspectChain(do *definitions.Do) error {
 
 	if IsChainExisting(chain) {
 		logger.Debugf("Chain exists, calling services.InspectServiceByService.\n")
-		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Args[0])
+		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
 			return err
 		}
@@ -183,17 +184,21 @@ func CurrentChain(do *definitions.Do) error {
 
 func PlopChain(do *definitions.Do) error {
 	do.Name = do.ChainID
-	rootDir := path.Join("/home/eris/.eris/blockchains", do.ChainID)
+	rootDir := path.Join("/home/eris/.eris/chains", do.ChainID)
 	switch do.Type {
 	case "genesis":
-		do.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
-		do.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+	case "validators":
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown plop option %s", do.Type)
 	}
+	do.Operations.PublishAllPorts = true // avoid port conflict
+	logger.Debugf("Execing =>\t\t\t%v\n", do.Operations.Args)
 	return ExecChain(do)
 }
 
@@ -205,7 +210,7 @@ func PortsChain(do *definitions.Do) error {
 
 	if IsChainExisting(chain) {
 		logger.Debugf("Chain exists, getting port mapping.\n")
-		return perform.PrintPortMappings(chain.Operations.SrvContainerID, do.Args)
+		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Operations.Args)
 	}
 
 	return nil
@@ -216,56 +221,6 @@ func EditChain(do *definitions.Do) error {
 	logger.Infof("Editing Service =>\t\t%s\n", chainDefFile)
 	do.Result = "success"
 	return Editor(chainDefFile)
-}
-
-func ListKnown(do *definitions.Do) error {
-	head, _ := util.GetHead()
-	chns := util.GetGlobalLevelConfigFilesByType("chains", false)
-	var chainsNew []string
-	for _, c := range chns {
-		switch c {
-		case "default":
-			continue
-		case head:
-			chainsNew = append(chainsNew, fmt.Sprintf("*\t%s", c))
-		default:
-			chainsNew = append(chainsNew, fmt.Sprintf("\t%s", c))
-		}
-		// if c == head {
-		// } else {
-		// }
-	}
-	do.Result = strings.Join(chainsNew, "\n")
-	return nil
-}
-
-func ListRunning(do *definitions.Do) error {
-	logger.Debugf("Quiet? =>\t\t\t%v\n", do.Quiet)
-	if do.Quiet {
-		do.Result = strings.Join(util.ChainContainerNames(false), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		logger.Debugf("ListRunningRaw:PrintTable =>\t%s:%v\n", "chain", false)
-		perform.PrintTableReport("chain", false)
-	}
-
-	return nil
-}
-
-func ListExisting(do *definitions.Do) error {
-	if do.Quiet {
-		do.Result = strings.Join(util.ChainContainerNames(true), "\n")
-		if len(do.Args) != 0 && do.Args[0] != "testing" {
-			logger.Printf("%s\n", "\n")
-		}
-	} else {
-		logger.Debugf("ListExistingRaw:PrintTable =>\t%s:%v\n", "chain", true)
-		perform.PrintTableReport("chain", true)
-	}
-
-	return nil
 }
 
 // XXX: What's going on here? => [csk]: magic
@@ -288,7 +243,7 @@ func RenameChain(do *definitions.Do) error {
 
 		if !transformOnly {
 			logger.Debugln("Embarking on DockerRename.")
-			err = perform.DockerRename(chainDef.Service, chainDef.Operations, do.Name, newNameBase)
+			err = perform.DockerRename(chainDef.Operations, do.NewName)
 			if err != nil {
 				return err
 			}
@@ -309,11 +264,14 @@ func RenameChain(do *definitions.Do) error {
 		if filepath.Ext(do.NewName) == "" {
 			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
 		} else {
-			newFile = filepath.Join(BlockchainsPath, do.NewName)
+			newFile = filepath.Join(ChainsPath, do.NewName)
 		}
 
 		chainDef.Name = newNameBase
+		// Generally we won't want to use Service.Name
+		// as it will be confused with the Name.
 		chainDef.Service.Name = ""
+		// Service.Image should be taken from the default.toml.
 		chainDef.Service.Image = ""
 		err = WriteChainDefinitionFile(chainDef, newFile)
 		if err != nil {
@@ -365,7 +323,7 @@ func RmChain(do *definitions.Do) error {
 	}
 
 	if IsChainExisting(chain) {
-		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD); err != nil {
+		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes); err != nil {
 			return err
 		}
 	} else {
@@ -377,7 +335,6 @@ func RmChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		oldFile = path.Join(BlockchainsPath, oldFile) + ".toml"
 		logger.Printf("Removing file =>\t\t%s\n", oldFile)
 		if err := os.Remove(oldFile); err != nil {
 			return err
@@ -400,7 +357,7 @@ func GraduateChain(do *definitions.Do) error {
 }
 
 func CatChain(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(path.Join(BlockchainsPath, do.Name+".toml"))
+	cat, err := ioutil.ReadFile(path.Join(ChainsPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}

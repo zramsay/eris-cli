@@ -21,18 +21,23 @@ var (
 	ErisLtd = path.Join(GoPath, "src", "github.com", "eris-ltd")
 	ErisGH  = "https://github.com/eris-ltd/"
 	// usr, _   = user.Current() // error?!
-	ErisRoot = ResolveErisRoot()
+	ErisRoot          = ResolveErisRoot()
+	ErisContainerRoot = "/home/eris/.eris" // XXX: this is used as root in the `eris/base` image
 
 	// Major Directories
+	AppsPath           = path.Join(ErisRoot, "apps") // previously "dapps"
 	ActionsPath        = path.Join(ErisRoot, "actions")
-	BlockchainsPath    = path.Join(ErisRoot, "blockchains")
+	ChainsPath         = path.Join(ErisRoot, "chains") // previously "blockchains"
 	DataContainersPath = path.Join(ErisRoot, "data")
-	DappsPath          = path.Join(ErisRoot, "dapps")
 	FilesPath          = path.Join(ErisRoot, "files")
 	KeysPath           = path.Join(ErisRoot, "keys")
 	LanguagesPath      = path.Join(ErisRoot, "languages")
 	ServicesPath       = path.Join(ErisRoot, "services")
 	ScratchPath        = path.Join(ErisRoot, "scratch")
+
+	//Deprecated Directories
+	BlockchainsPath = path.Join(ErisRoot, "blockchains")
+	DappsPath       = path.Join(ErisRoot, "dapps")
 
 	// Keys
 	KeysDataPath = path.Join(KeysPath, "data")
@@ -45,13 +50,18 @@ var (
 	SerpScratchPath = path.Join(ScratchPath, "ser")
 
 	// Blockchains stuff
-	ChainsConfigPath = path.Join(BlockchainsPath, "config")
-	HEAD             = path.Join(BlockchainsPath, "HEAD")
-	Refs             = path.Join(BlockchainsPath, "refs")
+	HEAD = path.Join(ChainsPath, "HEAD")
+	Refs = path.Join(ChainsPath, "refs")
 )
 
 var MajorDirs = []string{
-	ErisRoot, ActionsPath, BlockchainsPath, DataContainersPath, DappsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath, ChainsConfigPath,
+	ErisRoot, ActionsPath, ChainsPath, DataContainersPath, AppsPath, FilesPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
+}
+
+//eris update checks if old dirs exist & migrates them
+var DirsToMigrate = map[string]string{
+	BlockchainsPath: ChainsPath,
+	DappsPath:       AppsPath,
 }
 
 //---------------------------------------------
@@ -160,18 +170,22 @@ func Copy(src, dst string) error {
 		return err
 	}
 	if f.IsDir() {
-		tmpDir, err := ioutil.TempDir(os.TempDir(), "golang-copy")
+		tmpDir, err := ioutil.TempDir(os.TempDir(), "eris_copy")
 		if err != nil {
 			return err
 		}
 		if err := copyDir(src, tmpDir); err != nil {
 			return err
 		}
-		fi, err := os.Stat(src)
-		if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		if err := copyDir(tmpDir, dst); err != nil {
 			return err
 		}
-		return os.Rename(tmpDir, dst)
+		// fi, err := os.Stat(src)
+		// if err := os.MkdirAll(dst, fi.Mode()); err != nil {
+		// 	return err
+		// }
+		// return os.Rename(tmpDir, dst)
+		return nil
 	}
 	return copyFile(src, dst)
 }
@@ -251,8 +265,10 @@ func Editor(file string) error {
 		return vi(file)
 	case "emacs":
 		return emacs(file)
+	default:
+		return editor(file)
 	}
-	return fmt.Errorf("Unknown editor %s", editr)
+	// return fmt.Errorf("Unknown editor %s", editr)
 }
 
 func emacs(file string) error {
@@ -265,6 +281,14 @@ func emacs(file string) error {
 
 func vi(file string) error {
 	cmd := exec.Command("vim", file)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func editor(file string) error {
+	cmd := exec.Command(os.Getenv("EDITOR"), file)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -13,23 +13,22 @@ import (
 func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	cNum := do.Operations.ContainerNumber
-	do.Args = append(do.Args, do.ServicesSlice...)
-	logger.Infof("Building the Services Group =>\t%v\n", do.Args)
-	for _, srv := range do.Args {
-		s, e := BuildServicesGroup(srv, cNum)
+	do.Operations.Args = append(do.Operations.Args, do.ServicesSlice...)
+	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	for _, srv := range do.Operations.Args {
+		s, e := BuildServicesGroup(srv, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
 		}
 		services = append(services, s...)
 	}
+
+	// [csk]: controls for ops reconciliation, overwrite will, e.g., merge the maps and stuff
 	for _, s := range services {
-		// XXX does AutoMagic elim need for this?
-		// [csk]: not totally we may need to have ops reconciliation, overwrite will, e.g., merge the maps and stuff
-		util.OverWriteOperations(s.Operations, do.Operations)
+		util.Merge(s.Operations, do.Operations)
 	}
 
-	logger.Debugln("services before build chain")
+	logger.Debugln("Services before build chain =>")
 	for _, s := range services {
 		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
@@ -37,7 +36,7 @@ func StartService(do *definitions.Do) (err error) {
 	if err != nil {
 		return err
 	}
-	logger.Debugln("services after build chain")
+	logger.Debugln("Services after build chain =>")
 	for _, s := range services {
 		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
 	}
@@ -52,10 +51,11 @@ func StartService(do *definitions.Do) (err error) {
 	return StartGroup(services)
 }
 
-func KillService(do *definitions.Do) error {
+func KillService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	for _, servName := range do.Args {
+	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	for _, servName := range do.Operations.Args {
 		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
 		if e != nil {
 			return e
@@ -80,14 +80,10 @@ func KillService(do *definitions.Do) error {
 		}
 
 		if do.Rm {
-			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD); err != nil {
+			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes); err != nil {
 				return err
 			}
 		}
-	}
-
-	if do.ChainName != "" {
-		// XXX: is it possible to delete the chain from here?
 	}
 
 	return nil
@@ -99,13 +95,28 @@ func ExecService(do *definitions.Do) error {
 		return err
 	}
 
-	if IsServiceExisting(service.Service, service.Operations) {
-		return ExecServiceByService(service.Service, service.Operations, do.Args, do.Interactive)
-	} else {
-		return fmt.Errorf("Services does not exist. Please start the service container with eris services start %s.\n", do.Name)
+	util.Merge(service.Operations, do.Operations)
+
+	// Get the main service container name, check if it's running.
+	main := util.FindServiceContainer(do.Name, do.Operations.ContainerNumber, false)
+	if main != nil {
+		if service.Service.ExecHost == "" {
+			logger.Infof("Warning: exec_host not found in service definition file. May not be able to communicate with %q service\n", do.Name)
+		} else {
+			service.Service.Environment = append(service.Service.Environment,
+				fmt.Sprintf("%s=%s", service.Service.ExecHost, do.Name))
+		}
+
+		// Use service's short name as a link alias.
+		service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:%s", main.FullName, do.Name))
 	}
 
-	return nil
+	// Override links on the command line.
+	if len(do.Links) > 0 {
+		service.Service.Links = do.Links
+	}
+
+	return perform.DockerExecService(service.Service, service.Operations)
 }
 
 // TODO: test this recursion and service deps generally
@@ -134,7 +145,7 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
 	for _, srv := range group {
 		logger.Debugf("Telling Docker to start srv =>\t%s\n", srv.Name)
-		if err := perform.DockerRun(srv.Service, srv.Operations); err != nil {
+		if err := perform.DockerRunService(srv.Service, srv.Operations); err != nil {
 			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
 		}
 	}
@@ -185,28 +196,5 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 	// XXX: we may have name collision here if we're not careful.
 	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
 
-	util.OverWriteOperations(s.Operations, srv.Operations)
 	return s, nil
 }
-
-// ------------------------------------------------------------------------------------------
-// Wrappers we want to be able to call from Chains package (mostly)
-
-func StartServiceByService(srvMain *definitions.Service, ops *definitions.Operation) error {
-	return perform.DockerRun(srvMain, ops)
-}
-
-func LogsServiceByService(srv *definitions.Service, ops *definitions.Operation, follow bool, tail string) error {
-	return perform.DockerLogs(srv, ops, follow, tail)
-}
-
-func ExecServiceByService(srvMain *definitions.Service, ops *definitions.Operation, cmd []string, attach bool) error {
-	return perform.DockerExec(srvMain, ops, cmd, attach)
-}
-
-func KillServiceByService(srvMain *definitions.Service, ops *definitions.Operation, timeout uint) error {
-	return perform.DockerStop(srvMain, ops, timeout)
-}
-
-// ------------------------------------------------------------------------------------------
-// Helpers

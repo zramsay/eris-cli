@@ -6,13 +6,19 @@ import (
 	"os/exec"
 	"path"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func UpdateEris(branch string) {
 
 	//check that git/go are installed
-	CheckGitAndGo()
+	CheckGitAndGo(true, true)
+
+	//checks for deprecated dir names and renames them
+	err := MigrateDeprecatedDirs(common.DirsToMigrate, false) // false = no prompt
+	if err != nil {
+		logger.Printf("directory migration error: %v\ncontinuing with update without migration\n", err)
+	}
 
 	//change pwd to eris/cli
 	ChangeDirectory()
@@ -25,21 +31,27 @@ func UpdateEris(branch string) {
 	PullBranch(branch)
 
 	InstallEris()
+	ver := version() //because version.Version will be in RAM.
 
-	fmt.Printf("The marmots have updated eris successful.\nEris CLI Version is now: %s\n", version.VERSION)
+	logger.Printf("The marmots have updated eris successfully.\n%s\n", ver)
 }
 
-func CheckGitAndGo() {
-	stdOut1, err := exec.Command("go", "version").CombinedOutput()
-	if err != nil {
-		fmt.Printf("ensure you have go installed:\n%s\n", string(stdOut1))
-		os.Exit(1)
-	}
+func CheckGitAndGo(git, gO bool) {
+	if git {
+		stdOut1, err := exec.Command("git", "version").CombinedOutput()
+		if err != nil {
+			logger.Printf("ensure you have git installed:\n%v\n", string(stdOut1))
+			logger.Println("or if running `eris init` use the --skip-pull flag")
+			os.Exit(1)
 
-	stdOut2, err := exec.Command("git", "version").CombinedOutput()
-	if err != nil {
-		fmt.Printf("ensure you have git installed:\n%v\n", string(stdOut2))
-		os.Exit(1)
+		}
+	}
+	if gO {
+		stdOut2, err := exec.Command("go", "version").CombinedOutput()
+		if err != nil {
+			logger.Printf("ensure you have go installed:\n%s\n", string(stdOut2))
+			os.Exit(1)
+		}
 	}
 }
 
@@ -95,4 +107,16 @@ func InstallEris() {
 	}
 
 	logger.Debugf("Go install worked correctly.\n")
+}
+
+func version() string {
+	verArgs := []string{"version"}
+
+	stdOut, err := exec.Command("eris", verArgs...).CombinedOutput()
+	if err != nil {
+		fmt.Printf("error getting version:\n%s\n", string(stdOut))
+		os.Exit(1)
+	}
+	return string(stdOut)
+
 }

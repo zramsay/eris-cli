@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 )
 
 type LogLevel uint8
@@ -17,7 +18,7 @@ const (
 )
 
 const (
-	Version = "0.1.0" // add LogLevel type and Warn level
+	Version = "0.1.1" // atomic running
 )
 
 //--------------------------------------------------------------------------------
@@ -41,6 +42,8 @@ var (
 	errorCh    = make(chan []byte, chanBuffer)
 
 	quitCh = make(chan struct{})
+
+	running uint32 // atomic
 )
 
 type Logger struct {
@@ -107,32 +110,40 @@ func SetLoggers(level LogLevel, w io.Writer, ew io.Writer) {
 // concurrency
 
 func readLoop() {
-LOOP:
-	for {
-		select {
-		case b := <-writeCh:
-			writer.Write(b)
-		case b := <-errorCh:
-			errWriter.Write(b)
-		case <-quitCh:
-			break LOOP
+	if atomic.CompareAndSwapUint32(&running, 0, 1) {
+	LOOP:
+		for {
+			select {
+			case b := <-writeCh:
+				writer.Write(b)
+			case b := <-errorCh:
+				errWriter.Write(b)
+			case <-quitCh:
+				break LOOP
 
+			}
 		}
 	}
 }
 
-func Flush() {
-	quitCh <- struct{}{}
-LOOP:
+func flush(ch chan []byte, w io.Writer) {
 	for {
 		select {
-		case b := <-writeCh:
-			writer.Write(b)
-		case b := <-errorCh:
-			errWriter.Write(b)
+		case b := <-ch:
+			w.Write(b)
 		default:
-			break LOOP
+			return
 		}
+	}
+}
+
+// Flush the log channels. Concurrent users of the logger should quit before
+// Flush() is called to ensure it completes.
+func Flush() {
+	if atomic.CompareAndSwapUint32(&running, 1, 0) {
+		flush(writeCh, writer)
+		flush(errorCh, errWriter)
+		quitCh <- struct{}{}
 	}
 }
 

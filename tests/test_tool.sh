@@ -44,7 +44,7 @@ announce() {
 
 connect() {
   echo "Starting Machine."
-  docker-machine start $machine 1> /dev/null
+  docker-machine start $machine 1>/dev/null
   until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
   do
      ping_times=$[$ping_times +1]
@@ -55,10 +55,10 @@ connect() {
     echo "Could not start the machine. Exiting this test."
     exit 1
   else
-    docker-machine regenerate-certs -f $machine
+    echo "Machine Started."
+    docker-machine regenerate-certs -f $machine 2>/dev/null
   fi
   sleep 5
-  echo "Machine Started."
   echo "Connecting to Machine."
   eval "$(docker-machine env $machine)" &>/dev/null
   echo "Connected to Machine."
@@ -87,7 +87,7 @@ setup_machine() {
     echo
     eris version
     echo
-    eris_version=$(eris version | cut -d ':' -f2 | tr -d ' ')
+    eris_version=$(eris version --quiet)
     pull_images
     echo "Image Pulling Complete."
   fi
@@ -105,14 +105,17 @@ wait_procs() {
 }
 
 pull_images() {
-  images=( "eris/base" "eris/data" "eris/ipfs" "eris/keys" "eris/erisdb:$eris_version" )
+  images=( "quay.io/eris/base" "quay.io/eris/data" "quay.io/eris/ipfs" "quay.io/eris/keys" "quay.io/eris/erisdb:$eris_version" )
   for im in "${images[@]}"
   do
     echo -e "Pulling image =>\t\t$im"
-    docker pull $im 1>/dev/null &
-    set_procs
+    # Async // parallel pulling not working consistently.
+    #   see: https://github.com/docker/docker/issues/9718
+    docker pull $im 1>/dev/null
+    # docker pull $im 1>/dev/null &
+    # set_procs
   done
-  wait_procs
+  # wait_procs
 }
 
 passed() {
@@ -133,6 +136,7 @@ packagesToTest() {
 
   # For testing we want to override the Greg Slepak required ask before pull ;)
   export ERIS_PULL_APPROVE="true"
+  export ERIS_MIGRATE_APPROVE="true"
 
   # The first run of tests expect ipfs to be running
   eris services start ipfs
@@ -158,6 +162,9 @@ packagesToTest() {
   go test ./config/...
   passed Config
   if [ $? -ne 0 ]; then return 1; fi
+  go test ./keys/...
+  passed Keys
+  if [ $? -ne 0 ]; then return 1; fi
 
   # The second series of tests expects ipfs to not be running
   eris services stop ipfs -frx
@@ -166,19 +173,20 @@ packagesToTest() {
 
   # Start the second series of tests
   go test ./services/...
+  # cd services && go test && cd ..
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
   go test ./chains/...
-  # cd chains && go test
+  # cd chains && go test && cd ..
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  # cd ..
   go test ./actions/...
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi
   go test ./contracts/...
   passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
+
   # go test ./projects/...
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
@@ -190,7 +198,16 @@ packagesToTest() {
   go test ./commands/...
   passed Commands
   if [ $? -ne 0 ]; then return 1; fi
-  return 0
+
+  # Now! Stack based tests
+  if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+  then
+    $HOME/test_stack.sh
+  else
+    tests/test_stack.sh
+  fi
+  passed Stack
+  return $?
 }
 
 turn_off() {
@@ -246,7 +263,7 @@ then
     packagesToTest
   fi
 fi
-test_exit=$(echo $?)
+test_exit=$?
 set -e
 
 # ---------------------------------------------------------------------------

@@ -1,12 +1,18 @@
 package initialize
 
-func DefaultKeys() string {
-	return `[service]
-name = "keys"
+import (
+	"fmt"
 
-image = "eris/keys"
+	// "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+)
+
+func DefaultKeys() string {
+	return fmt.Sprintf(`[service]
+name = "keys"
+image = "quay.io/eris/keys"
 data_container = true
-`
+exec_host = "ERIS_KEYS_HOST"
+`)
 }
 
 func DefaultIpfs() string {
@@ -14,7 +20,7 @@ func DefaultIpfs() string {
 
 [service]
 name = "ipfs"
-image = "eris/ipfs"
+image = "quay.io/eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"
@@ -37,7 +43,7 @@ func DefaultIpfs2() string {
 
 [service]
 name = "ipfs"
-image = "eris/ipfs"
+image = "quay.io/eris/ipfs"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"

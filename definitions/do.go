@@ -3,10 +3,12 @@ package definitions
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Existing      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Interactive   bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Known         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Running       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	SkipPull      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	SkipImages    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -21,9 +23,12 @@ type Do struct {
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
+	Address       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Pubkey        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -38,16 +43,30 @@ type Do struct {
 	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Image         string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Compiler      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAddr   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultFee    string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
-
-	// Generalized string slice
-	Args []string `mapstructure:"," json:"," yaml:"," toml:","`
+	//clean
+	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Uninstall bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Volumes   bool `mapstructure:"," json:"," yaml:"," toml:","`
+	//data import/export
+	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
+	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`

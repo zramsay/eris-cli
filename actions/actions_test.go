@@ -3,19 +3,16 @@ package actions
 import (
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	ini "github.com/eris-ltd/eris-cli/initialize"
+	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
 var actionName string = "do not use"
 var oldName string = "wanna do some testing"
 var newName string = "yeah lets test shit"
@@ -27,16 +24,17 @@ func TestMain(m *testing.M) {
 	logLevel = 0
 	// logLevel = 1
 	// logLevel = 2
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(testsInit())
+	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
 	logger.Infoln("Commensing with Tests Tear Down.")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		ifExit(testsTearDown())
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -44,15 +42,19 @@ func TestMain(m *testing.M) {
 
 func TestListActions(t *testing.T) {
 	do := definitions.NowDo()
-	ifExit(ListKnown(do))
+	do.Known = true
+	do.Running = false
+	do.Existing = false
+	do.Operations.Args = []string{"testing"}
+	tests.IfExit(util.ListAll(do, "actions"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 1 {
-		ifExit(fmt.Errorf("The wrong number of action definitions have been found. Something is wrong.\n"))
+		tests.IfExit(fmt.Errorf("The wrong number of action definitions have been found. Something is wrong.\n"))
 	}
 
 	if k[0] != "do_not_use" {
-		ifExit(fmt.Errorf("Could not find \"do not use\" action definition.\n"))
+		tests.IfExit(fmt.Errorf("Could not find \"do not use\" action definition.\n"))
 	}
 }
 
@@ -74,9 +76,9 @@ func TestLoadActionDefinition(t *testing.T) {
 
 func TestDoAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(actionName)
+	do.Operations.Args = strings.Fields(actionName)
 	do.Quiet = true
-	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Args)
+	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Operations.Args)
 	if err := Do(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
@@ -85,8 +87,8 @@ func TestDoAction(t *testing.T) {
 
 func TestNewAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(oldName)
-	logger.Infof("New Action (from tests) =>\t%v\n", do.Args)
+	do.Operations.Args = strings.Fields(oldName)
+	logger.Infof("New Action (from tests) =>\t%v\n", do.Operations.Args)
 	if err := NewAction(do); err != nil {
 		logger.Errorln(err)
 		t.Fail()
@@ -123,7 +125,7 @@ func TestRenameAction(t *testing.T) {
 
 func TestRemoveAction(t *testing.T) {
 	do := definitions.NowDo()
-	do.Args = strings.Fields(oldName)
+	do.Operations.Args = strings.Fields(oldName)
 	do.File = true
 	if err := RmAction(do); err != nil {
 		logger.Errorln(err)
@@ -133,76 +135,14 @@ func TestRemoveAction(t *testing.T) {
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := definitions.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	ifExit(ini.Initialize(do))
-
-	return nil
-}
-
-func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
+	if err := tests.TestsInit("actions"); err != nil {
+		return err
 	}
-
 	return nil
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	var exist bool
-	name = strings.Replace(name, " ", "_", -1) // dirty
-	logger.Infof("\nTesting whether (%s) existing? (%t)\n", name, toExist)
-	name = util.DataContainersName(name, 1)
-
-	do := definitions.NowDo()
-	do.Quiet = true
-	if err := ListKnown(do); err != nil {
-		logger.Errorln(err)
+	if tests.TestExistAndRun(name, "actions", 1, toExist, false) {
 		t.Fail()
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(name) {
-			exist = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", name)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", name)
-		}
-		t.Fail()
-	}
-
-	logger.Infoln("")
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
 	}
 }

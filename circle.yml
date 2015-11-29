@@ -16,17 +16,16 @@ dependencies:
 test:
   override:
     - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
-    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0"
+    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0":
+        timeout: 900
 
 deployment:
   master:
     branch: master
     commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-      - docker push eris/eris
+      - docker push quay.io/eris/eris
+      - docs/build.sh master
+  develop:
+    branch: develop
+    commands:
       - docs/build.sh
-
-  # develop:
-  #   branch: develop
-  #   commands:
-  #     - docker push eris/eris

@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/ebuchman/go-shell-pipes"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -20,37 +20,48 @@ import (
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
-		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		importPath := filepath.Join(DataContainersPath, do.Name)
+		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
+		service, exists := perform.ContainerExists(srv.Operations)
 
-		// temp until docker cp works both ways.
-		logger.Debugf("Importing FROM =>\t\t%s\n", importPath)
-		os.Chdir(importPath)
-		// TODO [eb]: deal with hardcoded user
-		// TODO [csk]: drop the whole damn cmd call
-		//         use go's tar lib to make a tarball of the directory
-		//         read the tar file into an io.Reader
-		//         start a container with its Stdin open, connect to an io.Writer
-		//         connect them up with io.Pipe
-		//         this will free us from any quirks that the cli has
-		if do.Path != "" {
-			do.Path = do.Path
-		} else {
-			do.Path = "/home/eris/.eris"
+		if !exists {
+			return fmt.Errorf("There is no data container for that service.")
 		}
 
-		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Path)
-		cmd := "tar chf - . | docker run -i --rm --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
-		_, err := pipes.RunString(cmd)
+		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+		logger.Debugf("Importing FROM =>\t\t%s\n", do.Source)
+		os.Chdir(do.Source)
+
+		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Destination)
+		reader, err := util.Tar(do.Source, 0)
 		if err != nil {
-			cmd := "tar chf - . | docker run -i --volumes-from " + containerName + " --user eris eris/data tar xf - -C " + do.Path
-			_, e2 := pipes.RunString(cmd)
-			if e2 != nil {
-				return fmt.Errorf("Could not import the data container.\nTried with docker --rm =>\t%v\nTried without docker --rm =>\t%v", err, e2)
-			}
+			return err
+		}
+		defer reader.Close()
+
+		opts := docker.UploadToContainerOptions{
+			InputStream:          reader,
+			Path:                 do.Destination,
+			NoOverwriteDirNonDir: true,
+		}
+
+		logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)
+		logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+		if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
+			return err
+		}
+
+		doChown := definitions.NowDo()
+		doChown.Operations.DataContainerName = containerName
+		doChown.Operations.ContainerType = "data"
+		doChown.Operations.ContainerNumber = 1
+		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
+		_, err = perform.DockerRunData(doChown.Operations, nil)
+		if err != nil {
+			return fmt.Errorf("Error changing owner: %v\n", err)
 		}
 	} else {
-		if err := perform.DockerCreateDataContainer(do.Name, do.Operations.ContainerNumber); err != nil {
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
 		return ImportData(do)
@@ -61,9 +72,11 @@ func ImportData(do *definitions.Do) error {
 
 func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		do.Name = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		logger.Infoln("Running exec on container with volumes from data container " + do.Name)
-		if _, err := perform.DockerRunVolumesFromContainer(do.Name, do.Interactive, do.Args, nil); err != nil {
+		logger.Infoln("Running exec on container with volumes from data container " + do.Operations.DataContainerName)
+
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		util.Merge(ops, do.Operations)
+		if err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
 	} else {
@@ -75,10 +88,6 @@ func ExecData(do *definitions.Do) error {
 
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		dVer, err := util.DockerClientVersion()
-		if err != nil {
-			return err
-		}
 
 		logger.Infoln("Exporting data container", do.Name)
 
@@ -96,59 +105,24 @@ func ExportData(do *definitions.Do) error {
 			return fmt.Errorf("There is no data container for that service.")
 		}
 
-		cont, err := util.DockerClient.InspectContainer(service.ID)
-		if err != nil {
-			return err
-		}
-
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
-		if do.Path != "" {
-			do.Path = do.Path
-		} else {
-			do.Path = "/home/eris/.eris"
-		}
-		opts := docker.CopyFromContainerOptions{
+		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
-			Container:    service.ID,
-			Resource:     do.Path,
+			Path:         do.Source,
 		}
 
 		go func() {
 			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
-			logger.Debugf("\tPath =>\t\t\t%s\n", do.Path)
-			IfExit(util.DockerClient.CopyFromContainer(opts))
+			logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
 			writer.Close()
 		}()
 
 		logger.Debugf("Untarring Package from Cont =>\t%s\n", exportPath)
 		if err = util.Untar(reader, do.Name, exportPath); err != nil {
 			return err
-		}
-
-		// docker actually exports to a `_data` folder for volumes
-		//   this section of the function moves whatever docker dumps
-		//   into exportPath/_data into export. ranging through the
-		//   volumes is probably overkill as we could just assume
-		//   that it *was* `_data` but in case docker changes later
-		//   we'll just keep it for now. this is specific to 1.7 and
-		//   below. For 1.8 we do not need to do this.
-		// os.Chdir(exportPath)
-		if dVer <= 1.7 {
-			var unTarDestination string
-			logger.Debugf("Container's Volumes =>\t\t%v\n", cont.Volumes)
-			for k, v := range cont.Volumes {
-				if k == do.Path {
-					unTarDestination = filepath.Base(v)
-				}
-			}
-			logger.Debugf("Untarring to =>\t\t\t%s:%s\n", exportPath, unTarDestination)
-			if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, unTarDestination), exportPath); err != nil {
-				return err
-			}
-		} else {
-			logger.Debugf("Untarring to =>\t\t\t%s\n", exportPath)
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
@@ -159,14 +133,13 @@ func ExportData(do *definitions.Do) error {
 
 		// // finally remove everything in the data directory and move
 		// //   the temp contents there
-		prevDir := filepath.Join(DataContainersPath, do.Name)
-		if _, err := os.Stat(prevDir); os.IsNotExist(err) {
-			if e2 := os.MkdirAll(prevDir, 0755); e2 != nil {
-				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", prevDir)
+		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
+			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
+				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
 			}
 		}
-		// ClearDir(prevDir)
-		if err := moveOutOfDirAndRmDir(exportPath, prevDir); err != nil {
+		// ClearDir(do.Destionation)
+		if err := moveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
 			return err
 		}
 

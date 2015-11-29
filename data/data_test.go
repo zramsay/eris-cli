@@ -3,19 +3,16 @@ package data
 import (
 	"os"
 	"path"
-	"strings"
+	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	ini "github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/util"
+	tests "github.com/eris-ltd/eris-cli/testutils"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
@@ -28,19 +25,12 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	if err := testsInit(); err != nil {
-		logger.Errorln(err)
-		os.Exit(1)
-	}
+	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		if err := testsTearDown(); err != nil {
-			logger.Errorln(err)
-			log.Flush()
-			os.Exit(1)
-		}
+		tests.IfExit(tests.TestsTearDown())
 	}
 
 	os.Exit(exitCode)
@@ -64,6 +54,8 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
+	do.Source = filepath.Join(common.DataContainersPath, do.Name)
+	do.Destination = common.ErisContainerRoot
 	do.Operations.ContainerNumber = 1
 	logger.Infof("Importing Data (from tests) =>\t%s\n", do.Name)
 	if err := ImportData(do); err != nil {
@@ -72,6 +64,37 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	}
 
 	testExist(t, dataName, true)
+}
+
+func TestExecData(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
+	do.Operations.Interactive = false
+	do.Operations.ContainerNumber = 1
+
+	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
+	if err := ExecData(do); err != nil {
+		logger.Errorln(err)
+		t.Fail()
+	}
+}
+
+func TestExportData(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Source = common.ErisContainerRoot
+	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
+	do.Operations.ContainerNumber = 1
+	if err := ExportData(do); err != nil {
+		logger.Errorln(err)
+		t.FailNow()
+	}
+
+	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
+		logger.Errorf("Tragic! Exported file does not exist: %s\n", err)
+		t.Fail()
+	}
 }
 
 func TestRenameData(t *testing.T) {
@@ -108,9 +131,9 @@ func TestRenameData(t *testing.T) {
 func TestInspectData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Args = []string{"name"}
+	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
+	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
 		t.FailNow()
@@ -118,39 +141,11 @@ func TestInspectData(t *testing.T) {
 
 	do = definitions.NowDo()
 	do.Name = dataName
-	do.Args = []string{"config.network_disabled"}
+	do.Operations.Args = []string{"config.network_disabled"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
+	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
 	if err := InspectData(do); err != nil {
 		logger.Errorln(err)
-		t.Fail()
-	}
-}
-
-func TestExecData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
-	do.Interactive = false
-	do.Operations.ContainerNumber = 1
-	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Args)
-	if err := ExecData(do); err != nil {
-		logger.Errorln(err)
-		t.Fail()
-	}
-}
-
-func TestExportData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Operations.ContainerNumber = 1
-	if err := ExportData(do); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-	}
-
-	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
-		logger.Errorf("Tragic! Exported file does not exist: %s\n", err)
 		t.Fail()
 	}
 }
@@ -176,74 +171,14 @@ func TestRmData(t *testing.T) {
 }
 
 func testsInit() error {
-	var err error
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
-
-	// init dockerClient
-	util.DockerConnect(false, "eris")
-
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
-	do := definitions.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	do.Yes = true
-	ifExit(ini.Initialize(do))
-
-	return nil
-}
-
-func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
-		return e
+	if err := tests.TestsInit("data"); err != nil {
+		return err
 	}
-
 	return nil
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	var exist bool
-	logger.Infof("\nTesting whether (%s) existing? (%t)\n", name, toExist)
-	name = util.DataContainersName(name, 1)
-
-	do := definitions.NowDo()
-	do.Quiet = true
-	if err := ListKnown(do); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(name) {
-			exist = true
-		}
-	}
-
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", name)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", name)
-		}
+	if tests.TestExistAndRun(name, "data", 1, toExist, false) {
 		t.Fail()
-	}
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		testsTearDown()
-		os.Exit(1)
 	}
 }

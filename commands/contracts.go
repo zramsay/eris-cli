@@ -31,7 +31,7 @@ func buildContractsCommand() {
 }
 
 var contractsImport = &cobra.Command{
-	Use:   "import [hash] [packageName]",
+	Use:   "import HASH PACKAGE",
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
 via its hash and save it locally.`,
@@ -53,12 +53,11 @@ var contractsTest = &cobra.Command{
 Tests can be structured using three different
 test types.
 
-1. embark -- embark dapps can be tested against
-ethereum style chains.
-2. solUnit -- pure solidity smart contract packages
-may be tested via solUnit test framework.
-3. manual -- a simple gulp task can be given to the
-test environment.`,
+1. epm - epm apps can be tested against tendermint style blockchains.
+2. embark - embark apps can be tested against ethereum style blockchains.
+3. truffle - HELP WANTED!
+4. solUnit - pure solidity smart contract packages may be tested via solUnit test framework.
+5. manual - a simple gulp task can be given to the test environment.`,
 	Run: ContractsTest,
 }
 
@@ -70,12 +69,11 @@ var contractsDeploy = &cobra.Command{
 Deployments can be structured using three different
 deploy types.
 
-1. embark -- embark dapps can be deployed to an
-ethereum style blockchain simply.
-2. pyepm -- pyepm contract packages can be deployed
-to an ethereum style blockchain.
-3. manual -- a simple gulp task can be given to the
-deployer.`,
+1. epm - epm apps can be deployed to tendermint style blockchains simply.
+2. embark - embark apps can be deployed to an ethereum style blockchain simply.
+3. truffle - HELP WANTED!
+4. pyepm - IF THIS IS STILL A THING, HELP WANTED!
+5. manual - a simple gulp task can be given to the deployer.`,
 	Run: ContractsDeploy,
 }
 
@@ -84,18 +82,41 @@ deployer.`,
 func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for testing")
 	contractsTest.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	contractsTest.Flags().StringVarP(&do.Type, "type", "t", "", "dapp type paradigm to be used for testing (overrides package.json)")
+	contractsTest.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for testing (overrides package.json)")
 	contractsTest.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsTest.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of dapp (will use $pwd by default)")
-	contractsTest.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for testing")
+	contractsTest.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
+	contractsTest.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
+	contractsTest.Flags().BoolVarP(&do.RmD, "rm-data", "x", true, "remove artifacts from host")
+	contractsTest.Flags().StringVarP(&do.CSV, "output", "o", "", "results output type (EPM only)")
+	contractsTest.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which EPM should use (EPM only)")
+	contractsTest.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address (EPM only)")
+	contractsTest.Flags().BoolVarP(&do.OutputTable, "summary", "u", true, "output a table summarizing epm jobs (EPM only)")
+	contractsTest.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use (EPM only)")
+	contractsTest.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory EPM should use when saving ABIs after the compile process (EPM only)")
+	contractsTest.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job (EPM only)")
+	contractsTest.Flags().StringVarP(&do.Compiler, "compiler", "l", "https://compilers.eris.industries:9090", "<ip:port> of compiler which EPM should use (EPM only)")
+	contractsTest.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran (EPM only)")
+	contractsTest.Flags().StringVarP(&do.DefaultFee, "fee", "w", "1234", "default fee to use (EPM only)")
+	contractsTest.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use (EPM only)")
 
 	contractsDeploy.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	contractsDeploy.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "", "dapp type paradigm to be used for deployment (overrides package.json)")
+	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for deployment (overrides package.)")
 	contractsDeploy.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
-	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "r", "", "root directory of dapp (will use $pwd by default)")
-	contractsDeploy.Flags().StringVarP(&do.NewName, "dest", "e", "", "working directory to be used for deployment")
-	contractsDeploy.Flags().StringVarP(&do.ConfigFile, "yaml", "y", "", "yaml file for deployment. pyepm dapps require this; other dapps ignore")
+	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
+	contractsDeploy.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
+	contractsDeploy.Flags().BoolVarP(&do.RmD, "rm-data", "x", true, "remove artifacts from host")
+	contractsDeploy.Flags().StringVarP(&do.CSV, "output", "o", "", "results output type (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which EPM should use (EPM only)")
+	contractsDeploy.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address (EPM only)")
+	contractsDeploy.Flags().BoolVarP(&do.OutputTable, "summary", "u", true, "output a table summarizing epm jobs (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory EPM should use when saving ABIs after the compile process (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.Compiler, "compiler", "l", "https://compilers.eris.industries:9090", "<ip:port> of compiler which EPM should use (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.DefaultFee, "fee", "w", "1234", "default fee to use (EPM only)")
+	contractsDeploy.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use (EPM only)")
 }
 
 //----------------------------------------------------
