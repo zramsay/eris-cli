@@ -23,7 +23,6 @@ branch=${branch/-/_}
 #   installs by default on Linux"
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" "1.8.3" )
 declare -a docker_versions19=( "1.9.0" "1.9.1" )
-declare -a docker_latest_versions=("1.8.3" "1.9.1") # versions we run against no matter what
 declare -a machine_results=()
 
 # Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
@@ -211,10 +210,28 @@ else
 
 	  done
   else
-	  for ver in "${docker_latest_versions[@]}"
-	  do
-		  runTests $branch
-	  done
+	  # run the tests for the latest release of 1.8 and 1.9
+
+	  # latest 1.8
+	  ver=${docker_versions18[-1]}
+	  runTests "docker18"
+
+	  # latest 1.9
+	  ver=${docker_versions19[-1]}
+
+	    # Correct for docker build stuff
+	    if [[ "$branch" == "master" ]]
+	    then
+	      branch="latest"
+	    fi
+
+	    runTests $branch
+
+	    # Correct for docker build stuff
+	    if [[ "$branch" == "latest" ]]
+	    then
+	      branch="master"
+	    fi
   fi
 
 fi
