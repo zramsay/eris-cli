@@ -1,5 +1,3 @@
-%{define} erisbuilddir /var/tmp/eris-rpmbuild.tmp
-%{define} repodir %{erisbuilddir}/src/github.com/eris-ltd/eris-cli
 %{define} home %{getenv:HOME}
 %{define} version %{getenv:ERIS_VERSION}
 %{define} release %{getenv:ERIS_RELEASE}
@@ -12,30 +10,34 @@ Release: %{release}
 Group: Applications/Productivity
 URL: https://docs.erisindustries.com
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
-#BuildRequires: golang
-Requires: docker
 
 %description
-eris cli to manipulate blockchains smartcontracts
+Eris is a platform for building, testing,
+maintaining, and operating distributed
+applications with a blockchain backend.
+
+Eris makes it easy and simple to wrangle
+the dragons of smart contract blockchains.
 
 %prep
-#rm -fr %{repodir}
-#mkdir --parents %{repodir}
-#git clone https://github.com/eris-ltd/eris-cli %{repodir}
-#export GOPATH=%{erisbuilddir}
+cp %{home}/README %{_builddir}/README
+cp %{home}/COPYING %{_builddir}/COPYING
+cp %{home}/eris %{_builddir}/eris
+mkdir --parents ${RPM_BUILD_ROOT}/%{_mandir}/man1
+cp %{home}/eris.1 ${RPM_BUILD_ROOT}/%{_mandir}/man1/eris.1
 
 %build
-#{define} start `pwd`
-#cd %{repodir}/cmd/eris
-#export GOPATH=%{erisbuilddir} && go build
-#cd %{start}
 
 %install
-mkdir -p ${RPM_BUILD_ROOT}/%{_bindir}
-%{home}/eris man --dump > %{_mandir}/man1/eris.1
-install %{home}/eris ${RPM_BUILD_ROOT}/%{_bindir}
+mkdir --parents ${RPM_BUILD_ROOT}/%{_bindir}
+install eris ${RPM_BUILD_ROOT}/%{_bindir}
 
 %files
 %defattr(-, root, root, 0755)
+%doc README
+%license COPYING
+%{_mandir}/man1/*
 %{_bindir}/*
 
+%clean
+if [ -d $RPM_BUILD_ROOT ]; then rm -rf $RPM_BUILD_ROOT; fi

@@ -22,7 +22,7 @@ go get github.com/eris-ltd/eris-cli/cmd/eris
 eris init
 ```
 
-Please see our [getting started page](https://docs.erisindustries.com/tutorials/getting-started/) for those who no familiar with go and/or docker.
+Please see our [getting started page](https://docs.erisindustries.com/tutorials/getting-started/) for those who are not familiar with go and/or docker.
 
 # Overview
 
