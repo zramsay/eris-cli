@@ -135,15 +135,27 @@ func startChain(do *definitions.Do, exec bool) error {
 	logger.Debugf("\twith AllPortsPublshd =>\t%v\n", chain.Operations.PublishAllPorts)
 
 	if exec {
+
 		if do.Image != "" {
 			chain.Service.Image = do.Image
 		}
+
 		chain.Operations.Args = do.Operations.Args
 		logger.Debugf("\twith Args =>\t\t%v:%v\n", chain.Operations.Args, chain.Operations.Interactive)
+
 		// This override is necessary because erisdb uses an entryPoint and
 		// the perform package will respect the images entryPoint if it
 		// exists.
 		chain.Service.EntryPoint = ""
+		chain.Service.Command = ""
+
+		// there is literally never a reason not to randomize the ports.
+		chain.Operations.PublishAllPorts = true
+
+		// always link the chain to the exec container when doing chains exec
+		// so that there is never any problems with sending info to the service (chain) container
+		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainersName("chain", chain.Name, 1), "chain"))
+
 		err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
 		err = perform.DockerRunService(chain.Service, chain.Operations)

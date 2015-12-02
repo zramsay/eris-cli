@@ -106,10 +106,10 @@ seemlessly with [eris chains install] so that other users and/or colleagues
 should be able to use your registered blockchain by simply using the install
 command.
 
-The [eris chains register] command is not the *only* way to 
-share your blockchains. You can also export your chain definition file and 
-genesis.json to IPFS, and share the hash of the chain definition file and 
-genesis.json with any colleagues or users who need to be able to connect 
+The [eris chains register] command is not the *only* way to
+share your blockchains. You can also export your chain definition file and
+genesis.json to IPFS, and share the hash of the chain definition file and
+genesis.json with any colleagues or users who need to be able to connect
 into the blockchain.`,
 	Run: RegisterChain,
 }
@@ -136,7 +136,7 @@ chain (--running).
 If no known chains exist yet, create a new blockchain with: [eris chains new NAME]
 command.
 
-To install and fetch a blockchain from a chain definition file, 
+To install and fetch a blockchain from a chain definition file,
 use [eris chains install NAME] command.
 
 Services are handled using the [eris services] command.`,
@@ -215,7 +215,7 @@ var chainsEdit = &cobra.Command{
 Edit will utilize the default editor set for your current shell
 or if none is set, it will use *vim*. Sorry for the bias Emacs
 users, but we had to pick one and more marmots are known vim
-users. Emacs users can set their EDITOR variable and eris 
+users. Emacs users can set their EDITOR variable and eris
 will default to that if you wise.`,
 	Run: EditChain,
 }
@@ -224,7 +224,7 @@ var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
 	Long: `Start running a blockchain.
-	
+
 [eris chains start NAME] by default will put the chain into the
 background so its logs will not be viewable from the command line.
 
@@ -400,6 +400,7 @@ func addChainsFlags() {
 	chainsExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
 	chainsExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
+	chainsExec.Flags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 
 	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
 	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
