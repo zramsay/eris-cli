@@ -25,7 +25,7 @@ test:
     - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0":
         timeout: 900
     - git clone https://github.com/eris-ltd/integration-tests $INTEGRATION_TESTS_PATH
-    - bash $INTEGRATION_TESTS_PATH/test.sh
+    - bash $INTEGRATION_TESTS_PATH/test.sh $(cat $HOME/last_machine_used)
 
 deployment:
   master:

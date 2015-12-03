@@ -234,6 +234,10 @@ else
 	    fi
   fi
 
+  # so the integrations tester (which runs next) can attempt to reuse the machine
+  # ie. see the circle.yml
+  echo $machine > $HOME/last_machine_used
+
 fi
 
 # ---------------------------------------------------------------------------
