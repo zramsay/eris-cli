@@ -96,7 +96,7 @@ func DisplayManPage(in *bytes.Buffer) {
 	// Use PAGER value if set, or less(1) by default.
 	pagerCommand := os.Getenv("PAGER")
 	if pagerCommand == "" {
-		pagerCommand = "less"
+		pagerCommand = "less -r"
 	}
 
 	pagerArgs := strings.Split(pagerCommand, " ")
