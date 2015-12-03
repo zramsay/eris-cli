@@ -700,7 +700,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
 				}
 			} else {
-				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a second.\n", opts.Config.Image)
+				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a minute.\n", opts.Config.Image)
 			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
