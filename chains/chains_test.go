@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-	//"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -22,6 +21,7 @@ import (
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
+
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -44,27 +44,17 @@ func TestMain(m *testing.M) {
 
 	logLevel = 0
 	// logLevel = 1
-	//logLevel = 3
+	// logLevel = 3
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(tests.TestsInit("chain"))
+	ifExit(tests.TestsInit("chains"))
 	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
 	layTestChainToml(chainName)
 
 	_ = err
 	var exitCode int
-	/*defer func() {
-		logger.Infoln("Commensing with Tests Tear Down.")
-		if err = testsTearDown(); err != nil {
-			logger.Errorln(err)
-			os.Exit(1)
-		}
-		os.Exit(exitCode)
-
-	}()*/
-
 	exitCode = m.Run()
 	fmt.Println(exitCode)
 }
@@ -437,22 +427,6 @@ func TestRenameChain(t *testing.T) {
 	testExistAndRun(t, chainName, true, true)
 }
 
-// TODO: finish this....
-//[zr] this'll be a good one for toadserver ...
-// func TestServiceWithChainDependencies(t *testing.T) {
-// 	do := definitions.NowDo()
-// 	do.Name = "keys"
-// 	do.Operations.Args = []string{"eris/keys"}
-// 	err := services.NewService(do)
-// 	if err != nil {
-// 		logger.Errorln(err)
-// 		t.FailNow()
-// 	}
-
-// 	services.TestCatService(t)
-
-// }
-
 func TestRmChain(t *testing.T) {
 	testStartChain(t, chainName)
 
@@ -480,6 +454,390 @@ func TestRmChain(t *testing.T) {
 	}
 
 	testExistAndRun(t, chainName, false, false)
+}
+
+func TestServiceLinkNoChain(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "$chain:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+data_container = true
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	do := def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	if err := services.StartService(do); err == nil {
+		t.Fatalf("expect start service to fail, got nil")
+	}
+}
+
+func TestServiceLinkBadChain(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "$chain:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	do := def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = "non-existent-chain"
+	if err := services.StartService(do); err == nil {
+		t.Fatalf("expect start service to fail, got nil")
+	}
+}
+
+func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	do := def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = "non-existent-chain"
+
+	// [pv]: is this a bug? the service which doesn't have a
+	// "chain" in its definition file doesn't care about linking at all.
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expect service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+}
+
+func TestServiceLink(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "$chain:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	}
+
+	links := tests.Links("fake", def.TypeService, 1)
+	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
+}
+
+func TestServiceLinkWithDataContainer(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "$chain:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+data_container = true
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 data containers, got %v", n)
+	}
+
+	links := tests.Links("fake", def.TypeService, 1)
+	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
+}
+
+func TestServiceLinkLiteral(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "`+chainName+`:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	}
+
+	links := tests.Links("fake", def.TypeService, 1)
+	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
+}
+
+func TestServiceLinkBadLiteral(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "blah-blah:blah"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+entrypoint = "/bin/bash"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	// [pv]: probably a bug. Bad literal chain link in a definition
+	// file doesn't affect the service start. Links is not nil.
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	links := tests.Links("fake", def.TypeService, 1)
+	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
+}
+
+func TestServiceLinkKeys(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"keys"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersExisting("keys", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	links := tests.Links("keys", def.TypeService, 1)
+	if len(links) != 0 {
+		t.Fatalf("expected service links be empty, got %v", links)
+	}
+}
+
+func TestServiceLinkChainedService(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	do := def.NowDo()
+	do.Name = chainName
+	do.Operations.ContainerNumber = 1
+	if err := NewChain(do); err != nil {
+		t.Fatalf("could not start a new chain, got %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+chain = "$chain:fake"
+
+[service]
+name = "fake"
+image = "quay.io/eris/ipfs"
+
+[dependencies]
+services = [ "sham" ]
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if err := tests.FakeServiceDefinition(erisDir, "sham", `
+chain = "$chain:sham"
+
+[service]
+name = "sham"
+image = "quay.io/eris/keys"
+data_container = true
+`); err != nil {
+		t.Fatalf("can't create a sham service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	}
+
+	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+
+	if n := util.HowManyContainersExisting("sham", def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("sham", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 data containers, got %v", n)
+	}
+
+	do = def.NowDo()
+	do.Operations.Args = []string{"fake"}
+	do.Operations.ContainerNumber = 1
+	do.ChainName = chainName
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expecting service to start, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	}
+	if n := util.HowManyContainersRunning("sham", def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	}
+	if n := util.HowManyContainersExisting("sham", def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 fake data containers, got %v", n)
+	}
+
+	// [pv]: second service doesn't reference the chain.
+	links := tests.Links("fake", def.TypeService, 1)
+	if len(links) != 2 || !strings.Contains(links[0], chainName) {
+		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
 }
 
 //------------------------------------------------------------------
