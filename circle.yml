@@ -5,6 +5,7 @@ machine:
     INTEGRATION_TESTS_PATH: $HOME/integration-tests
     INTEGRATION_TESTS_BRANCH: integration_tests
     BACKEND_TESTS_BRANCH: staging
+    TEST_MINT_CLIENT_BRANCH: staging
   post:
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
@@ -22,10 +23,8 @@ dependencies:
 test:
   override:
     - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
-    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0":
-        timeout: 900
     - git clone https://github.com/eris-ltd/integration-tests $INTEGRATION_TESTS_PATH
-    - bash $INTEGRATION_TESTS_PATH/test.sh $(cat $HOME/last_machine_used)
+    - bash $INTEGRATION_TESTS_PATH/test.sh eris-test-dca1-1.9.1
 
 deployment:
   master:
