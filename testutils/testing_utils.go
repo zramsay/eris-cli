@@ -165,11 +165,6 @@ func Links(name string, t string, n int) []string {
 	return container.HostConfig.Links
 }
 
-// Remove the Docker image. A wrapper over Docker client's library.
-func RemoveImage(name string) error {
-	return util.DockerClient.RemoveImage(name)
-}
-
 // Write a fake service definition file in a tmpDir Eris home directory.
 func FakeServiceDefinition(tmpDir, name, definition string) error {
 	filename := filepath.Join(tmpDir, "services", name+".toml")
