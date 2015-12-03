@@ -22,7 +22,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
@@ -703,7 +702,6 @@ chain = "blah-blah:blah"
 [service]
 name = "fake"
 image = "quay.io/eris/ipfs"
-entrypoint = "/bin/bash"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -798,20 +796,6 @@ data_container = true
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
-	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers, got %v", n)
-	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
-	}
-
-	if n := util.HowManyContainersExisting("sham", def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers, got %v", n)
-	}
-	if n := util.HowManyContainersExisting("sham", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
-	}
-
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
@@ -827,10 +811,10 @@ data_container = true
 		t.Fatalf("expecting 0 fake data containers, got %v", n)
 	}
 	if n := util.HowManyContainersRunning("sham", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 fake service containers, got %v", n)
+		t.Fatalf("expecting 1 sham service containers, got %v", n)
 	}
 	if n := util.HowManyContainersExisting("sham", def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 fake data containers, got %v", n)
+		t.Fatalf("expecting 1 sham data containers, got %v", n)
 	}
 
 	// [pv]: second service doesn't reference the chain.

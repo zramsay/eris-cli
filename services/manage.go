@@ -191,8 +191,8 @@ func ExportService(do *definitions.Do) error {
 		logger.Println(hash)
 
 	} else {
-		return fmt.Errorf(`I don't known that service. Please retry with a known service.
-To find known services use: [eris services ls --known]`)
+		return fmt.Errorf(`I don't know that service. Please retry with a known service.
+To find known services use [eris services ls --known]`)
 	}
 	return nil
 }
