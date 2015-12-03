@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -45,10 +46,6 @@ func TestsInit(testType string) (err error) {
 	do.Services = true
 	do.Actions = true
 	do.Yes = true
-	// Pull everything for chains, not just the defaults.
-	if testType == "chains" {
-		do.Pull = false
-	}
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
@@ -171,6 +168,24 @@ func Links(name string, t string, n int) []string {
 // Remove the Docker image. A wrapper over Docker client's library.
 func RemoveImage(name string) error {
 	return util.DockerClient.RemoveImage(name)
+}
+
+// Write a fake service definition file in a tmpDir Eris home directory.
+func FakeServiceDefinition(tmpDir, name, definition string) error {
+	filename := filepath.Join(tmpDir, "services", name+".toml")
+
+	out, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = out.WriteString(definition)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // each pacakge will need its own custom stuff if need be
