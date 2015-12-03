@@ -145,13 +145,6 @@ http://github.com/eris-ltd/eris-cli/issues`
 
 var manHelpers = map[string]interface{}{
 	"escape": func(text string) string {
-		// See groff_char(7).
-		text = strings.Replace(text, `\`, `\\`, -1)
-		text = strings.Replace(text, `'`, `\[aq]`, -1)
-		text = strings.Replace(text, `"`, `\[dq]`, -1)
-		text = strings.Replace(text, `<`, `\[la]`, -1)
-		text = strings.Replace(text, `>`, `\[ra]`, -1)
-
 		// Replace empty strings with an empty string formatter.
 		//
 		// Regexp flags:
@@ -177,6 +170,15 @@ var manHelpers = map[string]interface{}{
 
 		// Replace double new lines with single new lines (if any).
 		text = regexp.MustCompile(`(?s)\n\n`).ReplaceAllString(text, "\n")
+
+		// See groff_char(7).
+		text = strings.NewReplacer(
+			`\`, `\\`,
+			`'`, `\[aq]`,
+			`"`, `\[dq]`,
+			`<`, `\[la]`,
+			`>`, `\[ra]`,
+		).Replace(text)
 
 		return text
 	},
