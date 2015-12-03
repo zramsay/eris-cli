@@ -38,13 +38,17 @@ func TestsInit(testType string) (err error) {
 
 	util.DockerConnect(false, "eris")
 
-	// this dumps the ipfs service def into the temp dir which
-	// has been set as the erisRoot
+	// this dumps the ipfs and keys services defs into the temp dir which
+	// has been set as the erisRoot.
 	do := def.NowDo()
 	do.Pull = true
 	do.Services = true
 	do.Actions = true
 	do.Yes = true
+	// Pull everything for chains, not just the defaults.
+	if testType == "chains" {
+		do.Pull = false
+	}
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}
@@ -152,6 +156,21 @@ func RemoveContainer(name string, t string, n int) error {
 // Remove everything Eris.
 func RemoveAllContainers() error {
 	return util.Clean(false, false, false, false)
+}
+
+// Return container links. For sake of simplicity, don't expose
+// anything else.
+func Links(name string, t string, n int) []string {
+	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name, n))
+	if err != nil {
+		return []string{}
+	}
+	return container.HostConfig.Links
+}
+
+// Remove the Docker image. A wrapper over Docker client's library.
+func RemoveImage(name string) error {
+	return util.DockerClient.RemoveImage(name)
 }
 
 // each pacakge will need its own custom stuff if need be
