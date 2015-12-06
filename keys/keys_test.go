@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
+	"regexp"
 	"strings"
 
-	"encoding/json"
 	"os"
 	"testing"
 
@@ -115,28 +115,14 @@ func TestGetPubKey(t *testing.T) {
 	config.GlobalConfig.Writer = key
 	doKey := def.NowDo()
 	doKey.Address = doPub.Address
-
 	if err := ConvertKey(doKey); err != nil {
 		fatal(t, err)
 	}
-	keyBytes := key.Bytes()
-	keyS := string(keyBytes)
 
-	k := struct {
-		PubKey json.RawMessage `json:"pub_key"`
-	}{}
+	converted := regexp.MustCompile(`"pub_key":\[1,"([^"]+)"\]`).FindStringSubmatch(key.String())[1]
 
-	if err := json.Unmarshal([]byte(keyS), &k); err != nil {
-		fatal(t, err)
-	}
-
-	//bit of hack to avoid godeping tendermint
-	strang := string(k.PubKey)
-	strang = strings.TrimLeft(strang, "[1,\"")
-	strang = strings.TrimRight(strang, "\"]")
-
-	if strang != pubkey {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", pubkey, strang))
+	if converted != pubkey {
+		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", pubkey, converted))
 	}
 }
 
