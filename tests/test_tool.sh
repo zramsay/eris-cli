@@ -70,7 +70,7 @@ clear_stuff() {
   echo "Clearing images and containers."
   set +e
   docker rm $(docker ps -a -q) &>/dev/null
-  docker rmi $(docker images -q) &>/dev/null
+  docker rmi -f $(docker images -q) &>/dev/null
   set -e
   echo ""
 }
@@ -172,7 +172,7 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
 
   # Start the second series of tests
-  go test ./services/...
+  go test ./services/... -timeout 720s
   # cd services && go test && cd ..
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
