@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -700,7 +700,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
 				}
 			} else {
-				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a second.\n", opts.Config.Image)
+				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a minute.\n", opts.Config.Image)
 			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
@@ -724,7 +724,7 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 	// Set terminal into raw mode, and restore upon container exit.
 	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
 	if err != nil {
-		logger.Errorln("Cannot set the terminal into raw mode")
+		logger.Infoln("Cannot set the terminal into raw mode")
 	} else {
 		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
 	}
@@ -776,7 +776,7 @@ func attachContainer(id string, attached chan struct{}) error {
 		InputStream:  reader,
 		OutputStream: config.GlobalConfig.Writer,
 		ErrorStream:  config.GlobalConfig.ErrorWriter,
-		Logs:         true,
+		Logs:         false,
 		Stream:       true,
 		Stdin:        true,
 		Stdout:       true,
@@ -875,6 +875,9 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 	opts.Config.User = "root"
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
+	opts.Config.AttachStdout = true
+	opts.Config.AttachStderr = true
+	opts.Config.AttachStdin = true
 
 	if ops.Interactive {
 		// if there are args, we overwrite the entrypoint
