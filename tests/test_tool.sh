@@ -1,5 +1,32 @@
 #!/usr/bin/env bash
-set -e
+
+# ---------------------------------------------------------------------------
+# PURPOSE
+
+# This script will test the eris tool itself, including its packages, against
+# a given docker backend. If it is started with the "local" argument then
+# it will test against the local docker backend. If it is started with an
+# argument which is not "local" then it will run the package tests for only
+# that package.
+#
+# Generally, the script will start a given docker-machine backend, make sure
+# that it can connect to that machine properly, then it will pull the required
+# docker images, run the eris package level tests, then run the eris stack
+# level tests, finally it will remove all of the docker containers and images
+# so that everything is nice and clean and then shut down the docker-machine.
+
+# ---------------------------------------------------------------------------
+# REQUIREMENTS
+
+# Docker installed locally
+# Docker-Machine installed locally (if using remote boxes)
+# eris' test_machines image (if testing against eris' test boxes)
+# Eris installed locally
+
+# ---------------------------------------------------------------------------
+# USAGE
+
+# test_tool.sh [local||package]
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -18,7 +45,7 @@ if [ $1 ]
 then
   machine="eris-test-local"
   swarm="local"
-  ver=$(docker version | grep -A 1 Client | tail -n 1 | cut -d ':' -f 2 | tr -s ' ' | sed -e 's/[[:space:]]//')
+  ver=$(docker version --format="{{.Client.Version}}")
 else
   machine=$MACHINE_NAME
 fi
@@ -66,15 +93,6 @@ connect() {
   clear_stuff
 }
 
-clear_stuff() {
-  echo "Clearing images and containers."
-  set +e
-  docker rm $(docker ps -a -q) &>/dev/null
-  docker rmi -f $(docker images -q) &>/dev/null
-  set -e
-  echo ""
-}
-
 setup_machine() {
   if [[ $machine == "eris-test-local" ]]
   then
@@ -109,9 +127,11 @@ pull_images() {
   for im in "${images[@]}"
   do
     echo -e "Pulling image =>\t\t$im"
+    docker pull $im 1>/dev/null
     # Async // parallel pulling not working consistently.
     #   see: https://github.com/docker/docker/issues/9718
-    docker pull $im 1>/dev/null
+    # this is fixed in docker 1.9 ONLY. So when we deprecate
+    # docker 1.8 we can move to asyncronous pulling
     # docker pull $im 1>/dev/null &
     # set_procs
   done
@@ -172,12 +192,12 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
 
   # Start the second series of tests
-  go test ./services/... -timeout 720s
-  # cd services && go test && cd ..
+  go test ./services/... -timeout 720s # switch FROM me if needing to debug
+  # cd services && go test && cd .. # switch to me if needing to debug
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./chains/...
-  # cd chains && go test && cd ..
+  go test ./chains/... # switch FROM me if needing to debug
+  # cd chains && go test && cd .. # switch TO me if needing to debug
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
   go test ./actions/...
@@ -210,6 +230,15 @@ packagesToTest() {
   return $?
 }
 
+clear_stuff() {
+  echo "Clearing images and containers."
+  set +e
+  docker rm $(docker ps -a -q) &>/dev/null
+  docker rmi -f $(docker images -q) &>/dev/null
+  set -e
+  echo ""
+}
+
 turn_off() {
   echo "Cleaning up after ourselves."
   clear_stuff
@@ -221,9 +250,25 @@ turn_off() {
   echo "Machine Stopped."
 }
 
+report() {
+  if [ $test_exit -eq 0 ]
+  then
+    echo ""
+    echo "Congratulations! All Package Level Tests Passed."
+    echo "Machine: $machine is green."
+    echo ""
+  else
+    echo ""
+    echo "Boo :( A Package Level Test has failed."
+    echo "Machine: $machine is red."
+    echo ""
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Go!
 
+set -e
 echo "Hello! The marmots will begin testing now."
 if [[ "$machine" == "eris-test-local" ]]
 then
@@ -241,30 +286,26 @@ docker version
 echo ""
 
 # Init eris with debug flag to check the connection to docker backend
-set +e
 echo ""
 echo "Checking the Eris <-> Docker Connection"
 echo ""
 setup_machine
 passed Setup
+set +e
 
 # Perform package level tests run only if eris init ran without problem
-if [ $? -eq 0 ]
+if [[ $machine == "eris-test-local" ]]
 then
-  if [ $1 ]
+  if [[ $1 == "local" ]]
   then
-    if [[ $1 == "local" ]]
-    then
-      packagesToTest
-    else
-      go test ./$1/... && passed $1
-    fi
-  else
     packagesToTest
+  else
+    go test ./$1/... && passed $1
   fi
+else
+  packagesToTest
 fi
 test_exit=$?
-set -e
 
 # ---------------------------------------------------------------------------
 # Clean up and report
@@ -274,18 +315,7 @@ then
   turn_off
 fi
 
-if [ $test_exit -eq 0 ]
-then
-  echo ""
-  echo "Congratulations! All Package Level Tests Passed."
-  echo "Machine: $machine is green."
-  echo ""
-else
-  echo ""
-  echo "Boo :( A Package Level Test has failed."
-  echo "Machine: $machine is red."
-  echo ""
-fi
+report
 
 cd $start
 exit $test_exit

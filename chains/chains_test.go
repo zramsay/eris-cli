@@ -29,13 +29,6 @@ import (
 var erisDir string = path.Join(os.TempDir(), "eris")
 var chainName string = "my_testing_chain_dot_com" // :( [csk]-> :)
 
-var hash string
-
-func fatal(t *testing.T, err error) {
-	testsTearDown()
-	panic(err)
-}
-
 func TestMain(m *testing.M) {
 	runtime.GOMAXPROCS(1)
 	var logLevel log.LogLevel
@@ -47,13 +40,14 @@ func TestMain(m *testing.M) {
 
 	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
 
-	ifExit(tests.TestsInit("chains"))
+	tests.IfExit(tests.TestsInit("chain"))
 	logger.Infoln("Test init completed. Starting main test sequence now.\n")
 
 	layTestChainToml(chainName)
 
 	_ = err
 	var exitCode int
+
 	exitCode = m.Run()
 	fmt.Println(exitCode)
 }
@@ -64,14 +58,14 @@ func TestKnownChain(t *testing.T) {
 	do.Existing = false
 	do.Running = false
 	do.Operations.Args = []string{"testing"}
-	ifExit(util.ListAll(do, "chains"))
+	tests.IfExit(util.ListAll(do, "chains"))
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	// apparently these have extra space
 	if strings.TrimSpace(k[0]) != chainName {
 		logger.Debugf("Result =>\t\t%s\n", do.Result)
-		ifExit(fmt.Errorf("Unexpected chain definition file. Got %s, expected %s.", k[0], chainName))
+		tests.IfExit(fmt.Errorf("Unexpected chain definition file. Got %s, expected %s.", k[0], chainName))
 	}
 }
 
@@ -80,29 +74,29 @@ func TestChainGraduate(t *testing.T) {
 	do.Name = chainName
 	logger.Infof("Graduate chain (from tests) =>\t%s\n", do.Name)
 	if err := GraduateChain(do); err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	srvDef, err := loaders.LoadServiceDefinition(chainName, false, 1)
 	if err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	image := "quay.io/eris/erisdb:" + version.VERSION
 	if srvDef.Service.Image != image {
-		fatal(t, fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
+		tests.IfExit(fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}
 
 	if srvDef.Service.Command != loaders.ErisChainStart {
-		fatal(t, fmt.Errorf("FAILURE: improper service command on GRADUATE. expected: %s\tgot: %s\n", loaders.ErisChainStart, srvDef.Service.Command))
+		tests.IfExit(fmt.Errorf("FAILURE: improper service command on GRADUATE. expected: %s\tgot: %s\n", loaders.ErisChainStart, srvDef.Service.Command))
 	}
 
 	if !srvDef.Service.AutoData {
-		fatal(t, fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
+		tests.IfExit(fmt.Errorf("FAILURE: improper service autodata on GRADUATE. expected: %t\tgot: %t\n", true, srvDef.Service.AutoData))
 	}
 
 	if len(srvDef.Dependencies.Services) != 1 {
-		fatal(t, fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.Dependencies.Services))
+		tests.IfExit(fmt.Errorf("FAILURE: improper service deps on GRADUATE. expected: [\"keys\"]\tgot: %s\n", srvDef.Dependencies.Services))
 	}
 }
 
@@ -111,19 +105,19 @@ func TestLoadChainDefinition(t *testing.T) {
 	logger.Infof("Load chain def (from tests) =>\t%s\n", chainName)
 	chn, e := loaders.LoadChainDefinition(chainName, false, 1)
 	if e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	if chn.Service.Name != chainName {
-		fatal(t, fmt.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s", chainName, chn.Service.Name))
+		tests.IfExit(fmt.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s", chainName, chn.Service.Name))
 	}
 
 	if !chn.Service.AutoData {
-		fatal(t, fmt.Errorf("FAILURE: data_container not properly read on LOAD."))
+		tests.IfExit(fmt.Errorf("FAILURE: data_container not properly read on LOAD."))
 	}
 
 	if chn.Operations.DataContainerName == "" {
-		fatal(t, fmt.Errorf("FAILURE: data_container_name not set."))
+		tests.IfExit(fmt.Errorf("FAILURE: data_container_name not set."))
 	}
 }
 
@@ -163,7 +157,7 @@ func TestPlopChain(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", chainName)
-	ifExit(NewChain(do))
+	tests.IfExit(NewChain(do))
 	defer testKillChain(t, chainName)
 
 	do = def.NowDo()
@@ -179,7 +173,7 @@ func TestPlopChain(t *testing.T) {
 	}
 
 	cfgFile, err := ioutil.ReadFile(cfgFilePath)
-	ifExit(err)
+	tests.IfExit(err)
 	cfgFilePlop := newWriter.Bytes()
 
 	// remove [13] that shows up everywhere ...
@@ -198,11 +192,11 @@ func TestChainsNewDirGen(t *testing.T) {
 	chainID := "testChainsNewDirGen"
 	myDir := path.Join(common.DataContainersPath, chainID)
 	if err := os.MkdirAll(myDir, 0700); err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 	contents := "this is a file in the directory\n"
 	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0664); err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	do := def.NowDo()
@@ -212,7 +206,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	ifExit(NewChain(do))
+	tests.IfExit(NewChain(do))
 
 	// remove the data container
 	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
@@ -227,14 +221,14 @@ func TestChainsNewDirGen(t *testing.T) {
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/file.file")}
 	b, err := perform.DockerRunData(ops, nil)
 	if err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	config.GlobalConfig.Writer = oldWriter
 	result := trimResult(string(b))
 	contents = trimResult(contents)
 	if result != contents {
-		fatal(t, fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
+		tests.IfExit(fmt.Errorf("file not faithfully copied. Got: %s \n Expected: %s", result, contents))
 	}
 
 	// verify the chain_id got swapped in the genesis.json
@@ -247,7 +241,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chainID)} //, "|", "jq", ".chain_id"}
 	b, err = perform.DockerRunData(ops, nil)
 	if err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	config.GlobalConfig.Writer = oldWriter
@@ -257,11 +251,11 @@ func TestChainsNewDirGen(t *testing.T) {
 		ChainID string `json:"chain_id"`
 	}{}
 	if err := json.Unmarshal([]byte(result), &s); err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	if s.ChainID != chainID {
-		fatal(t, fmt.Errorf("ChainID mismatch: got %s, expected %s", s.ChainID, chainID))
+		tests.IfExit(fmt.Errorf("ChainID mismatch: got %s, expected %s", s.ChainID, chainID))
 	}
 }
 
@@ -275,10 +269,10 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	ifExit(NewChain(do))
+	tests.IfExit(NewChain(do))
 	_, err := ioutil.ReadFile(do.ConfigFile)
 	if err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	// remove the data container
@@ -291,7 +285,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	result := trimResult(string(runContainer(t, ops)))
 	contents := trimResult(ini.DefChainConfig())
 	if result != contents {
-		fatal(t, fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
+		tests.IfExit(fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
 	}
 
 	// verify the contents of genesis.json (should have the validator from the csv)
@@ -307,7 +301,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 		}
 	}
 	if !found {
-		fatal(t, fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
+		tests.IfExit(fmt.Errorf("Did not find pubkey %s in genesis.json: %s", ini.DefaultPubKeys[0], result))
 	}
 }
 
@@ -322,7 +316,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
-	ifExit(NewChain(do))
+	tests.IfExit(NewChain(do))
 
 	// remove the data container
 	defer removeChainContainer(t, chainID, do.Operations.ContainerNumber)
@@ -347,7 +341,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 		}
 	}
 	if !found {
-		fatal(t, fmt.Errorf("failed to find fields: %s", result))
+		tests.IfExit(fmt.Errorf("failed to find fields: %s", result))
 	}
 }
 
@@ -362,7 +356,7 @@ func TestLogsChain(t *testing.T) {
 	logger.Infof("Get chain logs (from tests) =>\t%s:%s\n", do.Name, do.Tail)
 	e := LogsChain(do)
 	if e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 }
 
@@ -376,7 +370,7 @@ func TestUpdateChain(t *testing.T) {
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
 	if e := UpdateChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, chainName, true, true)
@@ -392,7 +386,7 @@ func TestInspectChain(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Operations.Args)
 	if e := InspectChain(do); e != nil {
-		fatal(t, fmt.Errorf("Error inspecting chain =>\t%v\n", e))
+		tests.IfExit(fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
 	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
@@ -410,7 +404,7 @@ func TestRenameChain(t *testing.T) {
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 
 	if e := RenameChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, rename1, true, true)
@@ -420,7 +414,7 @@ func TestRenameChain(t *testing.T) {
 	do.NewName = rename2
 	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
 	if e := RenameChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, chainName, true, true)
@@ -433,14 +427,14 @@ func TestRmChain(t *testing.T) {
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
 	if e := services.KillService(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
 	do.Name, do.Rm, do.RmD = chainName, false, false
 	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
 	if e := KillChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 	testExistAndRun(t, chainName, true, false)
 
@@ -449,7 +443,7 @@ func TestRmChain(t *testing.T) {
 	do.RmD = true
 	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
 	if e := RmChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, chainName, false, false)
@@ -835,7 +829,7 @@ func testStartChain(t *testing.T, chain string) {
 	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
 	if e := StartChain(do); e != nil {
 		logger.Errorln(e)
-		fatal(t, nil)
+		tests.IfExit(nil)
 	}
 	testExistAndRun(t, chain, true, true)
 }
@@ -848,21 +842,21 @@ func testKillChain(t *testing.T, chain string) {
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	logger.Infof("Killing keys (from tests) =>\n%s\n", do.Name)
 	if e := services.KillService(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
 	do.Name, do.Rm, do.RmD = chain, true, true
 	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
 	if e := KillChain(do); e != nil {
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 	testExistAndRun(t, chain, false, false)
 }
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
-		fatal(t, nil) //error thrown in func (logger.Errorln)
+		tests.IfExit(nil) //error thrown in func (logger.Errorln)
 	}
 }
 
@@ -873,7 +867,7 @@ func testNewChain(chain string) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
-	ifExit(NewChain(do))
+	tests.IfExit(NewChain(do))
 }
 
 func removeChainContainer(t *testing.T, chainID string, cNum int) {
@@ -882,26 +876,7 @@ func removeChainContainer(t *testing.T, chainID string, cNum int) {
 	do.Rm, do.Force, do.RmD = true, true, true
 	do.Operations.ContainerNumber = cNum
 	if err := KillChain(do); err != nil {
-		fatal(t, err)
-	}
-}
-
-//TODO use tests.TestsTearDown (or not? -> only once clean is refactored)
-func testsTearDown() error {
-	killService("keys")
-	testKillChain(nil, chainName)
-	log.Flush()
-	return os.RemoveAll(erisDir)
-}
-
-func killService(name string) {
-	do := def.NowDo()
-	do.Name = name
-	do.Operations.Args = []string{name}
-	do.Rm, do.RmD, do.Force = true, true, true
-	if e := services.KillService(do); e != nil {
-		logger.Errorln(e)
-		fatal(nil, e)
+		tests.IfExit(err)
 	}
 }
 
@@ -912,7 +887,7 @@ func runContainer(t *testing.T, ops *def.Operation) []byte {
 
 	b, err := perform.DockerRunData(ops, nil)
 	if err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 	logger.Debugf("Container ran =>\t\t%s:%v\n", ops.DataContainerName, ops.Args)
 	config.GlobalConfig.Writer = oldWriter
@@ -922,19 +897,11 @@ func runContainer(t *testing.T, ops *def.Operation) []byte {
 func ensureTomlValue(t *testing.T, s, field, value string) bool {
 	if strings.Contains(s, field) {
 		if !strings.Contains(s, value) {
-			fatal(t, fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
+			tests.IfExit(fmt.Errorf("Expected %s to be %s. Got: %s", field, value, s))
 		}
 		return true
 	}
 	return false
-}
-
-func ifExit(err error) {
-	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
-		os.Exit(1)
-	}
 }
 
 func trimResult(s string) string {
