@@ -48,9 +48,8 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "interactive":
 		cmd.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 		//update
-		//	case "pull":
-		//		cmd.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
-		//timeout see aboe
+	case "pull":
+		cmd.Flags().BoolVarP(&do.Pull, "pull", "p", false, fmt.Sprintf("pull an updated version of the %s's base service image from docker hub", typ))
 	case "env":
 		cmd.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax") //last digit; 1 or 2?
 	case "links":

@@ -428,11 +428,12 @@ func addChainsFlags() {
 	//chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
 	//chainsRemove.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 
-	//buildFlag(chainsUpdate, do, "pull", "chain")
+	buildFlag(chainsUpdate, do, "pull", "chain")
 	buildFlag(chainsUpdate, do, "timeout", "chain")
 	buildFlag(chainsUpdate, do, "env", "chain")
 	buildFlag(chainsUpdate, do, "links", "chain")
-	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
+
+	//chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
 	//chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
 	//chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
 	//chainsUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")

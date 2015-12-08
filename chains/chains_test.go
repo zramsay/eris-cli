@@ -366,7 +366,7 @@ func TestUpdateChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Name = chainName
-	do.SkipPull = true
+	do.Pull = false
 	do.Operations.PublishAllPorts = true
 	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
 	if e := UpdateChain(do); e != nil {
