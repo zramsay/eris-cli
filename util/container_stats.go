@@ -128,17 +128,16 @@ func PrintPortMappings(id string, ports []string) error {
 
 	// Replace plain port numbers without suffixes with both "/tcp" and "/udp" suffixes.
 	// (For example, replace ["53"] in a slice with ["53/tcp", "53/udp"].)
-	for i, port := range ports {
+	normalizedPorts := []string{}
+	for _, port := range ports {
 		if !strings.HasSuffix(port, "/tcp") && !strings.HasSuffix(port, "/udp") {
-			// Delete an element mid-slice.
-			ports = append(ports[:i], ports[i+1:]...)
-
-			ports = append(ports, port+"/tcp")
-			ports = append(ports, port+"/udp")
+			normalizedPorts = append(normalizedPorts, port+"/tcp", port+"/udp")
+		} else {
+			normalizedPorts = append(normalizedPorts, port)
 		}
 	}
 
-	for _, port := range ports {
+	for _, port := range normalizedPorts {
 		for _, binding := range exposedPorts[docker.Port(port)] {
 			logger.Printf("%s -> %s\n", port, fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort))
 		}
