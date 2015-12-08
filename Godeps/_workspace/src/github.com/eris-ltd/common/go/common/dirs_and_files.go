@@ -29,7 +29,6 @@ var (
 	ActionsPath        = path.Join(ErisRoot, "actions")
 	ChainsPath         = path.Join(ErisRoot, "chains") // previously "blockchains"
 	DataContainersPath = path.Join(ErisRoot, "data")
-	FilesPath          = path.Join(ErisRoot, "files")
 	KeysPath           = path.Join(ErisRoot, "keys")
 	LanguagesPath      = path.Join(ErisRoot, "languages")
 	ServicesPath       = path.Join(ErisRoot, "services")
