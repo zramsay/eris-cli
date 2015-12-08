@@ -215,13 +215,44 @@ func TestKillRmService(t *testing.T) {
 	testNumbersExistAndRun(t, servName, 0, 0)
 }
 
-func TestImportService(t *testing.T) {
+func TestExportService(t *testing.T) {
 	testStartService(t, "ipfs", false)
 	time.Sleep(5 * time.Second)
 
 	do := def.NowDo()
+	do.Name = "ipfs"
+
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ExportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ExportService(do); err != nil {
+			tests.IfExit(err)
+		}
+	}
+
+	hash = do.Result
+	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
+func TestImportService(t *testing.T) {
+	do := def.NowDo()
 	do.Name = "eth"
-	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	if hash == "" {
+		do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	} else {
+		do.Hash = hash
+	}
 	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
 
 	// because IPFS is testy, we retry the put up to
@@ -243,34 +274,8 @@ func TestImportService(t *testing.T) {
 		}
 	}
 
-	testExistAndRun(t, "ipfs", 1, true, true)
-}
-
-func TestExportService(t *testing.T) {
-	//ExportService has EnsureRunning builtin
-	do := def.NowDo()
-	do.Name = "ipfs"
-
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ExportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := ExportService(do); err != nil {
-			fatal(t, err)
-		}
-	}
-
-	testExistAndRun(t, "ipfs", 1, true, true)
+	testKillService(t, "ipfs", true)
+	testExistAndRun(t, "ipfs", 1, false, false)
 }
 
 func TestNewService(t *testing.T) {
