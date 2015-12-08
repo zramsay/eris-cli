@@ -116,20 +116,34 @@ func PrintPortMappings(id string, ports []string) error {
 	if err != nil {
 		return err
 	}
+
 	exposedPorts := cont.NetworkSettings.Ports
 
-	for _, p := range ports {
-		port := PortAndProtocol(p)
-		mappedPort, ok := exposedPorts[port]
-		if !ok {
-			return fmt.Errorf("%s is not an exposed port for container", port)
-		}
-		if len(ports) == 1 {
-			logger.Printf("%s\n", mappedPort[0].HostPort)
-		} else {
-			logger.Printf("%s:%s\n", mappedPort[0].HostPort, port)
+	// Display everything if no port's requested.
+	if len(ports) == 0 {
+		for exposed := range exposedPorts {
+			ports = append(ports, string(exposed))
 		}
 	}
+
+	// Replace plain port numbers without suffixes with both "/tcp" and "/udp" suffixes.
+	// (For example, replace ["53"] in a slice with ["53/tcp", "53/udp"].)
+	for i, port := range ports {
+		if !strings.HasSuffix(port, "/tcp") && !strings.HasSuffix(port, "/udp") {
+			// Delete an element mid-slice.
+			ports = append(ports[:i], ports[i+1:]...)
+
+			ports = append(ports, port+"/tcp")
+			ports = append(ports, port+"/udp")
+		}
+	}
+
+	for _, port := range ports {
+		for _, binding := range exposedPorts[docker.Port(port)] {
+			logger.Printf("%s -> %s\n", port, fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort))
+		}
+	}
+
 	return nil
 }
 

@@ -105,8 +105,8 @@ var servicesStart = &cobra.Command{
 	Long: `Start a service according to the service definition file which
 eris stores in the ~/.eris/services directory.
 
-The [eris services start NAME] command by default will put the 
-service into the background so its logs will not be viewable 
+The [eris services start NAME] command by default will put the
+service into the background so its logs will not be viewable
 from the command line.
 
 To stop the service use:      [eris services stop NAME].
@@ -129,10 +129,14 @@ $ eris services inspect ipfs host_config.binds -- will display only that value`,
 }
 
 var servicesPorts = &cobra.Command{
-	Use:   "ports PORT",
+	Use:   "ports NAME [PORT]...",
 	Short: "Print port mappings",
-	Long:  "Print port mappings",
-	Run:   PortsService,
+	Long: `Print port mappings.
+
+The [eris services ports] command displays published service ports.`,
+	Example: `$ eris services ports ipfs -- will display all IPFS ports
+$ eris services ports ipfs 4001 5001 -- will display specific IPFS ports`,
+	Run: PortsService,
 }
 
 var servicesExport = &cobra.Command{
@@ -334,7 +338,7 @@ func InspectService(cmd *cobra.Command, args []string) {
 }
 
 func PortsService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(srv.PortsService(do))

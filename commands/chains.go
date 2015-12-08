@@ -178,21 +178,22 @@ var chainsPlop = &cobra.Command{
 }
 
 var chainsPorts = &cobra.Command{
-	Use:   "ports",
-	Short: "Print the port mappings.",
-	Long: `Print the port mappings.
+	Use:   "ports NAME [PORT]...",
+	Short: "Print port mappings.",
+	Long: `Print port mappings.
 
-eris chains ports is mostly a developer convenience function.
-It returns a machine readable port mapping of a port which is
-exposed inside the container to what that port is mapped to
-on the host.
+The [eris chains ports] command is mostly a developer 
+convenience function. It returns a machine readable 
+port mapping of a port which is exposed inside the 
+container to what that port is mapped to on the host.
 
 This is useful when stitching together chain networks which
 need to know how to connect into a specific chain (perhaps
 with or without a container number) container.`,
 	Example: `$ eris chains ports myChain 1337 -- will display what port on the host is mapped to the eris:db API port
 $ eris chains ports myChain 46656 -- will display what port on the host is mapped to the eris:db peer port
-$ eris chains ports myChain 46657 -- will display what port on the host is mapped to the eris:db rpc port`,
+$ eris chains ports myChain 46657 -- will display what port on the host is mapped to the eris:db rpc port
+$ eris chains ports myChain -- will display all mappings`,
 	Run: PortsChain,
 }
 
@@ -526,7 +527,7 @@ func PlopChain(cmd *cobra.Command, args []string) {
 }
 
 func PortsChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(chns.PortsChain(do))
