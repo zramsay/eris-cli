@@ -8,6 +8,8 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
+//XXX flags were not deduplicated if only one known instance of being used
+//this command can probably be refactored...it's quite the bloated
 func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doesn't return anything; just sets the command
 	//typ always given but not always needed. also useful for restrictions
 	switch flag {
@@ -35,11 +37,7 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "rm-volumes":
 		cmd.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 	case "rm":
-		if typ == "contracts" {
-			cmd.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
-		} else { //"services" || "chains"
-			cmd.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
-		}
+		cmd.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	case "data":
 		cmd.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
 		//exec (services, chains)
@@ -79,5 +77,15 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 		} else if typ == "files" {
 			cmd.Flags().StringVarP(&do.CSV, "csv", "", "", "specify a .csv with entries of format: hash,fileName")
 		}
+	case "services":
+		cmd.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
+	case "config":
+		cmd.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file (config.toml) for the chain")
+	case "serverconf":
+		cmd.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
+	case "dir":
+		cmd.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	case "api":
+		cmd.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	}
 }

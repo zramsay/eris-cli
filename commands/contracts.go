@@ -23,6 +23,7 @@ func buildContractsCommand() {
 	// TODO: finish when the PR which is blocking
 	//   eris files put --dir is integrated into
 	//   ipfs
+	// [zr] looks like that's now the case ...
 	// XXX see https://github.com/ipfs/go-ipfs/pull/1845
 	// Contracts.AddCommand(contractsImport)
 	// Contracts.AddCommand(contractsExport)
@@ -79,7 +80,7 @@ deploy types.
 }
 
 //----------------------------------------------------
-
+// XXX todo deduplicate flags -> [zr] things get wonky with epm
 func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for testing")
 	contractsTest.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")

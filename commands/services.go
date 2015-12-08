@@ -218,47 +218,29 @@ Command will cat local service definition file.`,
 //----------------------------------------------------------------------
 // cli flags
 
-//TODO reconcile / harmonize unbuilt flags
 func addServicesFlags() {
 	buildFlag(servicesLogs, do, "follow", "service")
 	buildFlag(servicesLogs, do, "tail", "service")
-	//servicesLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs")
-	//servicesLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	//servicesExec.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
-	//servicesExec.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
-	//servicesExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	//servicesExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 
 	buildFlag(servicesUpdate, do, "pull", "service")
 	buildFlag(servicesUpdate, do, "timeout", "service")
 	buildFlag(servicesUpdate, do, "env", "service")
 	buildFlag(servicesUpdate, do, "links", "service")
-	//servicesUpdate.Flags().BoolVarP(&do.Pull, "pull", "p", false, "skip the pulling feature and simply rebuild the service container")
-	//servicesUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
-	//servicesUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	//servicesUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 
 	buildFlag(servicesRm, do, "file", "service")
 	buildFlag(servicesRm, do, "data", "service")
 	buildFlag(servicesRm, do, "rm-volumes", "service")
-	//servicesRm.Flags().BoolVarP(&do.File, "file", "f", false, "remove service definition file as well as service container")
-	//servicesRm.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers as well")
-	//servicesRm.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
 
 	buildFlag(servicesStart, do, "publish", "service")
 	buildFlag(servicesStart, do, "env", "service")
 	buildFlag(servicesStart, do, "links", "service")
 	buildFlag(servicesStart, do, "chain", "service")
-	//servicesStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	//servicesStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	//servicesStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
-	//servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 
 	buildFlag(servicesStop, do, "rm", "service")
 	buildFlag(servicesStop, do, "volumes", "service")
@@ -268,20 +250,10 @@ func addServicesFlags() {
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
 
-	//servicesStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
-	//servicesStop.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
-	//servicesStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
-	//servicesStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
-	//servicesStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
-
 	buildFlag(servicesListAll, do, "known", "service")
 	buildFlag(servicesListAll, do, "existing", "service")
 	buildFlag(servicesListAll, do, "running", "service")
 	buildFlag(servicesListAll, do, "quiet", "service")
-	//servicesListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the service definition files that exist")
-	//servicesListAll.Flags().BoolVarP(&do.Existing, "existing", "e", false, "list all the all current containers which exist for a service")
-	//servicesListAll.Flags().BoolVarP(&do.Running, "running", "r", false, "list all the current containers which are running for a service")
-	//servicesListAll.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
 
 }
 
