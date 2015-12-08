@@ -142,12 +142,6 @@ func PrintPortMappings(id string, ports []string) error {
 		}
 	}
 
-	// If only one port is requested, but there are more than one published port,
-	// don't use the minimal format.
-	if minimalDisplay && len(normalizedPorts) > 1 {
-		minimalDisplay = false
-	}
-
 	for _, port := range normalizedPorts {
 		for _, binding := range exposedPorts[docker.Port(port)] {
 			hostAndPortBinding := fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort)
