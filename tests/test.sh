@@ -218,7 +218,7 @@ else
 
 	  for ver in "${docker_versions19[@]}"
 	  do
-      runTests "latest"
+      runTests $branch
 	  done
   else
 	  # run the tests for only one of the docker versions at random
@@ -226,7 +226,7 @@ else
     runTests "docker18"
 
 	  ver=${docker_versions19[RANDOM%${#docker_versions19[@]}]}
-    runTests "latest"
+    runTests $branch
   fi
 fi
 
