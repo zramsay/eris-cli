@@ -119,6 +119,11 @@ func PrintPortMappings(id string, ports []string) error {
 
 	exposedPorts := cont.NetworkSettings.Ports
 
+	var minimalDisplay bool
+	if len(ports) == 1 {
+		minimalDisplay = true
+	}
+
 	// Display everything if no port's requested.
 	if len(ports) == 0 {
 		for exposed := range exposedPorts {
@@ -137,9 +142,22 @@ func PrintPortMappings(id string, ports []string) error {
 		}
 	}
 
+	// If only one port is requested, but there are more than one published port,
+	// don't use the minimal format.
+	if minimalDisplay && len(normalizedPorts) > 1 {
+		minimalDisplay = false
+	}
+
 	for _, port := range normalizedPorts {
 		for _, binding := range exposedPorts[docker.Port(port)] {
-			logger.Printf("%s -> %s\n", port, fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort))
+			hostAndPortBinding := fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort)
+
+			// If only one port request, display just the binding.
+			if minimalDisplay {
+				logger.Printf("%s\n", hostAndPortBinding)
+			} else {
+				logger.Printf("%s -> %s\n", port, hostAndPortBinding)
+			}
 		}
 	}
 
