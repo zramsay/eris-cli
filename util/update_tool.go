@@ -114,8 +114,7 @@ func version() string {
 
 	stdOut, err := exec.Command("eris", verArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Printf("error getting version:\n%s\n", string(stdOut))
-		os.Exit(1)
+		common.IfExit(fmt.Errorf("error getting version:\n%s\n", string(stdOut)))
 	}
 	return string(stdOut)
 
