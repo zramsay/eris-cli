@@ -10,12 +10,14 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
 const VERSION = version.VERSION
+const dVerMin = version.DVER_MIN
 
 // Defining the root command
 var ErisCmd = &cobra.Command{
@@ -41,6 +43,12 @@ Complete documentation is available at https://docs.erisindustries.com
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
 		util.DockerConnect(do.Verbose, do.MachineName)
+
+		dockerVersion, _ := util.DockerClientVersion()
+		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
+		if dockerVersion < dVerMin {
+			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
+		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
