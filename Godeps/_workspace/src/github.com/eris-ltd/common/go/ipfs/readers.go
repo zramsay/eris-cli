@@ -105,18 +105,19 @@ func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
 	//use absolute paths?
 	endPath := path.Join(dirName, fileName)
 	if dirName != "" {
-		w.Write([]byte("Downloading " + url + " to " + endPath + "\n"))
+		fmt.Printf("Downloading %s to %s\n", url, endPath)
 		checkDir, err := os.Stat(dirName)
 		if err != nil {
+			return err
+		}
+		if !checkDir.IsDir() {
 			w.Write([]byte("Directory does not exist, creating it"))
 			err1 := os.MkdirAll(dirName, 0700)
 			if err1 != nil {
 				return fmt.Errorf("error making directory, check your permissions %v\n", err1)
 			}
 		}
-		if !checkDir.IsDir() {
-			return fmt.Errorf("path specified is not a directory, please enter a directory")
-		}
+		//	return fmt.Errorf("path specified is not a directory, please enter a directory")
 	} else {
 		//dirNAme = getwd
 		w.Write([]byte("Downloading " + url + " to " + fileName + "\n"))

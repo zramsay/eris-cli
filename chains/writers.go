@@ -71,16 +71,16 @@ func MakeGenesisFile(do *def.Do) error {
 	doThr := def.NowDo()
 	doThr.Chain.ChainType = "throwaway" //for teardown
 	doThr.Name = "default"
+	doThr.Chain.Name = "default" //for teardown
 	doThr.Operations.ContainerNumber = 1
 	doThr.Operations.PublishAllPorts = true
 
 	log.WithField("=>", doThr.Name).Info("Making genesis.json file. Starting chain")
-	if er := StartChain(doThr); er != nil {
+	if er := NewChain(doThr); er != nil {
 		return fmt.Errorf("error starting chain %v\n", er)
 	}
 
 	doThr.Operations.Args = []string{"mintgen", "known", do.Chain.Name, fmt.Sprintf("--pub=%s", do.Pubkey)}
-	doThr.Chain.Name = "default" //for teardown
 
 	// pipe this output to /chains/chainName/genesis.json
 	err := ExecChain(doThr)

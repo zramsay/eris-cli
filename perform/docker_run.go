@@ -417,32 +417,27 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	if _, exists := ContainerExists(ops); exists {
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
-			err := DockerStop(srv, ops, 10)
-			if err != nil {
+			if err := DockerStop(srv, ops, 10); err != nil {
 				return err
 			}
 		}
-		err := removeContainer(ops.SrvContainerName, false)
-		if err != nil {
+		if err := removeContainer(service.ID, false); err != nil {
 			return err
 		}
 	}
 
 	if log.GetLevel() > 0 {
-		err := pullImage(srv.Image, os.Stdout)
-		if err != nil {
+		if err := pullImage(srv.Image, logger.Writer); err != nil {
 			return err
 		}
 	} else {
-		err := pullImage(srv.Image, bytes.NewBuffer([]byte{}))
-		if err != nil {
+		if err := pullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
 			return err
 		}
 	}
 
 	if wasRunning {
-		err := DockerRunService(srv, ops)
-		if err != nil {
+		if err := DockerRunService(srv, ops); err != nil {
 			return err
 		}
 	}
@@ -694,8 +689,7 @@ func pullImage(name string, writer io.Writer) error {
 
 	auth := docker.AuthConfiguration{}
 
-	err := util.DockerClient.PullImage(opts, auth)
-	if err != nil {
+	if err := util.DockerClient.PullImage(opts, auth); err != nil {
 		return err
 	}
 

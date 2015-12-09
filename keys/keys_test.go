@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -15,7 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/logger"
 	srv "github.com/eris-ltd/eris-cli/services"
 	tests "github.com/eris-ltd/eris-cli/testutils"
-	util "github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -23,8 +22,6 @@ import (
 
 var DEAD bool
 
-//TODO DRY this up!
-//vars
 func fatal(t *testing.T, err error) {
 	if !DEAD {
 		tests.TestsTearDown()
@@ -71,7 +68,7 @@ func TestGenerateKey(t *testing.T) {
 
 	lsOutBytes := lsOut.Bytes()
 
-	output := trimString(string(lsOutBytes))
+	output := util.TrimString(string(lsOutBytes))
 
 	if address != output {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output))
@@ -92,7 +89,7 @@ func TestGetPubKey(t *testing.T) {
 	}
 
 	pubBytes := pub.Bytes()
-	pubkey := trimString(string(pubBytes))
+	pubkey := util.TrimString(string(pubBytes))
 
 	key := new(bytes.Buffer)
 	config.GlobalConfig.Writer = key
@@ -130,7 +127,7 @@ func TestExportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := trimString(string(catOutBytes))
+	keyInCont := util.TrimString(string(catOutBytes))
 
 	doExp := def.NowDo()
 	doExp.Address = address
@@ -147,7 +144,7 @@ func TestExportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 
-	keyOnHost := trimString(string(key))
+	keyOnHost := util.TrimString(string(key))
 	if keyInCont != keyOnHost {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyInCont, keyOnHost))
 	}
@@ -173,7 +170,7 @@ func TestImportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 	//key b4 import
-	keyOnHost := trimString(string(key))
+	keyOnHost := util.TrimString(string(key))
 
 	//rm key that was generated before import
 	doRm := def.NowDo()
@@ -210,7 +207,7 @@ func TestImportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := trimString(string(catOutBytes))
+	keyInCont := util.TrimString(string(catOutBytes))
 
 	if keyOnHost != keyInCont {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))
@@ -221,10 +218,6 @@ func TestConvertKey(t *testing.T) {
 	// tested in TestGetPubKey
 }
 
-func trimString(strang string) string {
-	return strings.TrimSpace(strings.Trim(strang, "\n"))
-}
-
 //returns an addr for tests
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
@@ -233,7 +226,7 @@ func testsGenAKey() string {
 	tests.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
-	address := trimString(string(addrBytes))
+	address := util.TrimString(string(addrBytes))
 	return address
 }
 

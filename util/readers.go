@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -17,8 +18,9 @@ func Untar(reader io.Reader, name, dest string) error {
 	return archive.Untar(reader, dest, &archive.TarOptions{NoLchown: true}) //, Name: name})
 }
 
-func GetFromGithub(org, repo, branch, path, fileName string, w io.Writer) error {
-	url := "https://rawgit.com/" + strings.Join([]string{org, repo, branch, path}, "/")
-	w.Write([]byte("Will download from url -> " + url))
-	return ipfs.DownloadFromUrlToFile(url, fileName, "", w)
+func GetFromGithub(org, repo, branch, path, directory, fileName string, w io.Writer) error {
+	url := "https://raw.githubusercontent.com/" + strings.Join([]string{org, repo, branch, path}, "/")
+	//w.Write([]byte("Will download from url -> " + url))
+	fmt.Printf("Will download from url -> %s\nTo -> %s\n", url, directory)
+	return ipfs.DownloadFromUrlToFile(url, fileName, directory, w)
 }

@@ -1,14 +1,16 @@
 package initialize
 
 import (
-  "fmt"
+	"fmt"
 
-  "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/version"
 )
 
+//need to either pull from toadserver & update with strings.Replace on init
+//leave here for testing .. ? (or put right into test!)
 func DefChainService() string {
-  ver := version.VERSION
-  return fmt.Sprintf(`
+	ver := version.VERSION
+	return fmt.Sprintf(`
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 [service]
@@ -26,8 +28,9 @@ email = "support@erisindustries.com"
 `, ver)
 }
 
+//moved to gh.com/eris-ltd/eris-chains
 func DefChainConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
@@ -43,7 +46,7 @@ vm_log = false
 }
 
 func DefChainGen() string {
-  return `
+	return `
 {
   "chain_id": "my_tests",
   "accounts": [
@@ -88,14 +91,16 @@ func DefChainGen() string {
 }
 
 // different from genesis above! -- used for testing
+//[zr] leave for testing - for now ?
 var DefaultPubKeys = []string{"CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
 
 func DefChainCSV() string {
-  return fmt.Sprintf("%s,", DefaultPubKeys[0])
+	return fmt.Sprintf("%s,", DefaultPubKeys[0])
 }
 
+//use tool to gen one of these...
 func DefChainKeys() string {
-  return `
+	return `
 {
   "address": "37236DF251AB70022B1DA351F08A20FB52443E37",
   "pub_key": [
@@ -113,8 +118,9 @@ func DefChainKeys() string {
 `
 }
 
+//moved to gh.com/eris-ltd/eris-chains
 func DefChainServConfig() string {
-  return `
+	return `
 # This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 

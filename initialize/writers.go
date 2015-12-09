@@ -1,119 +1,69 @@
 package initialize
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"os/exec"
+	"path"
 	"path/filepath"
+	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-func cloneRepo(prompt bool, name, location string) error {
-	src := "https://github.com/eris-ltd/" + name
+//TODO hard code in /common
+var defChainDir = path.Join(common.ChainsPath, "default")
 
-	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
-		// if the .git directory exists within ~/.eris/services (or w/e)
-		//   then pull rather than clone.
-		log.Warn("The location is a git repository. Attempting to pull instead")
-		if err := pullRepo(location, prompt); err != nil {
-			return err
-		}
+func dropServiceDefaults(dir, from string) error {
+	servDefs := []string{
+		"btcd.toml",
+		"eth.toml",
+		"ipfs.toml",
+		"keys.toml",
+		"mindy.toml",
+		"mint.toml",
+		"openbazaar.toml",
+		"tinydns.toml",
+		"do_not_use.toml",
+	}
 
-	} else {
-
-		// if the ~/.eris/services (or w/e) directory exists, but it does
-		// not have a .git directory (caught above), then clone the repo
-		if prompt || askToPull(location) {
-
-			// if users want to clone the repository we clear the directory first to avoid
-			//   cannot merge errors on localized changes. This is very opinionated and may
-			//   need to change down the road. generally, this should not be a big problem.
-			common.ClearDir(location)
-
-			log.Warn("Cloning git repository")
-			c := exec.Command("git", "clone", src, location)
-
-			// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
-			//c.Stdout = config.GlobalConfig.Writer
-			c.Stderr = config.GlobalConfig.ErrorWriter
-			if e3 := c.Run(); e3 != nil {
-				return e3
-			}
-
-		} else {
-			log.Debug("Authorization not granted. Skipping")
-		}
+	if err := drops(servDefs, "services", dir, from); err != nil {
+		return err
 	}
 	return nil
 }
 
-func pullRepo(location string, alreadyAsked bool) error {
-	if alreadyAsked || askToPull(location) {
-		prevDir, _ := os.Getwd()
-
-		if err := os.Chdir(location); err != nil {
-			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
-		}
-
-		log.Warn("Pulling origin master")
-		c := exec.Command("git", "pull", "origin", "master")
-
-		// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
-		//c.Stdout = config.GlobalConfig.Writer
-
-		c.Stderr = config.GlobalConfig.ErrorWriter
-		if err := c.Run(); err != nil {
-			return err
-		}
-
-		if err := os.Chdir(prevDir); err != nil {
-			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", prevDir)
-		}
+func dropActionDefaults(dir, from string) error {
+	actDefs := []string{
+		"chain_info.toml",
+		"dns_register.toml",
+		"keys_list.toml",
 	}
-
-	return nil
-}
-
-func askToPull(location string) bool {
-	var input string
-
-	log.WithField("dir", location).Warn("Looks like the directory exists")
-	fmt.Print("Would you like the marmots to pull in any recent changes? (y/n): ")
-	fmt.Scanln(&input)
-
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-		return true
-	}
-	return false
-}
-
-func dropDefaults() error {
-	if err := writeDefaultFile(common.ServicesPath, "keys.toml", DefaultKeys); err != nil {
-		return fmt.Errorf("Cannot add keys: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", DefaultIpfs); err != nil {
-		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", DefaultIpfs2); err != nil {
-		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
-		return fmt.Errorf("Cannot add default action: %s.\n", err)
+	if err := drops(actDefs, "actions", dir, from); err != nil {
+		return err
 	}
 	return nil
 }
 
-func dropChainDefaults() error {
-	defChainDir := filepath.Join(common.ChainsPath, "default")
-	if err := writeDefaultFile(common.ChainsPath, "default.toml", DefChainService); err != nil {
-		return fmt.Errorf("Cannot add default chain definition: %s.\n", err)
+func dropChainDefaults(dir, from string) error {
+	if err := os.MkdirAll(defChainDir, 0777); err != nil {
+		return err
 	}
-	if err := writeDefaultFile(defChainDir, "config.toml", DefChainConfig); err != nil {
-		return fmt.Errorf("Cannot add default config.toml: %s.\n", err)
+
+	chnDefs := []string{
+		"default.toml",
+		"config.toml",
+		"server_conf.toml",
+	}
+	if err := drops(chnDefs, "chains", dir, from); err != nil {
+		return err
 	}
 	if err := writeDefaultFile(defChainDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
@@ -121,14 +71,114 @@ func dropChainDefaults() error {
 	if err := writeDefaultFile(defChainDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "server_conf.toml", DefChainServConfig); err != nil {
-		return fmt.Errorf("Cannot add default server_conf.toml: %s.\n", err)
-	}
 	if err := writeDefaultFile(defChainDir, "genesis.csv", DefChainCSV); err != nil {
 		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
 	}
+
+	versionDefault := path.Join(dir, "default.toml")
+
+	read, err := ioutil.ReadFile(versionDefault)
+	if err != nil {
+		return err
+	}
+
+	//TODO update eris-chains/default.toml for only one "version" in the file
+	withVersion := strings.Replace(string(read), "version", version.VERSION, 2)
+
+	if err := ioutil.WriteFile(versionDefault, []byte(withVersion), 0); err != nil {
+		return err
+	}
+
+	//move things to where they ought to be
+	config := path.Join(dir, "config.toml")
+	configDef := path.Join(defChainDir, "config.toml")
+	if err := os.Rename(config, configDef); err != nil {
+		return err
+	}
+
+	server := path.Join(dir, "server_conf.toml")
+	serverDef := path.Join(defChainDir, "server_conf.toml")
+	if err := os.Rename(server, serverDef); err != nil {
+		return err
+	}
 	return nil
 }
+
+func pullDefaultImages() error {
+	images := []string{
+		"quay.io/eris/base",
+		"quay.io/eris/keys",
+		"quay.io/eris/data",
+		"quay.io/eris/ipfs",
+		"quay.io/eris/erisdb",
+		"quay.io/eris/epm",
+	}
+
+	logger.Println("Pulling default docker images from quay.io")
+	for _, image := range images {
+		var tag string
+		if image == "eris/erisdb" || image == "eris/epm" {
+			tag = version.VERSION
+		} else {
+			tag = "latest"
+		}
+		opts := docker.PullImageOptions{
+			Repository:   image,
+			Registry:     "quay.io",
+			Tag:          tag,
+			OutputStream: os.Stdout,
+		}
+		auth := docker.AuthConfiguration{}
+
+		if err := util.DockerClient.PullImage(opts, auth); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func drops(files []string, typ, dir, from string) error {
+	var repo string
+	if typ == "services" {
+		repo = "eris-services"
+	} else if typ == "actions" {
+		repo = "eris-actions"
+	} else if typ == "chains" {
+		repo = "eris-chains"
+	}
+
+	if !util.DoesDirExist(dir) {
+		if err := os.MkdirAll(dir, 0777); err != nil {
+			return err
+		}
+	}
+
+	buf := new(bytes.Buffer)
+	if from == "toadserver" {
+		for _, file := range files {
+			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
+			logger.Debugf("Getting %s from:\t%s\n", file, url)
+			if err := ipfs.DownloadFromUrlToFile(url, file, dir, buf); err != nil {
+				return err
+			}
+		}
+	} else if from == "rawgit" {
+		for _, file := range files {
+			logger.Debugf("Getting %s from: GitHub\n", file)
+			//TODO deduplicate that dum file
+			if err := util.GetFromGithub("eris-ltd", repo, "master", file, dir, file, buf); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+//XXX legacy - keep around for good measure :~)
+//func dropChainDefaults(dir, from string) error {
+//	defChainDir := filepath.Join(common.ChainsPath, "default")
+//	return nil
+//}
 
 func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err := os.MkdirAll(savePath, 0777); err != nil {
