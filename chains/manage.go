@@ -309,7 +309,7 @@ func UpdateChain(do *definitions.Do) error {
 		chain.Service.Command = loaders.ErisChainStart
 	}
 
-	err = perform.DockerRebuild(chain.Service, chain.Operations, do.SkipPull, do.Timeout)
+	err = perform.DockerRebuild(chain.Service, chain.Operations, do.Pull, do.Timeout)
 	if err != nil {
 		return err
 	}

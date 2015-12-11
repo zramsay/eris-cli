@@ -88,6 +88,7 @@ Usually will be piped into $HOME/.eris/chains/newChain/priv_validator.json`,
 }
 
 //the container path is always hardcoded to /home/eris/.eris/keys/data
+// TODO dedup with data flags!
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")

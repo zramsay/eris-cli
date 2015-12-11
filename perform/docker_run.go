@@ -316,8 +316,8 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 }
 
 // DockerRebuild recreates the container based on the srv settings template.
-// Unless skipPull is true, it updates the Docker image before recreating
-// the container. timeout is a number of seconds to wait before killing the
+// If pullImage is true, it updates the Docker image before recreating
+// the container. Timeout is a number of seconds to wait before killing the
 // container process ungracefully.
 //
 //  ops.SrvContainerName  - service or a chain container name to rebuild
@@ -326,7 +326,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 //  ops.Labels            - container creation time labels
 //
 // Also see container parameters for DockerRunService.
-func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout uint) error {
+func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout uint) error {
 	var wasRunning bool = false
 
 	logger.Infof("Starting Docker Rebuild =>\t%s\n", srv.Name)
@@ -351,7 +351,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 		return nil
 	}
 
-	if !skipPull {
+	if pullImage {
 		logger.Infof("Pulling new image =>\t\t%s\n", srv.Image)
 		err := DockerPull(srv, ops)
 		if err != nil {
