@@ -93,7 +93,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 		return nil, err
 	}
 
-	logger.Infof("Waiting to exit =>\t%s\n", opts.Name)
+	logger.Infof("Waiting to exit =>\t\t%s\n", opts.Name)
 	if err := waitContainer(opts.Name); err != nil {
 		return nil, err
 	}

@@ -171,6 +171,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	} else {
 		doData.Destination = common.ErisContainerRoot
 	}
+
 	doData.Source = filepath.Join(common.DataContainersPath, doData.Name)
 	var loca string
 	if do.Path != pwd {
@@ -226,9 +227,12 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
+
 	doData.Source = common.ErisContainerRoot
 	if do.Path != pwd {
 		doData.Destination = do.Path
+	} else {
+		doData.Destination = filepath.Join(common.DataContainersPath, doData.Name)
 	}
 	var loca string
 	if do.Path != pwd {
@@ -237,11 +241,11 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
 	}
 
-	logger.Debugf("Exporting Results =>\t\t%s:%s\n", doData.Path, loca)
+	logger.Debugf("Exporting Results =>\t\t%s:%s\n", doData.Source, loca)
 	data.ExportData(doData)
 
 	if app.AppType.Name == "epm" {
-		files, _ := filepath.Glob(filepath.Join(loca, "epm*"))
+		files, _ := filepath.Glob(filepath.Join(loca, "*"))
 		for _, f := range files {
 			dest := filepath.Join(do.Path, filepath.Base(f))
 			logger.Debugf("Moving file =>\t\t\t%s:%s\n", f, dest)
