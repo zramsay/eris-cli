@@ -1,5 +1,30 @@
 #!/usr/bin/env bash
 
+# ---------------------------------------------------------------------------
+# PURPOSE
+
+# This script will test the eris. If it is given the "local" argument, then
+# it will run against the local docker backend. If it is not given the local
+# argument then it will run against a series of docker backends defined in
+# arrays at the top of the script.
+#
+# What this script will do is first it will define what should be run, then
+# it will make sure that it has access to the eris' test machine definition
+# image files necessary to connect into the backends. Then it will run the
+# test_tool and test_stack scripts against a set of backends. That set will
+# either be a random element of a given array for a major docker version, or
+# it will run against the entire suite of backends.
+
+# ---------------------------------------------------------------------------
+# REQUIREMENTS
+
+# Docker installed locally
+
+# ---------------------------------------------------------------------------
+# USAGE
+
+# test.sh [local]
+
 # ----------------------------------------------------------------------------
 # Set definitions and defaults
 
@@ -15,30 +40,26 @@ else
 fi
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}
+if [[ "$branch" == "" ]]
+then
+  # get from git
+  branch=`git rev-parse --abbrev-ref HEAD`
+fi
 
-# Docker Backend Versions Eris Tests Against -- Final element in this array is the definitive one.
-#   Circle passes or fails based on it. To speed testing uncomment out the second line to override
-#   the array and just test against the authoritative one. If testing against a specific backend
-#   then change the authoritative one to use that. We define "authoritative" to mean "what docker
-#   installs by default on Linux"
+# Docker Backend Versions Eris Tests Against -- Final element in the final array is the
+#   definitive one. Circle passes or fails based on it. We define "authoritative" to mean
+#   "what docker installs by default on Linux"
 declare -a docker_versions18=( "1.8.0" "1.8.1" "1.8.2" "1.8.3" )
 declare -a docker_versions19=( "1.9.0" "1.9.1" )
 declare -a machine_results=()
 
-# Primary swarm of backend machines -- uncomment out second line to use the secondary swarm
-#   if/when the primary swarm is either too slow or non-responsive. Swarms here are really
-#   data centers. These boxes are on Digital Ocean.
+# Primary and secondary swarm of backend machines. Swarms here are really data centers.
+#   These boxes are on AWS.
 swarm_prim="dca1"
 swarm_back="fra1"
 swarm=$swarm_prim
 
-if [[ $1 == "sec_swarm" ]]
-then
-  swarm=$swarm_back
-fi
-
 # Define now the tool tests within the Docker container will be booted from docker run
-host_docker="docker18"
 entrypoint="/home/eris/test_tool.sh"
 testimage=quay.io/eris/eris
 testuser=eris
@@ -49,10 +70,16 @@ machine_definitions=matDef
 # ----------------------------------------------------------------------------
 # Check swarm and machine stuff
 
+# Sets the name of the machine using eris box conventions
 set_machine() {
   echo "eris-test-$swarm-$ver"
 }
 
+# Checks whether the primary swarm for the current version of docker is running
+#   which indicates it is being used by a different test run. If the primary
+#   swarm for the current machine is running, then it will switch to using the
+#   secondary swarm for the same version of the version. If that box is also
+#   being used by another test run then that version will not be used.
 check_swarm() {
   machine=$(set_machine)
 
@@ -78,10 +105,13 @@ check_swarm() {
   fi
 }
 
+# Changes back to the primary swarm
 reset_swarm() {
   swarm=$swarm_prim
 }
 
+# Adds the results for a particular box to the machine_results array
+#   which is displayed at the end of the tests.
 log_results() {
   if [ "$test_exit" -eq 0 ]
   then
@@ -106,9 +136,9 @@ runTests(){
     then
       if [[ $(uname -s) == "Linux" ]]
       then
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage:$host_docker
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -v $localsocket:$localsocket --user $testuser $testimage:$1
       else
-        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$host_docker
+        docker run --rm --volumes-from $machine_definitions --entrypoint $entrypoint -e MACHINE_NAME=$machine -e SWARM=$swarm -e APIVERSION=$ver -p $remotesocket --user $testuser $testimage:$1
       fi
     else
       echo "Don't run local in Circle environment."
@@ -178,35 +208,26 @@ if [[ $1 == "local" ]]
 then
   runTests "local"
 else
-  if [[ $1 == "all" ]]
+  # we only run against all backends on a few branches
+  if [[ "$branch" == "$BACKEND_TESTS_BRANCH" || "$branch" == "master" ]]
   then
-    runTests "local"
-  fi
+	  for ver in "${docker_versions18[@]}"
+	  do
+	    runTests "docker18"
+	  done
 
-  for ver in "${docker_versions18[@]}"
-  do
+	  for ver in "${docker_versions19[@]}"
+	  do
+      runTests $branch
+	  done
+  else
+	  # run the tests for only one of the docker versions at random
+    ver=${docker_versions18[RANDOM%${#docker_versions18[@]}]}
     runTests "docker18"
-  done
 
-  for ver in "${docker_versions19[@]}"
-  do
-
-    # Correct for docker build stuff
-    if [[ "$branch" == "master" ]]
-    then
-      branch="latest"
-    fi
-
+	  ver=${docker_versions19[RANDOM%${#docker_versions19[@]}]}
     runTests $branch
-
-    # Correct for docker build stuff
-    if [[ "$branch" == "latest" ]]
-    then
-      branch="master"
-    fi
-
-  done
-
+  fi
 fi
 
 # ---------------------------------------------------------------------------

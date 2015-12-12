@@ -9,8 +9,8 @@ import (
 //TODO better explanations of command
 var Clean = &cobra.Command{
 	Use:   "clean",
-	Short: "Cleans up your eris working environment",
-	Long: `Stops and force removes all eris containers 
+	Short: "Clean up your eris working environment.",
+	Long: `Stops and force removes all eris containers
 	(chains, services, datas, etc) by default. Useful
 	for development.`,
 	Run: func(cmd *cobra.Command, args []string) {

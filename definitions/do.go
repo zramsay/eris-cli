@@ -3,14 +3,9 @@ package definitions
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Existing      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Known         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Running       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	SkipPull      bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	SkipImages    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -67,6 +62,11 @@ type Do struct {
 	//data import/export
 	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
+
+	//listing functions
+	Known    bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Running  bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Existing bool `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`

@@ -1,9 +1,29 @@
 #!/usr/bin/env bash
 
+# ---------------------------------------------------------------------------
+# PURPOSE
+
+# This script will test the eris stack and the connection between eris cli
+# and eris pm. **Generally, it should not be used in isolation.**
+
+# ---------------------------------------------------------------------------
+# REQUIREMENTS
+
+# Docker installed locally
+# Docker-Machine installed locally (if using remote boxes)
+# eris' test_machines image (if testing against eris' test boxes)
+# Eris installed locally
+
+# ---------------------------------------------------------------------------
+# USAGE
+
+# test_stack.sh
+
 # ----------------------------------------------------------------------------
 # Set definitions and defaults
 
 # Where are the Things
+start=`pwd`
 base=github.com/eris-ltd/eris-cli
 if [ "$CIRCLE_BRANCH" ]
 then
@@ -13,27 +33,30 @@ else
   repo=$GOPATH/src/$base
   circle=false
 fi
-branch=${CIRCLE_BRANCH:=master}
-branch=${branch/-/_}
+
+epm_dir=$repo/../eris-pm
 epm_test_dir=$repo/../eris-pm/tests
-epm_branch="master"
+epm_branch=${EPM_BRANCH:=master}
 
-start=`pwd`
-
-cd $repo
+# ----------------------------------------------------------------------------
+# Get EPM
 
 if [ -d "$epm_test_dir" ]; then
   cd $epm_test_dir
 else
-  cd ..
-  git clone https://github.com/eris-ltd/eris-pm.git 1>/dev/null
-  cd eris-pm
+  git clone https://github.com/eris-ltd/eris-pm.git $epm_dir 1>/dev/null
+  cd $epm_test_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
-  cd $epm_test_dir
 fi
+
+# ----------------------------------------------------------------------------
+# Run EPM tests
 
 ./test.sh
 test_exit=$?
+
+# ----------------------------------------------------------------------------
+# Cleanup
 
 cd $start
 exit $test_exit

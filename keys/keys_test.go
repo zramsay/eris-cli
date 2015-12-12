@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"path"
-	"strings"
-
-	"encoding/json"
 	"os"
+	"path"
+	"regexp"
+	"strings"
 	"testing"
+	//	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -58,16 +58,11 @@ func TestGenerateKey(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true)
 
-	addr := new(bytes.Buffer)
-	config.GlobalConfig.Writer = addr
-	do := def.NowDo()
-	tests.IfExit(GenerateKey(do))
-
-	addrBytes := addr.Bytes()
-	address := string(addrBytes)
+	address := testsGenAKey()
 
 	lsOut := new(bytes.Buffer)
 	config.GlobalConfig.Writer = lsOut
+	do := def.NowDo()
 	do.Name = "keys"
 	do.Operations.Interactive = false
 	do.Operations.ContainerNumber = 1
@@ -80,7 +75,7 @@ func TestGenerateKey(t *testing.T) {
 
 	lsOutBytes := lsOut.Bytes()
 
-	output := string(lsOutBytes)
+	output := trimString(string(lsOutBytes))
 
 	if address != output {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output))
@@ -91,16 +86,8 @@ func TestGetPubKey(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true)
 
-	addr := new(bytes.Buffer)
-	config.GlobalConfig.Writer = addr
-	do := def.NowDo()
-	if err := GenerateKey(do); err != nil {
-		fatal(t, err)
-	}
-
-	addrBytes := addr.Bytes()
 	doPub := def.NowDo()
-	doPub.Address = strings.TrimSpace(strings.Trim(string(addrBytes), "\n"))
+	doPub.Address = testsGenAKey()
 
 	pub := new(bytes.Buffer)
 	config.GlobalConfig.Writer = pub
@@ -109,34 +96,20 @@ func TestGetPubKey(t *testing.T) {
 	}
 
 	pubBytes := pub.Bytes()
-	pubkey := strings.TrimSpace(strings.Trim(string(pubBytes), "\n"))
+	pubkey := trimString(string(pubBytes))
 
 	key := new(bytes.Buffer)
 	config.GlobalConfig.Writer = key
 	doKey := def.NowDo()
 	doKey.Address = doPub.Address
-
 	if err := ConvertKey(doKey); err != nil {
 		fatal(t, err)
 	}
-	keyBytes := key.Bytes()
-	keyS := string(keyBytes)
 
-	k := struct {
-		PubKey json.RawMessage `json:"pub_key"`
-	}{}
+	converted := regexp.MustCompile(`"pub_key":\[1,"([^"]+)"\]`).FindStringSubmatch(key.String())[1]
 
-	if err := json.Unmarshal([]byte(keyS), &k); err != nil {
-		fatal(t, err)
-	}
-
-	//bit of hack to avoid godeping tendermint
-	strang := string(k.PubKey)
-	strang = strings.TrimLeft(strang, "[1,\"")
-	strang = strings.TrimRight(strang, "\"]")
-
-	if strang != pubkey {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", pubkey, strang))
+	if converted != pubkey {
+		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", pubkey, converted))
 	}
 }
 
@@ -144,18 +117,11 @@ func TestExportKeySingle(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true) //or some clean function
 
-	addr := new(bytes.Buffer)
-	config.GlobalConfig.Writer = addr
-	do := def.NowDo()
-	//gen a key, get addr
-	if err := GenerateKey(do); err != nil {
-		fatal(t, err)
-	}
-	addrBytes := addr.Bytes()
-	address := strings.TrimSpace(strings.Trim(string(addrBytes), "\n"))
+	address := testsGenAKey()
 
 	catOut := new(bytes.Buffer)
 	config.GlobalConfig.Writer = catOut
+	do := def.NowDo()
 	do.Name = "keys"
 	do.Operations.Interactive = false
 	do.Operations.ContainerNumber = 1
@@ -168,7 +134,7 @@ func TestExportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := string(catOutBytes)
+	keyInCont := trimString(string(catOutBytes))
 
 	doExp := def.NowDo()
 	doExp.Address = address
@@ -185,7 +151,7 @@ func TestExportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 
-	keyOnHost := string(key)
+	keyOnHost := trimString(string(key))
 	if keyInCont != keyOnHost {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyInCont, keyOnHost))
 	}
@@ -195,15 +161,7 @@ func TestImportKeySingle(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true) //or some clean function
 
-	addr := new(bytes.Buffer)
-	config.GlobalConfig.Writer = addr
-	do := def.NowDo()
-	//gen a key, get addr
-	if err := GenerateKey(do); err != nil {
-		fatal(t, err)
-	}
-	addrBytes := addr.Bytes()
-	address := strings.TrimSpace(strings.Trim(string(addrBytes), "\n"))
+	address := testsGenAKey()
 
 	//export it
 	doExp := def.NowDo()
@@ -219,7 +177,7 @@ func TestImportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 	//key b4 import
-	keyOnHost := string(key)
+	keyOnHost := trimString(string(key))
 
 	//rm key that was generated before import
 	doRm := def.NowDo()
@@ -256,7 +214,7 @@ func TestImportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := string(catOutBytes)
+	keyInCont := trimString(string(catOutBytes))
 
 	if keyOnHost != keyInCont {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))
@@ -265,6 +223,22 @@ func TestImportKeySingle(t *testing.T) {
 
 func TestConvertKey(t *testing.T) {
 	// tested in TestGetPubKey
+}
+
+func trimString(strang string) string {
+	return strings.TrimSpace(strings.Trim(strang, "\n"))
+}
+
+//returns an addr for tests
+func testsGenAKey() string {
+	addr := new(bytes.Buffer)
+	config.GlobalConfig.Writer = addr
+	doGen := def.NowDo()
+	tests.IfExit(GenerateKey(doGen))
+
+	addrBytes := addr.Bytes()
+	address := trimString(string(addrBytes))
+	return address
 }
 
 func testsInit() error {

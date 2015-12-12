@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 // Docker Client initialization
@@ -22,39 +24,36 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 	var err error
 	var dockerHost string
 	var dockerCertPath string
-
 	if runtime.GOOS == "linux" {
-		if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" { // this means we aren't gonna use docker-machine
+		// this means we aren't gonna use docker-machine (kind of)
+		if (machName == "eris" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
+			//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 			endpoint := "unix:///var/run/docker.sock"
 
 			logger.Debugf("Checking The Linux Docker Socket =>\t%s\n", endpoint)
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
-				logger.Printf("%v\n", mustInstallError())
-				os.Exit(1)
+				IfExit(fmt.Errorf("%v\n", mustInstallError()))
 			}
 
 			logger.Debugf("Connecting to the Docker Client via =>\t%s\n", endpoint)
 			DockerClient, err = docker.NewClient(endpoint)
 			if err != nil {
-				logger.Printf("%v\n", mustInstallError())
-				os.Exit(1)
+				IfExit(fmt.Errorf("%v\n", mustInstallError()))
 			}
-
 		} else {
+			//if machName !="eris/default" OR if docker env vars set (via, e.g., eval)
 			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH"))
 			logger.Debugf("Checking Details via Docker-Machine =>\t%s\n", machName)
 			dockerHost, dockerCertPath, err = getMachineDeets(machName)
 			if err != nil {
-				logger.Printf("Error getting Docker-Machine Details for connection over TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err)
-				os.Exit(1)
+				IfExit(fmt.Errorf("Error getting Docker-Machine Details for connection over TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err))
 			}
 
 			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
 			if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-				logger.Printf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err)
-				os.Exit(1)
+				IfExit(fmt.Errorf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err))
 			}
 			logger.Debugln("Successfully connected to Docker daemon.")
 
@@ -77,8 +76,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 				logger.Debugf("Could not connect to the \"default\" docker-machine.\nError:\t%vTrying to set up a new machine.\n", err)
 				if e2 := CheckDockerClient(); e2 != nil {
-					logger.Printf("%v\n", e2)
-					os.Exit(1)
+					IfExit(fmt.Errorf("%v\n", e2))
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
@@ -87,8 +85,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 		logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			logger.Printf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err)
-			os.Exit(1)
+			IfExit(fmt.Errorf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err))
 		}
 		logger.Debugln("Successfully connected to Docker daemon.")
 
@@ -103,7 +100,7 @@ func CheckDockerClient() error {
 	}
 
 	var input string
-	dockerHost, dockerCertPath := popPathAndHost()
+	dockerHost, dockerCertPath := popHostAndPath()
 
 	if dockerCertPath == "" || dockerHost == "" {
 		driver := "virtualbox" // when we use agents we'll wanna turn this driver into a flag
@@ -158,30 +155,31 @@ func CheckDockerClient() error {
 }
 
 func getMachineDeets(machName string) (string, string, error) {
-	var out bytes.Buffer
-	var out2 bytes.Buffer
+	var out = new(bytes.Buffer)
+	var out2 = new(bytes.Buffer)
 
 	noConnectError := fmt.Errorf("Could not evaluate the env vars for the %s docker-machine.\n", machName)
-	dPath, dHost := popPathAndHost()
+	dHost, dPath := popHostAndPath()
 
-	if dPath != "" && dHost != "" {
-		return dPath, dHost, nil
+	if (dHost != "" && dPath != "") && (machName == "eris" || machName == "default") {
+		return dHost, dPath, nil
 	}
 
 	// TODO: when go-dockerclient adds machine API endpoints use those instead.
 	logger.Debugf("Querying the %s docker-machine's url.\n", machName)
 	cmd := exec.Command("docker-machine", "url", machName)
-	cmd.Stdout = &out
+	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
 		return "", "", fmt.Errorf("%vError:\t%v\n", noConnectError, err)
 	}
-	dHost = out.String()
+	dHost = strings.TrimSpace(out.String())
 	logger.Debugf("\tURL =>\t\t\t%s\n", dHost)
 
 	// TODO: when go-dockerclient adds machine API endpoints use those instead.
 	logger.Debugf("Querying the %s docker-machine's certificate path.\n", machName)
-	cmd2 := exec.Command("docker-machine", "inspect", "--format='{{.HostOptions.AuthOptions.ClientCertPath}}'", machName)
-	cmd2.Stdout = &out2
+	cmd2 := exec.Command("docker-machine", "inspect", machName, "--format", "{{.HostOptions.AuthOptions.ServerCertPath}}")
+	cmd2.Stdout = out2
+	//cmd2.Stderr = os.Stderr
 	if err := cmd2.Run(); err != nil {
 		return "", "", fmt.Errorf("%vError:\t%v\n", noConnectError, err)
 	}
@@ -208,7 +206,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	os.Setenv("DOCKER_MACHINE_NAME", machName)
 
 	logger.Debugf("Finished getting machine details =>\t%s\n", machName)
-	return dPath, dHost, nil
+	return dHost, dPath, nil
 }
 
 func DockerClientVersion() (float64, error) {
@@ -289,7 +287,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 	return nil
 }
 
-func popPathAndHost() (string, string) {
+func popHostAndPath() (string, string) {
 	return os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH")
 }
 
@@ -342,13 +340,12 @@ func prepWin() error {
 func setIPFSHostViaDockerHost(dockerHost string) {
 	u, err := url.Parse(dockerHost)
 	if err != nil {
-		fmt.Println("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err)
-		os.Exit(1)
+		IfExit(fmt.Errorf("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
 	}
 	dIP, _, err := net.SplitHostPort(u.Host)
 	if err != nil {
-		fmt.Println("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err)
-		os.Exit(1)
+		IfExit(fmt.Errorf("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
+
 	}
 	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
 	logger.Debugf("Set ERIS_IPFS_HOST to =>\t%s\n", dockerIP)

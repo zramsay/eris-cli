@@ -1,5 +1,10 @@
 package definitions
 
+import (
+	"fmt"
+	"github.com/eris-ltd/eris-cli/version"
+)
+
 type AppType struct {
 	Name       string
 	BaseImage  string
@@ -21,7 +26,7 @@ func AllAppTypes() map[string]*AppType {
 func EPMApp() *AppType {
 	app := BlankAppType()
 	app.Name = "epm"
-	app.BaseImage = "quay.io/eris/epm"
+	app.BaseImage = fmt.Sprintf("quay.io/eris/epm:%s", version.VERSION)
 	app.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
 	app.DeployCmd = ""
 	app.TestCmd = ""

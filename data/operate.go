@@ -165,7 +165,7 @@ func moveOutOfDirAndRmDir(src, dest string) error {
 	}
 
 	for _, f := range toMove {
-		logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
+		// logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
 
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead

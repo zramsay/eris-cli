@@ -21,18 +21,6 @@ var srv *def.ServiceDefinition
 var servName string = "ipfs"
 var hash string
 
-var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
-
-//[zr] is basically a weird version of ifExit ..?
-func fatal(t *testing.T, err error) {
-	if !DEAD {
-		log.Flush()
-		tests.TestsTearDown()
-		DEAD = true
-		panic(err)
-	}
-}
-
 func TestMain(m *testing.M) {
 	var logLevel log.LogLevel
 
@@ -77,7 +65,7 @@ func TestLoadServiceDefinition(t *testing.T) {
 	srv, e = loaders.LoadServiceDefinition(servName, true, 1)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	if srv.Name != servName {
@@ -86,17 +74,17 @@ func TestLoadServiceDefinition(t *testing.T) {
 
 	if srv.Service.Name != servName {
 		logger.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	if !srv.Service.AutoData {
 		logger.Errorf("FAILURE: data_container not properly read on LOAD.\n")
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	if srv.Operations.DataContainerName == "" {
 		logger.Errorf("FAILURE: data_container_name not set.\n")
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 }
 
@@ -117,7 +105,7 @@ func TestInspectService(t *testing.T) {
 	e := InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
@@ -128,7 +116,7 @@ func TestInspectService(t *testing.T) {
 	e = InspectService(do)
 	if e != nil {
 		logger.Infof("Error inspecting service =>\t%v\n", e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 }
 
@@ -143,7 +131,7 @@ func TestLogsService(t *testing.T) {
 	e := LogsService(do)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 }
 
@@ -184,7 +172,7 @@ func TestUpdateService(t *testing.T) {
 	e := UpdateService(do)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, servName, 1, true, true)
@@ -201,7 +189,7 @@ func TestKillRmService(t *testing.T) {
 	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
 	if e := KillService(do); e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, servName, 1, true, false)
@@ -220,46 +208,17 @@ func TestKillRmService(t *testing.T) {
 	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
 	if e := RmService(do); e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, servName, 1, false, false)
 	testNumbersExistAndRun(t, servName, 0, 0)
 }
 
-func TestImportService(t *testing.T) {
+func TestExportService(t *testing.T) {
 	testStartService(t, "ipfs", false)
 	time.Sleep(5 * time.Second)
 
-	do := def.NowDo()
-	do.Name = "eth"
-	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
-
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ImportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := ImportService(do); err != nil {
-			fatal(t, err)
-		}
-	}
-
-	testExistAndRun(t, "ipfs", 1, true, true)
-}
-
-func TestExportService(t *testing.T) {
-	//ExportService has EnsureRunning builtin
 	do := def.NowDo()
 	do.Name = "ipfs"
 
@@ -278,11 +237,45 @@ func TestExportService(t *testing.T) {
 	if !passed {
 		// final time will throw
 		if err := ExportService(do); err != nil {
-			fatal(t, err)
+			tests.IfExit(err)
 		}
 	}
 
+	hash = do.Result
 	testExistAndRun(t, "ipfs", 1, true, true)
+}
+
+func TestImportService(t *testing.T) {
+	do := def.NowDo()
+	do.Name = "eth"
+	if hash == "" {
+		do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	} else {
+		do.Hash = hash
+	}
+	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
+
+	// because IPFS is testy, we retry the put up to
+	// 10 times.
+	passed := false
+	for i := 0; i < 9; i++ {
+		if err := ImportService(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := ImportService(do); err != nil {
+			tests.IfExit(err)
+		}
+	}
+
+	testKillService(t, "ipfs", true)
+	testExistAndRun(t, "ipfs", 1, false, false)
 }
 
 func TestNewService(t *testing.T) {
@@ -294,7 +287,7 @@ func TestNewService(t *testing.T) {
 	e := NewService(do)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
@@ -305,7 +298,7 @@ func TestNewService(t *testing.T) {
 	e = StartService(do)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, servName, 1, true, true)
@@ -326,8 +319,7 @@ func TestRenameService(t *testing.T) {
 	//do.Operations.ContainerNumber = 1
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	if e := RenameService(do); e != nil {
-		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
-		fatal(t, nil)
+		tests.IfExit(fmt.Errorf("Error (tests fail) =>\t\t%v\n", e))
 	}
 
 	testExistAndRun(t, "syek", 1, true, true)
@@ -343,7 +335,7 @@ func TestRenameService(t *testing.T) {
 	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
 	if e := RenameService(do); e != nil {
 		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, "keys", 1, true, true)
@@ -359,11 +351,11 @@ func TestCatService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "do_not_use"
 	if err := CatService(do); err != nil {
-		fatal(t, err)
+		tests.IfExit(err)
 	}
 
 	if do.Result != ini.DefaultIpfs2() {
-		fatal(t, fmt.Errorf("Cat Service on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
+		tests.IfExit(fmt.Errorf("Cat Service on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, ini.DefaultIpfs2()))
 	}
 }
 
@@ -375,7 +367,7 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
 	if e := StartService(do); e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	defer func() {
@@ -409,7 +401,7 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	e := StartService(do)
 	if e != nil {
 		logger.Infof("Error starting service =>\t%v\n", e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 
 	testExistAndRun(t, serviceName, 1, true, true)
@@ -429,7 +421,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	e := KillService(do)
 	if e != nil {
 		logger.Errorln(e)
-		fatal(t, e)
+		tests.IfExit(e)
 	}
 	testExistAndRun(t, serviceName, 1, !wipe, false)
 	testNumbersExistAndRun(t, serviceName, 0, 0)
@@ -437,7 +429,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
 	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
-		fatal(t, nil)
+		tests.IfExit(nil)
 	}
 }
 
@@ -450,13 +442,11 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 	run := util.HowManyContainersRunning(servName, "service")
 
 	if exist != containerExist {
-		logger.Printf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist)
-		fatal(t, nil)
+		tests.IfExit(fmt.Errorf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist))
 	}
 
 	if run != containerRun {
-		logger.Printf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run)
-		fatal(t, nil)
+		tests.IfExit(fmt.Errorf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run))
 	}
 
 	logger.Infoln("All good.\n")

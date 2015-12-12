@@ -60,6 +60,7 @@ pre_check() {
 cross_compile() {
   echo "Starting Cross Compile"
   cd $repo
+  go install ./cmd/eris
   mkdir $build_dir
   goxc -wd $cmd_path -n $pkg_name -d $build_dir -pv $version
   rm -rf $build_dir/$version/.goxc-temp
@@ -135,10 +136,12 @@ release_apt() {
 
 release_yum() {
   echo "Moving on to YUM relase. Uploading files to YUM server."
+  docker-machine scp $repo/tests/hack/release_rpm.sh $yummachine:~
   docker-machine scp $repo/tests/hack/eris-cli.spec $yummachine:~
   docker-machine scp $repo/tests/hack/eris.repo $yummachine:~
-  docker-machine scp $repo/tests/hack/release_rpm.sh $yummachine:~
-  docker-machine scp $build_dir/$version/linux_amd64/eris $yummachine:~
+  docker-machine scp $repo/README.md $yummachine:README
+  docker-machine scp $repo/LICENSE.md $yummachine:COPYING
+  docker-machine scp $GOPATH/bin/eris $yummachine:~
   docker-machine ssh $yummachine "echo \"$version\" > version"
   docker-machine ssh $yummachine
   echo "Finished with YUM release."

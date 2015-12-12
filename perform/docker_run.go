@@ -11,11 +11,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -93,7 +93,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 		return nil, err
 	}
 
-	logger.Infof("Waiting to exit =>\t%s\n", opts.Name)
+	logger.Infof("Waiting to exit =>\t\t%s\n", opts.Name)
 	if err := waitContainer(opts.Name); err != nil {
 		return nil, err
 	}
@@ -316,8 +316,8 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 }
 
 // DockerRebuild recreates the container based on the srv settings template.
-// Unless skipPull is true, it updates the Docker image before recreating
-// the container. timeout is a number of seconds to wait before killing the
+// If pullImage is true, it updates the Docker image before recreating
+// the container. Timeout is a number of seconds to wait before killing the
 // container process ungracefully.
 //
 //  ops.SrvContainerName  - service or a chain container name to rebuild
@@ -326,7 +326,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 //  ops.Labels            - container creation time labels
 //
 // Also see container parameters for DockerRunService.
-func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout uint) error {
+func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout uint) error {
 	var wasRunning bool = false
 
 	logger.Infof("Starting Docker Rebuild =>\t%s\n", srv.Name)
@@ -351,7 +351,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, skipPull bool, timeout 
 		return nil
 	}
 
-	if !skipPull {
+	if pullImage {
 		logger.Infof("Pulling new image =>\t\t%s\n", srv.Image)
 		err := DockerPull(srv, ops)
 		if err != nil {
@@ -700,7 +700,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
 				}
 			} else {
-				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a second.\n", opts.Config.Image)
+				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a minute.\n", opts.Config.Image)
 			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
@@ -724,7 +724,7 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 	// Set terminal into raw mode, and restore upon container exit.
 	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
 	if err != nil {
-		logger.Errorln("Cannot set the terminal into raw mode")
+		logger.Infoln("Cannot set the terminal into raw mode")
 	} else {
 		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
 	}
@@ -776,7 +776,7 @@ func attachContainer(id string, attached chan struct{}) error {
 		InputStream:  reader,
 		OutputStream: config.GlobalConfig.Writer,
 		ErrorStream:  config.GlobalConfig.ErrorWriter,
-		Logs:         true,
+		Logs:         false,
 		Stream:       true,
 		Stdin:        true,
 		Stdout:       true,
@@ -875,6 +875,9 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 	opts.Config.User = "root"
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
+	opts.Config.AttachStdout = true
+	opts.Config.AttachStderr = true
+	opts.Config.AttachStdin = true
 
 	if ops.Interactive {
 		// if there are args, we overwrite the entrypoint
