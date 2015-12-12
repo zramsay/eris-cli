@@ -15,7 +15,6 @@ func cloneRepo(prompt bool, name, location string) error {
 	src := "https://github.com/eris-ltd/" + name
 
 	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
-
 		// if the .git directory exists within ~/.eris/services (or w/e)
 		//   then pull rather than clone.
 		logger.Printf("The location is a git repository. Attempting to pull instead.\n")
@@ -32,9 +31,7 @@ func cloneRepo(prompt bool, name, location string) error {
 			// if users want to clone the repository we clear the directory first to avoid
 			//   cannot merge errors on localized changes. This is very opinionated and may
 			//   need to change down the road. generally, this should not be a big problem.
-			if e2 := common.ClearDir(location); e2 != nil {
-				return e2
-			}
+			common.ClearDir(location)
 
 			logger.Printf("Cloning git repository.\n")
 			c := exec.Command("git", "clone", src, location)

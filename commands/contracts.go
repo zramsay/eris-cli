@@ -23,6 +23,8 @@ func buildContractsCommand() {
 	// TODO: finish when the PR which is blocking
 	//   eris files put --dir is integrated into
 	//   ipfs
+	// [zr] looks like that's now the case ...
+	// XXX see https://github.com/ipfs/go-ipfs/pull/1845
 	// Contracts.AddCommand(contractsImport)
 	// Contracts.AddCommand(contractsExport)
 	Contracts.AddCommand(contractsTest)
@@ -78,7 +80,7 @@ deploy types.
 }
 
 //----------------------------------------------------
-
+// XXX todo deduplicate flags -> [zr] things get wonky with epm
 func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for testing")
 	contractsTest.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
@@ -100,12 +102,15 @@ func addContractsFlags() {
 	contractsTest.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use (EPM only)")
 
 	contractsDeploy.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
+
 	contractsDeploy.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
 	contractsDeploy.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for deployment (overrides package.)")
 	contractsDeploy.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
 	contractsDeploy.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
+
 	contractsDeploy.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
 	contractsDeploy.Flags().BoolVarP(&do.RmD, "rm-data", "x", true, "remove artifacts from host")
+
 	contractsDeploy.Flags().StringVarP(&do.CSV, "output", "o", "", "results output type (EPM only)")
 	contractsDeploy.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which EPM should use (EPM only)")
 	contractsDeploy.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address (EPM only)")

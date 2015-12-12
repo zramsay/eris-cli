@@ -9,6 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
@@ -49,7 +50,7 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 	}
 
 	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
-	if ver, _ := util.DockerClientVersion(); ver >= 1.7 {
+	if ver, _ := util.DockerClientVersion(); ver >= version.DVER_MIN {
 		addDependencyVolumesAndLinks(srv.Dependencies, srv.Service, srv.Operations)
 	}
 

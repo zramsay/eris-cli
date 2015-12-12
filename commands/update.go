@@ -8,7 +8,7 @@ import (
 
 var Update = &cobra.Command{
 	Use:   "update",
-	Short: "Update the eris tool",
+	Short: "Update the eris tool.",
 	Long: `Fetch the latest version (master branch by default)
 and re-install eris; requires git and go to be installed.`,
 	Run: func(cmd *cobra.Command, args []string) {

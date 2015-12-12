@@ -106,10 +106,10 @@ seemlessly with [eris chains install] so that other users and/or colleagues
 should be able to use your registered blockchain by simply using the install
 command.
 
-The [eris chains register] command is not the *only* way to 
-share your blockchains. You can also export your chain definition file and 
-genesis.json to IPFS, and share the hash of the chain definition file and 
-genesis.json with any colleagues or users who need to be able to connect 
+The [eris chains register] command is not the *only* way to
+share your blockchains. You can also export your chain definition file and
+genesis.json to IPFS, and share the hash of the chain definition file and
+genesis.json with any colleagues or users who need to be able to connect
 into the blockchain.`,
 	Run: RegisterChain,
 }
@@ -136,7 +136,7 @@ chain (--running).
 If no known chains exist yet, create a new blockchain with: [eris chains new NAME]
 command.
 
-To install and fetch a blockchain from a chain definition file, 
+To install and fetch a blockchain from a chain definition file,
 use [eris chains install NAME] command.
 
 Services are handled using the [eris services] command.`,
@@ -178,21 +178,22 @@ var chainsPlop = &cobra.Command{
 }
 
 var chainsPorts = &cobra.Command{
-	Use:   "ports",
-	Short: "Print the port mappings.",
-	Long: `Print the port mappings.
+	Use:   "ports NAME [PORT]...",
+	Short: "Print port mappings.",
+	Long: `Print port mappings.
 
-eris chains ports is mostly a developer convenience function.
-It returns a machine readable port mapping of a port which is
-exposed inside the container to what that port is mapped to
-on the host.
+The [eris chains ports] command is mostly a developer 
+convenience function. It returns a machine readable 
+port mapping of a port which is exposed inside the 
+container to what that port is mapped to on the host.
 
 This is useful when stitching together chain networks which
 need to know how to connect into a specific chain (perhaps
 with or without a container number) container.`,
 	Example: `$ eris chains ports myChain 1337 -- will display what port on the host is mapped to the eris:db API port
 $ eris chains ports myChain 46656 -- will display what port on the host is mapped to the eris:db peer port
-$ eris chains ports myChain 46657 -- will display what port on the host is mapped to the eris:db rpc port`,
+$ eris chains ports myChain 46657 -- will display what port on the host is mapped to the eris:db rpc port
+$ eris chains ports myChain -- will display all mappings`,
 	Run: PortsChain,
 }
 
@@ -215,7 +216,7 @@ var chainsEdit = &cobra.Command{
 Edit will utilize the default editor set for your current shell
 or if none is set, it will use *vim*. Sorry for the bias Emacs
 users, but we had to pick one and more marmots are known vim
-users. Emacs users can set their EDITOR variable and eris 
+users. Emacs users can set their EDITOR variable and eris
 will default to that if you wise.`,
 	Run: EditChain,
 }
@@ -224,7 +225,7 @@ var chainsStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start a blockchain.",
 	Long: `Start running a blockchain.
-	
+
 [eris chains start NAME] by default will put the chain into the
 background so its logs will not be viewable from the command line.
 
@@ -359,67 +360,68 @@ see https://github.com/eris-ltd/mint-client for more info`,
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
+	buildFlag(chainsNew, do, "config", "chain")
+	buildFlag(chainsNew, do, "csv", "chain")
+	buildFlag(chainsNew, do, "serverconf", "chain")
+	buildFlag(chainsNew, do, "dir", "chain")
+	buildFlag(chainsNew, do, "env", "chain")
+	buildFlag(chainsNew, do, "publish", "chain")
+	buildFlag(chainsNew, do, "links", "chain")
+	buildFlag(chainsNew, do, "api", "chain")
 	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
-	chainsNew.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "config.toml file")
 	chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
-	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	chainsNew.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
-	chainsNew.PersistentFlags().StringVarP(&do.CSV, "csv", "", "", "render a genesis.json from a csv file")
 	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
-	chainsNew.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	chainsNew.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
 	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val2 syntax")
 
+	buildFlag(chainsRegister, do, "links", "chain")
+	buildFlag(chainsRegister, do, "env", "chain")
 	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
-	chainsRegister.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked using the KEY1:val1,KEY2:val2 syntax")
-	chainsRegister.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1:val1,KEY2:val2 syntax")
 	chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 	chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
 
-	chainsInstall.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file for the chain")
-	chainsInstall.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
-	chainsInstall.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	buildFlag(chainsInstall, do, "publish", "chain")
+	buildFlag(chainsInstall, do, "links", "chain")
+	buildFlag(chainsInstall, do, "env", "chain")
+	buildFlag(chainsInstall, do, "config", "chain")
+	buildFlag(chainsInstall, do, "serverconf", "chain")
+	buildFlag(chainsInstall, do, "dir", "chain")
 	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
-	chainsInstall.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	chainsInstall.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	chainsInstall.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
 	chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 	chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
 
-	chainsStart.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	chainsStart.PersistentFlags().BoolVarP(&do.Run, "api", "a", false, "turn the chain on using erisdb's api")
-	chainsStart.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val1 syntax")
-	chainsStart.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val1 syntax")
+	buildFlag(chainsStart, do, "publish", "chain")
+	buildFlag(chainsStart, do, "env", "chain")
+	buildFlag(chainsStart, do, "links", "chain")
+	buildFlag(chainsStart, do, "api", "chain")
 
-	chainsLogs.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
-	chainsLogs.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
+	buildFlag(chainsLogs, do, "follow", "chain")
+	buildFlag(chainsLogs, do, "tail", "chain")
 
-	chainsExec.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
-	chainsExec.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
+	buildFlag(chainsExec, do, "publish", "chain")
+	buildFlag(chainsExec, do, "interactive", "chain")
+	buildFlag(chainsExec, do, "links", "chain")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
 
-	chainsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove chain definition file as well as chain container")
-	chainsRemove.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers also")
-	chainsRemove.Flags().BoolVarP(&do.Volumes, "vol", "o", true, "remove volumes")
+	buildFlag(chainsRemove, do, "file", "chain")
+	buildFlag(chainsRemove, do, "data", "chain")
+	buildFlag(chainsRemove, do, "rm-volumes", "chain")
 
-	chainsUpdate.Flags().BoolVarP(&do.SkipPull, "pull", "p", true, "pull an updated version of the chain's base service image from docker hub")
-	chainsUpdate.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; can be overridden by --force")
-	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
-	chainsUpdate.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
+	buildFlag(chainsUpdate, do, "pull", "chain")
+	buildFlag(chainsUpdate, do, "timeout", "chain")
+	buildFlag(chainsUpdate, do, "env", "chain")
+	buildFlag(chainsUpdate, do, "links", "chain")
 
-	chainsStop.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
-	chainsStop.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
-	chainsStop.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit")
-	chainsStop.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; can be overridden by --force")
-	chainsStop.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
+	buildFlag(chainsStop, do, "rm", "chain")
+	buildFlag(chainsStop, do, "data", "chain")
+	buildFlag(chainsStop, do, "force", "chain")
+	buildFlag(chainsStop, do, "timeout", "chain")
+	buildFlag(chainsStop, do, "volumes", "chain")
 
-	chainsListAll.Flags().BoolVarP(&do.Known, "known", "k", false, "list all the chain definition files that exist")
-	chainsListAll.Flags().BoolVarP(&do.Existing, "existing", "e", false, "list all the all current containers which exist for a chain")
-	chainsListAll.Flags().BoolVarP(&do.Running, "running", "r", false, "list all the current containers which are running for a chain")
-	chainsListAll.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "machine parsable output")
+	buildFlag(chainsListAll, do, "known", "chain")
+	buildFlag(chainsListAll, do, "existing", "chain")
+	buildFlag(chainsListAll, do, "running", "chain")
+	buildFlag(chainsListAll, do, "quiet", "chain")
 }
 
 //----------------------------------------------------------------------
@@ -525,7 +527,7 @@ func PlopChain(cmd *cobra.Command, args []string) {
 }
 
 func PortsChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
+	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(chns.PortsChain(do))

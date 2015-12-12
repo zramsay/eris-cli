@@ -15,9 +15,9 @@ var (
 	ErrMergeParameters = errors.New("parameters are not pointers to struct")
 )
 
-// Merge replaces blank fields of base with those from over; also merges maps
-// and slices of both. Base and over are pointers to structs. The result is stored
-// in base. Merge returns ErrMergeParameters if either base or over are not
+// Merge merges maps and slices of base and over and overwrites other base fields.
+// Base and over are pointers to structs. The result is stored in base.
+// Merge returns ErrMergeParameters if either base or over are not
 // pointers to structs.
 func Merge(base, over interface{}) error {
 	if base == nil || over == nil {
