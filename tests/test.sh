@@ -209,7 +209,7 @@ then
   runTests "local"
 else
   # we only run against all backends on a few branches
-  if [[ "$branch" == "$BACKEND_TESTS_BRANCH" || "$branch" == "master" ]]
+  if [[ "$branch" == "master" ]]
   then
 	  for ver in "${docker_versions18[@]}"
 	  do
