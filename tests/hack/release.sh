@@ -19,7 +19,7 @@ build_dir="builds"
 cmd_path="cmd/eris"
 pkg_name="eris"
 repo=$GOPATH/src/github.com/$this_user/$this_repo
-version=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
+version=$(cat version/version.go | tail -n 2 | head -n 1 | cut -d \  -f 4 | tr -d '"')
 start=`pwd`
 
 if [[ "$1" == "pre" ]]
