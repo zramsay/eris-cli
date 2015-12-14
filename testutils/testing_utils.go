@@ -183,6 +183,11 @@ func FakeServiceDefinition(tmpDir, name, definition string) error {
 	return err
 }
 
+// Remove the Docker image. A wrapper over Docker client's library.
+func RemoveImage(name string) error {
+	return util.DockerClient.RemoveImage(name)
+}
+
 // each pacakge will need its own custom stuff if need be
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
