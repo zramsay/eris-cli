@@ -1262,7 +1262,85 @@ func TestRebuildNotRunning(t *testing.T) {
 	}
 }
 
+func TestRebuildPullDisallow(t *testing.T) {
+	const (
+		name    = "keys"
+		number  = 99
+		timeout = 5
+	)
+
+	defer tests.RemoveAllContainers()
+
+	tests.RemoveImage(name)
+
+	os.Setenv("ERIS_PULL_APPROVE", "true")
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service container running, got %v", n)
+	}
+
+	if err := DockerRebuild(srv.Service, srv.Operations, false, timeout); err != nil {
+		t.Fatalf("expected container rebuilt, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service container running, got %v", n)
+	}
+}
+
 func TestRebuildPull(t *testing.T) {
+	const (
+		name    = "keys"
+		number  = 99
+		timeout = 5
+	)
+
+	defer tests.RemoveAllContainers()
+
+	tests.RemoveImage(name)
+
+	os.Setenv("ERIS_PULL_APPROVE", "true")
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service container running, got %v", n)
+	}
+
+	if err := DockerRebuild(srv.Service, srv.Operations, true, timeout); err != nil {
+		t.Fatalf("expected container rebuilt, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
+		t.Fatalf("expecting 1 service container running, got %v", n)
+	}
+}
+
+func TestRebuildPullRepeat(t *testing.T) {
 	const (
 		name    = "keys"
 		number  = 99
@@ -1397,7 +1475,7 @@ func TestLogsSimple(t *testing.T) {
 	const (
 		name   = "ipfs"
 		number = 99
-		tail   = "1"
+		tail   = "10"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1426,7 +1504,7 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if strings.TrimSpace(buf.String()) != "Daemon is ready" {
+	if !strings.Contains(buf.String(), "Initializing daemon") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }
