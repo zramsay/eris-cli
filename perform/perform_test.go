@@ -345,7 +345,7 @@ func TestExecServiceLogOutput(t *testing.T) {
 	buf := new(bytes.Buffer)
 	config.GlobalConfig.Writer = buf
 
-	srv.Operations.Args = strings.Fields("echo", "test")
+	srv.Operations.Args = strings.Fields("echo test")
 	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service run, got %v", err)
 	}
@@ -375,7 +375,7 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 	buf := new(bytes.Buffer)
 	config.GlobalConfig.Writer = buf
 
-	srv.Operations.Args = strings.Fields("du", "-sh", "/usr")
+	srv.Operations.Args = strings.Fields("du -sh /usr")
 	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container run, got %v", err)
 	}
@@ -405,7 +405,7 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 	buf := new(bytes.Buffer)
 	config.GlobalConfig.Writer = buf
 
-	srv.Operations.Args = strings.Fields("echo", "test")
+	srv.Operations.Args = strings.Fields("echo test")
 	srv.Operations.Interactive = true
 	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container run, got %v", err)
