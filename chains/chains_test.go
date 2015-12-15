@@ -126,6 +126,28 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
+func TestRestartChain(t *testing.T) {
+	testNewChain(chainName)
+	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("start, expected chain container running")
+	}
+
+	testKillChain(t, chainName)
+	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 0 {
+		t.Fatalf("start, expected chain container not running")
+	}
+	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("start, expected chain container existing")
+	}
+
+	testStartChain(t, chainName)
+	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
+		t.Fatalf("start, expected chain container running")
+	}
+
+	testKillChain(t, chainName)
+}
+
 // TODO: this isn't actually testing much!
 func TestExecChain(t *testing.T) {
 	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
