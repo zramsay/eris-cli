@@ -865,7 +865,7 @@ func testKillChain(t *testing.T, chain string) {
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
-		tests.IfExit(fmt.Errorf("TestExistAndRun %q exist=%t run=%t check failed", chainName, toExist, toRun))
+		tests.IfExit(nil)
 	}
 }
 
