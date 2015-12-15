@@ -287,7 +287,11 @@ func startsUp(field string) bool {
 
 //XXX moved from /perform/docker_run.go
 func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
-	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
+	category := "existing"
+	if all == false {
+		category = "running"
+	}
+	logger.Debugf("Parsing Containers =>\t\t%s:%s\n", name, category)
 	containers := listContainers(all)
 
 	r := regexp.MustCompile(name)
@@ -298,8 +302,6 @@ func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
 				if r.MatchString(n) {
 					logger.Debugf("Container Found =>\t\t%s\n", name)
 					return container, true
-					// } else {
-					// logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 				}
 			}
 		}
@@ -310,13 +312,18 @@ func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
 
 func listContainers(all bool) []docker.APIContainers {
 	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
+
+	// Match `/eris_chain_test_1`, but not `/eris_chain_test_1/keys`.
+	r := regexp.MustCompile(`(?m)^/eris_(?:service|chain|data)_.+_\d+$`)
 
 	contns, _ := DockerClient.ListContainers(docker.ListContainersOptions{All: all})
 	for _, con := range contns {
 		for _, c := range con.Names {
-			match := r.FindAllStringSubmatch(c, 1)
-			if len(match) != 0 {
+			if r.MatchString(c) {
+				// Since the container may have multiple names,
+				// leave only the one that matches.
+				con.Names = []string{c}
+
 				container = append(container, con)
 			}
 		}
