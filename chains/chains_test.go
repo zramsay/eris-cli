@@ -128,23 +128,10 @@ func TestStartKillChain(t *testing.T) {
 
 func TestRestartChain(t *testing.T) {
 	testNewChain(chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("start, expected chain container running")
-	}
+	defer testKillChain(t, chainName)
 
 	testKillChain(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 0 {
-		t.Fatalf("start, expected chain container not running")
-	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("start, expected chain container existing")
-	}
-
 	testStartChain(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("start, expected chain container running")
-	}
-
 	testKillChain(t, chainName)
 }
 
@@ -878,7 +865,7 @@ func testKillChain(t *testing.T, chain string) {
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
-		tests.IfExit(nil) //error thrown in func (logger.Errorln)
+		tests.IfExit(fmt.Errorf("TestExistAndRun %q exist=%t run=%t check failed", chainName, toExist, toRun))
 	}
 }
 
