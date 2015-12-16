@@ -71,7 +71,10 @@ announce() {
 
 connect() {
   echo "Starting Machine."
-  docker-machine start $machine 1>/dev/null
+  if [[ "$machine" != "eris" ]] # "eris" should be used when CI testing against OSX and Windows.
+  then
+    docker-machine start $machine 1>/dev/null
+  fi
   until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
   do
      ping_times=$[$ping_times +1]
@@ -83,7 +86,10 @@ connect() {
     exit 1
   else
     echo "Machine Started."
-    docker-machine regenerate-certs -f $machine 2>/dev/null
+    if [[ "$machine" != "eris" ]]
+    then
+      docker-machine regenerate-certs -f $machine 2>/dev/null
+    fi
   fi
   sleep 5
   echo "Connecting to Machine."
@@ -94,16 +100,9 @@ connect() {
 }
 
 setup_machine() {
-  if [[ $machine == "eris-test-local" ]]
+  if [[ $machine != "eris-test-local" ]]
   then
     eris init -dp --yes
-    echo
-    eris version
-    echo
-  else
-    eris init -dp --yes
-    echo
-    eris version
     echo
     eris_version=$(eris version --quiet)
     pull_images
@@ -277,6 +276,7 @@ else
   announce
   connect
 fi
+set +e
 
 # Once machine is turned on, display docker information
 echo ""
@@ -289,9 +289,10 @@ echo ""
 echo ""
 echo "Checking the Eris <-> Docker Connection"
 echo ""
+eris version
+echo
 setup_machine
 passed Setup
-set +e
 
 # Perform package level tests run only if eris init ran without problem
 if [[ $machine == "eris-test-local" ]]
