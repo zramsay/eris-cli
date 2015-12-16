@@ -126,6 +126,15 @@ func TestStartKillChain(t *testing.T) {
 	testKillChain(t, chainName)
 }
 
+func TestRestartChain(t *testing.T) {
+	testNewChain(chainName)
+	defer testKillChain(t, chainName)
+
+	testKillChain(t, chainName)
+	testStartChain(t, chainName)
+	testKillChain(t, chainName)
+}
+
 // TODO: this isn't actually testing much!
 func TestExecChain(t *testing.T) {
 	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
@@ -856,7 +865,7 @@ func testKillChain(t *testing.T, chain string) {
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
-		tests.IfExit(nil) //error thrown in func (logger.Errorln)
+		tests.IfExit(nil)
 	}
 }
 
