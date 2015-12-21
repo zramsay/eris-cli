@@ -327,7 +327,7 @@ func TestExecServiceSimple(t *testing.T) {
 
 func TestExecServiceLogOutput(t *testing.T) {
 	const (
-		name   = "ipfs"
+		name   = "keys"
 		number = 99
 	)
 
@@ -357,7 +357,7 @@ func TestExecServiceLogOutput(t *testing.T) {
 
 func TestExecServiceLogOutputLongRunning(t *testing.T) {
 	const (
-		name   = "ipfs"
+		name   = "keys"
 		number = 99
 	)
 
@@ -387,7 +387,7 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 
 func TestExecServiceLogOutputInteractive(t *testing.T) {
 	const (
-		name   = "ipfs"
+		name   = "keys"
 		number = 99
 	)
 
@@ -1475,7 +1475,7 @@ func TestLogsSimple(t *testing.T) {
 	const (
 		name   = "ipfs"
 		number = 99
-		tail   = "10"
+		tail   = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1504,7 +1504,7 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Initializing daemon") {
+	if !strings.Contains(buf.String(), "Starting IPFS") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }
@@ -1547,7 +1547,7 @@ func TestLogsTail(t *testing.T) {
 	const (
 		name   = "ipfs"
 		number = 99
-		tail   = "2"
+		tail   = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1576,7 +1576,7 @@ func TestLogsTail(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Gateway") {
+	if !strings.Contains(buf.String(), "Starting IPFS") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }
