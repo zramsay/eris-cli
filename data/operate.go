@@ -12,6 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -28,10 +29,12 @@ func ImportData(do *definitions.Do) error {
 		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		logger.Debugf("Importing FROM =>\t\t%s\n", do.Source)
+		log.WithFields(log.Fields{
+			"from": do.Source,
+			"to":   do.Destination,
+		}).Debug("Importing")
 		os.Chdir(do.Source)
 
-		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Destination)
 		reader, err := util.Tar(do.Source, 0)
 		if err != nil {
 			return err
@@ -44,8 +47,8 @@ func ImportData(do *definitions.Do) error {
 			NoOverwriteDirNonDir: true,
 		}
 
-		logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)
-		logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+		log.WithField("=>", containerName).Info("Copying into container")
+		log.WithField("path", do.Source).Debug()
 		if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
 			return err
 		}
@@ -72,7 +75,7 @@ func ImportData(do *definitions.Do) error {
 
 func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		logger.Infoln("Running exec on container with volumes from data container " + do.Operations.DataContainerName)
+		log.WithField("=>", do.Operations.DataContainerName).Info("Executing data container")
 
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		util.Merge(ops, do.Operations)
@@ -88,8 +91,7 @@ func ExecData(do *definitions.Do) error {
 
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-
-		logger.Infoln("Exporting data container", do.Name)
+		log.WithField("=>", do.Name).Info("Exporting data container")
 
 		// we want to export to a temp directory.
 		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name) // TODO: do.Operations.ContainerNumber ?
@@ -98,6 +100,7 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 
+		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
 		service, exists := perform.ContainerExists(srv.Operations)
 
@@ -114,13 +117,13 @@ func ExportData(do *definitions.Do) error {
 		}
 
 		go func() {
-			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
-			logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+			log.WithField("=>", containerName).Info("Copying out of container")
+			log.WithField("path", do.Source).Debug()
 			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
 			writer.Close()
 		}()
 
-		logger.Debugf("Untarring Package from Cont =>\t%s\n", exportPath)
+		log.WithField("=>", exportPath).Debug("Untarring package from container")
 		if err = util.Untar(reader, do.Name, exportPath); err != nil {
 			return err
 		}
@@ -152,28 +155,27 @@ func ExportData(do *definitions.Do) error {
 }
 
 func moveOutOfDirAndRmDir(src, dest string) error {
-	logger.Infof("Move all files/dirs out of a dir and rm -rf that dir.\n")
-	logger.Debugf("Source of the move =>\t\t%s.\n", src)
-	logger.Debugf("Destin of the move =>\t\t%s.\n", dest)
+	log.WithFields(log.Fields{
+		"from": src,
+		"to":   dest,
+	}).Info("Move all files/dirs out of a dir and `rm -rf` that dir")
 	toMove, err := filepath.Glob(filepath.Join(src, "*"))
 	if err != nil {
 		return err
 	}
 
 	if len(toMove) == 0 {
-		logger.Debugln("No files to move.")
+		log.Debug("No files to move")
 	}
 
 	for _, f := range toMove {
-		// logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
-
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
 		Copy(f, filepath.Join(dest, filepath.Base(f)))
 	}
 
-	logger.Infof("Removing directory =>\t\t%s.\n", src)
+	log.WithField("=>", src).Info("Removing directory")
 	err = os.RemoveAll(src)
 	if err != nil {
 		return err

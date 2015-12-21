@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -13,7 +14,7 @@ import (
 func Initialize(do *definitions.Do) error {
 	if _, err := os.Stat(common.ErisRoot); err != nil {
 		if os.IsNotExist(err) {
-			logger.Infoln("Eris Root Directory does not exist. The marmots will initialize this directory for you.\n")
+			log.Info("Eris root directory does not exist. The marmots will initialize this directory for you")
 			if err := common.InitErisDir(); err != nil {
 				return fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
 			}
@@ -23,17 +24,23 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	if do.Yes {
-		logger.Debugf("Not requiring input. Proceeding.\n")
+		log.Debug("Not requiring input. Proceeding")
 	} else {
 		var input string
-		logger.Printf("Eris Root Directory (%s) already exists.\nContinuing may overwrite files in:\n%s\n%s\nDo you wish to continue? (y/n): ", common.ErisRoot, common.ServicesPath, common.ActionsPath)
+		log.WithField("path", common.ErisRoot).Warn("Eris root directory already exists")
+		log.WithFields(log.Fields{
+			"services path": common.ServicesPath,
+			"actions path":  common.ActionsPath,
+		}).Warn("Continuing may overwrite files in")
+		fmt.Print("Do you wish to continue? (y/n): ")
 		if _, err := fmt.Scanln(&input); err != nil {
 			return fmt.Errorf("Error reading from stdin: %v\n", err)
 		}
 		if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-			logger.Debugf("Confirmation verified. Proceeding.\n")
+			log.Debug("Confirmation verified. Proceeding")
 		} else {
-			logger.Printf("\nThe marmots will not proceed without your permission to overwrite.\nPlease backup your files and try again.\n")
+			log.Warn("The marmots will not proceed without your permission to overwrite")
+			log.Warn("Please backup your files and try again")
 			return fmt.Errorf("Error:\tno permission given to overwrite services and actions.\n")
 		}
 	}
@@ -56,12 +63,12 @@ func Initialize(do *definitions.Do) error {
 }
 
 func InitDefaultServices(do *definitions.Do) error {
-	logger.Debugf("Adding default files\n")
+	log.Debug("Adding default files")
 
-	//do
 	if !do.Pull {
 		if err := cloneRepo(do.Services, "eris-services.git", common.ServicesPath); err != nil {
-			logger.Errorf("Error cloning default services repository.\n%v\nTrying default defs.\n", err)
+			log.Errorf("Error cloning default services repository: %v", err)
+			log.Error("Trying defaults")
 		}
 		if err2 := dropDefaults(); err2 != nil {
 			return fmt.Errorf("Error:\tcannot clone services.\nError:\tcannot drop default services.\n%v", err2)
@@ -70,7 +77,7 @@ func InitDefaultServices(do *definitions.Do) error {
 			return fmt.Errorf("Error:\tcannot clone actions.\n%v", err3)
 		}
 	} else {
-		logger.Printf("Skip pull param given. Complying.\n")
+		log.Warn("Skip pull param given. Complying")
 		if err := dropDefaults(); err != nil {
 			return err
 		}
@@ -80,9 +87,10 @@ func InitDefaultServices(do *definitions.Do) error {
 		return err
 	}
 
-	logger.Infof("Initialized eris root directory (%s) with default action, service, and chain files.\n", common.ErisRoot)
+	log.WithField("root", common.ErisRoot).Info("Initialized eris root directory with default action, service, and chain files")
 
-	//TODO: when called from cli provide option to go on tour, like `ipfs tour`
-	logger.Printf("\nThe marmots have everything set up for you.\nIf you are just getting started please type [eris] to get an overview of the tool.\n")
+	// TODO: when called from cli provide option to go on tour, like `ipfs tour`
+	log.Warn("The marmots have everything set up for you")
+	log.Warn("If you are just getting started, please type [eris] to get an overview of the tool")
 	return nil
 }

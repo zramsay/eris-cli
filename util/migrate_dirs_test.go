@@ -8,8 +8,9 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/logger"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -25,26 +26,21 @@ var apps string = path.Join(erisDir, "apps")
 var newDirs = []string{chains, apps}
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	if err := testsInit(); err != nil {
-		logger.Errorln(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		if err := testsTearDown(); err != nil {
-			logger.Errorln(err)
-			log.Flush()
-			os.Exit(1)
+			log.Fatal(err)
 		}
 	}
 
@@ -177,8 +173,7 @@ func testsTearDown() error {
 
 func ifExit(err error) {
 	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
+		log.Error(err)
 		testsTearDown()
 		os.Exit(1)
 	}

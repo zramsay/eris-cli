@@ -16,14 +16,15 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/logger"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -31,25 +32,18 @@ var chainName string = "my_testing_chain_dot_com" // :( [csk]-> :)
 
 func TestMain(m *testing.M) {
 	runtime.GOMAXPROCS(1)
-	var logLevel log.LogLevel
-	var err error
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	// log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("chain"))
-	logger.Infoln("Test init completed. Starting main test sequence now.\n")
+	log.Info("Test init completed. Starting main test sequence now")
 
 	layTestChainToml(chainName)
 
-	_ = err
-	var exitCode int
-
-	exitCode = m.Run()
-	fmt.Println(exitCode)
+	fmt.Println(m.Run())
 }
 
 func TestKnownChain(t *testing.T) {
@@ -64,7 +58,7 @@ func TestKnownChain(t *testing.T) {
 
 	// apparently these have extra space
 	if strings.TrimSpace(k[0]) != chainName {
-		logger.Debugf("Result =>\t\t%s\n", do.Result)
+		log.WithField("=>", do.Result).Debug("Result")
 		tests.IfExit(fmt.Errorf("Unexpected chain definition file. Got %s, expected %s.", k[0], chainName))
 	}
 }
@@ -72,7 +66,7 @@ func TestKnownChain(t *testing.T) {
 func TestChainGraduate(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chainName
-	logger.Infof("Graduate chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Graduate chain (from tests)")
 	if err := GraduateChain(do); err != nil {
 		tests.IfExit(err)
 	}
@@ -102,7 +96,7 @@ func TestChainGraduate(t *testing.T) {
 
 func TestLoadChainDefinition(t *testing.T) {
 	var e error
-	logger.Infof("Load chain def (from tests) =>\t%s\n", chainName)
+	log.WithField("=>", chainName).Info("Load chain definition (from tests)")
 	chn, e := loaders.LoadChainDefinition(chainName, false, 1)
 	if e != nil {
 		tests.IfExit(e)
@@ -137,11 +131,6 @@ func TestRestartChain(t *testing.T) {
 
 // TODO: this isn't actually testing much!
 func TestExecChain(t *testing.T) {
-	/*	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
-		return
-	}*/
-
 	testStartChain(t, chainName)
 	defer testKillChain(t, chainName)
 
@@ -149,10 +138,10 @@ func TestExecChain(t *testing.T) {
 	do.Name = chainName
 	do.Operations.Args = strings.Fields("ls -la /home/eris/.eris")
 	do.Operations.Interactive = false
-	logger.Infof("Exec-ing chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Executing chain (from tests)")
 	e := ExecChain(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		t.Fail()
 	}
 }
@@ -165,7 +154,7 @@ func TestPlopChain(t *testing.T) {
 	do.Name = chainName
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Creating chain (from tests) =>\t%s\n", chainName)
+	log.WithField("=>", chainName).Info("Creating chain (from tests)")
 	tests.IfExit(NewChain(do))
 	defer testKillChain(t, chainName)
 
@@ -177,7 +166,7 @@ func TestPlopChain(t *testing.T) {
 	config.GlobalConfig.Writer = newWriter
 	e := PlopChain(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		t.Fail()
 	}
 
@@ -190,7 +179,11 @@ func TestPlopChain(t *testing.T) {
 	cfgFilePlop = bytes.Replace(cfgFilePlop, []byte{13}, []byte{}, -1)
 
 	if !bytes.Equal(cfgFile, cfgFilePlop) {
-		logger.Errorf("Got:\n%s\n\nExpected:\n%s", cfgFilePlop, cfgFile)
+		log.Errorf("Error: Got: %s. Expected: %s", cfgFilePlop, cfgFile)
+		log.WithFields(log.Fields{
+			"got":      cfgFilePlop,
+			"expected": cfgFile,
+		}).Error("Error comparing config files")
 		t.Fail()
 	}
 }
@@ -214,7 +207,7 @@ func TestChainsNewDirGen(t *testing.T) {
 	do.Path = myDir
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Creating chain (from tests)")
 	tests.IfExit(NewChain(do))
 
 	// remove the data container
@@ -277,7 +270,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	do.CSV = path.Join(common.ChainsPath, "default", "genesis.csv")
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Creating chain (from tests)")
 	tests.IfExit(NewChain(do))
 	_, err := ioutil.ReadFile(do.ConfigFile)
 	if err != nil {
@@ -324,7 +317,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	do.ConfigOpts = []string{"moniker=satoshi", "p2p=1.1.1.1:42", "fast-sync=true"}
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Creating chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Creating chain (from tests)")
 	tests.IfExit(NewChain(do))
 
 	// remove the data container
@@ -362,7 +355,10 @@ func TestLogsChain(t *testing.T) {
 	do.Name = chainName
 	do.Follow = false
 	do.Tail = "all"
-	logger.Infof("Get chain logs (from tests) =>\t%s:%s\n", do.Name, do.Tail)
+	log.WithFields(log.Fields{
+		"=>":   do.Name,
+		"tail": do.Tail,
+	}).Info("Getting chain logs (from tests)")
 	e := LogsChain(do)
 	if e != nil {
 		tests.IfExit(e)
@@ -377,7 +373,7 @@ func TestUpdateChain(t *testing.T) {
 	do.Name = chainName
 	do.Pull = false
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Updating chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Updating chain (from tests)")
 	if e := UpdateChain(do); e != nil {
 		tests.IfExit(e)
 	}
@@ -393,11 +389,13 @@ func TestInspectChain(t *testing.T) {
 	do.Name = chainName
 	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect chain (via tests) =>\t%s:%v\n", chainName, do.Operations.Args)
+	log.WithFields(log.Fields{
+		"=>":   chainName,
+		"args": do.Operations.Args,
+	}).Debug("Inspecting chain (from tests)")
 	if e := InspectChain(do); e != nil {
 		tests.IfExit(fmt.Errorf("Error inspecting chain =>\t%v\n", e))
 	}
-	// log.SetLoggers(0, os.Stdout, os.Stderr)
 }
 
 func TestRenameChain(t *testing.T) {
@@ -410,7 +408,10 @@ func TestRenameChain(t *testing.T) {
 	do := def.NowDo()
 	do.Name = aChain
 	do.NewName = rename1
-	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming chain (from tests)")
 
 	if e := RenameChain(do); e != nil {
 		tests.IfExit(e)
@@ -421,7 +422,10 @@ func TestRenameChain(t *testing.T) {
 	do = def.NowDo()
 	do.Name = rename1
 	do.NewName = rename2
-	logger.Infof("Renaming chain (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming chain (from tests)")
 	if e := RenameChain(do); e != nil {
 		tests.IfExit(e)
 	}
@@ -434,14 +438,14 @@ func TestRmChain(t *testing.T) {
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
-	logger.Infof("Removing keys (from tests) =>\n%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Removing keys (from tests)")
 	if e := services.KillService(do); e != nil {
 		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
 	do.Name, do.Rm, do.RmD = chainName, false, false
-	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Stopping chain (from tests)")
 	if e := KillChain(do); e != nil {
 		tests.IfExit(e)
 	}
@@ -450,7 +454,7 @@ func TestRmChain(t *testing.T) {
 	do = def.NowDo()
 	do.Name = chainName
 	do.RmD = true
-	logger.Infof("Removing chain (from tests) =>\n%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Removing chain (from tests)")
 	if e := RmChain(do); e != nil {
 		tests.IfExit(e)
 	}
@@ -822,7 +826,7 @@ data_container = true
 
 	// [pv]: second service doesn't reference the chain.
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 2 || !strings.Contains(links[0], chainName) {
+	if len(links) != 2 || (!strings.Contains(links[1], chainName) && !strings.Contains(links[0], chainName)) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -835,9 +839,9 @@ func testStartChain(t *testing.T, chain string) {
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Starting chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Starting chain (from tests)")
 	if e := StartChain(do); e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(nil)
 	}
 	testExistAndRun(t, chain, true, true)
@@ -849,14 +853,14 @@ func testKillChain(t *testing.T, chain string) {
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
-	logger.Infof("Killing keys (from tests) =>\n%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Stopping service (from tests)")
 	if e := services.KillService(do); e != nil {
 		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
 	do.Name, do.Rm, do.RmD = chain, true, true
-	logger.Infof("Stopping chain (from tests) =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Stopping chain (from tests)")
 	if e := KillChain(do); e != nil {
 		tests.IfExit(e)
 	}
@@ -875,7 +879,7 @@ func testNewChain(chain string) {
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
-	logger.Infof("Creating chain (from tests) =>\t%s\n", chain)
+	log.WithField("=>", chain).Info("Creating chain")
 	tests.IfExit(NewChain(do))
 }
 
@@ -898,7 +902,10 @@ func runContainer(t *testing.T, ops *def.Operation) []byte {
 	if err != nil {
 		tests.IfExit(err)
 	}
-	logger.Debugf("Container ran =>\t\t%s:%v\n", ops.DataContainerName, ops.Args)
+	log.WithFields(log.Fields{
+		"=>":   ops.DataContainerName,
+		"args": ops.Args,
+	}).Debug("Container ran (from tests)")
 	config.GlobalConfig.Writer = oldWriter
 	return b
 }

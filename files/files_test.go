@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/logger"
 	"github.com/eris-ltd/eris-cli/services"
+
 	tests "github.com/eris-ltd/eris-cli/testutils"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var erisDir string = path.Join(os.TempDir(), "eris")
@@ -24,7 +26,6 @@ var hash string
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		log.Flush()
 		testKillIPFS(t)
 		tests.TestsTearDown()
 		DEAD = true
@@ -33,13 +34,11 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	// log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		erisDir = os.Getenv("HOME")
@@ -61,7 +60,7 @@ func TestMain(m *testing.M) {
 func TestPutFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = file
-	logger.Infof("Putting File =>\t\t\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Info("Putting file (from tests)")
 
 	// because IPFS is testy, we retry the put up to
 	// 10 times.
@@ -83,7 +82,7 @@ func TestPutFiles(t *testing.T) {
 	}
 
 	hash = do.Result
-	logger.Debugf("My Result =>\t\t\t%s\n", do.Result)
+	log.WithField("result", do.Result).Debug("Finished putting a file")
 }
 
 func TestGetFiles(t *testing.T) {
@@ -145,7 +144,7 @@ func testsInit() error {
 
 func testKillIPFS(t *testing.T) {
 	serviceName := "ipfs"
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", serviceName)
+	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
 
 	do := definitions.NowDo()
 	do.Name = serviceName

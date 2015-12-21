@@ -8,6 +8,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
@@ -17,7 +18,7 @@ func cloneRepo(prompt bool, name, location string) error {
 	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
 		// if the .git directory exists within ~/.eris/services (or w/e)
 		//   then pull rather than clone.
-		logger.Printf("The location is a git repository. Attempting to pull instead.\n")
+		log.Warn("The location is a git repository. Attempting to pull instead")
 		if err := pullRepo(location, prompt); err != nil {
 			return err
 		}
@@ -33,7 +34,7 @@ func cloneRepo(prompt bool, name, location string) error {
 			//   need to change down the road. generally, this should not be a big problem.
 			common.ClearDir(location)
 
-			logger.Printf("Cloning git repository.\n")
+			log.Warn("Cloning git repository")
 			c := exec.Command("git", "clone", src, location)
 
 			// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
@@ -44,7 +45,7 @@ func cloneRepo(prompt bool, name, location string) error {
 			}
 
 		} else {
-			logger.Debugf("Authorization not granted. Skipping.\n")
+			log.Debug("Authorization not granted. Skipping")
 		}
 	}
 	return nil
@@ -58,7 +59,7 @@ func pullRepo(location string, alreadyAsked bool) error {
 			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
 		}
 
-		logger.Printf("Pulling origin master.\n")
+		log.Warn("Pulling origin master")
 		c := exec.Command("git", "pull", "origin", "master")
 
 		// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
@@ -66,7 +67,6 @@ func pullRepo(location string, alreadyAsked bool) error {
 
 		c.Stderr = config.GlobalConfig.ErrorWriter
 		if err := c.Run(); err != nil {
-			logger.Printf("err: %v\n", err)
 			return err
 		}
 
@@ -81,7 +81,8 @@ func pullRepo(location string, alreadyAsked bool) error {
 func askToPull(location string) bool {
 	var input string
 
-	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (y/n): ", location)
+	log.WithField("dir", location).Warn("Looks like the directory exists")
+	fmt.Print("Would you like the marmots to pull in any recent changes? (y/n): ")
 	fmt.Scanln(&input)
 
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
@@ -52,11 +53,11 @@ func GetHead() (string, error) {
 // Expects the chain type and head (id) to be full (already resolved)
 func ChangeHead(name string) error {
 	if !IsKnownChain(name) && name != "" {
-		logger.Debugf("Chain name not known. Not saving.\n")
+		log.Debug("Chain name not known. Not saving")
 		return nil
 	}
 
-	logger.Debugf("Chain name known (or blank). Saving to head file.\n")
+	log.Debug("Chain name known (or blank). Saving to head file")
 	// read in the entire head file and clip
 	// if we have reached the max length
 	b, err := ioutil.ReadFile(common.HEAD)
@@ -80,6 +81,6 @@ func ChangeHead(name string) error {
 		return err
 	}
 
-	logger.Debugf("Head file saved.\n")
+	log.Debug("Head file saved")
 	return nil
 }

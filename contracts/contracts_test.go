@@ -4,25 +4,24 @@ import (
 	"os"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/logger"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 2
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
 
-	logger.Infoln("Commensing with Tests Tear Down.")
+	log.Info("Tearing tests down")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		tests.IfExit(tests.TestsTearDown())
 	}
