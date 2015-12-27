@@ -11,7 +11,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/logger"
-	"github.com/eris-ltd/eris-cli/services"
 
 	tests "github.com/eris-ltd/eris-cli/testutils"
 
@@ -25,7 +24,6 @@ var content string = "test content\n"
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		testKillIPFS(t)
 		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
@@ -43,13 +41,15 @@ func TestMain(m *testing.M) {
 		erisDir = os.Getenv("HOME")
 	}
 
+        // Prevent CLI from starting IPFS.
+        os.Setenv("ERIS_SKIP_ENSURE", "true")
+
 	file = path.Join(erisDir, "temp")
 
 	tests.IfExit(testsInit())
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		testKillIPFS(nil)
 		tests.IfExit(tests.TestsTearDown())
 	}
 
@@ -149,25 +149,5 @@ func testsInit() error {
 	tests.IfExit(err)
 	f.Write([]byte(content))
 
-	// Satisfy EnsureRunning.
-	do := definitions.NowDo()
-	do.Operations.Args = []string{"ipfs"}
-	err = services.StartService(do)
-	tests.IfExit(err)
-
 	return nil
-}
-
-func testKillIPFS(t *testing.T) {
-	serviceName := "ipfs"
-	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
-
-	do := definitions.NowDo()
-	do.Name = serviceName
-	do.Operations.Args = []string{serviceName}
-	do.Rm = true
-	do.RmD = true
-	if e := services.KillService(do); e != nil {
-		t.Fatal(e)
-	}
 }

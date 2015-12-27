@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
@@ -31,6 +30,9 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
+
+        // Prevent CLI from starting IPFS.
+        os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 
@@ -231,9 +233,6 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestExportService(t *testing.T) {
-	testStartService(t, "ipfs", false)
-	time.Sleep(5 * time.Second)
-
 	do := def.NowDo()
 	do.Name = "ipfs"
 
