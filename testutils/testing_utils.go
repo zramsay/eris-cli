@@ -1,4 +1,4 @@
-package testings
+package testutils
 
 import (
 	"fmt"
@@ -48,10 +48,6 @@ func TestsInit(testType string) (err error) {
 	do.Yes = true
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
-	}
-
-	if testType == "services" {
-		checkIPFSnotRunning() //TODO make more general & use for other things?
 	}
 
 	log.Info("Test init completed. Starting main test sequence now")

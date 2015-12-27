@@ -2,6 +2,8 @@ package services
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -20,14 +22,13 @@ import (
 var srv *def.ServiceDefinition
 
 var servName string = "ipfs"
-var hash string
 
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
-	// log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -236,59 +237,99 @@ func TestExportService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "ipfs"
 
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ExportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := ExportService(do); err != nil {
-			tests.IfExit(err)
-		}
+	hash := "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Header: map[string][]string{
+			"Ipfs-Hash": []string{hash},
+		},
+	})
+	defer ipfs.Close()
+
+	if err := ExportService(do); err != nil {
+		tests.IfExit(err)
 	}
 
-	hash = do.Result
+	if expected := "/ipfs/"; ipfs.Path() != expected {
+		tests.IfExit(fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "POST"; ipfs.Method() != expected {
+		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+	}
+
+	// Comparing IPFS service file with what ExportService actually sent.
+	filename := FindServiceDefinitionFile(do.Name)
+	in, err := os.Open(filename)
+	if err != nil {
+		tests.IfExit(fmt.Errorf("Cannot read the ipfs service definition file\n"))
+	}
+	defer in.Close()
+	fileCheck, _ := ioutil.ReadAll(in)
+
+	if ipfs.Body() != string(fileCheck) {
+		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", fileCheck, ipfs.Body()))
+	}
+
+	if hash != do.Result {
+		tests.IfExit(fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
+	}
+
 	testExistAndRun(t, "ipfs", 1, true, true)
 }
 
 func TestImportService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "eth"
-	if hash == "" {
-		do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-	} else {
-		do.Hash = hash
-	}
+	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
 	log.WithFields(log.Fields{
 		"=>":   do.Name,
 		"hash": do.Hash,
 	}).Debug("Importing service (from tests)")
 
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ImportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
+	content := `name = "ipfs"
+
+[service]
+name = "ipfs"
+image = "quay.io/eris/ipfs"`
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Body: content,
+	})
+	defer ipfs.Close()
+
+	if err := ImportService(do); err != nil {
+		tests.IfExit(err)
 	}
-	if !passed {
-		// final time will throw
-		if err := ImportService(do); err != nil {
-			tests.IfExit(err)
-		}
+
+	if expected := "/ipfs/" + do.Hash; ipfs.Path() != expected {
+		tests.IfExit(fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "GET"; ipfs.Method() != expected {
+		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+	}
+
+	f, err := os.Open(FindServiceDefinitionFile(do.Name))
+	if err != nil {
+		tests.IfExit(err)
+	}
+
+	contentExported, err := ioutil.ReadAll(f)
+	if err != nil {
+		tests.IfExit(err)
+	}
+
+	if content != string(contentExported) {
+		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentExported)))
 	}
 
 	testKillService(t, "ipfs", true)
