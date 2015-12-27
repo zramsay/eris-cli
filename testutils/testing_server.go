@@ -152,12 +152,12 @@ func NewServer(params ...interface{}) *Server {
 	s.server = httptest.NewUnstartedServer(s)
 
 	if _, ok := params[0].(string); !ok {
-		panic("can accept only strings as addr")
+                panic("can accept only strings as addr")
 	}
 
 	listener, err := net.Listen("tcp", params[0].(string))
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	s.server.Listener = listener
 	s.server.Start()
