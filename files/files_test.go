@@ -3,11 +3,11 @@ package files
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/logger"
@@ -21,7 +21,6 @@ import (
 var erisDir string = path.Join(os.TempDir(), "eris")
 var file string
 var content string = "test content\n"
-var hash string
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 func fatal(t *testing.T, err error) {
@@ -36,9 +35,9 @@ func fatal(t *testing.T, err error) {
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
-	// log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		erisDir = os.Getenv("HOME")
@@ -62,51 +61,68 @@ func TestPutFiles(t *testing.T) {
 	do.Name = file
 	log.WithField("=>", do.Name).Info("Putting file (from tests)")
 
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := testPutFiles(do); err != nil {
-			time.Sleep(3 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := testPutFiles(do); err != nil {
-			fatal(t, err)
-		}
+	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Header: map[string][]string{
+			"Ipfs-Hash": []string{hash},
+		},
+	})
+	defer ipfs.Close()
+
+	if err := PutFiles(do); err != nil {
+		fatal(t, err)
 	}
 
-	hash = do.Result
+	if expected := "/ipfs/"; ipfs.Path() != expected {
+		fatal(t, fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "POST"; ipfs.Method() != expected {
+		fatal(t, fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+	}
+
+	if ipfs.Body() != content {
+		fatal(t, fmt.Errorf("Put the bad file; expected %q, got %q\n", content, ipfs.Body()))
+	}
+
+	if hash != do.Result {
+		fatal(t, fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
+	}
+
 	log.WithField("result", do.Result).Debug("Finished putting a file")
 }
 
 func TestGetFiles(t *testing.T) {
 	fileName := strings.Replace(file, "temp", "pmet", 1)
+	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 	do := definitions.NowDo()
 	do.Name = hash
 	do.Path = fileName
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := testGetFiles(do); err != nil {
-			time.Sleep(3 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Body: content,
+	})
+	defer ipfs.Close()
+
+	if err := GetFiles(do); err != nil {
+		fatal(t, err)
 	}
-	if !passed {
-		// final time will throw
-		if err := testGetFiles(do); err != nil {
-			fatal(t, err)
-		}
+
+	if expected := "/ipfs/" + hash; ipfs.Path() != expected {
+		fatal(t, fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "GET"; ipfs.Method() != expected {
+		fatal(t, fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
 	f, err := os.Open(fileName)
@@ -120,7 +136,7 @@ func TestGetFiles(t *testing.T) {
 	}
 
 	if string(contentPuted) != content {
-		fatal(t, fmt.Errorf("ERROR: Content Put into IPFS and Pulled out to not match.\nExpected:\t%s\nReceived:\t%s\n", content, string(contentPuted)))
+		fatal(t, fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentPuted)))
 	}
 }
 
@@ -133,11 +149,11 @@ func testsInit() error {
 	tests.IfExit(err)
 	f.Write([]byte(content))
 
-	do1 := definitions.NowDo()
-	do1.Operations.Args = []string{"ipfs"}
-	err = services.StartService(do1)
+	// Satisfy EnsureRunning.
+	do := definitions.NowDo()
+	do.Operations.Args = []string{"ipfs"}
+	err = services.StartService(do)
 	tests.IfExit(err)
-	time.Sleep(5 * time.Second) // boot time
 
 	return nil
 }
@@ -154,18 +170,4 @@ func testKillIPFS(t *testing.T) {
 	if e := services.KillService(do); e != nil {
 		t.Fatal(e)
 	}
-}
-
-func testPutFiles(do *definitions.Do) error {
-	if err := PutFiles(do); err != nil {
-		return err
-	}
-	return nil
-}
-
-func testGetFiles(do *definitions.Do) error {
-	if err := GetFiles(do); err != nil {
-		return err
-	}
-	return nil
 }

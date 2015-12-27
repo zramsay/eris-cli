@@ -42,7 +42,7 @@ func ImportService(do *definitions.Do) error {
 	_, err = loaders.LoadServiceDefinition(do.Name, false, 0)
 	//XXX add protections?
 	if err != nil {
-		return fmt.Errorf("Your service defintion file looks improperly formatted and will not marshal.")
+		return fmt.Errorf("Your service definition file looks improperly formatted and will not marshal.")
 	}
 
 	do.Result = "success"
@@ -281,17 +281,15 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 }
 
 func exportFile(servName string) (string, error) {
-	fileName := fmt.Sprintf("%s%s", FindServiceDefinitionFile(servName), ".toml")
-
-	fn := path.Join(ServicesPath, fileName)
+	fileName := FindServiceDefinitionFile(servName)
 
 	var hash string
 	var err error
 
 	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fn, "", os.Stdout)
+		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
 	} else {
-		hash, err = ipfs.SendToIPFS(fn, "", bytes.NewBuffer([]byte{}))
+		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {
