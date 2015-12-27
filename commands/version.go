@@ -24,8 +24,8 @@ func addVerSionFlags() {
 
 func DisplayVersion(cmd *cobra.Command, args []string) {
 	if !quiet {
-		log.Println("Eris CLI Version: " + VERSION)
+		log.Warn("Eris CLI Version: " + VERSION)
 	} else {
-		log.Println(VERSION)
+		log.Warn(VERSION)
 	}
 }
