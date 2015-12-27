@@ -41,8 +41,8 @@ func TestMain(m *testing.M) {
 		erisDir = os.Getenv("HOME")
 	}
 
-        // Prevent CLI from starting IPFS.
-        os.Setenv("ERIS_SKIP_ENSURE", "true")
+	// Prevent CLI from starting IPFS.
+	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	file = path.Join(erisDir, "temp")
 

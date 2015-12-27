@@ -31,7 +31,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 			endpoint := "unix:///var/run/docker.sock"
 
-			log.WithField("=>", endpoint).Debug("Checking the Linux Docker socket")
+			log.WithField("=>", endpoint).Debug("Checking Linux Docker socket")
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
@@ -77,11 +77,11 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
 
 		if err != nil {
-			log.Debug("Could not connect to the Eris Docker Machine")
+			log.Debug("Could not connect to Eris Docker Machine")
 			log.Errorf("Trying %q Docker Machine: %v", "default", err)
 			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
 			if err != nil {
-				log.Debugf("Could not connect to the %q Docker Machine", "default")
+				log.Debugf("Could not connect to %q Docker Machine", "default")
 				log.Debugf("Error: %v", err)
 				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
@@ -210,7 +210,7 @@ func getMachineDeets(machName string) (string, string, error) {
 		return "", "", noConnectError
 	}
 
-	log.Info("Querying whether the host and user have access to the right files for TLS connection to Docker")
+	log.Info("Querying host and user have access to the right files for TLS connection to Docker")
 	if err := checkKeysAndCerts(dPath); err != nil {
 		return "", "", err
 	}

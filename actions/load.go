@@ -14,7 +14,7 @@ import (
 )
 
 func LoadActionDefinition(actionName string) (*def.Action, []string, error) {
-	log.WithField("=>", actionName).Info("Reading action definition file")
+	log.WithField("file", actionName).Info("Reading action definition file")
 	act := strings.Split(actionName, "_")
 	action := def.BlankAction()
 
@@ -38,7 +38,7 @@ func LoadActionDefinition(actionName string) (*def.Action, []string, error) {
 
 func MockAction(act string) (*def.Action, []string) {
 	action := def.BlankAction()
-	log.WithField("=>", act).Debug("Mocking action")
+	log.WithField("file", act).Debug("Mocking action")
 	return action, []string{}
 }
 

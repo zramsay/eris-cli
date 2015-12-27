@@ -1054,8 +1054,8 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		},
 	}
 
+	opts.Config.OpenStdin = true
 	if ops.Interactive {
-		opts.Config.OpenStdin = true
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
 		opts.Config.Cmd = ops.Args

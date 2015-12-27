@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -31,8 +30,8 @@ func TestMain(m *testing.M) {
 
 	tests.IfExit(testsInit())
 
-        // Prevent CLI from starting IPFS.
-        os.Setenv("ERIS_SKIP_ENSURE", "true")
+	// Prevent CLI from starting IPFS.
+	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 
@@ -261,24 +260,13 @@ func TestExportService(t *testing.T) {
 		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
-	// Comparing IPFS service file with what ExportService actually sent.
-	filename := FindServiceDefinitionFile(do.Name)
-	in, err := os.Open(filename)
-	if err != nil {
-		tests.IfExit(fmt.Errorf("Cannot read the ipfs service definition file\n"))
-	}
-	defer in.Close()
-	fileCheck, _ := ioutil.ReadAll(in)
-
-	if ipfs.Body() != string(fileCheck) {
-		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", fileCheck, ipfs.Body()))
+	if content := tests.FileContents(FindServiceDefinitionFile(do.Name)); content != ipfs.Body() {
+		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", content, ipfs.Body()))
 	}
 
 	if hash != do.Result {
 		tests.IfExit(fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
 	}
-
-	testExistAndRun(t, "ipfs", 1, true, true)
 }
 
 func TestImportService(t *testing.T) {
@@ -317,22 +305,9 @@ image = "quay.io/eris/ipfs"`
 		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
-	f, err := os.Open(FindServiceDefinitionFile(do.Name))
-	if err != nil {
-		tests.IfExit(err)
+	if imported := tests.FileContents(FindServiceDefinitionFile(do.Name)); imported != content {
+		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, imported))
 	}
-
-	contentExported, err := ioutil.ReadAll(f)
-	if err != nil {
-		tests.IfExit(err)
-	}
-
-	if content != string(contentExported) {
-		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentExported)))
-	}
-
-	testKillService(t, "ipfs", true)
-	testExistAndRun(t, "ipfs", 1, false, false)
 }
 
 func TestNewService(t *testing.T) {

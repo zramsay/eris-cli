@@ -104,7 +104,7 @@ func ExportAction(do *definitions.Do) error {
 
 func EditAction(do *definitions.Do) error {
 	actDefFile := util.GetFileByNameAndType("actions", do.Name)
-	log.WithField("=>", actDefFile).Info("Editing action")
+	log.WithField("file", actDefFile).Info("Editing action")
 	do.Result = "success"
 	return Editor(actDefFile)
 }
@@ -118,7 +118,10 @@ func RenameAction(do *definitions.Do) error {
 	do.NewName = strings.Replace(do.NewName, " ", "_", -1)
 	act, _, err := LoadActionDefinition(do.Name)
 	if err != nil {
-		log.WithField("=>", fmt.Sprintf("%s:%s", do.Name, do.NewName)).Debug("Failed renaming action")
+		log.WithFields(log.Fields{
+			"from": do.Name,
+			"to":   do.NewName,
+		}).Debug("Failed renaming action")
 		return err
 	}
 

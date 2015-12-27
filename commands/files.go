@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/files"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -127,7 +127,7 @@ func FilesPut(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	err := files.PutFiles(do)
 	IfExit(err)
-	log.Println(do.Result)
+	log.Warn(do.Result)
 }
 
 func FilesPin(cmd *cobra.Command, args []string) {
@@ -142,7 +142,7 @@ func FilesPin(cmd *cobra.Command, args []string) {
 	}
 	err := files.PinFiles(do)
 	IfExit(err)
-	log.Println(do.Result)
+	log.Warn(do.Result)
 }
 
 func FilesCat(cmd *cobra.Command, args []string) {
@@ -153,7 +153,7 @@ func FilesCat(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	err := files.CatFiles(do)
 	IfExit(err)
-	log.Println(do.Result)
+	log.Warn(do.Result)
 
 }
 
@@ -165,11 +165,11 @@ func FilesList(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	err := files.ListFiles(do)
 	IfExit(err)
-	log.Println(do.Result)
+	log.Warn(do.Result)
 }
 
 func FilesManageCached(cmd *cobra.Command, args []string) {
 	err := files.ManagePinned(do)
 	IfExit(err)
-	log.Println(do.Result)
+	log.Warn(do.Result)
 }
