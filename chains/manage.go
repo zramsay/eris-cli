@@ -18,6 +18,7 @@ import (
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func RegisterChain(do *definitions.Do) error {
@@ -37,7 +38,7 @@ func RegisterChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	logger.Debugf("Chain Loaded. Image =>\t\t%v\n", chain.Service.Image)
+	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
 
 	// set chainid and other vars
 	envVars := []string{
@@ -49,17 +50,21 @@ func RegisterChain(do *definitions.Do) error {
 	}
 	envVars = append(envVars, do.Env...)
 
-	logger.Debugf("Set env vars from RegisterChain =>\t%v\n", envVars)
+	log.WithFields(log.Fields{
+		"environment": envVars,
+		"links":       do.Links,
+	}).Debug("Registering chain with")
 	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	logger.Debugf("Set links from RegisterChain =>\t%v\n", do.Links)
 	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	if err := bootDependencies(chain, do); err != nil {
 		return err
 	}
 
-	logger.Debugf("Starting chain container via Docker =>\t%s\n", chain.Service.Name)
-	logger.Debugf("\twith Image =>\t\t%s\n", chain.Service.Image)
+	log.WithFields(log.Fields{
+		"=>":    chain.Service.Name,
+		"image": chain.Service.Image,
+	}).Debug("Performing chain container start")
 	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
 	chain.Operations.Args = []string{loaders.ErisChainRegister}
 
@@ -76,10 +81,9 @@ func ImportChain(do *definitions.Do) error {
 
 	s := strings.Split(do.Path, ":")
 	if s[0] == "ipfs" {
-
 		var err error
-		if logger.Level > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", logger.Writer)
+		if log.GetLevel() > 0 {
+			err = ipfs.GetFromIPFS(s[1], fileName, "", os.Stdout)
 		} else {
 			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
 		}
@@ -91,7 +95,7 @@ func ImportChain(do *definitions.Do) error {
 	}
 
 	if strings.Contains(s[0], "github") {
-		logger.Println("https://twitter.com/ryaneshea/status/595957712040628224")
+		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
 
@@ -105,7 +109,7 @@ func InspectChain(do *definitions.Do) error {
 	}
 
 	if IsChainExisting(chain) {
-		logger.Debugf("Chain exists, calling services.InspectServiceByService.\n")
+		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
 		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
 			return err
@@ -144,7 +148,7 @@ func ExportChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		logger.Println(hash)
+		log.Warn(hash)
 
 	} else {
 		return fmt.Errorf(`I don't known of that chain.
@@ -176,7 +180,7 @@ func CurrentChain(do *definitions.Do) error {
 		head = "There is no chain checked out."
 	}
 
-	logger.Println(head)
+	log.Warn(head)
 	do.Result = head
 
 	return nil
@@ -198,7 +202,7 @@ func PlopChain(do *definitions.Do) error {
 		return fmt.Errorf("unknown plop option %s", do.Type)
 	}
 	do.Operations.PublishAllPorts = true // avoid port conflict
-	logger.Debugf("Execing =>\t\t\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Debug("Executing command")
 	return ExecChain(do)
 }
 
@@ -209,7 +213,7 @@ func PortsChain(do *definitions.Do) error {
 	}
 
 	if IsChainExisting(chain) {
-		logger.Debugf("Chain exists, getting port mapping.\n")
+		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
 		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Operations.Args)
 	}
 
@@ -218,7 +222,7 @@ func PortsChain(do *definitions.Do) error {
 
 func EditChain(do *definitions.Do) error {
 	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
-	logger.Infof("Editing Service =>\t\t%s\n", chainDefFile)
+	log.WithField("file", chainDefFile).Info("Editing chain definition")
 	do.Result = "success"
 	return Editor(chainDefFile)
 }
@@ -233,16 +237,19 @@ func RenameChain(do *definitions.Do) error {
 	transformOnly := newNameBase == do.Name
 
 	if util.IsKnownChain(do.Name) {
-		logger.Infof("Renaming chain =>\t\t%s:%s\n", do.Name, do.NewName)
+		log.WithFields(log.Fields{
+			"from": do.Name,
+			"to":   do.NewName,
+		}).Info("Renaming chain")
 
-		logger.Debugf("Loading Chain Def File =>\t%s\n", do.Name)
+		log.WithField("=>", do.Name).Debug("Loading chain definition file")
 		chainDef, err := loaders.LoadChainDefinition(do.Name, false, 1) // TODO:CNUM
 		if err != nil {
 			return err
 		}
 
 		if !transformOnly {
-			logger.Debugln("Embarking on DockerRename.")
+			log.Debug("Renaming chain container")
 			err = perform.DockerRename(chainDef.Operations, do.NewName)
 			if err != nil {
 				return err
@@ -255,11 +262,11 @@ func RenameChain(do *definitions.Do) error {
 		}
 
 		if filepath.Base(oldFile) == do.NewName {
-			logger.Infoln("Those are the same file. Not renaming")
+			log.Info("Those are the same file. Not renaming")
 			return nil
 		}
 
-		logger.Debugln("Renaming Chain Definition File.")
+		log.Debug("Renaming chain definition file")
 		var newFile string
 		if filepath.Ext(do.NewName) == "" {
 			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
@@ -279,9 +286,11 @@ func RenameChain(do *definitions.Do) error {
 		}
 
 		if !transformOnly {
-			logger.Infof("Renaming DataC (fm ChainRaw) =>\t%s:%s\n", do.Name, do.NewName)
+			log.WithFields(log.Fields{
+				"from": fmt.Sprintf("%s:%d", do.Name, chainDef.Operations.ContainerNumber),
+				"to":   fmt.Sprintf("%s:%d", do.NewName, chainDef.Operations.ContainerNumber),
+			}).Info("Renaming chain data container")
 			do.Operations.ContainerNumber = chainDef.Operations.ContainerNumber
-			logger.Debugf("\twith ContainerNumber =>\t%d\n", do.Operations.ContainerNumber)
 			err = data.RenameData(do)
 			if err != nil {
 				return err
@@ -327,7 +336,7 @@ func RmChain(do *definitions.Do) error {
 			return err
 		}
 	} else {
-		logger.Infoln("That chain's container does not exist.")
+		log.Info("Chain container does not exist")
 	}
 
 	if do.File {
@@ -335,7 +344,7 @@ func RmChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		logger.Printf("Removing file =>\t\t%s\n", oldFile)
+		log.WithField("file", oldFile).Warn("Removing file")
 		if err := os.Remove(oldFile); err != nil {
 			return err
 		}
@@ -362,7 +371,7 @@ func CatChain(do *definitions.Do) error {
 		return err
 	}
 	// Let's actually WRITE this to the GlobalConfig.Writer...
-	logger.Println(string(cat))
+	log.Warn(string(cat))
 	return nil
 
 }
@@ -372,8 +381,8 @@ func exportFile(chainName string) (string, error) {
 
 	var hash string
 	var err error
-	if logger.Level > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", logger.Writer)
+	if log.GetLevel() > 0 {
+		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
 	} else {
 		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
 	}

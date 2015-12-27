@@ -6,6 +6,8 @@ import (
 	"github.com/eris-ltd/eris-cli/contracts"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -137,7 +139,7 @@ func ContractsExport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	IfExit(contracts.PutPackage(do))
-	logger.Println(do.Result)
+	log.Println(do.Result)
 }
 
 func ContractsTest(cmd *cobra.Command, args []string) {

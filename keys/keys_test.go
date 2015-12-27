@@ -9,16 +9,16 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	//	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/logger"
 	srv "github.com/eris-ltd/eris-cli/services"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	util "github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var DEAD bool
@@ -27,7 +27,6 @@ var DEAD bool
 //vars
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		log.Flush()
 		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
@@ -35,14 +34,11 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	//	logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
-
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
@@ -253,10 +249,10 @@ func testStartKeys(t *testing.T) {
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
+		log.Infof("Error starting service: %v", e)
 		t.Fail()
 	}
 
@@ -265,7 +261,7 @@ func testStartKeys(t *testing.T) {
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", serviceName)
+	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
 
 	do := def.NowDo()
 	do.Name = serviceName
@@ -276,7 +272,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	}
 	e := srv.KillService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		fatal(t, e)
 	}
 	testExistAndRun(t, serviceName, 1, !wipe, false)
@@ -290,22 +286,33 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 }
 
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
-	logger.Infof("\nTesting number of (%s) containers. Existing? (%d) and Running? (%d)\n", servName, containerExist, containerRun)
-
-	logger.Debugf("Checking Existing Containers =>\t%s\n", servName)
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
+	log.WithField("=>", servName).Debug("Checking existing containers for")
 	exist := util.HowManyContainersExisting(servName, "service")
-	logger.Debugf("Checking Running Containers =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Checking running containers for")
 	run := util.HowManyContainersRunning(servName, "service")
 
 	if exist != containerExist {
-		logger.Printf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist)
+		log.WithFields(log.Fields{
+			"service":  servName,
+			"expected": containerExist,
+			"got":      exist,
+		}).Error("Wrong number of existing containers")
 		fatal(t, nil)
 	}
 
 	if run != containerRun {
-		logger.Printf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run)
+		log.WithFields(log.Fields{
+			"service":  servName,
+			"expected": containerExist,
+			"got":      run,
+		}).Error("Wrong number of running containers")
 		fatal(t, nil)
 	}
 
-	logger.Infoln("All good.\n")
+	log.Info("All good")
 }

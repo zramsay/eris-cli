@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -30,51 +31,59 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 			endpoint := "unix:///var/run/docker.sock"
 
-			logger.Debugf("Checking The Linux Docker Socket =>\t%s\n", endpoint)
+			log.WithField("=>", endpoint).Debug("Checking the Linux Docker socket")
 			u, _ := url.Parse(endpoint)
 			_, err := net.Dial(u.Scheme, u.Path)
 			if err != nil {
 				IfExit(fmt.Errorf("%v\n", mustInstallError()))
 			}
-
-			logger.Debugf("Connecting to the Docker Client via =>\t%s\n", endpoint)
+			log.WithField("=>", endpoint).Debug("Connecting to Docker")
 			DockerClient, err = docker.NewClient(endpoint)
 			if err != nil {
 				IfExit(fmt.Errorf("%v\n", mustInstallError()))
 			}
 		} else {
-			//if machName !="eris/default" OR if docker env vars set (via, e.g., eval)
-			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH"))
-			logger.Debugf("Checking Details via Docker-Machine =>\t%s\n", machName)
+			log.WithFields(log.Fields{
+				"host":      os.Getenv("DOCKER_HOST"),
+				"cert path": os.Getenv("DOCKER_CERT_PATH"),
+			}).Debug("Getting connection details from environment")
+			log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
 			dockerHost, dockerCertPath, err = getMachineDeets(machName)
 			if err != nil {
-				IfExit(fmt.Errorf("Error getting Docker-Machine Details for connection over TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err))
+				IfExit(fmt.Errorf("Error getting Docker Machine details for connection via TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err))
 			}
 
-			logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
+			log.WithFields(log.Fields{
+				"host":      dockerHost,
+				"cert path": dockerCertPath,
+			}).Debug()
+
 			if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-				IfExit(fmt.Errorf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err))
+				IfExit(fmt.Errorf("Error connecting to Docker via TLS.\nERROR =>\t\t\t%v\n", err))
 			}
-			logger.Debugln("Successfully connected to Docker daemon.")
 
-			logger.Debugln("Setting IPFS Host")
 			setIPFSHostViaDockerHost(dockerHost)
 		}
 
-		logger.Debugln("Successfully connected to Docker daemon.")
+		log.Debug("Successfully connected to Docker daemon")
 
 	} else {
-		logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", os.Getenv("DOCKER_HOST"), os.Getenv("DOCKER_CERT_PATH"))
-		logger.Debugf("Checking Details via Docker-Machine =>\t%s\n", machName)
+		log.WithFields(log.Fields{
+			"host":      os.Getenv("DOCKER_HOST"),
+			"cert path": os.Getenv("DOCKER_CERT_PATH"),
+		}).Debug("Getting connection details from environment")
+		log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
+
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
 
 		if err != nil {
-
-			logger.Debugf("Could not connect to the eris docker-machine.\nError:\t%vTrying \"default\" docker-machine.\n", err)
+			log.Debug("Could not connect to the Eris Docker Machine")
+			log.Errorf("Trying %q Docker Machine: %v", "default", err)
 			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
 			if err != nil {
-
-				logger.Debugf("Could not connect to the \"default\" docker-machine.\nError:\t%vTrying to set up a new machine.\n", err)
+				log.Debugf("Could not connect to the %q Docker Machine", "default")
+				log.Debugf("Error: %v", err)
+				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
 					IfExit(fmt.Errorf("%v\n", e2))
 				}
@@ -83,13 +92,16 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 		}
 
-		logger.Debugf("Connecting to the Docker Client via =>\t%s:%s\n", dockerHost, dockerCertPath)
-		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			IfExit(fmt.Errorf("Error connecting to Docker Backend over TLS.\nERROR =>\t\t\t%v\n", err))
-		}
-		logger.Debugln("Successfully connected to Docker daemon.")
+		log.WithFields(log.Fields{
+			"host":      dockerHost,
+			"cert path": dockerCertPath,
+		}).Debug()
 
-		logger.Debugln("Setting IPFS Host")
+		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
+			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
+		}
+		log.Debug("Successfully connected to Docker daemon")
+
 		setIPFSHostViaDockerHost(dockerHost)
 	}
 }
@@ -112,36 +124,42 @@ func CheckDockerClient() error {
 		}
 
 		if _, _, err := getMachineDeets("default"); err == nil {
-
-			fmt.Print("A docker-machine virtual machine exists, which eris can use.\nHowever, our marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
+			fmt.Println("A Docker Machine VM exists, which Eris can use")
+			fmt.Println("However, our marmots recommend that you have a VM dedicated to Eris dev-ing")
+			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-				logger.Infof("The marmots will create an eris machine.\n")
+				log.Debug("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
 				}
 
-				logger.Debugf("New docker machine created using %s driver. Getting the proper environment variables.\n", driver)
+				log.WithField("driver", driver).Info("New Docker Machine created")
+				log.Info("Getting proper environment variables")
+
 				if _, _, err := getMachineDeets("eris"); err != nil {
 					return err
 				}
 			} else {
-				logger.Infof("No eris docker-machine will be created.")
+				log.Info("No Eris Docker Machine will be created")
 			}
 
 		} else {
 
-			fmt.Print("The marmots could not find a docker-machine virtual machine they could connect to.\nOur marmots recommend that you have a vm dedicated to eris dev-ing.\nWould you like the marmots to create a machine for you? (y/n): ")
+			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
+			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
+			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
 			fmt.Scanln(&input)
 
 			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-				logger.Printf("The marmots will create an eris machine.\n")
+				log.Warn("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
 				}
 
-				logger.Infof("New docker machine created using %s driver.\nGetting the proper environment variables.\n", driver)
+				log.WithField("driver", driver).Info("New Docker Machine created")
+				log.Info("Getting proper environment variables")
 				if _, _, err := getMachineDeets("eris"); err != nil {
 					return err
 				}
@@ -150,7 +168,7 @@ func CheckDockerClient() error {
 		}
 	}
 
-	logger.Infof("Docker client connects correctly.\n")
+	log.Info("Docker client connected")
 	return nil
 }
 
@@ -166,17 +184,17 @@ func getMachineDeets(machName string) (string, string, error) {
 	}
 
 	// TODO: when go-dockerclient adds machine API endpoints use those instead.
-	logger.Debugf("Querying the %s docker-machine's url.\n", machName)
+	log.WithField("machine", machName).Debug("Querying Docker Machine URL")
 	cmd := exec.Command("docker-machine", "url", machName)
 	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
 		return "", "", fmt.Errorf("%vError:\t%v\n", noConnectError, err)
 	}
 	dHost = strings.TrimSpace(out.String())
-	logger.Debugf("\tURL =>\t\t\t%s\n", dHost)
+	log.WithField("host", dHost).Debug()
 
 	// TODO: when go-dockerclient adds machine API endpoints use those instead.
-	logger.Debugf("Querying the %s docker-machine's certificate path.\n", machName)
+	log.WithField("machine", machName).Debug("Querying Docker Machine cert path")
 	cmd2 := exec.Command("docker-machine", "inspect", machName, "--format", "{{.HostOptions.AuthOptions.ServerCertPath}}")
 	cmd2.Stdout = out2
 	//cmd2.Stderr = os.Stderr
@@ -186,26 +204,26 @@ func getMachineDeets(machName string) (string, string, error) {
 	dPath = out2.String()
 	dPath = strings.Replace(dPath, "'", "", -1)
 	dPath = path.Dir(dPath)
-	logger.Debugf("\tCertificate Path =>\t%s\n", dPath)
+	log.WithField("cert path", dPath).Debug()
 
 	if dPath == "" || dHost == "" {
 		return "", "", noConnectError
 	}
 
-	logger.Infof("Querying whether the host and user have access to the right files for TLS connection to docker.\n")
+	log.Info("Querying whether the host and user have access to the right files for TLS connection to Docker")
 	if err := checkKeysAndCerts(dPath); err != nil {
 		return "", "", err
 	}
-	logger.Debugf("\tCertificate files look good.\n")
+	log.Debug("Certificate files look good")
 
 	// technically, do not *have* to do this, but it will make repetitive tasks faster
-	logger.Debugf("Setting the environment variables for quick future development.\n")
+	log.Debug("Setting environment variables for quick future development")
 	os.Setenv("DOCKER_HOST", dHost)
 	os.Setenv("DOCKER_CERT_PATH", dPath)
 	os.Setenv("DOCKER_TLS_VERIFY", "1")
 	os.Setenv("DOCKER_MACHINE_NAME", machName)
 
-	logger.Debugf("Finished getting machine details =>\t%s\n", machName)
+	log.WithField("machine", machName).Debug("Finished getting machine details")
 	return dHost, dPath, nil
 }
 
@@ -237,36 +255,37 @@ func setupErisMachine(driver string) error {
 	args := []string{"status", "eris"}
 	if err := exec.Command(cmd, args...).Run(); err == nil {
 		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
-		logger.Debugf("Eris docker-machine exists. Starting.\n")
+		log.Debug("Eris Docker Machine exists. Starting")
 		return startErisMachine()
 	}
-	logger.Debugf("Eris docker-machine doesn't exist.\n")
+	log.Debug("Eris Docker Machine doesn't exist")
 
 	return createErisMachine(driver)
 }
 
 func createErisMachine(driver string) error {
-	logger.Printf("Creating the eris docker-machine.\nThis will take some time, please feel free to go feed your marmot.\n")
-	logger.Debugf("\tDriver =>\t\t\t%s\n", driver)
+	log.Warn("Creating the Eris Docker Machine")
+	log.Warn("This will take some time, please feel free to go feed your marmot")
+	log.WithField("driver", driver).Debug()
 	cmd := "docker-machine"
 	args := []string{"create", "--driver", driver, "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		logger.Debugf("There was an error creating the eris docker-machine.\nError:\t%v\n", err)
+		log.Debugf("There was an error creating the Eris Docker Machine: %v", err)
 		return mustInstallError()
 	}
-	logger.Debugf("Eris docker-machine created.\n")
+	log.Debug("Eris Docker Machine created")
 
 	return startErisMachine()
 }
 
 func startErisMachine() error {
-	logger.Infof("Starting eris docker-machine.\n")
+	log.Info("Starting Eris Docker Machine")
 	cmd := "docker-machine"
 	args := []string{"start", "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
 	}
-	logger.Debugf("Eris docker-machine started.\n")
+	log.Debug("Eris Docker Machine started")
 
 	return nil
 }
@@ -274,16 +293,16 @@ func startErisMachine() error {
 func connectDockerTLS(dockerHost, dockerCertPath string) error {
 	var err error
 
-	logger.Debugf("Connecting to the Docker Client via TLS.\n")
-	logger.Debugf("\tURL =>\t\t\t%s\n", dockerHost)
-	logger.Debugf("\tDocker Cert Path =>\t%s\n", dockerCertPath)
-
+	log.WithFields(log.Fields{
+		"host":      dockerHost,
+		"cert path": dockerCertPath,
+	}).Debug("Connecting to Docker via TLS")
 	DockerClient, err = docker.NewTLSClient(dockerHost, path.Join(dockerCertPath, "cert.pem"), path.Join(dockerCertPath, "key.pem"), path.Join(dockerCertPath, "ca.pem"))
 	if err != nil {
 		return err
 	}
 
-	logger.Debugf("Connected over TLS.\n")
+	log.Debug("Connected via TLS")
 	return nil
 }
 
@@ -348,6 +367,7 @@ func setIPFSHostViaDockerHost(dockerHost string) {
 
 	}
 	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
-	logger.Debugf("Set ERIS_IPFS_HOST to =>\t%s\n", dockerIP)
+
+	log.WithField("url", dockerIP).Debug("Setting ERIS_IPFS_HOST")
 	os.Setenv("ERIS_IPFS_HOST", dockerIP)
 }

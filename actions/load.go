@@ -7,13 +7,14 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
 func LoadActionDefinition(actionName string) (*def.Action, []string, error) {
-	logger.Infof("Reading action def file =>\t%v\n", actionName)
+	log.WithField("=>", actionName).Info("Reading action definition file")
 	act := strings.Split(actionName, "_")
 	action := def.BlankAction()
 
@@ -37,7 +38,7 @@ func LoadActionDefinition(actionName string) (*def.Action, []string, error) {
 
 func MockAction(act string) (*def.Action, []string) {
 	action := def.BlankAction()
-	logger.Debugf("Mocking action =>\t\t%v\n", act)
+	log.WithField("=>", act).Debug("Mocking action")
 	return action, []string{}
 }
 
@@ -45,31 +46,37 @@ func cullCLIVariables(act []string) ([]string, []string) {
 	var actionVars []string
 	var action []string
 
-	logger.Debugln("Pulling out the named variables passed to the command line.")
+	log.Debug("Pulling out named variables")
 	for _, a := range act {
 		if strings.Contains(a, ":") {
 			r := strings.Replace(a, ":", "=", 1)
 			actionVars = append(actionVars, r)
-			logger.Debugln("Culling from variable list =>\t%s\n", r)
+			log.WithField("=>", r).Debug("Culling from variable list")
 		} else {
 			action = append(action, a)
 		}
 	}
 
-	logger.Debugf("Args culled =>\t\t\t%s\n", actionVars)
-	logger.Debugf("Args not culled =>\t\t%s\n", action)
-	logger.Infof("Successfully parsed the named variables passed to the command line.\n")
+	log.Info("Successfully parsed named variables")
+	log.WithFields(log.Fields{
+		"culled":     actionVars,
+		"not culled": action,
+	}).Debug()
 	return action, actionVars
 }
 
 func readActionDefinition(actionName []string, dropped map[string]string, varNum int) (*viper.Viper, map[string]string, error) {
 	if len(actionName) == 0 {
-		logger.Debugf("Fail. actionName, drop, varN =>\t%v:%v:%v\n", actionName, dropped, varNum)
+		log.WithFields(log.Fields{
+			"action": actionName,
+			"drop":   dropped,
+			"var#":   varNum,
+		}).Debug("Failed to load action definition file")
 		return nil, dropped, fmt.Errorf("The marmots could not find the action definition file.\nPlease check your actions with [eris actions ls]")
 	}
 
-	logger.Debugf("Read action definition file =>\t%s\n", strings.Join(actionName, "_"))
-	logger.Debugf("Args to add to the steps =>\t%s\n", dropped)
+	log.WithField("file", strings.Join(actionName, "_")).Debug("Preparing to read action definition file")
+	log.WithField("drop", dropped).Debug()
 
 	var actionConf = viper.New()
 
@@ -78,13 +85,13 @@ func readActionDefinition(actionName []string, dropped map[string]string, varNum
 	err := actionConf.ReadInConfig()
 
 	if err != nil {
-		logger.Debugf("Dropping and retrying =>\t%s\n", actionName[len(actionName)-1])
+		log.WithField("action", actionName[len(actionName)-1]).Debug("Dropping and retrying")
 		dropped[fmt.Sprintf("$%d", varNum)] = actionName[len(actionName)-1]
 		actionName = actionName[:len(actionName)-1]
 		varNum++
 		return readActionDefinition(actionName, dropped, varNum)
 	} else {
-		logger.Debugln("Action definition file successfully read.")
+		log.Debug("Successfully read action definition file")
 	}
 
 	return actionConf, dropped, nil
@@ -100,12 +107,12 @@ func marshalActionDefinition(actionConf *viper.Viper, action *def.Action) error 
 }
 
 func fixSteps(action *def.Action, dropReversed map[string]string) {
-	logger.Debugln("Replacing $1, $2, $3 in steps with args from command line.")
+	log.Debug("Replacing $1, $2, $3 in steps with args from command line")
 
 	if len(dropReversed) == 0 {
 		return
 	} else {
-		logger.Debugf("Variables to replace =>\t\t%s\n", dropReversed)
+		log.WithField("replace", dropReversed).Debug()
 	}
 
 	// Because we pop from the end of the args list, the variables
@@ -114,7 +121,7 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	dropped := make(map[string]string)
 	j := 1
 	for i := len(dropReversed); i > 0; i-- {
-		logger.Debugf("Reversing =>\t\t\t$%d:$%d\n", i, j)
+		log.WithField("=>", fmt.Sprintf("$%d:$%d", i, j)).Debug("Reversing")
 		dropped[fmt.Sprintf("$%d", j)] = dropReversed[fmt.Sprintf("$%d", i)]
 		j++
 	}
@@ -122,17 +129,17 @@ func fixSteps(action *def.Action, dropReversed map[string]string) {
 	reg := regexp.MustCompile(`\$\d`)
 	for n, step := range action.Steps {
 		if reg.MatchString(step) {
-			logger.Debugf("Match(es) Found In Step =>\t%s\n", step)
+			log.WithField("matched", step).Debug()
 			for _, m := range reg.FindAllString(step, -1) {
 				action.Steps[n] = strings.Replace(step, m, dropped[m], -1)
 			}
-			logger.Debugf("After replacing the step is =>\t%s\n", step)
+			log.WithField("replaced", step).Debug()
 		}
 	}
 
-	logger.Debugf("After Fixing Steps, we have ...\n")
+	log.Debug("Checking fixed steps")
 	for _, step := range action.Steps {
-		logger.Debugf("\t%s\n", step)
+		log.WithField("step", step).Debug()
 	}
 }
 
@@ -146,16 +153,16 @@ func fixChain(action *def.Action, chainName string) {
 	reg := regexp.MustCompile(`\$chain`)
 	for n, step := range action.Steps {
 		if reg.MatchString(step) {
-			logger.Debugf("Match(es) Found In Step =>\t%s\n", step)
+			log.WithField("matched", step).Debug()
 			for _, m := range reg.FindAllString(step, -1) {
 				action.Steps[n] = strings.Replace(step, m, chainName, -1)
 			}
-			logger.Debugf("After replacing the step is =>\t%s\n", step)
+			log.WithField("replaced", step).Debug()
 		}
 	}
 
-	logger.Debugf("After Adding Chains to the Steps, we have ...\n")
+	log.Debug("Checking fixed chain")
 	for _, step := range action.Steps {
-		logger.Debugf("\t%s\n", step)
+		log.WithField("step", step).Debug()
 	}
 }

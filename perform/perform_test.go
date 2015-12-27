@@ -9,20 +9,19 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/logger"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	// log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("perform"))
 

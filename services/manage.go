@@ -16,6 +16,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
@@ -27,15 +29,14 @@ func ImportService(do *definitions.Do) error {
 	}
 
 	var err error
-	if logger.Level > 0 {
-		err = ipfs.GetFromIPFS(do.Hash, fileName, "", logger.Writer)
+	if log.GetLevel() > 0 {
+		err = ipfs.GetFromIPFS(do.Hash, fileName, "", os.Stdout)
 	} else {
 		err = ipfs.GetFromIPFS(do.Hash, fileName, "", bytes.NewBuffer([]byte{}))
 	}
 
 	if err != nil {
 		return err
-		//return fmt.Errorf("I do not know how to get that file. Sorry. %v\n", err)
 	}
 
 	_, err = loaders.LoadServiceDefinition(do.Name, false, 0)
@@ -59,10 +60,13 @@ func NewService(do *definitions.Do) error {
 	//get maintainer info
 	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
-		logger.Debugf(err.Error())
+		log.Debug(err.Error())
 	}
 
-	logger.Debugf("Creating a new srv def file =>\t%s:%s\n", srv.Service.Name, srv.Service.Image)
+	log.WithFields(log.Fields{
+		"service": srv.Service.Name,
+		"image":   srv.Service.Image,
+	}).Debug("Creating a new service definition file")
 	err = WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
 	if err != nil {
 		return err
@@ -73,13 +77,16 @@ func NewService(do *definitions.Do) error {
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
-	logger.Infof("Editing Service =>\t\t%s\n", servDefFile)
+	log.WithField("=>", servDefFile).Info("Editing service")
 	do.Result = "success"
 	return Editor(servDefFile)
 }
 
 func RenameService(do *definitions.Do) error {
-	logger.Infof("Renaming Service =>\t\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
+	log.WithFields(log.Fields{
+		"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
+		"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+	}).Info("Renaming service")
 
 	if do.Name == do.NewName {
 		return fmt.Errorf("Cannot rename to same name")
@@ -97,19 +104,22 @@ func RenameService(do *definitions.Do) error {
 		do.Operations.ContainerNumber = serviceDef.Operations.ContainerNumber
 
 		if !transformOnly {
-			logger.Debugf("Asking Docker to Service =>\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
+			log.WithFields(log.Fields{
+				"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
+				"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+			}).Debug("Performing container rename")
 			err = perform.DockerRename(serviceDef.Operations, do.NewName)
 			if err != nil {
 				return err
 			}
 		} else {
-			logger.Infoln("Changing the service definition file type only. Not renaming container(s).")
+			log.Info("Changing service definition file only. Not renaming container")
 		}
 
 		oldFile := FindServiceDefinitionFile(do.Name)
 
 		if filepath.Base(oldFile) == do.NewName {
-			logger.Infoln("Those are the same file. Not renaming")
+			log.Info("Those are the same file. Not renaming")
 			return nil
 		}
 
@@ -128,7 +138,10 @@ func RenameService(do *definitions.Do) error {
 		}
 
 		if !transformOnly {
-			logger.Debugf("Calling Data Rename =>\t\t%s:%s:%d\n", do.Name, do.NewName, do.Operations.ContainerNumber)
+			log.WithFields(log.Fields{
+				"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
+				"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+			}).Debug("Performing data container rename")
 			err = data.RenameData(do)
 			if err != nil {
 				return err
@@ -162,7 +175,7 @@ func PortsService(do *definitions.Do) error {
 	}
 
 	if IsServiceExisting(service.Service, service.Operations) {
-		logger.Debugf("Service exists, getting port mapping.\n")
+		log.Debug("Service exists, getting port mapping")
 		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Operations.Args)
 	}
 
@@ -188,7 +201,7 @@ func ExportService(do *definitions.Do) error {
 
 		hash, err := exportFile(do.Name)
 		do.Result = hash
-		logger.Println(hash)
+		log.WithField("hash", hash).Warn()
 
 	} else {
 		return fmt.Errorf(`I don't know that service. Please retry with a known service.
@@ -231,7 +244,7 @@ func RmService(do *definitions.Do) error {
 				return err
 			}
 			oldFile = path.Join(ServicesPath, oldFile) + ".toml"
-			logger.Printf("Removing file =>\t\t%s\n", oldFile)
+			log.WithField("file", oldFile).Warn("Removing file")
 			if err := os.Remove(oldFile); err != nil {
 				return err
 			}
@@ -251,7 +264,7 @@ func CatService(do *definitions.Do) error {
 				return err
 			}
 			do.Result = string(cat)
-			logger.Println(string(cat))
+			log.Warn(string(cat))
 			return nil
 		}
 	}
@@ -275,8 +288,8 @@ func exportFile(servName string) (string, error) {
 	var hash string
 	var err error
 
-	if logger.Level > 0 {
-		hash, err = ipfs.SendToIPFS(fn, "", logger.Writer)
+	if log.GetLevel() > 0 {
+		hash, err = ipfs.SendToIPFS(fn, "", os.Stdout)
 	} else {
 		hash, err = ipfs.SendToIPFS(fn, "", bytes.NewBuffer([]byte{}))
 	}

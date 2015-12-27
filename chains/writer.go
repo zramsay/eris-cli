@@ -9,6 +9,8 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
@@ -72,7 +74,7 @@ func MakeGenesisFile(do *def.Do) error {
 	doThr.Operations.ContainerNumber = 1
 	doThr.Operations.PublishAllPorts = true
 
-	logger.Infof("Starting chain from MakeGenesisFile =>\t%s\n", doThr.Name)
+	log.WithField("=>", doThr.Name).Info("Making genesis.json file. Starting chain")
 	if er := StartChain(doThr); er != nil {
 		return fmt.Errorf("error starting chain %v\n", er)
 	}
@@ -83,7 +85,8 @@ func MakeGenesisFile(do *def.Do) error {
 	// pipe this output to /chains/chainName/genesis.json
 	err := ExecChain(doThr)
 	if err != nil {
-		logger.Printf("exec chain err: %v\nCleaning up...\n", err)
+		log.Warnf("Executing chain error: %v", err)
+		log.Warn("Cleaning up")
 		doThr.Rm = true
 		doThr.RmD = true
 		if err := CleanUp(doThr); err != nil {

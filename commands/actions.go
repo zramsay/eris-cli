@@ -7,6 +7,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -178,7 +180,7 @@ func ListActions(cmd *cobra.Command, args []string) {
 		return
 	}
 	for _, s := range strings.Split(do.Result, "\n") {
-		logger.Println(strings.Replace(s, "_", " ", -1))
+		log.Println(strings.Replace(s, "_", " ", -1))
 	}
 }
 
