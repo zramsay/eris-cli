@@ -1,7 +1,7 @@
 package commands
 
 import (
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"fmt"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -24,8 +24,8 @@ func addVerSionFlags() {
 
 func DisplayVersion(cmd *cobra.Command, args []string) {
 	if !quiet {
-		log.Warn("Eris CLI Version: " + VERSION)
+		fmt.Println("Eris CLI Version: " + VERSION)
 	} else {
-		log.Warn(VERSION)
+		fmt.Println(VERSION)
 	}
 }
