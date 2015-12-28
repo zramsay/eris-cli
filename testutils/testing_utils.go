@@ -185,7 +185,7 @@ func RemoveImage(name string) error {
 	return util.DockerClient.RemoveImage(name)
 }
 
-// FileContents returns the contents of the file a string
+// FileContents returns the contents of a file as a string
 // or panics on error.
 func FileContents(filename string) string {
 	f, err := os.Open(filename)

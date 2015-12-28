@@ -69,7 +69,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //      },
 //   })
 //
-func NewServer(params ...interface{}) *Server {
+func NewServer(addr ...interface{}) *Server {
 	s := &Server{
 		mu: &sync.RWMutex{},
 		response: ServerResponse{
@@ -79,7 +79,7 @@ func NewServer(params ...interface{}) *Server {
 	}
 
 	// NewServer().
-	if len(params) == 0 {
+	if len(addr) == 0 {
 		s.server = httptest.NewServer(s)
 		return s
 	}
@@ -87,11 +87,11 @@ func NewServer(params ...interface{}) *Server {
 	// NewServer(addr).
 	s.server = httptest.NewUnstartedServer(s)
 
-	if _, ok := params[0].(string); !ok {
-                panic("can accept only strings as addr")
+	if _, ok := addr[0].(string); !ok {
+		panic("can accept only strings as addr")
 	}
 
-	listener, err := net.Listen("tcp", params[0].(string))
+	listener, err := net.Listen("tcp", addr[0].(string))
 	if err != nil {
 		panic(err)
 	}
@@ -163,4 +163,3 @@ func (s *Server) setBody(body string) {
 
 	s.body = body
 }
-
