@@ -69,7 +69,7 @@ func StartServicesAndChains(do *definitions.Do) error {
 }
 
 func PerformCommand(action *definitions.Action, actionVars []string, quiet bool) error {
-	log.WithField("=>", action.Name).Info("Performing action")
+	log.WithField("action", action.Name).Info("Performing action")
 
 	dir, err := os.Getwd()
 	if err != nil {
