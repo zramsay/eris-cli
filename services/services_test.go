@@ -31,8 +31,8 @@ func TestMain(m *testing.M) {
 
 	tests.IfExit(testsInit())
 
-        // Prevent CLI from starting IPFS.
-        os.Setenv("ERIS_SKIP_ENSURE", "true")
+	// Prevent CLI from starting IPFS.
+	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 
@@ -268,8 +268,6 @@ func TestExportService(t *testing.T) {
 	if hash != do.Result {
 		tests.IfExit(fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
 	}
-
-	testExistAndRun(t, "ipfs", 1, true, true)
 }
 
 func TestImportService(t *testing.T) {
@@ -321,9 +319,6 @@ image = "quay.io/eris/ipfs"`
 	if content != string(contentExported) {
 		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentExported)))
 	}
-
-	testKillService(t, "ipfs", true)
-	testExistAndRun(t, "ipfs", 1, false, false)
 }
 
 func TestNewService(t *testing.T) {
