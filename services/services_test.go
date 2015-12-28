@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -306,18 +305,8 @@ image = "quay.io/eris/ipfs"`
 		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
-	f, err := os.Open(FindServiceDefinitionFile(do.Name))
-	if err != nil {
-		tests.IfExit(err)
-	}
-
-	contentExported, err := ioutil.ReadAll(f)
-	if err != nil {
-		tests.IfExit(err)
-	}
-
-	if content != string(contentExported) {
-		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentExported)))
+	if imported := tests.FileContents(FindServiceDefinitionFile(do.Name)); imported != content {
+		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, imported))
 	}
 }
 
