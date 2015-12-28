@@ -24,9 +24,8 @@ type Server struct {
 	body   string
 }
 
-// ServerResponse holds predefined server response for any API call.
-// SetResponse() method can change that after the fake server
-// has been created.
+// ServerResponse holds a prerecorded server response for any API call.
+// The response can be set with the SetResponse() method.
 type ServerResponse struct {
 	Code   int
 	Body   string
@@ -50,6 +49,56 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(s.response.Code)
 	fmt.Fprintf(w, s.response.Body)
+}
+
+// NewServer creates a new fake server that serves requests at addr base URL.
+// addr parameter is optional; if it is omitted, random port is used to serve
+// on localhost. That random port can be retrieved with server.URL() call.
+// NewServer panics on error.
+//
+// Usage:
+//
+//   server := testutils.NewServer()
+//
+//   server := testutils.NewServer("localhost:8080")
+//   server.SetResponse(testutils.ServerResponse{
+//	Code: http.StatusNotFound,
+//      Body: "{}",
+//      Header: map[string][]string{
+//     	   "Content-Type": []string{"application/json"},
+//      },
+//   })
+//
+func NewServer(params ...interface{}) *Server {
+	s := &Server{
+		mu: &sync.RWMutex{},
+		response: ServerResponse{
+			Code:   http.StatusOK,
+			Header: make(map[string][]string),
+		},
+	}
+
+	// NewServer().
+	if len(params) == 0 {
+		s.server = httptest.NewServer(s)
+		return s
+	}
+
+	// NewServer(addr).
+	s.server = httptest.NewUnstartedServer(s)
+
+	if _, ok := params[0].(string); !ok {
+                panic("can accept only strings as addr")
+	}
+
+	listener, err := net.Listen("tcp", params[0].(string))
+	if err != nil {
+		panic(err)
+	}
+	s.server.Listener = listener
+	s.server.Start()
+
+	return s
 }
 
 // Method returns the last HTTP method used to call the server.
@@ -115,52 +164,3 @@ func (s *Server) setBody(body string) {
 	s.body = body
 }
 
-// NewServer creates a new fake server that serves requests at addr base URL.
-// addr parameter is optional; if it is omitted, random port is used to serve
-// on localhost. That random port can be retrieved with server.URL() call.
-// NewServer returns nil on error.
-//
-// Usage:
-//
-//   server := testutils.NewServer()
-//
-//   server := testutils.NewServer("localhost:8080")
-//   server.SetResponse(testutils.ServerResponse{
-//	Code: http.StatusNotFound,
-//      Body: "{}",
-//      Header: map[string][]string{
-//     	   "Content-Type": []string{"application/json"},
-//      },
-//   })
-//
-func NewServer(params ...interface{}) *Server {
-	s := &Server{
-		mu: &sync.RWMutex{},
-		response: ServerResponse{
-			Code:   http.StatusOK,
-			Header: make(map[string][]string),
-		},
-	}
-
-	// NewServer().
-	if len(params) == 0 {
-		s.server = httptest.NewServer(s)
-		return s
-	}
-
-	// NewServer(addr).
-	s.server = httptest.NewUnstartedServer(s)
-
-	if _, ok := params[0].(string); !ok {
-                panic("can accept only strings as addr")
-	}
-
-	listener, err := net.Listen("tcp", params[0].(string))
-	if err != nil {
-		panic(err)
-	}
-	s.server.Listener = listener
-	s.server.Start()
-
-	return s
-}
