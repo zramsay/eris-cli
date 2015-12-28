@@ -261,17 +261,8 @@ func TestExportService(t *testing.T) {
 		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
-	// Comparing IPFS service file with what ExportService actually sent.
-	filename := FindServiceDefinitionFile(do.Name)
-	in, err := os.Open(filename)
-	if err != nil {
-		tests.IfExit(fmt.Errorf("Cannot read the ipfs service definition file\n"))
-	}
-	defer in.Close()
-	fileCheck, _ := ioutil.ReadAll(in)
-
-	if ipfs.Body() != string(fileCheck) {
-		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", fileCheck, ipfs.Body()))
+	if content := tests.FileContents(FindServiceDefinitionFile(do.Name)); content != ipfs.Body() {
+		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", content, ipfs.Body()))
 	}
 
 	if hash != do.Result {

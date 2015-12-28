@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -182,6 +183,23 @@ func FakeServiceDefinition(tmpDir, name, definition string) error {
 // Remove the Docker image. A wrapper over Docker client's library.
 func RemoveImage(name string) error {
 	return util.DockerClient.RemoveImage(name)
+}
+
+// FileContents returns the contents of the file a string
+// or panics on error.
+func FileContents(filename string) string {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(content)
 }
 
 // each pacakge will need its own custom stuff if need be
