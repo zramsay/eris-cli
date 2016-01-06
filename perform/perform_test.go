@@ -326,7 +326,7 @@ func TestExecServiceSimple(t *testing.T) {
 
 func TestExecServiceLogOutput(t *testing.T) {
 	const (
-		name   = "keys"
+		name   = "ipfs"
 		number = 99
 	)
 
@@ -386,7 +386,7 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 
 func TestExecServiceLogOutputInteractive(t *testing.T) {
 	const (
-		name   = "keys"
+		name   = "ipfs"
 		number = 99
 	)
 
