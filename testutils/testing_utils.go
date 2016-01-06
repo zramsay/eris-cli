@@ -39,10 +39,10 @@ func TestsInit(testType string) (err error) {
 	// this dumps the ipfs and keys services defs into the temp dir which
 	// has been set as the erisRoot.
 	do := def.NowDo()
-	do.Pull = false
-	do.Yes = true
+	do.Pull = false //don't pull imgs
+	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	do.Source = "toadserver"
+	do.Source = "toadserver" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
 	}

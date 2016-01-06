@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
 )
 
-//these were in writers.go but that got moved to /ipfs
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {
 	return archive.Tar(path, compression)
 }
@@ -20,7 +18,6 @@ func Untar(reader io.Reader, name, dest string) error {
 
 func GetFromGithub(org, repo, branch, path, directory, fileName string, w io.Writer) error {
 	url := "https://raw.githubusercontent.com/" + strings.Join([]string{org, repo, branch, path}, "/")
-	//w.Write([]byte("Will download from url -> " + url))
-	fmt.Printf("Will download from url -> %s\nTo -> %s\n", url, directory)
+	w.Write([]byte("Will download from url -> " + url))
 	return ipfs.DownloadFromUrlToFile(url, fileName, directory, w)
 }

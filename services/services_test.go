@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
-	//ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/logger"
 	tests "github.com/eris-ltd/eris-cli/testutils"
@@ -27,7 +26,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -44,7 +43,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-/*func TestKnownService(t *testing.T) {
+func TestKnownServices(t *testing.T) {
 	do := def.NowDo()
 	do.Known = true
 	do.Existing = false
@@ -53,14 +52,36 @@ func TestMain(m *testing.M) {
 	tests.IfExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 3 {
-		tests.IfExit(fmt.Errorf("Did not find exactly 3 service definitions files. Something is wrong.\n"))
+	if len(k) != 9 {
+		tests.IfExit(fmt.Errorf("Did not find exactly 9 service definitions files. Something is wrong.\n"))
 	}
-
-	if k[1] != "ipfs" {
-		tests.IfExit(fmt.Errorf("Could not find ipfs service definition. Services found =>\t%v\n", k))
+	i := 0
+	for _, actFile := range k {
+		switch actFile {
+		case "btcd":
+			i++
+		case "eth":
+			i++
+		case "ipfs":
+			i++
+		case "keys":
+			i++
+		case "mindy":
+			i++
+		case "mint":
+			i++
+		case "openbazaar":
+			i++
+		case "tinydns":
+			i++
+		case "do_not_use":
+			i++
+		}
 	}
-}*/
+	if i != 9 {
+		tests.IfExit(fmt.Errorf("Could not find all the expected service definition files.\n"))
+	}
+}
 
 func TestLoadServiceDefinition(t *testing.T) {
 	var e error

@@ -100,9 +100,11 @@ connect() {
 }
 
 setup_machine() {
+  export ERIS_PULL_APPROVE="true" #because init now pulls images
+  
   if [[ $machine != "eris-test-local" ]]
   then
-    eris init --yes --pull-images=true
+    eris init --yes --pull-images=true --testing=true
     echo
     eris_version=$(eris version --quiet)
     #pull_images
@@ -156,7 +158,6 @@ packagesToTest() {
 
   # For testing we want to override the Greg Slepak required ask before pull ;)
   export ERIS_PULL_APPROVE="true"
-  export ERIS_MIGRATE_APPROVE="true"
 
   # The first run of tests expect ipfs to be running
   eris services start ipfs
@@ -200,7 +201,7 @@ packagesToTest() {
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
   go test ./chains/... # switch FROM me if needing to debug
-  # cd chains && go test && cd .. # switch TO me if needing to debug
+# cd chains && go test && cd .. # switch TO me if needing to debug
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
   go test ./actions/...

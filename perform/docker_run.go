@@ -421,13 +421,13 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 				return err
 			}
 		}
-		if err := removeContainer(service.ID, false); err != nil {
+		if err := removeContainer(ops.SrvContainerName, false); err != nil {
 			return err
 		}
 	}
 
 	if log.GetLevel() > 0 {
-		if err := pullImage(srv.Image, logger.Writer); err != nil {
+		if err := pullImage(srv.Image, os.Stdout); err != nil {
 			return err
 		}
 	} else {

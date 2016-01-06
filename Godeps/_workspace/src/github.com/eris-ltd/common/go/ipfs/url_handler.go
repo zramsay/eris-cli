@@ -23,6 +23,7 @@ func IPFSBaseAPIUrl() string {
 
 func SexyUrl() string {
 	//TODO load balancer (when one isn't enough)
+	// also hosts toadserver (for init) at port 11113
 	return "http://ipfs.erisbootstrap.sexy"
 }
 

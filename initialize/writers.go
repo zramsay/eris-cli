@@ -18,9 +18,6 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-//TODO hard code in /common
-var defChainDir = path.Join(common.ChainsPath, "default")
-
 func dropServiceDefaults(dir, from string) error {
 	servDefs := []string{
 		"btcd.toml",
@@ -49,14 +46,13 @@ func dropActionDefaults(dir, from string) error {
 	if err := drops(actDefs, "actions", dir, from); err != nil {
 		return err
 	}
+	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
+		return fmt.Errorf("Cannot add default do_not_use: %s.\n", err)
+	}
 	return nil
 }
 
 func dropChainDefaults(dir, from string) error {
-	if err := os.MkdirAll(defChainDir, 0777); err != nil {
-		return err
-	}
-
 	chnDefs := []string{
 		"default.toml",
 		"config.toml",
@@ -65,39 +61,41 @@ func dropChainDefaults(dir, from string) error {
 	if err := drops(chnDefs, "chains", dir, from); err != nil {
 		return err
 	}
-	if err := writeDefaultFile(defChainDir, "genesis.json", DefChainGen); err != nil {
+
+	// common.DefaultChainDir goes to /home/zach/.eris
+	// rather than /tmp/eris/.eris
+	// XXX something wonky with ResolveErisRoot()?
+	chnDir := path.Join(dir, "default")
+	if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "priv_validator.json", DefChainKeys); err != nil {
+	if err := writeDefaultFile(chnDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "genesis.csv", DefChainCSV); err != nil {
+	if err := writeDefaultFile(chnDir, "genesis.csv", DefChainCSV); err != nil {
 		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
 	}
 
+	//insert version into default chain service definition
 	versionDefault := path.Join(dir, "default.toml")
-
 	read, err := ioutil.ReadFile(versionDefault)
 	if err != nil {
 		return err
 	}
-
-	//TODO update eris-chains/default.toml for only one "version" in the file
 	withVersion := strings.Replace(string(read), "version", version.VERSION, 2)
-
 	if err := ioutil.WriteFile(versionDefault, []byte(withVersion), 0); err != nil {
 		return err
 	}
 
 	//move things to where they ought to be
 	config := path.Join(dir, "config.toml")
-	configDef := path.Join(defChainDir, "config.toml")
+	configDef := path.Join(chnDir, "config.toml")
 	if err := os.Rename(config, configDef); err != nil {
 		return err
 	}
 
 	server := path.Join(dir, "server_conf.toml")
-	serverDef := path.Join(defChainDir, "server_conf.toml")
+	serverDef := path.Join(chnDir, "server_conf.toml")
 	if err := os.Rename(server, serverDef); err != nil {
 		return err
 	}
@@ -114,7 +112,7 @@ func pullDefaultImages() error {
 		"quay.io/eris/epm",
 	}
 
-	logger.Println("Pulling default docker images from quay.io")
+	log.Warn("Pulling default docker images from quay.io")
 	for _, image := range images {
 		var tag string
 		if image == "eris/erisdb" || image == "eris/epm" {
@@ -128,6 +126,10 @@ func pullDefaultImages() error {
 			Tag:          tag,
 			OutputStream: os.Stdout,
 		}
+		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+			opts.OutputStream = nil
+		}
+
 		auth := docker.AuthConfiguration{}
 
 		if err := util.DockerClient.PullImage(opts, auth); err != nil {
@@ -138,6 +140,7 @@ func pullDefaultImages() error {
 }
 
 func drops(files []string, typ, dir, from string) error {
+	//to get from rawgit
 	var repo string
 	if typ == "services" {
 		repo = "eris-services"
@@ -157,15 +160,15 @@ func drops(files []string, typ, dir, from string) error {
 	if from == "toadserver" {
 		for _, file := range files {
 			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
-			logger.Debugf("Getting %s from:\t%s\n", file, url)
+			log.WithField(file, url).Debug("Getting file from url")
+			log.WithField(file, dir).Debug("Dropping file to")
 			if err := ipfs.DownloadFromUrlToFile(url, file, dir, buf); err != nil {
 				return err
 			}
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
-			logger.Debugf("Getting %s from: GitHub\n", file)
-			//TODO deduplicate that dum file
+			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
 			if err := util.GetFromGithub("eris-ltd", repo, "master", file, dir, file, buf); err != nil {
 				return err
 			}
@@ -174,17 +177,13 @@ func drops(files []string, typ, dir, from string) error {
 	return nil
 }
 
-//XXX legacy - keep around for good measure :~)
-//func dropChainDefaults(dir, from string) error {
-//	defChainDir := filepath.Join(common.ChainsPath, "default")
-//	return nil
-//}
-
+//TODO eventually eliminate this
 func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err := os.MkdirAll(savePath, 0777); err != nil {
 		return err
 	}
-	writer, err := os.Create(filepath.Join(savePath, fileName))
+	pth := filepath.Join(savePath, fileName)
+	writer, err := os.Create(pth)
 	defer writer.Close()
 	if err != nil {
 		return err

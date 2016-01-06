@@ -26,8 +26,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(testsInit())
-
+	tests.IfExit(tests.TestsInit("actions"))
 	exitCode := m.Run()
 
 	log.Info("Tearing tests down")
@@ -38,7 +37,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestListActions(t *testing.T) {
+func TestListKnownActions(t *testing.T) {
 	do := definitions.NowDo()
 	do.Known = true
 	do.Running = false
@@ -47,12 +46,25 @@ func TestListActions(t *testing.T) {
 	tests.IfExit(util.ListAll(do, "actions"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 1 {
-		tests.IfExit(fmt.Errorf("The wrong number of action definitions have been found. Something is wrong.\n"))
+	if len(k) != 4 {
+		tests.IfExit(fmt.Errorf("Found %v action definition files, Expected 4. Something is wrong.\n", len(k)))
 	}
 
-	if k[0] != "do_not_use" {
-		tests.IfExit(fmt.Errorf("Could not find \"do not use\" action definition.\n"))
+	i := 0
+	for _, actFile := range k {
+		switch actFile {
+		case "do_not_use":
+			i++
+		case "chain_info":
+			i++
+		case "dns_register":
+			i++
+		case "keys_list":
+			i++
+		}
+	}
+	if i != 4 {
+		tests.IfExit(fmt.Errorf("Could not find all the expected action definition files.\n"))
 	}
 }
 
@@ -136,13 +148,6 @@ func TestRemoveAction(t *testing.T) {
 		t.Fail()
 	}
 	testExist(t, oldName, false)
-}
-
-func testsInit() error {
-	if err := tests.TestsInit("actions"); err != nil {
-		return err
-	}
-	return nil
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
