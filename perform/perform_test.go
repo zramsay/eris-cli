@@ -9,20 +9,19 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/logger"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("perform"))
 
@@ -357,7 +356,7 @@ func TestExecServiceLogOutput(t *testing.T) {
 
 func TestExecServiceLogOutputLongRunning(t *testing.T) {
 	const (
-		name   = "ipfs"
+		name   = "keys"
 		number = 99
 	)
 
@@ -1475,7 +1474,7 @@ func TestLogsSimple(t *testing.T) {
 	const (
 		name   = "ipfs"
 		number = 99
-		tail   = "10"
+		tail   = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1504,7 +1503,7 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Initializing daemon") {
+	if !strings.Contains(buf.String(), "Starting IPFS") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }
@@ -1547,7 +1546,7 @@ func TestLogsTail(t *testing.T) {
 	const (
 		name   = "ipfs"
 		number = 99
-		tail   = "2"
+		tail   = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1576,7 +1575,7 @@ func TestLogsTail(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Gateway") {
+	if !strings.Contains(buf.String(), "Starting IPFS") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }

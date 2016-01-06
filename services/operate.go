@@ -8,13 +8,15 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func StartService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
 	do.Operations.Args = append(do.Operations.Args, do.ServicesSlice...)
-	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Info("Building services group")
 	for _, srv := range do.Operations.Args {
 		s, e := BuildServicesGroup(srv, do.Operations.ContainerNumber)
 		if e != nil {
@@ -28,17 +30,33 @@ func StartService(do *definitions.Do) (err error) {
 		util.Merge(s.Operations, do.Operations)
 	}
 
-	logger.Debugln("Services before build chain =>")
+	log.Debug("Preparing to build chain")
 	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
+		log.WithFields(log.Fields{
+			"name":         s.Name,
+			"dependencies": s.Dependencies,
+			"links":        s.Service.Links,
+			"volumes from": s.Service.VolumesFrom,
+		}).Debug()
+
+		// Spacer.
+		log.Debug()
 	}
 	services, err = BuildChainGroup(do.ChainName, services)
 	if err != nil {
 		return err
 	}
-	logger.Debugln("Services after build chain =>")
+	log.Debug("Checking services after build chain")
 	for _, s := range services {
-		logger.Debugln("\t", s.Name, s.Dependencies, s.Service.Links, s.Service.VolumesFrom)
+		log.WithFields(log.Fields{
+			"name":         s.Name,
+			"dependencies": s.Dependencies,
+			"links":        s.Service.Links,
+			"volumes from": s.Service.VolumesFrom,
+		}).Debug()
+
+		// Spacer.
+		log.Debug()
 	}
 
 	// NOTE: the top level service should be at the end of the list
@@ -47,14 +65,13 @@ func StartService(do *definitions.Do) (err error) {
 	topService.Service.Links = append(topService.Service.Links, do.Links...)
 	services[len(services)-1] = topService
 
-	logger.Infof("Starting Services Group.\n")
 	return StartGroup(services)
 }
 
 func KillService(do *definitions.Do) (err error) {
 	var services []*definitions.ServiceDefinition
 
-	logger.Infof("Building the Services Group =>\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Info("Building services group")
 	for _, servName := range do.Operations.Args {
 		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
 		if e != nil {
@@ -70,13 +87,13 @@ func KillService(do *definitions.Do) (err error) {
 
 	for _, service := range services {
 		if IsServiceRunning(service.Service, service.Operations) {
-			logger.Debugf("Stopping Service =>\t\t%s:%d\n", service.Service.Name, service.Operations.ContainerNumber)
+			log.WithField("=>", fmt.Sprintf("%s:%d", service.Service.Name, service.Operations.ContainerNumber)).Debug("Stopping service")
 			if err := perform.DockerStop(service.Service, service.Operations, do.Timeout); err != nil {
 				return err
 			}
 
 		} else {
-			logger.Infof("Service (%s) not currently running. Skipping.\n", service.Service.Name)
+			log.WithField("=>", service.Service.Name).Info("Service not currently running. Skipping")
 		}
 
 		if do.Rm {
@@ -101,7 +118,8 @@ func ExecService(do *definitions.Do) error {
 	main := util.FindServiceContainer(do.Name, do.Operations.ContainerNumber, false)
 	if main != nil {
 		if service.Service.ExecHost == "" {
-			logger.Infof("Warning: exec_host not found in service definition file. May not be able to communicate with %q service\n", do.Name)
+			log.Info("exec_host not found in service definition file")
+			log.WithField("service", do.Name).Info("May not be able to communicate with the service")
 		} else {
 			service.Service.Environment = append(service.Service.Environment,
 				fmt.Sprintf("%s=%s", service.Service.ExecHost, do.Name))
@@ -121,14 +139,17 @@ func ExecService(do *definitions.Do) error {
 
 // TODO: test this recursion and service deps generally
 func BuildServicesGroup(srvName string, cNum int, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
-	logger.Debugf("BuildServicesGroup for =>\t%s:%d\n", srvName, len(services))
+	log.WithFields(log.Fields{
+		"=>":        srvName,
+		"services#": len(services),
+	}).Debug("Building services group for")
 	srv, err := loaders.LoadServiceDefinition(srvName, false, cNum)
 	if err != nil {
 		return nil, err
 	}
 	if srv.Dependencies != nil {
 		for _, sName := range srv.Dependencies.Services {
-			logger.Debugf("Found service dependency =>\t%s\n", sName)
+			log.WithField("=>", sName).Debug("Found service dependency")
 			s, e := BuildServicesGroup(sName, cNum)
 			if e != nil {
 				return nil, e
@@ -142,9 +163,9 @@ func BuildServicesGroup(srvName string, cNum int, services ...*definitions.Servi
 
 // start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
 func StartGroup(group []*definitions.ServiceDefinition) error {
-	logger.Debugf("Starting services group =>\t%d Services\n", len(group))
+	log.WithField("services#", len(group)).Debug("Starting services group")
 	for _, srv := range group {
-		logger.Debugf("Telling Docker to start srv =>\t%s\n", srv.Name)
+		log.WithField("=>", srv.Name).Debug("Performing container start")
 		if err := perform.DockerRunService(srv.Service, srv.Operations); err != nil {
 			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
 		}

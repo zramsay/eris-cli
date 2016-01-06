@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
@@ -53,12 +54,12 @@ func ContainerDisassemble(containerName string) *ContainerName {
 	pop := strings.Split(containerName, "_")
 
 	if len(pop) < 4 {
-		logger.Debugln("The marmots cannot disassemble container name", containerName)
+		log.WithField("=>", containerName).Debug("The marmots cannot disassemble container name")
 		return &ContainerName{}
 	}
 
 	if !(pop[0] == "eris" || pop[0] == "/eris") {
-		logger.Debugln("The marmots cannot disassemble container name", containerName)
+		log.WithField("=>", containerName).Debug("The marmots cannot disassemble container name")
 		return &ContainerName{}
 	}
 
@@ -66,7 +67,8 @@ func ContainerDisassemble(containerName string) *ContainerName {
 	srt := strings.Join(pop[2:len(pop)-1], "_")
 	num, err := strconv.Atoi(pop[len(pop)-1])
 	if err != nil {
-		logger.Debugln("The marmots cannot disassemble container name", containerName)
+		log.WithField("=>", containerName).Debug("The marmots cannot disassemble container name")
+
 		return &ContainerName{}
 	}
 
@@ -121,9 +123,8 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: running})
 
 	if len(contns) == 0 || err != nil {
-		logger.Infoln("There are no containers.")
 		if err != nil {
-			logger.Debugf("Marmot error duing DockerClient.ListContainers: %v\n", err)
+			log.Debugf("Marmot error during Docker container listing: %v", err)
 		}
 		return containers
 	}
@@ -135,7 +136,6 @@ func ErisContainersByType(typ string, running bool) []*ContainerName {
 			}
 			if r.MatchString(c) {
 				c = strings.Replace(c, "/", "", 1) // Docker's leading slash
-				// logger.Debugf("Found Eris Container =>\t\t%s\n", c)
 				cont := ContainerDisassemble(c)
 				cont.ContainerID = con.ID
 				containers = append(containers, cont)
@@ -174,13 +174,11 @@ func ServiceContainers(running bool) []*ContainerName {
 }
 
 func ServiceContainerNames(running bool) []string {
-	// logger.Debugf("Populating current containrs =>\tall? %t\n", running)
 	a := ServiceContainers(running)
 	b := []string{}
 	for _, c := range a {
 		b = append(b, c.ShortName)
 	}
-	// logger.Debugf("Containers I found =>\t\t%v\n", b)
 	return b
 }
 
@@ -241,12 +239,12 @@ func FindServiceContainer(srvName string, number int, running bool) *ContainerNa
 	for _, srv := range ServiceContainers(running) {
 		if srv.ShortName == srvName {
 			if srv.Number == number {
-				logger.Debugf("Found Service container =>\t%s:%s and %d:%d\n", srv.ShortName, srvName, srv.Number, number)
+				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found service container")
 				return srv
 			}
 		}
 	}
-	logger.Infof("Could not find service cont =>\t%s:%d\n", srvName, number)
+	log.WithField("=>", fmt.Sprintf("%s:%d", srvName, number)).Info("Could not find service container")
 	return nil
 }
 
@@ -262,12 +260,12 @@ func FindChainContainer(name string, number int, running bool) *ContainerName {
 	for _, srv := range ChainContainers(running) {
 		if srv.ShortName == name {
 			if srv.Number == number {
-				logger.Debugf("Found Chain container =>\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
+				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found chain container")
 				return srv
 			}
 		}
 	}
-	logger.Infof("Could not find chain cont =>\t%s:%d\n", name, number)
+	log.WithField("=>", fmt.Sprintf("%s:%d", name, number)).Info("Could not find chain container")
 	return nil
 }
 
@@ -282,12 +280,12 @@ func FindDataContainer(name string, number int) *ContainerName {
 	for _, srv := range DataContainers() {
 		if srv.ShortName == name {
 			if srv.Number == number {
-				logger.Debugf("Found Data container =>\t\t%s:%s and %d:%d\n", srv.ShortName, name, srv.Number, number)
+				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found data container")
 				return srv
 			}
 		}
 	}
-	logger.Infof("Could not find data cont =>\t%s:%d\n", name, number)
+	log.WithField("=>", fmt.Sprintf("%s:%d", name, number)).Info("Could not find data container")
 	return nil
 }
 

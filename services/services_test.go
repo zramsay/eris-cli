@@ -2,39 +2,40 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/logger"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var srv *def.ServiceDefinition
 
 var servName string = "ipfs"
-var hash string
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
+	// Prevent CLI from starting IPFS.
+	os.Setenv("ERIS_SKIP_ENSURE", "true")
+
 	exitCode := m.Run()
 
-	logger.Infoln("Commensing with Tests Tear Down.")
+	log.Info("Tearing tests down")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		tests.IfExit(tests.TestsTearDown())
 	}
@@ -64,26 +65,33 @@ func TestLoadServiceDefinition(t *testing.T) {
 	var e error
 	srv, e = loaders.LoadServiceDefinition(servName, true, 1)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
 	if srv.Name != servName {
-		logger.Errorf("FAILURE: improper name on LOAD. expected: %s\tgot: %s\n", servName, srv.Name)
+		log.WithFields(log.Fields{
+			"expected": servName,
+			"got":      srv.Name,
+		}).Error("Improper name on load")
 	}
 
 	if srv.Service.Name != servName {
-		logger.Errorf("FAILURE: improper service name on LOAD. expected: %s\tgot: %s\n", servName, srv.Service.Name)
+		log.WithFields(log.Fields{
+			"expected": servName,
+			"got":      srv.Service.Name,
+		}).Error("Improper service name on load")
+
 		tests.IfExit(e)
 	}
 
 	if !srv.Service.AutoData {
-		logger.Errorf("FAILURE: data_container not properly read on LOAD.\n")
+		log.Error("data_container not properly read on load")
 		tests.IfExit(e)
 	}
 
 	if srv.Operations.DataContainerName == "" {
-		logger.Errorf("FAILURE: data_container_name not set.\n")
+		log.Error("data_container_name not set")
 		tests.IfExit(e)
 	}
 }
@@ -101,10 +109,14 @@ func TestInspectService(t *testing.T) {
 	do.Name = servName
 	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v:%d\n", servName, do.Operations.Args, do.Operations.ContainerNumber)
+	log.WithFields(log.Fields{
+		"=>":   fmt.Sprintf("%s:%d", servName, do.Operations.ContainerNumber),
+		"args": do.Operations.Args,
+	}).Debug("Inspect service (from tests)")
+
 	e := InspectService(do)
 	if e != nil {
-		logger.Infof("Error inspecting service =>\t%v\n", e)
+		log.Infof("Error inspecting service: %v", e)
 		tests.IfExit(e)
 	}
 
@@ -112,10 +124,13 @@ func TestInspectService(t *testing.T) {
 	do.Name = servName
 	do.Operations.Args = []string{"config.user"}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Inspect service (via tests) =>\t%s:%v\n", servName, do.Operations.Args)
+	log.WithFields(log.Fields{
+		"=>":   servName,
+		"args": do.Operations.Args,
+	}).Debug("Inspect service (from tests)")
 	e = InspectService(do)
 	if e != nil {
-		logger.Infof("Error inspecting service =>\t%v\n", e)
+		log.Infof("Error inspecting service: %v", e)
 		tests.IfExit(e)
 	}
 }
@@ -127,20 +142,18 @@ func TestLogsService(t *testing.T) {
 	do.Name = servName
 	do.Follow = false
 	do.Tail = "5"
-	logger.Debugf("Inspect logs (via tests) =>\t%s:%v\n", servName, do.Tail)
+	log.WithFields(log.Fields{
+		"=>":   servName,
+		"tail": do.Tail,
+	}).Debug("Inspect logs (from tests)")
 	e := LogsService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 }
 
 func TestExecService(t *testing.T) {
-	/*if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have exec privileges (due to their driver). Skipping test.")
-		return
-	}*/
-
 	testStartService(t, servName, true)
 	defer testKillService(t, servName, true)
 
@@ -148,10 +161,13 @@ func TestExecService(t *testing.T) {
 	do.Name = servName
 	do.Operations.Interactive = false
 	do.Operations.Args = strings.Fields("ls -la /root/")
-	logger.Debugf("Exec-ing serv (via tests) =>\t%s:%v\n", servName, strings.Join(do.Operations.Args, " "))
+	log.WithFields(log.Fields{
+		"=>":   servName,
+		"args": do.Operations.Args,
+	}).Debug("Executing service (from tests)")
 	e := ExecService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		t.Fail()
 	}
 }
@@ -160,7 +176,7 @@ func TestUpdateService(t *testing.T) {
 	testStartService(t, servName, false)
 	defer testKillService(t, servName, true)
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		log.Warn("Testing in Circle where we don't have rm privileges. Skipping test")
 		return
 	}
 
@@ -168,10 +184,10 @@ func TestUpdateService(t *testing.T) {
 	do.Name = servName
 	do.Pull = false
 	do.Timeout = 1
-	logger.Debugf("Update serv (via tests) =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Update service (from tests)")
 	e := UpdateService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
@@ -186,9 +202,9 @@ func TestKillRmService(t *testing.T) {
 	do.Rm = false
 	do.RmD = false
 	do.Operations.Args = []string{servName}
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Stopping service (from tests)")
 	if e := KillService(do); e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
@@ -196,7 +212,7 @@ func TestKillRmService(t *testing.T) {
 	testNumbersExistAndRun(t, servName, 1, 0)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		log.Warn("Testing in Circle where we don't have rm privileges. Skipping test")
 		return
 	}
 
@@ -205,9 +221,9 @@ func TestKillRmService(t *testing.T) {
 	do.Operations.Args = []string{servName}
 	do.File = false
 	do.RmD = true
-	logger.Debugf("Removing serv (via tests) =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Removing service (from tests)")
 	if e := RmService(do); e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
@@ -216,66 +232,82 @@ func TestKillRmService(t *testing.T) {
 }
 
 func TestExportService(t *testing.T) {
-	testStartService(t, "ipfs", false)
-	time.Sleep(5 * time.Second)
-
 	do := def.NowDo()
 	do.Name = "ipfs"
 
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ExportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := ExportService(do); err != nil {
-			tests.IfExit(err)
-		}
+	hash := "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Header: map[string][]string{
+			"Ipfs-Hash": []string{hash},
+		},
+	})
+	defer ipfs.Close()
+
+	if err := ExportService(do); err != nil {
+		tests.IfExit(err)
 	}
 
-	hash = do.Result
-	testExistAndRun(t, "ipfs", 1, true, true)
+	if expected := "/ipfs/"; ipfs.Path() != expected {
+		tests.IfExit(fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "POST"; ipfs.Method() != expected {
+		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+	}
+
+	if content := tests.FileContents(FindServiceDefinitionFile(do.Name)); content != ipfs.Body() {
+		tests.IfExit(fmt.Errorf("Sent the bad file; expected %q, got %q\n", content, ipfs.Body()))
+	}
+
+	if hash != do.Result {
+		tests.IfExit(fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
+	}
 }
 
 func TestImportService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "eth"
-	if hash == "" {
-		do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-	} else {
-		do.Hash = hash
-	}
-	logger.Debugf("Import-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Hash)
+	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
+	log.WithFields(log.Fields{
+		"=>":   do.Name,
+		"hash": do.Hash,
+	}).Debug("Importing service (from tests)")
 
-	// because IPFS is testy, we retry the put up to
-	// 10 times.
-	passed := false
-	for i := 0; i < 9; i++ {
-		if err := ImportService(do); err != nil {
-			time.Sleep(2 * time.Second)
-			continue
-		} else {
-			passed = true
-			break
-		}
-	}
-	if !passed {
-		// final time will throw
-		if err := ImportService(do); err != nil {
-			tests.IfExit(err)
-		}
+	content := `name = "ipfs"
+
+[service]
+name = "ipfs"
+image = "quay.io/eris/ipfs"`
+
+	// Fake IPFS server.
+	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
+	ipfs := tests.NewServer("localhost:8080")
+	ipfs.SetResponse(tests.ServerResponse{
+		Code: http.StatusOK,
+		Body: content,
+	})
+	defer ipfs.Close()
+
+	if err := ImportService(do); err != nil {
+		tests.IfExit(err)
 	}
 
-	testKillService(t, "ipfs", true)
-	testExistAndRun(t, "ipfs", 1, false, false)
+	if expected := "/ipfs/" + do.Hash; ipfs.Path() != expected {
+		tests.IfExit(fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+	}
+
+	if expected := "GET"; ipfs.Method() != expected {
+		tests.IfExit(fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+	}
+
+	if imported := tests.FileContents(FindServiceDefinitionFile(do.Name)); imported != content {
+		tests.IfExit(fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, imported))
+	}
 }
 
 func TestNewService(t *testing.T) {
@@ -283,21 +315,26 @@ func TestNewService(t *testing.T) {
 	servName := "keys"
 	do.Name = servName
 	do.Operations.Args = []string{"quay.io/eris/keys"}
-	logger.Debugf("New-ing serv (via tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
+
+	log.WithFields(log.Fields{
+		"=>":   do.Name,
+		"args": do.Operations.Args,
+	}).Debug("Creating a new service (from tests)")
 	e := NewService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
 	do = def.NowDo()
 	do.Operations.Args = []string{servName}
-	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
-	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting serv (via tests) =>\t%v:%d\n", do.Operations.Args, do.Operations.ContainerNumber)
+	log.WithFields(log.Fields{
+		"container number": do.Operations.ContainerNumber,
+		"args":             do.Operations.Args,
+	}).Debug("Starting service (from tests)")
 	e = StartService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 
@@ -315,9 +352,10 @@ func TestRenameService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "keys"
 	do.NewName = "syek"
-	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
-	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Debug("Renaming service (from tests)")
 	if e := RenameService(do); e != nil {
 		tests.IfExit(fmt.Errorf("Error (tests fail) =>\t\t%v\n", e))
 	}
@@ -330,11 +368,12 @@ func TestRenameService(t *testing.T) {
 	do = def.NowDo()
 	do.Name = "syek"
 	do.NewName = "keys"
-	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
-	//do.Operations.ContainerNumber = 1
-	logger.Debugf("Renaming serv (via tests) =>\t%s:%v\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Debug("Renaming service (from tests)")
 	if e := RenameService(do); e != nil {
-		logger.Errorf("Error (tests fail) =>\t\t%v\n", e)
+		log.Errorf("Error (tests fail): %v", e)
 		tests.IfExit(e)
 	}
 
@@ -362,11 +401,12 @@ func TestCatService(t *testing.T) {
 func TestStartKillServiceWithDependencies(t *testing.T) {
 	do := def.NowDo()
 	do.Operations.Args = []string{"do_not_use"}
-	//do.Operations.ContainerNumber = 1
-	// do.Operations.ContainerNumber = util.AutoMagic(0, "service")
-	logger.Debugf("Starting service with deps =>\t%s:%s\n", servName, "keys")
+	log.WithFields(log.Fields{
+		"service":    servName,
+		"dependency": "keys",
+	}).Debug("Starting service with dependency (from tests)")
 	if e := StartService(do); e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
+		log.Infof("Error starting service: %v", e)
 		tests.IfExit(e)
 	}
 
@@ -376,10 +416,7 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 		testExistAndRun(t, servName, 1, false, false)
 		testNumbersExistAndRun(t, servName, 0, 0)
 
-		// XXX: option for kill to kill dependencies too
 		testKillService(t, "keys", true)
-		//testExistAndRun(t, "keys", 1, false, false)
-		//testNumbersExistAndRun(t, "keys", 1, 0)
 	}()
 
 	testExistAndRun(t, servName, 1, true, true)
@@ -397,10 +434,10 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
 	do.Operations.PublishAllPorts = publishAll
-	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (from tests)")
 	e := StartService(do)
 	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
+		log.Infof("Error starting service: %v", e)
 		tests.IfExit(e)
 	}
 
@@ -409,7 +446,7 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Stopping service (from tests)")
 
 	do := def.NowDo()
 	do.Name = serviceName
@@ -420,7 +457,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	}
 	e := KillService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		tests.IfExit(e)
 	}
 	testExistAndRun(t, serviceName, 1, !wipe, false)
@@ -434,11 +471,16 @@ func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist
 }
 
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
-	logger.Infof("\nTesting number of (%s) containers. Existing? (%d) and Running? (%d)\n", servName, containerExist, containerRun)
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
 
-	logger.Debugf("Checking Existing Containers =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Checking existing containers for")
 	exist := util.HowManyContainersExisting(servName, "service")
-	logger.Debugf("Checking Running Containers =>\t%s\n", servName)
+
+	log.WithField("=>", servName).Debug("Checking running containers for")
 	run := util.HowManyContainersRunning(servName, "service")
 
 	if exist != containerExist {
@@ -449,7 +491,7 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 		tests.IfExit(fmt.Errorf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run))
 	}
 
-	logger.Infoln("All good.\n")
+	log.Info("All good")
 }
 
 func testsInit() error {

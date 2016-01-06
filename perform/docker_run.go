@@ -16,6 +16,8 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -33,10 +35,10 @@ var (
 //  ops.Labels             - container creation time labels (use LoadDataDefinition)
 //
 func DockerCreateData(ops *def.Operation) error {
-	logger.Infof("Creating Data Container for =>\t%s\n", ops.DataContainerName)
+	log.WithField("=>", ops.DataContainerName).Info("Creating data container")
 
 	if _, exists := ContainerExists(ops); exists {
-		logger.Infoln("Data container exists. Not creating.")
+		log.Info("Data container exists. Not creating")
 		return ErrContainerExists
 	}
 
@@ -50,7 +52,8 @@ func DockerCreateData(ops *def.Operation) error {
 		return err
 	}
 
-	logger.Infof("Data Container ID =>\t\t%s\n", optsData.Name)
+	log.WithField("=>", optsData.Name).Info("Data container created")
+
 	return nil
 }
 
@@ -66,10 +69,13 @@ func DockerCreateData(ops *def.Operation) error {
 //  ops.Args              - if specified, run these args in a container
 //
 func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err error) {
-	logger.Infof("DockerRunData =>\t\t%s:%v\n", ops.DataContainerName, ops.Args)
+	log.WithFields(log.Fields{
+		"=>":   ops.DataContainerName,
+		"args": ops.Args,
+	}).Info("Running data container")
 
 	opts := configureVolumesFromContainer(ops, service)
-	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
+	log.WithField("image", opts.Config.Image).Info("Data container configured")
 
 	_, err = createContainer(opts)
 	if err != nil {
@@ -78,27 +84,27 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 
 	// Clean up the container.
 	defer func() {
-		logger.Infof("Removing container =>\t\t%s\n", opts.Name)
+		log.WithField("=>", opts.Name).Info("Removing data container")
 		if err2 := removeContainer(opts.Name, true); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
 		}
-		logger.Infof("Container removed =>\t\t%s\n", opts.Name)
+		log.WithField("=>", opts.Name).Info("Container removed")
 	}()
 
 	// Start the container.
-	logger.Infof("Run Container =>\t\t%s\n", opts.Name)
+	log.WithField("=>", opts.Name).Info("Starting data container")
 	if err = startContainer(opts); err != nil {
 		return nil, err
 	}
 
-	logger.Infof("Waiting to exit =>\t\t%s\n", opts.Name)
+	log.WithField("=>", opts.Name).Info("Waiting for data container to exit")
 	if err := waitContainer(opts.Name); err != nil {
 		return nil, err
 	}
 
-	logger.Debugf("Getting logs for container =>\t%s\n", opts.Name)
+	log.WithField("=>", opts.Name).Info("Getting logs from container")
 	if err = logsContainer(opts.Name, true, "all"); err != nil {
 		return nil, err
 	}
@@ -119,10 +125,13 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 //
 // See parameter description for DockerRunData.
 func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
-	logger.Infof("DockerExecData =>\t%s:%v\n", ops.DataContainerName, ops.Args)
+	log.WithFields(log.Fields{
+		"=>":   ops.DataContainerName,
+		"args": ops.Args,
+	}).Info("Executing data container")
 
 	opts := configureVolumesFromContainer(ops, service)
-	logger.Debugf("\tImage =>\t\t%s\n", opts.Config.Image)
+	log.WithField("image", opts.Config.Image).Info("Data container configured")
 
 	_, err = createContainer(opts)
 	if err != nil {
@@ -131,17 +140,17 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 
 	// Clean up the container.
 	defer func() {
-		logger.Infof("Removing container =>\t\t%s\n", opts.Name)
+		log.WithField("=>", opts.Name).Info("Removing data container")
 		if err2 := removeContainer(opts.Name, true); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
 		}
-		logger.Infof("Container removed =>\t\t%s\n", opts.Name)
+		log.WithField("=>", opts.Name).Info("Data container removed")
 	}()
 
 	// Start the container.
-	logger.Infof("Run Container =>\t\t%s\n", opts.Name)
+	log.WithField("=>", opts.Name).Info("Executing interactive data container")
 	if err = startInteractiveContainer(opts); err != nil {
 		return err
 	}
@@ -172,11 +181,11 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 //                          or never if unspecified)
 //
 func DockerRunService(srv *def.Service, ops *def.Operation) error {
-	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
+	log.WithField("=>", ops.SrvContainerName).Info("Running container")
 
 	_, running := ContainerRunning(ops)
 	if running {
-		logger.Infof("Service already Started. Skipping.\n\tService Name=>\t\t%s\n", srv.Name)
+		log.WithField("=>", ops.SrvContainerName).Info("Container already started. Skipping")
 		return nil
 	}
 
@@ -190,7 +199,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	}
 
 	// Setup data container.
-	logger.Infof("Manage data containers? =>\t%t\n", srv.AutoData)
+	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
 	if srv.AutoData {
 		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
@@ -198,9 +207,9 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 		}
 
 		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
-			logger.Infoln("Data Container already exists, am not creating.")
+			log.Info("Data container already exists. Not creating")
 		} else {
-			logger.Infoln("Data Container does not exist, creating.")
+			log.Info("Data container does not exist. Creating")
 			_, err := createContainer(optsData)
 			if err != nil {
 				return err
@@ -210,9 +219,9 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	// Check existence || create the container.
 	if _, exists := ContainerExists(ops); exists {
-		logger.Infoln("Service container already exists, am not creating.")
+		log.Debug("Container already exists. Not creating")
 	} else {
-		logger.Infof("Service container does not exist, creating from image (%s).\n", srv.Image)
+		log.WithField("image", srv.Image).Debug("Container does not exist. Creating")
 
 		_, err := createContainer(optsServ)
 		if err != nil {
@@ -221,27 +230,27 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	}
 
 	// Start the container.
-	logger.Infof("Starting service container =>\t%s\n", optsServ.Name)
-	if srv.AutoData {
-		logger.Infof("\twith data container =>\t%s\n", ops.DataContainerName)
-	}
-	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
-	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
-	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
-	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
-	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
+	log.WithFields(log.Fields{
+		"=>":              optsServ.Name,
+		"data container":  ops.DataContainerName,
+		"entrypoint":      optsServ.Config.Entrypoint,
+		"cmd":             optsServ.Config.Cmd,
+		"published ports": optsServ.HostConfig.PublishAllPorts,
+		"environment":     optsServ.Config.Env,
+		"image":           optsServ.Config.Image,
+	}).Info("Starting container")
 	if err := startContainer(optsServ); err != nil {
 		return err
 	}
 
 	if ops.Remove {
-		logger.Infof("Removing container =>\t%s\n", optsServ.Name)
+		log.WithField("=>", optsServ.Name).Info("Removing container")
 		if err := removeContainer(optsServ.Name, false); err != nil {
 			return err
 		}
 	}
 
-	logger.Infof("Successfully started service =>\t%s\n", optsServ.Name)
+	log.WithField("=>", optsServ.Name).Info("Container started")
 
 	return nil
 }
@@ -254,7 +263,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 //
 // See parameter description for DockerRunService.
 func DockerExecService(srv *def.Service, ops *def.Operation) error {
-	logger.Infof("Starting Service =>\t\t%s\n", srv.Name)
+	log.WithField("=>", ops.SrvContainerName).Info("Executing container")
 
 	optsServ := configureInteractiveContainer(srv, ops)
 
@@ -266,7 +275,8 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	}
 
 	// Setup data container.
-	logger.Infof("Manage data containers? =>\t%t\n", srv.AutoData)
+	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
+
 	if srv.AutoData {
 		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
@@ -274,9 +284,10 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		}
 
 		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
-			logger.Infoln("Data container already exists, am not creating.")
+			log.Info("Data container already exists, am not creating")
 		} else {
-			logger.Infoln("Data container does not exist, creating.")
+			log.Info("Data container does not exist. Creating")
+
 			_, err := createContainer(optsData)
 			if err != nil {
 				return err
@@ -284,30 +295,31 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		}
 	}
 
-	logger.Infof("Service container does not exist, creating from image (%s).\n", srv.Image)
+	log.WithField("image", srv.Image).Debug("Container does not exist. Creating")
 	_, err = createContainer(optsServ)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		logger.Infof("Removing container =>\t\t%s\n", optsServ.Name)
+		log.WithField("=>", optsServ.Name).Info("Removing container")
 		if err := removeContainer(optsServ.Name, false); err != nil {
-			fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", optsServ.Name, err)
+			log.WithField("=>", optsServ.Name).Error("Tragic! Error removing data container after executing")
+			log.Error(err)
 		}
-		logger.Infof("Container removed =>\t\t%s\n", optsServ.Name)
+		log.WithField("=>", optsServ.Name).Info("Container removed")
 	}()
 
 	// Start the container.
-	logger.Infof("Starting service container =>\t%s\n", optsServ.Name)
-	if srv.AutoData {
-		logger.Infof("\twith data container =>\t%s\n", ops.DataContainerName)
-	}
-	logger.Debugf("\twith EntryPoint =>\t%v\n", optsServ.Config.Entrypoint)
-	logger.Debugf("\twith CMD =>\t\t%v\n", optsServ.Config.Cmd)
-	logger.Debugf("\twith Image =>\t\t%v\n", optsServ.Config.Image)
-	logger.Debugf("\twith AllPortsPubl'd =>\t%v\n", optsServ.HostConfig.PublishAllPorts)
-	logger.Debugf("\twith Environment =>\t%v\n", optsServ.Config.Env)
+	log.WithFields(log.Fields{
+		"=>":              optsServ.Name,
+		"data container":  ops.DataContainerName,
+		"entrypoint":      optsServ.Config.Entrypoint,
+		"cmd":             optsServ.Config.Cmd,
+		"ports published": optsServ.HostConfig.PublishAllPorts,
+		"environment":     optsServ.Config.Env,
+		"image":           optsServ.Config.Image,
+	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
 		return err
 	}
@@ -329,9 +341,9 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout uint) error {
 	var wasRunning bool = false
 
-	logger.Infof("Starting Docker Rebuild =>\t%s\n", srv.Name)
+	log.WithField("=>", srv.Name).Info("Rebuilding container")
 
-	if service, exists := ContainerExists(ops); exists {
+	if _, exists := ContainerExists(ops); exists {
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
 			err := DockerStop(srv, ops, timeout)
@@ -340,19 +352,19 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 			}
 		}
 
-		logger.Infof("Removing old container =>\t%s\n", service.ID)
-		err := removeContainer(service.ID, true)
+		log.WithField("=>", ops.SrvContainerName).Info("Removing old container")
+		err := removeContainer(ops.SrvContainerName, true)
 		if err != nil {
 			return err
 		}
 
 	} else {
-		logger.Infoln("Service did not previously exist. Nothing to rebuild.")
+		log.Info("Container did not previously exist. Nothing to rebuild")
 		return nil
 	}
 
 	if pullImage {
-		logger.Infof("Pulling new image =>\t\t%s\n", srv.Image)
+		log.WithField("image", srv.Image).Info("Pulling image")
 		err := DockerPull(srv, ops)
 		if err != nil {
 			return err
@@ -366,21 +378,21 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 		return err
 	}
 
-	logger.Infof("Creating new cont for srv =>\t%s\n", srv.Name)
+	log.WithField("=>", ops.SrvContainerName).Info("Recreating container")
 	_, err = createContainer(opts)
 	if err != nil {
 		return err
 	}
 
 	if wasRunning {
-		logger.Infof("Restarting srv with new ID =>\t%s\n", opts.Name)
+		log.WithField("=>", opts.Name).Info("Restarting container")
 		err := startContainer(opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	logger.Infof("Finished rebuilding service =>\t%s\n", srv.Name)
+	log.WithField("=>", ops.SrvContainerName).Info("Container rebuilt")
 
 	return nil
 }
@@ -395,12 +407,14 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 //
 // Also see container parameters for DockerRunService.
 func DockerPull(srv *def.Service, ops *def.Operation) error {
-	logger.Infof("Pulling an image (%s) for the service (%s)\n", srv.Image, srv.Name)
+	log.WithFields(log.Fields{
+		"=>":    srv.Name,
+		"image": srv.Image,
+	}).Info("Pulling container image for")
 
 	var wasRunning bool = false
 
-	if service, exists := ContainerExists(ops); exists {
-		logger.Infoln("Found Service ID: " + service.ID)
+	if _, exists := ContainerExists(ops); exists {
 		if _, running := ContainerRunning(ops); running {
 			wasRunning = true
 			err := DockerStop(srv, ops, 10)
@@ -408,14 +422,14 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 				return err
 			}
 		}
-		err := removeContainer(service.ID, false)
+		err := removeContainer(ops.SrvContainerName, false)
 		if err != nil {
 			return err
 		}
 	}
 
-	if logger.Level > 0 {
-		err := pullImage(srv.Image, logger.Writer)
+	if log.GetLevel() > 0 {
+		err := pullImage(srv.Image, os.Stdout)
 		if err != nil {
 			return err
 		}
@@ -440,13 +454,17 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 // output. If follow is true, it behaves like `tail -f`. It returns Docker
 // errors on exit if not successful.
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
-	if service, exists := ContainerExists(ops); exists {
-		logger.Infof("Getting Logs for Service ID =>\t%s:%v:%v\n", service.ID, follow, tail)
-		if err := logsContainer(service.ID, follow, tail); err != nil {
+	if _, exists := ContainerExists(ops); exists {
+		log.WithFields(log.Fields{
+			"=>":     ops.SrvContainerName,
+			"follow": follow,
+			"tail":   tail,
+		}).Info("Getting logs")
+		if err := logsContainer(ops.SrvContainerName, follow, tail); err != nil {
 			return err
 		}
 	} else {
-		logger.Infoln("Service does not exist. Cannot display logs.")
+		log.Info("Container does not exist. Cannot display logs")
 	}
 
 	return nil
@@ -457,14 +475,14 @@ func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) 
 // either "line" to display a short info line or "all" to display everything. I
 // DockerInspect returns Docker errors on exit in not successful.
 func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
-	if service, exists := ContainerExists(ops); exists {
-		logger.Infof("Inspecting Service ID =>\t%s\n", service.ID)
-		err := inspectContainer(service.ID, field)
+	if _, exists := ContainerExists(ops); exists {
+		log.WithField("=>", ops.SrvContainerName).Info("Inspecting")
+		err := inspectContainer(ops.SrvContainerName, field)
 		if err != nil {
 			return err
 		}
 	} else {
-		logger.Infoln("Service container does not exist. Cannot inspect.")
+		log.Info("Container does not exist. Cannot inspect")
 	}
 	return nil
 }
@@ -478,23 +496,27 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 	// don't limit this to verbose because it takes a few seconds
 	// [zr] unless force sets timeout to 0 (for, eg. stdout)
 	if timeout != 0 {
-		logger.Printf("Docker is Stopping =>\t\t%s\tThis may take a few seconds.\n", srv.Name)
+		log.WithField("=>", srv.Name).Warn("Stopping (may take a few seconds)")
 	}
-	logger.Debugf("\twith ContainerNumber =>\t%d\n", ops.ContainerNumber)
-	logger.Debugf("\twith SrvContnerName =>\t%s\n", ops.SrvContainerName)
 
-	container, running := ContainerExists(ops)
+	log.WithFields(log.Fields{
+		"=>":      ops.SrvContainerName,
+		"timeout": timeout,
+	}).Info("Stopping container")
+
+	_, running := ContainerExists(ops)
 	if running {
-		logger.Infof("Service is running =>\t\t%s:%d\n", srv.Name, ops.ContainerNumber)
-		err := stopContainer(container.ID, timeout)
+		log.WithField("=>", ops.SrvContainerName).Debug("Container found running")
+
+		err := stopContainer(ops.SrvContainerName, timeout)
 		if err != nil {
 			return err
 		}
 	} else {
-		logger.Infof("Service is not running =>\t%s:%d\n", srv.Name, ops.ContainerNumber)
+		log.WithField("=>", ops.SrvContainerName).Debug("Container found not running")
 	}
 
-	logger.Infof("Finished stopping service =>\t%s\n", srv.Name)
+	log.WithField("=>", ops.SrvContainerName).Info("Container stopped")
 
 	return nil
 }
@@ -513,17 +535,18 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 func DockerRename(ops *def.Operation, newName string) error {
 	longNewName := util.ContainersName(ops.ContainerType, newName, ops.ContainerNumber)
 
-	logger.Infof("Renaming container =>\t\t%s to %s\n", ops.SrvContainerName, longNewName)
+	log.WithFields(log.Fields{
+		"from": ops.SrvContainerName,
+		"to":   longNewName,
+	}).Info("Renaming container")
 
-	logger.Debugln("\tChecking container exist")
-
+	log.WithField("=>", ops.SrvContainerName).Debug("Checking container exists")
 	container, err := util.DockerClient.InspectContainer(ops.SrvContainerName)
 	if err != nil {
 		return err
 	}
 
-	logger.Debugln("\tChecking new container exist (should fail)")
-
+	log.WithField("=>", longNewName).Debug("Checking new container exists")
 	_, err = util.DockerClient.InspectContainer(longNewName)
 	if err == nil {
 		return ErrContainerExists
@@ -532,14 +555,13 @@ func DockerRename(ops *def.Operation, newName string) error {
 	// Mark if the container's running to restart it later.
 	_, wasRunning := ContainerRunning(ops)
 	if wasRunning {
-		logger.Debugln("\tStopping container")
+		log.Debug("Stopping old container")
 		if err := util.DockerClient.StopContainer(container.ID, 5); err != nil {
-			logger.Debugln("\tNot stopped")
+			log.Debug("Container not stopped")
 		}
 	}
 
-	logger.Debugln("\tRemoving container")
-
+	log.Debug("Removing container")
 	removeOpts := docker.RemoveContainerOptions{
 		ID:            container.ID,
 		RemoveVolumes: true,
@@ -549,8 +571,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 		return err
 	}
 
-	logger.Debugln("\tCreating the new container")
-
+	log.Debug("Creating new container")
 	createOpts := docker.CreateContainerOptions{
 		Name:       longNewName,
 		Config:     container.Config,
@@ -577,7 +598,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 
 	newContainer, err := util.DockerClient.CreateContainer(createOpts)
 	if err != nil {
-		logger.Debugln("Not created")
+		log.Debug("Container not created")
 		return err
 	}
 
@@ -585,11 +606,11 @@ func DockerRename(ops *def.Operation, newName string) error {
 	if wasRunning {
 		err := util.DockerClient.StartContainer(newContainer.ID, createOpts.HostConfig)
 		if err != nil {
-			logger.Debugln("Not restarted")
+			log.Debug("Container not restarted")
 		}
 	}
 
-	logger.Infoln("Container renamed")
+	log.WithField("=>", longNewName).Info("Container renamed to")
 
 	return nil
 }
@@ -599,21 +620,21 @@ func DockerRename(ops *def.Operation, newName string) error {
 // If volumes is true, the associated volumes are removed for both containers.
 // DockerRemove returns Docker errors on exit if not successful.
 func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes bool) error {
-	if service, exists := ContainerExists(ops); exists {
-		logger.Infof("Removing Service ID =>\t\t%s\n", service.ID)
-		if err := removeContainer(service.ID, volumes); err != nil {
+	if _, exists := ContainerExists(ops); exists {
+		log.WithField("=>", ops.SrvContainerName).Info("Removing container")
+		if err := removeContainer(ops.SrvContainerName, volumes); err != nil {
 			return err
 		}
 		if withData {
-			if srv, ext := DataContainerExists(ops); ext {
-				logger.Infof("\t with DataContanr ID =>\t%s\n", srv.ID)
-				if err := removeContainer(srv.ID, volumes); err != nil {
+			if _, ext := DataContainerExists(ops); ext {
+				log.WithField("=>", ops.DataContainerName).Info("Removing dependent data container")
+				if err := removeContainer(ops.DataContainerName, volumes); err != nil {
 					return err
 				}
 			}
 		}
 	} else {
-		logger.Infoln("Service container does not exist. Cannot remove.")
+		log.Info("Container does not exist. Cannot remove")
 	}
 
 	return nil
@@ -690,17 +711,20 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 		if err == docker.ErrNoSuchImage {
 			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
 				var input string
-				logger.Printf("The docker image (%s) is not found locally.\nWould you like the marmots to pull it from the repository? (y/n) ", opts.Config.Image)
+				log.WithField("image", opts.Config.Image).Warn("The docker image not found locally")
+				fmt.Print("Would you like the marmots to pull it from the repository? (y/n): ")
 				fmt.Scanln(&input)
 
 				if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-					logger.Debugf("\nUser assented to pull.\n")
+					log.Debug("User assented to pull")
 				} else {
-					logger.Debugf("\nUser refused to pull.\n")
+					log.Debug("User refused to pull")
 					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
 				}
 			} else {
-				logger.Printf("The docker image (%s) is not found locally.\nThe marmots are approved to pull from the repository on your behalf.\nThis could take a minute.\n", opts.Config.Image)
+				log.WithField("image", opts.Config.Image).Warn("The Docker image is not found locally")
+				log.Warn("The marmots are approved to pull it from the repository on your behalf")
+				log.Warn("This could take a few minutes")
 			}
 			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
@@ -721,22 +745,14 @@ func startContainer(opts docker.CreateContainerOptions) error {
 }
 
 func startInteractiveContainer(opts docker.CreateContainerOptions) error {
-	// Set terminal into raw mode, and restore upon container exit.
-	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
-	if err != nil {
-		logger.Infoln("Cannot set the terminal into raw mode")
-	} else {
-		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
-	}
-
 	// Trap signals so we can drop out of the container.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
 		<-c
-		logger.Infof("\nCaught signal. Stopping container %s\n", opts.Name)
-		if err = stopContainer(opts.Name, 5); err != nil {
-			logger.Errorf("Error stopping container: %v\n", err)
+		log.WithField("=>", opts.Name).Info("Caught signal. Stopping container")
+		if err := stopContainer(opts.Name, 5); err != nil {
+			log.Errorf("Error stopping container: %v", err)
 		}
 	}()
 
@@ -755,7 +771,16 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 		attached <- struct{}{}
 	}
 
-	logger.Infof("Waiting to exit for removal =>\t%s\n", opts.Name)
+	log.WithField("=>", opts.Name).Info("Waiting for container to exit")
+
+	// Set terminal into raw mode, and restore upon container exit.
+	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+	if err != nil {
+		log.Info("Cannot set the terminal into raw mode")
+	} else {
+		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+	}
+
 	if err := waitContainer(opts.Name); err != nil {
 		return err
 	}
@@ -844,8 +869,6 @@ func inspectContainer(id, field string) error {
 }
 
 func stopContainer(id string, timeout uint) error {
-	logger.Debugf("\twith ContainerID =>\t%s\n", id)
-	logger.Debugf("\twith Timeout =>\t\t%d\n", timeout)
 	err := util.DockerClient.StopContainer(id, timeout)
 	if err != nil {
 		return err
@@ -1031,8 +1054,8 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		},
 	}
 
+	opts.Config.OpenStdin = true
 	if ops.Interactive {
-		opts.Config.OpenStdin = true
 		opts.Config.Cmd = []string{"/bin/bash"}
 	} else {
 		opts.Config.Cmd = ops.Args
@@ -1048,7 +1071,11 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 		opts.Config.Entrypoint = strings.Fields(service.EntryPoint)
 	}
 
-	logger.Debugf("configurVolumesFromContainer =>\t%v:%v\n", opts.Config.Cmd, opts.Config.Entrypoint)
+	log.WithFields(log.Fields{
+		"cmd":        opts.Config.Cmd,
+		"entrypoint": opts.Config.Entrypoint,
+	}).Debug("Data container configured")
+
 	return opts
 }
 

@@ -13,13 +13,17 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func NewAction(do *definitions.Do) error {
 	do.Name = strings.Join(do.Operations.Args, "_")
 	path := filepath.Join(ActionsPath, do.Name)
-	logger.Debugf("NewActionRaw to MockAction =>\t%v:%s\n", do.Name, path)
+	log.WithFields(log.Fields{
+		"action": do.Name,
+		"file":   path,
+	}).Debug("Creating new action (mocking)")
 	act, _ := MockAction(do.Name)
 	if err := WriteActionDefinitionFile(act, path); err != nil {
 		return err
@@ -52,8 +56,8 @@ func ImportAction(do *definitions.Do) error {
 			return err
 		}
 
-		if logger.Level > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", logger.Writer)
+		if log.GetLevel() > 0 {
+			err = ipfs.GetFromIPFS(s[1], fileName, "", os.Stdout)
 		} else {
 			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
 		}
@@ -65,11 +69,11 @@ func ImportAction(do *definitions.Do) error {
 	}
 
 	if strings.Contains(s[0], "github") {
-		logger.Println("https://twitter.com/ryaneshea/status/595957712040628224")
+		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
 		return nil
 	}
 
-	fmt.Println("I do not know how to get that file. Sorry.")
+	log.Warn("Failed to get that file. Sorry")
 	return nil
 }
 
@@ -94,13 +98,13 @@ func ExportAction(do *definitions.Do) error {
 		return err
 	}
 	do.Result = hash
-	logger.Println(hash)
+	log.Warn(hash)
 	return nil
 }
 
 func EditAction(do *definitions.Do) error {
 	actDefFile := util.GetFileByNameAndType("actions", do.Name)
-	logger.Infof("Editing Action =>\t\t%s\n", actDefFile)
+	log.WithField("file", actDefFile).Info("Editing action")
 	do.Result = "success"
 	return Editor(actDefFile)
 }
@@ -114,17 +118,20 @@ func RenameAction(do *definitions.Do) error {
 	do.NewName = strings.Replace(do.NewName, " ", "_", -1)
 	act, _, err := LoadActionDefinition(do.Name)
 	if err != nil {
-		logger.Debugf("About to fail. Name:NewName =>\t%s:%s", do.Name, do.NewName)
+		log.WithFields(log.Fields{
+			"from": do.Name,
+			"to":   do.NewName,
+		}).Debug("Failed renaming action")
 		return err
 	}
 
 	do.Name = strings.Replace(do.Name, " ", "_", -1)
-	logger.Debugf("About to find defFile =>\t%s\n", do.Name)
+	log.WithField("file", do.Name).Debug("Finding action definition file")
 	oldFile := util.GetFileByNameAndType("actions", do.Name)
 	if oldFile == "" {
 		return fmt.Errorf("Could not find that action definition file.")
 	}
-	logger.Debugf("Found defFile at =>\t\t%s\n", oldFile)
+	log.WithField("file", oldFile).Debug("Found action definition file")
 
 	if !strings.Contains(oldFile, ActionsPath) {
 		oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
@@ -141,19 +148,22 @@ func RenameAction(do *definitions.Do) error {
 	}
 
 	if newFile == oldFile {
-		logger.Infoln("Those are the same file. Not renaming")
+		log.Info("Not renaming the same file")
 		return nil
 	}
 
 	act.Name = strings.Replace(newNameBase, "_", " ", -1)
 
-	logger.Debugf("About to write new def file =>\t%s:%s\n", act.Name, newFile)
+	log.WithFields(log.Fields{
+		"old": act.Name,
+		"new": newFile,
+	}).Debug("Writing new action definition file")
 	err = WriteActionDefinitionFile(act, newFile)
 	if err != nil {
 		return err
 	}
 
-	logger.Debugf("Removing old file =>\t\t%s\n", oldFile)
+	log.WithField("file", oldFile).Debug("Removing old file")
 	os.Remove(oldFile)
 
 	return nil
@@ -171,7 +181,7 @@ func RmAction(do *definitions.Do) error {
 			oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
 		}
 
-		logger.Debugf("Removing file =>\t\t%s\n", oldFile)
+		log.WithField("file", oldFile).Debug("Removing file")
 		os.Remove(oldFile)
 	}
 	return nil
@@ -185,8 +195,8 @@ func exportFile(actionName string) (string, error) {
 	}
 
 	var hash string
-	if logger.Level > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", logger.Writer)
+	if log.GetLevel() > 0 {
+		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
 	} else {
 		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
 	}

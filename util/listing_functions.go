@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/definitions"
 )
 
@@ -79,7 +80,7 @@ func ListRunningOrExisting(quiet, testing, existing bool, typ string) (result st
 	if existing {
 		re = "Existing"
 	}
-	logger.Debugf("Asking Docker Client for the %s Containers. Quiet? %v\n", re, quiet)
+	log.WithField("status", strings.ToLower(re)).Debug("Asking Docker to list containers")
 
 	if quiet || testing {
 		if typ == "services" {
@@ -94,11 +95,11 @@ func ListRunningOrExisting(quiet, testing, existing bool, typ string) (result st
 
 	} else {
 		if typ == "services" {
-			logger.Debugf("List%sRaw:PrintTable =>\t%s:%v\n", re, "service", existing)
+			log.WithField("=>", fmt.Sprintf("service:%v", strings.ToLower(re))).Debug("Printing table")
 			result, _ = PrintTableReport("service", existing, false) //false is for All, dealt with somewhere else
 		}
 		if typ == "chains" {
-			logger.Debugf("List%sRaw:PrintTable =>\t%s:%v\n", re, "chain", existing)
+			log.WithField("=>", fmt.Sprintf("chain:%v", strings.ToLower(re))).Debugf("Printing table")
 			result, _ = PrintTableReport("chain", existing, false)
 		}
 		if typ == "data" {

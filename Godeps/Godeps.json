@@ -117,6 +117,10 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Rev": "ad63b06ab3877915532cd30073b45d6f7e02b7cd"
 		}
 	]
 }
