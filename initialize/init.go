@@ -95,8 +95,7 @@ func checkThenInitErisRoot(force bool) (bool, error) {
 			return true, fmt.Errorf("Error:\tcould not Initialize the Eris Root Directory.\n%s\n", err)
 		}
 		newDir = true
-	} else { // ErisRoot exists
-		log.Warn("Eris Root Directory already exists. Backup up important files in (...) or decline the overwrite.")
+	} else { // ErisRoot exists, prompt for overwrite
 		newDir = false
 	}
 	return newDir, nil
