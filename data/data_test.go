@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -38,36 +38,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestImportDataRawNoPriorExist(t *testing.T) {
-	newDataDir := filepath.Join(common.DataContainersPath, dataName)
-	if err := os.MkdirAll(newDataDir, 0777); err != nil {
-		log.Error(err)
-		t.FailNow()
-		os.Exit(1)
-	}
-
-	f, err := os.Create(filepath.Join(newDataDir, "test"))
-	if err != nil {
-		log.Error(err)
-		t.FailNow()
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Source = filepath.Join(common.DataContainersPath, do.Name)
-	do.Destination = common.ErisContainerRoot
-	do.Operations.ContainerNumber = 1
-	log.WithField("=>", do.Name).Info("Importing data (from tests)")
-	if err := ImportData(do); err != nil {
-		log.Error(err)
-		t.Fail()
-	}
-
-	testExist(t, dataName, true)
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
 }
 
 func TestExportData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Source = common.ErisContainerRoot
@@ -82,8 +60,12 @@ func TestExportData(t *testing.T) {
 		log.Errorf("Tragic! Exported file does not exist: %s", err)
 		t.Fail()
 	}
+
 }
 func TestExecData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
@@ -98,9 +80,14 @@ func TestExecData(t *testing.T) {
 		log.Error(err)
 		t.Fail()
 	}
+
+	//TODO check that the file was actually moved! (TestExport _used_ todo that)
 }
 
 func TestRenameData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	testExist(t, dataName, true)
 	testExist(t, newName, false)
 
@@ -138,6 +125,9 @@ func TestRenameData(t *testing.T) {
 }
 
 func TestInspectData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.Args = []string{"name"}
@@ -166,30 +156,62 @@ func TestInspectData(t *testing.T) {
 }
 
 func TestRmData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	testExist(t, dataName, true)
+
+	testKillDataCont(t, dataName)
+	testExist(t, dataName, false)
+}
+
+//creates a new data container w/ dir to be used by a test
+//maybe give create opts? => paths, files, file contents, etc
+func testCreateDataByImport(t *testing.T, name string) {
+	newDataDir := path.Join(common.DataContainersPath, name)
+	if err := os.MkdirAll(newDataDir, 0777); err != nil {
+		log.Error(err)
+		t.FailNow()
+		os.Exit(1)
+	}
+
+	f, err := os.Create(path.Join(newDataDir, "test"))
+	if err != nil {
+		log.Error(err)
+		t.FailNow()
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	do := definitions.NowDo()
+	do.Name = name
+	do.Source = filepath.Join(common.DataContainersPath, do.Name)
+	do.Destination = common.ErisContainerRoot
+	do.Operations.ContainerNumber = 1
+	log.WithField("=>", do.Name).Info("Importing data (from tests)")
+	if err := ImportData(do); err != nil {
+		log.Error(err)
+		t.Fail()
+	}
+
+	testExist(t, name, true)
+}
+
+func testKillDataCont(t *testing.T, name string) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		log.Warn("Testing in Circle. Where we don't have rm privileges. Skipping test")
 		return
 	}
 
+	testCreateDataByImport(t, name)
+
 	do := definitions.NowDo()
-	do.Name = dataName
+	do.Name = name
 	do.Operations.ContainerNumber = 1
 	if err := RmData(do); err != nil {
 		log.Error(err)
 		t.Fail()
 	}
 
-	do = definitions.NowDo()
-	do.Name = newName
-	do.Operations.ContainerNumber = 1
-	RmData(do) // don't reap this error, it is just to check its Rm'ed
-}
-
-func testsInit() error {
-	if err := tests.TestsInit("data"); err != nil {
-		return err
-	}
-	return nil
+	testExist(t, name, false)
 }
 
 func testExist(t *testing.T, name string, toExist bool) {

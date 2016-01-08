@@ -18,6 +18,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
+//import from: do.Source(on host), to: do.Destination(in container)
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
@@ -57,6 +58,7 @@ func ImportData(do *definitions.Do) error {
 		doChown.Operations.DataContainerName = containerName
 		doChown.Operations.ContainerType = "data"
 		doChown.Operations.ContainerNumber = 1
+		//required b/c `docker cp` (UploadToContainer) goes in as root
 		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
 		_, err = perform.DockerRunData(doChown.Operations, nil)
 		if err != nil {
@@ -89,6 +91,7 @@ func ExecData(do *definitions.Do) error {
 	return nil
 }
 
+//export from: do.Source(in container), to: do.Destination(on host)
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		log.WithField("=>", do.Name).Info("Exporting data container")
