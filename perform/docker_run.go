@@ -761,14 +761,14 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 		attachContainer(opts.Name, attached)
 	}(attached)
 
-	if err := startContainer(opts); err != nil {
-		return err
-	}
-
 	// Wait for a console prompt to appear.
 	_, ok := <-attached
 	if ok {
 		attached <- struct{}{}
+	}
+
+	if err := startContainer(opts); err != nil {
+		return err
 	}
 
 	log.WithField("=>", opts.Name).Info("Waiting for container to exit")
