@@ -48,8 +48,10 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		dockerVersion, _ := util.DockerClientVersion()
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
-		if dockerVersion < dVerMin {
-			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
+		if os.Getenv("TEST_IN_CIRCLE") != "true" {
+			if dockerVersion < dVerMin {
+				IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
+			}
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
