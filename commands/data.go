@@ -24,13 +24,15 @@ The [eris data import] and [eris data export] commands should be
 thought of from the point of view of the container.
 
 The [eris data import] command sends a directory *as is* from 
-SRC on the host to DEST inside of the data container.
+SRC on the host to an existing DEST inside of the data container.
 
 The [eris data export] command performs this process in the reverse. 
 It sucks out whatever is in the SRC directory in the data container 
 and sticks it back into a DEST directory on the host.
 
-Note: container paths enter at /home/eris/.eris
+Notes: 
+- container paths enter at /home/eris/.eris
+- import host path must be absolute, export host path is indifferent
 
 At Eris, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
@@ -55,7 +57,8 @@ var dataImport = &cobra.Command{
 	Short: "Import from a host folder to a named data container's directory",
 	Long: `Import from a host folder to a named data container's directory.
 Requires src and dest for each host and container, respectively.
-Container path enters at /home/eris/.eris`,
+Container path enters at /home/eris/.eris
+Source (host) path must be absolute and destination dir must exist.`,
 	Run: ImportData,
 }
 
@@ -64,7 +67,8 @@ var dataExport = &cobra.Command{
 	Short: "Export a named data container's directory to a host directory",
 	Long: `Export a named data container's directory to a host directory.
 Requires src and dest for each container and host, respectively.
-Container path enters at /home/eris/.eris`,
+Container path enters at /home/eris/.eris
+Destination (host) path can be relative.`,
 	Run: ExportData,
 }
 
