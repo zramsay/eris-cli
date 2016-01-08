@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	//	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
@@ -15,7 +14,6 @@ import (
 //----------------------------------------------------
 
 // Primary Data Sub-Command
-//TODO re-write
 var Data = &cobra.Command{
 	Use:   "data",
 	Short: "Manage data containers for your application.",
@@ -25,13 +23,12 @@ data into containers for use by your application.
 The [eris data import] and [eris data export] commands should be 
 thought of from the point of view of the container.
 
-The [eris data import] command sends files *as is* from 
-~/.eris/data/NAME on the host to ~/.eris/ inside 
-of the data container.
+The [eris data import] command sends a directory *as is* from 
+SRC on the host to DEST inside of the data container.
 
 The [eris data export] command performs this process in the reverse. 
-It sucks out whatever is in the volumes of the data container 
-and sticks it back into ~/.eris/data/NAME on the host.
+It sucks out whatever is in the SRC directory in the data container 
+and sticks it back into a DEST directory on the host.
 
 At Eris, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
