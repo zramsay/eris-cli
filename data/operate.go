@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	//	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -195,30 +194,29 @@ func moveOutOfDirAndRmDir(src, dest string) error {
 	return nil
 }
 
-//check path for ErisContainerRoot
+// check path for ErisContainerRoot
+// XXX this is opiniated & we may want to change in future
+// for more flexibility with filesystem of data conts
 func checkErisContainerRoot(do *definitions.Do, typ string) error {
 
 	r, err := regexp.Compile(ErisContainerRoot)
 	if err != nil {
 		return err
 	}
+
 	switch typ {
 	case "import":
 		if r.MatchString(do.Destination) != true { //if not there join it
-			fmt.Printf("dest before %s\n", do.Destination)
 			do.Destination = path.Join(ErisContainerRoot, do.Destination)
-			fmt.Printf("dest after%s\n", do.Destination)
 			return nil
 		} else { // matches: do nothing
 			return nil
 		}
 	case "export":
-		if r.MatchString(do.Source) != true { //if not there join it
-			fmt.Printf("source before %s\n", do.Source)
+		if r.MatchString(do.Source) != true {
 			do.Source = path.Join(ErisContainerRoot, do.Source)
-			fmt.Printf("source after%s\n", do.Source)
 			return nil
-		} else { // matches: do nothing
+		} else {
 			return nil
 		}
 	}

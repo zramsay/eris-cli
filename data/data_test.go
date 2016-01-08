@@ -17,8 +17,6 @@ import (
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
-//TODO disentngle tests
-
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
@@ -37,8 +35,9 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+//TODO add some export/import test robustness
 func TestImportDataRawNoPriorExist(t *testing.T) {
-	testCreateDataByImport(t, dataName)
+	testCreateDataByImport(t, dataName) //was basically copied from this test
 	defer testKillDataCont(t, dataName)
 }
 
@@ -155,6 +154,7 @@ func TestInspectData(t *testing.T) {
 	}
 }
 
+//now is testKillDataCont()
 func TestRmData(t *testing.T) {
 	testCreateDataByImport(t, dataName)
 	testExist(t, dataName, true)
@@ -202,6 +202,7 @@ func testKillDataCont(t *testing.T, name string) {
 	}
 
 	testCreateDataByImport(t, name)
+	testExist(t, name, true)
 
 	do := definitions.NowDo()
 	do.Name = name

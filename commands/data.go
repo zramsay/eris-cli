@@ -181,7 +181,6 @@ func RmData(cmd *cobra.Command, args []string) {
 	IfExit(data.RmData(do))
 }
 
-//TODO add checks for ErisContainerRoot
 //src on host, dest in container
 func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(3, "eq", cmd, args))
