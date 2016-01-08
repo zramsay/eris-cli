@@ -17,6 +17,8 @@ import (
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
+//TODO disentngle tests
+
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
@@ -65,6 +67,22 @@ func TestImportDataRawNoPriorExist(t *testing.T) {
 	testExist(t, dataName, true)
 }
 
+func TestExportData(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Source = common.ErisContainerRoot
+	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
+	do.Operations.ContainerNumber = 1
+	if err := ExportData(do); err != nil {
+		log.Error(err)
+		t.FailNow()
+	}
+
+	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
+		log.Errorf("Tragic! Exported file does not exist: %s", err)
+		t.Fail()
+	}
+}
 func TestExecData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
@@ -78,23 +96,6 @@ func TestExecData(t *testing.T) {
 	}).Info("Executing data (from tests)")
 	if err := ExecData(do); err != nil {
 		log.Error(err)
-		t.Fail()
-	}
-}
-
-func TestExportData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Source = common.ErisContainerRoot
-	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
-	do.Operations.ContainerNumber = 1
-	if err := ExportData(do); err != nil {
-		log.Error(err)
-		t.FailNow()
-	}
-
-	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
-		log.Errorf("Tragic! Exported file does not exist: %s", err)
 		t.Fail()
 	}
 }

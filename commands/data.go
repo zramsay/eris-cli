@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"path/filepath"
+	//	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
@@ -15,6 +15,7 @@ import (
 //----------------------------------------------------
 
 // Primary Data Sub-Command
+//TODO re-write
 var Data = &cobra.Command{
 	Use:   "data",
 	Short: "Manage data containers for your application.",
@@ -51,10 +52,19 @@ func buildDataCommand() {
 }
 
 var dataImport = &cobra.Command{
-	Use:   "import NAME",
-	Short: "Import ~/.eris/data/name folder to a named data container",
-	Long:  `Import ~/.eris/data/name folder to a named data container`,
-	Run:   ImportData,
+	Use:   "import NAME SRC DEST",
+	Short: "Import from a host folder to a named data container's directory",
+	Long: `Import from a host folder to a named data container's directory.
+Requires src and dest for each host and container, respectively.`,
+	Run: ImportData,
+}
+
+var dataExport = &cobra.Command{
+	Use:   "export NAME SRC DEST",
+	Short: "Export a named data container's directory to a host directory",
+	Long: `Export a named data container's directory to a host directory.
+Requires src and dest for each container and host, respectively.`,
+	Run: ExportData,
 }
 
 var dataList = &cobra.Command{
@@ -103,13 +113,6 @@ var dataInspect = &cobra.Command{
 	Run:   InspectData,
 }
 
-var dataExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "Export a named data container's volumes to ~/.eris/data/name",
-	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
-	Run:   ExportData,
-}
-
 var dataRm = &cobra.Command{
 	Use:   "rm NAME",
 	Short: "Remove a data container",
@@ -126,11 +129,11 @@ func addDataFlags() {
 
 	buildFlag(dataExec, do, "interactive", "data")
 
-	dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
-	//XXX not used ... but could be if we wanted to be less opiniated
-	//dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
-	//dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
-	dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
+	// all have been converted into arguments
+	// dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
+	// dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	// dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	// dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
 }
 
 //----------------------------------------------------
@@ -174,16 +177,18 @@ func RmData(cmd *cobra.Command, args []string) {
 }
 
 func ImportData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
-	setDefaultDir("import")
+	do.Source = args[1]
+	do.Destination = args[2]
 	IfExit(data.ImportData(do))
 }
 
 func ExportData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
-	setDefaultDir("export")
+	do.Source = args[1]
+	do.Destination = args[2]
 	IfExit(data.ExportData(do))
 }
 
@@ -205,27 +210,4 @@ func ExecData(cmd *cobra.Command, args []string) {
 
 	do.Operations.Args = args
 	IfExit(data.ExecData(do))
-}
-
-// we don't set this as the default for the flag because it overwrites
-// the unified do.Path script with other packages expect to be able to
-// provide their own defaults for.
-// [zr] perhaps now we can set default in flag...?
-func setDefaultDir(typ string) {
-	switch typ {
-	case "import":
-		//if do.Source == "" {
-		do.Source = filepath.Join(DataContainersPath, do.Name)
-		//}
-		if do.Destination == "" {
-			do.Destination = ErisContainerRoot
-		}
-	case "export":
-		if do.Source == "" {
-			do.Source = ErisContainerRoot
-		}
-		//if do.Destination == "" {
-		do.Destination = filepath.Join(DataContainersPath, do.Name)
-		//}
-	}
 }

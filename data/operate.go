@@ -129,23 +129,21 @@ func ExportData(do *definitions.Do) error {
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
-		//   move everything from .eris to exportPath
+		// move everything from .eris to exportPath
 		if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, ".eris"), exportPath); err != nil {
 			return err
 		}
 
-		// // finally remove everything in the data directory and move
-		// //   the temp contents there
+		// finally remove everything in the data directory and move
+		// the temp contents there
 		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
 			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
 				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
 			}
 		}
-		// ClearDir(do.Destionation)
 		if err := moveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
 			return err
 		}
-
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
