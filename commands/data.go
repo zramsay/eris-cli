@@ -30,6 +30,8 @@ The [eris data export] command performs this process in the reverse.
 It sucks out whatever is in the SRC directory in the data container 
 and sticks it back into a DEST directory on the host.
 
+Note: container paths enter at /home/eris/.eris
+
 At Eris, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
 containers"`,
@@ -52,7 +54,8 @@ var dataImport = &cobra.Command{
 	Use:   "import NAME SRC DEST",
 	Short: "Import from a host folder to a named data container's directory",
 	Long: `Import from a host folder to a named data container's directory.
-Requires src and dest for each host and container, respectively.`,
+Requires src and dest for each host and container, respectively.
+Container path enters at /home/eris/.eris`,
 	Run: ImportData,
 }
 
@@ -60,7 +63,8 @@ var dataExport = &cobra.Command{
 	Use:   "export NAME SRC DEST",
 	Short: "Export a named data container's directory to a host directory",
 	Long: `Export a named data container's directory to a host directory.
-Requires src and dest for each container and host, respectively.`,
+Requires src and dest for each container and host, respectively.
+Container path enters at /home/eris/.eris`,
 	Run: ExportData,
 }
 
@@ -173,6 +177,8 @@ func RmData(cmd *cobra.Command, args []string) {
 	IfExit(data.RmData(do))
 }
 
+//TODO add checks for ErisContainerRoot
+//src on host, dest in container
 func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
@@ -181,6 +187,7 @@ func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(data.ImportData(do))
 }
 
+//src in container, dest on host
 func ExportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]

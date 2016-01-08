@@ -5,7 +5,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
+	//	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -27,6 +30,9 @@ func ImportData(do *definitions.Do) error {
 
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
+		}
+		if err := checkErisContainerRoot(do, "import"); err != nil {
+			return err
 		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
@@ -114,6 +120,9 @@ func ExportData(do *definitions.Do) error {
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
+		if err := checkErisContainerRoot(do, "export"); err != nil {
+			return err
+		}
 		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
 			Path:         do.Source,
@@ -155,6 +164,7 @@ func ExportData(do *definitions.Do) error {
 	return nil
 }
 
+//TODO test that this doesn't fmt things up, see note in #400
 func moveOutOfDirAndRmDir(src, dest string) error {
 	log.WithFields(log.Fields{
 		"from": src,
@@ -182,5 +192,35 @@ func moveOutOfDirAndRmDir(src, dest string) error {
 		return err
 	}
 
+	return nil
+}
+
+//check path for ErisContainerRoot
+func checkErisContainerRoot(do *definitions.Do, typ string) error {
+
+	r, err := regexp.Compile(ErisContainerRoot)
+	if err != nil {
+		return err
+	}
+	switch typ {
+	case "import":
+		if r.MatchString(do.Destination) != true { //if not there join it
+			fmt.Printf("dest before %s\n", do.Destination)
+			do.Destination = path.Join(ErisContainerRoot, do.Destination)
+			fmt.Printf("dest after%s\n", do.Destination)
+			return nil
+		} else { // matches: do nothing
+			return nil
+		}
+	case "export":
+		if r.MatchString(do.Source) != true { //if not there join it
+			fmt.Printf("source before %s\n", do.Source)
+			do.Source = path.Join(ErisContainerRoot, do.Source)
+			fmt.Printf("source after%s\n", do.Source)
+			return nil
+		} else { // matches: do nothing
+			return nil
+		}
+	}
 	return nil
 }
