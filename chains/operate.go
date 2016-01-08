@@ -18,8 +18,8 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
 )
@@ -252,13 +252,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	if !data.IsKnown(do.Name) {
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		log.WithField("=>", do.Name).Debug("Chain data container already exists")
+	} else {
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
-	} else {
-		log.WithField("=>", do.Name).Debug("Chain data container already exists")
 	}
 
 	log.WithField("=>", do.Name).Debug("Chain data container built")
