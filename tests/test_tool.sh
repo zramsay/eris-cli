@@ -71,7 +71,7 @@ announce() {
 
 connect() {
   echo "Starting Machine."
-  if [[ "$machine" != "eris" ]] # "eris" should be used when CI testing against OSX and Windows.
+  if [[ "$machine" != eris-test-osx* ]] || [[ "$machine" != eris-test-win* ]]
   then
     docker-machine start $machine 1>/dev/null
   fi
@@ -86,9 +86,26 @@ connect() {
     exit 1
   else
     echo "Machine Started."
+    sleep 15
     if [[ "$machine" != "eris" ]]
     then
-      docker-machine regenerate-certs -f $machine 2>/dev/null
+      n=0
+      until [ $n -ge 10 ]
+      do
+        sleep 3
+        docker-machine regenerate-certs -f $machine &>/dev/null && break
+        n=$[$n+1]
+      done
+      if [ $n -ge 10 ]
+      then
+        echo "There was an error connecting to the machine. Exiting test"
+        echo
+        test_exit=1
+        turn_off
+        report
+        cd $start
+        exit $test_exit
+      fi
     fi
   fi
   sleep 5
@@ -157,14 +174,6 @@ packagesToTest() {
   export ERIS_PULL_APPROVE="true"
   export ERIS_MIGRATE_APPROVE="true"
 
-  # The first run of tests expect ipfs to be running
-  eris services start ipfs
-  if [ $? -ne 0 ]; then return 1; fi
-  ERIS_IPFS_HOST="http://$(docker inspect --format='{{.NetworkSettings.IPAddress}}' eris_service_ipfs_1)"
-  if [ $? -ne 0 ]; then return 1; fi
-  export ERIS_IPFS_HOST
-  sleep 5 # give ipfs node time to boot
-
   # Start the first series of tests
   go test ./perform/...
   passed Perform
@@ -183,11 +192,6 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
   go test ./keys/...
   passed Keys
-  if [ $? -ne 0 ]; then return 1; fi
-
-  # The second series of tests expects ipfs to not be running
-  eris services stop ipfs -frx
-  unset ERIS_IPFS_HOST
   if [ $? -ne 0 ]; then return 1; fi
 
   # Start the second series of tests
@@ -231,10 +235,8 @@ packagesToTest() {
 
 clear_stuff() {
   echo "Clearing images and containers."
-  set +e
   docker rm $(docker ps -a -q) &>/dev/null
   docker rmi -f $(docker images -q) &>/dev/null
-  set -e
   echo ""
 }
 
@@ -267,7 +269,6 @@ report() {
 # ---------------------------------------------------------------------------
 # Go!
 
-set -e
 echo "Hello! The marmots will begin testing now."
 if [[ "$machine" == "eris-test-local" ]]
 then
@@ -276,7 +277,6 @@ else
   announce
   connect
 fi
-set +e
 
 # Once machine is turned on, display docker information
 echo ""

@@ -1,3 +1,40 @@
 version: 1.0.{build}-{branch}
-build:
-  verbosity: minimal
+clone_folder: C:\src\github.com\eris-ltd\eris-cli
+
+environment:
+  GOPATH: C:\
+  GOBIN: C:\bin
+  PATH: '%PATH%;C:\bin'
+  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+
+build_script:
+- cmd: >-
+
+    choco install -yr msys2 > nul
+
+    choco install -yr docker jq
+
+    choco install -yr docker-machine -version 0.4.1
+
+    cd c:\src\github.com\eris-ltd\eris-cli\cmd\eris
+
+    go get
+
+    go install
+
+    docker-machine create --driver amazonec2 --amazonec2-access-key %AWS_ACCESS_KEY% --amazonec2-secret-key %AWS_SECRET_KEY% --amazonec2-region %AWS_REGION% --amazonec2-vpc-id %AWS_VPC_ID% --amazonec2-security-group %AWS_SECURITY_GROUP% eris-test-win-%APPVEYOR_BUILD_ID%
+
+test_script:
+- ps: >-
+
+    docker-machine.exe env --shell=powershell eris-test-win-"$env:APPVEYOR_BUILD_ID" | Invoke-Expression
+
+    cd c:\src\github.com\eris-ltd\eris-cli
+
+    bash tests\test_tool.sh
+
+on_finish:
+- cmd: >-
+    docker-machine kill eris-test-win-%APPVEYOR_BUILD_ID%
+
+    docker-machine rm --force eris-test-win-%APPVEYOR_BUILD_ID%
