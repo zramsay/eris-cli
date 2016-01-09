@@ -5,6 +5,15 @@ environment:
   GOPATH: C:\
   GOBIN: C:\bin
   PATH: '%PATH%;C:\bin'
+  AWS_ACCESS_KEY:
+    secure: +ZHNhI/rT7L/bEqsQl9Ow+1haJ9mEfpiBntxCt7j5q4=
+  AWS_SECRET_KEY:
+    secure: 6UdVKS5QjGD+4nlrDrBTq/qzEOkHHencKA4pPayXOXCB6hLSFbNrKwAwIN7IbQtl
+  AWS_REGION: us-east-1
+  AWS_VPC_ID:
+    secure: SJGZG9U3ikfqUPYBe5adHw==
+  AWS_SECURITY_GROUP:
+    secure: jDcmvJeKkI4ifbImHF9vSQ==
   MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
 
 build_script:
