@@ -3,26 +3,22 @@ os: osx
 language: go
 
 env:
-- MACHINE_NAME=eris SWARM=osx-tests APIVERSION=latest
+- MACHINE_NAME=eris-test-osx-$TRAVIS_JOB_ID SWARM=osx-tests APIVERSION=latest
 
 install:
 - eval "$(gimme 1.5)"
 - brew update
-- brew install docker docker-machine
+- brew install docker docker-machine jq
 - echo "change the below when `docker-machine --version | cut -d ' ' -f 3` is at 0.5.4"
 - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.5.4/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine"
 - sudo chmod +x /usr/local/bin/docker-machine
 
 script:
 - go install ./cmd/eris
-- docker-machine create --driver amazonec2 eris
-- tests/test_tool.sh
+- docker-machine create --driver amazonec2 eris-test-osx-$TRAVIS_JOB_ID && tests/test_tool.sh
 
-after_success:
-- docker-machine rm --force eris
-
-after_failure:
-- docker-machine rm --force eris
+after_script:
+- docker-machine rm --force eris-test-osx-$TRAVIS_JOB_ID
 
 notifications:
   email: false

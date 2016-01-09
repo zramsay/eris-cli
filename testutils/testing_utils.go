@@ -48,7 +48,7 @@ func TestsInit(testType string) (err error) {
 	do.Actions = true
 	do.Yes = true
 	if err := ini.Initialize(do); err != nil {
-		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
+		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}
 
 	log.Info("Test init completed. Starting main test sequence now")

@@ -3,7 +3,7 @@ package loaders
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -72,7 +72,7 @@ func DefaultContractPackage() (*definitions.Contracts, error) {
 	// we don't catch the directory error here as it should be caught prior to
 	//   calling this function.
 	pwd, _ := os.Getwd()
-	app.Name = path.Base(pwd)
+	app.Name = filepath.Base(pwd)
 	app.ChainName = ""
 	app.TestType = "epm"
 	app.DeployType = "epm"
