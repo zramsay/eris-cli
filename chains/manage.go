@@ -153,7 +153,7 @@ func ExportChain(do *definitions.Do) error {
 	} else {
 		return fmt.Errorf(`I don't known of that chain.
 Please retry with a known chain.
-To find known chains use: eris chains known`)
+To find known chains use: eris chains ls --known`)
 	}
 	return nil
 }

@@ -188,3 +188,7 @@ func uninstallEris(prompt bool) error {
 	}
 	return nil
 }
+
+func TrimString(strang string) string {
+	return strings.TrimSpace(strings.Trim(strang, "\n"))
+}

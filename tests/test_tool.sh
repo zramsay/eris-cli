@@ -117,13 +117,15 @@ connect() {
 }
 
 setup_machine() {
+  export ERIS_PULL_APPROVE="true" #because init now pulls images
+  
   if [[ $machine != "eris-test-local" ]]
   then
-    eris init -dp --yes
+    eris init --yes --pull-images=true --testing=true
     echo
     eris_version=$(eris version --quiet)
-    pull_images
-    echo "Image Pulling Complete."
+    #pull_images
+    #echo "Image Pulling Complete."
   fi
 }
 
@@ -138,21 +140,22 @@ wait_procs() {
   done
 }
 
-pull_images() {
-  images=( "quay.io/eris/base" "quay.io/eris/data" "quay.io/eris/ipfs" "quay.io/eris/keys" "quay.io/eris/erisdb:$eris_version" "quay.io/eris/epm:$eris_version" )
-  for im in "${images[@]}"
-  do
-    echo -e "Pulling image =>\t\t$im"
-    docker pull $im 1>/dev/null
+#done by init
+#pull_images() {
+#  images=( "quay.io/eris/base" "quay.io/eris/data" "quay.io/eris/ipfs" "quay.io/eris/keys" "quay.io/eris/erisdb:$eris_version" "quay.io/eris/epm:$eris_version" )
+#  for im in "${images[@]}"
+#  do
+#    echo -e "Pulling image =>\t\t$im"
+#    docker pull $im 1>/dev/null
     # Async // parallel pulling not working consistently.
     #   see: https://github.com/docker/docker/issues/9718
     # this is fixed in docker 1.9 ONLY. So when we deprecate
     # docker 1.8 we can move to asyncronous pulling
     # docker pull $im 1>/dev/null &
     # set_procs
-  done
+#  done
   # wait_procs
-}
+#}
 
 passed() {
   if [ $? -eq 0 ]
@@ -172,9 +175,11 @@ packagesToTest() {
 
   # For testing we want to override the Greg Slepak required ask before pull ;)
   export ERIS_PULL_APPROVE="true"
-  export ERIS_MIGRATE_APPROVE="true"
 
   # Start the first series of tests
+  go test ./initialize/...
+  passed Initialize
+  if [ $? -ne 0 ]; then return 1; fi
   go test ./perform/...
   passed Perform
   if [ $? -ne 0 ]; then return 1; fi
@@ -200,7 +205,7 @@ packagesToTest() {
   passed Services
   if [ $? -ne 0 ]; then return 1; fi
   go test ./chains/... # switch FROM me if needing to debug
-  # cd chains && go test && cd .. # switch TO me if needing to debug
+# cd chains && go test && cd .. # switch TO me if needing to debug
   passed Chains
   if [ $? -ne 0 ]; then return 1; fi
   go test ./actions/...

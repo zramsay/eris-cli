@@ -19,10 +19,6 @@ import (
 
 var erisDir = path.Join(os.TempDir(), "eris")
 
-//hold things...?
-type TestingInfo struct {
-}
-
 //testType = one of each package, will switch over it for
 //make additional tempDirs and vars as needed -> [zr] or not, TBD
 func TestsInit(testType string) (err error) {
@@ -43,10 +39,10 @@ func TestsInit(testType string) (err error) {
 	// this dumps the ipfs and keys services defs into the temp dir which
 	// has been set as the erisRoot.
 	do := def.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	do.Yes = true
+	do.Pull = false //don't pull imgs
+	do.Yes = true   //over-ride command-line prompts
+	do.Quiet = true
+	do.Source = "toadserver" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}

@@ -49,12 +49,13 @@ var (
 	SerpScratchPath = path.Join(ScratchPath, "ser")
 
 	// Blockchains stuff
-	HEAD = path.Join(ChainsPath, "HEAD")
-	Refs = path.Join(ChainsPath, "refs")
+	HEAD            = path.Join(ChainsPath, "HEAD")
+	Refs            = path.Join(ChainsPath, "refs")
+	DefaultChainDir = path.Join(ChainsPath, "default")
 )
 
 var MajorDirs = []string{
-	ErisRoot, ActionsPath, ChainsPath, DataContainersPath, AppsPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
+	ErisRoot, ActionsPath, ChainsPath, DefaultChainDir, DataContainersPath, AppsPath, KeysPath, LanguagesPath, ServicesPath, KeysDataPath, KeyNamesPath, ScratchPath, EpmScratchPath, LllcScratchPath, SolcScratchPath, SerpScratchPath,
 }
 
 //eris update checks if old dirs exist & migrates them

@@ -285,7 +285,14 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	util.Merge(ops, do.Operations)
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chainID)}
 	result := trimResult(string(runContainer(t, ops)))
-	contents := trimResult(ini.DefChainConfig())
+
+	configDefault := path.Join(erisDir, "chains", "default", "config.toml")
+	read, err := ioutil.ReadFile(configDefault)
+	if err != nil {
+		tests.IfExit(err)
+	}
+	contents := trimResult(string(read))
+
 	if result != contents {
 		tests.IfExit(fmt.Errorf("config not properly copied. Got: %s \n Expected: %s", result, contents))
 	}
