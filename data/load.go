@@ -49,22 +49,3 @@ func checkServiceGiven(args []string) error {
 	}
 	return nil
 }
-
-func parseKnown(name string, num int) bool {
-	name = util.NameAndNumber(name, num)
-	return _parseKnown(name)
-}
-
-func _parseKnown(name string) bool {
-	do := def.NowDo()
-	do.Existing = true
-	util.ListAll(do, "data")
-	if len(do.Operations.Args) != 0 {
-		for _, srv := range do.Operations.Args {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
-}

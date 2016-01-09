@@ -16,9 +16,9 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func RegisterChain(do *definitions.Do) error {
@@ -30,7 +30,7 @@ func RegisterChain(do *definitions.Do) error {
 	do.ChainID = do.Name
 
 	// NOTE: registration expects you to have the data container
-	if !data.IsKnown(do.Name) {
+	if !util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
 	}
 
