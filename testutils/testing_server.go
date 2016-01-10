@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"time"
 )
 
 // This is a fake server implementation to test Eris command line tools
@@ -93,7 +94,14 @@ func NewServer(addr ...interface{}) *Server {
 
 	listener, err := net.Listen("tcp", addr[0].(string))
 	if err != nil {
-		panic(err)
+		// to hedge against the defer statement taking a second
+		// to close the connection to the address from any
+		// previous tests...
+		time.Sleep(3 * time.Second)
+		listener, err = net.Listen("tcp", addr[0].(string))
+		if err != nil {
+			panic(err)
+		}
 	}
 	s.server.Listener = listener
 	s.server.Start()

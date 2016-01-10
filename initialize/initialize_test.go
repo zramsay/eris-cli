@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -18,11 +18,11 @@ import (
 
 //XXX can't dry because testutils imports this package
 
-var erisDir = path.Join(os.TempDir(), "eris")
-var servDir = path.Join(erisDir, "services")
-var actDir = path.Join(erisDir, "actions")
-var chnDir = path.Join(erisDir, "chains")
-var chnDefDir = path.Join(chnDir, "default")
+var erisDir = filepath.Join(os.TempDir(), "eris")
+var servDir = filepath.Join(erisDir, "services")
+var actDir = filepath.Join(erisDir, "actions")
+var chnDir = filepath.Join(erisDir, "chains")
+var chnDefDir = filepath.Join(chnDir, "default")
 
 func TestMain(m *testing.M) {
 
@@ -87,8 +87,8 @@ func TestDropChainDefaults(t *testing.T) {
 }
 
 func testDrops(dir, kind string) error {
-	var dirToad = path.Join(dir, "toad")
-	var dirGit = path.Join(dir, "git")
+	var dirToad = filepath.Join(dir, "toad")
+	var dirGit = filepath.Join(dir, "git")
 
 	if err := os.MkdirAll(dirToad, 0777); err != nil {
 		ifExit(err)
@@ -136,8 +136,8 @@ func testDrops(dir, kind string) error {
 	for _, toad := range toads {
 		for _, git := range gits {
 			if toad.Name() == git.Name() {
-				tsFile := path.Join(dirToad, toad.Name())
-				gitFile := path.Join(dirGit, git.Name())
+				tsFile := filepath.Join(dirToad, toad.Name())
+				gitFile := filepath.Join(dirGit, git.Name())
 				//read and compare files
 				if err := testsCompareFiles(tsFile, gitFile); err != nil {
 					ifExit(fmt.Errorf("error comparing files: %v\n", err))

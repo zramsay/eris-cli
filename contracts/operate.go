@@ -3,7 +3,6 @@ package contracts
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/chains"
@@ -148,7 +147,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	if do.Path != pwd {
 		do.Service.WorkDir = do.Path // do.Path is actually where the workdir inside the container goes
 	} else {
-		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", app.Name)
+		do.Service.WorkDir = filepath.Join(common.ErisContainerRoot, "apps", app.Name)
 	}
 	do.Service.User = "eris"
 
@@ -179,9 +178,9 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	doData.Source = filepath.Join(common.DataContainersPath, doData.Name)
 	var loca string
 	if do.Path != pwd {
-		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
 	} else {
-		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
 	}
 	log.WithFields(log.Fields{
 		"path":     do.Path,
@@ -230,8 +229,8 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		doRm.RmD = true
 		chains.KillChain(doRm)
 
-		latentDir := path.Join(common.DataContainersPath, do.Chain.Name)
-		latentFile := path.Join(common.ChainsPath, do.Chain.Name+".toml")
+		latentDir := filepath.Join(common.DataContainersPath, do.Chain.Name)
+		latentFile := filepath.Join(common.ChainsPath, do.Chain.Name+".toml")
 		log.WithFields(log.Fields{
 			"dir":  latentDir,
 			"file": latentFile,
@@ -255,9 +254,9 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	}
 	var loca string
 	if do.Path != pwd {
-		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
 	} else {
-		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
 	}
 
 	log.WithFields(log.Fields{
@@ -279,8 +278,8 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	}
 
 	if !do.RmD {
-		log.WithField("dir", path.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
+		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
+		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
 	}
 
 	if !do.Rm {
@@ -367,7 +366,7 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 
 	if do.EPMConfigFile != "" {
 		log.WithField("config", do.EPMConfigFile).Debug("Setting config file to")
-		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(do.Service.WorkDir, do.EPMConfigFile)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + filepath.Join(do.Service.WorkDir, do.EPMConfigFile)
 	}
 
 	if len(do.ConfigOpts) != 0 {
@@ -384,11 +383,11 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	}
 
 	if do.ContractsPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.ContractsPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + filepath.Join(do.Service.WorkDir, do.ContractsPath)
 	}
 
 	if do.ABIPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + path.Join(do.Service.WorkDir, do.ABIPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + filepath.Join(do.Service.WorkDir, do.ABIPath)
 	}
 
 	if do.DefaultGas != "" {

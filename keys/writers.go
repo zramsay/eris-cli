@@ -2,6 +2,7 @@ package keys
 
 import (
 	"path"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -53,7 +54,7 @@ func ExportKey(do *definitions.Do) error {
 	}
 	//destination on host
 	if do.Destination == "" {
-		do.Destination = path.Join(KeysPath, "data")
+		do.Destination = filepath.Join(KeysPath, "data")
 	}
 	//src in container
 	do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address)
@@ -80,7 +81,7 @@ func ImportKey(do *definitions.Do) error {
 	//src on host
 
 	if do.Source == "" {
-		do.Source = path.Join(KeysPath, "data", do.Address, do.Address)
+		do.Source = filepath.Join(KeysPath, "data", do.Address, do.Address)
 	}
 	//dest in container
 	do.Destination = dir

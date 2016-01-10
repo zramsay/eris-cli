@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -26,7 +25,7 @@ import (
 
 func NewChain(do *definitions.Do) error {
 	//overwrites directory if --force
-	dir := path.Join(DataContainersPath, do.Name)
+	dir := filepath.Join(DataContainersPath, do.Name)
 	if _, err := os.Stat(dir); err == nil {
 		log.WithField("dir", dir).Debug("Chain data already exists in")
 		if do.Force {
@@ -276,8 +275,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}()
 
 	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
-	containerDst := path.Join("chains", do.Name)                // path in container
-	dst := path.Join(DataContainersPath, do.Name, containerDst) // path on host
+	containerDst := filepath.Join("chains", do.Name)                // path in container
+	dst := filepath.Join(DataContainersPath, do.Name, containerDst) // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 	// we probably need to update Import
 
@@ -420,7 +419,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 // genesis file either given directly, in dir, or not found (empty)
 func resolveGenesisFile(genesis, dir string) string {
 	if genesis == "" {
-		genesis = path.Join(dir, "genesis.json")
+		genesis = filepath.Join(dir, "genesis.json")
 		if _, err := os.Stat(genesis); err != nil {
 			return ""
 		}
@@ -461,9 +460,9 @@ func copyFiles(dst string, files []stringPair) error {
 		if f.key != "" {
 			log.WithFields(log.Fields{
 				"from": f.key,
-				"to":   path.Join(dst, f.value),
+				"to":   filepath.Join(dst, f.value),
 			}).Debug("Copying files")
-			if err := Copy(f.key, path.Join(dst, f.value)); err != nil {
+			if err := Copy(f.key, filepath.Join(dst, f.value)); err != nil {
 				log.Debugf("Error copying files: %v", err)
 				return err
 			}
@@ -486,8 +485,8 @@ func CleanUp(do *definitions.Do) error {
 		doRm.Volumes = true
 		KillChain(doRm)
 
-		latentDir := path.Join(DataContainersPath, do.Chain.Name)
-		latentFile := path.Join(ChainsPath, do.Chain.Name+".toml")
+		latentDir := filepath.Join(DataContainersPath, do.Chain.Name)
+		latentFile := filepath.Join(ChainsPath, do.Chain.Name+".toml")
 
 		if doRm.Name == "default" {
 			log.WithField("dir", latentDir).Debug("Removing latent dir")
@@ -506,8 +505,8 @@ func CleanUp(do *definitions.Do) error {
 	}
 
 	if do.RmD {
-		log.WithField("dir", path.Join(DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(path.Join(DataContainersPath, do.Service.Name))
+		log.WithField("dir", filepath.Join(DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
+		os.RemoveAll(filepath.Join(DataContainersPath, do.Service.Name))
 	}
 
 	if do.Rm {

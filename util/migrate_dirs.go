@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
@@ -105,8 +105,8 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 	}
 
 	for _, file := range depDirFiles { //if any filenames match, must resolve
-		depFile := path.Join(depDir, file.Name())
-		newFile := path.Join(newDir, file.Name()) //file may not actually exist (yet)
+		depFile := filepath.Join(depDir, file.Name())
+		newFile := filepath.Join(newDir, file.Name()) //file may not actually exist (yet)
 
 		if fileNamesToCheck[file.Name()] == true { //conflict!
 			return fmt.Errorf("identical file name in deprecated dir (%s) and new dir to migrate to (%s)\nplease resolve and re-run command", depFile, newFile)

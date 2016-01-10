@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -35,7 +36,8 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
+
 	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
@@ -131,7 +133,7 @@ func TestExportKeySingle(t *testing.T) {
 
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = path.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	//export
 	if err := ExportKey(doExp); err != nil {
@@ -139,7 +141,7 @@ func TestExportKeySingle(t *testing.T) {
 	}
 
 	//cat host contents
-	key, err := ioutil.ReadFile(path.Join(doExp.Destination, address, address))
+	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
 		fatal(t, err)
 	}
@@ -159,13 +161,13 @@ func TestImportKeySingle(t *testing.T) {
 	//export it
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = path.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	if err := ExportKey(doExp); err != nil {
 		fatal(t, err)
 	}
 
-	key, err := ioutil.ReadFile(path.Join(doExp.Destination, address, address))
+	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
 		fatal(t, err)
 	}

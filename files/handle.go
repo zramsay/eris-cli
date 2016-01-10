@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -236,7 +236,7 @@ func exportDir(dirName, gateway string) (string, error) {
 	//the dir ends up in the loop & tries to post
 	for i := range files {
 		//hacky
-		file := path.Join(gwd, dirName, files[i].Name())
+		file := filepath.Join(gwd, dirName, files[i].Name())
 		if log.GetLevel() > 0 {
 			hashArray[i], err = ipfs.SendToIPFS(file, gateway, os.Stdout)
 		} else {

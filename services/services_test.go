@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/logger"
@@ -26,7 +28,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -273,7 +275,7 @@ func TestExportService(t *testing.T) {
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
-			"Ipfs-Hash": []string{hash},
+			"Ipfs-Hash": {hash},
 		},
 	})
 	defer ipfs.Close()
@@ -423,12 +425,12 @@ func TestCatService(t *testing.T) {
 		tests.IfExit(err)
 	}
 	//if init worked properly...?
-	read, err := ioutil.ReadFile("/tmp/eris/services/ipfs.toml")
+	read, err := ioutil.ReadFile(filepath.Join(config.GlobalConfig.ErisDir, "services", "ipfs.toml"))
 	if err != nil {
 		tests.IfExit(err)
 	}
 	if do.Result != string(read) {
-		tests.IfExit(fmt.Errorf("Cat Service on keys does not match DefaultKeys. Got %s \n Expected %s", do.Result, string(read)))
+		tests.IfExit(fmt.Errorf("Cat Service on ipfs does not match Default. Got %s \n Expected %s", do.Result, string(read)))
 	}
 }
 

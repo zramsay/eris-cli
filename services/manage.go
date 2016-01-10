@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -67,7 +66,7 @@ func NewService(do *definitions.Do) error {
 		"service": srv.Service.Name,
 		"image":   srv.Service.Image,
 	}).Debug("Creating a new service definition file")
-	err = WriteServiceDefinitionFile(srv, path.Join(ServicesPath, do.Name+".toml"))
+	err = WriteServiceDefinitionFile(srv, filepath.Join(ServicesPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}
@@ -243,7 +242,7 @@ func RmService(do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
-			oldFile = path.Join(ServicesPath, oldFile) + ".toml"
+			oldFile = filepath.Join(ServicesPath, oldFile) + ".toml"
 			log.WithField("file", oldFile).Warn("Removing file")
 			if err := os.Remove(oldFile); err != nil {
 				return err

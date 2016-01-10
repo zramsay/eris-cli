@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -71,7 +70,7 @@ func dropChainDefaults(dir, from string) error {
 	// common.DefaultChainDir goes to /home/zach/.eris
 	// rather than /tmp/eris/.eris
 	// XXX something wonky with ResolveErisRoot()?
-	chnDir := path.Join(dir, "default")
+	chnDir := filepath.Join(dir, "default")
 	if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
@@ -83,7 +82,7 @@ func dropChainDefaults(dir, from string) error {
 	}
 
 	//insert version into default chain service definition
-	versionDefault := path.Join(dir, "default.toml")
+	versionDefault := filepath.Join(dir, "default.toml")
 	read, err := ioutil.ReadFile(versionDefault)
 	if err != nil {
 		return err
@@ -94,14 +93,14 @@ func dropChainDefaults(dir, from string) error {
 	}
 
 	//move things to where they ought to be
-	config := path.Join(dir, "config.toml")
-	configDef := path.Join(chnDir, "config.toml")
+	config := filepath.Join(dir, "config.toml")
+	configDef := filepath.Join(chnDir, "config.toml")
 	if err := os.Rename(config, configDef); err != nil {
 		return err
 	}
 
-	server := path.Join(dir, "server_conf.toml")
-	serverDef := path.Join(chnDir, "server_conf.toml")
+	server := filepath.Join(dir, "server_conf.toml")
+	serverDef := filepath.Join(chnDir, "server_conf.toml")
 	if err := os.Rename(server, serverDef); err != nil {
 		return err
 	}

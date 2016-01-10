@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 
@@ -60,7 +60,7 @@ func ChangeDirectory() {
 		log.Fatal("You do not have $GOPATH set. Please make sure this is set and rerun the command")
 	}
 
-	dir := path.Join(goPath, "src/github.com/eris-ltd/eris-cli/")
+	dir := filepath.Join(goPath, "src", "github.com", "eris-ltd", "eris-cli")
 	err := os.Chdir(dir)
 
 	if err != nil {

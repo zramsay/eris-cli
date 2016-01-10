@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -27,7 +26,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
+var erisDir string = filepath.Join(os.TempDir(), "eris")
 var chainName string = "my_testing_chain_dot_com" // :( [csk]-> :)
 
 func TestMain(m *testing.M) {
@@ -36,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("chain"))
 	log.Info("Test init completed. Starting main test sequence now")
@@ -147,7 +146,7 @@ func TestExecChain(t *testing.T) {
 }
 
 func TestPlopChain(t *testing.T) {
-	cfgFilePath := path.Join(common.ChainsPath, "default", "config.toml")
+	cfgFilePath := filepath.Join(common.ChainsPath, "default", "config.toml")
 
 	do := def.NowDo()
 	do.ConfigFile = cfgFilePath
@@ -192,17 +191,17 @@ func TestPlopChain(t *testing.T) {
 // the default chain_id is my_tests, so should be overwritten
 func TestChainsNewDirGen(t *testing.T) {
 	chainID := "testChainsNewDirGen"
-	myDir := path.Join(common.DataContainersPath, chainID)
+	myDir := filepath.Join(common.DataContainersPath, chainID)
 	if err := os.MkdirAll(myDir, 0700); err != nil {
 		tests.IfExit(err)
 	}
 	contents := "this is a file in the directory\n"
-	if err := ioutil.WriteFile(path.Join(myDir, "file.file"), []byte(contents), 0664); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(myDir, "file.file"), []byte(contents), 0664); err != nil {
 		tests.IfExit(err)
 	}
 
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.ChainsPath, "default", "genesis.json")
+	do.GenesisFile = filepath.Join(common.ChainsPath, "default", "genesis.json")
 	do.Name = chainID
 	do.Path = myDir
 	do.Operations.ContainerNumber = 1
@@ -266,8 +265,8 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	chainID := "testChainsNewConfigAndCSV"
 	do := def.NowDo()
 	do.Name = chainID
-	do.ConfigFile = path.Join(common.ChainsPath, "default", "config.toml")
-	do.CSV = path.Join(common.ChainsPath, "default", "genesis.csv")
+	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
+	do.CSV = filepath.Join(common.ChainsPath, "default", "genesis.csv")
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	log.WithField("=>", do.Name).Info("Creating chain (from tests)")
@@ -286,7 +285,7 @@ func TestChainsNewConfigAndCSV(t *testing.T) {
 	ops.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chainID)}
 	result := trimResult(string(runContainer(t, ops)))
 
-	configDefault := path.Join(erisDir, "chains", "default", "config.toml")
+	configDefault := filepath.Join(erisDir, "chains", "default", "config.toml")
 	read, err := ioutil.ReadFile(configDefault)
 	if err != nil {
 		tests.IfExit(err)
@@ -882,7 +881,7 @@ func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
 
 func testNewChain(chain string) {
 	do := def.NowDo()
-	do.GenesisFile = path.Join(common.ChainsPath, "default", "genesis.json")
+	do.GenesisFile = filepath.Join(common.ChainsPath, "default", "genesis.json")
 	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
@@ -942,7 +941,7 @@ func layTestChainToml(name string) {
 	chain := loaders.MockChainDefinition(name, name, false, 1)
 
 	// write the chain definition file ...
-	fileName := filepath.Join(erisDir, "chains", name) + ".toml"
+	fileName := filepath.Join(erisDir, "chains", name)
 	if _, err := os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
 			panic(fmt.Errorf("error writing chain definition to file: %v", err))

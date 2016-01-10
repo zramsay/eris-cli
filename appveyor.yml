@@ -5,6 +5,9 @@ environment:
   GOPATH: C:\
   GOBIN: C:\bin
   PATH: '%PATH%;C:\bin'
+  SWARM: win-tests
+  APIVERSION: latest
+  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
   AWS_ACCESS_KEY:
     secure: +ZHNhI/rT7L/bEqsQl9Ow+1haJ9mEfpiBntxCt7j5q4=
   AWS_SECRET_KEY:
@@ -14,12 +17,12 @@ environment:
     secure: SJGZG9U3ikfqUPYBe5adHw==
   AWS_SECURITY_GROUP:
     secure: jDcmvJeKkI4ifbImHF9vSQ==
-  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+  TEST_IN_CIRCLE: "true"
 
 build_script:
 - cmd: >-
 
-    choco install -yr msys2 > nul
+    choco install -yr cygwin > nul
 
     choco install -yr docker jq
 
@@ -36,11 +39,7 @@ build_script:
 test_script:
 - ps: >-
 
-    docker-machine.exe env --shell=powershell eris-test-win-"$env:APPVEYOR_BUILD_ID" | Invoke-Expression
-
-    cd c:\src\github.com\eris-ltd\eris-cli
-
-    bash tests\test_tool.sh
+    bash c:\src\github.com\eris-ltd\eris-cli\tests\test_tool.sh
 
 on_finish:
 - cmd: >-

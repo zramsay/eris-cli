@@ -37,6 +37,7 @@ repo=$GOPATH/src/$base
 ver=$APIVERSION
 swarm=$SWARM
 ping_times=0
+regn_times=0
 declare -a images
 
 # If an arg is passed to the script we will assume that only local
@@ -56,6 +57,8 @@ declare -a checks
 
 cd $repo
 
+export ERIS_PULL_APPROVE="true"
+
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
 
@@ -70,62 +73,64 @@ announce() {
 }
 
 connect() {
-  echo "Starting Machine."
-  if [[ "$machine" != eris-test-osx* ]] || [[ "$machine" != eris-test-win* ]]
+  if [[ "$machine" != eris-test-osx* ]] && [[ "$machine" != eris-test-win* ]] && [[ "$machine" != "eris" ]]
   then
+    echo "Starting Machine."
     docker-machine start $machine 1>/dev/null
-  fi
-  until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
-  do
-     ping_times=$[$ping_times +1]
-     sleep 3
-  done
-  if [[ $(docker-machine status $machine) != "Running" ]]
-  then
-    echo "Could not start the machine. Exiting this test."
-    exit 1
-  else
-    echo "Machine Started."
-    sleep 15
-    if [[ "$machine" != "eris" ]]
+    until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
+    do
+       ping_times=$[$ping_times+1]
+       sleep 3
+    done
+    if [[ $(docker-machine status $machine) != "Running" ]]
     then
-      n=0
-      until [ $n -ge 10 ]
+      echo "Could not start the machine. Exiting this test."
+      echo
+      early_exit
+    else
+      echo "Machine Started. Regenerating the Certificates."
+      sleep 15
+      until [ $regn_times -ge 10 ]
       do
-        sleep 3
         docker-machine regenerate-certs -f $machine &>/dev/null && break
-        n=$[$n+1]
+        regn_times=$[$regn_times+1]
+        sleep 3
       done
-      if [ $n -ge 10 ]
+      if [ $regn_times -ge 10 ]
       then
-        echo "There was an error connecting to the machine. Exiting test"
+        echo "There was an error connecting to the machine. Exiting test."
         echo
-        test_exit=1
-        turn_off
-        report
-        cd $start
-        exit $test_exit
+        early_exit
       fi
     fi
+    connect_machine
+    clear_stuff
+  else
+    connect_machine
   fi
-  sleep 5
+}
+
+early_exit(){
+  docker-machine kill $machine &>/dev/null
+  test_exit=1
+  report
+  cd $start
+  exit $test_exit
+}
+
+connect_machine(){
   echo "Connecting to Machine."
   eval "$(docker-machine env $machine)" &>/dev/null
   echo "Connected to Machine."
-  echo ""
-  clear_stuff
+  echo
 }
 
 setup_machine() {
-  export ERIS_PULL_APPROVE="true" #because init now pulls images
-  
   if [[ $machine != "eris-test-local" ]]
   then
     eris init --yes --pull-images=true --testing=true
     echo
     eris_version=$(eris version --quiet)
-    #pull_images
-    #echo "Image Pulling Complete."
   fi
 }
 
@@ -139,23 +144,6 @@ wait_procs() {
     wait ${checks[$chk]}
   done
 }
-
-#done by init
-#pull_images() {
-#  images=( "quay.io/eris/base" "quay.io/eris/data" "quay.io/eris/ipfs" "quay.io/eris/keys" "quay.io/eris/erisdb:$eris_version" "quay.io/eris/epm:$eris_version" )
-#  for im in "${images[@]}"
-#  do
-#    echo -e "Pulling image =>\t\t$im"
-#    docker pull $im 1>/dev/null
-    # Async // parallel pulling not working consistently.
-    #   see: https://github.com/docker/docker/issues/9718
-    # this is fixed in docker 1.9 ONLY. So when we deprecate
-    # docker 1.8 we can move to asyncronous pulling
-    # docker pull $im 1>/dev/null &
-    # set_procs
-#  done
-  # wait_procs
-#}
 
 passed() {
   if [ $? -eq 0 ]
@@ -172,56 +160,50 @@ passed() {
 }
 
 packagesToTest() {
-
-  # For testing we want to override the Greg Slepak required ask before pull ;)
-  export ERIS_PULL_APPROVE="true"
-
-  # Start the first series of tests
   go test ./initialize/...
   passed Initialize
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./perform/...
-  passed Perform
   if [ $? -ne 0 ]; then return 1; fi
   go test ./util/...
   passed Util
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./data/...
-  passed Data
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./files/...
-  passed Files
-  if [ $? -ne 0 ]; then return 1; fi
   go test ./config/...
   passed Config
   if [ $? -ne 0 ]; then return 1; fi
+  go test ./perform/...
+  passed Perform
+  if [ $? -ne 0 ]; then return 1; fi
+  go test ./data/...
+  passed Data
+  if [ $? -ne 0 ]; then return 1; fi
+  if [[ "$machine" != eris-test-win* ]]
+  then
+    go test ./files/...
+    passed Files
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./services/... # switch FROM me if needing to debug
+    # cd services && go test && cd .. # switch to me if needing to debug
+    passed Services
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./chains/... # switch FROM me if needing to debug
+    # cd chains && go test && cd .. # switch TO me if needing to debug
+    passed Chains
+    if [ $? -ne 0 ]; then return 1; fi
+  fi
   go test ./keys/...
   passed Keys
-  if [ $? -ne 0 ]; then return 1; fi
-
-  # Start the second series of tests
-  go test ./services/... -timeout 720s # switch FROM me if needing to debug
-  # cd services && go test && cd .. # switch to me if needing to debug
-  passed Services
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./chains/... # switch FROM me if needing to debug
-# cd chains && go test && cd .. # switch TO me if needing to debug
-  passed Chains
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./actions/...
-  passed Actions
   if [ $? -ne 0 ]; then return 1; fi
   go test ./contracts/...
   passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
-
+  go test ./actions/...
+  passed Actions
+  if [ $? -ne 0 ]; then return 1; fi
   # go test ./projects/...
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
   # go test ./remotes/...
   # passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-
   # The final push....
   go test ./commands/...
   passed Commands
