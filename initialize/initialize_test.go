@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -182,7 +183,7 @@ func testsCompareFiles(path1, path2 string) error {
 		return err
 	}
 
-	if string(file1) != string(file2) {
+	if !bytes.Equal(file1, file2) {
 		return fmt.Errorf("Error: Got %s\nExpected %s", string(file1), string(file1))
 	}
 	return nil
