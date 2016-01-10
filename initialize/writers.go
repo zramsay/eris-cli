@@ -18,16 +18,22 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
+// XXX all files in this sequence must be added to both
+// the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_name)
 func dropServiceDefaults(dir, from string) error {
 	servDefs := []string{
 		"btcd.toml",
+		"compilers.toml",
 		"eth.toml",
 		"ipfs.toml",
 		"keys.toml",
+		"logspout.toml",
+		"logsrotate.toml",
 		"mindy.toml",
 		"mint.toml",
 		"openbazaar.toml",
 		"tinydns.toml",
+		"watchtower.toml",
 		"do_not_use.toml",
 	}
 
