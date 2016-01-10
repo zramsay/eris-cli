@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(testsInit())
+	tests.IfExit(tests.TestsInit("data"))
 
 	exitCode := m.Run()
 
@@ -55,7 +55,7 @@ func TestExportData(t *testing.T) {
 		t.FailNow()
 	}
 
-	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
 		log.Errorf("Tragic! Exported file does not exist: %s", err)
 		t.Fail()
 	}
@@ -166,14 +166,14 @@ func TestRmData(t *testing.T) {
 //creates a new data container w/ dir to be used by a test
 //maybe give create opts? => paths, files, file contents, etc
 func testCreateDataByImport(t *testing.T, name string) {
-	newDataDir := path.Join(common.DataContainersPath, name)
+	newDataDir := filepath.Join(common.DataContainersPath, name)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
 		log.Error(err)
 		t.FailNow()
 		os.Exit(1)
 	}
 
-	f, err := os.Create(path.Join(newDataDir, "test"))
+	f, err := os.Create(filepath.Join(newDataDir, "test"))
 	if err != nil {
 		log.Error(err)
 		t.FailNow()
