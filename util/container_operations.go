@@ -3,7 +3,7 @@ package util
 import (
 	"errors"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -160,7 +160,7 @@ func FixDirs(arg []string) ([]string, error) {
 			keep := strings.Replace(a, tmp+":", "", 1)
 			if runtime.GOOS == "windows" {
 				winTmp := strings.Split(tmp, "/")
-				tmp = path.Join(winTmp...)
+				tmp = filepath.Join(winTmp...)
 			}
 			tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
 			arg[n] = strings.Join([]string{tmp, keep}, ":")

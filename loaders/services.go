@@ -2,8 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	// "os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -11,8 +10,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -168,7 +167,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return config.LoadViperConfig(path.Join(ServicesPath), servName, "service")
+	return config.LoadViperConfig(filepath.Join(ServicesPath), servName, "service")
 }
 
 // Services must be given an image. Flame out if they do not.

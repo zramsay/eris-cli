@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -17,7 +17,7 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
+var erisDir string = filepath.Join(os.TempDir(), "eris")
 var file string
 var content string = "test content\n"
 
@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		erisDir = os.Getenv("HOME")
@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	file = path.Join(erisDir, "temp")
+	file = filepath.Join(erisDir, "temp")
 
 	tests.IfExit(testsInit())
 	exitCode := m.Run()
@@ -64,14 +64,16 @@ func TestPutFiles(t *testing.T) {
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
-	ipfs := tests.NewServer("localhost:8080")
+	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+	ipfs := tests.NewServer("0.0.0.0:8080")
+	log.Warn("Server turned on.")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
-			"Ipfs-Hash": []string{hash},
+			"Ipfs-Hash": {hash},
 		},
 	})
+	log.Warn("Waiting on server response.")
 	defer ipfs.Close()
 
 	if err := PutFiles(do); err != nil {
@@ -105,8 +107,8 @@ func TestGetFiles(t *testing.T) {
 	do.Path = fileName
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
-	ipfs := tests.NewServer("localhost:8080")
+	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
+	ipfs := tests.NewServer("0.0.0.0:8080")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,

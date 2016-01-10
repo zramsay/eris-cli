@@ -2,7 +2,6 @@ package data
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
@@ -23,7 +22,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -37,14 +36,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestImportDataRawNoPriorExist(t *testing.T) {
-	newDataDir := path.Join(common.DataContainersPath, dataName)
+	newDataDir := filepath.Join(common.DataContainersPath, dataName)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
 		log.Error(err)
 		t.FailNow()
 		os.Exit(1)
 	}
 
-	f, err := os.Create(path.Join(newDataDir, "test"))
+	f, err := os.Create(filepath.Join(newDataDir, "test"))
 	if err != nil {
 		log.Error(err)
 		t.FailNow()
@@ -94,7 +93,7 @@ func TestExportData(t *testing.T) {
 		t.FailNow()
 	}
 
-	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
 		log.Errorf("Tragic! Exported file does not exist: %s", err)
 		t.Fail()
 	}

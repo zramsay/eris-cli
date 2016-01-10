@@ -3,7 +3,7 @@ package data
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -79,7 +79,7 @@ func RmData(do *definitions.Do) (err error) {
 
 		if do.RmHF {
 			log.WithField("=>", do.Name).Warn("Removing host directory")
-			if err = os.RemoveAll(path.Join(DataContainersPath, do.Name)); err != nil {
+			if err = os.RemoveAll(filepath.Join(DataContainersPath, do.Name)); err != nil {
 				return err
 			}
 		}

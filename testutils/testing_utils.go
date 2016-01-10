@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -17,7 +16,7 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var erisDir = path.Join(os.TempDir(), "eris")
+var erisDir = filepath.Join(os.TempDir(), "eris")
 
 //testType = one of each package, will switch over it for
 //make additional tempDirs and vars as needed -> [zr] or not, TBD

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -13,16 +14,16 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
+var erisDir string = filepath.Join(os.TempDir(), "eris")
 
 //old
-var blockchains string = path.Join(erisDir, "blockchains")
-var dapps string = path.Join(erisDir, "dapps")
+var blockchains string = filepath.Join(erisDir, "blockchains")
+var dapps string = filepath.Join(erisDir, "dapps")
 var depDirs = []string{blockchains, dapps}
 
 //new
-var chains string = path.Join(erisDir, "chains")
-var apps string = path.Join(erisDir, "apps")
+var chains string = filepath.Join(erisDir, "chains")
+var apps string = filepath.Join(erisDir, "apps")
 var newDirs = []string{chains, apps}
 
 func TestMain(m *testing.M) {
@@ -87,7 +88,7 @@ func TestMigrationMoveFile(t *testing.T) {
 	defer testsRemoveDirs(depDirs, newDirs)
 
 	testFile := "migration_test"
-	testDepFile := path.Join(depDirs[0], testFile)
+	testDepFile := filepath.Join(depDirs[0], testFile)
 
 	testDepContent := []byte("some datas")
 
@@ -105,7 +106,7 @@ func TestMigrationMoveFile(t *testing.T) {
 		ifExit(err)
 	}
 
-	testNewFile := path.Join(newDirs[0], testFile)
+	testNewFile := filepath.Join(newDirs[0], testFile)
 	testNewContent, err := ioutil.ReadFile(testNewFile)
 	if err != nil {
 		ifExit(err)
@@ -123,7 +124,10 @@ func testsInit() error {
 	ifExit(err)
 
 	if err := os.Mkdir(erisDir, 0777); err != nil {
-		ifExit(err)
+		if runtime.GOOS != "windows" {
+			// windows returns an error here
+			ifExit(err)
+		}
 	}
 	config.ChangeErisDir(erisDir)
 

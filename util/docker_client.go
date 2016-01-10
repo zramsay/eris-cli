@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -203,7 +203,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	}
 	dPath = out2.String()
 	dPath = strings.Replace(dPath, "'", "", -1)
-	dPath = path.Dir(dPath)
+	dPath = filepath.Dir(dPath)
 	log.WithField("cert path", dPath).Debug()
 
 	if dPath == "" || dHost == "" {
@@ -297,7 +297,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 		"host":      dockerHost,
 		"cert path": dockerCertPath,
 	}).Debug("Connecting to Docker via TLS")
-	DockerClient, err = docker.NewTLSClient(dockerHost, path.Join(dockerCertPath, "cert.pem"), path.Join(dockerCertPath, "key.pem"), path.Join(dockerCertPath, "ca.pem"))
+	DockerClient, err = docker.NewTLSClient(dockerHost, filepath.Join(dockerCertPath, "cert.pem"), filepath.Join(dockerCertPath, "key.pem"), filepath.Join(dockerCertPath, "ca.pem"))
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func popHostAndPath() (string, string) {
 func checkKeysAndCerts(dPath string) error {
 	toCheck := []string{"cert.pem", "key.pem", "ca.pem"}
 	for _, f := range toCheck {
-		f = path.Join(dPath, f)
+		f = filepath.Join(dPath, f)
 		if _, err := os.Stat(f); err != nil {
 			if os.IsNotExist(err) {
 				return fmt.Errorf("The marmots could not find a file that was required to connect to Docker.\nThey get a file does not exist error from the OS.\nFile needed:\t%s\n", f)

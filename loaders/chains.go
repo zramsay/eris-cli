@@ -2,7 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -46,7 +46,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
-	chainConf, err := config.LoadViperConfig(path.Join(ChainsPath), chainName, "chain")
+	chainConf, err := config.LoadViperConfig(filepath.Join(ChainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(path.Join(ChainsPath), "default", "chain")
+	cfg, err := config.LoadViperConfig(filepath.Join(ChainsPath), "default", "chain")
 	if err != nil {
 		return err
 	}

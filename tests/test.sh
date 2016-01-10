@@ -55,8 +55,8 @@ declare -a machine_results=()
 
 # Primary and secondary swarm of backend machines. Swarms here are really data centers.
 #   These boxes are on AWS.
-swarm_prim="fra1"
-swarm_back="dca1"
+swarm_prim="dca1"
+swarm_back="fra1"
 swarm=$swarm_prim
 
 # Define now the tool tests within the Docker container will be booted from docker run

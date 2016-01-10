@@ -188,12 +188,12 @@ func CurrentChain(do *definitions.Do) error {
 
 func PlopChain(do *definitions.Do) error {
 	do.Name = do.ChainID
-	rootDir := path.Join("/home/eris/.eris/chains", do.ChainID)
+	rootDir := path.Join(ErisContainerRoot, "chains", do.ChainID)
 	switch do.Type {
 	case "genesis":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+		do.Operations.Args = []string{"cat", filepath.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+		do.Operations.Args = []string{"cat", filepath.Join(rootDir, "config.toml")}
 	case "status":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
 	case "validators":
@@ -359,14 +359,14 @@ func GraduateChain(do *definitions.Do) error {
 	}
 
 	serv := loaders.ServiceDefFromChain(chain, loaders.ErisChainStart)
-	if err := services.WriteServiceDefinitionFile(serv, path.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
+	if err := services.WriteServiceDefinitionFile(serv, filepath.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
 		return err
 	}
 	return nil
 }
 
 func CatChain(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(path.Join(ChainsPath, do.Name+".toml"))
+	cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}
