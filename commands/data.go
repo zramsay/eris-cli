@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
@@ -24,13 +23,16 @@ data into containers for use by your application.
 The [eris data import] and [eris data export] commands should be 
 thought of from the point of view of the container.
 
-The [eris data import] command sends files *as is* from 
-~/.eris/data/NAME on the host to ~/.eris/ inside 
-of the data container.
+The [eris data import] command sends a directory *as is* from 
+SRC on the host to an existing DEST inside of the data container.
 
 The [eris data export] command performs this process in the reverse. 
-It sucks out whatever is in the volumes of the data container 
-and sticks it back into ~/.eris/data/NAME on the host.
+It sucks out whatever is in the SRC directory in the data container 
+and sticks it back into a DEST directory on the host.
+
+Notes: 
+- container paths enter at /home/eris/.eris
+- import host path must be absolute, export host path is indifferent
 
 At Eris, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
@@ -51,10 +53,23 @@ func buildDataCommand() {
 }
 
 var dataImport = &cobra.Command{
-	Use:   "import NAME",
-	Short: "Import ~/.eris/data/name folder to a named data container",
-	Long:  `Import ~/.eris/data/name folder to a named data container`,
-	Run:   ImportData,
+	Use:   "import NAME SRC DEST",
+	Short: "Import from a host folder to a named data container's directory",
+	Long: `Import from a host folder to a named data container's directory.
+Requires src and dest for each host and container, respectively.
+Container path enters at /home/eris/.eris
+Source (host) path must be absolute and destination dir must exist.`,
+	Run: ImportData,
+}
+
+var dataExport = &cobra.Command{
+	Use:   "export NAME SRC DEST",
+	Short: "Export a named data container's directory to a host directory",
+	Long: `Export a named data container's directory to a host directory.
+Requires src and dest for each container and host, respectively.
+Container path enters at /home/eris/.eris
+Destination (host) path can be relative.`,
+	Run: ExportData,
 }
 
 var dataList = &cobra.Command{
@@ -103,13 +118,6 @@ var dataInspect = &cobra.Command{
 	Run:   InspectData,
 }
 
-var dataExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "Export a named data container's volumes to ~/.eris/data/name",
-	Long:  `Export a named data container's volumes to ~/.eris/data/name`,
-	Run:   ExportData,
-}
-
 var dataRm = &cobra.Command{
 	Use:   "rm NAME",
 	Short: "Remove a data container",
@@ -126,11 +134,11 @@ func addDataFlags() {
 
 	buildFlag(dataExec, do, "interactive", "data")
 
-	dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
-	//XXX not used ... but could be if we wanted to be less opiniated
-	//dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
-	//dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
-	dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
+	// all have been converted into arguments
+	// dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
+	// dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
+	// dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
+	// dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
 }
 
 //----------------------------------------------------
@@ -173,17 +181,21 @@ func RmData(cmd *cobra.Command, args []string) {
 	IfExit(data.RmData(do))
 }
 
+//src on host, dest in container
 func ImportData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
-	setDefaultDir("import")
+	do.Source = args[1]
+	do.Destination = args[2]
 	IfExit(data.ImportData(do))
 }
 
+//src in container, dest on host
 func ExportData(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
-	setDefaultDir("export")
+	do.Source = args[1]
+	do.Destination = args[2]
 	IfExit(data.ExportData(do))
 }
 
@@ -205,27 +217,4 @@ func ExecData(cmd *cobra.Command, args []string) {
 
 	do.Operations.Args = args
 	IfExit(data.ExecData(do))
-}
-
-// we don't set this as the default for the flag because it overwrites
-// the unified do.Path script with other packages expect to be able to
-// provide their own defaults for.
-// [zr] perhaps now we can set default in flag...?
-func setDefaultDir(typ string) {
-	switch typ {
-	case "import":
-		//if do.Source == "" {
-		do.Source = filepath.Join(DataContainersPath, do.Name)
-		//}
-		if do.Destination == "" {
-			do.Destination = ErisContainerRoot
-		}
-	case "export":
-		if do.Source == "" {
-			do.Source = ErisContainerRoot
-		}
-		//if do.Destination == "" {
-		do.Destination = filepath.Join(DataContainersPath, do.Name)
-		//}
-	}
 }

@@ -142,6 +142,7 @@ func ChangeErisDir(erisDir string) {
 	dir.LllcScratchPath = filepath.Join(dir.ScratchPath, "lllc")
 	dir.SolcScratchPath = filepath.Join(dir.ScratchPath, "sol")
 	dir.SerpScratchPath = filepath.Join(dir.ScratchPath, "ser")
+	dir.DataContainersPath = filepath.Join(dir.ScratchPath, "data")
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
