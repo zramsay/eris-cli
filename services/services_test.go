@@ -55,7 +55,7 @@ func TestKnownServices(t *testing.T) {
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 13 {
-		tests.IfExit(fmt.Errorf("Did not find exactly 13 service definitions files. Something is wrong.\n"))
+		tests.IfExit(fmt.Errorf("Did not find exactly 13 service definitions files, found %v. Something is wrong.\n", len(k)))
 	}
 	i := 0
 	for _, actFile := range k {
@@ -501,7 +501,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
+	if err := tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun); err != nil {
 		tests.IfExit(nil)
 	}
 }

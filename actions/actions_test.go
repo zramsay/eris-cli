@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("actions"))
 	exitCode := m.Run()
@@ -151,7 +151,7 @@ func TestRemoveAction(t *testing.T) {
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	if tests.TestExistAndRun(name, "actions", 1, toExist, false) {
-		t.Fail()
+	if existing := tests.TestActionDefinitionFile(name); existing != toExist {
+		t.Errorf("expected action definition file %q with status %v, got %v", name, toExist, existing)
 	}
 }

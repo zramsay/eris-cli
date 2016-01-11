@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -275,7 +275,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
+	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }

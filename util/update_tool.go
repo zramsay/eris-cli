@@ -36,7 +36,7 @@ func UpdateEris(branch string) {
 	InstallEris()
 	ver := version() //because version.Version will be in RAM.
 
-	log.WithField("version", ver).Warn("The marmots have updated Eris successfully")
+	log.WithField("=>", ver).Warn("The marmots have updated Eris successfully")
 }
 
 func CheckGitAndGo(git, gO bool) {

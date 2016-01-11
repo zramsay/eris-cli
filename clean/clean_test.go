@@ -153,7 +153,7 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
+	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }

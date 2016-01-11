@@ -3,7 +3,6 @@ package initialize
 import (
 	"fmt"
 	"os"
-	//	"path"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -115,7 +114,7 @@ func checkIfCanOverwrite(doYes bool) error {
 		return nil
 	}
 	var input string
-	log.WithField("path", common.ErisRoot).Warn("Eris root directory already exists.")
+	log.WithField("path", common.ErisRoot).Warn("Eris root directory already exists")
 	log.WithFields(log.Fields{
 		"services path": common.ServicesPath,
 		"actions path":  common.ActionsPath,
@@ -126,7 +125,7 @@ func checkIfCanOverwrite(doYes bool) error {
 		return fmt.Errorf("Error reading from stdin: %v\n", err)
 	}
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-		log.Debug("Confirmation verified. Proceeding.")
+		log.Debug("Confirmation verified. Proceeding")
 	} else {
 		log.Warn("The marmots will not proceed without your permission to overwrite")
 		log.Warn("Please backup your files and try again")
@@ -150,7 +149,7 @@ func GetTheImages() error {
 		log.Warn("These times can double or triple on local host machines")
 		log.Warn("If you already have these images, they will be updated")
 
-		log.WithField("ERIS_PULL_APPROVE", "true").Warn("To avoid this warning on all future pulls, set as an environment variable:")
+		log.WithField("ERIS_PULL_APPROVE", "true").Warn("To avoid this warning on all future pulls, set as an environment variable")
 
 		fmt.Print("Do you wish to continue? (y/n): ")
 		if _, err := fmt.Scanln(&input); err != nil {
