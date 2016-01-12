@@ -216,7 +216,7 @@ func testKillDataCont(t *testing.T, name string) {
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	if tests.TestExistAndRun(name, "data", 1, toExist, false) {
+	if err := tests.TestExistAndRun(name, "data", 1, toExist, false); err != nil {
 		t.Fail()
 	}
 }

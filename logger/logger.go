@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"os/exec"
+	"runtime"
 	"sort"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -31,6 +32,11 @@ var (
 // Tput asks the terminfo database for a particular escape sequence.
 func tput(command string, params ...interface{}) []byte {
 	args := []string{command}
+
+	// Don't do anything on Windows.
+	if runtime.GOOS == "windows" {
+		return []byte{}
+	}
 
 	for _, param := range params {
 		switch param.(type) {

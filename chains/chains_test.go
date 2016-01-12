@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("chain"))
 	log.Info("Test init completed. Starting main test sequence now")
@@ -874,7 +874,7 @@ func testKillChain(t *testing.T, chain string) {
 }
 
 func testExistAndRun(t *testing.T, chainName string, toExist, toRun bool) {
-	if tests.TestExistAndRun(chainName, "chains", 1, toExist, toRun) {
+	if err := tests.TestExistAndRun(chainName, "chain", 1, toExist, toRun); err != nil {
 		tests.IfExit(nil)
 	}
 }

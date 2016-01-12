@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
 		erisDir = os.Getenv("HOME")
@@ -131,6 +131,7 @@ func TestGetFiles(t *testing.T) {
 	if err != nil {
 		fatal(t, err)
 	}
+	defer f.Close()
 
 	contentPuted, err := ioutil.ReadAll(f)
 	if err != nil {

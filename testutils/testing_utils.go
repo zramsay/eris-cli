@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,7 +17,12 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var erisDir = filepath.Join(os.TempDir(), "eris")
+var (
+	erisDir = filepath.Join(os.TempDir(), "eris")
+
+	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
+	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
+)
 
 //testType = one of each package, will switch over it for
 //make additional tempDirs and vars as needed -> [zr] or not, TBD
@@ -50,85 +56,60 @@ func TestsInit(testType string) (err error) {
 	return nil
 }
 
-//return to handle failings in each pkg
-//typ = type of test for dealing with do.() details
-func TestExistAndRun(name, typ string, contNum int, toExist, toRun bool) bool {
-	var exist, run bool
-	if typ == "actions" {
-		name = strings.Replace(name, " ", "_", -1) // dirty
-	}
+func TestActionDefinitionFile(name string) bool {
+	name = strings.Replace(name, " ", "_", -1)
 
+	if util.GetFileByNameAndType("actions", name) == "" {
+		return false
+	}
+	return true
+}
+
+func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":       name,
 		"running":  toRun,
 		"existing": toExist,
 	}).Info("Checking container")
-	if typ == "chains" {
-		name = util.ChainContainersName(name, 1) // not worried about containerNumbers, deal with multiple containers in services tests
-	} else if typ == "services" {
-		name = util.ServiceContainersName(name, contNum)
 
-	} else {
-		name = util.DataContainersName(name, 1)
-	}
-	do := def.NowDo()
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
+	if existing := FindContainer(name, t, contNum, false); existing != toExist {
+		log.WithFields(log.Fields{
+			"=>":       name,
+			"expected": toExist,
+			"got":      existing,
+		}).Info("Checking container existing")
 
-	if typ == "data" || typ == "chains" || typ == "services" {
-		do.Existing = true
-	} else if typ == "actions" {
-		do.Known = true
-	}
-	if err := util.ListAll(do, typ); err != nil {
-		log.Error(err)
-		return true
+		return ErrContainerExistMismatch
 	}
 
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == util.ContainersShortName(name) {
-			exist = true
-		}
+	if running := FindContainer(name, t, contNum, true); running != toRun {
+		log.WithFields(log.Fields{
+			"=>":       name,
+			"expected": toExist,
+			"got":      running,
+		}).Info("Checking container running")
+
+		return ErrContainerRunMismatch
 	}
 
-	if toExist != exist {
-		if toExist {
-			log.WithField("=>", name).Info("Could not find existing")
-		} else {
-			log.WithField("=>", name).Info("Found existing when shouldn't be")
-		}
-		return true
-	}
-	//func should always be testing for toExist, only sometimes tested for runining
-	if typ == "chains" || typ == "services" {
-		do.Running = true
-		do.Existing = false //unset
-		if err := util.ListAll(do, typ); err != nil {
-			return true
-		}
-		res = strings.Split(do.Result, "\n")
-		for _, r := range res {
-			if r == util.ContainersShortName(name) {
-				run = true
-			}
-		}
+	return nil
+}
 
-		if toRun != run {
-			if toRun {
-				log.WithField("=>", name).Info("Could not find running")
-			} else {
-				log.WithField("=>", name).Info("Found running when shouldn't be")
-			}
+// FindContainer returns true if the container with a given
+// short name, type, number, and status exists.
+func FindContainer(name, t string, n int, running bool) bool {
+	containers := util.ErisContainersByType(t, !running)
+
+	for _, c := range containers {
+		if c.ShortName == name && c.Number == n {
 			return true
 		}
 	}
-
 	return false
 }
 
 // Remove a container of some name, type, and number.
-func RemoveContainer(name string, t string, n int) error {
+func RemoveContainer(name, t string, n int) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            util.ContainersName(t, name, n),
 		RemoveVolumes: true,
@@ -149,7 +130,7 @@ func RemoveAllContainers() error {
 
 // Return container links. For sake of simplicity, don't expose
 // anything else.
-func Links(name string, t string, n int) []string {
+func Links(name, t string, n int) []string {
 	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name, n))
 	if err != nil {
 		return []string{}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -91,8 +92,6 @@ func AddCommands() {
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
 	ErisCmd.AddCommand(ListEverything)
-	buildManCommand()
-	ErisCmd.AddCommand(ManPage)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()
@@ -102,6 +101,10 @@ func AddCommands() {
 	buildVerSionCommand()
 	ErisCmd.AddCommand(VerSion)
 
+	if runtime.GOOS != "windows" {
+		buildManCommand()
+		ErisCmd.AddCommand(ManPage)
+	}
 	ErisCmd.SetHelpCommand(Help)
 	ErisCmd.SetHelpTemplate(helpTemplate)
 }
