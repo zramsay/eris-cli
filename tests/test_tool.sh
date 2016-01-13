@@ -63,52 +63,6 @@ announce() {
   echo ""
 }
 
-# connect() {
-#   if [[ "$machine" != eris-test-osx* ]] && [[ "$machine" != eris-test-win* ]] && [[ "$machine" != "eris" ]]
-#   then
-#     echo "Starting Machine."
-#     docker-machine start $machine 1>/dev/null
-#     until [[ $(docker-machine status $machine) == "Running" ]] || [ $ping_times -eq 10 ]
-#     do
-#        ping_times=$[$ping_times+1]
-#        sleep 3
-#     done
-#     if [[ $(docker-machine status $machine) != "Running" ]]
-#     then
-#       echo "Could not start the machine. Exiting this test."
-#       echo
-#       early_exit
-#     else
-#       echo "Machine Started. Regenerating the Certificates."
-#       sleep 15
-#       until [ $regn_times -ge 10 ]
-#       do
-#         docker-machine regenerate-certs -f $machine &>/dev/null && break
-#         regn_times=$[$regn_times+1]
-#         sleep 3
-#       done
-#       if [ $regn_times -ge 10 ]
-#       then
-#         echo "There was an error connecting to the machine. Exiting test."
-#         echo
-#         early_exit
-#       fi
-#     fi
-#     connect_machine
-#     clear_stuff
-#   else
-#     connect_machine
-#   fi
-# }
-
-# early_exit(){
-#   docker-machine kill $machine &>/dev/null
-#   test_exit=1
-#   report
-#   cd $start
-#   exit $test_exit
-# }
-
 connect(){
   echo "Connecting to Machine."
   eval "$(docker-machine env $machine)" &>/dev/null
@@ -121,17 +75,6 @@ setup() {
   echo
   eris_version=$(eris version --quiet)
 }
-
-# set_procs() {
-#   checks[$1]=$!
-# }
-
-# wait_procs() {
-#   for chk in "${!checks[@]}"
-#   do
-#     wait ${checks[$chk]}
-#   done
-# }
 
 packagesToTest() {
   go test ./initialize/...
@@ -172,6 +115,9 @@ packagesToTest() {
   go test ./actions/...
   passed Actions
   if [ $? -ne 0 ]; then return 1; fi
+  go test ./clean/...
+  passed Clean
+  if [ $? -ne 0 ]; then return 1; fi
   # go test ./projects/...
   # passed Projects
   # if [ $? -ne 0 ]; then return 1; fi
@@ -207,24 +153,6 @@ passed() {
     return 1
   fi
 }
-
-# clear_stuff() {
-#   echo "Clearing images and containers."
-#   docker rm $(docker ps -a -q) &>/dev/null
-#   docker rmi -f $(docker images -q) &>/dev/null
-#   echo ""
-# }
-
-# turn_off() {
-#   echo "Cleaning up after ourselves."
-#   clear_stuff
-#   echo "Containers and Images cleanup complete."
-#   echo "Stopping Machine."
-#   set +e
-#   docker-machine kill $machine
-#   set -e
-#   echo "Machine Stopped."
-# }
 
 report() {
   if [ $test_exit -eq 0 ]
