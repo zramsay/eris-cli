@@ -120,7 +120,8 @@
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Rev": "ad63b06ab3877915532cd30073b45d6f7e02b7cd"
+			"Comment": "v0.8.7-53-g446d1c1",
+			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
 		}
 	]
 }
