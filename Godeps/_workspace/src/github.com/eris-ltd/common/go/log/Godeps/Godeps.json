@@ -1,31 +1,14 @@
 {
-	"ImportPath": "github.com/eris-ltd/common/go/log",
+	"ImportPath": "github.com/eris-ltd/common/go",
 	"GoVersion": "go1.4",
 	"Packages": [
-		"github.com/Sirupsen/logrus"
-	],
+		"./..."
+		],
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.8.7-53-g446d1c1",
 			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
-		},
-		{
-			"ImportPath": "github.com/davecgh/go-spew/spew",
-			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
-		},
-		{
-			"ImportPath": "github.com/pmezard/go-difflib/difflib",
-			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.2-6-gf390dcf",
-			"Rev": "f390dcf405f7b83c997eac1b06768bb9f44dec18"
-		},
-		{
-			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
 		}
 	]
 }
