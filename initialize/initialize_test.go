@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
@@ -23,6 +26,7 @@ var servDir = filepath.Join(erisDir, "services")
 var actDir = filepath.Join(erisDir, "actions")
 var chnDir = filepath.Join(erisDir, "chains")
 var chnDefDir = filepath.Join(chnDir, "default")
+var toadUp bool
 
 func TestMain(m *testing.M) {
 
@@ -33,6 +37,8 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	ifExit(testsInit())
+
+	toadUp = toadServerUp()
 
 	exitCode := m.Run()
 
@@ -100,24 +106,30 @@ func testDrops(dir, kind string) error {
 	switch kind {
 	case "services":
 		//pull from toadserver
-		if err := dropServiceDefaults(dirToad, "toadserver"); err != nil {
-			ifExit(err)
+		if toadUp {
+			if err := dropServiceDefaults(dirToad, "toadserver"); err != nil {
+				ifExit(err)
+			}
 		}
 		//pull from rawgit
 		if err := dropServiceDefaults(dirGit, "rawgit"); err != nil {
 			ifExit(err)
 		}
 	case "actions":
-		if err := dropActionDefaults(dirToad, "toadserver"); err != nil {
-			ifExit(err)
+		if toadUp {
+			if err := dropActionDefaults(dirToad, "toadserver"); err != nil {
+				ifExit(err)
+			}
 		}
 		if err := dropActionDefaults(dirGit, "rawgit"); err != nil {
 			ifExit(err)
 		}
 
 	case "chains":
-		if err := dropChainDefaults(dirToad, "toadserver"); err != nil {
-			ifExit(err)
+		if toadUp {
+			if err := dropChainDefaults(dirToad, "toadserver"); err != nil {
+				ifExit(err)
+			}
 		}
 		if err := dropChainDefaults(dirGit, "rawgit"); err != nil {
 			ifExit(err)
@@ -133,19 +145,34 @@ func testDrops(dir, kind string) error {
 		ifExit(err)
 	}
 
-	for _, toad := range toads {
-		for _, git := range gits {
-			if toad.Name() == git.Name() {
-				tsFile := filepath.Join(dirToad, toad.Name())
-				gitFile := filepath.Join(dirGit, git.Name())
-				//read and compare files
-				if err := testsCompareFiles(tsFile, gitFile); err != nil {
-					ifExit(fmt.Errorf("error comparing files: %v\n", err))
+	if toadUp {
+		for _, toad := range toads {
+			for _, git := range gits {
+				if toad.Name() == git.Name() {
+					tsFile := filepath.Join(dirToad, toad.Name())
+					gitFile := filepath.Join(dirGit, git.Name())
+					//read and compare files
+					if err := testsCompareFiles(tsFile, gitFile); err != nil {
+						ifExit(fmt.Errorf("error comparing files: %v\n", err))
+					}
 				}
 			}
 		}
 	}
 	return nil
+}
+
+func toadServerUp() bool {
+	timeout := time.Duration(5 * time.Second)
+	client := http.Client{
+		Timeout: timeout,
+	}
+	url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), "keys.toml")
+	_, err := client.Get(url)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func testsInit() error {
