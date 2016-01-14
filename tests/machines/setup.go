@@ -19,11 +19,12 @@ var docker18s = []string{"1.8.0", "1.8.1", "1.8.2", "1.8.3"}
 var docker19s = []string{"1.9.0", "1.9.1"}
 var dockerAll = [][]string{docker18s, docker19s}
 
-// var dmDriver = "amazonec2"
-var dmDriver = "digitalocean"
+var dmDriver = "amazonec2"
 var script = "docker.sh"
+var vars map[string]string
+
 var buildAllBranches = []string{"master", "staging"}
-var maxRetries = 5
+var maxTimeout = 15 * time.Minute
 
 var wg sync.WaitGroup
 
@@ -52,17 +53,14 @@ func main() {
 		}
 	}
 
-	var dockers []string
 	var machines []string
-
-	for d := range dockerAll {
-		dockers = append(dockers, dockerAll[d]...)
-	}
 
 	if runtime.GOOS == "linux" {
 		if allOrFew {
-			for _, d := range dockers {
-				machines = append(machines, makeMachName(d))
+			for d1 := range dockerAll {
+				for _, d := range dockerAll[d1] {
+					machines = append(machines, makeMachName(d))
+				}
 			}
 		} else {
 			for d := range dockerAll {
@@ -73,15 +71,35 @@ func main() {
 		machines = []string{makeMachName(dockerAll[len(dockerAll)-1][0])}
 	}
 
+	failOut := make(chan bool, len(machines))
+	go timeOutTicker(machines)
+
 	wg.Add(len(machines))
 	for _, m := range machines {
-		go startMachine(m, 0)
+		go startMachine(m, failOut)
 	}
+
+	go func(failOut chan bool) {
+		if _, ok := <-failOut; ok {
+			for _, m := range machines {
+				fmt.Println(m)
+			}
+			os.Exit(1)
+		}
+	}(failOut)
 	wg.Wait()
 
 	for _, m := range machines {
 		fmt.Println(m)
 	}
+}
+
+func timeOutTicker(machines []string) {
+	time.Sleep(maxTimeout)
+	for _, m := range machines {
+		fmt.Println(m)
+	}
+	os.Exit(1)
 }
 
 func toShuffle() bool {
@@ -100,36 +118,31 @@ func shuffle(arr []string) {
 }
 
 func vetAndPopulate() error {
-	vars := make(map[string]string)
+	vars = make(map[string]string)
 
 	// aws vars
 	vars["akey"] = os.Getenv("AWS_ACCESS_KEY_ID")
 	vars["asec"] = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	vars["avpc"] = os.Getenv("AWS_VPC_ID")
-	vars["agrp"] = "eris-test-dca1"
-	vars["areg"] = "us-east-1"
-	vars["assh"] = "eris"
+	vars["agrp"] = "eris-test-ire"
+	vars["areg"] = "eu-west-1"
 	switch runtime.GOOS {
 	case "windows":
 		vars["azon"] = "a"
 	case "darwin":
 		vars["azon"] = "b"
 	default:
-		vars["azon"] = "d"
+		vars["azon"] = "c"
 	}
 
 	// set aws default vars into env
+	os.Setenv("AWS_VPC_ID", vars["avpc"])
 	os.Setenv("AWS_SECURITY_GROUP", vars["agrp"])
 	os.Setenv("AWS_DEFAULT_REGION", vars["areg"])
-	os.Setenv("AWS_SSH_USER", vars["assh"])
 	os.Setenv("AWS_ZONE", vars["azon"])
 
-	// do vars
-	vars["dkey"] = os.Getenv("DIGITALOCEAN_ACCESS_TOKEN")
-	vars["dreg"] = "ams3"
-
-	// set dm default vars into env
-	os.Setenv("DIGITALOCEAN_REGION", vars["dreg"])
+	// this setting is atrocious in AWS
+	os.Setenv("AWS_SSH_USER", "")
 
 	// check populated based on driver
 	for k, v := range vars {
@@ -170,31 +183,21 @@ func getBranch() (string, error) {
 	return strings.TrimSpace(out.String()), nil
 }
 
-func startMachine(machine string, retries int) {
+func startMachine(machine string, failOut chan<- bool) {
 	defer wg.Done()
 	if err := makeMachine(machine); err != nil {
-		if retries <= maxRetries {
-			retries++
-			startMachine(machine, retries)
-		} else {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		failOut <- true
+		return
 	}
-	retries = 0
 	if err := setUpMachine(machine); err != nil {
-		if retries <= maxRetries {
-			retries++
-			startMachine(machine, retries)
-		} else {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		failOut <- true
 	}
 }
 
 func makeMachine(machine string) error {
-	cmd := exec.Command("docker-machine", "create", "--driver", dmDriver, machine)
+	var cmd *exec.Cmd
+	cmd = exec.Command("docker-machine", "create", "--driver", dmDriver, "--amazonec2-access-key", vars["akey"], "--amazonec2-secret-key", vars["asec"], "--amazonec2-region", vars["areg"], "--amazonec2-vpc-id", vars["avpc"], "--amazonec2-security-group", vars["agrp"], "--amazonec2-zone", vars["azon"], machine)
+	// 	cmd = exec.Command("docker-machine", "create", "--driver", dmDriver, machine)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

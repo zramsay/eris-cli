@@ -56,11 +56,11 @@ export ERIS_MIGRATE_APPROVE="true"
 # Define the tests and passed functions
 
 announce() {
-  echo ""
-  echo ""
+  echo
+  echo
   echo "Testing against"
   echo -e "\tMachine name:\t$machine"
-  echo ""
+  echo
 }
 
 connect(){
@@ -71,9 +71,27 @@ connect(){
 }
 
 setup() {
+  if [[ "$machine" == eris-test-win* ]]
+  then
+    mkdir $HOME/.eris
+    touch $HOME/.eris/eris.toml
+  fi
+
+  # needed for clean package tests
+  docker pull busybox &>/dev/null
+  if [ $? -ne 0 ] && [ -z $1 ]
+  then
+    echo "Could not connect to Docker backend. Attempting to regenerate certificates."
+    docker-machine regenerate-certs --force $machine
+    connect
+    setup "rebuild"
+  elif [ $? -ne 0 ] && [ ! -z $1 ]
+  then
+    flame_out
+  fi
+
   eris init --yes --pull-images=true --testing=true
   echo
-  eris_version=$(eris version --quiet)
 }
 
 packagesToTest() {
@@ -89,11 +107,11 @@ packagesToTest() {
   go test ./perform/...
   passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./data/...
-  passed Data
-  if [ $? -ne 0 ]; then return 1; fi
   if [[ "$machine" != eris-test-win* ]]
   then
+    go test ./data/...
+    passed Data
+    if [ $? -ne 0 ]; then return 1; fi
     go test ./files/...
     passed Files
     if [ $? -ne 0 ]; then return 1; fi
@@ -124,30 +142,32 @@ packagesToTest() {
   # go test ./remotes/...
   # passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  # The final push....
   go test ./commands/...
   passed Commands
   if [ $? -ne 0 ]; then return 1; fi
 
   # Now! Stack based tests
-  if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+  if [[ "$machine" != eris-test-win* ]]
   then
-    $HOME/test_stack.sh
-  else
-    tests/test_stack.sh
+    if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+    then
+      $HOME/test_stack.sh
+    else
+      tests/test_stack.sh
+    fi
+    passed Stack
   fi
-  passed Stack
   return $?
 }
 
 passed() {
   if [ $? -eq 0 ]
   then
-    echo ""
-    echo ""
+    echo
+    echo
     echo "*** Congratulations! *** $1 Package Level Tests Have Passed on Machine: $machine"
-    echo ""
-    echo ""
+    echo
+    echo
     return 0
   else
     return 1
@@ -157,16 +177,35 @@ passed() {
 report() {
   if [ $test_exit -eq 0 ]
   then
-    echo ""
+    echo
     echo "Congratulations! All Package Level Tests Passed."
     echo "Machine: $machine is green."
-    echo ""
+    echo
   else
-    echo ""
+    echo
     echo "Boo :( A Package Level Test has failed."
     echo "Machine: $machine is red."
-    echo ""
+    echo
   fi
+}
+
+flame_out() {
+  echo
+  echo "Could not connect to docker daemon. Dumping information =>"
+  echo
+  ls -la $HOME/.docker/machine/machines/$machine/
+  echo
+  docker-machine ls
+  echo
+  docker-machine env $machine
+  echo
+  env | grep -i "docker"
+  echo
+  docker version
+  echo
+  echo "Exiting. :("
+  echo
+  exit 1
 }
 
 # ---------------------------------------------------------------------------
@@ -179,25 +218,22 @@ then
 else
   announce
   connect
+  setup
 fi
 
 # Once machine is turned on, display docker information
-echo ""
+echo
 echo "Docker API Information"
-echo ""
+echo
 docker version
-echo ""
+echo
 
 # Init eris with debug flag to check the connection to docker backend
-echo ""
+echo
 echo "Checking the Eris <-> Docker Connection"
-echo ""
+echo
 eris version
 echo
-if [[ "$machine" != "eris-test-local" ]]
-then
-  setup
-fi
 passed Setup
 
 # Perform package level tests run only if eris init ran without problem

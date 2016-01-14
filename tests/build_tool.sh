@@ -7,17 +7,15 @@ then
 else
   repo=$GOPATH/src/github.com/eris-ltd/eris-cli
 fi
-branch=${CIRCLE_BRANCH:=master}
-branch=${branch/-/_}
-testimage=${testimage:="quay.io/eris/eris"}
 
+testimage="quay.io/eris/eris"
 release_min=$(cat version/version.go | tail -n 2 | head -n 1 | cut -d \  -f 4 | tr -d '"')
 release_maj=$(echo $release_min | cut -d . -f 1-2)
 
 start=`pwd`
 cd $repo
 
-if [[ "$branch" = "master" ]]
+if [[ "$BRANCH" = "master" ]]
 then
   docker build -t $testimage:docker18 -f tests/Dockerfile-1.8 .
   docker build -t $testimage:latest .
@@ -26,7 +24,7 @@ then
   docker tag -f $testimage:latest $testimage:master
 else
   docker build -t $testimage:docker18 -f tests/Dockerfile-1.8 .
-  docker build -t $testimage:$branch .
+  docker build -t $testimage:$BRANCH .
 fi
 
 cd $start
