@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -147,6 +148,10 @@ func checkAppAndChain(app *definitions.Contracts, name string) error {
 		return nil
 	default:
 		chain = name
+	}
+
+	if strings.Contains(app.Name, " ") {
+		app.Name = strings.Replace(app.Name, " ", "_", -1)
 	}
 
 	// this is hacky.... at best.
