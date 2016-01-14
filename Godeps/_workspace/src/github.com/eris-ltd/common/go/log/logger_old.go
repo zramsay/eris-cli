@@ -1,5 +1,7 @@
 package log
 
+//XXX this pkg is being deprecated in favour of logrus
+
 import (
 	"fmt"
 	"io"

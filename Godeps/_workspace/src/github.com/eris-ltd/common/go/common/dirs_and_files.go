@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -17,40 +18,40 @@ import (
 var (
 	// Convenience Directories
 	GoPath  = os.Getenv("GOPATH")
-	ErisLtd = filepath.Join(GoPath, "src", "github.com", "eris-ltd")
+	ErisLtd = path.Join(GoPath, "src", "github.com", "eris-ltd")
 	ErisGH  = "https://github.com/eris-ltd/"
 	// usr, _   = user.Current() // error?!
 	ErisRoot          = ResolveErisRoot()
 	ErisContainerRoot = "/home/eris/.eris" // XXX: this is used as root in the `eris/base` image
 
 	// Major Directories
-	AppsPath      = filepath.Join(ErisRoot, "apps") // previously "dapps"
-	ActionsPath   = filepath.Join(ErisRoot, "actions")
-	ChainsPath    = filepath.Join(ErisRoot, "chains") // previously "blockchains"
-	KeysPath      = filepath.Join(ErisRoot, "keys")
-	LanguagesPath = filepath.Join(ErisRoot, "languages")
-	ServicesPath  = filepath.Join(ErisRoot, "services")
-	ScratchPath   = filepath.Join(ErisRoot, "scratch")
+	AppsPath      = path.Join(ErisRoot, "apps") // previously "dapps"
+	ActionsPath   = path.Join(ErisRoot, "actions")
+	ChainsPath    = path.Join(ErisRoot, "chains") // previously "blockchains"
+	KeysPath      = path.Join(ErisRoot, "keys")
+	LanguagesPath = path.Join(ErisRoot, "languages")
+	ServicesPath  = path.Join(ErisRoot, "services")
+	ScratchPath   = path.Join(ErisRoot, "scratch")
 
 	//Deprecated Directories
-	BlockchainsPath = filepath.Join(ErisRoot, "blockchains")
-	DappsPath       = filepath.Join(ErisRoot, "dapps")
+	BlockchainsPath = path.Join(ErisRoot, "blockchains")
+	DappsPath       = path.Join(ErisRoot, "dapps")
 
 	// Keys
-	KeysDataPath = filepath.Join(KeysPath, "data")
-	KeyNamesPath = filepath.Join(KeysPath, "names")
+	KeysDataPath = path.Join(KeysPath, "data")
+	KeyNamesPath = path.Join(KeysPath, "names")
 
 	// Scratch Directories (globally coordinated)
-	EpmScratchPath     = filepath.Join(ScratchPath, "epm")
-	LllcScratchPath    = filepath.Join(ScratchPath, "lllc")
-	SolcScratchPath    = filepath.Join(ScratchPath, "sol")
-	SerpScratchPath    = filepath.Join(ScratchPath, "ser")
-	DataContainersPath = filepath.Join(ScratchPath, "data")
+	EpmScratchPath     = path.Join(ScratchPath, "epm")
+	LllcScratchPath    = path.Join(ScratchPath, "lllc")
+	SolcScratchPath    = path.Join(ScratchPath, "sol")
+	SerpScratchPath    = path.Join(ScratchPath, "ser")
+	DataContainersPath = path.Join(ScratchPath, "data")
 
 	// Blockchains stuff
-	HEAD            = filepath.Join(ChainsPath, "HEAD")
-	Refs            = filepath.Join(ChainsPath, "refs")
-	DefaultChainDir = filepath.Join(ChainsPath, "default")
+	HEAD            = path.Join(ChainsPath, "HEAD")
+	Refs            = path.Join(ChainsPath, "refs")
+	DefaultChainDir = path.Join(ChainsPath, "default")
 )
 
 var MajorDirs = []string{
@@ -94,10 +95,10 @@ func IfExit(err error) {
 // filesystem
 
 func AbsolutePath(Datadir string, filename string) string {
-	if filepath.IsAbs(filename) {
+	if path.IsAbs(filename) {
 		return filename
 	}
-	return filepath.Join(Datadir, filename)
+	return path.Join(Datadir, filename)
 }
 
 func InitDataDir(Datadir string) error {
@@ -121,9 +122,9 @@ func ResolveErisRoot() string {
 			if home == "" {
 				home = os.Getenv("USERPROFILE")
 			}
-			eris = filepath.Join(home, ".eris")
+			eris = path.Join(home, ".eris")
 		} else {
-			eris = filepath.Join(Usr(), ".eris")
+			eris = path.Join(Usr(), ".eris")
 		}
 	}
 	return eris
@@ -151,11 +152,11 @@ func ClearDir(dir string) error {
 	for _, f := range fs {
 		n := f.Name()
 		if f.IsDir() {
-			if err := os.RemoveAll(filepath.Join(dir, f.Name())); err != nil {
+			if err := os.RemoveAll(path.Join(dir, f.Name())); err != nil {
 				return err
 			}
 		} else {
-			if err := os.Remove(filepath.Join(dir, n)); err != nil {
+			if err := os.Remove(path.Join(dir, n)); err != nil {
 				return err
 			}
 		}
@@ -201,8 +202,8 @@ func copyDir(src, dst string) error {
 	}
 
 	for _, f := range fs {
-		s := filepath.Join(src, f.Name())
-		d := filepath.Join(dst, f.Name())
+		s := path.Join(src, f.Name())
+		d := path.Join(dst, f.Name())
 		if f.IsDir() {
 			if err := copyDir(s, d); err != nil {
 				return err
@@ -257,7 +258,7 @@ func WriteFile(data, path string) error {
 func Editor(file string) error {
 	editr := os.Getenv("EDITOR")
 	if strings.Contains(editr, "/") {
-		editr = filepath.Base(editr)
+		editr = path.Base(editr)
 	}
 	switch editr {
 	case "", "vim", "vi":

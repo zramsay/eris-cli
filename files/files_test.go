@@ -10,11 +10,10 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/logger"
-
 	tests "github.com/eris-ltd/eris-cli/testutils"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var erisDir string = filepath.Join(os.TempDir(), "eris")

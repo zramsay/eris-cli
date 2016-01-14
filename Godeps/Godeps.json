@@ -27,15 +27,15 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "b223a8b4ff99569f534784c58779ca065f83545e"
+			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/ipfs",
-			"Rev": "b223a8b4ff99569f534784c58779ca065f83545e"
+			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "b223a8b4ff99569f534784c58779ca065f83545e"
+			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
@@ -120,7 +120,8 @@
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Rev": "ad63b06ab3877915532cd30073b45d6f7e02b7cd"
+			"Comment": "v0.8.7-53-g446d1c1",
+			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
 		}
 	]
 }
