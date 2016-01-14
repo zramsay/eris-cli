@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -32,13 +34,14 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		var logLevel log.LogLevel
+		log.SetFormatter(logger.ErisFormatter{})
+
+		log.SetLevel(log.WarnLevel)
 		if do.Verbose {
-			logLevel = 2
+			log.SetLevel(log.InfoLevel)
 		} else if do.Debug {
-			logLevel = 3
+			log.SetLevel(log.DebugLevel)
 		}
-		log.SetLoggers(logLevel, config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter)
 
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
@@ -53,9 +56,8 @@ Complete documentation is available at https://docs.erisindustries.com
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
 		if err != nil {
-			logger.Errorln(err)
+			log.Errorln(err)
 		}
-		log.Flush()
 	},
 }
 
@@ -90,8 +92,6 @@ func AddCommands() {
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
 	ErisCmd.AddCommand(ListEverything)
-	buildManCommand()
-	ErisCmd.AddCommand(ManPage)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()
@@ -101,6 +101,10 @@ func AddCommands() {
 	buildVerSionCommand()
 	ErisCmd.AddCommand(VerSion)
 
+	if runtime.GOOS != "windows" {
+		buildManCommand()
+		ErisCmd.AddCommand(ManPage)
+	}
 	ErisCmd.SetHelpCommand(Help)
 	ErisCmd.SetHelpTemplate(helpTemplate)
 }

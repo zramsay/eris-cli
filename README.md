@@ -1,6 +1,9 @@
-[![Circle CI](https://circleci.com/gh/eris-ltd/eris-cli/tree/master.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli)
+|[![GoDoc](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris?status.png)](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris) | Linux | OSX | Windows |
+|---|-------|-----|---------|
+| Master | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/master.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=master)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/master?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
+| Develop | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/develop.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=develop)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/develop?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
 
-[![GoDoc](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris?status.png)](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris)
+# Introduction
 
 ```
 Eris is a platform for building, testing, maintaining, and operating distributed

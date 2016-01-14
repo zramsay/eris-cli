@@ -9,6 +9,8 @@ import (
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func Clean(prompt, all, rmd, images bool) error {
@@ -94,7 +96,7 @@ func removeErisDir(prompt bool) error {
 			return err
 		}
 	} else {
-		logger.Println("permission to remove eris root directory not given, continuing with clean")
+		log.Warn("Permission to remove eris root directory not given, continuing with clean")
 	}
 	return nil
 }
@@ -127,7 +129,7 @@ func removeErisImages(prompt bool) error {
 		for _, rt := range repoTag {
 			r, err := regexp.Compile(`eris`)
 			if err != nil {
-				logger.Printf("regexp error: %v\n", err)
+				log.Errorf("Regexp error: %v", err)
 			}
 
 			if r.MatchString(rt) == true {
@@ -139,13 +141,16 @@ func removeErisImages(prompt bool) error {
 
 	if !prompt || canWeRemove(erisImages, "images") {
 		for i, imageID := range erisImageIDs {
-			logger.Debugf("removing image: %s with ID\t%s ", erisImages[i], imageID)
+			log.WithFields(log.Fields{
+				"=>": erisImages[i],
+				"id": imageID,
+			}).Debug("Removing image")
 			if err := DockerClient.RemoveImage(imageID); err != nil {
 				return err
 			}
 		}
 	} else {
-		logger.Println("permission to remove images not given, continuing with clean")
+		log.Warn("Permission to remove images not given, continuing with clean")
 	}
 	return nil
 }
@@ -154,14 +159,16 @@ func canWeRemove(removing []string, what string) bool {
 	//if nothing in removing, say so and return, or something
 	var input string
 	if what == "all" {
-		logger.Printf("The marmots are about to forcefully remove all running and existing eris containers with corresponding volumes. Please confirm (y/Y):\n")
+		fmt.Print("The marmots are about to forcefully remove all running and existing eris containers with corresponding volumes. Please confirm (y/Y): ")
 	} else {
-		logger.Printf("The marmots are about to remove %s:\n%sPlease confirm (y/Y):", what, strings.Join(removing, "\n"))
+		log.WithField("=>", what).Warn("The marmots are about to remove")
+		log.Warn(strings.Join(removing, "\n"))
+		fmt.Print("Please confirm (y/Y): ")
 	}
 
 	fmt.Scanln(&input)
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-		logger.Printf("authorization given, removing %s\n", what)
+		log.WithField("=>", what).Warn("Authorization given, removing")
 		return true
 	} else {
 		return false
@@ -180,4 +187,8 @@ func uninstallEris(prompt bool) error {
 		return err
 	}
 	return nil
+}
+
+func TrimString(strang string) string {
+	return strings.TrimSpace(strings.Trim(strang, "\n"))
 }

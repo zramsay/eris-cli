@@ -3,13 +3,16 @@ package loaders
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func LoadContractPackage(path, chainName, command, typ string) (*definitions.Contracts, error) {
@@ -17,7 +20,7 @@ func LoadContractPackage(path, chainName, command, typ string) (*definitions.Con
 	contConf, err := loadContractPackage(path)
 
 	if err != nil {
-		logger.Infoln("The marmots could not read that package.json. Will use defaults.")
+		log.Info("The marmots could not read that package.json. Will use defaults")
 		app, _ = DefaultContractPackage()
 
 		_, err := LoadEPMInstructions(path)
@@ -34,10 +37,12 @@ func LoadContractPackage(path, chainName, command, typ string) (*definitions.Con
 		}
 	}
 
-	logger.Debugf("Package testType =>\t\t%s\n", app.TestType)
-	logger.Debugf("\tdeployType =>\t\t%s\n", app.DeployType)
-	logger.Debugf("\ttestTask =>\t\t%s\n", app.TestTask)
-	logger.Debugf("\tdeployTask =>\t\t%s\n", app.DeployTask)
+	log.WithFields(log.Fields{
+		"test task":   app.TestTask,
+		"test type":   app.TestType,
+		"deploy type": app.DeployType,
+		"deploy task": app.DeployTask,
+	}).Debug("Loading package")
 
 	if err := setAppType(app, chainName, command, typ); err != nil {
 		return nil, err
@@ -68,7 +73,7 @@ func DefaultContractPackage() (*definitions.Contracts, error) {
 	// we don't catch the directory error here as it should be caught prior to
 	//   calling this function.
 	pwd, _ := os.Getwd()
-	app.Name = path.Base(pwd)
+	app.Name = filepath.Base(pwd)
 	app.ChainName = ""
 	app.TestType = "epm"
 	app.DeployType = "epm"
@@ -94,9 +99,11 @@ func marshalContractPackage(contConf *viper.Viper) (*definitions.Contracts, erro
 func setAppType(app *definitions.Contracts, name, command, typ string) error {
 	var t string
 
-	logger.Debugf("Setting App Type. Task =>\t%s\n", command)
-	logger.Debugf("\tChainType =>\t\t%s\n", typ)
-	logger.Debugf("\tChainName =>\t\t%s\n", name)
+	log.WithFields(log.Fields{
+		"task": command,
+		"type": typ,
+		"app":  name,
+	}).Debug("Setting app type")
 
 	if typ != "" {
 		t = typ
@@ -120,7 +127,7 @@ func setAppType(app *definitions.Contracts, name, command, typ string) error {
 		app.AppType = definitions.EPMApp()
 	}
 
-	logger.Debugf("\tApp Type =>\t\t%s\n", app.AppType.Name)
+	log.WithField("app type", app.AppType.Name).Debug()
 
 	return nil
 }
@@ -141,6 +148,10 @@ func checkAppAndChain(app *definitions.Contracts, name string) error {
 		return nil
 	default:
 		chain = name
+	}
+
+	if strings.Contains(app.Name, " ") {
+		app.Name = strings.Replace(app.Name, " ", "_", -1)
 	}
 
 	// this is hacky.... at best.

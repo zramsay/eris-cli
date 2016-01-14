@@ -2,30 +2,28 @@ package data
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
-
-	tests.IfExit(testsInit())
+	tests.IfExit(tests.TestsInit("data"))
 
 	exitCode := m.Run()
 
@@ -36,68 +34,58 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+//TODO add some export/import test robustness
 func TestImportDataRawNoPriorExist(t *testing.T) {
-	newDataDir := path.Join(common.DataContainersPath, dataName)
-	if err := os.MkdirAll(newDataDir, 0777); err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-		os.Exit(1)
-	}
-
-	f, err := os.Create(path.Join(newDataDir, "test"))
-	if err != nil {
-		logger.Errorln(err)
-		t.FailNow()
-		os.Exit(1)
-	}
-	defer f.Close()
-
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Source = filepath.Join(common.DataContainersPath, do.Name)
-	do.Destination = common.ErisContainerRoot
-	do.Operations.ContainerNumber = 1
-	logger.Infof("Importing Data (from tests) =>\t%s\n", do.Name)
-	if err := ImportData(do); err != nil {
-		logger.Errorln(err)
-		t.Fail()
-	}
-
-	testExist(t, dataName, true)
-}
-
-func TestExecData(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = dataName
-	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
-	do.Operations.Interactive = false
-	do.Operations.ContainerNumber = 1
-
-	logger.Infof("Exec-ing Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
-	if err := ExecData(do); err != nil {
-		logger.Errorln(err)
-		t.Fail()
-	}
+	testCreateDataByImport(t, dataName) //was basically copied from this test
+	defer testKillDataCont(t, dataName)
 }
 
 func TestExportData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Source = common.ErisContainerRoot
 	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
 	do.Operations.ContainerNumber = 1
 	if err := ExportData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.FailNow()
 	}
 
-	if _, err := os.Stat(path.Join(common.DataContainersPath, dataName, "tset")); os.IsNotExist(err) {
-		logger.Errorf("Tragic! Exported file does not exist: %s\n", err)
+	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
+		log.Errorf("Tragic! Exported file does not exist: %s", err)
 		t.Fail()
 	}
+
+}
+func TestExecData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
+	do := definitions.NowDo()
+	do.Name = dataName
+	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
+	do.Operations.Interactive = false
+	do.Operations.ContainerNumber = 1
+
+	log.WithFields(log.Fields{
+		"data container": do.Name,
+		"args":           do.Operations.Args,
+	}).Info("Executing data (from tests)")
+	if err := ExecData(do); err != nil {
+		log.Error(err)
+		t.Fail()
+	}
+
+	//TODO check that the file was actually moved! (TestExport _used_ todo that)
 }
 
 func TestRenameData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	testExist(t, dataName, true)
 	testExist(t, newName, false)
 
@@ -105,9 +93,12 @@ func TestRenameData(t *testing.T) {
 	do.Name = dataName
 	do.NewName = newName
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Renaming Data (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming data (from tests)")
 	if err := RenameData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.FailNow()
 	}
 
@@ -118,9 +109,12 @@ func TestRenameData(t *testing.T) {
 	do.Name = newName
 	do.NewName = dataName
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Renaming Data (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming data (from tests)")
 	if err := RenameData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.FailNow()
 	}
 
@@ -129,13 +123,19 @@ func TestRenameData(t *testing.T) {
 }
 
 func TestInspectData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	defer testKillDataCont(t, dataName)
+
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.Args = []string{"name"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
+	log.WithFields(log.Fields{
+		"data container": do.Name,
+		"args":           do.Operations.Args,
+	}).Info("Inspecting data (from tests)")
 	if err := InspectData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.FailNow()
 	}
 
@@ -143,42 +143,79 @@ func TestInspectData(t *testing.T) {
 	do.Name = dataName
 	do.Operations.Args = []string{"config.network_disabled"}
 	do.Operations.ContainerNumber = 1
-	logger.Infof("Inspecting Data (from tests) =>\t%s:%v\n", do.Name, do.Operations.Args)
+	log.WithFields(log.Fields{
+		"data container": do.Name,
+		"args":           do.Operations.Args,
+	}).Info("Inspecting data (from tests)")
 	if err := InspectData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 }
 
+//now is testKillDataCont()
 func TestRmData(t *testing.T) {
+	testCreateDataByImport(t, dataName)
+	testExist(t, dataName, true)
+
+	testKillDataCont(t, dataName)
+	testExist(t, dataName, false)
+}
+
+//creates a new data container w/ dir to be used by a test
+//maybe give create opts? => paths, files, file contents, etc
+func testCreateDataByImport(t *testing.T, name string) {
+	newDataDir := filepath.Join(common.DataContainersPath, name)
+	if err := os.MkdirAll(newDataDir, 0777); err != nil {
+		log.Error(err)
+		t.FailNow()
+		os.Exit(1)
+	}
+
+	f, err := os.Create(filepath.Join(newDataDir, "test"))
+	if err != nil {
+		log.Error(err)
+		t.FailNow()
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	do := definitions.NowDo()
+	do.Name = name
+	do.Source = filepath.Join(common.DataContainersPath, do.Name)
+	do.Destination = common.ErisContainerRoot
+	do.Operations.ContainerNumber = 1
+	log.WithField("=>", do.Name).Info("Importing data (from tests)")
+	if err := ImportData(do); err != nil {
+		log.Error(err)
+		t.Fail()
+	}
+
+	testExist(t, name, true)
+}
+
+func testKillDataCont(t *testing.T, name string) {
 	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		logger.Println("Testing in Circle. Where we don't have rm privileges (due to their driver). Skipping test.")
+		log.Warn("Testing in Circle. Where we don't have rm privileges. Skipping test")
 		return
 	}
 
+	testCreateDataByImport(t, name)
+	testExist(t, name, true)
+
 	do := definitions.NowDo()
-	do.Name = dataName
+	do.Name = name
 	do.Operations.ContainerNumber = 1
 	if err := RmData(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 
-	do = definitions.NowDo()
-	do.Name = newName
-	do.Operations.ContainerNumber = 1
-	RmData(do) // don't reap this error, it is just to check its Rm'ed
-}
-
-func testsInit() error {
-	if err := tests.TestsInit("data"); err != nil {
-		return err
-	}
-	return nil
+	testExist(t, name, false)
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	if tests.TestExistAndRun(name, "data", 1, toExist, false) {
+	if err := tests.TestExistAndRun(name, "data", 1, toExist, false); err != nil {
 		t.Fail()
 	}
 }

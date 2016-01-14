@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
@@ -17,7 +19,8 @@ func UpdateEris(branch string) {
 	//checks for deprecated dir names and renames them
 	err := MigrateDeprecatedDirs(common.DirsToMigrate, false) // false = no prompt
 	if err != nil {
-		logger.Printf("directory migration error: %v\ncontinuing with update without migration\n", err)
+		log.Warnf("Directory migration error: %v", err)
+		log.Warn("Continuing with update without migration")
 	}
 
 	//change pwd to eris/cli
@@ -33,24 +36,20 @@ func UpdateEris(branch string) {
 	InstallEris()
 	ver := version() //because version.Version will be in RAM.
 
-	logger.Printf("The marmots have updated eris successfully.\n%s\n", ver)
+	log.WithField("=>", ver).Warn("The marmots have updated Eris successfully")
 }
 
 func CheckGitAndGo(git, gO bool) {
 	if git {
 		stdOut1, err := exec.Command("git", "version").CombinedOutput()
 		if err != nil {
-			logger.Printf("ensure you have git installed:\n%v\n", string(stdOut1))
-			logger.Println("or if running `eris init` use the --skip-pull flag")
-			os.Exit(1)
-
+			log.WithField("version", string(stdOut1)).Fatal("Ensure you have git installed or if running `eris init` use the `--skip-pull` flag")
 		}
 	}
 	if gO {
 		stdOut2, err := exec.Command("go", "version").CombinedOutput()
 		if err != nil {
-			logger.Printf("ensure you have go installed:\n%s\n", string(stdOut2))
-			os.Exit(1)
+			log.WithField("version", string(stdOut2)).Fatal("Ensure you have Go installed")
 		}
 	}
 }
@@ -58,19 +57,17 @@ func CheckGitAndGo(git, gO bool) {
 func ChangeDirectory() {
 	goPath := os.Getenv("GOPATH")
 	if goPath == "" {
-		fmt.Printf("You do not have $GOPATH set. Please make sure this is set and rerun the command.\n")
-		os.Exit(1)
+		log.Fatal("You do not have $GOPATH set. Please make sure this is set and rerun the command")
 	}
 
-	dir := path.Join(goPath, "src/github.com/eris-ltd/eris-cli/")
+	dir := filepath.Join(goPath, "src", "github.com", "eris-ltd", "eris-cli")
 	err := os.Chdir(dir)
 
 	if err != nil {
-		fmt.Printf("error changing directory\n%v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error changing directory: %v")
 	}
 
-	logger.Debugf("directory changed to:\n%s\n", dir)
+	log.WithField("dir", dir).Debug("Directory changed to")
 }
 
 func CheckoutBranch(branch string) {
@@ -78,11 +75,10 @@ func CheckoutBranch(branch string) {
 
 	stdOut, err := exec.Command("git", checkoutArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Printf("error checking out %s:\n%s\n", branch, string(stdOut))
-		os.Exit(1)
+		log.WithField("branch", branch).Fatalf("Error checking out branch: %v", string(stdOut))
 	}
 
-	logger.Debugf("%s checked-out\n", branch)
+	log.WithField("branch", branch).Debug("Branch checked-out")
 }
 
 func PullBranch(branch string) {
@@ -90,11 +86,10 @@ func PullBranch(branch string) {
 
 	stdOut, err := exec.Command("git", pullArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Printf("error pulling from github:\n%s\n", string(stdOut))
-		os.Exit(1)
+		log.Fatalf("Error pulling from GitHub: %v", string(stdOut))
 	}
 
-	logger.Debugf("%s pulled successfully\n", branch)
+	log.WithField("branch", branch).Debug("Branch pulled successfully")
 }
 
 func InstallEris() {
@@ -102,11 +97,10 @@ func InstallEris() {
 
 	stdOut, err := exec.Command("go", goArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Printf("error with go install ./cmd/eris:\n%s\n", string(stdOut))
-		os.Exit(1)
+		log.Fatalf("Error with go install ./cmd/eris: %v", string(stdOut))
 	}
 
-	logger.Debugf("Go install worked correctly.\n")
+	log.Debug("Go install worked correctly")
 }
 
 func version() string {

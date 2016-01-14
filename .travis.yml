@@ -1,0 +1,20 @@
+os: osx
+
+language: go
+
+install:
+- eval "$(gimme 1.5)"
+- brew update
+- brew install docker docker-machine jq
+- echo "change the below when `docker-machine --version | cut -d ' ' -f 3` is at 0.5.4"
+- sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.5.4/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine"
+- sudo chmod +x /usr/local/bin/docker-machine
+
+script:
+- go install ./cmd/eris
+- tests/test_osx_win.sh
+
+notifications:
+  email: false
+  slack:
+    secure: QExEkkFtFt7BdtDeAiWOQxtQqyoBbWrBpfgcYU+pdpABC/bRv2TFyjzqKnxM479Hc30qUvzM6FCijc/qjDvEeDy9KMyiCR7HgtFy6T0Ixz/37kfMbTbxmAIxVPsBjVLtjDsnIL7RlJDNqEs1H5ZUdeBFm8+kh3FIiZQC5d9Bk+oQqk+7RZYmAm/VnA01NtV2UpxaP6Be4zryul2span3F3TPbh3ltgaCK7rC0dt2RMmr8w3IAdD4UvyUZueTzIp+lOm3lX6ldZQ5JuxZySarsnyPbTvMiRpcBRpC9JpCH9DUoREuDO008W7Zh7kLCx0J59iyD94B7xDen4wP8p2zzGaUSIvMRYihBNdbBz/rb/UiutNC5B0PgcaUw0t7IUprNsPifSUwk/VgOFrAPsvcpuLQ0JuN3xaQvojoHfwT/b2ks2ioOTzlC0NPDnxXz/qrXU2qsKfQGQXUNpVOCEor0UKYoMilZA2+vO+/62uD2sC2u2d/SGtqyu/EomsoRg+AGJMQPUqNpeeu/+PkbBV1pGsZuXTao0Bu+1GgrBg8Y9azQkOGfH2sK8iJzWLv2TMVeMCtAO+KKICKSISQiEX8SfjDTRhIg5h2ts6q2qBNtnFyBwO2Ah7S5TcdjXspB1oJ+lY/Tr/1n9ahrgq9utDSFUQPDG9EdcHQkiNgItrot8U=

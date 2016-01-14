@@ -1,0 +1,37 @@
+version: 1.0.{build}-{branch}
+clone_folder: C:\src\github.com\eris-ltd\eris-cli
+
+environment:
+  GOPATH: C:\
+  GOBIN: C:\bin
+  PATH: '%PATH%;C:\bin'
+  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+  AWS_ACCESS_KEY_ID:
+    secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
+  AWS_SECRET_ACCESS_KEY:
+    secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
+  AWS_DEFAULT_REGION: eu-west-1
+  AWS_VPC_ID:
+    secure: Lo717dojMJUNytpQPZWwyw==
+  AWS_SECURITY_GROUP:
+    secure: Jie7WuAzjiHVp7tX8MfaSQ==
+
+build_script:
+- cmd: >-
+
+    choco install -yr cygwin > nul
+
+    choco install -yr docker jq
+
+    choco install -yr docker-machine -version 0.4.1
+
+    cd c:\src\github.com\eris-ltd\eris-cli\cmd\eris
+
+    go get
+
+    go install
+
+test_script:
+- cmd: >-
+
+    bash c:\src\github.com\eris-ltd\eris-cli\tests\test_osx_win.sh

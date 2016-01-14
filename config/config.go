@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -21,6 +20,7 @@ type ErisCli struct {
 	Writer      io.Writer
 	ErrorWriter io.Writer
 	Config      *ErisConfig
+	ErisDir     string
 }
 
 type ErisConfig struct {
@@ -59,7 +59,7 @@ func LoadViperConfig(configPath, configName, typ string) (*viper.Viper, error) {
 	conf.SetConfigName(configName)
 	err := conf.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to load the %s's config for %s in %s.\nCheck your known %ss with:\neris %ss known", typ, configName, configPath, typ, typ)
+		return nil, fmt.Errorf("Unable to load the %s's config for %s in %s.\nCheck your known %ss with:\neris %ss ls --known", typ, configName, configPath, typ, typ)
 	}
 
 	return conf, nil
@@ -73,7 +73,9 @@ func LoadGlobalConfig() (*viper.Viper, error) {
 
 	globalConfig.AddConfigPath(dir.ErisRoot)
 	globalConfig.SetConfigName("eris")
-	globalConfig.ReadInConfig()
+	if err := globalConfig.ReadInConfig(); err != nil {
+		// do nothing as this is not essential.
+	}
 
 	return globalConfig, nil
 }
@@ -122,23 +124,25 @@ func ChangeErisDir(erisDir string) {
 		return
 	}
 
+	GlobalConfig.ErisDir = erisDir
 	dir.ErisRoot = erisDir
 
 	// Major Directories
-	dir.ActionsPath = path.Join(dir.ErisRoot, "actions")
-	dir.ChainsPath = path.Join(dir.ErisRoot, "chains")
-	dir.DataContainersPath = path.Join(dir.ErisRoot, "data")
-	dir.AppsPath = path.Join(dir.ErisRoot, "apps")
-	dir.KeysPath = path.Join(dir.ErisRoot, "keys")
-	dir.LanguagesPath = path.Join(dir.ErisRoot, "languages")
-	dir.ServicesPath = path.Join(dir.ErisRoot, "services")
-	dir.ScratchPath = path.Join(dir.ErisRoot, "scratch")
+	dir.ActionsPath = filepath.Join(dir.ErisRoot, "actions")
+	dir.ChainsPath = filepath.Join(dir.ErisRoot, "chains")
+	dir.DataContainersPath = filepath.Join(dir.ErisRoot, "data")
+	dir.AppsPath = filepath.Join(dir.ErisRoot, "apps")
+	dir.KeysPath = filepath.Join(dir.ErisRoot, "keys")
+	dir.LanguagesPath = filepath.Join(dir.ErisRoot, "languages")
+	dir.ServicesPath = filepath.Join(dir.ErisRoot, "services")
+	dir.ScratchPath = filepath.Join(dir.ErisRoot, "scratch")
 
 	// Scratch Directories (globally coordinated)
-	dir.EpmScratchPath = path.Join(dir.ScratchPath, "epm")
-	dir.LllcScratchPath = path.Join(dir.ScratchPath, "lllc")
-	dir.SolcScratchPath = path.Join(dir.ScratchPath, "sol")
-	dir.SerpScratchPath = path.Join(dir.ScratchPath, "ser")
+	dir.EpmScratchPath = filepath.Join(dir.ScratchPath, "epm")
+	dir.LllcScratchPath = filepath.Join(dir.ScratchPath, "lllc")
+	dir.SolcScratchPath = filepath.Join(dir.ScratchPath, "sol")
+	dir.SerpScratchPath = filepath.Join(dir.ScratchPath, "ser")
+	dir.DataContainersPath = filepath.Join(dir.ScratchPath, "data")
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {

@@ -2,8 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	// "os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -11,6 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
@@ -23,9 +23,9 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 
 	if cNum[0] == 0 {
 		cNum[0] = util.AutoMagic(0, definitions.TypeService, newCont)
-		logger.Debugf("Loading Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Loading service definition (autoassigned)")
 	} else {
-		logger.Debugf("Loading Service Definition =>\t%s:%d\n", servName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Loading service definition")
 	}
 
 	srv := definitions.BlankServiceDefinition()
@@ -64,10 +64,10 @@ func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definiti
 
 	if len(cNum) == 0 {
 		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeService, newCont)
-		logger.Debugf("Mocking Service Definition =>\t%s:%d (autoassigned)\n", servName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Mocking service definition (autoassigned)")
 	} else {
 		srv.Operations.ContainerNumber = cNum[0]
-		logger.Debugf("Mocking Service Definition =>\t%s:%d\n", servName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Mocking service definition")
 	}
 
 	srv.Operations.ContainerType = definitions.TypeService
@@ -100,19 +100,19 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	} else if srv.Name == "" && srv.Service.Name == "" && srv.Service.Image != "" { // If no name use image
 		srv.Name = strings.Replace(srv.Service.Image, "/", "_", -1)
 		srv.Service.Name = srv.Name
-		logger.Debugf("Defaulting to image name =>\t%s\n", srv.Name)
+		log.WithField("image", srv.Name).Debug("Defaulting to image")
 	} else if srv.Service.Name != "" && srv.Name == "" { // harmonize names
 		srv.Name = srv.Service.Name
-		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Service.Name)
+		log.WithField("service", srv.Service.Name).Debug("Defaulting to service")
 	} else if srv.Service.Name == "" && srv.Name != "" {
 		srv.Service.Name = srv.Name
-		logger.Debugf("Defaulting to service name =>\t%s\n", srv.Name)
+		log.WithField("service", srv.Name).Debug("Defaulting to service")
 	}
 
 	container := util.FindServiceContainer(srv.Name, srv.Operations.ContainerNumber, true)
 
 	if container != nil {
-		logger.Debugf("Setting SrvCont Names =>\t%s:%s\n", container.FullName, container.ContainerID)
+		log.WithField("=>", container.FullName).Debug("Setting service container name")
 		srv.Operations.SrvContainerName = container.FullName
 		srv.Operations.SrvContainerID = container.ContainerID
 	} else {
@@ -122,7 +122,7 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	if srv.Service.AutoData {
 		dataContainer := util.FindDataContainer(srv.Name, srv.Operations.ContainerNumber)
 		if dataContainer != nil {
-			logger.Debugf("Setting DataCont Names =>\t%s:%s\n", dataContainer.FullName, dataContainer.ContainerID)
+			log.WithField("=>", dataContainer.FullName).Debug("Setting data container name")
 			srv.Operations.DataContainerName = dataContainer.FullName
 			srv.Operations.DataContainerID = dataContainer.ContainerID
 		} else {
@@ -141,7 +141,14 @@ func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, nam
 
 // links and mounts for service dependencies
 func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ, name, internalName string, link, mount bool) {
-	logger.Debugf("Connecting service %s to %s %s (%s) with link (%v) and volumes-from (%v)\n", srv.Name, typ, name, internalName, link, mount)
+	log.WithFields(log.Fields{
+		"=>":            srv.Name,
+		"type":          typ,
+		"name":          name,
+		"internal name": internalName,
+		"link":          link,
+		"volumes from":  mount,
+	}).Debug("Connecting to service")
 	containerName := util.ContainersName(typ, name, ops.ContainerNumber)
 
 	if link {
@@ -160,7 +167,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return config.LoadViperConfig(path.Join(ServicesPath), servName, "service")
+	return config.LoadViperConfig(filepath.Join(ServicesPath), servName, "service")
 }
 
 // Services must be given an image. Flame out if they do not.

@@ -3,7 +3,6 @@ package contracts
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/chains"
@@ -14,20 +13,24 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 var pwd string
 
 func RunPackage(do *definitions.Do) error {
-	logger.Debugf("Welcome! Say the Marmots. Running App package.\n")
+	log.Debug("Welcome! Say the marmots. Running app package")
 	var err error
 	pwd, err = os.Getwd()
 	if err != nil {
 		return fmt.Errorf("Could not get the present working directory. Are you on Mars?\nError: %v\n", err)
 	}
 
-	logger.Debugf("\twith Host Path =>\t%s:%s\n", do.Path, pwd)
+	log.WithFields(log.Fields{
+		"host path": do.Path,
+		"pwd":       pwd,
+	}).Debug()
 	app, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
 	if err != nil {
 		do.Result = "could not load package"
@@ -81,17 +84,17 @@ func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error 
 	case "":
 		if app.ChainName == "" {
 			// TODO [csk]: first check if there is a chain checked out. if not, then use throwAway
-			logger.Infof("No chain was given, booting a throwaway chain.\n")
+			log.Info("No chain was given, booting a throwaway chain")
 			err = bootThrowAwayChain(app.Name, do)
 		} else {
-			logger.Infof("Booting chain =>\t\t%s\n", app.ChainName)
+			log.WithField("=>", app.ChainName).Info("Booting chain")
 			err = bootChain(app.ChainName, do)
 		}
 	case "t", "tmp", "temp":
-		logger.Infof("No chain was given, booting a throwaway chain.\n")
+		log.Info("No chain was given, booting a throwaway chain")
 		err = bootThrowAwayChain(app.Name, do)
 	default:
-		logger.Infof("Booting chain =>\t\t%s\n", do.ChainName)
+		log.WithField("=>", do.ChainName).Info("Booting chain")
 		err = bootChain(do.ChainName, do)
 	}
 
@@ -144,7 +147,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	if do.Path != pwd {
 		do.Service.WorkDir = do.Path // do.Path is actually where the workdir inside the container goes
 	} else {
-		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", app.Name)
+		do.Service.WorkDir = filepath.Join(common.ErisContainerRoot, "apps", app.Name)
 	}
 	do.Service.User = "eris"
 
@@ -175,25 +178,34 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	doData.Source = filepath.Join(common.DataContainersPath, doData.Name)
 	var loca string
 	if do.Path != pwd {
-		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
 	} else {
-		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
 	}
-	logger.Debugf("Creating App Data Cont =>\t%s:%s\n", do.Path, loca)
+	log.WithFields(log.Fields{
+		"path":     do.Path,
+		"location": loca,
+	}).Debug("Creating app data container")
 	common.Copy(do.Path, loca)
 	if err := data.ImportData(doData); err != nil {
 		return err
 	}
 	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
 
-	logger.Debugf("App Action Built.\n")
+	log.Debug("App action built")
 	return nil
 }
 
 func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
-	logger.Println("Performing Action. This can sometimes take a wee while.")
-	logger.Infof("\t=>\t\t\t%s:%s\n", do.Service.Name, do.Service.Image)
-	logger.Debugf("\t=>\t\t\t%s:%s\n", do.Service.WorkDir, do.Service.EntryPoint)
+	log.Warn("Performing action. This can sometimes take a wee while")
+	log.WithFields(log.Fields{
+		"service": do.Service.Name,
+		"image":   do.Service.Image,
+	}).Info()
+	log.WithFields(log.Fields{
+		"workdir":    do.Service.WorkDir,
+		"entrypoint": do.Service.EntryPoint,
+	}).Debug()
 
 	do.Operations.ContainerType = definitions.TypeService
 	if err := perform.DockerExecService(do.Service, do.Operations); err != nil {
@@ -201,15 +213,15 @@ func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) err
 		return err
 	}
 
-	logger.Infof("Finished performing App Action.\n")
+	log.Info("Finished performing app action")
 	return nil
 }
 
 func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
-	logger.Infof("Commensing CleanUp.\n")
+	log.Info("Cleaning up")
 
 	if do.Chain.ChainType == "throwaway" {
-		logger.Debugf("Destroying Throwaway Chain =>\t%s\n", do.Chain.Name)
+		log.WithField("=>", do.Chain.Name).Debug("Destroying throwaway chain")
 		doRm := definitions.NowDo()
 		doRm.Operations = do.Operations
 		doRm.Name = do.Chain.Name
@@ -217,11 +229,17 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		doRm.RmD = true
 		chains.KillChain(doRm)
 
-		logger.Debugf("Removing latent files/dirs =>\t%s:%s\n", path.Join(common.DataContainersPath, do.Chain.Name), path.Join(common.ChainsPath, do.Chain.Name+".toml"))
-		os.RemoveAll(path.Join(common.DataContainersPath, do.Chain.Name))
-		os.Remove(path.Join(common.ChainsPath, do.Chain.Name+".toml"))
+		latentDir := filepath.Join(common.DataContainersPath, do.Chain.Name)
+		latentFile := filepath.Join(common.ChainsPath, do.Chain.Name+".toml")
+		log.WithFields(log.Fields{
+			"dir":  latentDir,
+			"file": latentFile,
+		}).Debug("Removing latent dir and file")
+
+		os.RemoveAll(latentDir)
+		os.Remove(latentFile)
 	} else {
-		logger.Debugf("No Throwaway Chain to destroy.\n")
+		log.Debug("No throwaway chain to destroy")
 	}
 
 	doData := definitions.NowDo()
@@ -236,32 +254,38 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 	}
 	var loca string
 	if do.Path != pwd {
-		loca = path.Join(common.DataContainersPath, doData.Name, do.Path)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
 	} else {
-		loca = path.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
+		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
 	}
 
-	logger.Debugf("Exporting Results =>\t\t%s:%s\n", doData.Source, loca)
+	log.WithFields(log.Fields{
+		"path":     doData.Source,
+		"location": loca,
+	}).Debug("Exporting results")
 	data.ExportData(doData)
 
 	if app.AppType.Name == "epm" {
 		files, _ := filepath.Glob(filepath.Join(loca, "*"))
 		for _, f := range files {
 			dest := filepath.Join(do.Path, filepath.Base(f))
-			logger.Debugf("Moving file =>\t\t\t%s:%s\n", f, dest)
+			log.WithFields(log.Fields{
+				"from": f,
+				"to":   dest,
+			}).Debug("Moving file")
 			common.Copy(f, dest)
 		}
 	}
 
 	if !do.RmD {
-		logger.Debugf("Removing data dir on host =>\t%s\n", path.Join(common.DataContainersPath, do.Service.Name))
-		os.RemoveAll(path.Join(common.DataContainersPath, do.Service.Name))
+		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
+		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
 	}
 
 	if !do.Rm {
 		doRemove := definitions.NowDo()
 		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
-		logger.Debugf("Removing data contnr =>\t\t%s\n", doRemove.Operations.SrvContainerName)
+		log.WithField("=>", doRemove.Operations.SrvContainerName).Debug("Removing data container")
 		if err := perform.DockerRemove(nil, doRemove.Operations, false, true); err != nil {
 			return err
 		}
@@ -306,7 +330,7 @@ func bootThrowAwayChain(name string, do *definitions.Do) error {
 	}
 
 	do.Chain.Name = do.Name // setting this for tear down purposes
-	logger.Debugf("ThrowAwayChain booted =>\t%s\n", do.Name)
+	log.WithField("=>", do.Name).Debug("Throwaway chain booted")
 
 	do.Name = tmp
 	return nil
@@ -334,20 +358,20 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	}
 
 	if do.CSV != "" {
-		logger.Debugf("Setting output format to =>\t%s\n", do.CSV)
+		log.WithField("format", do.CSV).Debug("Setting output format to")
 		do.Service.EntryPoint = do.Service.EntryPoint + " --output " + do.CSV
 	} else {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --output json"
 	}
 
 	if do.EPMConfigFile != "" {
-		logger.Debugf("Setting config file to =>\t%s\n", do.EPMConfigFile)
-		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(do.Service.WorkDir, do.EPMConfigFile)
+		log.WithField("config", do.EPMConfigFile).Debug("Setting config file to")
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + filepath.Join(do.Service.WorkDir, do.EPMConfigFile)
 	}
 
 	if len(do.ConfigOpts) != 0 {
 		var toAdd string
-		logger.Debugf("Setting sets file to =>\t%v\n", do.ConfigOpts)
+		log.WithField("sets file", do.ConfigOpts).Debug("Setting sets file to")
 		for _, s := range do.ConfigOpts {
 			toAdd = toAdd + "," + s
 		}
@@ -359,11 +383,11 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	}
 
 	if do.ContractsPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.ContractsPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + filepath.Join(do.Service.WorkDir, do.ContractsPath)
 	}
 
 	if do.ABIPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + path.Join(do.Service.WorkDir, do.ABIPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + filepath.Join(do.Service.WorkDir, do.ABIPath)
 	}
 
 	if do.DefaultGas != "" {

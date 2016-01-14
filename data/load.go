@@ -5,6 +5,8 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.ServiceDefinition {
@@ -12,7 +14,7 @@ func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.Ser
 	srv.Name = serviceYourPretendingToBe
 
 	if len(cNum) == 0 || cNum[0] == 0 {
-		logger.Debugf("Loading Service Definition =>\t%s:1 (autoassigned)\n", serviceYourPretendingToBe)
+		log.WithField("=>", fmt.Sprintf("%s:1", serviceYourPretendingToBe)).Debug("Loading service definition (autoassigned)")
 		// TODO: findNextContainerIndex => util/container_operations.go
 		if len(cNum) == 0 {
 			cNum = append(cNum, 1)
@@ -20,7 +22,7 @@ func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.Ser
 			cNum[0] = 1
 		}
 	} else {
-		logger.Debugf("Loading Service Definition =>\t%s:%d\n", serviceYourPretendingToBe, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", serviceYourPretendingToBe, cNum[0])).Debug("Loading service definition")
 	}
 
 	srv.Operations.ContainerNumber = cNum[0]
@@ -30,13 +32,15 @@ func PretendToBeAService(serviceYourPretendingToBe string, cNum ...int) *def.Ser
 }
 
 func giveMeAllTheNames(name string, srv *def.ServiceDefinition) {
-	logger.Debugf("Giving myself all the names =>\t%s\n", name)
+	log.WithField("=>", name).Debug("Giving myself all the names")
 	srv.Name = name
 	srv.Service.Name = name
 	srv.Operations.SrvContainerName = util.DataContainersName(srv.Name, srv.Operations.ContainerNumber)
 	srv.Operations.DataContainerName = util.DataContainersName(srv.Name, srv.Operations.ContainerNumber)
-	logger.Debugf("My service container name is =>\t%s\n", srv.Operations.SrvContainerName)
-	logger.Debugf("My data container name is =>\t%s\n", srv.Operations.DataContainerName)
+	log.WithFields(log.Fields{
+		"data container":    srv.Operations.DataContainerName,
+		"service container": srv.Operations.SrvContainerName,
+	}).Debug("Using names")
 }
 
 func checkServiceGiven(args []string) error {
@@ -44,23 +48,4 @@ func checkServiceGiven(args []string) error {
 		return fmt.Errorf("No Data Container Given. Please rerun command with a known data container.")
 	}
 	return nil
-}
-
-func parseKnown(name string, num int) bool {
-	name = util.NameAndNumber(name, num)
-	return _parseKnown(name)
-}
-
-func _parseKnown(name string) bool {
-	do := def.NowDo()
-	do.Existing = true
-	util.ListAll(do, "data")
-	if len(do.Operations.Args) != 0 {
-		for _, srv := range do.Operations.Args {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
 }

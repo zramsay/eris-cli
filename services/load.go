@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+        "os"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 var (
@@ -16,6 +19,10 @@ var (
 
 //checks that a service is running. if not, tells user to start it
 func EnsureRunning(do *definitions.Do) error {
+        if os.Getenv("ERIS_SKIP_ENSURE") != "" {
+               return nil
+        } 
+
 	srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		return err
@@ -25,18 +32,18 @@ func EnsureRunning(do *definitions.Do) error {
 		e := fmt.Sprintf("The requested service is not running, start it with `eris services start %s`", do.Name)
 		return errors.New(e)
 	} else {
-		logger.Infof("%s is running.\n", strings.ToUpper(do.Name))
+		log.WithField("=>", strings.ToUpper(do.Name)).Info("Service is running")
 	}
 	return nil
 }
 
 func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
-	logger.Debugf("Is Service Existing? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", service.Name, ops.ContainerNumber)).Debug("Checking service existing")
 	return parseContainers(service, ops, true)
 }
 
 func IsServiceRunning(service *definitions.Service, ops *definitions.Operation) bool {
-	logger.Debugf("Is Service Running? =>\t\t%s:%d\n", service.Name, ops.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", service.Name, ops.ContainerNumber)).Debug("Checking service running")
 	return parseContainers(service, ops, false)
 }
 
@@ -54,14 +61,14 @@ func parseContainers(service *definitions.Service, ops *definitions.Operation, a
 	if cName == nil {
 		return false
 	}
-	ops.SrvContainerName = cName.DockersName
+	ops.SrvContainerName = cName.FullName
 	ops.SrvContainerID = cName.ContainerID
 
 	// populate data container specifics
 	if service.AutoData && ops.DataContainerID == "" {
 		dName := util.FindDataContainer(service.Name, ops.ContainerNumber)
 		if dName != nil {
-			ops.DataContainerName = dName.DockersName
+			ops.DataContainerName = dName.FullName
 			ops.DataContainerID = dName.ContainerID
 		}
 	}

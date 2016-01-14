@@ -11,6 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/oleiade/reflections"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/olekukonko/tablewriter"
@@ -36,7 +37,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 		if err != nil {
 			return err
 		}
-		logger.Printf("%s\n", strings.Join(parts, " "))
+		log.Warn(strings.Join(parts, " "))
 	case "all":
 		for _, obj := range []interface{}{cont, cont.Config, cont.HostConfig, cont.NetworkSettings} {
 			t, err := reflections.Fields(obj)
@@ -55,7 +56,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 }
 
 func PrintTableReport(typ string, existing, all bool) (string, error) {
-	logger.Debugf("PrintTableReport Initialized =>\t%s", typ)
+	log.WithField("type", typ).Debug("Table report initialized")
 
 	var conts []*ContainerName
 	if !all {
@@ -148,9 +149,9 @@ func PrintPortMappings(id string, ports []string) error {
 
 			// If only one port request, display just the binding.
 			if minimalDisplay {
-				logger.Printf("%s\n", hostAndPortBinding)
+				log.Warn(hostAndPortBinding)
 			} else {
-				logger.Printf("%s -> %s\n", port, hostAndPortBinding)
+				log.Warnf("%s -> %s", port, hostAndPortBinding)
 			}
 		}
 	}
@@ -181,7 +182,7 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 
 // this function is for parsing single variables
 func printField(container interface{}, field string) error {
-	logger.Debugf("Inspecting field =>\t\t%s\n", field)
+	log.WithField("=>", field).Debug("Inspecting field")
 	var line string
 
 	// We allow fields to be passed using dot syntax, but
@@ -193,7 +194,7 @@ func printField(container interface{}, field string) error {
 	FieldCamel := strings.Join(lineSplit, ".")
 
 	f, _ := reflections.GetFieldKind(container, FieldCamel)
-	logger.Debugln("field type", f.String())
+	log.Debug("Field type", f)
 	switch f.String() {
 	case "ptr":
 		//we don't recurse into to gain a bit more control... this function will be rarely used and doesn't have to be perfectly parseable.
@@ -268,7 +269,7 @@ func camelize(field string) string {
 }
 
 func writeTemplate(container interface{}, toParse string) error {
-	logger.Debugf("Template parsing =>\t\t%s", toParse)
+	log.WithField("=>", strings.Replace(toParse, "\n", " ", -1)).Info("Template parsing")
 	tmpl, err := template.New("field").Parse(toParse)
 	if err != nil {
 		return err
@@ -287,7 +288,11 @@ func startsUp(field string) bool {
 
 //XXX moved from /perform/docker_run.go
 func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
-	logger.Debugf("Parsing Containers =>\t\t%s:%t\n", name, all)
+	category := "existing"
+	if all == false {
+		category = "running"
+	}
+	log.WithField("=>", fmt.Sprintf("%s:%s", name, category)).Debug("Parsing containers")
 	containers := listContainers(all)
 
 	r := regexp.MustCompile(name)
@@ -296,27 +301,30 @@ func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
 		for _, container := range containers {
 			for _, n := range container.Names {
 				if r.MatchString(n) {
-					logger.Debugf("Container Found =>\t\t%s\n", name)
+					log.WithField("=>", name).Debug("Container found")
 					return container, true
-					// } else {
-					// logger.Debugf("No match =>\t\t\t%s:%v\n", name, container.Names)
 				}
 			}
 		}
 	}
-	logger.Debugf("Container Not Found =>\t\t%s\n", name)
+	log.WithField("=>", name).Debug("Container not found")
 	return docker.APIContainers{}, false
 }
 
 func listContainers(all bool) []docker.APIContainers {
 	var container []docker.APIContainers
-	r := regexp.MustCompile(`\/eris_(?:service|chain|data)_(.+)_\d`)
+
+	// Match `/eris_chain_test_1`, but not `/eris_chain_test_1/keys`.
+	r := regexp.MustCompile(`(?m)^/eris_(?:service|chain|data)_.+_\d+$`)
 
 	contns, _ := DockerClient.ListContainers(docker.ListContainersOptions{All: all})
 	for _, con := range contns {
 		for _, c := range con.Names {
-			match := r.FindAllStringSubmatch(c, 1)
-			if len(match) != 0 {
+			if r.MatchString(c) {
+				// Since the container may have multiple names,
+				// leave only the one that matches.
+				con.Names = []string{c}
+
 				container = append(container, con)
 			}
 		}
