@@ -142,12 +142,11 @@ func GetTheImages() error {
 		log.Warn("Pulling of default images successful")
 	} else {
 		var input string
-		//there's gotta be a better way (logrus?)
-		log.Warn("WARNING: Approximately 5 gigabytes of docker images are about to be pulled onto your host machine")
-		log.Warn("Please ensure that you have sufficient bandwidth to handle the download")
-		log.Warn("On a remote host in the cloud, this should only take a few minutes but can sometimes take 10 or more...")
-		log.Warn("These times can double or triple on local host machines")
-		log.Warn("If you already have these images, they will be updated")
+		log.Warn(`WARNING: Approximately 1 gigabyte of docker images are about to be pulled onto your host machine
+Please ensure that you have sufficient bandwidth to handle the download
+On a remote host in the cloud, this should only take a few minutes but can sometimes take 10 or more.
+These times can double or triple on local host machines
+If you already have these images, they will be updated`)
 
 		log.WithField("ERIS_PULL_APPROVE", "true").Warn("To avoid this warning on all future pulls, set as an environment variable")
 

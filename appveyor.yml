@@ -5,19 +5,16 @@ environment:
   GOPATH: C:\
   GOBIN: C:\bin
   PATH: '%PATH%;C:\bin'
-  SWARM: win-tests
-  APIVERSION: latest
   MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
-  AWS_ACCESS_KEY:
-    secure: +ZHNhI/rT7L/bEqsQl9Ow+1haJ9mEfpiBntxCt7j5q4=
-  AWS_SECRET_KEY:
-    secure: 6UdVKS5QjGD+4nlrDrBTq/qzEOkHHencKA4pPayXOXCB6hLSFbNrKwAwIN7IbQtl
-  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID:
+    secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
+  AWS_SECRET_ACCESS_KEY:
+    secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
+  AWS_DEFAULT_REGION: eu-west-1
   AWS_VPC_ID:
-    secure: SJGZG9U3ikfqUPYBe5adHw==
+    secure: Lo717dojMJUNytpQPZWwyw==
   AWS_SECURITY_GROUP:
-    secure: jDcmvJeKkI4ifbImHF9vSQ==
-  TEST_IN_CIRCLE: "true"
+    secure: Jie7WuAzjiHVp7tX8MfaSQ==
 
 build_script:
 - cmd: >-
@@ -34,15 +31,7 @@ build_script:
 
     go install
 
-    docker-machine create --driver amazonec2 --amazonec2-access-key %AWS_ACCESS_KEY% --amazonec2-secret-key %AWS_SECRET_KEY% --amazonec2-region %AWS_REGION% --amazonec2-vpc-id %AWS_VPC_ID% --amazonec2-security-group %AWS_SECURITY_GROUP% eris-test-win-%APPVEYOR_BUILD_ID%
-
 test_script:
-- ps: >-
-
-    bash c:\src\github.com\eris-ltd\eris-cli\tests\test_tool.sh
-
-on_finish:
 - cmd: >-
-    docker-machine kill eris-test-win-%APPVEYOR_BUILD_ID%
 
-    docker-machine rm --force eris-test-win-%APPVEYOR_BUILD_ID%
+    bash c:\src\github.com\eris-ltd\eris-cli\tests\test_osx_win.sh

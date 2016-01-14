@@ -2,9 +2,6 @@ os: osx
 
 language: go
 
-env:
-- MACHINE_NAME=eris-test-osx-$TRAVIS_JOB_ID SWARM=osx-tests APIVERSION=latest
-
 install:
 - eval "$(gimme 1.5)"
 - brew update
@@ -15,10 +12,7 @@ install:
 
 script:
 - go install ./cmd/eris
-- docker-machine create --driver amazonec2 eris-test-osx-$TRAVIS_JOB_ID && tests/test_tool.sh
-
-after_script:
-- docker-machine rm --force eris-test-osx-$TRAVIS_JOB_ID
+- tests/test_osx_win.sh
 
 notifications:
   email: false

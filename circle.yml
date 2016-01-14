@@ -6,6 +6,8 @@ machine:
     INTEGRATION_TESTS_BRANCH: staging
     TEST_MINT_CLIENT_BRANCH: staging
     TEST_MINDY_BRANCH: staging
+    DOCKER_VERSION: 1.9.1
+    DOCKER_MACHINE_VERSION: 0.5.4
   post:
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
@@ -27,8 +29,7 @@ dependencies:
 test:
   override:
     - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
-    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0":
-            timeout: 1000
+    - "tests/test_linux.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0"
     - bash $INTEGRATION_TESTS_PATH/test.sh
 
 deployment:

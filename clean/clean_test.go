@@ -61,7 +61,7 @@ func TestClean(t *testing.T) {
 	opts := docker.CreateContainerOptions{
 		Name: "not_eris",
 		Config: &docker.Config{
-			Image:           "ubuntu",
+			Image:           "busybox",
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
