@@ -360,6 +360,9 @@ see https://github.com/eris-ltd/mint-client for more info`,
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
+
+	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
+
 	buildFlag(chainsNew, do, "config", "chain")
 	buildFlag(chainsNew, do, "csv", "chain")
 	buildFlag(chainsNew, do, "serverconf", "chain")
