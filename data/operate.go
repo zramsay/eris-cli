@@ -5,18 +5,22 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
+//import from: do.Source(on host), to: do.Destination(in container)
 func ImportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
@@ -26,12 +30,17 @@ func ImportData(do *definitions.Do) error {
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
 		}
+		if err := checkErisContainerRoot(do, "import"); err != nil {
+			return err
+		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		logger.Debugf("Importing FROM =>\t\t%s\n", do.Source)
+		log.WithFields(log.Fields{
+			"from": do.Source,
+			"to":   do.Destination,
+		}).Debug("Importing")
 		os.Chdir(do.Source)
 
-		logger.Debugf("Importing TO =>\t\t\t%s\n", do.Destination)
 		reader, err := util.Tar(do.Source, 0)
 		if err != nil {
 			return err
@@ -44,8 +53,8 @@ func ImportData(do *definitions.Do) error {
 			NoOverwriteDirNonDir: true,
 		}
 
-		logger.Infof("Copying into Cont. ID =>\t%s\n", service.ID)
-		logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+		log.WithField("=>", containerName).Info("Copying into container")
+		log.WithField("path", do.Source).Debug()
 		if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
 			return err
 		}
@@ -54,6 +63,7 @@ func ImportData(do *definitions.Do) error {
 		doChown.Operations.DataContainerName = containerName
 		doChown.Operations.ContainerType = "data"
 		doChown.Operations.ContainerNumber = 1
+		//required b/c `docker cp` (UploadToContainer) goes in as root
 		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
 		_, err = perform.DockerRunData(doChown.Operations, nil)
 		if err != nil {
@@ -72,7 +82,7 @@ func ImportData(do *definitions.Do) error {
 
 func ExecData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		logger.Infoln("Running exec on container with volumes from data container " + do.Operations.DataContainerName)
+		log.WithField("=>", do.Operations.DataContainerName).Info("Executing data container")
 
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		util.Merge(ops, do.Operations)
@@ -86,10 +96,10 @@ func ExecData(do *definitions.Do) error {
 	return nil
 }
 
+//export from: do.Source(in container), to: do.Destination(on host)
 func ExportData(do *definitions.Do) error {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-
-		logger.Infoln("Exporting data container", do.Name)
+		log.WithField("=>", do.Name).Info("Exporting data container")
 
 		// we want to export to a temp directory.
 		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name) // TODO: do.Operations.ContainerNumber ?
@@ -98,6 +108,7 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 
+		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
 		service, exists := perform.ContainerExists(srv.Operations)
 
@@ -108,41 +119,42 @@ func ExportData(do *definitions.Do) error {
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
+		if err := checkErisContainerRoot(do, "export"); err != nil {
+			return err
+		}
 		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
 			Path:         do.Source,
 		}
 
 		go func() {
-			logger.Infof("Copying out of Cont. ID =>\t%s\n", service.ID)
-			logger.Debugf("\tPath =>\t\t\t%s\n", do.Source)
+			log.WithField("=>", containerName).Info("Copying out of container")
+			log.WithField("path", do.Source).Debug()
 			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
 			writer.Close()
 		}()
 
-		logger.Debugf("Untarring Package from Cont =>\t%s\n", exportPath)
+		log.WithField("=>", exportPath).Debug("Untarring package from container")
 		if err = util.Untar(reader, do.Name, exportPath); err != nil {
 			return err
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
-		//   move everything from .eris to exportPath
+		// move everything from .eris to exportPath
 		if err := moveOutOfDirAndRmDir(filepath.Join(exportPath, ".eris"), exportPath); err != nil {
 			return err
 		}
 
-		// // finally remove everything in the data directory and move
-		// //   the temp contents there
+		// finally remove everything in the data directory and move
+		// the temp contents there
 		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
 			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
 				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
 			}
 		}
-		// ClearDir(do.Destionation)
 		if err := moveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
 			return err
 		}
-
 	} else {
 		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
 	}
@@ -151,33 +163,62 @@ func ExportData(do *definitions.Do) error {
 	return nil
 }
 
+//TODO test that this doesn't fmt things up, see note in #400
 func moveOutOfDirAndRmDir(src, dest string) error {
-	logger.Infof("Move all files/dirs out of a dir and rm -rf that dir.\n")
-	logger.Debugf("Source of the move =>\t\t%s.\n", src)
-	logger.Debugf("Destin of the move =>\t\t%s.\n", dest)
+	log.WithFields(log.Fields{
+		"from": src,
+		"to":   dest,
+	}).Info("Move all files/dirs out of a dir and `rm -rf` that dir")
 	toMove, err := filepath.Glob(filepath.Join(src, "*"))
 	if err != nil {
 		return err
 	}
 
 	if len(toMove) == 0 {
-		logger.Debugln("No files to move.")
+		log.Debug("No files to move")
 	}
 
 	for _, f := range toMove {
-		// logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
-
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
 		Copy(f, filepath.Join(dest, filepath.Base(f)))
 	}
 
-	logger.Infof("Removing directory =>\t\t%s.\n", src)
+	log.WithField("=>", src).Info("Removing directory")
 	err = os.RemoveAll(src)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// check path for ErisContainerRoot
+// XXX this is opiniated & we may want to change in future
+// for more flexibility with filesystem of data conts
+func checkErisContainerRoot(do *definitions.Do, typ string) error {
+
+	r, err := regexp.Compile(ErisContainerRoot)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "import":
+		if r.MatchString(do.Destination) != true { //if not there join it
+			do.Destination = path.Join(ErisContainerRoot, do.Destination)
+			return nil
+		} else { // matches: do nothing
+			return nil
+		}
+	case "export":
+		if r.MatchString(do.Source) != true {
+			do.Source = path.Join(ErisContainerRoot, do.Source)
+			return nil
+		} else {
+			return nil
+		}
+	}
 	return nil
 }

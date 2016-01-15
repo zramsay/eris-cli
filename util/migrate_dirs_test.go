@@ -4,47 +4,44 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
-var erisDir string = path.Join(os.TempDir(), "eris")
+var erisDir string = filepath.Join(os.TempDir(), "eris")
 
 //old
-var blockchains string = path.Join(erisDir, "blockchains")
-var dapps string = path.Join(erisDir, "dapps")
+var blockchains string = filepath.Join(erisDir, "blockchains")
+var dapps string = filepath.Join(erisDir, "dapps")
 var depDirs = []string{blockchains, dapps}
 
 //new
-var chains string = path.Join(erisDir, "chains")
-var apps string = path.Join(erisDir, "apps")
+var chains string = filepath.Join(erisDir, "chains")
+var apps string = filepath.Join(erisDir, "apps")
 var newDirs = []string{chains, apps}
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	if err := testsInit(); err != nil {
-		logger.Errorln(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	exitCode := m.Run()
 
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		if err := testsTearDown(); err != nil {
-			logger.Errorln(err)
-			log.Flush()
-			os.Exit(1)
+			log.Fatal(err)
 		}
 	}
 
@@ -91,7 +88,7 @@ func TestMigrationMoveFile(t *testing.T) {
 	defer testsRemoveDirs(depDirs, newDirs)
 
 	testFile := "migration_test"
-	testDepFile := path.Join(depDirs[0], testFile)
+	testDepFile := filepath.Join(depDirs[0], testFile)
 
 	testDepContent := []byte("some datas")
 
@@ -109,7 +106,7 @@ func TestMigrationMoveFile(t *testing.T) {
 		ifExit(err)
 	}
 
-	testNewFile := path.Join(newDirs[0], testFile)
+	testNewFile := filepath.Join(newDirs[0], testFile)
 	testNewContent, err := ioutil.ReadFile(testNewFile)
 	if err != nil {
 		ifExit(err)
@@ -127,7 +124,10 @@ func testsInit() error {
 	ifExit(err)
 
 	if err := os.Mkdir(erisDir, 0777); err != nil {
-		ifExit(err)
+		if runtime.GOOS != "windows" {
+			// windows returns an error here
+			ifExit(err)
+		}
 	}
 	config.ChangeErisDir(erisDir)
 
@@ -177,8 +177,7 @@ func testsTearDown() error {
 
 func ifExit(err error) {
 	if err != nil {
-		logger.Errorln(err)
-		log.Flush()
+		log.Error(err)
 		testsTearDown()
 		os.Exit(1)
 	}

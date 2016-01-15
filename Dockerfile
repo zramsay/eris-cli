@@ -16,7 +16,7 @@ ENV INSTALL_BASE /usr/local/bin
 # DEPS
 RUN apt-get update && apt-get install -y \
   curl wget gcc libc6-dev make ca-certificates \
-  lxc apt-transport-https supervisor \
+  lxc apt-transport-https supervisor jq \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
@@ -48,7 +48,7 @@ RUN curl -sSL -o $INSTALL_BASE/wrapdocker https://raw.githubusercontent.com/jpet
 RUN chmod +x $INSTALL_BASE/wrapdocker
 
 # DOCKER-MACHINE (for testing)
-ENV DOCKER_MACHINE_VERSION 0.4.0
+ENV DOCKER_MACHINE_VERSION 0.5.4
 RUN curl -sSL -o $INSTALL_BASE/docker-machine \
   https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine_linux-amd64 && \
   chmod +x $INSTALL_BASE/docker-machine

@@ -16,7 +16,7 @@ ENV INSTALL_BASE /usr/local/bin
 # DEPS
 RUN apt-get update && apt-get install -y \
   curl wget gcc libc6-dev make ca-certificates \
-  lxc apt-transport-https supervisor \
+  lxc apt-transport-https supervisor jq \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 

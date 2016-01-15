@@ -3,11 +3,12 @@ package util
 import (
 	"errors"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
@@ -87,7 +88,7 @@ func Merge(base, over interface{}) error {
 // container to work on unless newCont == true in which case it would return the highest
 // container number plus one.
 func AutoMagic(cNum int, typ string, newCont bool) int {
-	logger.Debugf("Automagic (base) =>\t\t%s:%d\n", typ, cNum)
+	log.WithField("automagic", cNum).Debug()
 	contns := ErisContainersByType(typ, true)
 
 	contnums := make([]int, len(contns))
@@ -112,7 +113,8 @@ func AutoMagic(cNum int, typ string, newCont bool) int {
 		result = 1
 	}
 
-	logger.Debugf("Automagic (result) =>\t\t%s:%d\n", typ, result)
+	log.WithField("automagic", result).Debug()
+
 	return result
 }
 
@@ -158,7 +160,7 @@ func FixDirs(arg []string) ([]string, error) {
 			keep := strings.Replace(a, tmp+":", "", 1)
 			if runtime.GOOS == "windows" {
 				winTmp := strings.Split(tmp, "/")
-				tmp = path.Join(winTmp...)
+				tmp = filepath.Join(winTmp...)
 			}
 			tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
 			arg[n] = strings.Join([]string{tmp, keep}, ":")

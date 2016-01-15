@@ -10,7 +10,8 @@ import (
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var actionName string = "do not use"
@@ -19,20 +20,16 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 2
-	// logLevel = 3
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
-
-	tests.IfExit(testsInit())
-
+	tests.IfExit(tests.TestsInit("actions"))
 	exitCode := m.Run()
 
-	logger.Infoln("Commensing with Tests Tear Down.")
+	log.Info("Tearing tests down")
 	if os.Getenv("TEST_IN_CIRCLE") != "true" {
 		tests.IfExit(tests.TestsTearDown())
 	}
@@ -40,7 +37,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestListActions(t *testing.T) {
+func TestListKnownActions(t *testing.T) {
 	do := definitions.NowDo()
 	do.Known = true
 	do.Running = false
@@ -49,12 +46,25 @@ func TestListActions(t *testing.T) {
 	tests.IfExit(util.ListAll(do, "actions"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 1 {
-		tests.IfExit(fmt.Errorf("The wrong number of action definitions have been found. Something is wrong.\n"))
+	if len(k) != 4 {
+		tests.IfExit(fmt.Errorf("Found %v action definition files, Expected 4. Something is wrong.\n", len(k)))
 	}
 
-	if k[0] != "do_not_use" {
-		tests.IfExit(fmt.Errorf("Could not find \"do not use\" action definition.\n"))
+	i := 0
+	for _, actFile := range k {
+		switch actFile {
+		case "do_not_use":
+			i++
+		case "chain_info":
+			i++
+		case "dns_register":
+			i++
+		case "keys_list":
+			i++
+		}
+	}
+	if i != 4 {
+		tests.IfExit(fmt.Errorf("Could not find all the expected action definition files.\n"))
 	}
 }
 
@@ -63,13 +73,13 @@ func TestLoadActionDefinition(t *testing.T) {
 	actionName = strings.Replace(actionName, " ", "_", -1)
 	act, _, e := LoadActionDefinition(actionName)
 	if e != nil {
-		logger.Errorf("Action did not load properly =>\t%v\n", e)
+		log.Errorf("Error: action did not load properly: %v", e)
 		t.FailNow()
 	}
 
 	actionName = strings.Replace(actionName, "_", " ", -1)
 	if act.Name != actionName {
-		logger.Errorf("FAILURE: improper action name on LOAD. expected: %s\tgot: %s\n", actionName, act.Name)
+		log.Errorf("Error: improper action name on LOAD. expected: %s got: %s", actionName, act.Name)
 		t.Fail()
 	}
 }
@@ -78,9 +88,9 @@ func TestDoAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Operations.Args = strings.Fields(actionName)
 	do.Quiet = true
-	logger.Infof("Perform Action (from tests) =>\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Info("Performing action (from tests)")
 	if err := Do(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 }
@@ -88,9 +98,9 @@ func TestDoAction(t *testing.T) {
 func TestNewAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Operations.Args = strings.Fields(oldName)
-	logger.Infof("New Action (from tests) =>\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Info("New action (from tests)")
 	if err := NewAction(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 	testExist(t, oldName, true)
@@ -103,9 +113,12 @@ func TestRenameAction(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = oldName
 	do.NewName = newName
-	logger.Infof("Renaming Action (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming action (from tests)")
 	if err := RenameAction(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 	testExist(t, newName, true)
@@ -114,9 +127,12 @@ func TestRenameAction(t *testing.T) {
 	do = definitions.NowDo()
 	do.Name = newName
 	do.NewName = oldName
-	logger.Infof("Renaming Action (from tests) =>\t%s:%s\n", do.Name, do.NewName)
+	log.WithFields(log.Fields{
+		"from": do.Name,
+		"to":   do.NewName,
+	}).Info("Renaming action (from tests)")
 	if err := RenameAction(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 	testExist(t, newName, false)
@@ -128,21 +144,14 @@ func TestRemoveAction(t *testing.T) {
 	do.Operations.Args = strings.Fields(oldName)
 	do.File = true
 	if err := RmAction(do); err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		t.Fail()
 	}
 	testExist(t, oldName, false)
 }
 
-func testsInit() error {
-	if err := tests.TestsInit("actions"); err != nil {
-		return err
-	}
-	return nil
-}
-
 func testExist(t *testing.T, name string, toExist bool) {
-	if tests.TestExistAndRun(name, "actions", 1, toExist, false) {
-		t.Fail()
+	if existing := tests.TestActionDefinitionFile(name); existing != toExist {
+		t.Errorf("expected action definition file %q with status %v, got %v", name, toExist, existing)
 	}
 }

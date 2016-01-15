@@ -5,16 +5,19 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
+    	"runtime"
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 func Do(do *definitions.Do) error {
-	logger.Infof("Performing Action =>\t\t%v\n", do.Operations.Args)
-	logger.Debugf("CLI Chain to turn on =>\t\t%v\n", do.ChainName)
-	logger.Debugf("CLI Services to turn on =>\t%v\n", do.ServicesSlice)
+	log.WithFields(log.Fields{
+		"chain":    do.ChainName,
+		"services": do.ServicesSlice,
+	}).Info("Performing action")
 
 	var err error
 	var actionVars []string
@@ -42,10 +45,10 @@ func StartServicesAndChains(do *definitions.Do) error {
 	// start the services and chains
 	doSrvs := definitions.NowDo()
 	if do.Action.Dependencies == nil || len(do.Action.Dependencies.Services) == 0 {
-		logger.Debugf("No services to start.\n")
+		log.Debug("No services to start")
 	} else {
 		doSrvs.Operations.Args = do.Action.Dependencies.Services
-		logger.Debugf("Starting Services. Args =>\t%v\n", doSrvs.Operations.Args)
+		log.WithField("args", doSrvs.Operations.Args).Debug("Starting services")
 		if err := services.StartService(doSrvs); err != nil {
 			return err
 		}
@@ -54,9 +57,9 @@ func StartServicesAndChains(do *definitions.Do) error {
 	doChns := definitions.NowDo()
 	doChns.Name = do.Action.Chain
 	if doChns.Name == "" {
-		logger.Debugf("No chain to start.\n")
+		log.Debug("No chain to start")
 	} else {
-		logger.Debugf("Starting Chain. Name =>\t\t%v\n", doChns.Name)
+		log.WithField("=>", doChns.Name).Debug("Starting chain")
 		if err := chains.StartChain(do); err != nil {
 			return err
 		}
@@ -66,13 +69,13 @@ func StartServicesAndChains(do *definitions.Do) error {
 }
 
 func PerformCommand(action *definitions.Action, actionVars []string, quiet bool) error {
-	logger.Infof("Performing Action =>\t\t%s.\n", action.Name)
+	log.WithField("action", action.Name).Info("Performing action")
 
 	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	logger.Debugf("Directory for action =>\t\t%s\n", dir)
+	log.WithField("directory", dir).Debug()
 
 	// pull actionVars (first given from command line) and
 	// combine with the environment variables (given in the
@@ -84,17 +87,20 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 	}
 
 	for _, v := range actionVars {
-		logger.Debugf("Variable for action =>\t\t%s\n", v)
+		log.WithField("variable", v).Debug()
 	}
 
 	actionVars = append(os.Environ(), actionVars...)
 
 	for n, step := range action.Steps {
 		cmd := exec.Command("sh", "-c", step)
+	        if runtime.GOOS == "windows" {
+	            cmd = exec.Command("cmd", "/c", step)
+	        }
 		cmd.Env = actionVars
 		cmd.Dir = dir
 
-		logger.Debugf("Performing Step %d =>\t\t%s\n", n+1, strings.Join(cmd.Args, " "))
+		log.WithField("=>", strings.Join(cmd.Args, " ")).Debugf("Performing step %d", n+1)
 
 		prev, err := cmd.Output()
 		if err != nil {
@@ -102,7 +108,7 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 		}
 
 		if !quiet {
-			logger.Println(strings.TrimSpace(string(prev)))
+			log.Warn(strings.TrimSpace(string(prev)))
 		}
 
 		if n != 0 {
@@ -111,7 +117,7 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 		actionVars = append(actionVars, ("prev=" + strings.TrimSpace(string(prev))))
 	}
 
-	logger.Infoln("Action performed")
+	log.Info("Action performed")
 	return nil
 }
 
@@ -129,5 +135,5 @@ func resolveServices(do *definitions.Do) {
 	if do.Action.Dependencies != nil {
 		do.Action.Dependencies.Services = append(do.Action.Dependencies.Services, do.ServicesSlice...)
 	}
-	logger.Debugf("Services to start =>\t\t%v\n", do.Operations.Args)
+	log.WithField("args", do.Operations.Args).Debug("Services to start")
 }

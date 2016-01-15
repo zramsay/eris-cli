@@ -1,139 +1,194 @@
 package initialize
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-func cloneRepo(prompt bool, name, location string) error {
-	src := "https://github.com/eris-ltd/" + name
+// XXX all files in this sequence must be added to both
+// the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_name)
+func dropServiceDefaults(dir, from string) error {
+	servDefs := []string{
+		"btcd.toml",
+		"compilers.toml",
+		"eth.toml",
+		"ipfs.toml",
+		"keys.toml",
+		"logspout.toml",
+		"logsrotate.toml",
+		"mindy.toml",
+		"mint.toml",
+		"openbazaar.toml",
+		"tinydns.toml",
+		"watchtower.toml",
+		"do_not_use.toml",
+	}
 
-	if _, err := os.Stat(filepath.Join(location, ".git")); !os.IsNotExist(err) {
-		// if the .git directory exists within ~/.eris/services (or w/e)
-		//   then pull rather than clone.
-		logger.Printf("The location is a git repository. Attempting to pull instead.\n")
-		if err := pullRepo(location, prompt); err != nil {
-			return err
-		}
-
-	} else {
-
-		// if the ~/.eris/services (or w/e) directory exists, but it does
-		// not have a .git directory (caught above), then clone the repo
-		if prompt || askToPull(location) {
-
-			// if users want to clone the repository we clear the directory first to avoid
-			//   cannot merge errors on localized changes. This is very opinionated and may
-			//   need to change down the road. generally, this should not be a big problem.
-			common.ClearDir(location)
-
-			logger.Printf("Cloning git repository.\n")
-			c := exec.Command("git", "clone", src, location)
-
-			// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
-			//c.Stdout = config.GlobalConfig.Writer
-			c.Stderr = config.GlobalConfig.ErrorWriter
-			if e3 := c.Run(); e3 != nil {
-				return e3
-			}
-
-		} else {
-			logger.Debugf("Authorization not granted. Skipping.\n")
-		}
+	if err := drops(servDefs, "services", dir, from); err != nil {
+		return err
 	}
 	return nil
 }
 
-func pullRepo(location string, alreadyAsked bool) error {
-	if alreadyAsked || askToPull(location) {
-		prevDir, _ := os.Getwd()
-
-		if err := os.Chdir(location); err != nil {
-			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", location)
-		}
-
-		logger.Printf("Pulling origin master.\n")
-		c := exec.Command("git", "pull", "origin", "master")
-
-		// XXX [csk]: we squelch this output to provide a nicer newb interface... may need to change later
-		//c.Stdout = config.GlobalConfig.Writer
-
-		c.Stderr = config.GlobalConfig.ErrorWriter
-		if err := c.Run(); err != nil {
-			logger.Printf("err: %v\n", err)
-			return err
-		}
-
-		if err := os.Chdir(prevDir); err != nil {
-			return fmt.Errorf("Error:\tCould not move into the directory (%s)\n", prevDir)
-		}
+func dropActionDefaults(dir, from string) error {
+	actDefs := []string{
+		"chain_info.toml",
+		"dns_register.toml",
+		"keys_list.toml",
 	}
-
-	return nil
-}
-
-func askToPull(location string) bool {
-	var input string
-
-	logger.Printf("Looks like the %s directory exists.\nWould you like the marmots to pull in any recent changes? (y/n): ", location)
-	fmt.Scanln(&input)
-
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-		return true
-	}
-	return false
-}
-
-func dropDefaults() error {
-	if err := writeDefaultFile(common.ServicesPath, "keys.toml", DefaultKeys); err != nil {
-		return fmt.Errorf("Cannot add keys: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", DefaultIpfs); err != nil {
-		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ServicesPath, "do_not_use.toml", DefaultIpfs2); err != nil {
-		return fmt.Errorf("Cannot add ipfs: %s.\n", err)
+	if err := drops(actDefs, "actions", dir, from); err != nil {
+		return err
 	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
-		return fmt.Errorf("Cannot add default action: %s.\n", err)
+		return fmt.Errorf("Cannot add default do_not_use: %s.\n", err)
 	}
 	return nil
 }
 
-func dropChainDefaults() error {
-	defChainDir := filepath.Join(common.ChainsPath, "default")
-	if err := writeDefaultFile(common.ChainsPath, "default.toml", DefChainService); err != nil {
-		return fmt.Errorf("Cannot add default chain definition: %s.\n", err)
+func dropChainDefaults(dir, from string) error {
+	chnDefs := []string{
+		"default.toml",
+		"config.toml",
+		"server_conf.toml",
 	}
-	if err := writeDefaultFile(defChainDir, "config.toml", DefChainConfig); err != nil {
-		return fmt.Errorf("Cannot add default config.toml: %s.\n", err)
+	if err := drops(chnDefs, "chains", dir, from); err != nil {
+		return err
 	}
-	if err := writeDefaultFile(defChainDir, "genesis.json", DefChainGen); err != nil {
+
+	// common.DefaultChainDir goes to /home/zach/.eris
+	// rather than /tmp/eris/.eris
+	// XXX something wonky with ResolveErisRoot()?
+	chnDir := filepath.Join(dir, "default")
+	if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "priv_validator.json", DefChainKeys); err != nil {
+	if err := writeDefaultFile(chnDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
 	}
-	if err := writeDefaultFile(defChainDir, "server_conf.toml", DefChainServConfig); err != nil {
-		return fmt.Errorf("Cannot add default server_conf.toml: %s.\n", err)
-	}
-	if err := writeDefaultFile(defChainDir, "genesis.csv", DefChainCSV); err != nil {
+	if err := writeDefaultFile(chnDir, "genesis.csv", DefChainCSV); err != nil {
 		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
+	}
+
+	//insert version into default chain service definition
+	versionDefault := filepath.Join(dir, "default.toml")
+	read, err := ioutil.ReadFile(versionDefault)
+	if err != nil {
+		return err
+	}
+	withVersion := strings.Replace(string(read), "version", version.VERSION, 2)
+	if err := ioutil.WriteFile(versionDefault, []byte(withVersion), 0); err != nil {
+		return err
+	}
+
+	//move things to where they ought to be
+	config := filepath.Join(dir, "config.toml")
+	configDef := filepath.Join(chnDir, "config.toml")
+	if err := os.Rename(config, configDef); err != nil {
+		return err
+	}
+
+	server := filepath.Join(dir, "server_conf.toml")
+	serverDef := filepath.Join(chnDir, "server_conf.toml")
+	if err := os.Rename(server, serverDef); err != nil {
+		return err
 	}
 	return nil
 }
 
+func pullDefaultImages() error {
+	images := []string{
+		"quay.io/eris/base",
+		"quay.io/eris/keys",
+		"quay.io/eris/data",
+		"quay.io/eris/ipfs",
+		"quay.io/eris/erisdb",
+		"quay.io/eris/epm",
+	}
+
+	log.Warn("Pulling default docker images from quay.io")
+	for _, image := range images {
+		var tag string
+		if image == "eris/erisdb" || image == "eris/epm" {
+			tag = version.VERSION
+		} else {
+			tag = "latest"
+		}
+		opts := docker.PullImageOptions{
+			Repository:   image,
+			Registry:     "quay.io",
+			Tag:          tag,
+			OutputStream: os.Stdout,
+		}
+		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+			opts.OutputStream = nil
+		}
+
+		auth := docker.AuthConfiguration{}
+
+		if err := util.DockerClient.PullImage(opts, auth); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func drops(files []string, typ, dir, from string) error {
+	//to get from rawgit
+	var repo string
+	if typ == "services" {
+		repo = "eris-services"
+	} else if typ == "actions" {
+		repo = "eris-actions"
+	} else if typ == "chains" {
+		repo = "eris-chains"
+	}
+
+	if !util.DoesDirExist(dir) {
+		if err := os.MkdirAll(dir, 0777); err != nil {
+			return err
+		}
+	}
+
+	buf := new(bytes.Buffer)
+	if from == "toadserver" {
+		for _, file := range files {
+			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
+			log.WithField(file, url).Debug("Getting file from url")
+			log.WithField(file, dir).Debug("Dropping file to")
+			if err := ipfs.DownloadFromUrlToFile(url, file, dir, buf); err != nil {
+				return err
+			}
+		}
+	} else if from == "rawgit" {
+		for _, file := range files {
+			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
+			if err := util.GetFromGithub("eris-ltd", repo, "master", file, dir, file, buf); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+//TODO eventually eliminate this
 func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err := os.MkdirAll(savePath, 0777); err != nil {
 		return err
 	}
-	writer, err := os.Create(filepath.Join(savePath, fileName))
+	pth := filepath.Join(savePath, fileName)
+	writer, err := os.Create(pth)
 	defer writer.Close()
 	if err != nil {
 		return err

@@ -2,7 +2,7 @@ package loaders
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -11,6 +11,7 @@ import (
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
@@ -31,9 +32,9 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 
 	if cNum[0] == 0 {
 		cNum[0] = util.AutoMagic(0, definitions.TypeChain, newCont)
-		logger.Debugf("Loading Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Loading chain definition (autoassigned)")
 	} else {
-		logger.Debugf("Loading Chain Definition =>\t%s:%d\n", chainName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Loading chain definition")
 	}
 
 	chain := definitions.BlankChain()
@@ -45,7 +46,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 		return nil, err
 	}
 
-	chainConf, err := config.LoadViperConfig(path.Join(ChainsPath), chainName, "chain")
+	chainConf, err := config.LoadViperConfig(filepath.Join(ChainsPath), chainName, "chain")
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +66,12 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 	}
 
 	checkChainNames(chain)
-	logger.Debugf("Chain Loader. ContNumber =>\t%d\n", chain.Operations.ContainerNumber)
-	logger.Debugf("\twith Environment =>\t%v\n", chain.Service.Environment)
-	logger.Debugf("\tBooting =>\t\t%v:%v\n", chain.Service.EntryPoint, chain.Service.Command)
+	log.WithFields(log.Fields{
+		"container number": chain.Operations.ContainerNumber,
+		"environment":      chain.Service.Environment,
+		"entrypoint":       chain.Service.EntryPoint,
+		"cmd":              chain.Service.Command,
+	}).Debug("Chain definition loaded")
 	return chain, nil
 }
 
@@ -124,10 +128,10 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 
 	if len(cNum) == 0 {
 		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeChain, newCont)
-		logger.Debugf("Mocking Chain Definition =>\t%s:%d (autoassigned)\n", chainName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Mocking chain definition (autoassigned)")
 	} else {
 		chn.Operations.ContainerNumber = cNum[0]
-		logger.Debugf("Mocking Chain Definition =>\t%s:%d\n", chainName, cNum[0])
+		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Mocking chain definition")
 	}
 
 	chn.Operations.ContainerType = definitions.TypeChain
@@ -139,6 +143,7 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 
 // marshal from viper to definitions struct
 func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
+	log.Debug("Marshalling chain")
 	chnTemp := definitions.BlankChain()
 	err := chainConf.Marshal(chnTemp)
 	if err != nil {
@@ -154,8 +159,8 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 	// opinionated. we know.
 	for _, s := range []string{"", "service."} {
 		if chainConf.GetBool(s + "data_container") {
-			logger.Debugln("Loader.Chain.Marshal. Data Containers Turned On.")
 			chain.Service.AutoData = true
+			log.WithField("autodata", chain.Service.AutoData).Debug()
 		}
 	}
 
@@ -163,7 +168,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(path.Join(ChainsPath), "default", "chain")
+	cfg, err := config.LoadViperConfig(filepath.Join(ChainsPath), "default", "chain")
 	if err != nil {
 		return err
 	}
@@ -171,7 +176,7 @@ func setChainDefaults(chain *definitions.Chain) error {
 		return err
 	}
 
-	logger.Debugf("Chain Defaults Set. Image =>\t%s\n", chain.Service.Image)
+	log.WithField("image", chain.Service.Image).Debug("Chain defaults set")
 	return nil
 }
 

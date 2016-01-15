@@ -6,28 +6,25 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
-	"strings"
 	"testing"
-	//	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 	tests "github.com/eris-ltd/eris-cli/testutils"
-	util "github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/util"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var DEAD bool
 
-//TODO DRY this up!
-//vars
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		log.Flush()
 		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
@@ -35,13 +32,11 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	//	logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -75,7 +70,7 @@ func TestGenerateKey(t *testing.T) {
 
 	lsOutBytes := lsOut.Bytes()
 
-	output := trimString(string(lsOutBytes))
+	output := util.TrimString(string(lsOutBytes))
 
 	if address != output {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output))
@@ -96,7 +91,7 @@ func TestGetPubKey(t *testing.T) {
 	}
 
 	pubBytes := pub.Bytes()
-	pubkey := trimString(string(pubBytes))
+	pubkey := util.TrimString(string(pubBytes))
 
 	key := new(bytes.Buffer)
 	config.GlobalConfig.Writer = key
@@ -134,11 +129,11 @@ func TestExportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := trimString(string(catOutBytes))
+	keyInCont := util.TrimString(string(catOutBytes))
 
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = path.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	//export
 	if err := ExportKey(doExp); err != nil {
@@ -146,12 +141,12 @@ func TestExportKeySingle(t *testing.T) {
 	}
 
 	//cat host contents
-	key, err := ioutil.ReadFile(path.Join(doExp.Destination, address, address))
+	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
 		fatal(t, err)
 	}
 
-	keyOnHost := trimString(string(key))
+	keyOnHost := util.TrimString(string(key))
 	if keyInCont != keyOnHost {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyInCont, keyOnHost))
 	}
@@ -166,18 +161,18 @@ func TestImportKeySingle(t *testing.T) {
 	//export it
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = path.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	if err := ExportKey(doExp); err != nil {
 		fatal(t, err)
 	}
 
-	key, err := ioutil.ReadFile(path.Join(doExp.Destination, address, address))
+	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
 		fatal(t, err)
 	}
 	//key b4 import
-	keyOnHost := trimString(string(key))
+	keyOnHost := util.TrimString(string(key))
 
 	//rm key that was generated before import
 	doRm := def.NowDo()
@@ -214,7 +209,7 @@ func TestImportKeySingle(t *testing.T) {
 	}
 
 	catOutBytes := catOut.Bytes()
-	keyInCont := trimString(string(catOutBytes))
+	keyInCont := util.TrimString(string(catOutBytes))
 
 	if keyOnHost != keyInCont {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))
@@ -225,10 +220,6 @@ func TestConvertKey(t *testing.T) {
 	// tested in TestGetPubKey
 }
 
-func trimString(strang string) string {
-	return strings.TrimSpace(strings.Trim(strang, "\n"))
-}
-
 //returns an addr for tests
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
@@ -237,7 +228,7 @@ func testsGenAKey() string {
 	tests.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
-	address := trimString(string(addrBytes))
+	address := util.TrimString(string(addrBytes))
 	return address
 }
 
@@ -253,10 +244,10 @@ func testStartKeys(t *testing.T) {
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1
-	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
+		log.Infof("Error starting service: %v", e)
 		t.Fail()
 	}
 
@@ -265,7 +256,7 @@ func testStartKeys(t *testing.T) {
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	logger.Debugf("Stopping serv (via tests) =>\t%s\n", serviceName)
+	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
 
 	do := def.NowDo()
 	do.Name = serviceName
@@ -276,7 +267,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	}
 	e := srv.KillService(do)
 	if e != nil {
-		logger.Errorln(e)
+		log.Error(e)
 		fatal(t, e)
 	}
 	testExistAndRun(t, serviceName, 1, !wipe, false)
@@ -284,28 +275,39 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
+	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }
 
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
-	logger.Infof("\nTesting number of (%s) containers. Existing? (%d) and Running? (%d)\n", servName, containerExist, containerRun)
-
-	logger.Debugf("Checking Existing Containers =>\t%s\n", servName)
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
+	log.WithField("=>", servName).Debug("Checking existing containers for")
 	exist := util.HowManyContainersExisting(servName, "service")
-	logger.Debugf("Checking Running Containers =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Checking running containers for")
 	run := util.HowManyContainersRunning(servName, "service")
 
 	if exist != containerExist {
-		logger.Printf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist)
+		log.WithFields(log.Fields{
+			"service":  servName,
+			"expected": containerExist,
+			"got":      exist,
+		}).Error("Wrong number of existing containers")
 		fatal(t, nil)
 	}
 
 	if run != containerRun {
-		logger.Printf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run)
+		log.WithFields(log.Fields{
+			"service":  servName,
+			"expected": containerExist,
+			"got":      run,
+		}).Error("Wrong number of running containers")
 		fatal(t, nil)
 	}
 
-	logger.Infoln("All good.\n")
+	log.Info("All good")
 }

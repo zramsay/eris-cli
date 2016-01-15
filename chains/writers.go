@@ -9,6 +9,8 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
@@ -69,21 +71,22 @@ func MakeGenesisFile(do *def.Do) error {
 	doThr := def.NowDo()
 	doThr.Chain.ChainType = "throwaway" //for teardown
 	doThr.Name = "default"
+	doThr.Chain.Name = "default" //for teardown
 	doThr.Operations.ContainerNumber = 1
 	doThr.Operations.PublishAllPorts = true
 
-	logger.Infof("Starting chain from MakeGenesisFile =>\t%s\n", doThr.Name)
-	if er := StartChain(doThr); er != nil {
+	log.WithField("=>", doThr.Name).Info("Making genesis.json file. Starting chain")
+	if er := NewChain(doThr); er != nil {
 		return fmt.Errorf("error starting chain %v\n", er)
 	}
 
 	doThr.Operations.Args = []string{"mintgen", "known", do.Chain.Name, fmt.Sprintf("--pub=%s", do.Pubkey)}
-	doThr.Chain.Name = "default" //for teardown
 
 	// pipe this output to /chains/chainName/genesis.json
 	err := ExecChain(doThr)
 	if err != nil {
-		logger.Printf("exec chain err: %v\nCleaning up...\n", err)
+		log.Warnf("Executing chain error: %v", err)
+		log.Warn("Cleaning up")
 		doThr.Rm = true
 		doThr.RmD = true
 		if err := CleanUp(doThr); err != nil {

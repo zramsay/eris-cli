@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
@@ -12,23 +14,26 @@ func ChainsPathChecker(name string) (string, error) {
 	pathS := filepath.Join(ChainsPath, name)
 	src, err := os.Stat(pathS)
 	if err != nil || !src.IsDir() {
-		logger.Infof("path: %s does not exist or is not a directory, please pass in a valid path or ensure a dir was created and has the correct files in it\n", pathS)
+		log.WithField("=>", pathS).Info("Path does not exist or not a diretory")
 		return "", err
 	}
 	return pathS, nil
 }
 
 func GetFileByNameAndType(typ, name string) string {
-	logger.Debugf("Looking for file =>\t\t%s:%s\n", typ, name)
+	log.WithFields(log.Fields{
+		"file": name,
+		"type": typ,
+	}).Debug("Looking for file")
 	files := GetGlobalLevelConfigFilesByType(typ, true)
 
 	for _, file := range files {
 		file_base := strings.Split(filepath.Base(file), ".")[0] // quick and dirty file root
 		if file_base == name {
-			logger.Debugf("This file found =>\t\t%s\n", file)
+			log.WithField("file", file).Debug("This file found")
 			return file
 		}
-		logger.Debugf("Group file found =>\t\t%s\n", file)
+		log.WithField("file", file).Debug("Group file found")
 	}
 
 	return ""
@@ -67,28 +72,33 @@ func GetGlobalLevelConfigFilesByType(typ string, withExt bool) []string {
 }
 
 func MoveOutOfDirAndRmDir(src, dest string) error {
-	logger.Infof("Move all files/dirs out of a dir and rm -rf that dir.\n")
-	logger.Debugf("Source of the move =>\t\t%s.\n", src)
-	logger.Debugf("Destin of the move =>\t\t%s.\n", dest)
+	log.WithFields(log.Fields{
+		"from": src,
+		"to":   dest,
+	}).Info("Move all files/dirs out of a dir and `rm -fr` that dir")
 	toMove, err := filepath.Glob(filepath.Join(src, "*"))
 	if err != nil {
 		return err
 	}
 
 	if len(toMove) == 0 {
-		logger.Debugln("No files to move.")
+		log.Debug("No files to move")
 	}
 
 	for _, f := range toMove {
-		logger.Debugf("Moving [%s] to [%s].\n", f, filepath.Join(dest, filepath.Base(f)))
+		t := filepath.Join(dest, filepath.Base(f))
+		log.WithFields(log.Fields{
+			"from": f,
+			"to":   t,
+		}).Debug("Moving")
 
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
-		Copy(f, filepath.Join(dest, filepath.Base(f)))
+		Copy(f, t)
 	}
 
-	logger.Infof("Removing directory =>\t\t%s.\n", src)
+	log.WithField("=>", src).Info("Removing directory")
 	err = os.RemoveAll(src)
 	if err != nil {
 		return err

@@ -5,9 +5,9 @@ func defAct() string {
 services = [ "ipfs" ]
 chain = ""
 steps = [
-  "printenv",
-  "echo hello",
-  "echo goodbye"
+"printenv",
+"echo hello",
+"echo goodbye"
 ]
 
 [environment]

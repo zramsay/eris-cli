@@ -10,7 +10,8 @@ import (
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
@@ -18,7 +19,6 @@ var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 
 func fatal(t *testing.T, err error) {
 	if !DEAD {
-		log.Flush()
 		tests.TestsTearDown()
 		DEAD = true
 		panic(err)
@@ -26,14 +26,11 @@ func fatal(t *testing.T, err error) {
 }
 
 func TestMain(m *testing.M) {
-	var logLevel log.LogLevel
+	log.SetFormatter(logger.ErisFormatter{})
 
-	logLevel = 0
-	// logLevel = 1
-	// logLevel = 3
-
-	log.SetLoggers(logLevel, os.Stdout, os.Stderr)
-
+	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.DebugLevel)
 	tests.IfExit(testsInit())
 
 	exitCode := m.Run()
@@ -64,7 +61,7 @@ func TestClean(t *testing.T) {
 	opts := docker.CreateContainerOptions{
 		Name: "not_eris",
 		Config: &docker.Config{
-			Image:           "ubuntu",
+			Image:           "busybox",
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
@@ -144,10 +141,10 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do.Operations.Args = []string{serviceName}
 	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
 	do.Operations.PublishAllPorts = publishAll
-	logger.Debugf("Starting service (via tests) =>\t%s:%d\n", serviceName, do.Operations.ContainerNumber)
+	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (from tests)")
 	e := srv.StartService(do)
 	if e != nil {
-		logger.Infof("Error starting service =>\t%v\n", e)
+		log.Infof("Error starting service: %v", e)
 		fatal(t, e)
 	}
 
@@ -156,32 +153,44 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 }
 
 func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if tests.TestExistAndRun(servName, "services", containerNumber, toExist, toRun) {
+	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }
 
-//[zr] TODO move to testings pacakge...wait with [pv] done with moving to testutils
-//could also refactor this to use labels && be more generalized...
+//[zr] TODO move to testings package
 func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
-	logger.Infof("\nTesting number of (%s) containers. Existing? (%d) and Running? (%d)\n", servName, containerExist, containerRun)
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
 
-	logger.Debugf("Checking Existing Containers =>\t%s\n", servName)
+	log.WithField("=>", servName).Debug("Checking existing containers for")
 	exist := util.HowManyContainersExisting(servName, "service")
-	logger.Debugf("Checking Running Containers =>\t%s\n", servName)
+
+	log.WithField("=>", servName).Debug("Checking running containers for")
 	run := util.HowManyContainersRunning(servName, "service")
 
 	if exist != containerExist {
-		logger.Printf("Wrong number of containers existing for service (%s). Expected (%d). Got (%d).\n", servName, containerExist, exist)
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      exist,
+		}).Error("Wrong number of existing containers")
 		fatal(t, nil)
 	}
 
 	if run != containerRun {
-		logger.Printf("Wrong number of containers running for service (%s). Expected (%d). Got (%d).\n", servName, containerRun, run)
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      run,
+		}).Error("Wrong number of running containers")
 		fatal(t, nil)
 	}
 
-	logger.Infoln("All good.\n")
+	log.Info("All good")
 }
 
 func testsInit() error {

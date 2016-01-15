@@ -9,6 +9,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
 )
 
@@ -22,7 +23,10 @@ func WriteActionDefinitionFile(actDef *def.Action, fileName string) error {
 		fileName = fileName + ".toml"
 	}
 
-	logger.Debugf("Writing action def file =>\t%s:%s\n", actDef.Name, fileName)
+	log.WithFields(log.Fields{
+		"action": actDef.Name,
+		"file":   fileName,
+	}).Debug("Writing action definition file")
 
 	writer, err := os.Create(fileName)
 	defer writer.Close()

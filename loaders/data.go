@@ -1,8 +1,12 @@
 package loaders
 
 import (
+	"fmt"
+
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
 // LoadDataDefinition returns an Operation structure for a blank data container
@@ -12,7 +16,7 @@ func LoadDataDefinition(dataName string, cNum int) *definitions.Operation {
 		cNum = 1
 	}
 
-	logger.Debugf("Loading Data Definition =>\t%s:%d\n", dataName, cNum)
+	log.WithField("=>", fmt.Sprintf("%s:%d", dataName, cNum)).Debug("Loading data definition")
 
 	ops := definitions.BlankOperation()
 	ops.ContainerNumber = cNum

@@ -1,26 +1,28 @@
-package testings
+package testutils
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var erisDir = path.Join(os.TempDir(), "eris")
-var logger = log.AddLogger("tests")
+var (
+	erisDir = filepath.Join(os.TempDir(), "eris")
 
-//hold things...?
-type TestingInfo struct {
-}
+	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
+	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
+)
 
 //testType = one of each package, will switch over it for
 //make additional tempDirs and vars as needed -> [zr] or not, TBD
@@ -42,101 +44,73 @@ func TestsInit(testType string) (err error) {
 	// this dumps the ipfs and keys services defs into the temp dir which
 	// has been set as the erisRoot.
 	do := def.NowDo()
-	do.Pull = true
-	do.Services = true
-	do.Actions = true
-	do.Yes = true
+	do.Pull = false //don't pull imgs
+	do.Yes = true   //over-ride command-line prompts
+	do.Quiet = true
+	// do.Source = "toadserver" //use "rawgit" if ts down
+	do.Source = "rawgit" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
-		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir.\n"))
+		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}
 
-	if testType == "services" {
-		checkIPFSnotRunning() //TODO make more general & use for other things?
-	}
-
-	logger.Infoln("Test init completed. Starting main test sequence now.")
+	log.Info("Test init completed. Starting main test sequence now")
 	return nil
 }
 
-//return to handle failings in each pkg
-//typ = type of test for dealing with do.() details
-func TestExistAndRun(name, typ string, contNum int, toExist, toRun bool) bool {
-	var exist, run bool
-	if typ == "actions" {
-		name = strings.Replace(name, " ", "_", -1) // dirty
+func TestActionDefinitionFile(name string) bool {
+	name = strings.Replace(name, " ", "_", -1)
+
+	if util.GetFileByNameAndType("actions", name) == "" {
+		return false
+	}
+	return true
+}
+
+func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
+	log.WithFields(log.Fields{
+		"=>":       name,
+		"running":  toRun,
+		"existing": toExist,
+	}).Info("Checking container")
+
+	if existing := FindContainer(name, t, contNum, false); existing != toExist {
+		log.WithFields(log.Fields{
+			"=>":       name,
+			"expected": toExist,
+			"got":      existing,
+		}).Info("Checking container existing")
+
+		return ErrContainerExistMismatch
 	}
 
-	//logger.Infof("\nTesting whether (%s) existing? (%t)\n", name, toExist)
-	logger.Infof("\nTesting whether (%s) is running? (%t) and existing? (%t)\n", name, toRun, toExist)
-	if typ == "chains" {
-		name = util.ChainContainersName(name, 1) // not worried about containerNumbers, deal with multiple containers in services tests
-	} else if typ == "services" {
-		name = util.ServiceContainersName(name, contNum)
+	if running := FindContainer(name, t, contNum, true); running != toRun {
+		log.WithFields(log.Fields{
+			"=>":       name,
+			"expected": toExist,
+			"got":      running,
+		}).Info("Checking container running")
 
-	} else {
-		name = util.DataContainersName(name, 1)
-	}
-	do := def.NowDo()
-	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
-
-	if typ == "data" || typ == "chains" || typ == "services" {
-		do.Existing = true
-	} else if typ == "actions" {
-		do.Known = true
-	}
-	if err := util.ListAll(do, typ); err != nil {
-		logger.Errorln(err)
-		return true
+		return ErrContainerRunMismatch
 	}
 
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		logger.Debugf("Existing =>\t\t\t%s\n", r)
-		if r == util.ContainersShortName(name) {
-			exist = true
-		}
-	}
+	return nil
+}
 
-	if toExist != exist {
-		if toExist {
-			logger.Infof("Could not find an existing =>\t%s\n", name)
-		} else {
-			logger.Infof("Found an existing instance of %s when I shouldn't have\n", name)
-		}
-		return true
-	}
-	//func should always be testing for toExist, only sometimes tested for runining
-	if typ == "chains" || typ == "services" {
-		do.Running = true
-		do.Existing = false //unset
-		if err := util.ListAll(do, typ); err != nil {
-			return true
-		}
-		logger.Debugln("RUNNING RESULT:", do.Result)
-		res = strings.Split(do.Result, "\n")
-		for _, r := range res {
-			logger.Debugf("Running =>\t\t\t%s\n", r)
-			if r == util.ContainersShortName(name) {
-				run = true
-			}
-		}
+// FindContainer returns true if the container with a given
+// short name, type, number, and status exists.
+func FindContainer(name, t string, n int, running bool) bool {
+	containers := util.ErisContainersByType(t, !running)
 
-		if toRun != run {
-			if toRun {
-				logger.Infof("Could not find a running =>\t%s\n", name)
-			} else {
-				logger.Infof("Found a running instance of %s when I shouldn't have\n", name)
-			}
+	for _, c := range containers {
+		if c.ShortName == name && c.Number == n {
 			return true
 		}
 	}
-
 	return false
 }
 
 // Remove a container of some name, type, and number.
-func RemoveContainer(name string, t string, n int) error {
+func RemoveContainer(name, t string, n int) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            util.ContainersName(t, name, n),
 		RemoveVolumes: true,
@@ -157,7 +131,7 @@ func RemoveAllContainers() error {
 
 // Return container links. For sake of simplicity, don't expose
 // anything else.
-func Links(name string, t string, n int) []string {
+func Links(name, t string, n int) []string {
 	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name, n))
 	if err != nil {
 		return []string{}
@@ -183,6 +157,28 @@ func FakeServiceDefinition(tmpDir, name, definition string) error {
 	return err
 }
 
+// Remove the Docker image. A wrapper over Docker client's library.
+func RemoveImage(name string) error {
+	return util.DockerClient.RemoveImage(name)
+}
+
+// FileContents returns the contents of a file as a string
+// or panics on error.
+func FileContents(filename string) string {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(content)
+}
+
 // each pacakge will need its own custom stuff if need be
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
@@ -195,11 +191,10 @@ func TestsTearDown() error {
 
 func IfExit(err error) {
 	if err != nil {
-		logger.Errorln(err)
+		log.Error(err)
 		if err := TestsTearDown(); err != nil {
-			logger.Errorln(err)
+			log.Error(err)
 		}
-		log.Flush()
 		os.Exit(1)
 	}
 }
@@ -213,7 +208,7 @@ func checkIPFSnotRunning() {
 	do.Running = true
 	do.Quiet = true
 	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the running services.")
+	log.Debug("Finding the running services")
 	if err := util.ListAll(do, "services"); err != nil {
 		IfExit(err)
 	}
@@ -230,7 +225,7 @@ func checkIPFSnotRunning() {
 	do.Running = false
 	do.Quiet = true
 	do.Operations.Args = []string{"testing"}
-	logger.Debugln("Finding the existing services.")
+	log.Debug("Finding the existing services")
 	if err := util.ListAll(do, "services"); err != nil {
 		IfExit(err)
 	}
