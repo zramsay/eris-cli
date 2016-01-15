@@ -26,6 +26,6 @@ func addUpdateFlags() {
 }
 
 func UpdateTool(cmd *cobra.Command, args []string) {
-	util.UpdateEris(do.Branch)
+	util.UpdateEris(do.Branch, true, true)
 
 }
