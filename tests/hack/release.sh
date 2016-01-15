@@ -19,7 +19,7 @@ build_dir="builds"
 cmd_path="cmd/eris"
 pkg_name="eris"
 repo=$GOPATH/src/github.com/$this_user/$this_repo
-version=$(cat version/version.go | tail -n 2 | head -n 1 | cut -d \  -f 4 | tr -d '"')
+version=$(cat $repo/version/version.go | tail -n 2 | head -n 1 | cut -d \  -f 4 | tr -d '"')
 start=`pwd`
 
 if [[ "$1" == "pre" ]]
@@ -46,10 +46,13 @@ pre_check() {
   echo "OK. Moving on then."
   echo ""
   echo ""
-  latest_tag=$(git tag | tail -n 1 | cut -c 2-)
+  latest_tag=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
   if [[ "$latest_tag" != "$version" ]]
   then
-    echo "Something isn't right. The last tagged version, does not match the version to be released. Exiting."
+    echo "Something isn't right. The last tagged version, does not match the version to be released."
+    echo "Last tagged: $latest_tag"
+    echo "This version: $version"
+    echo "Exiting."
     exit 1
   fi
 }

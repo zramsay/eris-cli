@@ -23,7 +23,7 @@ var dmDriver = "amazonec2"
 var script = "docker.sh"
 var vars map[string]string
 
-var buildAllBranches = []string{"master", "staging"}
+var buildAllBranches = []string{"master", "staging", "develop"}
 var maxTimeout = 15 * time.Minute
 
 var wg sync.WaitGroup
@@ -57,18 +57,12 @@ func main() {
 
 	if runtime.GOOS == "linux" {
 		if allOrFew {
-			for d1 := range dockerAll {
-				for _, d := range dockerAll[d1] {
-					machines = append(machines, makeMachName(d))
-				}
-			}
+			machines = allBackends()
 		} else {
-			for d := range dockerAll {
-				machines = append(machines, makeMachName(dockerAll[d][0]))
-			}
+			machines = curBackend()
 		}
 	} else {
-		machines = []string{makeMachName(dockerAll[len(dockerAll)-1][0])}
+		machines = curBackend()
 	}
 
 	failOut := make(chan bool, len(machines))
@@ -94,6 +88,18 @@ func main() {
 	}
 }
 
+func allBackends() []string {
+	var machines []string
+	for d := range dockerAll {
+		machines = append(machines, makeMachName(dockerAll[d][0]))
+	}
+	return machines
+}
+
+func curBackend() []string {
+	return []string{makeMachName(dockerAll[len(dockerAll)-1][0])}
+}
+
 func timeOutTicker(machines []string) {
 	time.Sleep(maxTimeout)
 	for _, m := range machines {
@@ -105,7 +111,7 @@ func timeOutTicker(machines []string) {
 func toShuffle() bool {
 	t := time.Now()
 	rand.Seed(int64(t.Nanosecond()))
-	return rand.Int()%3 != 0
+	return rand.Int()%4 != 0
 }
 
 func shuffle(arr []string) {
@@ -128,11 +134,11 @@ func vetAndPopulate() error {
 	vars["areg"] = "eu-west-1"
 	switch runtime.GOOS {
 	case "windows":
-		vars["azon"] = "a"
+		vars["azon"] = "b"
 	case "darwin":
 		vars["azon"] = "b"
 	default:
-		vars["azon"] = "c"
+		vars["azon"] = "a"
 	}
 
 	// set aws default vars into env
@@ -197,7 +203,6 @@ func startMachine(machine string, failOut chan<- bool) {
 func makeMachine(machine string) error {
 	var cmd *exec.Cmd
 	cmd = exec.Command("docker-machine", "create", "--driver", dmDriver, "--amazonec2-access-key", vars["akey"], "--amazonec2-secret-key", vars["asec"], "--amazonec2-region", vars["areg"], "--amazonec2-vpc-id", vars["avpc"], "--amazonec2-security-group", vars["agrp"], "--amazonec2-zone", vars["azon"], machine)
-	// 	cmd = exec.Command("docker-machine", "create", "--driver", dmDriver, machine)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()

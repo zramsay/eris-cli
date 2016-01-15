@@ -4,7 +4,7 @@
 # Defaults
 
 package=eris
-host_location=/var/repositories
+host_location=/var/www/html
 declare -a distros=( precise trusty utopic vivid wheezy jessie stretch )
 
 echo "Prepping keys"
