@@ -65,9 +65,11 @@ type Do struct {
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//listing functions
-	Known    bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Running  bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Existing bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Known     bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Running   bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Existing  bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Host      bool `mapstructure:"," json:"," yaml:"," toml:","` //keys ls
+	Container bool `mapstructure:"," json:"," yaml:"," toml:","` //keys ls
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`
