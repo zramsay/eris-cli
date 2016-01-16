@@ -22,8 +22,8 @@ import (
 func dropServiceDefaults(dir, from string) error {
 	servDefs := []string{
 		"btcd.toml",
-		"bitcoincore.toml"
-		"bitcoinclassic.toml"
+		"bitcoincore.toml",
+		"bitcoinclassic.toml",
 		"compilers.toml",
 		"eth.toml",
 		"ipfs.toml",
