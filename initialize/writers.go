@@ -18,10 +18,12 @@ import (
 )
 
 // XXX all files in this sequence must be added to both
-// the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_name)
+// the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
 func dropServiceDefaults(dir, from string) error {
 	servDefs := []string{
 		"btcd.toml",
+		"bitcoincore.toml"
+		"bitcoinclassic.toml"
 		"compilers.toml",
 		"eth.toml",
 		"ipfs.toml",
@@ -67,7 +69,7 @@ func dropChainDefaults(dir, from string) error {
 		return err
 	}
 
-	// common.DefaultChainDir goes to /home/zach/.eris
+	// common.DefaultChainDir goes to $HOME/.eris
 	// rather than /tmp/eris/.eris
 	// XXX something wonky with ResolveErisRoot()?
 	chnDir := filepath.Join(dir, "default")

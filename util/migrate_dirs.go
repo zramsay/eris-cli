@@ -44,7 +44,7 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 }
 
 func canWeMigrate() bool {
-	fmt.Print("Permission to migrate deprecated directories required: would you like to continue? (Y/y): ")
+	fmt.Print("Permission to migrate deprecated directories required: would you like to continue? (y/n): ")
 	var input string
 	fmt.Scanln(&input)
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
