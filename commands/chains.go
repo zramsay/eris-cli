@@ -360,6 +360,7 @@ see https://github.com/eris-ltd/mint-client for more info`,
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
+
 	buildFlag(chainsNew, do, "config", "chain")
 	buildFlag(chainsNew, do, "csv", "chain")
 	buildFlag(chainsNew, do, "serverconf", "chain")
@@ -373,6 +374,7 @@ func addChainsFlags() {
 	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
 	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
+	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
 
 	buildFlag(chainsRegister, do, "links", "chain")
 	buildFlag(chainsRegister, do, "env", "chain")
@@ -394,6 +396,7 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	buildFlag(chainsStart, do, "api", "chain")
+	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
 	buildFlag(chainsLogs, do, "tail", "chain")
