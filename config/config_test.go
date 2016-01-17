@@ -15,52 +15,6 @@ var (
 	configErisDir = filepath.Join(os.TempDir(), "config")
 )
 
-func placeErisConfig(definition string) {
-	os.MkdirAll(configErisDir, 0755)
-	fakeDefinitionFile(configErisDir, "eris", definition)
-}
-
-func removeErisDir() {
-	// Move out of configErisDir before deleting it.
-	parentPath := filepath.Join(configErisDir, "..")
-	os.Chdir(parentPath)
-
-	if err := os.RemoveAll(configErisDir); err != nil {
-		panic(err)
-	}
-}
-
-func fakeDefinitionFile(tmpDir, name, definition string) error {
-	filename := filepath.Join(tmpDir, name+".toml")
-	out, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = out.WriteString(definition)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
-
-func fileContents(filename string) string {
-	f, err := os.Open(filename)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	content, err := ioutil.ReadAll(f)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(content)
-}
-
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
@@ -613,4 +567,50 @@ func TestChangeErisDirCI(t *testing.T) {
 	if GlobalConfig.ErisDir != "" {
 		t.Fatalf("expected config directory not changed in CI, got %v", GlobalConfig.ErisDir)
 	}
+}
+
+func placeErisConfig(definition string) {
+	os.MkdirAll(configErisDir, 0755)
+	fakeDefinitionFile(configErisDir, "eris", definition)
+}
+
+func removeErisDir() {
+	// Move out of configErisDir before deleting it.
+	parentPath := filepath.Join(configErisDir, "..")
+	os.Chdir(parentPath)
+
+	if err := os.RemoveAll(configErisDir); err != nil {
+		panic(err)
+	}
+}
+
+func fakeDefinitionFile(tmpDir, name, definition string) error {
+	filename := filepath.Join(tmpDir, name+".toml")
+	out, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = out.WriteString(definition)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func fileContents(filename string) string {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(content)
 }
