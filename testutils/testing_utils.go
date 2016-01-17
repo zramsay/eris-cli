@@ -141,8 +141,12 @@ func Links(name, t string, n int) []string {
 
 // Write a fake service definition file in a tmpDir Eris home directory.
 func FakeServiceDefinition(tmpDir, name, definition string) error {
-	filename := filepath.Join(tmpDir, "services", name+".toml")
+	return FakeDefinitionFile(filepath.Join(tmpDir, "services"), name, definition)
+}
 
+// Write a fake definition file in a tmpDir Eris home directory.
+func FakeDefinitionFile(tmpDir, name, definition string) error {
+	filename := filepath.Join(tmpDir, name+".toml")
 	out, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -183,6 +187,10 @@ func FileContents(filename string) string {
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
 func TestsTearDown() error {
+	// Move out of erisDir before deleting it.
+	parentPath := filepath.Join(erisDir, "..")
+	os.Chdir(parentPath)
+
 	if err := os.RemoveAll(erisDir); err != nil {
 		return err
 	}

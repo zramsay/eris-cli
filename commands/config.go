@@ -1,9 +1,6 @@
 package commands
 
 import (
-	// "fmt"
-	"github.com/eris-ltd/eris-cli/config"
-
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
@@ -41,7 +38,7 @@ for the eris CLI. To set the config for a blockchain use [eris chains config]
 command, and to set the config for a service use [eris services config] 
 command.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.Set(args)
+		// TODO
 	},
 }
 
@@ -51,8 +48,7 @@ var configPlop = &cobra.Command{
 	Short: "Display the config.",
 	Long:  `Display the config.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Println(Cum)
-		// config.PlopEntireConfig(globalConfig, args)
+		// TODO
 	},
 }
 
@@ -62,6 +58,6 @@ var configEdit = &cobra.Command{
 	Short: "Edit a config for in an editor.",
 	Long:  `Edit a config for in your default editor.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config.Edit()
+		// TODO
 	},
 }
