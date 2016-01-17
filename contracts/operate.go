@@ -3,6 +3,7 @@ package contracts
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/chains"
@@ -147,7 +148,7 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	if do.Path != pwd {
 		do.Service.WorkDir = do.Path // do.Path is actually where the workdir inside the container goes
 	} else {
-		do.Service.WorkDir = filepath.Join(common.ErisContainerRoot, "apps", app.Name)
+		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", app.Name)
 	}
 	do.Service.User = "eris"
 
@@ -366,7 +367,7 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 
 	if do.EPMConfigFile != "" {
 		log.WithField("config", do.EPMConfigFile).Debug("Setting config file to")
-		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + filepath.Join(do.Service.WorkDir, do.EPMConfigFile)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(do.Service.WorkDir, do.EPMConfigFile)
 	}
 
 	if len(do.ConfigOpts) != 0 {
@@ -383,11 +384,11 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	}
 
 	if do.ContractsPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + filepath.Join(do.Service.WorkDir, do.ContractsPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.ContractsPath)
 	}
 
 	if do.ABIPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + filepath.Join(do.Service.WorkDir, do.ABIPath)
+		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + path.Join(do.Service.WorkDir, do.ABIPath)
 	}
 
 	if do.DefaultGas != "" {
