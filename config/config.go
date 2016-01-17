@@ -13,7 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
-// Properly scope the globalConfig
+// Properly scope the globalConfig.
 var GlobalConfig *ErisCli
 
 type ErisCli struct {
@@ -105,6 +105,10 @@ func SaveGlobalConfig(config *ErisConfig) error {
 
 // config values will be coerced into strings...
 func GetConfigValue(key string) string {
+	if GlobalConfig == nil || GlobalConfig.Config == nil {
+		return ""
+	}
+
 	switch key {
 	case "IpfsHost":
 		return GlobalConfig.Config.IpfsHost
@@ -124,10 +128,15 @@ func ChangeErisDir(erisDir string) {
 		return
 	}
 
+	// Do nothing if not initialized.
+	if GlobalConfig == nil {
+		return
+	}
+
 	GlobalConfig.ErisDir = erisDir
 	dir.ErisRoot = erisDir
 
-	// Major Directories
+	// Major directories.
 	dir.ActionsPath = filepath.Join(dir.ErisRoot, "actions")
 	dir.ChainsPath = filepath.Join(dir.ErisRoot, "chains")
 	dir.DataContainersPath = filepath.Join(dir.ErisRoot, "data")
@@ -137,7 +146,7 @@ func ChangeErisDir(erisDir string) {
 	dir.ServicesPath = filepath.Join(dir.ErisRoot, "services")
 	dir.ScratchPath = filepath.Join(dir.ErisRoot, "scratch")
 
-	// Scratch Directories (globally coordinated)
+	// Scratch directories (globally coordinated).
 	dir.EpmScratchPath = filepath.Join(dir.ScratchPath, "epm")
 	dir.LllcScratchPath = filepath.Join(dir.ScratchPath, "lllc")
 	dir.SolcScratchPath = filepath.Join(dir.ScratchPath, "sol")
