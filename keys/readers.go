@@ -26,6 +26,7 @@ func ListKeys(do *definitions.Do) error {
 		for i, addr := range addrs {
 			hostAddrs[i] = addr.Name()
 		}
+		do.Result = strings.Join(hostAddrs, ",")
 		log.WithField("=>", hostAddrs[0]).Warn("The keys on your host kind marmot:")
 		hostAddrs = append(hostAddrs[:0], hostAddrs[1:]...)
 		for _, addr := range hostAddrs {
@@ -49,6 +50,7 @@ func ListKeys(do *definitions.Do) error {
 			return err
 		}
 		keysOutString := strings.Split(util.TrimString(string(keysOut.Bytes())), "\n")
+		do.Result = strings.Join(keysOutString, ",")
 		log.WithField("=>", keysOutString[0]).Warn("The keys in your container kind marmot:")
 		keysOutString = append(keysOutString[:0], keysOutString[1:]...)
 		for _, addr := range keysOutString {
