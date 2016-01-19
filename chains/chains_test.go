@@ -14,6 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
@@ -51,7 +52,7 @@ func TestKnownChain(t *testing.T) {
 	do.Existing = false
 	do.Running = false
 	do.Operations.Args = []string{"testing"}
-	tests.IfExit(util.ListAll(do, "chains"))
+	tests.IfExit(list.ListAll(do, "chains"))
 
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 

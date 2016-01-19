@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/list"
+	//"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -144,15 +145,15 @@ func addDataFlags() {
 //----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
 	do.Existing = true
-	if err := util.ListAll(do, "data"); err != nil {
+	if err := list.ListDatas(do); err != nil {
 		return
 	}
 
 	// https://www.reddit.com/r/television/comments/2755ow/hbos_silicon_valley_tells_the_most_elaborate/
-	datasToManipulate := do.Result
-	for _, s := range strings.Split(datasToManipulate, "||") {
-		fmt.Println(s)
-	}
+	//datasToManipulate := do.Result
+	//for _, s := range strings.Split(datasToManipulate, "||") {
+	//	fmt.Println(s)
+	//}
 }
 
 func RenameData(cmd *cobra.Command, args []string) {

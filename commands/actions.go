@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	act "github.com/eris-ltd/eris-cli/actions"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/list"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -176,7 +176,7 @@ func ListActions(cmd *cobra.Command, args []string) {
 	do.Known = true
 	do.Running = false
 	do.Existing = false
-	if err := util.ListAll(do, "actions"); err != nil {
+	if err := list.ListAll(do, "actions"); err != nil {
 		return
 	}
 	for _, s := range strings.Split(do.Result, "\n") {
