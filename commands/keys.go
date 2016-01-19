@@ -28,6 +28,7 @@ func buildKeysCommand() {
 	Keys.AddCommand(keysExport)
 	Keys.AddCommand(keysImport)
 	Keys.AddCommand(keysConvert)
+	Keys.AddCommand(keysList)
 	addKeysFlags()
 }
 
@@ -87,6 +88,19 @@ Usually will be piped into $HOME/.eris/chains/newChain/priv_validator.json`,
 	Run: ConvertKey,
 }
 
+var keysList = &cobra.Command{
+	Use:   "ls",
+	Short: "List keys on host and in running keys container",
+	Long: `List keys on host and in running keys container
+
+Specify location with flags --host or ---container.
+
+Latter flag is equivalent to:
+the [eris actions do keys list] command, which itself wraps
+the [eris services exec keys "ls /home/eris/.eris/keys/data"] command.`,
+	Run: ListKeys,
+}
+
 //the container path is always hardcoded to /home/eris/.eris/keys/data
 // TODO dedup with data flags!
 func addKeysFlags() {
@@ -94,6 +108,8 @@ func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from. give full filepath to key")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
+	keysList.Flags().BoolVarP(&do.Host, "host", "", false, "list keys on host: looks in $HOME/.eris/keys/data")
+	keysList.Flags().BoolVarP(&do.Container, "container", "", false, "list keys in container: looks in /home/eris/.eris/keys/data")
 
 }
 
@@ -125,4 +141,13 @@ func ConvertKey(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Address = strings.TrimSpace(args[0])
 	IfExit(keys.ConvertKey(do))
+}
+
+func ListKeys(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	if !do.Host && !do.Container { //both flags unset. list all
+		do.Host = true
+		do.Container = true
+	}
+	IfExit(keys.ListKeys(do))
 }
