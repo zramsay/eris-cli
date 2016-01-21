@@ -84,7 +84,7 @@ func DefaultContractPackage() (*definitions.Contracts, error) {
 
 func marshalContractPackage(contConf *viper.Viper) (*definitions.Contracts, error) {
 	pkg := definitions.BlankPackage()
-	err := contConf.Marshal(pkg)
+	err := contConf.Unmarshal(pkg)
 	app := pkg.Contracts
 	app.Name = pkg.Name
 

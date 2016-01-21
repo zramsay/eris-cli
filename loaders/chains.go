@@ -145,7 +145,7 @@ func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *
 func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
 	log.Debug("Marshalling chain")
 	chnTemp := definitions.BlankChain()
-	err := chainConf.Marshal(chnTemp)
+	err := chainConf.Unmarshal(chnTemp)
 	if err != nil {
 		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
 	}
@@ -172,7 +172,7 @@ func setChainDefaults(chain *definitions.Chain) error {
 	if err != nil {
 		return err
 	}
-	if err := cfg.Marshal(chain); err != nil {
+	if err := cfg.Unmarshal(chain); err != nil {
 		return err
 	}
 

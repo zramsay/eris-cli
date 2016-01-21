@@ -99,7 +99,7 @@ func readActionDefinition(actionName []string, dropped map[string]string, varNum
 
 // marshal from viper to definitions struct
 func marshalActionDefinition(actionConf *viper.Viper, action *def.Action) error {
-	err := actionConf.Marshal(action)
+	err := actionConf.Unmarshal(action)
 	if err != nil {
 		return fmt.Errorf("Tragic! The marmots could not read that action definition file:\n%v\n", err)
 	}
