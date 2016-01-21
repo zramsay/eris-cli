@@ -191,9 +191,9 @@ func PlopChain(do *definitions.Do) error {
 	rootDir := path.Join(ErisContainerRoot, "chains", do.ChainID)
 	switch do.Type {
 	case "genesis":
-		do.Operations.Args = []string{"cat", filepath.Join(rootDir, "genesis.json")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Operations.Args = []string{"cat", filepath.Join(rootDir, "config.toml")}
+		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
 	case "validators":

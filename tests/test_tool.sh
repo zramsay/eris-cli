@@ -107,23 +107,18 @@ packagesToTest() {
   go test ./perform/...
   passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  if [[ "$machine" != eris-test-win* ]]
-  then
-    go test ./data/...
-    passed Data
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./files/...
-    passed Files
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./services/... # switch FROM me if needing to debug
-    # cd services && go test && cd .. # switch to me if needing to debug
-    passed Services
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./chains/... # switch FROM me if needing to debug
-    # cd chains && go test && cd .. # switch TO me if needing to debug
-    passed Chains
-    if [ $? -ne 0 ]; then return 1; fi
-  fi
+  go test ./data/...
+  passed Data
+  if [ $? -ne 0 ]; then return 1; fi
+  go test ./files/...
+  passed Files
+  if [ $? -ne 0 ]; then return 1; fi
+  go test ./services/...
+  passed Services
+  if [ $? -ne 0 ]; then return 1; fi
+  go test ./chains/...
+  passed Chains
+  if [ $? -ne 0 ]; then return 1; fi
   go test ./keys/...
   passed Keys
   if [ $? -ne 0 ]; then return 1; fi

@@ -178,17 +178,14 @@ func TestPlopChain(t *testing.T) {
 	cfgFilePlop = bytes.Replace(cfgFilePlop, []byte{13}, []byte{}, -1)
 
 	if !bytes.Equal(cfgFile, cfgFilePlop) {
-		log.Errorf("Error: Got: %s. Expected: %s", cfgFilePlop, cfgFile)
 		log.WithFields(log.Fields{
-			"got":      cfgFilePlop,
-			"expected": cfgFile,
+			"got":      string(cfgFilePlop),
+			"expected": string(cfgFile),
 		}).Error("Error comparing config files")
 		t.Fail()
 	}
 }
 
-// eris chains new --dir _ -g _
-// the default chain_id is my_tests, so should be overwritten
 func TestChainsNewDirGen(t *testing.T) {
 	chainID := "testChainsNewDirGen"
 	myDir := filepath.Join(common.DataContainersPath, chainID)

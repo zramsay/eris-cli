@@ -2,11 +2,9 @@ package files
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -17,8 +15,6 @@ import (
 )
 
 var erisDir string = filepath.Join(os.TempDir(), "eris")
-var file string
-var content string = "test content\n"
 
 var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
 func fatal(t *testing.T, err error) {
@@ -43,8 +39,6 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	file = filepath.Join(erisDir, "temp")
-
 	tests.IfExit(testsInit())
 	exitCode := m.Run()
 
@@ -56,23 +50,27 @@ func TestMain(m *testing.M) {
 }
 
 func TestPutFiles(t *testing.T) {
+	var (
+		content  = "test contents"
+		filename = filepath.Join(erisDir, "test-file.toml")
+	)
+	tests.FakeDefinitionFile(erisDir, "test-file", content)
+
 	do := definitions.NowDo()
-	do.Name = file
+	do.Name = filename
 	log.WithField("=>", do.Name).Info("Putting file (from tests)")
 
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
-	ipfs := tests.NewServer("0.0.0.0:8080")
-	log.Warn("Server turned on.")
+	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	ipfs := tests.NewServer("127.0.0.1:8080")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
 			"Ipfs-Hash": {hash},
 		},
 	})
-	log.Warn("Waiting on server response.")
 	defer ipfs.Close()
 
 	if err := PutFiles(do); err != nil {
@@ -99,15 +97,18 @@ func TestPutFiles(t *testing.T) {
 }
 
 func TestGetFiles(t *testing.T) {
-	fileName := strings.Replace(file, "temp", "pmet", 1)
-	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
+	var (
+		filename = filepath.Join(erisDir, "tset file.toml")
+		content  = "test contents"
+		hash     = "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
+	)
 	do := definitions.NowDo()
 	do.Name = hash
-	do.Path = fileName
+	do.Path = filename
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0")
-	ipfs := tests.NewServer("0.0.0.0:8080")
+	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	ipfs := tests.NewServer("127.0.0.1:8080")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,
@@ -126,19 +127,8 @@ func TestGetFiles(t *testing.T) {
 		fatal(t, fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
 	}
 
-	f, err := os.Open(fileName)
-	if err != nil {
-		fatal(t, err)
-	}
-	defer f.Close()
-
-	contentPuted, err := ioutil.ReadAll(f)
-	if err != nil {
-		fatal(t, err)
-	}
-
-	if string(contentPuted) != content {
-		fatal(t, fmt.Errorf("Returned unexpected content; expected: %q, got %q", content, string(contentPuted)))
+	if returned := tests.FileContents(filename); content != returned {
+		fatal(t, fmt.Errorf("Returned unexpected content; expected %q, got %q", content, returned))
 	}
 }
 
@@ -146,10 +136,6 @@ func testsInit() error {
 	if err := tests.TestsInit("files"); err != nil {
 		return err
 	}
-
-	f, err := os.Create(file)
-	tests.IfExit(err)
-	f.Write([]byte(content))
 
 	return nil
 }

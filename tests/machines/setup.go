@@ -192,10 +192,12 @@ func getBranch() (string, error) {
 func startMachine(machine string, failOut chan<- bool) {
 	defer wg.Done()
 	if err := makeMachine(machine); err != nil {
+		fmt.Fprintf(os.Stderr, "makeMachine error: %v\n", err)
 		failOut <- true
 		return
 	}
 	if err := setUpMachine(machine); err != nil {
+		fmt.Fprintf(os.Stderr, "setUpMachine error: %v\n", err)
 		failOut <- true
 	}
 }
@@ -205,6 +207,7 @@ func makeMachine(machine string) error {
 	cmd = exec.Command("docker-machine", "create", "--driver", dmDriver, "--amazonec2-access-key", vars["akey"], "--amazonec2-secret-key", vars["asec"], "--amazonec2-region", vars["areg"], "--amazonec2-vpc-id", vars["avpc"], "--amazonec2-security-group", vars["agrp"], "--amazonec2-zone", vars["azon"], machine)
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err := cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Cannot make the machine (%s): (%s)\n\n%s", machine, err, out.String())
@@ -221,6 +224,7 @@ func setUpMachine(machine string) error {
 	cmd := exec.Command("docker-machine", "scp", file, fmt.Sprintf("%s:", machine))
 	var out bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Cannot scp into the machine (%s): (%s)\n\n%s", machine, err, out.String())
@@ -229,6 +233,7 @@ func setUpMachine(machine string) error {
 	file = filepath.Base(file)
 	cmd = exec.Command("docker-machine", "ssh", machine, fmt.Sprintf("sudo $HOME/%s", file))
 	cmd.Stdout = &out
+	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("Cannot execute the command to change docker daemon on machine (%s): (%s)\n\n%s", machine, err, out.String())
