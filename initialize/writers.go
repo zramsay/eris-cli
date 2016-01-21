@@ -122,7 +122,7 @@ func pullDefaultImages() error {
 	log.Warn("Pulling default docker images from quay.io")
 	for _, image := range images {
 		var tag string
-		if image == "eris/erisdb" || image == "eris/epm" {
+		if image == "quay.io/eris/erisdb" || image == "quay.io/eris/epm" {
 			tag = version.VERSION
 		} else {
 			tag = "latest"
