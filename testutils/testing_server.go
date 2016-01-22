@@ -13,6 +13,8 @@ import (
 // This is a fake server implementation to test Eris command line tools
 // hitting proper API endpoints.
 
+const closeTimeout = time.Millisecond * 100
+
 // Server holds an httptest.Server handler along with the last recorded
 // API endpoint call (path, method, body).
 type Server struct {
@@ -66,7 +68,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	Code: http.StatusNotFound,
 //      Body: "{}",
 //      Header: map[string][]string{
-//     	   "Content-Type": []string{"application/json"},
+//     	   "Content-Type": {"application/json"},
 //      },
 //   })
 //
@@ -88,17 +90,19 @@ func NewServer(addr ...interface{}) *Server {
 	// NewServer(addr).
 	s.server = httptest.NewUnstartedServer(s)
 
-	if _, ok := addr[0].(string); !ok {
+	address, ok := addr[0].(string)
+	if !ok {
 		panic("can accept only strings as addr")
 	}
 
-	listener, err := net.Listen("tcp", addr[0].(string))
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		// to hedge against the defer statement taking a second
-		// to close the connection to the address from any
-		// previous tests...
-		time.Sleep(3 * time.Second)
-		listener, err = net.Listen("tcp", addr[0].(string))
+		// The grace period is unfortunately necessary on Windows due to its
+		// opinionated sockets implementation. httptest.NewServer() implementation
+		// does a good job of closing all client connections already.
+		// https://forum.golangbridge.org/t/re-using-sockets-on-windows/1412
+		time.Sleep(closeTimeout)
+		listener, err = net.Listen("tcp", address)
 		if err != nil {
 			panic(err)
 		}

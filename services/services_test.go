@@ -274,8 +274,8 @@ func TestExportService(t *testing.T) {
 	hash := "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
-	ipfs := tests.NewServer("localhost:8080")
+	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	ipfs := tests.NewServer("127.0.0.1:8080")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
@@ -321,8 +321,8 @@ name = "ipfs"
 image = "quay.io/eris/ipfs"`
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://localhost")
-	ipfs := tests.NewServer("localhost:8080")
+	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	ipfs := tests.NewServer("127.0.0.1:8080")
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,
