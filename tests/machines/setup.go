@@ -72,19 +72,15 @@ func main() {
 	for _, m := range machines {
 		go startMachine(m, failOut)
 	}
-
-	go func(failOut chan bool) {
-		if _, ok := <-failOut; ok {
-			for _, m := range machines {
-				fmt.Println(m)
-			}
-			os.Exit(1)
-		}
-	}(failOut)
 	wg.Wait()
+	close(failOut)
 
 	for _, m := range machines {
 		fmt.Println(m)
+	}
+
+	if _, ok := <-failOut; ok {
+		os.Exit(1)
 	}
 }
 
@@ -227,7 +223,7 @@ func setUpMachine(machine string) error {
 	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf("Cannot scp into the machine (%s): (%s)\n\n%s", machine, err, out.String())
+		return fmt.Errorf("Cannot scp (%s) into the machine (%s): (%s)\n\n%s", file, machine, err, out.String())
 	}
 
 	file = filepath.Base(file)
