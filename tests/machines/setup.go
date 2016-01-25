@@ -36,13 +36,13 @@ func main() {
 	}
 
 	if err := vetAndPopulate(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "vetAndPopulate error: %v\n", err)
 		os.Exit(1)
 	}
 
 	branch, err := getBranch()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintf(os.Stderr, "getBranch error: %v\n", err)
 		os.Exit(1)
 	}
 
