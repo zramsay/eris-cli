@@ -80,7 +80,7 @@ func ImportKey(do *definitions.Do) error {
 	}
 	//src on host
 
-	if do.Source == "" {
+	if do.Source == "rawgit" {
 		do.Source = filepath.Join(KeysPath, "data", do.Address, do.Address)
 	}
 	//dest in container
