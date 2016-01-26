@@ -38,6 +38,7 @@ away!`,
 
 // Build the chains subcommand
 func buildChainsCommand() {
+	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsRegister)
 	Chains.AddCommand(chainsInstall)
@@ -64,10 +65,48 @@ func buildChainsCommand() {
 }
 
 // Chains Sub-sub-Commands
+var chainsMake = &cobra.Command{
+	Use:   "make NAME",
+	Short: "Create keys and a genesis block for your chain.",
+	Long: `Create the new required files for your chain.
+
+Make is an opinionated gateway to the basic types of chains which most eris users
+will make most of the time. Make is a command line wizard in which you will let
+the marmots know how you would like your genesis created.
+
+Make can also be used with a variety of flags when integrated into complex scripts
+which will not trigger the wizard part of make.
+
+When using make with the --known flag the marmots will *not* create keys for you
+and will instead assume that the keys exist somewhere. When using make with the
+wizard (no flags) or when using with the --type flag then keys will be made along
+with the genesis.json and priv_validator.json so that everything is ready to go
+for you to [eris chains new].
+
+Make can utilize the --type flag which will utilize preconfigured chain types.
+Currently eris supports:
+ * simple -- one validator, three accounts all with full privileges
+
+(more coming)
+
+The make process will *not* start a chain for you. You will want to use [eris
+chains new] for that which will import all of the files which make creates into
+containers and start your shiny new chain.
+
+For more complex chain creation, you will want to "hand craft" a genesis.json
+see our tutorial for chain creation here:
+https://docs.erisindustries.com/tutorials/chainmaking/`,
+	Example: `$ eris chains make myChain -- will step by step walk you thru the chain making process interactively
+$ eris chains make myChain --type simple -- will make a very simple (one node) chain useful for rapid development
+$ eris chains make myChain --known --accounts account.csv --validators validators.csv -- will make a genesis.json based on two csv files
+`,
+	Run: MakeChain,
+}
+
 var chainsNew = &cobra.Command{
 	Use:   "new NAME",
-	Short: "Create a new blockhain.",
-	Long: `Create a new blockchain.
+	Short: "Create and start a new blockhain.",
+	Long: `Create and start a new blockchain.
 
 The creation process will both create a blockchain on the current machine
 as well as start running that chain.
@@ -80,17 +119,15 @@ utilize [eris chains update NAME -p] to update the blockchain appropriately
 for eris:db).
 
 Will use a default genesis.json from ~/.eris/chains/default/genesis.json
-unless a --genesis flag is passed.
+unless a --genesis or --dir flag is passed.
 
 Will use a default config.toml from ~/.eris/chains/default/config.toml
-unless the --options flag is passed.
+unless the --options or --dir flag is passed.
 
 Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
-unless the --serverconf flag is passed.
+unless the --serverconf or --dir flag is passed.
 
-For more complex blockchain creation, you will want to "hand craft" a genesis.json
-see our tutorial for chain creation here:
-https://docs.erisindustries.com/tutorials/chainmaking/`,
+If you would like to create a genesis.json then please utilize [eris chains make]`,
 	Run: NewChain,
 }
 
@@ -182,9 +219,9 @@ var chainsPorts = &cobra.Command{
 	Short: "Print port mappings.",
 	Long: `Print port mappings.
 
-The [eris chains ports] command is mostly a developer 
-convenience function. It returns a machine readable 
-port mapping of a port which is exposed inside the 
+The [eris chains ports] command is mostly a developer
+convenience function. It returns a machine readable
+port mapping of a port which is exposed inside the
 container to what that port is mapped to on the host.
 
 This is useful when stitching together chain networks which
@@ -361,6 +398,11 @@ see https://github.com/eris-ltd/mint-client for more info`,
 
 func addChainsFlags() {
 
+	chainsMake.PersistentFlags().StringVarP(&do.Type, "type", "", "", "create a specific type of chain")
+	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.ChainMakeActs, "accounts", "", []string{}, "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.ChainMakeVals, "validators", "", []string{}, "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
+
 	buildFlag(chainsNew, do, "config", "chain")
 	buildFlag(chainsNew, do, "csv", "chain")
 	buildFlag(chainsNew, do, "serverconf", "chain")
@@ -478,6 +520,20 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.InstallChain(do))
+}
+
+// make the genesis files for a chain
+//
+// MakeChain will assemble the necessary files for a new blockchain. it does not
+// actually make the chain or start it (that happens in new), but it does create
+// the predicate files for more complex chains than is typically used in default
+func MakeChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	if do.Known && (len(do.ChainMakeActs) == 0 || len(do.ChainMakeVals) == 0) {
+		IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required."))
+	}
+	IfExit(chns.MakeChain(do))
 }
 
 // create a new chain

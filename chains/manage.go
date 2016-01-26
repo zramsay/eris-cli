@@ -21,6 +21,10 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
 
+func MakeChain(do *definitions.Do) error {
+	return nil
+}
+
 func RegisterChain(do *definitions.Do) error {
 	// do.Name is mandatory
 	if do.Name == "" {
