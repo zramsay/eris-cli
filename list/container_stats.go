@@ -13,6 +13,14 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/olekukonko/tablewriter"
 )
 
+func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
+	cont, exists := util.ParseContainers(containerName, true)
+	if exists {
+		return util.PrintLineByContainerID(cont.ID, existing)
+	}
+	return nil, nil //fail silently
+}
+
 func PrintTableReport(typ string, existing, all bool) (string, error) {
 	log.WithField("type", typ).Debug("Table report initialized")
 
@@ -20,11 +28,16 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 	if !all {
 		conts = util.ErisContainersByType(typ, existing)
 	}
+	header := []string{"NAME", "MACHINE", "RUNNING", "CONTAINER NAME", "PORTS"}
+	if err := util.CheckParts(header); err != nil {
+		log.Error(err) // err is silenced by some funcs
+		return "", err
+	}
 
 	buf := new(bytes.Buffer)
 	table := tablewriter.NewWriter(buf)
 	//name set by logger instead
-	table.SetHeader([]string{"NAME", "MACHINE", "RUNNING", "CONTAINER NAME", "PORTS"})
+	table.SetHeader(header)
 
 	if all { //get all the things
 		parts, _ := AssembleTable(typ)
@@ -33,7 +46,7 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 		}
 	} else {
 		for _, c := range conts {
-			n, _ := util.PrintLineByContainerName(c.FullName, existing)
+			n, _ := PrintLineByContainerName(c.FullName, existing)
 			if typ == "chain" {
 				head, _ := util.GetHead()
 				if n[0] == head {
@@ -111,6 +124,10 @@ func formatLine(p Parts) []string {
 
 	//must match header
 	part := []string{p.ShortName, "", running, p.FullName, p.PortsOutput}
+	if err := util.CheckParts(part); err != nil {
+		log.Error(err)
+		return []string{}
+	}
 
 	return part
 }

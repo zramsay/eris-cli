@@ -16,18 +16,6 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/serenize/snaker"
 )
 
-// currently only used by `eris ls, eris services/chains ls`
-// flags for listing functions do things their own way -> prevents testing clusterf*ck
-// [zr] should struct be implemented throughout?
-type Parts struct {
-	ShortName   string //known & existing & running
-	Type        string
-	Running     bool
-	FullName    string
-	Number      int
-	PortsOutput string
-}
-
 func PrintInspectionReport(cont *docker.Container, field string) error {
 	switch field {
 	case "line":
@@ -51,14 +39,6 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 	}
 
 	return nil
-}
-
-func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
-	cont, exists := ParseContainers(containerName, true)
-	if exists {
-		return PrintLineByContainerID(cont.ID, existing)
-	}
-	return nil, nil //fail silently
 }
 
 func PrintLineByContainerID(containerID string, existing bool) ([]string, error) {
@@ -134,7 +114,17 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 	Names := ContainerDisassemble(n)
 
 	parts := []string{Names.ShortName, "", running, Names.FullName, FormulatePortsOutput(container)}
+	if err := CheckParts(parts); err != nil {
+		return []string{}, err
+	}
 	return parts, nil
+}
+
+func CheckParts(parts []string) error {
+	if len(parts) != 5 {
+		return fmt.Errorf("part length !=5")
+	}
+	return nil
 }
 
 // this function is for parsing single variables
