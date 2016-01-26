@@ -137,7 +137,6 @@ func addDataFlags() {
 
 //----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
-	do.Existing = true
 	if err := list.ListDatas(do); err != nil {
 		return
 	}

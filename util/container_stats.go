@@ -120,13 +120,6 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 	return parts, nil
 }
 
-func CheckParts(parts []string) error {
-	if len(parts) != 5 {
-		return fmt.Errorf("part length !=5")
-	}
-	return nil
-}
-
 // this function is for parsing single variables
 func printField(container interface{}, field string) error {
 	log.WithField("=>", field).Debug("Inspecting field")
@@ -278,4 +271,12 @@ func listContainers(all bool) []docker.APIContainers {
 	}
 
 	return container
+}
+
+// a checker for building tables cf. listing funcs
+func CheckParts(parts []string) error {
+	if len(parts) != 5 {
+		return fmt.Errorf("part length !=5")
+	}
+	return nil
 }

@@ -13,14 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/olekukonko/tablewriter"
 )
 
-func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
-	cont, exists := util.ParseContainers(containerName, true)
-	if exists {
-		return util.PrintLineByContainerID(cont.ID, existing)
-	}
-	return nil, nil //fail silently
-}
-
 func PrintTableReport(typ string, existing, all bool) (string, error) {
 	log.WithField("type", typ).Debug("Table report initialized")
 
@@ -69,12 +61,19 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 }
 
 type Parts struct {
-	ShortName string //known & existing & running
-	Machine   string
-	Running   bool
-	FullName  string
-	//Number      int
+	ShortName   string //known & existing & running
+	Machine     string //TODO
+	Running     bool
+	FullName    string
 	PortsOutput string
+}
+
+func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
+	cont, exists := util.ParseContainers(containerName, true)
+	if exists {
+		return util.PrintLineByContainerID(cont.ID, existing)
+	}
+	return nil, nil //fail silently
 }
 
 //----------------------------------------------------------

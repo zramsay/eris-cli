@@ -9,50 +9,34 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-//TODO harmonice do.Quiet & testing arg
+//looks for definition files in ~/.eris/typ
+func ListKnown(typ string) (result string, err error) {
 
-// pulled out for simplicity; neither known or running
-func ListDatas(do *definitions.Do) error {
-	//result := strings.Join(util.DataContainerNames(), "\n")
-	var result string
-	var err error
-	if !do.Quiet {
-		result, err = PrintTableReport("data", true, true)
-		if err != nil {
-			return err
+	result = strings.Join(util.GetGlobalLevelConfigFilesByType(typ, false), "\n")
+
+	if typ == "chains" {
+		var chainsNew []string
+		head, _ := util.GetHead()
+		chns := util.GetGlobalLevelConfigFilesByType(typ, false)
+
+		for _, c := range chns {
+			switch c {
+			case "default":
+				continue
+			case head:
+				chainsNew = append(chainsNew, fmt.Sprintf("*%s", c))
+			default:
+				chainsNew = append(chainsNew, fmt.Sprintf("%s", c))
+			}
 		}
-	} else {
-		result = strings.Join(util.DataContainerNames(), "\n")
-		do.Result = result
+		result = strings.Join(chainsNew, "\n")
 	}
-
-	//print table report
-	log.Warn("Active data containers:")
-	log.Warn(result)
-	//fmt.Printf("Datas to log %s\n", result)
-	return nil
-}
-
-func ListActions(do *definitions.Do) error {
-	actions, err := ListKnown("actions")
-	if err != nil {
-		return err
-	}
-	do.Result = actions //for testing but not rly needed
-	knowns := strings.Split(actions, "\n")
-	log.WithField("=>", knowns[0]).Warn("The known actions on your host kind marmot:")
-	knowns = append(knowns[:0], knowns[1:]...)
-	for _, known := range knowns {
-		log.WithField("=>", known).Warn()
-	}
-
-	return nil
+	return result, nil
 }
 
 //XXX chains and services only
 func ListAll(do *definitions.Do, typ string) (err error) {
-	//have testing use do.Quiet
-	quiet := do.Quiet //XXX hacky
+	quiet := do.Quiet
 	var result string
 	if do.All == true { //overrides all the functionality used for flags/tests to stdout a nice table
 		resK, err := ListKnown(typ)
@@ -101,34 +85,44 @@ func ListAll(do *definitions.Do, typ string) (err error) {
 	return nil
 }
 
-//looks for definition files in ~/.eris/typ
-func ListKnown(typ string) (result string, err error) {
-
-	result = strings.Join(util.GetGlobalLevelConfigFilesByType(typ, false), "\n")
-
-	if typ == "chains" {
-		var chainsNew []string
-		head, _ := util.GetHead()
-		chns := util.GetGlobalLevelConfigFilesByType(typ, false)
-
-		for _, c := range chns {
-			switch c {
-			case "default":
-				continue
-			case head:
-				chainsNew = append(chainsNew, fmt.Sprintf("*%s", c))
-			default:
-				chainsNew = append(chainsNew, fmt.Sprintf("%s", c))
-			}
+// pulled out for simplicity; neither known or running
+func ListDatas(do *definitions.Do) error {
+	var result string
+	var err error
+	if !do.Quiet {
+		result, err = PrintTableReport("data", true, true)
+		if err != nil {
+			return err
 		}
-		result = strings.Join(chainsNew, "\n")
+		log.Warn(result)
+	} else {
+		result = strings.Join(util.DataContainerNames(), "\n")
+		do.Result = result
+		log.Warn("Active data containers:")
+		log.Warn(result)
 	}
-	return result, nil
+
+	return nil
+}
+
+func ListActions(do *definitions.Do) error {
+	actions, err := ListKnown("actions")
+	if err != nil {
+		return err
+	}
+	do.Result = actions //for testing but not rly needed
+	knowns := strings.Split(actions, "\n")
+	log.WithField("=>", knowns[0]).Warn("The known actions on your host kind marmot:")
+	knowns = append(knowns[:0], knowns[1:]...)
+	for _, known := range knowns {
+		log.WithField("=>", known).Warn()
+	}
+
+	return nil
 }
 
 //lists the containers running for a chain/service
 //[zr] eventually remotes/actions
-//TODO dedup quiet / testing
 func ListRunningOrExisting(quiet, existing bool, typ string) (result string, err error) {
 	re := "Running"
 	if existing {

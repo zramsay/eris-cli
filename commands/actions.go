@@ -173,10 +173,7 @@ func NewAction(cmd *cobra.Command, args []string) {
 
 func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
-	do.Known = true
-	do.Running = false
-	do.Existing = false
-	if err := list.ListAll(do, "actions"); err != nil {
+	if err := list.ListActions(do); err != nil {
 		return
 	}
 	for _, s := range strings.Split(do.Result, "\n") {
