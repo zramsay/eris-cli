@@ -31,9 +31,10 @@ func dropServiceDefaults(dir, from string) error {
 		"logspout.toml",
 		"logsrotate.toml",
 		"mindy.toml",
-		"mint.toml",
 		"openbazaar.toml",
+		"toadserver.toml",
 		"tinydns.toml",
+		"tor.toml",
 		"watchtower.toml",
 		"do_not_use.toml",
 	}

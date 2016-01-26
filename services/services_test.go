@@ -54,7 +54,7 @@ func TestKnownServices(t *testing.T) {
 	tests.IfExit(util.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 15 {
+	if len(k) != 16 {
 		tests.IfExit(fmt.Errorf("Did not find expected number of service definitions files, found %v. Something is wrong.\n", len(k)))
 	}
 	i := 0
@@ -76,11 +76,13 @@ func TestKnownServices(t *testing.T) {
 			i++
 		case "mindy":
 			i++
-		case "mint":
-			i++
 		case "openbazaar":
 			i++
 		case "tinydns":
+			i++
+		case "tor":
+			i++
+		case "toadserver":
 			i++
 		case "watchtower":
 			i++
@@ -92,7 +94,7 @@ func TestKnownServices(t *testing.T) {
 			i++
 		}
 	}
-	if i != 15 {
+	if i != 16 {
 		tests.IfExit(fmt.Errorf("Could not find all the expected service definition files.\n"))
 	}
 }
