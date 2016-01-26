@@ -39,9 +39,6 @@ func TestMain(m *testing.M) {
 
 func TestListKnownActions(t *testing.T) {
 	do := definitions.NowDo()
-	do.Known = true
-	do.Running = false
-	do.Existing = false
 	do.Quiet = true
 	tests.IfExit(list.ListActions(do))
 	k := strings.Split(do.Result, "\n") // tests output formatting.

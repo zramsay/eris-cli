@@ -94,11 +94,11 @@ func ListDatas(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
+		log.Warn("Active data containers:")
 		log.Warn(result)
 	} else {
 		result = strings.Join(util.DataContainerNames(), "\n")
 		do.Result = result
-		log.Warn("Active data containers:")
 		log.Warn(result)
 	}
 
