@@ -82,22 +82,20 @@ func AssembleTable(typ string) ([]Parts, error) {
 	var myTable []Parts
 	addedAlready := make(map[string]bool)
 
-	if typ != "actions" {
-		for _, name := range contsR {
-			part, _ := makePartFromContainer(name.FullName, false)
-			addedAlready[part.ShortName] = true //has to come after because short name needed
-			part.Running = true
-			myTable = append(myTable, part)
-		}
+	for _, name := range contsR {
+		part, _ := makePartFromContainer(name.FullName)
+		addedAlready[part.ShortName] = true //has to come after because short name needed
+		part.Running = true
+		myTable = append(myTable, part)
+	}
 
-		for _, name := range contsE {
-			part, _ := makePartFromContainer(name.FullName, false)
-			if addedAlready[part.ShortName] == true {
-				continue
-			} else {
-				part.Running = false
-				myTable = append(myTable, part)
-			}
+	for _, name := range contsE {
+		part, _ := makePartFromContainer(name.FullName)
+		if addedAlready[part.ShortName] == true {
+			continue
+		} else {
+			part.Running = false
+			myTable = append(myTable, part)
 		}
 	}
 	return myTable, nil
@@ -112,43 +110,39 @@ func formatLine(p Parts) []string {
 	}
 
 	//must match header
-	part := []string{p.ShortName, "machine", running, p.FullName, p.PortsOutput}
+	part := []string{p.ShortName, "", running, p.FullName, p.PortsOutput}
 
 	return part
 }
 
-func makePartFromContainer(name string, defs bool) (v Parts, err error) {
-	if defs {
-		v.ShortName = name // the only value needed for known
-	} else {
-		// this block pulls out functionality from
-		// PrintLineByContainerName{Id} & printLine
-		var contID *docker.Container
-		cont, exists := util.ParseContainers(name, true)
-		if exists {
-			contID, err = util.DockerClient.InspectContainer(cont.ID)
-			if err != nil {
-				return Parts{}, err
-			}
-		}
+func makePartFromContainer(name string) (v Parts, err error) {
+	// this block pulls out functionality from
+	// PrintLineByContainerName{Id} & printLine
+	var contID *docker.Container
+	cont, exists := util.ParseContainers(name, true)
+	if exists {
+		contID, err = util.DockerClient.InspectContainer(cont.ID)
 		if err != nil {
 			return Parts{}, err
 		}
-		tmp, err := reflections.GetField(contID, "Name")
-		if err != nil {
-			return Parts{}, err
-		}
+	}
+	if err != nil {
+		return Parts{}, err
+	}
+	tmp, err := reflections.GetField(contID, "Name")
+	if err != nil {
+		return Parts{}, err
+	}
 
-		n := tmp.(string)
+	n := tmp.(string)
 
-		Names := util.ContainerDisassemble(n)
+	Names := util.ContainerDisassemble(n)
 
-		v = Parts{
-			ShortName: Names.ShortName,
-			//Running: set in previous function
-			FullName:    Names.FullName,
-			PortsOutput: util.FormulatePortsOutput(contID),
-		}
+	v = Parts{
+		ShortName: Names.ShortName,
+		//Running: set in previous function
+		FullName:    Names.FullName,
+		PortsOutput: util.FormulatePortsOutput(contID),
 	}
 	return v, nil
 }

@@ -1,7 +1,6 @@
 package util
 
 import (
-	//"bytes"
 	"fmt"
 	"regexp"
 	"sort"
@@ -14,7 +13,6 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/oleiade/reflections"
-	//"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/olekukonko/tablewriter"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/serenize/snaker"
 )
 
@@ -135,7 +133,7 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 
 	Names := ContainerDisassemble(n)
 
-	parts := []string{Names.ShortName, Names.Type, running, Names.FullName, fmt.Sprintf("%d", Names.Number), FormulatePortsOutput(container)}
+	parts := []string{Names.ShortName, "", running, Names.FullName, FormulatePortsOutput(container)}
 	return parts, nil
 }
 

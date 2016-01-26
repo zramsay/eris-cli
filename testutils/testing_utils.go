@@ -216,7 +216,6 @@ func checkIPFSnotRunning() {
 	do.Existing = false
 	do.Running = true
 	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
 	log.Debug("Finding the running services")
 	if err := list.ListAll(do, "services"); err != nil {
 		IfExit(err)
@@ -233,7 +232,6 @@ func checkIPFSnotRunning() {
 	do.Existing = true
 	do.Running = false
 	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
 	log.Debug("Finding the existing services")
 	if err := list.ListAll(do, "services"); err != nil {
 		IfExit(err)
