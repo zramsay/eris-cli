@@ -151,7 +151,7 @@ func TestImportKeySingle(t *testing.T) {
 	//export it
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = filepath.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default set by flag
 
 	if err := ExportKey(doExp); err != nil {
 		fatal(t, err)
@@ -179,6 +179,7 @@ func TestImportKeySingle(t *testing.T) {
 	doImp := def.NowDo()
 	doImp.Address = address
 	//doImp.Destination // set in function
+	doImp.Source = filepath.Join(KeysPath, "data")
 
 	if err := ImportKey(doImp); err != nil {
 		fatal(t, err)
