@@ -89,16 +89,16 @@ func ListAll(do *definitions.Do, typ string) (err error) {
 func ListDatas(do *definitions.Do) error {
 	var result string
 	var err error
-	if !do.Quiet {
+	if do.Quiet {
+		result = strings.Join(util.DataContainerNames(), "\n")
+		do.Result = result
+		log.Warn(result)
+	} else {
 		result, err = PrintTableReport("data", true, true)
 		if err != nil {
 			return err
 		}
 		log.Warn("Active data containers:")
-		log.Warn(result)
-	} else {
-		result = strings.Join(util.DataContainerNames(), "\n")
-		do.Result = result
 		log.Warn(result)
 	}
 
@@ -110,12 +110,16 @@ func ListActions(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Result = actions //for testing but not rly needed
-	knowns := strings.Split(actions, "\n")
-	log.WithField("=>", knowns[0]).Warn("The known actions on your host kind marmot:")
-	knowns = append(knowns[:0], knowns[1:]...)
-	for _, known := range knowns {
-		log.WithField("=>", known).Warn()
+	if do.Quiet {
+		do.Result = actions //for testing but not rly needed
+		log.Warn(actions)
+	} else {
+		knowns := strings.Split(actions, "\n")
+		log.WithField("=>", knowns[0]).Warn("The known actions on your host kind marmot:")
+		knowns = append(knowns[:0], knowns[1:]...)
+		for _, known := range knowns {
+			log.WithField("=>", known).Warn()
+		}
 	}
 
 	return nil

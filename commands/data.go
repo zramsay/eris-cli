@@ -130,6 +130,8 @@ var dataRm = &cobra.Command{
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 
+	dataList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
+
 	buildFlag(dataRm, do, "rm-volumes", "data")
 
 	buildFlag(dataExec, do, "interactive", "data")

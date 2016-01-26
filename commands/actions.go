@@ -6,7 +6,6 @@ import (
 	act "github.com/eris-ltd/eris-cli/actions"
 	"github.com/eris-ltd/eris-cli/list"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -151,6 +150,8 @@ func addActionsFlags() {
 
 	buildFlag(actionsRemove, do, "file", "action")
 
+	actionsList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
+
 }
 
 //----------------------------------------------------------------------
@@ -173,12 +174,8 @@ func NewAction(cmd *cobra.Command, args []string) {
 
 func ListActions(cmd *cobra.Command, args []string) {
 	// TODO: add scoping for when projects done.
-	if err := list.ListActions(do); err != nil {
-		return
-	}
-	for _, s := range strings.Split(do.Result, "\n") {
-		log.Warn(strings.Replace(s, "_", " ", -1))
-	}
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	IfExit(list.ListActions(do))
 }
 
 func EditAction(cmd *cobra.Command, args []string) {
