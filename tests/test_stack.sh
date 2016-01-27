@@ -34,9 +34,36 @@ else
   circle=false
 fi
 
+ecm_dir=$repo/../eris-cm
+ecm_test_dir=$repo/../eris-cm/tests
+ecm_branch=${EPM_BRANCH:=master}
+
 epm_dir=$repo/../eris-pm
 epm_test_dir=$repo/../eris-pm/tests
 epm_branch=${EPM_BRANCH:=master}
+
+# ----------------------------------------------------------------------------
+# Get ECM
+
+if [ -d "$ecm_test_dir" ]; then
+  cd $ecm_test_dir
+else
+  git clone https://github.com/eris-ltd/eris-pm.git $ecm_dir 1>/dev/null
+  cd $ecm_test_dir 1>/dev/null
+  git checkout origin/$ecm_branch &>/dev/null
+fi
+
+# ----------------------------------------------------------------------------
+# Run ECM tests
+
+./test.sh
+test_exit=$?
+if [ $test_exit -ne 0 ]
+then
+  cd $start
+  exit $test_exit
+fi
+cd $start
 
 # ----------------------------------------------------------------------------
 # Get EPM
@@ -54,9 +81,13 @@ fi
 
 ./test.sh
 test_exit=$?
+if [ $test_exit -ne 0 ]
+then
+  cd $start
+  exit $test_exit
+fi
+cd $start
 
 # ----------------------------------------------------------------------------
 # Cleanup
-
-cd $start
 exit $test_exit

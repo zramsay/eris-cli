@@ -320,6 +320,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		"ports published": optsServ.HostConfig.PublishAllPorts,
 		"environment":     optsServ.Config.Env,
 		"image":           optsServ.Config.Image,
+		"user":            optsServ.Config.User,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
 		return err
@@ -890,7 +891,11 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 	opts := configureServiceContainer(srv, ops)
 
 	opts.Name = "eris_interactive_" + opts.Name
-	opts.Config.User = "root"
+	if srv.User == "" {
+		opts.Config.User = "root"
+	} else {
+		opts.Config.User = srv.User
+	}
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
 	opts.Config.AttachStdout = true

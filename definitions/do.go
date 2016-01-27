@@ -19,6 +19,9 @@ type Do struct {
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Tarball       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	ZipFile       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Output        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
@@ -31,6 +34,7 @@ type Do struct {
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -54,10 +58,11 @@ type Do struct {
 	DefaultAddr   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultFee    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainMakeActs string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainMakeVals string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainMakeActs []string `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainMakeVals []string `mapstructure:"," json:"," yaml:"," toml:","`
+	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
 	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`

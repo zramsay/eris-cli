@@ -27,15 +27,15 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "2804b1f28fdaa71a534db5508674cbc899f95002"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/ipfs",
-			"Rev": "2804b1f28fdaa71a534db5508674cbc899f95002"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "2804b1f28fdaa71a534db5508674cbc899f95002"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",

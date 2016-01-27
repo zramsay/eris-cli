@@ -15,6 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -22,7 +23,58 @@ import (
 )
 
 func MakeChain(do *definitions.Do) error {
-	return nil
+	do.Service.Name = do.Name
+	do.Service.Image = fmt.Sprintf("quay.io/eris/eris-cm:%s", version.VERSION)
+	do.Service.AutoData = false
+	do.Service.User = "eris"
+	do.Service.Volumes = []string{fmt.Sprintf("%s:%s:rw", ChainsPath, path.Join(ErisContainerRoot, "chains"))} // using path.Join here because even when host on windows we want / not \
+	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys", 1), "keys")}
+
+	if do.Known {
+		log.Debug("Using MintGen rather than eris:cm")
+		do.Service.EntryPoint = "mintgen"
+		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s > %s", do.Name, do.ChainMakeVals, do.ChainMakeActs, path.Join(ErisContainerRoot, "chains", do.Name, "genesis.json"))
+	} else {
+		log.Debug("Using eris:cm rather than MintGen")
+		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
+	}
+
+	do.Service.Environment = []string{
+		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
+		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
+		fmt.Sprintf("ERIS_CHAINMANAGER_CHAINTYPE=%s", do.ChainType),
+		fmt.Sprintf("ERIS_CHAINMANAGER_TARBALLS=%v", do.Tarball),
+		fmt.Sprintf("ERIS_CHAINMANAGER_ZIPFILES=%v", do.ZipFile),
+		fmt.Sprintf("ERIS_CHAINMANAGER_OUTPUT=%v", do.Output),
+		fmt.Sprintf("ERIS_CHAINMANAGER_VERBOSE=%v", do.Verbose),
+		fmt.Sprintf("ERIS_CHAINMANAGER_DEBUG=%v", do.Debug),
+	}
+
+	if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
+		do.Operations.Interactive = true
+		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
+	}
+
+	if do.Known {
+		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
+		do.Service.WorkDir = path.Join(ErisContainerRoot, "chains", do.Name)
+	}
+
+	do.Operations.ContainerType = "service"
+	do.Operations.SrvContainerName = util.ContainersName("service", do.Name, 1)
+	do.Operations.ContainerNumber = 1
+	do.Operations.Remove = true
+
+	// log.WithFields(log.Fields{
+	// 	"name":  do.Service.Name,
+	// 	"cmd":   fmt.Sprintf("%s %s", do.Service.EntryPoint, do.Service.Command),
+	// 	"links": do.Service.Links,
+	// 	"env":   do.Service.Environment,
+	// 	"inter": do.Operations.Interactive,
+	// 	"user":  do.Service.User,
+	// }).Debug("Running Chainmaker")
+
+	return perform.DockerExecService(do.Service, do.Operations)
 }
 
 func RegisterChain(do *definitions.Do) error {

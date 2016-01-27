@@ -36,6 +36,7 @@ var (
 	HEAD             = filepath.Join(ChainsPath, "HEAD")
 	DefaultChainPath = filepath.Join(ChainsPath, "default")
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
+	ChainTypePath    = filepath.Join(ChainsPath, "chain-types")
 
 	// Keys Directories
 	KeysDataPath = filepath.Join(KeysPath, "data")
@@ -64,6 +65,7 @@ var MajorDirs = []string{
 	ChainsPath,
 	DefaultChainPath,
 	AccountsTypePath,
+	ChainTypePath,
 	KeysPath,
 	KeysDataPath,
 	KeyNamesPath,
@@ -76,6 +78,37 @@ var MajorDirs = []string{
 	SerpScratchPath,
 	ServicesPath,
 	PersonalServicesPath,
+}
+
+// These should only be used by specific tooling rather than eris-cli level
+var ChainsDirs = []string{
+	ChainsPath,
+	DefaultChainPath,
+	AccountsTypePath,
+	ChainTypePath,
+}
+
+// These should only be used by specific tooling rather than eris-cli level
+var KeysDirs = []string{
+	KeysPath,
+	KeysDataPath,
+	KeyNamesPath,
+}
+
+// These should only be used by specific tooling rather than eris-cli level
+var ServicesDirs = []string{
+	ServicesPath,
+	PersonalServicesPath,
+}
+
+// These should only be used by specific tooling rather than eris-cli level
+var ScratchDirs = []string{
+	ScratchPath,
+	DataContainersPath,
+	LanguagesScratchPath,
+	LllcScratchPath,
+	SolcScratchPath,
+	SerpScratchPath,
 }
 
 //eris update checks if old dirs exist & migrates them
