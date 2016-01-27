@@ -125,8 +125,9 @@ func ListActions(do *definitions.Do) error {
 	return nil
 }
 
-//lists the containers running for a chain/service
-//[zr] eventually remotes/actions
+// lists the containers running for a chain/service
+// eventually remotes/actions
+// existing -> true to ls existing; false to ls running
 func ListRunningOrExisting(quiet, existing bool, typ string) (result string, err error) {
 	re := "Running"
 	if existing {

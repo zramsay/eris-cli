@@ -20,6 +20,7 @@ func PrintTableReport(typ string, existing, all bool) (string, error) {
 	if !all {
 		conts = util.ErisContainersByType(typ, existing)
 	}
+	// "MACHINE" is placeholder
 	header := []string{"NAME", "MACHINE", "RUNNING", "CONTAINER NAME", "PORTS"}
 	if err := util.CheckParts(header); err != nil {
 		log.Error(err) // err is silenced by some funcs
@@ -69,9 +70,15 @@ type Parts struct {
 }
 
 func PrintLineByContainerName(containerName string, existing bool) ([]string, error) {
-	cont, exists := util.ParseContainers(containerName, true)
+	cont0, exists := util.ParseContainers(containerName, true)
 	if exists {
-		return util.PrintLineByContainerID(cont.ID, existing)
+		cont1, running := util.ParseContainers(containerName, false)
+		if running && (cont0.ID == cont1.ID) {
+			return util.PrintLineByContainerID(cont0.ID, false) //will print "RUNNING" = Yes when asked for existing/running conts
+
+		} else {
+			return util.PrintLineByContainerID(cont0.ID, true) // will print "RUNNING" = No when asked for existing conts
+		}
 	}
 	return nil, nil //fail silently
 }
