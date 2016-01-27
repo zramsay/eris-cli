@@ -131,19 +131,19 @@ packagesToTest() {
   go test ./clean/...
   passed Clean
   if [ $? -ne 0 ]; then return 1; fi
-  # go test ./projects/...
-  # passed Projects
-  # if [ $? -ne 0 ]; then return 1; fi
   # go test ./remotes/...
   # passed Remotes
+  # if [ $? -ne 0 ]; then return 1; fi
+  # go test ./apps/...
+  # passed Apps
   # if [ $? -ne 0 ]; then return 1; fi
   go test ./commands/...
   passed Commands
   if [ $? -ne 0 ]; then return 1; fi
 
   # Now! Stack based tests
-  if [[ "$machine" != eris-test-win* ]]
-  then
+  # if [[ "$machine" != eris-test-win* ]]
+  # then
     if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
     then
       $HOME/test_stack.sh
@@ -151,7 +151,7 @@ packagesToTest() {
       tests/test_stack.sh
     fi
     passed Stack
-  fi
+  # fi
   return $?
 }
 

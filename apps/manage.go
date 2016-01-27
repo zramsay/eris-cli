@@ -1,4 +1,4 @@
-package projects
+package apps
 
 import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"

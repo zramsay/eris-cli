@@ -1,7 +1,7 @@
 package commands
 
 import (
-	prj "github.com/eris-ltd/eris-cli/projects"
+	prj "github.com/eris-ltd/eris-cli/apps"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )

@@ -34,12 +34,16 @@ else
   circle=false
 fi
 
-ecm_dir=$repo/../eris-cm
-ecm_test_dir=$repo/../eris-cm/tests
-ecm_branch=${EPM_BRANCH:=master}
+ecm=eris-cm
+ecm_repo=https://github.com/eris-ltd/$ecm.git
+ecm_dir=$repo/../$ecm
+ecm_test_dir=$repo/../$ecm/tests
+ecm_branch=${ECM_BRANCH:=master}
 
-epm_dir=$repo/../eris-pm
-epm_test_dir=$repo/../eris-pm/tests
+epm=$epm
+epm_repo=https://github.com/eris-ltd/$epm.git
+epm_dir=$repo/../$epm
+epm_test_dir=$repo/../$epm/tests
 epm_branch=${EPM_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
@@ -48,7 +52,7 @@ epm_branch=${EPM_BRANCH:=master}
 if [ -d "$ecm_test_dir" ]; then
   cd $ecm_test_dir
 else
-  git clone https://github.com/eris-ltd/eris-pm.git $ecm_dir 1>/dev/null
+  git clone $ecm_repo $ecm_dir 1>/dev/null
   cd $ecm_test_dir 1>/dev/null
   git checkout origin/$ecm_branch &>/dev/null
 fi
@@ -71,7 +75,7 @@ cd $start
 if [ -d "$epm_test_dir" ]; then
   cd $epm_test_dir
 else
-  git clone https://github.com/eris-ltd/eris-pm.git $epm_dir 1>/dev/null
+  git clone $epm_repo $epm_dir 1>/dev/null
   cd $epm_test_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
 fi
