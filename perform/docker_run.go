@@ -15,7 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
@@ -1036,7 +1036,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + ops.DataContainerName,
 		Config: &docker.Config{
-			Image:           path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_BASE),
+			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1082,7 +1082,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = "quay.io/eris/data"
+		srv.Image = path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
 	}
 
 	// Manipulate labels locally.

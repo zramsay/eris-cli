@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -74,7 +75,7 @@ func TestKnownServices(t *testing.T) {
 		}
 	}
 
-	if i != len(ver.SERVICE_DEFINITION) {
+	if i != len(ver.SERVICE_DEFINITIONS) {
 		tests.IfExit(fmt.Errorf("Could not find all the expected service definition files.\n"))
 	}
 }
@@ -300,7 +301,7 @@ func TestImportService(t *testing.T) {
 
 [service]
 name = "ipfs"
-image = "quay.io/eris/ipfs"`
+image = "` + path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS) + `"`
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
@@ -332,7 +333,7 @@ func TestNewService(t *testing.T) {
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Operations.Args = []string{"quay.io/eris/keys"}
+	do.Operations.Args = []string{path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)}
 
 	log.WithFields(log.Fields{
 		"=>":   do.Name,
