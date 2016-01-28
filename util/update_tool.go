@@ -153,10 +153,11 @@ func CheckGitAndGo(git, gO bool) (bool, bool) {
 
 func ChangeDirectory(to string) {
 	if to == "bin" {
-		erisLoc, _ := exec.LookPath("eris")
-		locLen := len(erisLoc) - 4
-		erisLoc = erisLoc[:locLen]
-		err := os.Chdir(erisLoc)
+		erisLoc, err := exec.LookPath("eris")
+		if err != nil {
+			log.Fatalf("Error finding eris binary: %v", err)
+		}
+		err = os.Chdir(filepath.Dir(erisLoc))
 		if err != nil {
 			log.Fatalf("Error changing directory: %v", err)
 		}
