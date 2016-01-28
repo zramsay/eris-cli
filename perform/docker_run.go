@@ -163,6 +163,8 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 // is true. DockerRunService returns Docker errors if not successful.
 //
 //  srv.AutoData          - if true, create or use existing data container
+//  srv.Restart           - container restart policy ("always", "max:<#attempts>"
+//                          or never if unspecified)
 //
 //  ops.SrvContainerName  - service or a chain container name
 //  ops.DataContainerName - dependent data container name
@@ -177,8 +179,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 //  ops.CapAdd            - add linux capabilities (similar to `docker run --cap-add=[]`)
 //  ops.CapDrop           - add linux capabilities (similar to `docker run --cap-drop=[]`)
 //  ops.Privileged        - if true, give extended privileges
-//  ops.Restart           - container restart policy ("always", "max:<#attempts>"
-//                          or never if unspecified)
 //
 func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	log.WithField("=>", ops.SrvContainerName).Info("Running container")
@@ -961,7 +961,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 			VolumesFrom:     srv.VolumesFrom,
 			CapAdd:          ops.CapAdd,
 			CapDrop:         ops.CapDrop,
-			RestartPolicy:   docker.NeverRestart(),
+			RestartPolicy:   docker.NeverRestart(), //default. overide below
 			NetworkMode:     "bridge",
 		},
 	}
@@ -977,10 +977,11 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 		opts.Config.WorkingDir = srv.WorkDir
 	}
 
-	if ops.Restart == "always" {
+	//[zr] used to be ops.Restart
+	if srv.Restart == "always" {
 		opts.HostConfig.RestartPolicy = docker.AlwaysRestart()
-	} else if strings.Contains(ops.Restart, "max") {
-		times, err := strconv.Atoi(strings.Split(ops.Restart, ":")[1])
+	} else if strings.Contains(srv.Restart, "max") {
+		times, err := strconv.Atoi(strings.Split(srv.Restart, ":")[1])
 		if err != nil {
 			return docker.CreateContainerOptions{}
 		}
