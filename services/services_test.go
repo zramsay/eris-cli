@@ -15,6 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -29,7 +30,7 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(testsInit())
 
@@ -55,47 +56,25 @@ func TestKnownServices(t *testing.T) {
 	tests.IfExit(list.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 16 {
-		tests.IfExit(fmt.Errorf("Did not find expected number of service definitions files, found %v. Something is wrong.\n", len(k)))
+	if len(k) != len(ver.SERVICE_DEFINITIONS) {
+		tests.IfExit(fmt.Errorf("Did not find correct number of service definitions files, Expected %v, found %v.\n", len(ver.SERVICE_DEFINITIONS), len(k)))
 	}
+
+	servDefs := make(map[string]bool)
+
+	for _, srv := range ver.SERVICE_DEFINITIONS {
+		servDef := strings.Split(srv, ".")
+		servDefs[servDef[0]] = true
+	}
+
 	i := 0
-	for _, actFile := range k {
-		switch actFile {
-		case "btcd":
-			i++
-		case "compilers":
-			i++
-		case "eth":
-			i++
-		case "ipfs":
-			i++
-		case "keys":
-			i++
-		case "logspout":
-			i++
-		case "logsrotate":
-			i++
-		case "mindy":
-			i++
-		case "openbazaar":
-			i++
-		case "tinydns":
-			i++
-		case "tor":
-			i++
-		case "toadserver":
-			i++
-		case "watchtower":
-			i++
-		case "bitcoincore":
-			i++
-		case "bitcoinclassic":
-			i++
-		case "do_not_use":
+	for _, srvFile := range k {
+		if servDefs[srvFile] == true {
 			i++
 		}
 	}
-	if i != 16 {
+
+	if i != len(ver.SERVICE_DEFINITION) {
 		tests.IfExit(fmt.Errorf("Could not find all the expected service definition files.\n"))
 	}
 }
