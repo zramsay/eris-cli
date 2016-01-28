@@ -135,7 +135,7 @@ func CheckGitAndGo(git, gO bool) (bool, bool) {
 	if git {
 		stdOut1, err := exec.Command("git", "version").CombinedOutput()
 		if err != nil {
-			log.WithField("version", string(stdOut1)).Fatal("Ensure you have git installed or if running `eris init` use the `--skip-pull` flag")
+			log.WithField("version", string(stdOut1)).Warn("Ensure you have git installed.")
 		} else {
 			hasGit = true
 		}
@@ -143,7 +143,7 @@ func CheckGitAndGo(git, gO bool) (bool, bool) {
 	if gO {
 		stdOut2, err := exec.Command("go", "version").CombinedOutput()
 		if err != nil {
-			log.WithField("version", string(stdOut2)).Fatal("Ensure you have Go installed")
+			log.WithField("version", string(stdOut2)).Warn("Ensure you have Go installed.")
 		} else {
 			hasGo = true
 		}
