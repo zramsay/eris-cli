@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 
@@ -427,11 +429,11 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if log.GetLevel() > 0 {
-		if err := pullImage(srv.Image, os.Stdout); err != nil {
+		if err := PullImage(srv.Image, os.Stdout); err != nil {
 			return err
 		}
 	} else {
-		if err := pullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
+		if err := PullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
 			return err
 		}
 	}
@@ -658,7 +660,7 @@ func DataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
 // ----------------------------------------------------------------------------
 // ---------------------    Images Core    ------------------------------------
 // ----------------------------------------------------------------------------
-func pullImage(name string, writer io.Writer) error {
+func PullImage(name string, writer io.Writer) error {
 	var tag string = "latest"
 	var reg string = ""
 
@@ -720,7 +722,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 				log.Warn("The marmots are approved to pull it from the repository on your behalf")
 				log.Warn("This could take a few minutes")
 			}
-			if err := pullImage(opts.Config.Image, nil); err != nil {
+			if err := PullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
 			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
@@ -1034,7 +1036,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + ops.DataContainerName,
 		Config: &docker.Config{
-			Image:           "quay.io/eris/base",
+			Image:           path.Join(version.QUAY, version.ERIS_IMG_BASE),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,

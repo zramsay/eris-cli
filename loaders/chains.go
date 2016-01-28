@@ -2,6 +2,7 @@ package loaders
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -94,10 +95,9 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 
 func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
 	// chainID := chain.ChainID
-	vers := version.VERSION
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
-	chain.Service.Image = "quay.io/eris/erisdb:" + vers
+	chain.Service.Image = path.Join(version.QUAY, version.ERIS_IMG_DB)
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
 	chain.Service.Command = cmd
 
