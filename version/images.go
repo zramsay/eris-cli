@@ -15,7 +15,3 @@ var (
 	ERIS_IMG_PM   = fmt.Sprintf("eris/epm:%s", VERSION)
 	ERIS_IMG_IPFS = "eris/ipfs"
 )
-
-func getReg(imgRaw string) string {
-	return ""
-}

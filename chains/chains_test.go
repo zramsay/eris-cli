@@ -471,10 +471,10 @@ func TestServiceLinkNoChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	if err := tests.FakeServiceDefinition(erisDir, "fake", `
-chain = \"$chain:fake\"
+chain = "$chain:fake"
 
 [service]
-name = \"fake\"
+name = "fake"
 image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 data_container = true
 `); err != nil {
