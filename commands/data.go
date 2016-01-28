@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -130,28 +130,17 @@ var dataRm = &cobra.Command{
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 
+	dataList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
+
 	buildFlag(dataRm, do, "rm-volumes", "data")
 
 	buildFlag(dataExec, do, "interactive", "data")
-
-	// all have been converted into arguments
-	// dataImport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for import into data container")
-	// dataImport.Flags().StringVarP(&do.Source, "src", "", "", "source on host to import from")
-	// dataExport.Flags().StringVarP(&do.Destination, "dest", "", "", "destination for export on host")
-	// dataExport.Flags().StringVarP(&do.Source, "src", "", "", "source inside data container to export from")
 }
 
 //----------------------------------------------------
 func ListKnownData(cmd *cobra.Command, args []string) {
-	do.Existing = true
-	if err := util.ListAll(do, "data"); err != nil {
+	if err := list.ListDatas(do); err != nil {
 		return
-	}
-
-	// https://www.reddit.com/r/television/comments/2755ow/hbos_silicon_valley_tells_the_most_elaborate/
-	datasToManipulate := do.Result
-	for _, s := range strings.Split(datasToManipulate, "||") {
-		fmt.Println(s)
 	}
 }
 

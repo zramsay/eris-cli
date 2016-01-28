@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -377,7 +377,7 @@ func ListAllServices(cmd *cobra.Command, args []string) {
 		IfExit(FlagCheck(1, "eq", cmd, flags))
 	}
 
-	if err := util.ListAll(do, "services"); err != nil {
+	if err := list.ListAll(do, "services"); err != nil {
 		return
 	}
 	if !do.All { //do.All will output a pretty table on its own

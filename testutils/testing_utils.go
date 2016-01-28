@@ -12,6 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -215,9 +216,8 @@ func checkIPFSnotRunning() {
 	do.Existing = false
 	do.Running = true
 	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
 	log.Debug("Finding the running services")
-	if err := util.ListAll(do, "services"); err != nil {
+	if err := list.ListAll(do, "services"); err != nil {
 		IfExit(err)
 	}
 	res := strings.Split(do.Result, "\n")
@@ -232,9 +232,8 @@ func checkIPFSnotRunning() {
 	do.Existing = true
 	do.Running = false
 	do.Quiet = true
-	do.Operations.Args = []string{"testing"}
 	log.Debug("Finding the existing services")
-	if err := util.ListAll(do, "services"); err != nil {
+	if err := list.ListAll(do, "services"); err != nil {
 		IfExit(err)
 	}
 	res = strings.Split(do.Result, "\n")

@@ -11,6 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/loaders"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
@@ -50,8 +51,8 @@ func TestKnownServices(t *testing.T) {
 	do.Known = true
 	do.Existing = false
 	do.Running = false
-	do.Operations.Args = []string{"testing"}
-	tests.IfExit(util.ListAll(do, "services"))
+	do.Quiet = true
+	tests.IfExit(list.ListAll(do, "services"))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 16 {

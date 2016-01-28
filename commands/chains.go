@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
@@ -587,7 +587,7 @@ func ListAllChains(cmd *cobra.Command, args []string) {
 		IfExit(FlagCheck(1, "eq", cmd, flags))
 	}
 
-	if err := util.ListAll(do, "chains"); err != nil {
+	if err := list.ListAll(do, "chains"); err != nil {
 		return
 	}
 	if !do.All { //do.All will output a pretty table on its own

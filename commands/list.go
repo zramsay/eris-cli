@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/list"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
@@ -26,10 +26,16 @@ func ListAllTheThings() {
 	//do.All for known/existing/running
 	do.All = true
 
-	typs := []string{"services", "chains", "actions", "data"}
+	typs := []string{"chains", "services"}
 	for _, typ := range typs {
-		if err := util.ListAll(do, typ); err != nil {
+		if err := list.ListAll(do, typ); err != nil {
 			return
 		}
+	}
+	if err := list.ListDatas(do); err != nil {
+		return
+	}
+	if err := list.ListActions(do); err != nil {
+		return
 	}
 }

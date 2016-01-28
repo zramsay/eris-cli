@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/list"
 	tests "github.com/eris-ltd/eris-cli/testutils"
-	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -39,11 +39,8 @@ func TestMain(m *testing.M) {
 
 func TestListKnownActions(t *testing.T) {
 	do := definitions.NowDo()
-	do.Known = true
-	do.Running = false
-	do.Existing = false
-	do.Operations.Args = []string{"testing"}
-	tests.IfExit(util.ListAll(do, "actions"))
+	do.Quiet = true
+	tests.IfExit(list.ListActions(do))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
 	if len(k) != 4 {
