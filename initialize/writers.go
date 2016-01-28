@@ -112,7 +112,7 @@ func pullDefaultImages() error {
 
 		opts := docker.PullImageOptions{
 			Repository:   image,
-			Registry:     ver.QUAY,
+			Registry:     ver.ERIS_REG_DEF,
 			Tag:          tag,
 			OutputStream: os.Stdout,
 		}
@@ -122,8 +122,8 @@ func pullDefaultImages() error {
 		}
 
 		if err := util.DockerClient.PullImage(opts, auth); err != nil {
-			//try with hub
-			opts.Registry = ver.HUB // empty string
+			//try with hub (empty string)
+			opts.Registry = ver.ERIS_REG_BAK
 			if err := util.DockerClient.PullImage(opts, auth); err != nil {
 				return err
 			}

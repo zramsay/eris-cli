@@ -97,7 +97,7 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 	// chainID := chain.ChainID
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name // this let's the data containers flow thru
-	chain.Service.Image = path.Join(version.QUAY, version.ERIS_IMG_DB)
+	chain.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_DB)
 	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
 	chain.Service.Command = cmd
 

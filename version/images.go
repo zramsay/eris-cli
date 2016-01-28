@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	QUAY = "quay.io"
-	HUB  = "" //dockerhub
+	ERIS_REG_DEF = "quay.io"
+	ERIS_REG_BAK = "" //dockerhub
 
 	ERIS_IMG_BASE = "eris/base"
 	ERIS_IMG_DATA = "eris/data"
