@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -109,9 +110,9 @@ func pullDefaultImages() error {
 			tag = nameSplit[2]
 		}
 		image = nameSplit[0]
-
+		img := path.Join(ver.ERIS_REG_DEF, image)
 		opts := docker.PullImageOptions{
-			Repository:   image,
+			Repository:   img,
 			Registry:     ver.ERIS_REG_DEF,
 			Tag:          tag,
 			OutputStream: os.Stdout,
@@ -123,6 +124,7 @@ func pullDefaultImages() error {
 
 		if err := util.DockerClient.PullImage(opts, auth); err != nil {
 			//try with hub (empty string)
+			opts.Repository = image
 			opts.Registry = ver.ERIS_REG_BAK
 			if err := util.DockerClient.PullImage(opts, auth); err != nil {
 				return err
