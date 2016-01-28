@@ -5,18 +5,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	//"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 // XXX all files in this sequence must be added to both
@@ -85,19 +83,50 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		path.Join(ver.QUAY, ver.ERIS_IMG_BASE),
-		path.Join(ver.QUAY, ver.ERIS_IMG_DATA),
-		path.Join(ver.QUAY, ver.ERIS_IMG_KEYS),
-		path.Join(ver.QUAY, ver.ERIS_IMG_IPFS),
-		path.Join(ver.QUAY, ver.ERIS_IMG_DB),
-		path.Join(ver.QUAY, ver.ERIS_IMG_PM),
+		ver.ERIS_IMG_BASE,
+		ver.ERIS_IMG_DATA,
+		ver.ERIS_IMG_KEYS,
+		ver.ERIS_IMG_IPFS,
+		ver.ERIS_IMG_DB,
+		ver.ERIS_IMG_PM,
 	}
 
 	log.Warn("Pulling default docker images from quay.io")
-	for _, image := range images {
-		//XXX can'tuse b/c import cycle :(
-		if err := perform.PullImage(image, nil); err != nil {
 
+	// XXX can't use perform.PullImage b/c import cycle :(
+	// it's essentially re-implemented here w/ a bit more opinion
+	// fail over to docker hub is quay is down/firewalled
+	auth := docker.AuthConfiguration{}
+
+	for _, image := range images {
+		var tag string = "latest"
+
+		nameSplit := strings.Split(image, ":")
+		if len(nameSplit) == 2 {
+			tag = nameSplit[1]
+		}
+		if len(nameSplit) == 3 {
+			tag = nameSplit[2]
+		}
+		image = nameSplit[0]
+
+		opts := docker.PullImageOptions{
+			Repository:   image,
+			Registry:     ver.QUAY,
+			Tag:          tag,
+			OutputStream: os.Stdout,
+		}
+
+		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+			opts.OutputStream = nil
+		}
+
+		if err := util.DockerClient.PullImage(opts, auth); err != nil {
+			//try with hub
+			opts.Registry = ver.HUB // empty string
+			if err := util.DockerClient.PullImage(opts, auth); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -12,13 +12,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
@@ -429,11 +429,11 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if log.GetLevel() > 0 {
-		if err := PullImage(srv.Image, os.Stdout); err != nil {
+		if err := pullImage(srv.Image, os.Stdout); err != nil {
 			return err
 		}
 	} else {
-		if err := PullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
+		if err := pullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
 			return err
 		}
 	}
@@ -660,7 +660,7 @@ func DataContainerExists(ops *def.Operation) (docker.APIContainers, bool) {
 // ----------------------------------------------------------------------------
 // ---------------------    Images Core    ------------------------------------
 // ----------------------------------------------------------------------------
-func PullImage(name string, writer io.Writer) error {
+func pullImage(name string, writer io.Writer) error {
 	var tag string = "latest"
 	var reg string = ""
 
@@ -722,7 +722,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 				log.Warn("The marmots are approved to pull it from the repository on your behalf")
 				log.Warn("This could take a few minutes")
 			}
-			if err := PullImage(opts.Config.Image, nil); err != nil {
+			if err := pullImage(opts.Config.Image, nil); err != nil {
 				return nil, err
 			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
