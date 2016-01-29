@@ -29,7 +29,7 @@ func MakeChain(do *definitions.Do) error {
 		eie = true
 	}
 	do.Service.Name = do.Name
-	do.Service.Image = version.ERIS_IMG_CM
+	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
 	do.Service.User = "eris"
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys", 1), "keys")}
 	if eie {
