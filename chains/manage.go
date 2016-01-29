@@ -23,12 +23,21 @@ import (
 )
 
 func MakeChain(do *definitions.Do) error {
+	var eie bool = false
+	if os.Getenv("ERIS_IN_DOCKER") == "1" {
+		log.Info("Using Eris in Docker")
+		eie = true
+	}
 	do.Service.Name = do.Name
 	do.Service.Image = fmt.Sprintf("quay.io/eris/eris-cm:%s", version.VERSION)
-	do.Service.AutoData = false
 	do.Service.User = "eris"
-	do.Service.Volumes = []string{fmt.Sprintf("%s:%s:rw", ChainsPath, path.Join(ErisContainerRoot, "chains"))} // using path.Join here because even when host on windows we want / not \
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys", 1), "keys")}
+	if eie {
+		do.Service.AutoData = true
+	} else {
+		do.Service.AutoData = false
+		do.Service.Volumes = []string{fmt.Sprintf("%s:%s", ChainsPath, path.Join(ErisContainerRoot, "chains"))} // using path.Join here because even when host on windows we want / not \
+	}
 
 	if do.Known {
 		log.Debug("Using MintGen rather than eris:cm")
@@ -61,20 +70,51 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	do.Operations.ContainerType = "service"
-	do.Operations.SrvContainerName = util.ContainersName("service", do.Name, 1)
+	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name, 1)
+	do.Operations.DataContainerName = util.DataContainersName(do.Name, 1)
 	do.Operations.ContainerNumber = 1
 	do.Operations.Remove = true
 
-	// log.WithFields(log.Fields{
-	// 	"name":  do.Service.Name,
-	// 	"cmd":   fmt.Sprintf("%s %s", do.Service.EntryPoint, do.Service.Command),
-	// 	"links": do.Service.Links,
-	// 	"env":   do.Service.Environment,
-	// 	"inter": do.Operations.Interactive,
-	// 	"user":  do.Service.User,
-	// }).Debug("Running Chainmaker")
+	// import data; if data
+	doData := definitions.NowDo()
+	doData.Name = do.Name
+	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
+	defer data.RmData(doData)
 
-	return perform.DockerExecService(do.Service, do.Operations)
+	if eie {
+		// first. the fake one.
+		doData.Source = filepath.Join(ChainsPath, "HEAD")
+		doData.Destination = ErisContainerRoot
+		if err := data.ImportData(doData); err != nil {
+			return err
+		}
+		doData.Operations.Args = []string{"mkdir", "-p", path.Join(ErisContainerRoot, "chains")}
+		if err := data.ExecData(doData); err != nil {
+			return err
+		}
+		doData.Operations.Args = []string{}
+		// second. the real one.
+		doData.Source = ChainsPath
+		doData.Destination = path.Join(ErisContainerRoot, "chains")
+		if err := data.ImportData(doData); err != nil {
+			return err
+		}
+	}
+
+	if err := perform.DockerExecService(do.Service, do.Operations); err != nil {
+		return err
+	}
+
+	if eie {
+		// export data
+		doData.Destination = ErisRoot
+		doData.Source = path.Join(ErisContainerRoot, "chains")
+		if err := data.ExportData(doData); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func RegisterChain(do *definitions.Do) error {

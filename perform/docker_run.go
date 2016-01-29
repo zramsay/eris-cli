@@ -321,6 +321,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		"environment":     optsServ.Config.Env,
 		"image":           optsServ.Config.Image,
 		"user":            optsServ.Config.User,
+		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
 		return err

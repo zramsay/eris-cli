@@ -142,8 +142,8 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
 
   # Now! Stack based tests
-  # if [[ "$machine" != eris-test-win* ]]
-  # then
+  if [[ "$machine" != eris-test-win* ]]
+  then
     if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
     then
       $HOME/test_stack.sh
@@ -151,7 +151,7 @@ packagesToTest() {
       tests/test_stack.sh
     fi
     passed Stack
-  # fi
+  fi
   return $?
 }
 
