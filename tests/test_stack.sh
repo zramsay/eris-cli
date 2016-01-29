@@ -40,7 +40,7 @@ ecm_dir=$repo/../$ecm
 ecm_test_dir=$repo/../$ecm/tests
 ecm_branch=${ECM_BRANCH:=master}
 
-epm=$epm
+epm=eris-pm
 epm_repo=https://github.com/eris-ltd/$epm.git
 epm_dir=$repo/../$epm
 epm_test_dir=$repo/../$epm/tests
@@ -60,6 +60,8 @@ fi
 # ----------------------------------------------------------------------------
 # Run ECM tests
 
+export ERIS_PULL_APPROVE="true"
+eris init --yes --pull-images=true --testing=true
 ./test.sh
 test_exit=$?
 if [ $test_exit -ne 0 ]
