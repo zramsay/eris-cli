@@ -53,6 +53,9 @@ func dropChainDefaults(dir, from string) error {
 	if err := writeDefaultFile(chnDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
 	}
+	if err := writeDefaultFile(chnDir, "genesis.csv", DefChainCSV); err != nil {
+		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
+	}
 
 	//insert version into default chain service definition
 	versionDefault := filepath.Join(dir, "default.toml")
