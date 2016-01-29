@@ -58,10 +58,17 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Run ECM tests
+# Get Setup
 
+echo
+eval "$(docker-machine env $MACHINE_NAME)" # todo, this won't really work for local
 export ERIS_PULL_APPROVE="true"
 eris init --yes --pull-images=true --testing=true
+echo
+
+# ----------------------------------------------------------------------------
+# Run ECM tests
+
 ./test.sh
 test_exit=$?
 if [ $test_exit -ne 0 ]
