@@ -9,6 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	tests "github.com/eris-ltd/eris-cli/testutils"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -43,24 +44,27 @@ func TestListKnownActions(t *testing.T) {
 	tests.IfExit(list.ListActions(do))
 	k := strings.Split(do.Result, "\n") // tests output formatting.
 
-	if len(k) != 4 {
-		tests.IfExit(fmt.Errorf("Found %v action definition files, Expected 4. Something is wrong.\n", len(k)))
+	ver.ACTION_DEFINITIONS = append(ver.ACTION_DEFINITIONS, "do_not_use.toml")
+
+	if len(k) != len(ver.ACTION_DEFINITIONS) {
+		tests.IfExit(fmt.Errorf("Did not find correct number of action definitions files, Expected %v, found %v.\n", len(ver.ACTION_DEFINITIONS), len(k)))
+	}
+
+	actDefs := make(map[string]bool)
+
+	for _, act := range ver.ACTION_DEFINITIONS {
+		actDef := strings.Split(act, ".")
+		actDefs[actDef[0]] = true
 	}
 
 	i := 0
 	for _, actFile := range k {
-		switch actFile {
-		case "do_not_use":
-			i++
-		case "chain_info":
-			i++
-		case "dns_register":
-			i++
-		case "keys_list":
+		if actDefs[actFile] == true {
 			i++
 		}
 	}
-	if i != 4 {
+
+	if i != len(ver.ACTION_DEFINITIONS) {
 		tests.IfExit(fmt.Errorf("Could not find all the expected action definition files.\n"))
 	}
 }

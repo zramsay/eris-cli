@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -20,38 +21,14 @@ import (
 // XXX all files in this sequence must be added to both
 // the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
 func dropServiceDefaults(dir, from string) error {
-	servDefs := []string{
-		"btcd.toml",
-		"bitcoincore.toml",
-		"bitcoinclassic.toml",
-		"compilers.toml",
-		"eth.toml",
-		"ipfs.toml",
-		"keys.toml",
-		"logspout.toml",
-		"logsrotate.toml",
-		"mindy.toml",
-		"openbazaar.toml",
-		"toadserver.toml",
-		"tinydns.toml",
-		"tor.toml",
-		"watchtower.toml",
-		"do_not_use.toml",
-	}
-
-	if err := drops(servDefs, "services", dir, from); err != nil {
+	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from); err != nil {
 		return err
 	}
 	return nil
 }
 
 func dropActionDefaults(dir, from string) error {
-	actDefs := []string{
-		"chain_info.toml",
-		"dns_register.toml",
-		"keys_list.toml",
-	}
-	if err := drops(actDefs, "actions", dir, from); err != nil {
+	if err := drops(ver.ACTION_DEFINITIONS, "actions", dir, from); err != nil {
 		return err
 	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
@@ -61,12 +38,7 @@ func dropActionDefaults(dir, from string) error {
 }
 
 func dropChainDefaults(dir, from string) error {
-	chnDefs := []string{
-		"default.toml",
-		"config.toml",
-		"server_conf.toml",
-	}
-	if err := drops(chnDefs, "chains", dir, from); err != nil {
+	if err := drops(ver.CHAIN_DEFINITIONS, "chains", dir, from); err != nil {
 		return err
 	}
 
@@ -90,7 +62,7 @@ func dropChainDefaults(dir, from string) error {
 	if err != nil {
 		return err
 	}
-	withVersion := strings.Replace(string(read), "version", version.VERSION, 2)
+	withVersion := strings.Replace(string(read), "version", ver.VERSION, 2)
 	if err := ioutil.WriteFile(versionDefault, []byte(withVersion), 0); err != nil {
 		return err
 	}
@@ -112,36 +84,51 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		"quay.io/eris/base",
-		"quay.io/eris/keys",
-		"quay.io/eris/data",
-		"quay.io/eris/ipfs",
-		"quay.io/eris/erisdb",
-		"quay.io/eris/epm",
+		ver.ERIS_IMG_BASE,
+		ver.ERIS_IMG_DATA,
+		ver.ERIS_IMG_KEYS,
+		ver.ERIS_IMG_IPFS,
+		ver.ERIS_IMG_DB,
+		ver.ERIS_IMG_PM,
 	}
 
 	log.Warn("Pulling default docker images from quay.io")
+
+	// XXX can't use perform.PullImage b/c import cycle :(
+	// it's essentially re-implemented here w/ a bit more opinion
+	// fail over to docker hub is quay is down/firewalled
+	auth := docker.AuthConfiguration{}
+
 	for _, image := range images {
-		var tag string
-		if image == "quay.io/eris/erisdb" || image == "quay.io/eris/epm" {
-			tag = version.VERSION
-		} else {
-			tag = "latest"
+		var tag string = "latest"
+
+		nameSplit := strings.Split(image, ":")
+		if len(nameSplit) == 2 {
+			tag = nameSplit[1]
 		}
+		if len(nameSplit) == 3 {
+			tag = nameSplit[2]
+		}
+		image = nameSplit[0]
+		img := path.Join(ver.ERIS_REG_DEF, image)
 		opts := docker.PullImageOptions{
-			Repository:   image,
-			Registry:     "quay.io",
+			Repository:   img,
+			Registry:     ver.ERIS_REG_DEF,
 			Tag:          tag,
 			OutputStream: os.Stdout,
 		}
+
 		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
 			opts.OutputStream = nil
 		}
 
-		auth := docker.AuthConfiguration{}
-
 		if err := util.DockerClient.PullImage(opts, auth); err != nil {
-			return err
+			//try with hub (empty string)
+			opts.Repository = image
+			opts.Registry = ver.ERIS_REG_BAK
+			if err := util.DockerClient.PullImage(opts, auth); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

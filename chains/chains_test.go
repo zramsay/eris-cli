@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -20,7 +21,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	tests "github.com/eris-ltd/eris-cli/testutils"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -76,7 +77,7 @@ func TestChainGraduate(t *testing.T) {
 		tests.IfExit(err)
 	}
 
-	image := "quay.io/eris/erisdb:" + version.VERSION
+	image := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DB)
 	if srvDef.Service.Image != image {
 		tests.IfExit(fmt.Errorf("FAILURE: improper service image on GRADUATE. expected: %s\tgot: %s\n", image, srvDef.Service.Image))
 	}
@@ -474,7 +475,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -496,7 +497,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -516,7 +517,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := tests.FakeServiceDefinition(erisDir, "fake", `
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -555,7 +556,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -607,7 +608,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -660,7 +661,7 @@ chain = "`+chainName+`:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -712,7 +713,7 @@ chain = "blah-blah:blah"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -784,7 +785,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "quay.io/eris/ipfs"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -797,7 +798,7 @@ chain = "$chain:sham"
 
 [service]
 name = "sham"
-image = "quay.io/eris/keys"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a sham service definition: %v", err)
