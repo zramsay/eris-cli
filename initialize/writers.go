@@ -45,15 +45,13 @@ func dropChainDefaults(dir, from string) error {
 	// common.DefaultChainDir goes to $HOME/.eris
 	// rather than /tmp/eris/.eris
 	// XXX something wonky with ResolveErisRoot()?
+	// TODO: refactor so it uses chainsMake .... somehow
 	chnDir := filepath.Join(dir, "default")
 	if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
 	if err := writeDefaultFile(chnDir, "priv_validator.json", DefChainKeys); err != nil {
 		return fmt.Errorf("Cannot add default priv_validator.json: %s.\n", err)
-	}
-	if err := writeDefaultFile(chnDir, "genesis.csv", DefChainCSV); err != nil {
-		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
 	}
 
 	//insert version into default chain service definition
@@ -90,6 +88,7 @@ func pullDefaultImages() error {
 		ver.ERIS_IMG_IPFS,
 		ver.ERIS_IMG_DB,
 		ver.ERIS_IMG_PM,
+		ver.ERIS_IMG_CM,
 	}
 
 	log.Warn("Pulling default docker images from quay.io")
