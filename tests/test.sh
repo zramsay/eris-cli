@@ -35,6 +35,7 @@ if [ "$CIRCLE_BRANCH" ]
 then
   repo=${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
   ci=true
+  linux=true
 elif [ "$TRAVIS_BRANCH" ]
 then
   ci=true
@@ -247,8 +248,14 @@ remove_machines() {
 setup_tests() {
   echo "Hello! I'm the testing suite for eris."
   echo
-  build_eris $BRANCH &
-  build_result=$!
+  if [ $linux ]
+  then
+    build_eris $BRANCH &
+    build_result=$!
+  else
+    echo "Not building in Circle. Skipping docker build."
+    build_result=$!
+  fi
   sort_machines $1
   machi_result=$?
   wait $build_result
@@ -265,9 +272,15 @@ perform_tests() {
   do
     if [[ "$machine" == *1.8* ]]
     then
-      find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} +
-      test_tool_in_docker "docker18" & # non current docker versions still supported need to use a DinD strategy to get around API types mismatch
-      docker18_result=$!
+      if [ $linux ]
+      then
+        find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} +
+        test_tool_in_docker "docker18" & # non current docker versions still supported need to use a DinD strategy to get around API types mismatch
+        docker18_result=$!
+      else
+        echo "Not building in Circle. Skipping this machine."
+        docker18_result=$!
+      fi
     else
       export MACHINE_NAME=$machine && tests/test_tool.sh
       test_exit=$?
