@@ -22,8 +22,8 @@
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/term",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
+			"Comment": "v1.4.1-9744-g5f5a752",
+			"Rev": "5f5a752bcf687aab0120e6c7903922ff01371ec0"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
