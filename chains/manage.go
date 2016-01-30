@@ -58,7 +58,9 @@ func MakeChain(do *definitions.Do) error {
 	do.Operations.ContainerType = "service"
 	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name, do.Operations.ContainerNumber)
 	do.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-	do.Operations.Remove = true
+	if do.RmD {
+		do.Operations.Remove = true
+	}
 
 	if do.Known {
 		log.Debug("Using MintGen rather than eris:cm")
@@ -84,7 +86,9 @@ func MakeChain(do *definitions.Do) error {
 	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
 	doData.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	doData.Operations.ContainerType = "service"
-	defer data.RmData(doData)
+	if do.RmD {
+		defer data.RmData(doData)
+	}
 
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")

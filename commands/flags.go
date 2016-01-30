@@ -39,7 +39,11 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "rm":
 		cmd.Flags().BoolVarP(&do.Rm, "rm", "r", false, "remove containers after stopping")
 	case "data":
-		cmd.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
+		if typ == "chain-make" {
+			cmd.Flags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
+		} else {
+			cmd.Flags().BoolVarP(&do.RmD, "data", "x", false, "remove data containers after stopping")
+		}
 		//exec (services, chains)
 	case "publish":
 		cmd.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
