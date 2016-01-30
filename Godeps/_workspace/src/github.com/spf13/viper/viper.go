@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
+	//"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -36,7 +36,8 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cast"
 	jww "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/jwalterweatherman"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/pflag"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/fsnotify.v1"
+	//	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/
+	//"gopkg.in/fsnotify.v1"
 )
 
 var v *Viper
@@ -154,7 +155,7 @@ type Viper struct {
 	aliases        map[string]string
 	typeByDefValue bool
 
-	onConfigChange func(fsnotify.Event)
+	//onConfigChange func(fsnotify.Event)
 }
 
 // Returns an initialized Viper instance.
@@ -223,13 +224,13 @@ var SupportedExts []string = []string{"json", "toml", "yaml", "yml", "properties
 // Universally supported remote providers.
 var SupportedRemoteProviders []string = []string{"etcd", "consul"}
 
-func OnConfigChange(run func(in fsnotify.Event)) { v.OnConfigChange(run) }
-func (v *Viper) OnConfigChange(run func(in fsnotify.Event)) {
-	v.onConfigChange = run
-}
+//func OnConfigChange(run func(in fsnotify.Event)) { v.OnConfigChange(run) }
+//func (v *Viper) OnConfigChange(run func(in fsnotify.Event)) {
+//	v.onConfigChange = run
+//}
 
-func WatchConfig() { v.WatchConfig() }
-func (v *Viper) WatchConfig() {
+//func WatchConfig() { v.WatchConfig() }
+/*func (v *Viper) WatchConfig() {
 	go func() {
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -265,7 +266,7 @@ func (v *Viper) WatchConfig() {
 		watcher.Add(configDir)
 		<-done
 	}()
-}
+}*/
 
 // Explicitly define the path, name and extension of the config file
 // Viper will use this and not check any of the config paths
