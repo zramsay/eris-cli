@@ -26,7 +26,6 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cast"
 	jww "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/jwalterweatherman"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
-	"github.com/hashicorp/hcl"
 )
 
 // Denotes failing to parse configuration file.
@@ -130,7 +129,7 @@ func findCWD() (string, error) {
 	return path, nil
 }
 
-func unmarshallConfigReader(in io.Reader, c map[string]interface{}, configType string) error {
+func marshallConfigReader(in io.Reader, c map[string]interface{}, configType string) error {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(in)
 
@@ -142,15 +141,6 @@ func unmarshallConfigReader(in io.Reader, c map[string]interface{}, configType s
 
 	case "json":
 		if err := json.Unmarshal(buf.Bytes(), &c); err != nil {
-			return ConfigParseError{err}
-		}
-
-	case "hcl":
-		obj, err := hcl.Parse(string(buf.Bytes()))
-		if err != nil {
-			return ConfigParseError{err}
-		}
-		if err = hcl.DecodeObject(&c, obj); err != nil {
 			return ConfigParseError{err}
 		}
 
