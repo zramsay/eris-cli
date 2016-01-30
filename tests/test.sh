@@ -210,10 +210,11 @@ test_tool_in_docker() {
   echo "Starting Eris Docker container."
   if [ "$ci" = true ]
   then
-    docker run --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1
+    docker run --name test_tool --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 > $CIRCLE_ARTIFACTS/$1.log
   else
-    docker run --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1
+    docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 > $CIRCLE_ARTIFACTS/$1.log
   fi
+  docker logs --tail=all test_tool > $CIRCLE_ARTIFACTS/$1-tail.log
   log_machine
 }
 
