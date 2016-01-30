@@ -12,7 +12,7 @@ install:
 
 script:
 - go install ./cmd/eris
-- tests/test_osx_win.sh
+- tests/test.sh
 
 notifications:
   email: false

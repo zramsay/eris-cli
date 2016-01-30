@@ -25,14 +25,25 @@
 # Where are the Things
 start=`pwd`
 base=github.com/eris-ltd/eris-cli
-if [ "$CIRCLE_BRANCH" ]
+repo=$GOPATH/src/$base
+if [ "$CIRCLE_BRANCH" ] # TODO add windows/osx
 then
   repo=${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-  circle=true
+  ci=true
+elif [ "$TRAVIS_BRANCH" ]
+then
+  ci=true
+  osx=true
+elif [ "$APPVEYOR_REPO_BRANCH" ]
+then
+  ci=true
+  win=true
 else
-  repo=$GOPATH/src/$base
-  circle=false
+  ci=false
 fi
+
+export ERIS_PULL_APPROVE="true"
+export ERIS_MIGRATE_APPROVE="true"
 
 ecm=eris-cm
 ecm_repo=https://github.com/eris-ltd/$ecm.git
@@ -47,9 +58,21 @@ epm_test_dir=$repo/../$epm/tests
 epm_branch=${EPM_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
+# Utility functions
+
+check_and_exit() {
+  if [ $test_exit -ne 0 ]
+  then
+    cd $start
+    exit $test_exit
+  fi
+}
+
+# ----------------------------------------------------------------------------
 # Get ECM
 
 if [ -d "$ecm_test_dir" ]; then
+  echo "eris-cm present on host; not cloning"
   cd $ecm_test_dir
 else
   git clone $ecm_repo $ecm_dir 1>/dev/null
@@ -58,30 +81,18 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Get Setup
-
-echo
-eval "$(docker-machine env $MACHINE_NAME)" # todo, this won't really work for local
-export ERIS_PULL_APPROVE="true"
-eris init --yes --pull-images=true --testing=true
-echo
-
-# ----------------------------------------------------------------------------
 # Run ECM tests
 
 ./test.sh
 test_exit=$?
-if [ $test_exit -ne 0 ]
-then
-  cd $start
-  exit $test_exit
-fi
+check_and_exit
 cd $start
 
 # ----------------------------------------------------------------------------
 # Get EPM
 
 if [ -d "$epm_test_dir" ]; then
+  echo "eris-pm present on host; not cloning"
   cd $epm_test_dir
 else
   git clone $epm_repo $epm_dir 1>/dev/null
@@ -94,13 +105,10 @@ fi
 
 ./test.sh
 test_exit=$?
-if [ $test_exit -ne 0 ]
-then
-  cd $start
-  exit $test_exit
-fi
+check_and_exit
 cd $start
 
 # ----------------------------------------------------------------------------
 # Cleanup
+cd $start
 exit $test_exit

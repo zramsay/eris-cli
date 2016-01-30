@@ -20,8 +20,19 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-//import from: do.Source(on host), to: do.Destination(in container)
+// ImportData does what it says. It imports from a host's Source to a Dest
+// in a data container. It returns an error.
+//
+//  do.Name                       - name of the data container to use (required)
+//  do.Operations.ContainerNumber - container number (optional)
+//  do.Source                     - directory which should be imported (required)
+//  do.Destination                - directory to _unload_ the payload into (required)
+//
 func ImportData(do *definitions.Do) error {
+	log.WithFields(log.Fields{
+		"from": do.Source,
+		"to":   do.Destination,
+	}).Debug("Importing")
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 
 		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
@@ -35,10 +46,6 @@ func ImportData(do *definitions.Do) error {
 		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		log.WithFields(log.Fields{
-			"from": do.Source,
-			"to":   do.Destination,
-		}).Debug("Importing")
 		os.Chdir(do.Source)
 
 		reader, err := util.Tar(do.Source, 0)
@@ -62,7 +69,7 @@ func ImportData(do *definitions.Do) error {
 		doChown := definitions.NowDo()
 		doChown.Operations.DataContainerName = containerName
 		doChown.Operations.ContainerType = "data"
-		doChown.Operations.ContainerNumber = 1
+		doChown.Operations.ContainerNumber = do.Operations.ContainerNumber
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
 		_, err = perform.DockerRunData(doChown.Operations, nil)
@@ -70,6 +77,7 @@ func ImportData(do *definitions.Do) error {
 			return fmt.Errorf("Error changing owner: %v\n", err)
 		}
 	} else {
+		log.WithField("name", do.Name).Info("Data container does not exist.")
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)

@@ -39,7 +39,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "ef410296f87750305e1e1acf9ad2ba3833dcb004"
+			"Rev": "02a8beb401b20e112cff3ea740545960b667eab1"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",

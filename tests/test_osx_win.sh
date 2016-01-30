@@ -3,17 +3,7 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris. If it is given the "local" argument, then
-# it will run against the local docker backend. If it is not given the local
-# argument then it will run against a series of docker backends defined in
-# arrays at the top of the script.
-#
-# What this script will do is first it will define what should be run, then
-# it will make sure that it has access to the eris' test machine definition
-# image files necessary to connect into the backends. Then it will run the
-# test_tool and test_stack scripts against a set of backends. That set will
-# either be a random element of a given array for a major docker version, or
-# it will run against the entire suite of backends.
+# **DEPRECATED**
 
 # ---------------------------------------------------------------------------
 # REQUIREMENTS
