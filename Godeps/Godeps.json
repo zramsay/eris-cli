@@ -119,6 +119,10 @@
 			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
 		},
 		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
+		},
+		{
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.8.7-53-g446d1c1",
 			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
