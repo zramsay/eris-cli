@@ -107,7 +107,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/viper",
-			"Rev": "9fca10189b1307bba68b2cd487dd93da0bfbda06"
+			"Rev": "a212099cbe6fbe8d07476bfda8d2d39b6ff8f325"
 		},
 		{
 			"ImportPath": "github.com/tcnksm/go-gitconfig",
