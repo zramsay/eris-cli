@@ -48,7 +48,7 @@ export ERIS_MIGRATE_APPROVE="true"
 ecm=eris-cm
 ecm_repo=https://github.com/eris-ltd/$ecm.git
 ecm_dir=$repo/../$ecm
-ecm_test_dir=$repo/../$ecm/tests
+ecm_test_dir=$repo/../$ecm
 ecm_branch=${ECM_BRANCH:=master}
 
 epm=eris-pm
@@ -83,7 +83,7 @@ fi
 # ----------------------------------------------------------------------------
 # Run ECM tests
 
-./test.sh
+tests/test.sh
 test_exit=$?
 check_and_exit
 cd $start
