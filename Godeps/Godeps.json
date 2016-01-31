@@ -22,8 +22,8 @@
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/term",
-			"Comment": "v1.4.1-4216-gc782be0",
-			"Rev": "c782be0e2a5c45bc31e1f3351e62679a4af3175a"
+			"Comment": "v1.4.1-9744-g5f5a752",
+			"Rev": "5f5a752bcf687aab0120e6c7903922ff01371ec0"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
@@ -91,11 +91,11 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/cast",
-			"Rev": "2c4fdb5416dd394ff5e61fcdb8eb4f09e46a2ed8"
+			"Rev": "ee7b3e0353166ab1f3a605294ac8cd2b77953778"
 		},
 		{
 			"ImportPath": "github.com/spf13/cobra",
-			"Rev": "6d7031177028ad8c5b4b428ac9a2288fbc1c0649"
+			"Rev": "8e91712f174ced10270cf66615e0a9127e7c4de5"
 		},
 		{
 			"ImportPath": "github.com/spf13/jwalterweatherman",
@@ -103,11 +103,11 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
-			"Rev": "f735fdff4ffb34299727eb2e3c9abab588742d41"
+			"Rev": "7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7"
 		},
 		{
 			"ImportPath": "github.com/spf13/viper",
-			"Rev": "9fca10189b1307bba68b2cd487dd93da0bfbda06"
+			"Rev": "a212099cbe6fbe8d07476bfda8d2d39b6ff8f325"
 		},
 		{
 			"ImportPath": "github.com/tcnksm/go-gitconfig",
@@ -116,6 +116,10 @@
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
 			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
 		},
 		{

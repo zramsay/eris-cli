@@ -155,7 +155,7 @@ func ChangeErisDir(erisDir string) {
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
-	err := globalConfig.Marshal(config)
+	err := globalConfig.Unmarshal(config)
 	if err != nil {
 		return err
 	}
