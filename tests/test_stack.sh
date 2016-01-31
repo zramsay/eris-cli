@@ -54,7 +54,7 @@ ecm_branch=${ECM_BRANCH:=master}
 epm=eris-pm
 epm_repo=https://github.com/eris-ltd/$epm.git
 epm_dir=$repo/../$epm
-epm_test_dir=$repo/../$epm/tests
+epm_test_dir=$repo/../$epm
 epm_branch=${EPM_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
@@ -76,7 +76,8 @@ if [ -d "$ecm_test_dir" ]; then
   echo "eris-cm present on host; not cloning"
   cd $ecm_test_dir
 else
-  git clone $ecm_repo $ecm_dir 1>/dev/null
+  echo -e "Cloning eris-cm to:\t\t$ecm_dir"
+  git clone $ecm_repo $ecm_dir &>/dev/null
   cd $ecm_test_dir 1>/dev/null
   git checkout origin/$ecm_branch &>/dev/null
 fi
@@ -98,7 +99,8 @@ if [ -d "$epm_test_dir" ]; then
   echo "eris-pm present on host; not cloning"
   cd $epm_test_dir
 else
-  git clone $epm_repo $epm_dir 1>/dev/null
+  echo -e "Cloning eris-pm to:\t\t$epm_dir"
+  git clone $epm_repo $epm_dir &>/dev/null
   cd $epm_test_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
 fi
@@ -107,7 +109,7 @@ echo
 # ----------------------------------------------------------------------------
 # Run EPM tests
 
-./test.sh
+tests/test.sh
 test_exit=$?
 check_and_exit
 cd $start
