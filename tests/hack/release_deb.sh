@@ -5,7 +5,7 @@
 
 package=eris
 host_location=/var/www/html
-declare -a distros=( precise trusty utopic vivid wheezy jessie stretch )
+declare -a distros=( precise trusty utopic vivid wheezy jessie stretch wily )
 
 echo "Prepping keys"
 gpg --armor --export 'support@erisindustries.com' > $host_location/APT-GPG-KEY

@@ -15,64 +15,115 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
 
-func RegisterChain(do *definitions.Do) error {
-	// do.Name is mandatory
-	if do.Name == "" {
-		return fmt.Errorf("RegisterChain requires a chainame")
+// MakeChain runs the `eris-cm make` command in a docker container.
+// It returns an error. Note that if do.Known, do.AccountTypes
+// or do.ChainType are not set the command will run via interactive
+// shell.
+//
+//  do.Name          - name of the chain to be created (required)
+//  do.Known         - will use the mintgen tool to parse csv's and create a genesis.json (requires do.ChainMakeVals and do.ChainMakeActs) (optional)
+//  do.ChainMakeVals - csv file to use for validators (optional)
+//  do.ChainMakeActs - csv file to use for accounts (optional)
+//  do.AccountTypes  - use eris-cm make account-types paradigm (example: Root:1,Participants:25,...) (optional)
+//  do.ChainType     - use eris-cm make chain-types paradigm (example: simplechain) (optional)
+//  do.Tarball       - instead of outputing raw files in directories, output packages of tarbals (optional)
+//  do.ZipFile       - similar to do.Tarball except uses zipfiles (optional)
+//  do.Verbose       - verbose output (optional)
+//  do.Debug         - debug output (optional)
+//
+func MakeChain(do *definitions.Do) error {
+	do.Service.Name = do.Name
+	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
+	do.Service.User = "eris"
+	do.Service.AutoData = true
+	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys", do.Operations.ContainerNumber), "keys")}
+	do.Service.Environment = []string{
+		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
+		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
+		fmt.Sprintf("ERIS_CHAINMANAGER_CHAINTYPE=%s", do.ChainType),
+		fmt.Sprintf("ERIS_CHAINMANAGER_TARBALLS=%v", do.Tarball),
+		fmt.Sprintf("ERIS_CHAINMANAGER_ZIPFILES=%v", do.ZipFile),
+		fmt.Sprintf("ERIS_CHAINMANAGER_OUTPUT=%v", do.Output),
+		fmt.Sprintf("ERIS_CHAINMANAGER_VERBOSE=%v", do.Verbose),
+		fmt.Sprintf("ERIS_CHAINMANAGER_DEBUG=%v", do.Debug),
 	}
-	etcbChain := do.ChainID
-	do.ChainID = do.Name
 
-	// NOTE: registration expects you to have the data container
-	if !util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
+	do.Operations.ContainerType = "service"
+	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name, do.Operations.ContainerNumber)
+	do.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	if do.RmD {
+		do.Operations.Remove = true
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
-	if err != nil {
+	if do.Known {
+		log.Debug("Using MintGen rather than eris:cm")
+		do.Service.EntryPoint = "mintgen"
+		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s > %s", do.Name, do.ChainMakeVals, do.ChainMakeActs, path.Join(ErisContainerRoot, "chains", do.Name, "genesis.json"))
+	} else {
+		log.Debug("Using eris:cm rather than MintGen")
+		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
+	}
+
+	if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
+		do.Operations.Interactive = true
+		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
+	}
+
+	if do.Known {
+		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
+		do.Service.WorkDir = path.Join(ErisContainerRoot, "chains", do.Name)
+	}
+
+	doData := definitions.NowDo()
+	doData.Name = do.Name
+	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
+	doData.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	doData.Operations.ContainerType = "service"
+	if do.RmD {
+		defer data.RmData(doData)
+	}
+
+	doData.Source = AccountsTypePath
+	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
+	if err := data.ImportData(doData); err != nil {
 		return err
 	}
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-
-	// set chainid and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
+	doData.Source = ChainTypePath
+	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
+	if err := data.ImportData(doData); err != nil {
+		return err
 	}
-	envVars = append(envVars, do.Env...)
+	chnPath := filepath.Join(ChainsPath, do.Name)
+	if _, err := os.Stat(chnPath); !os.IsNotExist(err) {
+		doData.Source = chnPath
+		doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
+		if err := data.ImportData(doData); err != nil {
+			return err
+		}
+	}
 
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug("Registering chain with")
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	if err := bootDependencies(chain, do); err != nil {
+	if err := perform.DockerExecService(do.Service, do.Operations); err != nil {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
-	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
-	chain.Operations.Args = []string{loaders.ErisChainRegister}
-
-	_, err = perform.DockerRunData(chain.Operations, chain.Service)
-
-	return err
+	doData.Source = path.Join(ErisContainerRoot, "chains")
+	doData.Destination = ErisRoot
+	return data.ExportData(doData)
 }
 
+// ImportChain pulls a chain definition file from IPFS and saves
+// that file into ChainPath. It returns an error.
+//
+//  do.Name          - name of the chain to be imported (required)
+//  do.Path          - path to export to; currently only supports ipfs (example: ipfs:QmVdjShTMLAD6YTEgQ1wen1ym4p19ZWepCYTf1MNC1f1Ft) (required)
+//
 func ImportChain(do *definitions.Do) error {
 	fileName := filepath.Join(ChainsPath, do.Name)
 	if filepath.Ext(fileName) == "" {
@@ -102,6 +153,12 @@ func ImportChain(do *definitions.Do) error {
 	return fmt.Errorf("I do not know how to get that file. Sorry.")
 }
 
+// InspectChain is eris' version of docker inspect. It returns
+// an error.
+//
+//  do.Name            - name of the chain to inspect (required)
+//  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
+//
 func InspectChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -119,6 +176,13 @@ func InspectChain(do *definitions.Do) error {
 	return nil
 }
 
+// LogsChain returns the logs of a chains' service container
+// for display by the user.
+//
+//  do.Name    - name of the chain (required)
+//  do.Follow  - follow the logs until the user sends SIGTERM (optional)
+//  do.Tail    - number of lines to display (can be "all") (optional)
+//
 func LogsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -133,7 +197,11 @@ func LogsChain(do *definitions.Do) error {
 	return nil
 }
 
-// export a chain definition file
+// ExportChain exports a chain definition file to IPFS for easy
+// collaboration between peers.
+//
+//  do.Name - name of the chain (required)
+//
 func ExportChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -158,6 +226,14 @@ To find known chains use: eris chains ls --known`)
 	return nil
 }
 
+// CheckoutChain writes to the ChainPath/HEAD file the name
+// of the chain to be "checked out". It returns an error. This
+// operates similar to git branches and is predominantly a
+// scoping function which is used by other portions of the
+// platform where a --chain flag may otherwise be used.
+//
+//  do.Name - the name of the chain to checkout; if blank will "uncheckout" current chain (optional)
+//
 func CheckoutChain(do *definitions.Do) error {
 	if do.Name == "" {
 		do.Result = "nil"
@@ -173,6 +249,9 @@ func CheckoutChain(do *definitions.Do) error {
 	return util.ChangeHead(do.Name)
 }
 
+// CurrentChain displays the currently in scope (or checked out) chain. It
+// returns an error (which should never be triggered)
+//
 func CurrentChain(do *definitions.Do) error {
 	head, _ := util.GetHead()
 
@@ -186,6 +265,7 @@ func CurrentChain(do *definitions.Do) error {
 	return nil
 }
 
+// TODO: merge with cat
 func PlopChain(do *definitions.Do) error {
 	do.Name = do.ChainID
 	rootDir := path.Join(ErisContainerRoot, "chains", do.ChainID)
@@ -206,6 +286,23 @@ func PlopChain(do *definitions.Do) error {
 	return ExecChain(do)
 }
 
+// TODO: merge with plop
+func CatChain(do *definitions.Do) error {
+	cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
+	if err != nil {
+		return err
+	}
+	// Let's actually WRITE this to the GlobalConfig.Writer...
+	log.Warn(string(cat))
+	return nil
+
+}
+
+// PortsChain displays the port mapping for a particular chain.
+// It returns an error.
+//
+//  do.Name - name of the chain to display port mappings for (required)
+//
 func PortsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
@@ -220,6 +317,13 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
+// EditChain is an easy way to edit a chain definition file
+// it uses eris-ltd/common/go/common/dirs_and_files.go 's editor
+// function to determine the editor for the current shell and
+// to utilize that (or VIM by default) (sorry emacs folks).
+//
+//  do.Name - name of the chain to edit its chain definition files (required)
+//
 func EditChain(do *definitions.Do) error {
 	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
 	log.WithField("file", chainDefFile).Info("Editing chain definition")
@@ -365,17 +469,6 @@ func GraduateChain(do *definitions.Do) error {
 	return nil
 }
 
-func CatChain(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
-	if err != nil {
-		return err
-	}
-	// Let's actually WRITE this to the GlobalConfig.Writer...
-	log.Warn(string(cat))
-	return nil
-
-}
-
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
@@ -392,4 +485,57 @@ func exportFile(chainName string) (string, error) {
 	}
 
 	return hash, nil
+}
+
+// TODO: remove
+func RegisterChain(do *definitions.Do) error {
+	// do.Name is mandatory
+	if do.Name == "" {
+		return fmt.Errorf("RegisterChain requires a chainame")
+	}
+	etcbChain := do.ChainID
+	do.ChainID = do.Name
+
+	// NOTE: registration expects you to have the data container
+	if !util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
+	}
+
+	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	if err != nil {
+		return err
+	}
+	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
+
+	// set chainid and other vars
+	envVars := []string{
+		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
+		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
+		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
+		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
+	}
+	envVars = append(envVars, do.Env...)
+
+	log.WithFields(log.Fields{
+		"environment": envVars,
+		"links":       do.Links,
+	}).Debug("Registering chain with")
+	chain.Service.Environment = append(chain.Service.Environment, envVars...)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
+
+	if err := bootDependencies(chain, do); err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"=>":    chain.Service.Name,
+		"image": chain.Service.Image,
+	}).Debug("Performing chain container start")
+	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
+	chain.Operations.Args = []string{loaders.ErisChainRegister}
+
+	_, err = perform.DockerRunData(chain.Operations, chain.Service)
+
+	return nil
 }

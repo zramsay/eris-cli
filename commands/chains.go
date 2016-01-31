@@ -38,9 +38,10 @@ away!`,
 
 // Build the chains subcommand
 func buildChainsCommand() {
+	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
-	Chains.AddCommand(chainsRegister)
-	Chains.AddCommand(chainsInstall)
+	// Chains.AddCommand(chainsRegister)
+	// Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListAll)
 	Chains.AddCommand(chainsCheckout)
@@ -59,15 +60,58 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
-	Chains.AddCommand(chainsMakeGenesis)
+	// Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
 
 // Chains Sub-sub-Commands
+var chainsMake = &cobra.Command{
+	Use:   "make NAME",
+	Short: "Create keys and a genesis block for your chain.",
+	Long: `Create the new required files for your chain.
+
+Make is an opinionated gateway to the basic types of chains which most eris users
+will make most of the time. Make is a command line wizard in which you will let
+the marmots know how you would like your genesis created.
+
+Make can also be used with a variety of flags for fast chain making.
+
+When using make with the --known flag the marmots will *not* create keys for you
+and will instead assume that the keys exist somewhere. When using make with the
+wizard (no flags) or when using with the other flags then keys will be made along
+with the genesis.jsons and priv_validator.jsons so that everything is ready to go
+for you to [eris chains new].
+
+Optionally chains make provides packages of outputed priv_validator and genesis.json
+which you can email or send on your slack to your coworkers. These packages can
+be tarballs or zip files, and **they will contain the private keys** so please
+be aware of that.
+
+The make process will *not* start a chain for you. You will want to use
+
+[eris chains new chainName --dir chainName]
+
+for that which will import all of the files which make creates into containers and
+start your shiny new chain.
+
+If you have any questions on eris chains make, please see the eris-cm (chain manager)
+documentation here:
+https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/
+`,
+	Example: `$ eris chains make myChain -- will use the chain-making wizard and make your chain named myChain (interactive)
+$ eris chains make myChain --chain-type=simplechain --  will use the chain type definition files to make your chain named myChain (non-interactive)
+$ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
+$ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 --chain-type=simplechain -- account types trump chain types, this command will use the flags to make the chain (non-interactive)
+$ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
+$ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains
+`,
+	Run: MakeChain,
+}
+
 var chainsNew = &cobra.Command{
 	Use:   "new NAME",
-	Short: "Create a new blockhain.",
-	Long: `Create a new blockchain.
+	Short: "Create and start a new blockhain.",
+	Long: `Create and start a new blockchain.
 
 The creation process will both create a blockchain on the current machine
 as well as start running that chain.
@@ -80,17 +124,15 @@ utilize [eris chains update NAME -p] to update the blockchain appropriately
 for eris:db).
 
 Will use a default genesis.json from ~/.eris/chains/default/genesis.json
-unless a --genesis flag is passed.
+unless a --genesis or --dir flag is passed.
 
 Will use a default config.toml from ~/.eris/chains/default/config.toml
-unless the --options flag is passed.
+unless the --options or --dir flag is passed.
 
 Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
-unless the --serverconf flag is passed.
+unless the --serverconf or --dir flag is passed.
 
-For more complex blockchain creation, you will want to "hand craft" a genesis.json
-see our tutorial for chain creation here:
-https://docs.erisindustries.com/tutorials/chainmaking/`,
+If you would like to create a genesis.json then please utilize [eris chains make]`,
 	Run: NewChain,
 }
 
@@ -182,9 +224,9 @@ var chainsPorts = &cobra.Command{
 	Short: "Print port mappings.",
 	Long: `Print port mappings.
 
-The [eris chains ports] command is mostly a developer 
-convenience function. It returns a machine readable 
-port mapping of a port which is exposed inside the 
+The [eris chains ports] command is mostly a developer
+convenience function. It returns a machine readable
+port mapping of a port which is exposed inside the
 container to what that port is mapped to on the host.
 
 This is useful when stitching together chain networks which
@@ -360,43 +402,53 @@ see https://github.com/eris-ltd/mint-client for more info`,
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account_types; incompatible with and overrides chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain_types")
+	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in ~/.eris/chains, make tarballs; incompatible with and overrides zip")
+	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in ~/.eris/chains, make zip files")
+	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
+	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
+	buildFlag(chainsMake, do, "data", "chain-make")
 
-	buildFlag(chainsNew, do, "config", "chain")
-	buildFlag(chainsNew, do, "csv", "chain")
-	buildFlag(chainsNew, do, "serverconf", "chain")
+	// [csk]: the flags below are commented out to reduce the complexity of this command. chains new should just use dirs....
+	// buildFlag(chainsNew, do, "config", "chain")
+	// buildFlag(chainsNew, do, "csv", "chain")
+	// buildFlag(chainsNew, do, "serverconf", "chain")
+	// chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
+	// chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
+	// chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
+	// chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
 	buildFlag(chainsNew, do, "api", "chain")
-	chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
-	chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
-	chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
-	chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
-	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "overwrite data in  ~/.eris/data/chainName")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
+	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", true, "overwrite data in  ~/.eris/data/chainName")
+	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", true, "turn on logsrotate as a dependency to handle long output")
 
-	buildFlag(chainsRegister, do, "links", "chain")
-	buildFlag(chainsRegister, do, "env", "chain")
-	chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
-	chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
-	chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
+	// buildFlag(chainsRegister, do, "links", "chain")
+	// buildFlag(chainsRegister, do, "env", "chain")
+	// chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
+	// chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
+	// chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
 
-	buildFlag(chainsInstall, do, "publish", "chain")
-	buildFlag(chainsInstall, do, "links", "chain")
-	buildFlag(chainsInstall, do, "env", "chain")
-	buildFlag(chainsInstall, do, "config", "chain")
-	buildFlag(chainsInstall, do, "serverconf", "chain")
-	buildFlag(chainsInstall, do, "dir", "chain")
-	chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
-	chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
-	chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
+	// buildFlag(chainsInstall, do, "publish", "chain")
+	// buildFlag(chainsInstall, do, "links", "chain")
+	// buildFlag(chainsInstall, do, "env", "chain")
+	// buildFlag(chainsInstall, do, "config", "chain")
+	// buildFlag(chainsInstall, do, "serverconf", "chain")
+	// buildFlag(chainsInstall, do, "dir", "chain")
+	// chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
+	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
+	// chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
 
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	buildFlag(chainsStart, do, "api", "chain")
-	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
+	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", true, "turn on logsrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
 	buildFlag(chainsLogs, do, "tail", "chain")
@@ -478,6 +530,29 @@ func InstallChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.InstallChain(do))
+}
+
+// make the genesis files for a chain
+//
+// MakeChain will assemble the necessary files for a new blockchain. it does not
+// actually make the chain or start it (that happens in new), but it does create
+// the predicate files for more complex chains than is typically used in default
+func MakeChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
+		cmd.Help()
+		IfExit(fmt.Errorf("\nIf you are using the --known flag the --validators *and* the --accounts flags are both required."))
+	}
+	if len(do.AccountTypes) > 0 && do.ChainType != "" {
+		cmd.Help()
+		IfExit(fmt.Errorf("\nThe --account-types flag is incompatible with the --chain-type flag. Please use one or the other."))
+	}
+	if (len(do.AccountTypes) > 0 || do.ChainType != "") && do.Known {
+		cmd.Help()
+		IfExit(fmt.Errorf("\nThe --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these."))
+	}
+	IfExit(chns.MakeChain(do))
 }
 
 // create a new chain

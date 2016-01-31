@@ -27,19 +27,19 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/ipfs",
-			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "1f7474dd7c0f7e0b602afac18bd7b1b53dfd18a6"
+			"Rev": "31d06f51b52a9f2e841db234eb53997f2e4cd860"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "ef410296f87750305e1e1acf9ad2ba3833dcb004"
+			"Rev": "02a8beb401b20e112cff3ea740545960b667eab1"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",

@@ -57,7 +57,6 @@ export ERIS_MIGRATE_APPROVE="true"
 
 announce() {
   echo
-  echo
   echo "Testing against"
   echo -e "\tMachine name:\t$machine"
   echo
@@ -77,8 +76,8 @@ setup() {
     touch $HOME/.eris/eris.toml
   fi
 
-  # needed for clean package tests
-  docker pull busybox &>/dev/null
+  echo "Checking the Host <-> Docker Connection"
+  docker pull busybox &>/dev/null # needed for clean package tests; also tester for docker connection
   if [ $? -ne 0 ] && [ -z $1 ]
   then
     echo "Could not connect to Docker backend. Attempting to regenerate certificates."
@@ -89,79 +88,79 @@ setup() {
   then
     flame_out
   fi
+  echo "Docker connection established"
 
-  eris init --yes --pull-images=true --testing=true
+  echo "Initializing eris (this may take a few moments)"
+  eris init --yes --pull-images=true --testing=true &>/dev/null
+  if [ $? -ne 0 ]
+  then
+    flame_out
+  fi
+  echo "Eris initialized."
+
   echo
+  echo "Docker API Information"
+  echo
+  docker version
+  if [ $? -ne 0 ]
+  then
+    flame_out
+  fi
+
+  echo
+  echo "Checking the Eris <-> Docker Connection"
+  echo
+  eris version
+  if [ $? -ne 0 ]
+  then
+    flame_out
+  fi
 }
 
 packagesToTest() {
-  go test ./initialize/...
-  passed Initialize
+  go test ./initialize/... && passed Initialize
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./util/...
-  passed Util
+  go test ./util/... && passed Util
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./config/...
-  passed Config
+  go test ./config/... && passed Config
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./perform/...
-  passed Perform
+  go test ./perform/... && passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./data/...
-  passed Data
+  go test ./data/... && passed Data
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./files/...
-  passed Files
+  go test ./files/... && passed Files
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./services/...
-  passed Services
+  go test ./services/... && passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./chains/...
-  passed Chains
+  go test ./chains/... && passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./keys/...
-  passed Keys
+  go test ./keys/... && passed Keys
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./contracts/...
-  passed Contracts
+  go test ./contracts/... && passed Contracts
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./actions/...
-  passed Actions
+  go test ./actions/... && passed Actions
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./clean/...
-  passed Clean
-  if [ $? -ne 0 ]; then return 1; fi
-  # go test ./projects/...
-  # passed Projects
+  # go test ./remotes/... && passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  # go test ./remotes/...
-  # passed Remotes
+  # go test ./apps/... && passed Apps
   # if [ $? -ne 0 ]; then return 1; fi
-  go test ./commands/...
-  passed Commands
+  go test ./commands/... && passed Commands
   if [ $? -ne 0 ]; then return 1; fi
-
-  # Now! Stack based tests
-  if [[ "$machine" != eris-test-win* ]]
+  go test ./clean/... && passed Clean
+  if [ $? -ne 0 ]; then return 1; fi
+  if [[ "$SKIP_STACK" != "true" ]] # the appveyor.yml currently SKIP_STACK; otherwise this is here if faster testing needed; set in your shell before calling tests/test.sh or tests/test_tool.sh
   then
-    if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
-    then
-      $HOME/test_stack.sh
-    else
-      tests/test_stack.sh
-    fi
-    passed Stack
+    echo "Running Stack Tests"
+    echo
+    tests/test_stack.sh && passed Stack
   fi
-  return $?
 }
 
 passed() {
   if [ $? -eq 0 ]
   then
     echo
-    echo
     echo "*** Congratulations! *** $1 Package Level Tests Have Passed on Machine: $machine"
-    echo
     echo
     return 0
   else
@@ -186,7 +185,7 @@ report() {
 
 flame_out() {
   echo
-  echo "Could not connect to docker daemon. Dumping information =>"
+  echo "Could not connect to setup for tests. Dumping information =>"
   echo
   ls -la $HOME/.docker/machine/machines/$machine/
   echo
@@ -215,23 +214,8 @@ else
   connect
   setup
 fi
-
-# Once machine is turned on, display docker information
-echo
-echo "Docker API Information"
-echo
-docker version
-echo
-
-# Init eris with debug flag to check the connection to docker backend
-echo
-echo "Checking the Eris <-> Docker Connection"
-echo
-eris version
-echo
 passed Setup
 
-# Perform package level tests run only if eris init ran without problem
 if [[ $machine == "eris-test-local" ]]
 then
   if [[ $1 == "local" ]]
@@ -249,6 +233,5 @@ test_exit=$?
 # Clean up and report
 
 report
-
 cd $start
 exit $test_exit
