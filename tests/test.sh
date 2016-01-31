@@ -292,7 +292,7 @@ perform_tests() {
 }
 
 cleanup_tests(){
-  # remove_machines
+  remove_machines
   echo
   echo
   echo "Your summary good human...."
