@@ -71,6 +71,7 @@ check_and_exit() {
 # ----------------------------------------------------------------------------
 # Get ECM
 
+echo
 if [ -d "$ecm_test_dir" ]; then
   echo "eris-cm present on host; not cloning"
   cd $ecm_test_dir
@@ -79,6 +80,7 @@ else
   cd $ecm_test_dir 1>/dev/null
   git checkout origin/$ecm_branch &>/dev/null
 fi
+echo
 
 # ----------------------------------------------------------------------------
 # Run ECM tests
@@ -91,6 +93,7 @@ cd $start
 # ----------------------------------------------------------------------------
 # Get EPM
 
+echo
 if [ -d "$epm_test_dir" ]; then
   echo "eris-pm present on host; not cloning"
   cd $epm_test_dir
@@ -99,6 +102,7 @@ else
   cd $epm_test_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
 fi
+echo
 
 # ----------------------------------------------------------------------------
 # Run EPM tests

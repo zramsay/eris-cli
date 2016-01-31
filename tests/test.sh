@@ -210,18 +210,17 @@ test_tool_in_docker() {
   echo "Starting Eris Docker container."
   if [ "$ci" = true ]
   then
-    docker run --name test_tool --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 > $CIRCLE_ARTIFACTS/$1.log
+    docker run --name test_tool --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
   else
-    docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 > $CIRCLE_ARTIFACTS/$1.log
+    docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
   fi
-  docker logs --tail=all test_tool > $CIRCLE_ARTIFACTS/$1-tail.log
-  log_machine
+  log_machine $?
 }
 
 # Adds the results for a particular box to the MACH_RESULTS array
 #   which is displayed at the end of the tests.
 log_machine() {
-  if [ "$test_exit" -eq 0 ]
+  if [ "$test_exit" -eq 0 ] || [ "$1" -eq 0 ]
   then
     MACH_RESULTS+=( "$machine is Green!" )
   else
@@ -273,14 +272,15 @@ perform_tests() {
   do
     if [[ "$machine" == *1.8* ]]
     then
-      if [ $linux ]
+      if [ $ci ] && [ $linux ] # only do this in circle
       then
+        # non current docker versions still supported need to use a DinD strategy to get around API types mismatch
         find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} +
-        test_tool_in_docker "docker18" & # non current docker versions still supported need to use a DinD strategy to get around API types mismatch
+        test_tool_in_docker "docker18" &
         docker18_result=$!
       else
         echo "Not building in Circle. Skipping this machine."
-        docker18_result=$!
+        docker18_result=$! # if we don't give the var a result it will wait forever
       fi
     else
       export MACHINE_NAME=$machine && tests/test_tool.sh

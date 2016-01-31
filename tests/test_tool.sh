@@ -152,7 +152,12 @@ packagesToTest() {
   then
     echo "Running Stack Tests"
     echo
-    tests/test_stack.sh && passed Stack
+    if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+    then
+      $HOME/test_stack.sh && passed Stack
+    else
+      tests/test_stack.sh && passed Stack
+    fi
   fi
 }
 
