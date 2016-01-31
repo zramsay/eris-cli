@@ -60,6 +60,7 @@ entrypoint="/home/eris/test_tool.sh"
 testimage=quay.io/eris/eris
 testuser=eris
 remotesocket=2376
+hostsocket=6732
 dm_path=".docker/machine"
 strt=`pwd`
 
@@ -210,9 +211,9 @@ test_tool_in_docker() {
   echo "Starting Eris Docker container."
   if [ "$ci" = true ]
   then
-    docker run --name test_tool --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
+    docker run --name test_tool --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $hostsocket:$remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
   else
-    docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
+    docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $hostsocket:$remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
   fi
   log_machine $?
 }
