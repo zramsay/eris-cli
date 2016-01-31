@@ -220,7 +220,7 @@ test_tool_in_docker() {
 # Adds the results for a particular box to the MACH_RESULTS array
 #   which is displayed at the end of the tests.
 log_machine() {
-  if [ "$test_exit" -eq 0 ] || [ "$1" -eq 0 ]
+  if [ "$1" -eq 0 ]
   then
     MACH_RESULTS+=( "$machine is Green!" )
   else
@@ -285,7 +285,7 @@ perform_tests() {
     else
       export MACHINE_NAME=$machine && tests/test_tool.sh
       test_exit=$?
-      log_machine
+      log_machine $test_exit
     fi
   done
   wait $docker18_result
