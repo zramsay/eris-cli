@@ -48,13 +48,11 @@ export ERIS_MIGRATE_APPROVE="true"
 ecm=eris-cm
 ecm_repo=https://github.com/eris-ltd/$ecm.git
 ecm_dir=$repo/../$ecm
-ecm_test_dir=$repo/../$ecm
 ecm_branch=${ECM_BRANCH:=master}
 
 epm=eris-pm
 epm_repo=https://github.com/eris-ltd/$epm.git
 epm_dir=$repo/../$epm
-epm_test_dir=$repo/../$epm
 epm_branch=${EPM_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
@@ -72,13 +70,13 @@ check_and_exit() {
 # Get ECM
 
 echo
-if [ -d "$ecm_test_dir" ]; then
+if [ -d "$ecm_dir" ]; then
   echo "eris-cm present on host; not cloning"
-  cd $ecm_test_dir
+  cd $ecm_dir
 else
   echo -e "Cloning eris-cm to:\t\t$ecm_dir"
   git clone $ecm_repo $ecm_dir &>/dev/null
-  cd $ecm_test_dir 1>/dev/null
+  cd $ecm_dir 1>/dev/null
   git checkout origin/$ecm_branch &>/dev/null
 fi
 echo
@@ -95,13 +93,13 @@ cd $start
 # Get EPM
 
 echo
-if [ -d "$epm_test_dir" ]; then
+if [ -d "$epm_dir" ]; then
   echo "eris-pm present on host; not cloning"
-  cd $epm_test_dir
+  cd $epm_dir
 else
   echo -e "Cloning eris-pm to:\t\t$epm_dir"
   git clone $epm_repo $epm_dir &>/dev/null
-  cd $epm_test_dir 1>/dev/null
+  cd $epm_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
 fi
 echo
