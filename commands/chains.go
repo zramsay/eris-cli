@@ -40,13 +40,10 @@ away!`,
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
-	// Chains.AddCommand(chainsRegister)
-	// Chains.AddCommand(chainsInstall)
 	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsListAll)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
-	Chains.AddCommand(chainsPlop)
 	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
@@ -167,7 +164,6 @@ Install an existing erisdb based blockchain for use locally.
 	Run: InstallChain,
 }
 
-//lists all or specify a flag
 var chainsListAll = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists everything chain related.",
@@ -177,9 +173,6 @@ chain (--running).
 
 If no known chains exist yet, create a new blockchain with: [eris chains new NAME]
 command.
-
-To install and fetch a blockchain from a chain definition file,
-use [eris chains install NAME] command.
 
 Services are handled using the [eris services] command.`,
 	Run: ListAllChains,
@@ -210,13 +203,6 @@ passing in a --chain flag. If a --chain is passed to any command accepting
 If command is given without arguments it will clear the head and there will
 be no chain checked out.`,
 	Run: CheckoutChain,
-}
-
-var chainsPlop = &cobra.Command{
-	Use:   "plop",
-	Short: "Plop the genesis or config file",
-	Long:  "Display the genesis or config file in a machine readable output.",
-	Run:   PlopChain,
 }
 
 var chainsPorts = &cobra.Command{
@@ -378,11 +364,13 @@ functions have more convenience functions for working "on" chains themselves.`,
 }
 
 var chainsCat = &cobra.Command{
-	Use:   "cat NAME",
-	Short: "Display chains definition file.",
-	Long: `Display chains definition file.
-
-Command will cat local chains definition file.`,
+	Use:     "cat NAME [config|genesis]",
+	Short:   "Display chain information.",
+	Long:    `Display chain information.`,
+	Aliases: []string{"plop"},
+	Example: `$ eris chains cat simplechain -- will display the chain definition file
+$ eris chains cat simplechain config -- will display the config.toml file from inside the container
+$ eris chains cat simplechain genesis -- will display the genesis.json file from the container`,
 	Run: CatChain,
 }
 
@@ -458,6 +446,7 @@ func addChainsFlags() {
 	buildFlag(chainsExec, do, "links", "chain")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
 
+	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "file", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
@@ -594,14 +583,15 @@ func CurrentChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.CurrentChain(do))
 }
 
-func PlopChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.ChainID = args[0]
-	do.Type = args[1]
-	if len(args) > 2 {
-		do.Operations.Args = args[2:]
+func CatChain(cmd *cobra.Command, args []string) {
+	// [csk]: if no args should we just start the checkedout chain?
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Type = "toml"
+	if len(args) > 1 {
+		do.Type = args[1]
 	}
-	IfExit(chns.PlopChain(do))
+	IfExit(chns.CatChain(do))
 }
 
 func PortsChain(cmd *cobra.Command, args []string) {
@@ -665,7 +655,7 @@ func ListAllChains(cmd *cobra.Command, args []string) {
 	if err := list.ListAll(do, "chains"); err != nil {
 		return
 	}
-	if !do.All { //do.All will output a pretty table on its own
+	if !do.All {
 		fmt.Println(do.Result)
 	}
 }
@@ -695,13 +685,6 @@ func GraduateChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.GraduateChain(do))
-}
-
-func CatChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.CatChain(do))
 }
 
 func MakeGenesisFile(cmd *cobra.Command, args []string) {

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -265,37 +266,38 @@ func CurrentChain(do *definitions.Do) error {
 	return nil
 }
 
-// TODO: merge with cat
-func PlopChain(do *definitions.Do) error {
-	do.Name = do.ChainID
-	rootDir := path.Join(ErisContainerRoot, "chains", do.ChainID)
+// CatChain displays chain information. It returns nil on success, or input/output
+// errors otherwise.
+//
+//  do.Name - chain name
+//  do.Type - "toml", "genesis", or "config".
+//
+func CatChain(do *definitions.Do) error {
+	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
 	switch do.Type {
 	case "genesis":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
+		// [pv]: can't have 0.0.0.0 on OSX or Windows.
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
 	case "validators":
+		// [pv]: can't have 0.0.0.0 on OSX or Windows.
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "validators"}
+	case "toml":
+		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
+		if err != nil {
+			return err
+		}
+		config.GlobalConfig.Writer.Write(cat)
+		return nil
 	default:
-		return fmt.Errorf("unknown plop option %s", do.Type)
+		return fmt.Errorf("unknown cat subcommand %q", do.Type)
 	}
-	do.Operations.PublishAllPorts = true // avoid port conflict
+	do.Operations.PublishAllPorts = true
 	log.WithField("args", do.Operations.Args).Debug("Executing command")
 	return ExecChain(do)
-}
-
-// TODO: merge with plop
-func CatChain(do *definitions.Do) error {
-	cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
-	if err != nil {
-		return err
-	}
-	// Let's actually WRITE this to the GlobalConfig.Writer...
-	log.Warn(string(cat))
-	return nil
-
 }
 
 // PortsChain displays the port mapping for a particular chain.
@@ -436,7 +438,7 @@ func RmChain(do *definitions.Do) error {
 	}
 
 	if IsChainExisting(chain) {
-		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes); err != nil {
+		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
 			return err
 		}
 	} else {

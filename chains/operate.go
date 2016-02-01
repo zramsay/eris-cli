@@ -67,7 +67,7 @@ func KillChain(do *definitions.Do) error {
 	}
 
 	if do.Rm {
-		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes); err != nil {
+		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
 			return err
 		}
 	}
@@ -514,7 +514,7 @@ func CleanUp(do *definitions.Do) error {
 
 	if do.Rm {
 		log.WithField("=>", do.Operations.SrvContainerName).Debug("Removing tmp service container")
-		perform.DockerRemove(do.Service, do.Operations, true, true)
+		perform.DockerRemove(do.Service, do.Operations, true, true, false)
 	}
 
 	return nil
