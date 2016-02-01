@@ -67,8 +67,6 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		enc.Encode(serviceDef.Maintainer)
 		writer.Write([]byte("\n[location]\n"))
 		enc.Encode(serviceDef.Location)
-		writer.Write([]byte("\n[machine]\n"))
-		enc.Encode(serviceDef.Machine)
 	}
 	return nil
 }
