@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -14,9 +15,16 @@ import (
 )
 
 func Clean(prompt, all, rmd, images bool) error {
+	// [zr]: TODO better prompt solution
 
 	//do this always
 	if err := defaultClean(prompt); err != nil {
+		return err
+	}
+
+	//also do this always
+
+	if err := cleanScratchData(); err != nil {
 		return err
 	}
 
@@ -73,11 +81,29 @@ func defaultClean(prompt bool) error {
 					return err
 				}
 			}
-
 		}
 	}
 	return nil
+}
 
+func cleanScratchData() error {
+	d, err := os.Open(common.DataContainersPath)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(common.DataContainersPath, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func removeErisDir(prompt bool) error {
