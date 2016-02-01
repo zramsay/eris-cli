@@ -215,7 +215,6 @@ test_tool_in_docker() {
   else
     docker run --name test_tool --rm --volume $HOME/$dm_path:/home/$testuser/$dm_path --entrypoint $entrypoint -e MACHINE_NAME=$machine -p $hostsocket:$remotesocket --user $testuser $testimage:$1 &> $CIRCLE_ARTIFACTS/$1.log
   fi
-  log_machine $?
 }
 
 # Adds the results for a particular box to the MACH_RESULTS array
@@ -275,21 +274,25 @@ perform_tests() {
     then
       if [ $ci ] && [ $linux ] # only do this in circle
       then
-        # non current docker versions still supported need to use a DinD strategy to get around API types mismatch
-        find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} +
+        docker18_machine=$machine
+        find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} + # non current docker versions still supported need to use a DinD strategy
         test_tool_in_docker "docker18" &
         docker18_result=$!
-      else
-        echo "Not building in Circle. Skipping this machine."
-        docker18_result=$! # if we don't give the var a result it will wait forever
       fi
     else
+      docker_cur_machine=$machine
       export MACHINE_NAME=$machine && tests/test_tool.sh
       test_exit=$?
-      log_machine $test_exit
     fi
   done
-  wait $docker18_result
+  if [ $ci ] && [ $linux ] # only do this in circle
+  then
+    machine=$docker18_machine
+    wait $docker18_result
+    log_machine $?
+  fi
+  machine=$docker_cur_machine
+  log_machine $test_exit
 }
 
 cleanup_tests(){
