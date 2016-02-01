@@ -236,6 +236,7 @@ func addServicesFlags() {
 	buildFlag(servicesUpdate, do, "env", "service")
 	buildFlag(servicesUpdate, do, "links", "service")
 
+	buildFlag(servicesRm, do, "force", "service")
 	buildFlag(servicesRm, do, "file", "service")
 	buildFlag(servicesRm, do, "data", "service")
 	buildFlag(servicesRm, do, "rm-volumes", "service")
