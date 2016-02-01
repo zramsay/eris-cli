@@ -15,7 +15,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/loaders"
-	tests "github.com/eris-ltd/eris-cli/testutils"
+	tests "github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
@@ -38,11 +38,8 @@ func TestMain(m *testing.M) {
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
-
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		tests.IfExit(tests.TestsTearDown())
-	}
-
+	log.Info("Tearing tests down")
+	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 
@@ -205,10 +202,8 @@ func TestUpdateService(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	start(t, servName, false)
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		t.Log("Testing in Circle where we don't have rm privileges. Skipping test")
-		return
-	}
+	testStartService(t, servName, false)
+	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
 	do.Name = servName
@@ -255,10 +250,6 @@ func TestKillService(t *testing.T) {
 
 func TestRmService(t *testing.T) {
 	defer tests.RemoveAllContainers()
-
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		t.Skip("Testing in Circle where we don't have rm privileges. Skipping test")
-	}
 
 	start(t, servName, false)
 	if n := util.HowManyContainersRunning(servName, def.TypeService); n != 1 {

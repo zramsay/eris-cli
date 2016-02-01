@@ -1,49 +1,25 @@
 package apps
 
 import (
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/eris-ltd/eris-cli/definitions"
 )
 
-func Get(cmd *cobra.Command, args []string) {
+func NewApps(do *definitions.Do) error {
 
+	return nil
 }
 
-func New(cmd *cobra.Command, args []string) {
+func InstallApps(do *definitions.Do) error {
 
+	return nil
 }
 
-func Add(cmd *cobra.Command, args []string) {
+func EditApps(do *definitions.Do) error {
 
+	return nil
 }
 
-func Install(cmd *cobra.Command, args []string) {
+func RmApps(do *definitions.Do) error {
 
-}
-
-func ListProjects() {
-
-}
-
-func ListServices(cmd *cobra.Command, args []string) {
-
-}
-
-func ListActions(cmd *cobra.Command, args []string) {
-
-}
-
-func Rename(cmd *cobra.Command, args []string) {
-
-}
-
-func Redefine(cmd *cobra.Command, args []string) {
-
-}
-
-func Rm(cmd *cobra.Command, args []string) {
-
-}
-
-func Clean(cmd *cobra.Command, args []string) {
-
+	return nil
 }

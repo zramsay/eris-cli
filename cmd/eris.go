@@ -85,8 +85,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Actions)
 
 	// TODO
-	// buildAppsCommand()
-	// ErisCmd.AddCommand(Apps)
+	// buildApplicationsCommand()
+	// ErisCmd.AddCommand(Applications)
 	// buildRemotesCommand()
 	// ErisCmd.AddCommand(Remotes)
 
@@ -95,6 +95,11 @@ func AddCommands() {
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
 	ErisCmd.AddCommand(ListEverything)
+
+	// TODO
+	// buildAgentsCommand()
+	// ErisCmd.AddCommand(Agents)
+
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()

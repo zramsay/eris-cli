@@ -9,7 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	tests "github.com/eris-ltd/eris-cli/testutils"
+	tests "github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -28,11 +28,7 @@ func TestMain(m *testing.M) {
 	tests.RemoveAllContainers()
 
 	exitCode := m.Run()
-
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		tests.IfExit(tests.TestsTearDown())
-	}
-
+	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 

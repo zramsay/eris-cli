@@ -125,7 +125,7 @@ func GetConfigValue(key string) string {
 
 // TODO: [by csk] refactor this and DRY it up as this function really should be in common (without the globalConfig object of course)
 func ChangeErisDir(erisDir string) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+	if os.Getenv("TESTING") == "true" {
 		return
 	}
 

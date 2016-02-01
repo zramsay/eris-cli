@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	tests "github.com/eris-ltd/eris-cli/testutils"
+	tests "github.com/eris-ltd/eris-cli/tests"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -32,20 +32,12 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
-		erisDir = os.Getenv("HOME")
-	}
-
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	tests.IfExit(testsInit())
 	exitCode := m.Run()
-
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		tests.IfExit(tests.TestsTearDown())
-	}
-
+	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 
