@@ -7,7 +7,7 @@ machine:
     TEST_MINT_CLIENT_BRANCH: staging
     TEST_MINDY_BRANCH: staging
     DOCKER_VERSION: 1.9.1
-    DOCKER_MACHINE_VERSION: 0.5.6
+    DOCKER_MACHINE_VERSION: 0.5.4
   post:
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
