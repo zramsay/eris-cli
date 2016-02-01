@@ -6,9 +6,9 @@ install:
 - eval "$(gimme 1.5)"
 - brew update
 - brew install docker docker-machine jq
-# - echo "change the below when `docker-machine --version | cut -d ' ' -f 3` is at 0.5.4"
-# - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.5.4/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine"
-# - sudo chmod +x /usr/local/bin/docker-machine
+- echo "change the below when `docker-machine --version | cut -d ' ' -f 3` is at 0.5.4"
+- sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.5.4/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine"
+- sudo chmod +x /usr/local/bin/docker-machine
 
 script:
 - go install ./cmd/eris
