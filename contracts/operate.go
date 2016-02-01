@@ -287,7 +287,7 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		doRemove := definitions.NowDo()
 		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
 		log.WithField("=>", doRemove.Operations.SrvContainerName).Debug("Removing data container")
-		if err := perform.DockerRemove(nil, doRemove.Operations, false, true); err != nil {
+		if err := perform.DockerRemove(nil, doRemove.Operations, false, true, false); err != nil {
 			return err
 		}
 	}

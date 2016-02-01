@@ -66,7 +66,7 @@ func RmData(do *definitions.Do) (err error) {
 			srv := definitions.BlankServiceDefinition()
 			srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
 
-			if err = perform.DockerRemove(srv.Service, srv.Operations, false, do.Volumes); err != nil {
+			if err = perform.DockerRemove(srv.Service, srv.Operations, false, do.Volumes, false); err != nil {
 				log.Errorf("Error removing %s: %v", do.Name, err)
 				return err
 			}

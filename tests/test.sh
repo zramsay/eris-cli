@@ -172,12 +172,18 @@ sort_machines() {
     then
       go run setup.go 1>/dev/null
       MACHINES=( $(docker-machine ls -q) )
+      setup_result=$?
     else
       MACHINES=( $(go run setup.go) )
+      setup_result=$?
     fi
   fi
   kill $ticker
   wait $ticker 2>/dev/null
+  if [ "$setup_result" -ne 0 ]
+  then
+    return 1
+  fi
   cd $repo
   echo
   echo "Machines sorted."

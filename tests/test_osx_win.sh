@@ -66,7 +66,7 @@ check_build() {
   then
     echo "Could not make machines. Rebuilding machines."
     remove_machines
-    sleep 5
+    sleep 15
     sort_machines
     machi_result=$?
     check_build "rebuild"
@@ -90,12 +90,18 @@ sort_machines() {
   if [ "$ci" = true ]
   then
     go run setup.go 1>/dev/null
+    setup_result=$?
     MACHINES=( $(docker-machine ls -q) )
   else
     MACHINES=( $(go run setup.go) )
+    setup_result=$?
   fi
   kill $ticker
   wait $ticker 2>/dev/null
+  if [ "$setup_result" -ne 0 ]
+  then
+    return 1
+  fi
   cd $repo
   for machine in "${MACHINES[@]}"
   do
@@ -122,15 +128,10 @@ log_machine() {
 
 # remove the machines
 remove_machines() {
-  if [ "$ci" = true ]
-  then
-    docker-machine rm --force $(docker-machine ls -q)
-  else
-    for machine in "${MACHINES[@]}"
-    do
-      docker-machine rm --force $machine
-    done
-  fi
+  for machine in "${MACHINES[@]}"
+  do
+    docker-machine rm --force $machine
+  done
 }
 
 # ----------------------------------------------------------------------------

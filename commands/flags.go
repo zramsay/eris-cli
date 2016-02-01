@@ -65,8 +65,8 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "file":
 		if typ == "action" {
 			cmd.Flags().BoolVarP(&do.File, "file", "f", false, fmt.Sprintf("remove %s definition file", typ))
-		} else { //typ == "chain" || typ == "service"
-			cmd.Flags().BoolVarP(&do.File, "file", "f", false, fmt.Sprintf("remove %s definition file as well as %s container", typ, typ))
+		} else {
+			cmd.Flags().BoolVarP(&do.File, "file", "", false, fmt.Sprintf("remove %s definition file as well as %s container", typ, typ))
 		}
 	case "chain":
 		if typ == "service" {

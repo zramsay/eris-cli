@@ -86,7 +86,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 	// Clean up the container.
 	defer func() {
 		log.WithField("=>", opts.Name).Info("Removing data container")
-		if err2 := removeContainer(opts.Name, true); err2 != nil {
+		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
@@ -142,7 +142,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 	// Clean up the container.
 	defer func() {
 		log.WithField("=>", opts.Name).Info("Removing data container")
-		if err2 := removeContainer(opts.Name, true); err2 != nil {
+		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
@@ -246,7 +246,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	if ops.Remove {
 		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false); err != nil {
+		if err := removeContainer(optsServ.Name, false, false); err != nil {
 			return err
 		}
 	}
@@ -304,7 +304,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 
 	defer func() {
 		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false); err != nil {
+		if err := removeContainer(optsServ.Name, false, false); err != nil {
 			log.WithField("=>", optsServ.Name).Error("Tragic! Error removing data container after executing")
 			log.Error(err)
 		}
@@ -356,7 +356,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 		}
 
 		log.WithField("=>", ops.SrvContainerName).Info("Removing old container")
-		err := removeContainer(ops.SrvContainerName, true)
+		err := removeContainer(ops.SrvContainerName, true, false)
 		if err != nil {
 			return err
 		}
@@ -424,7 +424,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 				return err
 			}
 		}
-		if err := removeContainer(ops.SrvContainerName, false); err != nil {
+		if err := removeContainer(ops.SrvContainerName, false, false); err != nil {
 			return err
 		}
 	}
@@ -613,20 +613,20 @@ func DockerRename(ops *def.Operation, newName string) error {
 	return nil
 }
 
-// DockerRemove removes the ops.SrvContainerName container unforcedly.
+// DockerRemove removes the ops.SrvContainerName container.
 // If withData is true, the associated data container is also removed.
 // If volumes is true, the associated volumes are removed for both containers.
 // DockerRemove returns Docker errors on exit if not successful.
-func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes bool) error {
+func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force bool) error {
 	if _, exists := ContainerExists(ops); exists {
 		log.WithField("=>", ops.SrvContainerName).Info("Removing container")
-		if err := removeContainer(ops.SrvContainerName, volumes); err != nil {
+		if err := removeContainer(ops.SrvContainerName, volumes, force); err != nil {
 			return err
 		}
 		if withData {
 			if _, ext := DataContainerExists(ops); ext {
 				log.WithField("=>", ops.DataContainerName).Info("Removing dependent data container")
-				if err := removeContainer(ops.DataContainerName, volumes); err != nil {
+				if err := removeContainer(ops.DataContainerName, volumes, force); err != nil {
 					return err
 				}
 			}
@@ -873,11 +873,11 @@ func stopContainer(id string, timeout uint) error {
 	return nil
 }
 
-func removeContainer(id string, volumes bool) error {
+func removeContainer(id string, volumes, force bool) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            id,
 		RemoveVolumes: volumes,
-		Force:         false,
+		Force:         force,
 	}
 
 	err := util.DockerClient.RemoveContainer(opts)
