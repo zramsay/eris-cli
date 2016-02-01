@@ -12,7 +12,6 @@ import (
 )
 
 func GenerateKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	do.Operations.ContainerNumber = 1
 

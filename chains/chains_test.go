@@ -39,11 +39,11 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("chain"))
-	log.Info("Test init completed. Starting main test sequence now")
-
 	mockChainDefinitionFile(chainName)
 
 	m.Run()
+
+	tests.IfExit(tests.TestsTearDown())
 }
 
 func TestListAllChainsRunning(t *testing.T) {
@@ -105,7 +105,7 @@ func TestChainGraduate(t *testing.T) {
 	}
 
 	if !srvDef.Service.AutoData {
-		t.Fatalf("improper service autodata value on graduae, expected %t, got %t", true, srvDef.Service.AutoData)
+		t.Fatalf("improper service autodata value on graduate, expected %t, got %t", true, srvDef.Service.AutoData)
 	}
 
 	if len(srvDef.Dependencies.Services) != 1 {
@@ -388,7 +388,7 @@ func TestChainsNewCSV(t *testing.T) {
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, ini.DefaultPubKeys[0]) {
-		t.Fatalf("expected to find a validator from csv, got %", out)
+		t.Fatalf("expected to find a validator from csv, got %v", out)
 	}
 
 }
@@ -938,7 +938,7 @@ func start(t *testing.T, chain string) {
 	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = true
 	if err := StartChain(do); err != nil {
-		t.Fatalf("starting chain %v failed: %v", err)
+		t.Fatalf("starting chain %v failed: %v", chain, err)
 	}
 }
 
