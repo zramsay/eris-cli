@@ -15,7 +15,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/loaders"
-	tests "github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 

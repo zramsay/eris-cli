@@ -51,7 +51,7 @@ type Do struct {
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	PackagePath   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Compiler      string   `mapstructure:"," json:"," yaml:"," toml:","`

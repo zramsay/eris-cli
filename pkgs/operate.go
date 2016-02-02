@@ -1,4 +1,4 @@
-package contracts
+package pkgs
 
 import (
 	"fmt"
@@ -383,8 +383,8 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --summary "
 	}
 
-	if do.ContractsPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.ContractsPath)
+	if do.PackagePath != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.PackagePath)
 	}
 
 	if do.ABIPath != "" {

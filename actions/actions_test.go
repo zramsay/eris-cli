@@ -8,7 +8,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
-	tests "github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/tests"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"

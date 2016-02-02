@@ -1,4 +1,4 @@
-package contracts
+package pkgs
 
 import (
 	"github.com/eris-ltd/eris-cli/definitions"

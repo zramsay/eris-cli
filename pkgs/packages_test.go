@@ -1,10 +1,10 @@
-package contracts
+package pkgs
 
 import (
 	"os"
 	"testing"
 
-	tests "github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/tests"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -36,7 +36,7 @@ func TestContractsDeploy(t *testing.T) {
 }
 
 func testsInit() error {
-	if err := tests.TestsInit("contracts"); err != nil {
+	if err := tests.TestsInit("pkgs"); err != nil {
 		return err
 	}
 	return nil

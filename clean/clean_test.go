@@ -7,7 +7,7 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
-	tests "github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
