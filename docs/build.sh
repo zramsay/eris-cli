@@ -29,6 +29,7 @@ if [[ "$1" == "master" ]]
 then
   mkdir -p docs/$base_name/latest
   rsync -av docs/$base_name/$release_min/ docs/$base_name/latest/
+  find docs/$base_name/latest -type f -name "*.md" -exec sed -i "s/$release_min/latest/g" {} +
 fi
 
 cd $HOME
