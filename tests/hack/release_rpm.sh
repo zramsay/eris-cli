@@ -33,7 +33,7 @@ version=$(cat version)
 # Build it
 
 rm -rf $HOME/rpmbuild/*
-$HOME/eris init --yes
+$HOME/eris init --yes --pull-images=false
 $HOME/eris man --dump > $HOME/eris.1
 gpg2 --armor --export 3C7AFAEB > $host_location/RPM-GPG-KEY
 rpm --import $host_location/RPM-GPG-KEY

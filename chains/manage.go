@@ -87,7 +87,7 @@ func MakeChain(do *definitions.Do) error {
 	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
 	doData.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	doData.Operations.ContainerType = "service"
-	if do.RmD {
+	if !do.RmD {
 		defer data.RmData(doData)
 	}
 

@@ -23,4 +23,4 @@ echo -e "\n\nAfter Adding we have the following.\n"
 reprepro -b $host_location ls $package
 
 echo "Cleaning up"
-rm $HOME/$package*.deb
+# rm $HOME/$package*.deb
