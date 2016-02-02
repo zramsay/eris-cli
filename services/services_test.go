@@ -202,8 +202,6 @@ func TestUpdateService(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	start(t, servName, false)
-	testStartService(t, servName, false)
-	defer testKillService(t, servName, true)
 
 	do := def.NowDo()
 	do.Name = servName
