@@ -1,21 +1,15 @@
 package apps
 
 import (
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/eris-ltd/eris-cli/definitions"
 )
 
-func Checkout(cmd *cobra.Command, args []string) {
+func StartApps(do *definitions.Do) error {
 
+	return nil
 }
 
-func Configure(cmd *cobra.Command, args []string) {
+func StopApps(do *definitions.Do) error {
 
-}
-
-func Start(cmd *cobra.Command, args []string) {
-
-}
-
-func Kill(cmd *cobra.Command, args []string) {
-
+	return nil
 }

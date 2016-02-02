@@ -8,7 +8,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
-	tests "github.com/eris-ltd/eris-cli/testutils"
+	"github.com/eris-ltd/eris-cli/tests"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -31,10 +31,7 @@ func TestMain(m *testing.M) {
 	exitCode := m.Run()
 
 	log.Info("Tearing tests down")
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		tests.IfExit(tests.TestsTearDown())
-	}
-
+	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 

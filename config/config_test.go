@@ -23,11 +23,11 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	// Unset this variable by default for config package.
-	savedEnv := os.Getenv("TEST_IN_CIRCLE")
-	if err := os.Unsetenv("TEST_IN_CIRCLE"); err != nil {
-		panic("can't unset TEST_IN_CIRCLE")
+	savedEnv := os.Getenv("TESTING")
+	if err := os.Unsetenv("TESTING"); err != nil {
+		panic("can't unset TESTING")
 	}
-	defer os.Setenv("TEST_IN_CIRCLE", savedEnv)
+	defer os.Setenv("TESTING", savedEnv)
 
 	log.WithField("dir", configErisDir).Info("Using temporary directory for config files")
 
@@ -561,7 +561,7 @@ func TestChangeErisDir(t *testing.T) {
 func TestChangeErisDirCI(t *testing.T) {
 	GlobalConfig = &ErisCli{}
 
-	os.Setenv("TEST_IN_CIRCLE", "true")
+	os.Setenv("TESTING", "true")
 	ChangeErisDir(configErisDir)
 
 	if GlobalConfig.ErisDir != "" {

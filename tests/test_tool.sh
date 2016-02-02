@@ -136,7 +136,7 @@ packagesToTest() {
   if [ $? -ne 0 ]; then return 1; fi
   go test ./keys/... && passed Keys
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./contracts/... && passed Contracts
+  go test ./pkgs/... && passed Packages
   if [ $? -ne 0 ]; then return 1; fi
   go test ./actions/... && passed Actions
   if [ $? -ne 0 ]; then return 1; fi
@@ -144,7 +144,9 @@ packagesToTest() {
   # if [ $? -ne 0 ]; then return 1; fi
   # go test ./apps/... && passed Apps
   # if [ $? -ne 0 ]; then return 1; fi
-  go test ./commands/... && passed Commands
+  # go test ./agent/... && passed Agent
+  # if [ $? -ne 0 ]; then return 1; fi
+  go test ./cmd/... && passed Commands
   if [ $? -ne 0 ]; then return 1; fi
   go test ./clean/... && passed Clean
   if [ $? -ne 0 ]; then return 1; fi

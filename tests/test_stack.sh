@@ -53,7 +53,15 @@ ecm_branch=${ECM_BRANCH:=master}
 epm=eris-pm
 epm_repo=https://github.com/eris-ltd/$epm.git
 epm_dir=$repo/../$epm
-epm_branch=${EPM_BRANCH:=master}
+epm_branch=${EPM_BRANCH:=contracts2pkg}
+
+mindy_repo=https://github.com/eris-ltd/mindy.git
+mindy_dir=$repo/../mindy
+mindy_branch=${MINDY_BRANCY:=master}
+
+mindy_repo=https://github.com/eris-ltd/mindy.git
+mindy_dir=$repo/../mindy
+mindy_branch=${MINDY_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
 # Utility functions
@@ -106,6 +114,29 @@ echo
 
 # ----------------------------------------------------------------------------
 # Run EPM tests
+
+tests/test.sh
+test_exit=$?
+check_and_exit
+cd $start
+
+# ----------------------------------------------------------------------------
+# Get Mindy
+
+echo
+if [ -d "$mindy_dir" ]; then
+  echo "mindy present on host; not cloning"
+  cd $mindy_dir
+else
+  echo -e "Cloning mindy to:\t\t$mindy_dir"
+  git clone $mindy_repo $mindy_dir &>/dev/null
+  cd $mindy_dir 1>/dev/null
+  git checkout origin/$mindy_branch &>/dev/null
+fi
+echo
+
+# ----------------------------------------------------------------------------
+# Run Mindy tests
 
 tests/test.sh
 test_exit=$?
