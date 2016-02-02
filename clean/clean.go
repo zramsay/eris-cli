@@ -6,7 +6,16 @@ import (
 )
 
 func Clean(do *definitions.Do) error {
-	if err := util.Clean(do.Yes, do.All, do.RmD, do.Images); err != nil {
+	// in util so that other pkgs can import it easily
+	toClean := map[string]bool{
+		"yes":        do.Yes,
+		"all":        do.All,
+		"containers": do.Containers,
+		"scratch":    do.Scratch,
+		"rmd":        do.RmD,
+		"images":     do.Images,
+	}
+	if err := util.Clean(toClean); err != nil {
 		return err
 	}
 	return nil

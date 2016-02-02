@@ -98,6 +98,39 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 	return nil
 }
 
+func TestNumbersExistAndRun(servName string, containerExist, containerRun int) error {
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
+
+	log.WithField("=>", servName).Debug("Checking existing containers for")
+	exist := util.HowManyContainersExisting(servName, "service")
+
+	log.WithField("=>", servName).Debug("Checking running containers for")
+	run := util.HowManyContainersRunning(servName, "service")
+
+	if exist != containerExist {
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      exist,
+		}).Info("Wrong number of existing containers")
+		return fmt.Errorf("Wrong number of existing containers")
+	}
+
+	if run != containerRun {
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      run,
+		}).Info("Wrong number of running containers")
+		return fmt.Errorf("Wrong number of existing containers")
+	}
+	log.Info("All good")
+}
+
 // FindContainer returns true if the container with a given
 // short name, type, number, and status exists.
 func FindContainer(name, t string, running bool) bool {
@@ -127,8 +160,15 @@ func RemoveContainer(name, t string) error {
 }
 
 // Remove everything Eris.
+// [zr] XXX ensure this stay consistent with clean minro refacotr
 func RemoveAllContainers() error {
-	return util.Clean(false, false, false, false)
+	toClean := map[string]bool{
+		"yes":    false,
+		"all":    false,
+		"rmd":    false,
+		"images": false,
+	}
+	return util.Clean(toClean)
 }
 
 // Return container links. For sake of simplicity, don't expose

@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,77 +14,75 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-func Clean(prompt, all, rmd, images bool) error {
-	// [zr]: TODO better prompt solution
+func Clean(toClean map[string]bool) error {
+
+	if toClean["yes"] {
+		//go do shit
+		cleanHandler() //bool 3
+	} else {
+		if canWeRemove(toClean) { // bool x3
+			cleanHandler()
+		}
+	}
 
 	//do this always
-	if err := defaultClean(prompt); err != nil {
+	// TODO have flag to turn this behaviour off
+	if err := defaultClean(); err != nil {
 		return err
 	}
 
 	//also do this always
-
 	if err := cleanScratchData(); err != nil {
 		return err
 	}
 
-	if all {
-		rmd = true
-		images = true
+	if toClean["all"] {
+		toClean["rmd"] = true
+		toClean["images"] = true
 		//do.Volumes = true
 	}
 
-	if rmd {
-		if err := removeErisDir(prompt); err != nil {
+	if toClean["rmd"] {
+		if err := removeErisDir(); err != nil {
 			return err
 		}
 	}
-	if images {
-		if err := removeErisImages(prompt); err != nil {
+	if toClean["images"] {
+		if err := removeErisImages(); err != nil {
 			return err
 		}
 	}
-
-	/* TODO [zr] see issue #295
-	if do.Volumes {
-		if err := removeOrphanedVolumes(prompt); err != nil {
-			return err
-		}
-	}
-
-	if do.Uninstall {
-		if err := uninstallEris(prompt); err != nil { //will also removeErisDir
-			return err
-		}
-	}*/
 
 	return nil
 }
 
+func cleanHandler() {
+}
+
 // stops and removes containers and their volumes
-func defaultClean(prompt bool) error {
+func defaultClean() error {
+	//TODO actually clean data conts
+	// is this a labels issue ... ?
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		fmt.Printf("List containers error: %v\n", err)
 	}
 
-	if !prompt || canWeRemove([]string{}, "all") {
-		for _, container := range contns {
-			if container.Labels["eris:ERIS"] == "true" {
+	for _, container := range contns {
+		if container.Labels["eris:ERIS"] == "true" {
 
-				removeOpts := docker.RemoveContainerOptions{
-					ID:            container.ID,
-					RemoveVolumes: true,
-					Force:         true,
+			removeOpts := docker.RemoveContainerOptions{
+				ID:            container.ID,
+				RemoveVolumes: true,
+				Force:         true,
+			}
+			if err := DockerClient.RemoveContainer(removeOpts); err != nil {
+				// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
+				if fmt.Sprintf("%v", err) == "EOF" {
+					log.Debug("Weird EOF error. Not reaping.")
+					continue
 				}
-				if err := DockerClient.RemoveContainer(removeOpts); err != nil {
-					// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
-					if fmt.Sprintf("%v", err) == "EOF" {
-						log.Debug("Weird EOF error. Not reaping.")
-						continue
-					}
-					return err
-				}
+				return err
 			}
 		}
 	}
@@ -115,28 +113,11 @@ func cleanScratchData() error {
 	return nil
 }
 
-func removeErisDir(prompt bool) error {
-	erisRoot, err := ioutil.ReadDir(ErisRoot)
-	if err != nil {
-		return err
-	}
-
-	dirsInErisRoot := make([]string, len(erisRoot))
-	for i, dir := range erisRoot {
-		dirsInErisRoot[i] = dir.Name()
-	}
-
-	if !prompt || canWeRemove(dirsInErisRoot, ErisRoot) {
-		if err := os.RemoveAll(ErisRoot); err != nil {
-			return err
-		}
-	} else {
-		log.Warn("Permission to remove eris root directory not given, continuing with clean")
-	}
-	return nil
+func removeErisDir() error {
+	return os.RemoveAll(ErisRoot)
 }
 
-func removeErisImages(prompt bool) error {
+func removeErisImages() error {
 	opts := docker.ListImagesOptions{
 		All:     true,
 		Filters: nil,
@@ -174,54 +155,77 @@ func removeErisImages(prompt bool) error {
 		}
 	}
 
-	if !prompt || canWeRemove(erisImages, "images") {
-		for i, imageID := range erisImageIDs {
-			log.WithFields(log.Fields{
-				"=>": erisImages[i],
-				"id": imageID,
-			}).Debug("Removing image")
-			if err := DockerClient.RemoveImage(imageID); err != nil {
-				return err
-			}
+	for i, imageID := range erisImageIDs {
+		log.WithFields(log.Fields{
+			"=>": erisImages[i],
+			"id": imageID,
+		}).Debug("Removing image")
+		if err := DockerClient.RemoveImage(imageID); err != nil {
+			return err
 		}
-	} else {
-		log.Warn("Permission to remove images not given, continuing with clean")
 	}
 	return nil
 }
 
-func canWeRemove(removing []string, what string) bool {
-	//if nothing in removing, say so and return, or something
+func canWeRemove(toClean map[string]bool) bool {
 	var input string
-	if what == "all" {
-		fmt.Print("The marmots are about to forcefully remove all running and existing eris containers with corresponding volumes. Please confirm (y/Y): ")
-	} else {
-		log.WithField("=>", what).Warn("The marmots are about to remove")
-		log.Warn(strings.Join(removing, "\n"))
-		fmt.Print("Please confirm (y/Y): ")
+
+	toWarn := map[string]string{
+		"containers": "All Eris Containers",
+		"scratch":    "The contents of $HOME/eris/scratch",
+		"rmd":        "The Eris Root Directory ($HOME/.eris)",
+		"images":     "All Eris docker images",
 	}
+
+	//toWarnSome := make(map[string]string)
+
+	if toClean["all"] != true {
+		for _, thing := range toWarn {
+			fmt.Printf("thing: %v\n", thing)
+		}
+	} else {
+		log.WithFields(log.Fields{
+			"containers": toWarn["containers"],
+			"scratch":    toWarn["scratch"],
+			"rmd":        toWarn["rmd"],
+			"images":     toWarn["images"],
+		}).Warn("The marmots are about to remove")
+	}
+
+	fmt.Print("Please confirm (y/Y): ")
 
 	fmt.Scanln(&input)
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
-		log.WithField("=>", what).Warn("Authorization given, removing")
+		log.Warn("Authorization given, removing")
 		return true
 	}
 	return false
 }
 
-//TODO: see bash script
-func removeOrphanedVolumes(prompt bool) error {
-	return nil
-}
-
-//TODO
-func uninstallEris(prompt bool) error {
-	if err := removeErisDir(prompt); err != nil { //and other things
-		return err
-	}
-	return nil
-}
-
 func TrimString(strang string) string {
 	return strings.TrimSpace(strings.Trim(strang, "\n"))
 }
+
+/* TODO
+if do.Volumes {
+	if err := removeOrphanedVolumes(yes); err != nil {
+		return err
+	}
+}
+
+if do.Uninstall {
+	if err := uninstallEris(yes); err != nil { //will also removeErisDir
+		return err
+	}
+}
+
+func removeOrphanedVolumes() error {
+	return nil
+}
+
+func uninstallEris() error {
+	if err := removeErisDir(); err != nil { //and other things
+		return err
+	}
+	return nil
+}*/

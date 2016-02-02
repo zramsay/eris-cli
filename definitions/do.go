@@ -65,9 +65,11 @@ type Do struct {
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
-	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Uninstall bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Volumes   bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Scratch    bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Images     bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Uninstall  bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Volumes    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	//data import/export
 	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`

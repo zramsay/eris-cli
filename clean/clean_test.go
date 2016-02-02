@@ -15,14 +15,20 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
-var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
-
-func fatal(t *testing.T, err error) {
-	if !DEAD {
-		tests.TestsTearDown()
-		DEAD = true
-		panic(err)
-	}
+var ToTest = []struct {
+	name   string
+	prompt bool
+	rmd    bool
+	images bool
+	all    bool
+	//uninstall bool => forthcoming
+}{
+	{"no-flag", false, false, false, false},
+	{"rmd-only", false, true, false, false},
+	{"imgs-only", false, false, true, false},
+	{"imgs-rmd", false, true, true, false}, //is this  == --all -> prefered behaviour ?
+	{"all-only", false, false, false, true},
+	{"all-flags", false, true, true, true},
 }
 
 func TestMain(m *testing.M) {
@@ -30,31 +36,16 @@ func TestMain(m *testing.M) {
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
-	tests.IfExit(testsInit())
+	log.SetLevel(log.DebugLevel)
+
+	tests.IfExit(tests.TestsInit("clean"))
 
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 
-func TestClean(t *testing.T) {
-	tests.RemoveAllContainers()
-
-	// since we'll be cleaning all eris containers, check if any exist & flame out
-	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
-	if err != nil {
-		fatal(t, err)
-	}
-	for _, container := range contns {
-		if container.Labels["eris:ERIS"] == "true" {
-			fatal(t, fmt.Errorf("Eris container detected. Please remove all eris containers prior to initiating tests\n"))
-		}
-	}
-
-	// each boot 2 contns
-	testStartService(t, "ipfs", false)
-	testStartService(t, "keys", false)
+func testCreateNotEris(t *testing.T) {
 
 	opts := docker.CreateContainerOptions{
 		Name: "not_eris",
@@ -74,30 +65,28 @@ func TestClean(t *testing.T) {
 
 	newCont, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("create container error: %v", err)
 	}
+	return newCont.ID
+}
 
-	//only runs default clean -> need test for others
-	if err := util.Clean(false, false, false, false); err != nil {
-		fatal(t, err)
-	}
-
-	contns, err = util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
+func testCheckSimple(t *testing.T, newContID string) {
+	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error listing containers: %v", err)
 	}
 
 	//if any Eris, fail
 	for _, container := range contns {
 		if container.Labels["eris:ERIS"] == "true" {
-			fatal(t, fmt.Errorf("Eris container detected. Clean did not do its job\n"))
+			t.Fatalf("Eris container detected. Clean did not do its job\n")
 		}
 	}
 
 	var notEris bool
 	//make sure "not_eris" still exists
 	for _, container := range contns {
-		if container.ID == newCont.ID {
+		if container.ID == newContID {
 			notEris = true
 			break
 		} else {
@@ -106,30 +95,27 @@ func TestClean(t *testing.T) {
 	}
 
 	if !notEris {
-		fatal(t, fmt.Errorf("Expected running container, did not find %s\n", newCont.ID))
+		t.Fatalf("Expected running container, did not find %s\n", newContID)
 	}
 
 	//teardown non-eris
 	rmOpts := docker.RemoveContainerOptions{
-		ID:            newCont.ID,
+		ID:            newContID,
 		RemoveVolumes: true,
 		Force:         true,
 	}
 
 	if err := util.DockerClient.RemoveContainer(rmOpts); err != nil {
-		fatal(t, err)
+		t.Fatalf("error removing container: %v", err)
 	}
 
 	contns, err = util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error listing containers: %v", err)
 	}
 
-	//check only that not_eris and no eris contns are running
-	for _, container := range contns {
-		if container.Labels["eris:ERIS"] == "true" || container.ID == newCont.ID {
-			fatal(t, fmt.Errorf("found remaining eris containers or test container, something went wrong\n"))
-		}
+	if len(contns) != 0 {
+		t.Fatalf("found remaining containers, something went wrong\n")
 	}
 }
 
@@ -141,58 +127,9 @@ func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, 1)).Debug("Starting service (from tests)")
 	e := srv.StartService(do)
 	if e != nil {
-		log.Infof("Error starting service: %v", e)
-		fatal(t, e)
+		t.Fatalf("Error starting service: %v", e)
 	}
 
-	testExistAndRun(t, serviceName, 1, true, true)
-	testNumbersExistAndRun(t, serviceName, 1, 1)
-}
-
-func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
-		fatal(t, nil)
-	}
-}
-
-//[zr] TODO move to testings package
-func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
-	log.WithFields(log.Fields{
-		"=>":        servName,
-		"existing#": containerExist,
-		"running#":  containerRun,
-	}).Info("Checking number of containers for")
-
-	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.HowManyContainersExisting(servName, "service")
-
-	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.HowManyContainersRunning(servName, "service")
-
-	if exist != containerExist {
-		log.WithFields(log.Fields{
-			"name":     servName,
-			"expected": containerExist,
-			"got":      exist,
-		}).Error("Wrong number of existing containers")
-		fatal(t, nil)
-	}
-
-	if run != containerRun {
-		log.WithFields(log.Fields{
-			"name":     servName,
-			"expected": containerExist,
-			"got":      run,
-		}).Error("Wrong number of running containers")
-		fatal(t, nil)
-	}
-
-	log.Info("All good")
-}
-
-func testsInit() error {
-	if err := tests.TestsInit("clean"); err != nil {
-		return err
-	}
-	return nil
+	tests.IfExit(tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun))
+	tests.IfExit(tests.TestNumbersExistAndRun(serviceName, 1, 1))
 }
