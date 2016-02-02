@@ -235,7 +235,7 @@ func DockerClientVersion() (float64, error) {
 
 	verD := verR.Get("Version")
 	v := strings.Split(verD, ".")
-	v = v[:len(v)-1] // we only want 1.8 so we can marshal that into a float64
+	v = v[0:2] // we only want 1.8 so we can marshal that into a float64
 
 	return strconv.ParseFloat(strings.Join(v, "."), 10)
 }

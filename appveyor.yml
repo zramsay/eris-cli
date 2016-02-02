@@ -6,6 +6,7 @@ environment:
   GOBIN: C:\bin
   PATH: '%PATH%;C:\bin'
   MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+  SKIP_STACK: "true" # remove later when stack tests work on windows.
   AWS_ACCESS_KEY_ID:
     secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
   AWS_SECRET_ACCESS_KEY:
@@ -34,4 +35,4 @@ build_script:
 test_script:
 - cmd: >-
 
-    bash c:\src\github.com\eris-ltd\eris-cli\tests\test_osx_win.sh
+    bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh

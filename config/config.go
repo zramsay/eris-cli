@@ -13,7 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
 )
 
-// Properly scope the globalConfig
+// Properly scope the globalConfig.
 var GlobalConfig *ErisCli
 
 type ErisCli struct {
@@ -105,6 +105,10 @@ func SaveGlobalConfig(config *ErisConfig) error {
 
 // config values will be coerced into strings...
 func GetConfigValue(key string) string {
+	if GlobalConfig == nil || GlobalConfig.Config == nil {
+		return ""
+	}
+
 	switch key {
 	case "IpfsHost":
 		return GlobalConfig.Config.IpfsHost
@@ -119,34 +123,47 @@ func GetConfigValue(key string) string {
 	}
 }
 
+// TODO: [by csk] refactor this and DRY it up as this function really should be in common (without the globalConfig object of course)
 func ChangeErisDir(erisDir string) {
-	if os.Getenv("TEST_IN_CIRCLE") == "true" {
+	if os.Getenv("TESTING") == "true" {
+		return
+	}
+
+	// Do nothing if not initialized.
+	if GlobalConfig == nil {
 		return
 	}
 
 	GlobalConfig.ErisDir = erisDir
 	dir.ErisRoot = erisDir
 
-	// Major Directories
+	// Major directories.
 	dir.ActionsPath = filepath.Join(dir.ErisRoot, "actions")
-	dir.ChainsPath = filepath.Join(dir.ErisRoot, "chains")
-	dir.DataContainersPath = filepath.Join(dir.ErisRoot, "data")
-	dir.AppsPath = filepath.Join(dir.ErisRoot, "apps")
+	dir.AppsPath = filepath.Join(dir.ErisRoot, "apps")     // previously "dapps"
+	dir.ChainsPath = filepath.Join(dir.ErisRoot, "chains") // previously "blockchains"
 	dir.KeysPath = filepath.Join(dir.ErisRoot, "keys")
-	dir.LanguagesPath = filepath.Join(dir.ErisRoot, "languages")
-	dir.ServicesPath = filepath.Join(dir.ErisRoot, "services")
+	dir.RemotesPath = filepath.Join(dir.ErisRoot, "remotes")
 	dir.ScratchPath = filepath.Join(dir.ErisRoot, "scratch")
+	dir.ServicesPath = filepath.Join(dir.ErisRoot, "services")
 
-	// Scratch Directories (globally coordinated)
-	dir.EpmScratchPath = filepath.Join(dir.ScratchPath, "epm")
-	dir.LllcScratchPath = filepath.Join(dir.ScratchPath, "lllc")
-	dir.SolcScratchPath = filepath.Join(dir.ScratchPath, "sol")
-	dir.SerpScratchPath = filepath.Join(dir.ScratchPath, "ser")
+	// Chains Directories
+	dir.DefaultChainPath = filepath.Join(dir.ChainsPath, "default")
+	dir.AccountsTypePath = filepath.Join(dir.ChainsPath, "account-types")
+
+	// Keys Directories
+	dir.KeysDataPath = filepath.Join(dir.KeysPath, "data")
+	dir.KeyNamesPath = filepath.Join(dir.KeysPath, "names")
+
+	// Scratch Directories (basically eris' cache) (globally coordinated)
 	dir.DataContainersPath = filepath.Join(dir.ScratchPath, "data")
+	dir.LanguagesScratchPath = filepath.Join(dir.ScratchPath, "languages") // previously "~/.eris/languages"
+
+	// Services Directories
+	dir.PersonalServicesPath = filepath.Join(dir.ServicesPath, "global")
 }
 
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
-	err := globalConfig.Marshal(config)
+	err := globalConfig.Unmarshal(config)
 	if err != nil {
 		return err
 	}

@@ -7,17 +7,18 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
@@ -85,7 +86,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 	// Clean up the container.
 	defer func() {
 		log.WithField("=>", opts.Name).Info("Removing data container")
-		if err2 := removeContainer(opts.Name, true); err2 != nil {
+		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
@@ -141,7 +142,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 	// Clean up the container.
 	defer func() {
 		log.WithField("=>", opts.Name).Info("Removing data container")
-		if err2 := removeContainer(opts.Name, true); err2 != nil {
+		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
 				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
 			}
@@ -163,6 +164,8 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 // is true. DockerRunService returns Docker errors if not successful.
 //
 //  srv.AutoData          - if true, create or use existing data container
+//  srv.Restart           - container restart policy ("always", "max:<#attempts>"
+//                          or never if unspecified)
 //
 //  ops.SrvContainerName  - service or a chain container name
 //  ops.DataContainerName - dependent data container name
@@ -177,8 +180,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 //  ops.CapAdd            - add linux capabilities (similar to `docker run --cap-add=[]`)
 //  ops.CapDrop           - add linux capabilities (similar to `docker run --cap-drop=[]`)
 //  ops.Privileged        - if true, give extended privileges
-//  ops.Restart           - container restart policy ("always", "max:<#attempts>"
-//                          or never if unspecified)
 //
 func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	log.WithField("=>", ops.SrvContainerName).Info("Running container")
@@ -245,7 +246,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	if ops.Remove {
 		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false); err != nil {
+		if err := removeContainer(optsServ.Name, false, false); err != nil {
 			return err
 		}
 	}
@@ -303,7 +304,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 
 	defer func() {
 		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false); err != nil {
+		if err := removeContainer(optsServ.Name, false, false); err != nil {
 			log.WithField("=>", optsServ.Name).Error("Tragic! Error removing data container after executing")
 			log.Error(err)
 		}
@@ -319,6 +320,8 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		"ports published": optsServ.HostConfig.PublishAllPorts,
 		"environment":     optsServ.Config.Env,
 		"image":           optsServ.Config.Image,
+		"user":            optsServ.Config.User,
+		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
 		return err
@@ -353,7 +356,7 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 		}
 
 		log.WithField("=>", ops.SrvContainerName).Info("Removing old container")
-		err := removeContainer(ops.SrvContainerName, true)
+		err := removeContainer(ops.SrvContainerName, true, false)
 		if err != nil {
 			return err
 		}
@@ -421,7 +424,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 				return err
 			}
 		}
-		if err := removeContainer(ops.SrvContainerName, false); err != nil {
+		if err := removeContainer(ops.SrvContainerName, false, false); err != nil {
 			return err
 		}
 	}
@@ -610,20 +613,20 @@ func DockerRename(ops *def.Operation, newName string) error {
 	return nil
 }
 
-// DockerRemove removes the ops.SrvContainerName container unforcedly.
+// DockerRemove removes the ops.SrvContainerName container.
 // If withData is true, the associated data container is also removed.
 // If volumes is true, the associated volumes are removed for both containers.
 // DockerRemove returns Docker errors on exit if not successful.
-func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes bool) error {
+func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force bool) error {
 	if _, exists := ContainerExists(ops); exists {
 		log.WithField("=>", ops.SrvContainerName).Info("Removing container")
-		if err := removeContainer(ops.SrvContainerName, volumes); err != nil {
+		if err := removeContainer(ops.SrvContainerName, volumes, force); err != nil {
 			return err
 		}
 		if withData {
 			if _, ext := DataContainerExists(ops); ext {
 				log.WithField("=>", ops.DataContainerName).Info("Removing dependent data container")
-				if err := removeContainer(ops.DataContainerName, volumes); err != nil {
+				if err := removeContainer(ops.DataContainerName, volumes, force); err != nil {
 					return err
 				}
 			}
@@ -870,11 +873,11 @@ func stopContainer(id string, timeout uint) error {
 	return nil
 }
 
-func removeContainer(id string, volumes bool) error {
+func removeContainer(id string, volumes, force bool) error {
 	opts := docker.RemoveContainerOptions{
 		ID:            id,
 		RemoveVolumes: volumes,
-		Force:         false,
+		Force:         force,
 	}
 
 	err := util.DockerClient.RemoveContainer(opts)
@@ -889,7 +892,11 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 	opts := configureServiceContainer(srv, ops)
 
 	opts.Name = "eris_interactive_" + opts.Name
-	opts.Config.User = "root"
+	if srv.User == "" {
+		opts.Config.User = "root"
+	} else {
+		opts.Config.User = srv.User
+	}
 	opts.Config.OpenStdin = true
 	opts.Config.Tty = true
 	opts.Config.AttachStdout = true
@@ -961,7 +968,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 			VolumesFrom:     srv.VolumesFrom,
 			CapAdd:          ops.CapAdd,
 			CapDrop:         ops.CapDrop,
-			RestartPolicy:   docker.NeverRestart(),
+			RestartPolicy:   docker.NeverRestart(), //default. overide below
 			NetworkMode:     "bridge",
 		},
 	}
@@ -977,10 +984,11 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 		opts.Config.WorkingDir = srv.WorkDir
 	}
 
-	if ops.Restart == "always" {
+	//[zr] used to be ops.Restart
+	if srv.Restart == "always" {
 		opts.HostConfig.RestartPolicy = docker.AlwaysRestart()
-	} else if strings.Contains(ops.Restart, "max") {
-		times, err := strconv.Atoi(strings.Split(ops.Restart, ":")[1])
+	} else if strings.Contains(srv.Restart, "max") {
+		times, err := strconv.Atoi(strings.Split(srv.Restart, ":")[1])
 		if err != nil {
 			return docker.CreateContainerOptions{}
 		}
@@ -1033,7 +1041,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: "eris_exec_" + ops.DataContainerName,
 		Config: &docker.Config{
-			Image:           "quay.io/eris/base",
+			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1079,7 +1087,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = "quay.io/eris/data"
+		srv.Image = path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
 	}
 
 	// Manipulate labels locally.

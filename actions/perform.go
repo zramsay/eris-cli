@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
-    	"runtime"
+
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
@@ -94,9 +95,9 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 
 	for n, step := range action.Steps {
 		cmd := exec.Command("sh", "-c", step)
-	        if runtime.GOOS == "windows" {
-	            cmd = exec.Command("cmd", "/c", step)
-	        }
+		if runtime.GOOS == "windows" {
+			cmd = exec.Command("cmd", "/c", step)
+		}
 		cmd.Env = actionVars
 		cmd.Dir = dir
 

@@ -3,17 +3,7 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris. If it is given the "local" argument, then
-# it will run against the local docker backend. If it is not given the local
-# argument then it will run against a series of docker backends defined in
-# arrays at the top of the script.
-#
-# What this script will do is first it will define what should be run, then
-# it will make sure that it has access to the eris' test machine definition
-# image files necessary to connect into the backends. Then it will run the
-# test_tool and test_stack scripts against a set of backends. That set will
-# either be a random element of a given array for a major docker version, or
-# it will run against the entire suite of backends.
+# **DEPRECATED**
 
 # ---------------------------------------------------------------------------
 # REQUIREMENTS
@@ -76,7 +66,7 @@ check_build() {
   then
     echo "Could not make machines. Rebuilding machines."
     remove_machines
-    sleep 5
+    sleep 15
     sort_machines
     machi_result=$?
     check_build "rebuild"
@@ -100,12 +90,18 @@ sort_machines() {
   if [ "$ci" = true ]
   then
     go run setup.go 1>/dev/null
+    setup_result=$?
     MACHINES=( $(docker-machine ls -q) )
   else
     MACHINES=( $(go run setup.go) )
+    setup_result=$?
   fi
   kill $ticker
   wait $ticker 2>/dev/null
+  if [ "$setup_result" -ne 0 ]
+  then
+    return 1
+  fi
   cd $repo
   for machine in "${MACHINES[@]}"
   do
@@ -132,15 +128,10 @@ log_machine() {
 
 # remove the machines
 remove_machines() {
-  if [ "$ci" = true ]
-  then
-    docker-machine rm --force $(docker-machine ls -q)
-  else
-    for machine in "${MACHINES[@]}"
-    do
-      docker-machine rm --force $machine
-    done
-  fi
+  for machine in "${MACHINES[@]}"
+  do
+    docker-machine rm --force $machine
+  done
 }
 
 # ----------------------------------------------------------------------------

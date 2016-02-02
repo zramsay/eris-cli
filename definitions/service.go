@@ -7,6 +7,8 @@ type Service struct {
 	Image string `json:"image,omitempty" yaml:"image,omitempty" toml:"image,omitempty"`
 	// whether eris should automagically handle a data container for this service
 	AutoData bool `json:"data_container" yaml:"data_container" toml:"data_container"`
+	// restart policy: "always" or "max:<#attempts>"
+	Restart string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	// maps directly to docker cmd
 	Command string `json:"command,omitempty" yaml:"command,omitempty" toml:"command,omitempty"`
 	// maps directly to docker links

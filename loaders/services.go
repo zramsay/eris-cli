@@ -78,10 +78,10 @@ func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definiti
 }
 
 func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.ServiceDefinition) error {
-	err := serviceConf.Marshal(srv)
+	err := serviceConf.Unmarshal(srv)
 	if err != nil {
 		// Vipers error messages are atrocious.
-		return fmt.Errorf("Sorry, the marmots could not figure that service definition out.\nPlease check for known services with [eris services known] and retry.\n")
+		return fmt.Errorf("Sorry, the marmots could not figure that service definition out.\nPlease check for known services with [eris services ls --known] and retry.\n")
 	}
 
 	// toml bools don't really marshal well

@@ -41,12 +41,8 @@ func TestMain(m *testing.M) {
 	toadUp = toadServerUp()
 
 	exitCode := m.Run()
-
 	log.Info("Commensing with Tests Tear Down.")
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		ifExit(testsTearDown())
-	}
-
+	ifExit(testsTearDown())
 	os.Exit(exitCode)
 }
 

@@ -12,7 +12,6 @@ import (
 )
 
 func GenerateKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	do.Operations.ContainerNumber = 1
 
@@ -52,10 +51,11 @@ func ExportKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	//destination on host
-	if do.Destination == "" {
-		do.Destination = filepath.Join(KeysPath, "data")
-	}
+	//destination on host -> given as flag default
+	//if do.Destination == "" {
+	//	do.Destination = filepath.Join(KeysPath, "data")
+	//}
+
 	//src in container
 	do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address)
 	if err := data.ExportData(do); err != nil {
@@ -79,8 +79,8 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 	//src on host
-
-	if do.Source == "" {
+	//if default given (from flag), join addrs
+	if do.Source == filepath.Join(KeysPath, "data") {
 		do.Source = filepath.Join(KeysPath, "data", do.Address, do.Address)
 	}
 	//dest in container

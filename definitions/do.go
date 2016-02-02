@@ -9,6 +9,7 @@ type Do struct {
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Logsrotate    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -18,6 +19,9 @@ type Do struct {
 	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Tarball       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	ZipFile       bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Output        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
@@ -30,6 +34,7 @@ type Do struct {
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -46,15 +51,19 @@ type Do struct {
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	PackagePath   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Compiler      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultAddr   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultFee    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainMakeActs string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainMakeVals string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
+	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//clean
 	Images    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall bool `mapstructure:"," json:"," yaml:"," toml:","`
@@ -64,9 +73,11 @@ type Do struct {
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//listing functions
-	Known    bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Running  bool `mapstructure:"," json:"," yaml:"," toml:","`
-	Existing bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Known     bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Running   bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Existing  bool `mapstructure:"," json:"," yaml:"," toml:","`
+	Host      bool `mapstructure:"," json:"," yaml:"," toml:","` //keys ls
+	Container bool `mapstructure:"," json:"," yaml:"," toml:","` //keys ls
 
 	// <key>=<value> pairs
 	Env []string `mapstructure:"," json:"," yaml:"," toml:","`

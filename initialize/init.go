@@ -33,7 +33,7 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	if do.Pull { //true by default; if imgs already exist, will check for latest anyways
-		if err := GetTheImages(); err != nil {
+		if err := GetTheImages(do.Yes); err != nil {
 			return err
 		}
 	}
@@ -134,8 +134,8 @@ func checkIfCanOverwrite(doYes bool) error {
 	return nil
 }
 
-func GetTheImages() error {
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+func GetTheImages(doYes bool) error {
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" || doYes {
 		if err := pullDefaultImages(); err != nil {
 			return err
 		}

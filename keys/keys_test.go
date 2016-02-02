@@ -8,12 +8,13 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
-	tests "github.com/eris-ltd/eris-cli/testutils"
+	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -38,14 +39,10 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(testsInit())
+	tests.IfExit(tests.TestsInit("keys"))
 
 	exitCode := m.Run()
-
-	if os.Getenv("TEST_IN_CIRCLE") != "true" {
-		tests.IfExit(tests.TestsTearDown())
-	}
-
+	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 
@@ -55,25 +52,14 @@ func TestGenerateKey(t *testing.T) {
 
 	address := testsGenAKey()
 
-	lsOut := new(bytes.Buffer)
-	config.GlobalConfig.Writer = lsOut
-	do := def.NowDo()
-	do.Name = "keys"
-	do.Operations.Interactive = false
-	do.Operations.ContainerNumber = 1
-	path := path.Join(ErisContainerRoot, "keys", "data")
+	output := testListKeys("container")
 
-	do.Operations.Args = []string{"ls", path}
-	if err := srv.ExecService(do); err != nil {
-		fatal(t, err)
+	if len(output) != 1 {
+		fatal(t, fmt.Errorf("Expected one key, got (%v)\n", len(output)))
 	}
 
-	lsOutBytes := lsOut.Bytes()
-
-	output := util.TrimString(string(lsOutBytes))
-
-	if address != output {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output))
+	if address != output[0] {
+		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output[0]))
 	}
 }
 
@@ -110,7 +96,7 @@ func TestGetPubKey(t *testing.T) {
 
 func TestExportKeySingle(t *testing.T) {
 	testStartKeys(t)
-	defer testKillService(t, "keys", true) //or some clean function
+	defer testKillService(t, "keys", true)
 
 	address := testsGenAKey()
 
@@ -154,14 +140,14 @@ func TestExportKeySingle(t *testing.T) {
 
 func TestImportKeySingle(t *testing.T) {
 	testStartKeys(t)
-	defer testKillService(t, "keys", true) //or some clean function
+	defer testKillService(t, "keys", true)
 
 	address := testsGenAKey()
 
 	//export it
 	doExp := def.NowDo()
 	doExp.Address = address
-	doExp.Destination = filepath.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default set by flag
 
 	if err := ExportKey(doExp); err != nil {
 		fatal(t, err)
@@ -189,6 +175,7 @@ func TestImportKeySingle(t *testing.T) {
 	doImp := def.NowDo()
 	doImp.Address = address
 	//doImp.Destination // set in function
+	doImp.Source = filepath.Join(KeysPath, "data")
 
 	if err := ImportKey(doImp); err != nil {
 		fatal(t, err)
@@ -220,6 +207,88 @@ func TestConvertKey(t *testing.T) {
 	// tested in TestGetPubKey
 }
 
+func TestListKeyContainer(t *testing.T) {
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+
+	addrs := make(map[string]bool)
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+
+	output := testListKeys("container")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 3 {
+		fatal(t, fmt.Errorf("Expected 3 keys, got (%v)\n", i))
+	}
+}
+
+func TestListKeyHost(t *testing.T) {
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+
+	addr0 := testsGenAKey()
+	addr1 := testsGenAKey()
+
+	addrs := make(map[string]bool)
+	addrs[addr0] = true
+	addrs[addr1] = true
+
+	doExp := def.NowDo()
+	doExp.Address = addr0
+	doExp.Destination = filepath.Join(KeysPath, "data") //is default
+
+	if err := ExportKey(doExp); err != nil {
+		fatal(t, err)
+	}
+
+	doExp.Address = addr1
+	if err := ExportKey(doExp); err != nil {
+		fatal(t, err)
+	}
+
+	output := testListKeys("host")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 2 {
+		fatal(t, fmt.Errorf("Expected 2 keys, got (%v)\n", i))
+	}
+}
+
+//
+func testListKeys(typ string) []string {
+	do := def.NowDo()
+
+	if typ == "container" {
+		do.Container = true
+		do.Host = false
+	} else if typ == "host" {
+		do.Container = false
+		do.Host = true
+	}
+
+	if err := ListKeys(do); err != nil {
+		tests.IfExit(err)
+	}
+
+	res := strings.Split(do.Result, ",")
+
+	return res
+}
+
 //returns an addr for tests
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
@@ -230,13 +299,6 @@ func testsGenAKey() string {
 	addrBytes := addr.Bytes()
 	address := util.TrimString(string(addrBytes))
 	return address
-}
-
-func testsInit() error {
-	if err := tests.TestsInit("keys"); err != nil {
-		return err
-	}
-	return nil
 }
 
 func testStartKeys(t *testing.T) {

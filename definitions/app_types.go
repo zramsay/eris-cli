@@ -1,7 +1,8 @@
 package definitions
 
 import (
-	"fmt"
+	"path"
+
 	"github.com/eris-ltd/eris-cli/version"
 )
 
@@ -26,7 +27,7 @@ func AllAppTypes() map[string]*AppType {
 func EPMApp() *AppType {
 	app := BlankAppType()
 	app.Name = "epm"
-	app.BaseImage = fmt.Sprintf("quay.io/eris/epm:%s", version.VERSION)
+	app.BaseImage = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM)
 	app.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
 	app.DeployCmd = ""
 	app.TestCmd = ""
