@@ -53,15 +53,11 @@ ecm_branch=${ECM_BRANCH:=master}
 epm=eris-pm
 epm_repo=https://github.com/eris-ltd/$epm.git
 epm_dir=$repo/../$epm
-epm_branch=${EPM_BRANCH:=contracts2pkg}
+epm_branch=${EPM_BRANCH:=master}
 
 mindy_repo=https://github.com/eris-ltd/mindy.git
 mindy_dir=$repo/../mindy
 mindy_branch=${MINDY_BRANCY:=master}
-
-mindy_repo=https://github.com/eris-ltd/mindy.git
-mindy_dir=$repo/../mindy
-mindy_branch=${MINDY_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
 # Utility functions
@@ -82,7 +78,7 @@ if [ -d "$ecm_dir" ]; then
   echo "eris-cm present on host; not cloning"
   cd $ecm_dir
 else
-  echo -e "Cloning eris-cm to:\t\t$ecm_dir"
+  echo -e "Cloning eris-cm to:\t\t$ecm_dir:$ecm_branch"
   git clone $ecm_repo $ecm_dir &>/dev/null
   cd $ecm_dir 1>/dev/null
   git checkout origin/$ecm_branch &>/dev/null
@@ -105,7 +101,7 @@ if [ -d "$epm_dir" ]; then
   echo "eris-pm present on host; not cloning"
   cd $epm_dir
 else
-  echo -e "Cloning eris-pm to:\t\t$epm_dir"
+  echo -e "Cloning eris-pm to:\t\t$epm_dir:$epm_branch"
   git clone $epm_repo $epm_dir &>/dev/null
   cd $epm_dir 1>/dev/null
   git checkout origin/$epm_branch &>/dev/null
@@ -125,7 +121,7 @@ cd $start
 
 echo
 if [ -d "$mindy_dir" ]; then
-  echo "mindy present on host; not cloning"
+  echo "mindy present on host; not cloning:$mindy_branch"
   cd $mindy_dir
 else
   echo -e "Cloning mindy to:\t\t$mindy_dir"
