@@ -414,7 +414,7 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "links", "chain")
 	buildFlag(chainsNew, do, "api", "chain")
 	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", true, "overwrite data in  ~/.eris/data/chainName")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", true, "turn on logsrotate as a dependency to handle long output")
+	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
 
 	// buildFlag(chainsRegister, do, "links", "chain")
 	// buildFlag(chainsRegister, do, "env", "chain")
@@ -436,7 +436,7 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	buildFlag(chainsStart, do, "api", "chain")
-	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", true, "turn on logsrotate as a dependency to handle long output")
+	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
 	buildFlag(chainsLogs, do, "tail", "chain")
