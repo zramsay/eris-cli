@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -87,27 +87,31 @@ func defaultClean(prompt bool) error {
 }
 
 func cleanScratchData() error {
-	d, err := os.Open(common.DataContainersPath)
-	if err != nil {
-		return err
-	}
-	defer d.Close()
-
-	names, err := d.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(common.DataContainersPath, name))
+	if DoesDirExist(DataContainersPath) {
+		d, err := os.Open(DataContainersPath)
 		if err != nil {
 			return err
 		}
+		defer d.Close()
+
+		names, err := d.Readdirnames(-1)
+		if err != nil {
+			return err
+		}
+		for _, name := range names {
+			err = os.RemoveAll(filepath.Join(DataContainersPath, name))
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		return nil
 	}
 	return nil
 }
 
 func removeErisDir(prompt bool) error {
-	erisRoot, err := ioutil.ReadDir(common.ErisRoot)
+	erisRoot, err := ioutil.ReadDir(ErisRoot)
 	if err != nil {
 		return err
 	}
@@ -117,8 +121,8 @@ func removeErisDir(prompt bool) error {
 		dirsInErisRoot[i] = dir.Name()
 	}
 
-	if !prompt || canWeRemove(dirsInErisRoot, common.ErisRoot) {
-		if err := os.RemoveAll(common.ErisRoot); err != nil {
+	if !prompt || canWeRemove(dirsInErisRoot, ErisRoot) {
+		if err := os.RemoveAll(ErisRoot); err != nil {
 			return err
 		}
 	} else {
