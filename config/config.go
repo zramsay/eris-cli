@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -17,10 +18,12 @@ import (
 var GlobalConfig *ErisCli
 
 type ErisCli struct {
-	Writer      io.Writer
-	ErrorWriter io.Writer
-	Config      *ErisConfig
-	ErisDir     string
+	Writer                 io.Writer
+	ErrorWriter            io.Writer
+	InteractiveWriter      io.Writer
+	InteractiveErrorWriter io.Writer
+	Config                 *ErisConfig
+	ErisDir                string
 }
 
 type ErisConfig struct {
@@ -34,8 +37,10 @@ type ErisConfig struct {
 
 func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
 	e := ErisCli{
-		Writer:      writer,
-		ErrorWriter: errorWriter,
+		Writer:                 writer,
+		ErrorWriter:            errorWriter,
+		InteractiveWriter:      ioutil.Discard,
+		InteractiveErrorWriter: ioutil.Discard,
 	}
 
 	config, err := LoadGlobalConfig()

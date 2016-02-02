@@ -100,8 +100,6 @@ func TestExportKeySingle(t *testing.T) {
 
 	address := testsGenAKey()
 
-	catOut := new(bytes.Buffer)
-	config.GlobalConfig.Writer = catOut
 	do := def.NowDo()
 	do.Name = "keys"
 	do.Operations.Interactive = false
@@ -110,12 +108,12 @@ func TestExportKeySingle(t *testing.T) {
 
 	//cat container contents of new key
 	do.Operations.Args = []string{"cat", keyPath}
-	if err := srv.ExecService(do); err != nil {
+	catOut, err := srv.ExecService(do)
+	if err != nil {
 		fatal(t, err)
 	}
 
-	catOutBytes := catOut.Bytes()
-	keyInCont := util.TrimString(string(catOutBytes))
+	keyInCont := util.TrimString(catOut.String())
 
 	doExp := def.NowDo()
 	doExp.Address = address
@@ -168,7 +166,7 @@ func TestImportKeySingle(t *testing.T) {
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
 	doRm.Operations.Args = []string{"rm", "-rf", keyPath}
-	if err := srv.ExecService(doRm); err != nil {
+	if _, err := srv.ExecService(doRm); err != nil {
 		fatal(t, err)
 	}
 
@@ -181,8 +179,6 @@ func TestImportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 
-	catOut := new(bytes.Buffer)
-	config.GlobalConfig.Writer = catOut
 	doCat := def.NowDo()
 	doCat.Name = "keys"
 	doCat.Operations.Interactive = false
@@ -191,12 +187,12 @@ func TestImportKeySingle(t *testing.T) {
 
 	//cat container contents of new key
 	doCat.Operations.Args = []string{"cat", keyPathCat}
-	if err := srv.ExecService(doCat); err != nil {
+	catOut, err := srv.ExecService(doCat)
+	if err != nil {
 		fatal(t, err)
 	}
 
-	catOutBytes := catOut.Bytes()
-	keyInCont := util.TrimString(string(catOutBytes))
+	keyInCont := util.TrimString(catOut.String())
 
 	if keyOnHost != keyInCont {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))

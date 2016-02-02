@@ -163,20 +163,18 @@ func TestExecService(t *testing.T) {
 
 	start(t, servName, true)
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Interactive = false
 	do.Operations.Args = strings.Fields("ls -la /root/")
 
-	if err := ExecService(do); err != nil {
+	buf, err := ExecService(do)
+	if err != nil {
 		t.Fatalf("expected to execute service, got %v", err)
 	}
 
-	if out := buf.String(); !strings.Contains(out, ".bashrc") {
-		t.Fatalf("expected a file in the exec output, got %v", out)
+	if !strings.Contains(buf.String(), ".bashrc") {
+		t.Fatalf("expected a file in the exec output, got %v", buf.String())
 	}
 }
 
@@ -193,7 +191,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 	do.Operations.Interactive = false
 	do.Operations.Args = strings.Fields("bad command line")
 
-	if err := ExecService(do); err == nil {
+	if _, err := ExecService(do); err == nil {
 		t.Fatal("expected executing service to fail")
 	}
 }

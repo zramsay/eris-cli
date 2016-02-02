@@ -2,9 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -500,7 +502,10 @@ func ExecChain(cmd *cobra.Command, args []string) {
 		args = strings.Split(args[0], " ")
 	}
 	do.Operations.Args = args
-	IfExit(chns.ExecChain(do))
+	config.GlobalConfig.InteractiveWriter = os.Stdout
+	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	_, err := chns.ExecChain(do)
+	IfExit(err)
 }
 
 func KillChain(cmd *cobra.Command, args []string) {

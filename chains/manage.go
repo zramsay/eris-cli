@@ -3,6 +3,7 @@ package chains
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -104,7 +105,7 @@ func MakeChain(do *definitions.Do) error {
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	if _, err := os.Stat(chnPath); !os.IsNotExist(err) {
 		doData.Operations.Args = []string{"mkdir", "--parents", path.Join(ErisContainerRoot, "chains", do.Name)}
-		if err := data.ExecData(doData); err != nil {
+		if _, err := data.ExecData(doData); err != nil {
 			return err
 		}
 		doData.Operations.Args = []string{}
@@ -115,9 +116,12 @@ func MakeChain(do *definitions.Do) error {
 		}
 	}
 
-	if err := perform.DockerExecService(do.Service, do.Operations); err != nil {
+	buf, err := perform.DockerExecService(do.Service, do.Operations)
+	if err != nil {
 		return err
 	}
+
+	io.Copy(config.GlobalConfig.Writer, buf)
 
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
@@ -302,7 +306,12 @@ func CatChain(do *definitions.Do) error {
 	}
 	do.Operations.PublishAllPorts = true
 	log.WithField("args", do.Operations.Args).Debug("Executing command")
-	return ExecChain(do)
+
+	buf, err := ExecChain(do)
+
+	io.Copy(config.GlobalConfig.Writer, buf)
+
+	return err
 }
 
 // PortsChain displays the port mapping for a particular chain.

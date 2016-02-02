@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -280,7 +282,6 @@ func ExecService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
-	// if interactive, we ignore args. if not, run args as command
 	args = args[1:]
 	if !do.Operations.Interactive {
 		if len(args) == 0 {
@@ -291,7 +292,10 @@ func ExecService(cmd *cobra.Command, args []string) {
 		args = strings.Split(args[0], " ")
 	}
 	do.Operations.Args = args
-	IfExit(srv.ExecService(do))
+	config.GlobalConfig.InteractiveWriter = os.Stdout
+	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	_, err := srv.ExecService(do)
+	IfExit(err)
 }
 
 func KillService(cmd *cobra.Command, args []string) {

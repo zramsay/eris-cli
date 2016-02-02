@@ -119,13 +119,14 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 }
 
 // DockerExecData runs a data container with volumes-from field set interactively.
+// It returns the container output or error on exit.
 //
 //  ops.Args         - command line parameters
 //  ops.Interactive  - if true, set Entrypoint to ops.Args,
 //                     if false, set Cmd to ops.Args
 //
 // See parameter description for DockerRunData.
-func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
+func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer, err error) {
 	log.WithFields(log.Fields{
 		"=>":   ops.DataContainerName,
 		"args": ops.Args,
@@ -136,7 +137,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 
 	_, err = createContainer(opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Clean up the container.
@@ -150,13 +151,23 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 		log.WithField("=>", opts.Name).Info("Data container removed")
 	}()
 
+	// Save writer values for later and restore on exit.
+	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	defer func() {
+		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+	}()
+
+	buf = new(bytes.Buffer)
+	config.GlobalConfig.Writer = buf
+	config.GlobalConfig.ErrorWriter = buf
+
 	// Start the container.
 	log.WithField("=>", opts.Name).Info("Executing interactive data container")
 	if err = startInteractiveContainer(opts); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return buf, err
 }
 
 // DockerRunService creates and runs a chain or a service container with the srv
@@ -263,16 +274,15 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 //                     if false, set Cmd to ops.Args
 //
 // See parameter description for DockerRunService.
-func DockerExecService(srv *def.Service, ops *def.Operation) error {
+func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer, err error) {
 	log.WithField("=>", ops.SrvContainerName).Info("Executing container")
 
 	optsServ := configureInteractiveContainer(srv, ops)
 
 	// Fix volume paths.
-	var err error
 	srv.Volumes, err = util.FixDirs(srv.Volumes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Setup data container.
@@ -281,7 +291,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	if srv.AutoData {
 		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
@@ -291,7 +301,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 
 			_, err := createContainer(optsData)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -299,7 +309,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	log.WithField("image", srv.Image).Debug("Container does not exist. Creating")
 	_, err = createContainer(optsServ)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -310,6 +320,16 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		}
 		log.WithField("=>", optsServ.Name).Info("Container removed")
 	}()
+
+	// Save writer values for later and restore on exit.
+	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	defer func() {
+		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+	}()
+
+	buf = new(bytes.Buffer)
+	config.GlobalConfig.Writer = buf
+	config.GlobalConfig.ErrorWriter = buf
 
 	// Start the container.
 	log.WithFields(log.Fields{
@@ -324,10 +344,10 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return buf, nil
 }
 
 // DockerRebuild recreates the container based on the srv settings template.
@@ -796,8 +816,8 @@ func attachContainer(id string, attached chan struct{}) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
 		InputStream:  reader,
-		OutputStream: config.GlobalConfig.Writer,
-		ErrorStream:  config.GlobalConfig.ErrorWriter,
+		OutputStream: io.MultiWriter(config.GlobalConfig.Writer, config.GlobalConfig.InteractiveWriter),
+		ErrorStream:  io.MultiWriter(config.GlobalConfig.ErrorWriter, config.GlobalConfig.InteractiveErrorWriter),
 		Logs:         false,
 		Stream:       true,
 		Stdin:        true,

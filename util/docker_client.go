@@ -258,7 +258,7 @@ func IsMinimalDockerClientVersion() bool {
 	return CompareVersions(version, ver.DVER_MIN)
 }
 
-// CompareVersions returns true if the version v1 is larger than the version v2,
+// CompareVersions returns true if the version1 is larger or equal the version2,
 // for example CompareVersions("1.10", "1.9") returns true.
 func CompareVersions(version1, version2 string) bool {
 	v1 := strings.Split(version1, ".")

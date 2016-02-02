@@ -2,8 +2,10 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/list"
 
@@ -20,17 +22,17 @@ var Data = &cobra.Command{
 	Long: `The data subcommand is used to import, and export
 data into containers for use by your application.
 
-The [eris data import] and [eris data export] commands should be 
+The [eris data import] and [eris data export] commands should be
 thought of from the point of view of the container.
 
-The [eris data import] command sends a directory *as is* from 
+The [eris data import] command sends a directory *as is* from
 SRC on the host to an existing DEST inside of the data container.
 
-The [eris data export] command performs this process in the reverse. 
-It sucks out whatever is in the SRC directory in the data container 
+The [eris data export] command performs this process in the reverse.
+It sucks out whatever is in the SRC directory in the data container
 and sticks it back into a DEST directory on the host.
 
-Notes: 
+Notes:
 - container paths enter at /home/eris/.eris
 - import host path must be absolute, export host path is indifferent
 
@@ -205,5 +207,8 @@ func ExecData(cmd *cobra.Command, args []string) {
 	}
 
 	do.Operations.Args = args
-	IfExit(data.ExecData(do))
+	config.GlobalConfig.InteractiveWriter = os.Stdout
+	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	_, err := data.ExecData(do)
+	IfExit(err)
 }

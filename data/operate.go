@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -88,20 +89,21 @@ func ImportData(do *definitions.Do) error {
 	return nil
 }
 
-func ExecData(do *definitions.Do) error {
+func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
 		log.WithField("=>", do.Operations.DataContainerName).Info("Executing data container")
 
 		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
 		util.Merge(ops, do.Operations)
-		if err := perform.DockerExecData(ops, nil); err != nil {
-			return err
+		buf, err = perform.DockerExecData(ops, nil)
+		if err != nil {
+			return nil, err
 		}
 	} else {
-		return fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
+		return nil, fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
 	}
 	do.Result = "success"
-	return nil
+	return buf, nil
 }
 
 //export from: do.Source(in container), to: do.Destination(on host)

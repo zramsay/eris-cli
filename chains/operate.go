@@ -76,10 +76,12 @@ func KillChain(do *definitions.Do) error {
 }
 
 func StartChain(do *definitions.Do) error {
-	return startChain(do, false)
+	_, err := startChain(do, false)
+
+	return err
 }
 
-func ExecChain(do *definitions.Do) error {
+func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
 }
 
@@ -104,23 +106,23 @@ func ThrowAwayChain(do *definitions.Do) error {
 }
 
 //------------------------------------------------------------------------
-func startChain(do *definitions.Do, exec bool) error {
+func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
 		log.Error("Cannot start a chain I cannot find")
 		do.Result = "no file"
-		return nil
+		return nil, nil
 	}
 
 	if chain.Name == "" {
 		log.Error("Cannot start a chain without a name")
 		do.Result = "no name"
-		return nil
+		return nil, nil
 	}
 
 	// boot the dependencies (eg. keys, logsrotate)
 	if err := bootDependencies(chain, do); err != nil {
-		return err
+		return nil, err
 	}
 
 	chain.Service.Command = loaders.ErisChainStart
@@ -164,16 +166,16 @@ func startChain(do *definitions.Do, exec bool) error {
 		// so that there is never any problems with sending info to the service (chain) container
 		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainersName("chain", chain.Name, 1), "chain"))
 
-		err = perform.DockerExecService(chain.Service, chain.Operations)
+		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
 		err = perform.DockerRunService(chain.Service, chain.Operations)
 	}
 	if err != nil {
 		do.Result = "error"
-		return err
+		return nil, err
 	}
 
-	return nil
+	return buf, nil
 }
 
 // boot chain dependencies

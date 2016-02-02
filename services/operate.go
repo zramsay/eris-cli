@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -106,10 +107,10 @@ func KillService(do *definitions.Do) (err error) {
 	return nil
 }
 
-func ExecService(do *definitions.Do) error {
+func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	util.Merge(service.Operations, do.Operations)
