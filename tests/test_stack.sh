@@ -59,6 +59,10 @@ mindy_repo=https://github.com/eris-ltd/mindy.git
 mindy_dir=$repo/../mindy
 mindy_branch=${MINDY_BRANCY:=master}
 
+mindy_repo=https://github.com/eris-ltd/mindy.git
+mindy_dir=$repo/../mindy
+mindy_branch=${MINDY_BRANCH:=master}
+
 # ----------------------------------------------------------------------------
 # Utility functions
 
