@@ -52,7 +52,7 @@ Complete documentation is available at https://docs.erisindustries.com
 			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved and the marmots will be happy to service your blockchain management needs\n\n%v", err))
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
-		if dockerVersion < dVerMin {
+		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
 	},
