@@ -59,8 +59,7 @@ var dataImport = &cobra.Command{
 	Short: "Import from a host folder to a named data container's directory",
 	Long: `Import from a host folder to a named data container's directory.
 Requires src and dest for each host and container, respectively.
-Container path enters at /home/eris/.eris
-Source (host) path must be absolute and destination dir must exist.`,
+Container path enters at /home/eris/.eris and destination dir must exist.`,
 	Run: ImportData,
 }
 
@@ -69,8 +68,7 @@ var dataExport = &cobra.Command{
 	Short: "Export a named data container's directory to a host directory",
 	Long: `Export a named data container's directory to a host directory.
 Requires src and dest for each container and host, respectively.
-Container path enters at /home/eris/.eris
-Destination (host) path can be relative.`,
+Container path enters at /home/eris/.eris.`,
 	Run: ExportData,
 }
 

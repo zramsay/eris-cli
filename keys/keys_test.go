@@ -76,8 +76,7 @@ func TestGetPubKey(t *testing.T) {
 		fatal(t, err)
 	}
 
-	pubBytes := pub.Bytes()
-	pubkey := util.TrimString(string(pubBytes))
+	pubkey := util.TrimString(pub.String())
 
 	key := new(bytes.Buffer)
 	config.GlobalConfig.Writer = key
