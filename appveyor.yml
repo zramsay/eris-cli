@@ -24,7 +24,7 @@ build_script:
 
     choco install -yr jq
     
-    choco install -yr docker         -version 1.9.1
+    choco install -yr docker -version 1.9.1
 
     choco install -yr docker-machine -version 0.4.1
 
