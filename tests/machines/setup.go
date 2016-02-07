@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -212,22 +211,16 @@ func makeMachine(machine string) error {
 }
 
 func setUpMachine(machine string) error {
-	dir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	file := filepath.Join(dir, script)
-	cmd := exec.Command("docker-machine", "scp", file, fmt.Sprintf("%s:", machine))
+	cmd := exec.Command("docker-machine", "scp", script, fmt.Sprintf("%s:", machine))
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("Cannot scp (%s) into the machine (%s): (%s)\n\n%s", file, machine, err, out.String())
+		return fmt.Errorf("Cannot scp (%s) into the machine (%s): (%s)\n\n%s", script, machine, err, out.String())
 	}
 
-	file = filepath.Base(file)
-	cmd = exec.Command("docker-machine", "ssh", machine, fmt.Sprintf("sudo $HOME/%s", file))
+	cmd = exec.Command("docker-machine", "ssh", machine, fmt.Sprintf("sudo $HOME/%s", script))
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	err = cmd.Run()

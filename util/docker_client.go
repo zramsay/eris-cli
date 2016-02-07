@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	ver "github.com/eris-ltd/eris-cli/version"
+
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
@@ -227,27 +229,83 @@ func getMachineDeets(machName string) (string, string, error) {
 	return dHost, dPath, nil
 }
 
-func DockerClientVersion() (float64, error) {
-	verR, err := DockerClient.Version()
+func DockerClientVersion() (string, error) {
+	info, err := DockerClient.Version()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	verD := verR.Get("Version")
-	v := strings.Split(verD, ".")
-	v = v[0:2] // we only want 1.8 so we can marshal that into a float64
-
-	return strconv.ParseFloat(strings.Join(v, "."), 10)
+	return info.Get("Version"), nil
 }
 
-func DockerAPIVersion() (float64, error) {
-	verR, err := DockerClient.Version()
+func DockerAPIVersion() (string, error) {
+	info, err := DockerClient.Version()
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	verD := verR.Get("APIVersion")
-	return strconv.ParseFloat(verD, 10)
+	return info.Get("APIVersion"), nil
+}
+
+// IsMinimalDockerClientVersion returns true if the connected Docker client
+// version is at least equal to the mimimal required for Eris.
+func IsMinimalDockerClientVersion() bool {
+	version, err := DockerClientVersion()
+	if err != nil {
+		return false
+	}
+
+	return CompareVersions(version, ver.DVER_MIN)
+}
+
+// CompareVersions returns true if the version v1 is larger than the version v2,
+// for example CompareVersions("1.10", "1.9") returns true.
+func CompareVersions(version1, version2 string) bool {
+	v1 := strings.Split(version1, ".")
+	v2 := strings.Split(version2, ".")
+
+	// Comparing just the major.minor scheme versions against each other (like "1.8").
+	if len(v1) < 2 || len(v2) < 2 {
+		return false
+	}
+
+	major1, err := strconv.Atoi(v1[0])
+	if err != nil {
+		return false
+	}
+	minor1, err := strconv.Atoi(v1[1])
+	if err != nil {
+		return false
+	}
+
+	major2, err := strconv.Atoi(v2[0])
+	if err != nil {
+		return false
+	}
+	minor2, err := strconv.Atoi(v2[1])
+	if err != nil {
+		return false
+	}
+
+	// Comparing major versions.
+	if major1 < major2 {
+		return false
+	}
+	if major1 > major2 {
+		return true
+	}
+
+	// Majors are equal. Comparing minor versions.
+	if minor1 < minor2 {
+		return false
+	}
+
+	// Otherwise true.
+
+	// NOTE: this means that CompareVersions("1.9.19", "1.9.23") will return true,
+	// because "1.9" equals "1.9".
+
+	return true
 }
 
 func setupErisMachine(driver string) error {

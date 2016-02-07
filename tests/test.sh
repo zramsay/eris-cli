@@ -171,8 +171,8 @@ sort_machines() {
     if [ "$ci" = true ]
     then
       go run setup.go 1>/dev/null
-      MACHINES=( $(docker-machine ls -q) )
       setup_result=$?
+      MACHINES=( $(docker-machine ls -q) )
     else
       MACHINES=( $(go run setup.go) )
       setup_result=$?
@@ -259,7 +259,7 @@ setup_tests() {
     build_eris $BRANCH &
     build_result=$!
   else
-    echo "Not building in Circle. Skipping docker build."
+    echo "Skipping docker build."
     build_result=$!
   fi
   sort_machines $1
