@@ -83,7 +83,7 @@ func MakeGenesisFile(do *def.Do) error {
 	doThr.Operations.Args = []string{"mintgen", "known", do.Chain.Name, fmt.Sprintf("--pub=%s", do.Pubkey)}
 
 	// pipe this output to /chains/chainName/genesis.json
-	err := ExecChain(doThr)
+	_, err := ExecChain(doThr)
 	if err != nil {
 		log.Warnf("Executing chain error: %v", err)
 		log.Warn("Cleaning up")

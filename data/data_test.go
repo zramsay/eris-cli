@@ -115,7 +115,7 @@ func TestExecData(t *testing.T) {
 		"data container": do.Name,
 		"args":           do.Operations.Args,
 	}).Info("Executing data (from tests)")
-	if err := ExecData(do); err != nil {
+	if _, err := ExecData(do); err != nil {
 		log.Error(err)
 		t.Fail()
 	}

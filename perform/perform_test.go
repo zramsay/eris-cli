@@ -125,8 +125,12 @@ func TestExecDataSimple(t *testing.T) {
 	}
 
 	ops.Args = strings.Fields("uptime")
-	if err := DockerExecData(ops, nil); err != nil {
+	buf, err := DockerExecData(ops, nil)
+	if err != nil {
 		t.Fatalf("expected data successfully run, got %v", err)
+	}
+	if !strings.Contains(buf.String(), "up") {
+		t.Fatalf("expected to find text in the output, got %s", buf.String())
 	}
 }
 
@@ -148,8 +152,42 @@ func TestExecDataBadCommandLine(t *testing.T) {
 	}
 
 	ops.Args = strings.Fields("/bad/command/line")
-	if err := DockerExecData(ops, nil); err == nil {
+	if _, err := DockerExecData(ops, nil); err == nil {
 		t.Fatalf("expected command line error, got nil")
+	}
+}
+
+func TestExecDataBufferNotOverwritten(t *testing.T) {
+	const (
+		name   = "testdata"
+		number = 199
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	ops := loaders.LoadDataDefinition(name, number)
+	if err := DockerCreateData(ops); err != nil {
+		t.Fatalf("expected data container created, got %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+
+	ops.Args = strings.Fields("true")
+	if _, err := DockerExecData(ops, nil); err != nil {
+		t.Fatalf("expected data successfully run, got %v", err)
+	}
+
+	if config.GlobalConfig.Writer != buf {
+		t.Fatalf("expected global writer unchaged after exec")
+	}
+
+	if config.GlobalConfig.ErrorWriter != buf {
+		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
 
@@ -308,7 +346,7 @@ func TestExecServiceSimple(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
@@ -317,6 +355,36 @@ func TestExecServiceSimple(t *testing.T) {
 	}
 	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
 		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceBufferNotOverwritten(t *testing.T) {
+	const (
+		name   = "ipfs"
+		number = 99
+	)
+
+	defer tests.RemoveAllContainers()
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Args = strings.Fields("true")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+
+	if config.GlobalConfig.Writer != buf {
+		t.Fatalf("expected global writer unchaged after exec")
+	}
+
+	if config.GlobalConfig.ErrorWriter != buf {
+		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
 
@@ -337,11 +405,9 @@ func TestExecServiceLogOutput(t *testing.T) {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("echo test")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service run, got %v", err)
 	}
 
@@ -367,11 +433,9 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("du -sh /usr")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service container run, got %v", err)
 	}
 
@@ -397,12 +461,10 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("echo test")
 	srv.Operations.Interactive = true
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service container run, got %v", err)
 	}
 
@@ -430,11 +492,12 @@ func TestExecServiceTwice(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("1. expected service container created, got %v", err)
 	}
 
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
@@ -466,11 +529,11 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 	srv.Service.AutoData = false
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("1. expected service container created, got %v", err)
 	}
 
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
@@ -501,7 +564,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 
 	srv.Operations.Interactive = false
 	srv.Operations.Args = strings.Fields("/bad/command/line")
-	if err := DockerExecService(srv.Service, srv.Operations); err == nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure, got %v", err)
 	}
 
@@ -532,7 +595,7 @@ func TestExecServiceNonInteractive(t *testing.T) {
 
 	srv.Operations.Interactive = false
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
@@ -567,7 +630,7 @@ func TestExecServiceAfterRunService(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err == nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure due to unpublished ports, got %v", err)
 	}
 }
@@ -596,7 +659,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 
@@ -632,7 +695,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 	srv.Operations.PublishAllPorts = true
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 

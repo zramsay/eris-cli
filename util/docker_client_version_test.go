@@ -29,6 +29,7 @@ var Tests = []struct {
 	// Unacceptable values.
 	{"0", "0", false},
 	{"0", "", false},
+	{"", "0", false},
 	{"", "", false},
 	{"9", "0", false},
 	{"0", "9", false},
@@ -40,7 +41,6 @@ var Tests = []struct {
 	{"9.0", "+.-", false},
 	{"3.4", "3.*", false},
 	{"4.##", "1.1", false},
-	{"40.#*", "1.1", false},
 }
 
 func TestCompareVersions(t *testing.T) {

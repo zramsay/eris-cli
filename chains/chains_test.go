@@ -199,16 +199,15 @@ func TestRestartChain(t *testing.T) {
 }
 
 func TestExecChain(t *testing.T) {
-	start(t, chainName)
-	defer kill(t, chainName)
+	defer tests.RemoveAllContainers()
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	start(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
 	do.Operations.Args = []string{"ls", common.ErisContainerRoot}
-	if err := ExecChain(do); err != nil {
+	buf, err := ExecChain(do)
+	if err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)
 	}
 
@@ -218,13 +217,13 @@ func TestExecChain(t *testing.T) {
 }
 
 func TestExecChainBadCommandLine(t *testing.T) {
+	defer tests.RemoveAllContainers()
 	start(t, chainName)
-	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
 	do.Operations.Args = strings.Fields("bad command line")
-	if err := ExecChain(do); err == nil {
+	if _, err := ExecChain(do); err == nil {
 		t.Fatalf("expected chain to fail")
 	}
 }
@@ -411,7 +410,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 	do = def.NowDo()
 	do.Name = chain
 	do.Operations.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
-	if err := ExecChain(do); err != nil {
+	if _, err := ExecChain(do); err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)
 	}
 
@@ -957,13 +956,11 @@ func kill(t *testing.T, chain string) {
 }
 
 func exec(t *testing.T, chain string, args []string) string {
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	do := def.NowDo()
 	do.Name = chain
 	do.Operations.Args = args
-	if err := ExecChain(do); err != nil {
+	buf, err := ExecChain(do)
+	if err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)
 	}
 
