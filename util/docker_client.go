@@ -391,7 +391,7 @@ func mustInstallError() error {
 
 	switch runtime.GOOS {
 	case "linux":
-		return fmt.Errorf("%s%s\nDo you have docker installed and running?\nIf not please [sudo services start docker] on Ubuntu.\nAlso check that your user is in the docker group (or rerun with sudo).\nTo fix this please run [sudo usermod -a -G docker $USER] on Ubuntu with your user substituted.", errBase, dInst)
+		return fmt.Errorf("%s%s\nDo you have docker installed and running?\nIf not please [sudo service docker start] on Ubuntu.\nAlso check that your user is in the docker group (or rerun with sudo).\nTo fix this please run [sudo usermod -a -G docker $USER] on Ubuntu with your user substituted.", errBase, dInst)
 	case "darwin":
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "mac/"))
 	case "windows":
