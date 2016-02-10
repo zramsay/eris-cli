@@ -39,6 +39,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestClean(t *testing.T) {
+	tests.RemoveAllContainers()
+
 	// since we'll be cleaning all eris containers, check if any exist & flame out
 	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
