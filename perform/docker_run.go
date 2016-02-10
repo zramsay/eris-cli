@@ -602,7 +602,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 
 	// Was running before remove.
 	if wasRunning {
-		err := util.DockerClient.StartContainer(newContainer.ID, createOpts.HostConfig)
+		err := util.DockerClient.StartContainer(newContainer.ID, nil)
 		if err != nil {
 			log.Debug("Container not restarted")
 		}
@@ -738,6 +738,10 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 }
 
 func startContainer(opts docker.CreateContainerOptions) error {
+	// Setting HostConfig in 'POST /containers/.../start' API call
+	// is deprecated since Docker v1.10.0.
+	opts.HostConfig = nil
+
 	return util.DockerClient.StartContainer(opts.Name, opts.HostConfig)
 }
 
