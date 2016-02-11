@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
@@ -16,6 +15,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 var (
@@ -39,7 +40,7 @@ func TestsInit(testType string) (err error) {
 	// variables to ensure that the tests
 	// run correctly.
 	config.ChangeErisDir(erisDir)
-
+	common.InitErisDir()
 	util.DockerConnect(false, "eris")
 
 	// this dumps the ipfs and keys services defs into the temp dir which
@@ -48,8 +49,7 @@ func TestsInit(testType string) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	// do.Source = "toadserver" //use "rawgit" if ts down
-	do.Source = "rawgit" //use "rawgit" if ts down
+	do.Source = "toadserver" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}

@@ -63,8 +63,6 @@ in a package definition file.`,
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	packagesDo.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	packagesDo.Flags().StringVarP(&do.Type, "type", "t", "mint", "app type paradigm to be used for deployment (overrides package.)")
-	packagesDo.Flags().StringVarP(&do.Task, "task", "k", "", "gulp task to be ran (overrides package.json; forces --type manual)")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
 	packagesDo.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
 	packagesDo.Flags().BoolVarP(&do.RmD, "rm-data", "x", true, "remove artifacts from host")
@@ -100,8 +98,9 @@ func PackagesExport(cmd *cobra.Command, args []string) {
 func PackagesDo(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
 	if do.Path == "" {
-		do.Path, _ = os.Getwd() // we aren't catching this error, but revisit later if it becomes a problem
+		var err error
+		do.Path, err = os.Getwd()
+		IfExit(err)
 	}
-	do.Name = "deploy" // todo remove this.
 	IfExit(pkgs.RunPackage(do))
 }

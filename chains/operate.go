@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -89,6 +90,7 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
 	do.Path = filepath.Join(ChainsPath, "default")
+	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"=>":   do.Name,
 		"path": do.Path,
@@ -256,16 +258,15 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		log.WithField("=>", do.Name).Debug("Chain data container already exists")
-	} else {
-		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
-		if err := perform.DockerCreateData(ops); err != nil {
-			return fmt.Errorf("Error creating data container =>\t%v", err)
-		}
-	}
-
-	log.WithField("=>", do.Name).Debug("Chain data container built")
+	// if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	// 	log.WithField("=>", do.Name).Debug("Chain data container already exists")
+	// } else {
+	// 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	// 	if err := perform.DockerCreateData(ops); err != nil {
+	// 		return fmt.Errorf("Error creating data container =>\t%v", err)
+	// 	}
+	// }
+	// log.WithField("=>", do.Name).Debug("Chain data container built")
 
 	// if something goes wrong, cleanup
 	defer func() {
@@ -280,10 +281,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}()
 
 	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
-	containerDst := filepath.Join("chains", do.Name)                // path in container
+	containerDst := path.Join("chains", do.Name)                    // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst) // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
-	// we probably need to update Import
 
 	log.WithFields(log.Fields{
 		"container path": containerDst,
@@ -337,7 +337,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	importDo.Name = do.Name
 	importDo.Operations = do.Operations
 	importDo.Destination = ErisContainerRoot
-	importDo.Source = filepath.Join(DataContainersPath, do.Name)
+	importDo.Source = dst
 	if err = data.ImportData(importDo); err != nil {
 		return err
 	}

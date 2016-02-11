@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/data"
@@ -13,6 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -21,51 +24,51 @@ import (
 var pwd string
 
 func RunPackage(do *definitions.Do) error {
-	log.Debug("Welcome! Say the marmots. Running app package")
+	log.Debug("Welcome! Say the marmots. Running package")
 	var err error
 	pwd, err = os.Getwd()
 	if err != nil {
-		return fmt.Errorf("Could not get the present working directory. Are you on Mars?\nError: %v\n", err)
+		return err
 	}
 
 	log.WithFields(log.Fields{
 		"host path": do.Path,
 		"pwd":       pwd,
 	}).Debug()
-	app, err := loaders.LoadContractPackage(do.Path, do.ChainName, do.Name, do.Type)
+	pkg, err := loaders.LoadPackage(do.Path, do.ChainName)
 	if err != nil {
 		do.Result = "could not load package"
 		return err
 	}
 
-	if err := BootServicesAndChain(do, app); err != nil {
+	if err := BootServicesAndChain(do, pkg); err != nil {
 		do.Result = "could not boot chain or services"
-		CleanUp(do, app)
+		CleanUp(do, pkg)
 		return err
 	}
 
-	do.Path = pwd
-	if err := DefineAppActionService(do, app); err != nil {
-		do.Result = "could not define app action service"
-		CleanUp(do, app)
+	if err := DefinePkgActionService(do, pkg); err != nil {
+		do.Result = "could not define pkg action service"
+		CleanUp(do, pkg)
 		return err
 	}
 
-	if err := PerformAppActionService(do, app); err != nil {
-		do.Result = "could not perform app action service"
-		CleanUp(do, app)
+	if err := PerformAppActionService(do, pkg); err != nil {
+		do.Result = "could not perform pkg action service"
+		CleanUp(do, pkg)
 		return err
 	}
 
 	do.Result = "success"
-	return CleanUp(do, app)
+	return CleanUp(do, pkg)
 }
 
-func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error {
+func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 	var err error
 	var srvs []*definitions.ServiceDefinition
+	do.ServicesSlice = append(do.ServicesSlice, pkg.Dependencies.Services...)
 
-	// launch the services
+	// assemble the services
 	for _, s := range do.ServicesSlice {
 		t, err := services.BuildServicesGroup(s, do.Operations.ContainerNumber, srvs...)
 		if err != nil {
@@ -74,6 +77,7 @@ func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error 
 		srvs = append(srvs, t...)
 	}
 
+	// boot the services
 	if len(srvs) >= 1 {
 		if err := services.StartGroup(srvs); err != nil {
 			return err
@@ -81,25 +85,42 @@ func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error 
 	}
 
 	// boot the chain
-	switch do.ChainName {
+	switch do.ChainName { // switch on the flag
 	case "":
-		if app.ChainName == "" {
-			// TODO [csk]: first check if there is a chain checked out. if not, then use throwAway
+		switch pkg.ChainName { // switch on the package.json
+		case "":
+			head, _ := util.GetHead() // checks the checkedout chain
+			if head != "" {           // used checked out chain
+				log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
+				err = bootChain(head, do)
+			} else { // if no chain is checked out and no --chain given, default to a throwaway
+				log.Info("No chain was given, booting a throwaway chain")
+				err = bootThrowAwayChain(pkg.Name, do)
+			}
+		case "$chain":
+			head, _ := util.GetHead() // checks the checkedout chain
+			if head != "" {           // used checked out chain
+				log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
+				err = bootChain(head, do)
+			} else { // if no chain is checked out and no --chain given, default to a throwaway
+				return fmt.Errorf("The package definition file needs a checked out chain to continue. Please check out the appropriate chain or rerun with a chain flag.")
+			}
+		case "t", "tmp", "temp", "temporary", "throwaway", "thr", "throw":
 			log.Info("No chain was given, booting a throwaway chain")
-			err = bootThrowAwayChain(app.Name, do)
-		} else {
-			log.WithField("=>", app.ChainName).Info("Booting chain")
-			err = bootChain(app.ChainName, do)
+			err = bootThrowAwayChain(pkg.Name, do)
+		default:
+			log.WithField("=>", pkg.ChainName).Info("No chain flag used. Booting chain from package file")
+			err = bootChain(pkg.ChainName, do)
 		}
-	case "t", "tmp", "temp":
+	case "t", "tmp", "temp", "temporary", "throwaway", "thr", "throw":
 		log.Info("No chain was given, booting a throwaway chain")
-		err = bootThrowAwayChain(app.Name, do)
+		err = bootThrowAwayChain(pkg.Name, do)
 	default:
-		log.WithField("=>", do.ChainName).Info("Booting chain")
+		log.WithField("=>", do.ChainName).Info("Booting chain from chain flag.")
 		err = bootChain(do.ChainName, do)
 	}
 
-	app.ChainName = do.Chain.Name
+	pkg.ChainName = do.Chain.Name
 	if err != nil {
 		return err
 	}
@@ -107,49 +128,13 @@ func BootServicesAndChain(do *definitions.Do, app *definitions.Contracts) error 
 	return nil
 }
 
-func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) error {
-	var cmd string
-
-	switch do.Name {
-	case "test":
-		cmd = app.AppType.TestCmd
-	case "deploy":
-		cmd = app.AppType.DeployCmd
-	default:
-		return fmt.Errorf("I do not know how to perform that task (%s)\nPlease check what you can do with contracts by typing [eris contracts].\n", do.Name)
-	}
-
-	// if manual, set task
-	if app.AppType.Name == "manual" {
-		switch do.Name {
-		case "test":
-			cmd = app.TestTask
-		case "deploy":
-			cmd = app.DeployTask
-		}
-	}
-
-	// task flag override
-	if do.Task != "" {
-		app.AppType = definitions.GulpApp()
-		cmd = do.Task
-	}
-
-	if cmd == "nil" {
-		return fmt.Errorf("I cannot perform that task against that app type.\n")
-	}
-
-	// build service that will run
-	do.Service.Name = app.Name + "_tmp_" + do.Name
-	do.Service.Image = app.AppType.BaseImage
+// build service that will run
+func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error {
+	do.Service.Name = pkg.Name + "_tmp_" + do.Name
+	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM)
 	do.Service.AutoData = true
-	do.Service.EntryPoint = app.AppType.EntryPoint
-	do.Service.Command = cmd
-	if do.Path != pwd {
-		do.Service.WorkDir = do.Path // do.Path is actually where the workdir inside the container goes
-	} else {
-		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", app.Name)
-	}
+	do.Service.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
+	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", pkg.Name)
 	do.Service.User = "eris"
 
 	srv := definitions.BlankServiceDefinition()
@@ -160,44 +145,18 @@ func DefineAppActionService(do *definitions.Do, app *definitions.Contracts) erro
 	do.Operations = srv.Operations
 	do.Operations.Follow = true
 
-	linkAppToChain(do, app)
-
-	if app.AppType.Name == "epm" {
-		prepareEpmAction(do, app)
-	}
-
-	// make data container and import do.Path to do.Path (if exists)
-	doData := definitions.NowDo()
-	doData.Name = do.Service.Name
-	doData.Operations = do.Operations
-	if do.Path != pwd {
-		doData.Destination = do.Path
-	} else {
-		doData.Destination = common.ErisContainerRoot
-	}
-
-	doData.Source = filepath.Join(common.DataContainersPath, doData.Name)
-	var loca string
-	if do.Path != pwd {
-		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
-	} else {
-		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
-	}
-	log.WithFields(log.Fields{
-		"path":     do.Path,
-		"location": loca,
-	}).Debug("Creating app data container")
-	common.Copy(do.Path, loca)
-	if err := data.ImportData(doData); err != nil {
-		return err
-	}
-	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
+	prepareEpmAction(do, pkg)
+	linkAppToChain(do, pkg)
 
 	log.Debug("App action built")
 	return nil
 }
 
-func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) error {
+func PerformAppActionService(do *definitions.Do, app *definitions.Package) error {
+	if err := getDataContainerSorted(do, true); err != nil {
+		return err
+	}
+
 	log.Warn("Performing action. This can sometimes take a wee while")
 	log.WithFields(log.Fields{
 		"service": do.Service.Name,
@@ -214,11 +173,11 @@ func PerformAppActionService(do *definitions.Do, app *definitions.Contracts) err
 		return err
 	}
 
-	log.Info("Finished performing app action")
+	log.Info("Finished performing action")
 	return nil
 }
 
-func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
+func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 	log.Info("Cleaning up")
 
 	if do.Chain.ChainType == "throwaway" {
@@ -243,39 +202,8 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		log.Debug("No throwaway chain to destroy")
 	}
 
-	doData := definitions.NowDo()
-	doData.Name = do.Service.Name
-	doData.Operations = do.Operations
-
-	doData.Source = common.ErisContainerRoot
-	if do.Path != pwd {
-		doData.Destination = do.Path
-	} else {
-		doData.Destination = filepath.Join(common.DataContainersPath, doData.Name)
-	}
-	var loca string
-	if do.Path != pwd {
-		loca = filepath.Join(common.DataContainersPath, doData.Name, do.Path)
-	} else {
-		loca = filepath.Join(common.DataContainersPath, doData.Name, "apps", app.Name)
-	}
-
-	log.WithFields(log.Fields{
-		"path":     doData.Source,
-		"location": loca,
-	}).Debug("Exporting results")
-	data.ExportData(doData)
-
-	if app.AppType.Name == "epm" {
-		files, _ := filepath.Glob(filepath.Join(loca, "*"))
-		for _, f := range files {
-			dest := filepath.Join(do.Path, filepath.Base(f))
-			log.WithFields(log.Fields{
-				"from": f,
-				"to":   dest,
-			}).Debug("Moving file")
-			common.Copy(f, dest)
-		}
+	if err := getDataContainerSorted(do, false); err != nil {
+		return err // errors marmotified in getDataContainerSorted
 	}
 
 	if !do.RmD {
@@ -287,7 +215,7 @@ func CleanUp(do *definitions.Do, app *definitions.Contracts) error {
 		doRemove := definitions.NowDo()
 		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
 		log.WithField("=>", doRemove.Operations.SrvContainerName).Debug("Removing data container")
-		if err := perform.DockerRemove(nil, doRemove.Operations, false, true, false); err != nil {
+		if err := perform.DockerRemove(nil, doRemove.Operations, true, true, false); err != nil {
 			return err
 		}
 	}
@@ -300,22 +228,39 @@ func bootChain(name string, do *definitions.Do) error {
 	startChain := definitions.NowDo()
 	startChain.Name = name
 	startChain.Operations = do.Operations
-	err := chains.StartChain(startChain)
-	// errors *could* be because the chain was actually a service.
-	if err != nil {
-		if util.IsServiceContainer(name, do.Operations.ContainerNumber, true) {
-			startService := definitions.NowDo()
-			startService.Operations = do.Operations
-			startService.Operations.Args = []string{name}
-			err = services.StartService(startService)
-			if err != nil {
-				return err
-			}
+	f, err := os.Stat(filepath.Join(common.ChainsPath, startChain.Name))
+	switch {
+	case util.IsChainContainer(name, do.Operations.ContainerNumber, true):
+		log.WithField("name", startChain.Name).Info("Starting Chain")
+		if err := chains.StartChain(startChain); err != nil {
+			return err
 		}
-	} else {
 		do.Chain.ChainType = "chain" // setting this for tear down purposes
+	case !os.IsNotExist(err) && f.IsDir():
+		log.WithField("name", startChain.Name).Info("Trying New Chain")
+		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
+		if err := chains.NewChain(startChain); err != nil {
+			return err
+		}
+		do.Chain.ChainType = "chain" // setting this for tear down purposes
+	case util.IsServiceContainer(name, do.Operations.ContainerNumber, true):
+		log.WithField("name", name).Info("Chain exists as a service.")
+		startService := definitions.NowDo()
+		startService.Operations = do.Operations
+		startService.Operations.Args = []string{name}
+		err = services.StartService(startService)
+		if err != nil {
+			return err
+		}
+		do.Chain.ChainType = "service" // setting this for tear down purposes
+	default:
+		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command.")
 	}
+
 	do.Chain.Name = name // setting this for tear down purposes
+
+	// let the chain boot properly
+	time.Sleep(5 * time.Second)
 	return nil
 }
 
@@ -333,24 +278,33 @@ func bootThrowAwayChain(name string, do *definitions.Do) error {
 	do.Chain.Name = do.Name // setting this for tear down purposes
 	log.WithField("=>", do.Name).Debug("Throwaway chain booted")
 
+	// let the chain boot properly
+	time.Sleep(5 * time.Second)
+
 	do.Name = tmp
 	return nil
 }
 
-func linkAppToChain(do *definitions.Do, app *definitions.Contracts) {
+func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
 	if do.Chain.ChainType == "service" {
-		newLink = util.ServiceContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ServiceContainersName(pkg.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainersName(app.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ChainContainersName(pkg.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
 	}
 	newLink2 := util.ServiceContainersName("keys", do.Operations.ContainerNumber) + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
 	do.Service.Links = append(do.Service.Links, newLink2)
+
+	for _, s := range do.ServicesSlice {
+		l := util.ServiceContainersName(s, do.Operations.ContainerNumber) + ":" + s
+		do.Service.Links = append(do.Service.Links, l)
+	}
 }
 
-func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
+func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
+	// todo: rework these so they all just append to the environment variables rather than use flags as it will be more stable
 	if do.Verbose {
 		do.Service.Environment = append(do.Service.Environment, "EPM_VERBOSE=true")
 	}
@@ -365,11 +319,6 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --output json"
 	}
 
-	if do.EPMConfigFile != "" {
-		log.WithField("config", do.EPMConfigFile).Debug("Setting config file to")
-		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(do.Service.WorkDir, do.EPMConfigFile)
-	}
-
 	if len(do.ConfigOpts) != 0 {
 		var toAdd string
 		log.WithField("sets file", do.ConfigOpts).Debug("Setting sets file to")
@@ -381,14 +330,6 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 
 	if do.OutputTable {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --summary "
-	}
-
-	if do.PackagePath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --contracts-path " + path.Join(do.Service.WorkDir, do.PackagePath)
-	}
-
-	if do.ABIPath != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --abi-path " + path.Join(do.Service.WorkDir, do.ABIPath)
 	}
 
 	if do.DefaultGas != "" {
@@ -410,4 +351,234 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Contracts) {
 	if do.DefaultAmount != "" {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --amount " + do.DefaultAmount
 	}
+}
+
+func getDataContainerSorted(do *definitions.Do, inbound bool) error {
+	if inbound {
+		log.WithField("dir", "inbound").Info("Getting data container situated")
+	} else {
+		log.WithField("dir", "outbound").Info("Getting data container situated")
+	}
+
+	doData := definitions.NowDo()
+	doData.Name = do.Service.Name
+	doData.Operations = do.Operations
+	if doData.Operations.ContainerNumber == 0 {
+		log.Info("Setting ops.ContainerNumber to 1")
+		doData.Operations.ContainerNumber = 1
+	}
+
+	if inbound && util.HowManyContainersExisting(doData.Name, "data") == 0 {
+		doData.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
+		doData.Operations.ContainerType = "data"
+		if err := perform.DockerCreateData(doData.Operations); err != nil {
+			return err
+		}
+	}
+
+	oldDoPath := do.Path
+	oldPkgPath := do.PackagePath
+	oldAbiPath := do.ABIPath
+
+	var err error
+	do.Path, err = filepath.Abs(do.Path)
+	do.PackagePath, err = filepath.Abs(do.PackagePath)
+	do.ABIPath, err = filepath.Abs(do.ABIPath)
+	do.EPMConfigFile, err = filepath.Abs(do.EPMConfigFile)
+	if err != nil {
+		return err
+	}
+
+	fi, err := os.Stat(do.Path)
+	if err == nil && !fi.IsDir() {
+		do.Path = filepath.Dir(do.Path)
+		log.WithField("=>", do.Path).Debug("Setting do.Path")
+	}
+
+	fi, err = os.Stat(do.PackagePath)
+	if err == nil && !fi.IsDir() {
+		do.PackagePath = filepath.Dir(do.PackagePath)
+		log.WithField("=>", do.PackagePath).Debug("Setting do.PackagePath")
+	}
+
+	fi, err = os.Stat(do.ABIPath)
+	if err == nil && !fi.IsDir() {
+		do.ABIPath = filepath.Dir(do.ABIPath)
+		log.WithField("=>", do.ABIPath).Debug("Setting do.ABIPath")
+	}
+
+	// import contracts path (if exists)
+	if _, err := os.Stat(do.Path); !os.IsNotExist(err) {
+		if inbound {
+			doData.Source = do.Path
+			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+
+			log.Info("Making a directory in the data container")
+			doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))}
+			if _, err := data.ExecData(doData); err != nil {
+				return err
+			}
+			doData.Operations.Args = []string{}
+
+		} else {
+			doData.Source = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+			doData.Destination = filepath.Dir(do.Path) // on exports we always need the parent of the directory
+		}
+
+		log.WithFields(log.Fields{
+			"source": doData.Source,
+			"dest":   doData.Destination,
+		}).Debug("Setting app data for container")
+		if inbound {
+			if err := data.ImportData(doData); err != nil {
+				return err
+			}
+		} else {
+			if err := data.ExportData(doData); err != nil {
+				return err
+			}
+		}
+	} else {
+		return fmt.Errorf("That path does not exist. Please rerun command with a proper path.")
+	}
+
+	// import contracts path (if exists)
+	if _, err := os.Stat(do.PackagePath); !os.IsNotExist(err) && !strings.Contains(do.PackagePath, do.Path) {
+		log.WithFields(log.Fields{
+			"path":        do.Path,
+			"packagePath": do.PackagePath,
+		}).Debug("Package path exists and is not in app path. Proceeding with Import/Export sequence.")
+		if inbound {
+			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
+			doData.Source = do.PackagePath
+
+			if _, err := os.Stat(filepath.Join(do.Path, "contracts")); os.IsNotExist(err) {
+				log.Info("Making a contracts directory in the data container")
+				doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")}
+				if _, err := data.ExecData(doData); err != nil {
+					return err
+				}
+				doData.Operations.Args = []string{}
+			}
+
+			log.WithFields(log.Fields{
+				"source": doData.Source,
+				"dest":   doData.Destination,
+			}).Debug("Importing contracts path.")
+			if err := data.ImportData(doData); err != nil {
+				return err
+			}
+		} else {
+			log.WithFields(log.Fields{
+				"source": filepath.Join(do.Path, "contracts"),
+				"dest":   do.PackagePath,
+			}).Debug("Moving contracts into position.")
+			if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
+				return err
+			}
+		}
+	} else if !strings.Contains(do.PackagePath, do.Path) {
+		log.WithFields(log.Fields{
+			"source": filepath.Join(do.Path, "contracts"),
+			"dest":   do.PackagePath,
+		}).Debug("Moving contracts into position.")
+		if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
+			return err
+		}
+	} else {
+		log.Info("Package path does not exist on the host or is inside the app Path.")
+	}
+
+	// import abi path (if exists)
+	if _, err := os.Stat(do.ABIPath); !os.IsNotExist(err) && !strings.Contains(do.ABIPath, do.Path) {
+		log.WithFields(log.Fields{
+			"path":    do.Path,
+			"abiPath": do.ABIPath,
+		}).Debug("ABI path exists and is not in app path. Proceeding with Import/Export sequence.")
+		if inbound {
+			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
+			doData.Source = do.ABIPath
+
+			if _, err := os.Stat(filepath.Join(do.Path, "abi")); os.IsNotExist(err) {
+				log.Info("Making a abi directory in the data container")
+				doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")}
+				if _, err := data.ExecData(doData); err != nil {
+					return err
+				}
+				doData.Operations.Args = []string{}
+			}
+
+			log.WithFields(log.Fields{
+				"source": doData.Source,
+				"dest":   doData.Destination,
+			}).Debug("Importing abi path.")
+			if err := data.ImportData(doData); err != nil {
+				return err
+			}
+		} else {
+			log.WithFields(log.Fields{
+				"source": filepath.Join(do.Path, "abi"),
+				"dest":   do.ABIPath,
+			}).Debug("Moving abi into position.")
+			if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
+				return err
+			}
+		}
+	} else if !strings.Contains(do.ABIPath, do.Path) {
+		log.WithFields(log.Fields{
+			"source": filepath.Join(do.Path, "abi"),
+			"dest":   do.ABIPath,
+		}).Debug("Moving abi into position.")
+		if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
+			return err
+		}
+	} else {
+		log.Info("ABI path does not exist on the host or is inside the app Path.")
+	}
+
+	// import epm.yaml (if it is in a weird place)
+	if inbound && !strings.Contains(do.EPMConfigFile, do.Path) { // note <- is the default, if we change the default we'll have to change this.
+		doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+		doData.Source = do.EPMConfigFile
+		log.WithFields(log.Fields{
+			"source": doData.Source,
+			"dest":   doData.Destination,
+		}).Debug("Importing eris-pm config file.")
+		if err := data.ImportData(doData); err != nil {
+			return err
+		}
+	} else if !strings.Contains(do.EPMConfigFile, do.Path) {
+		file, err := filepath.Abs(do.EPMConfigFile)
+		if err != nil {
+			return err
+		}
+		dirToMoveTo := filepath.Dir(file)
+		epmFiles, err := filepath.Glob(filepath.Join(do.Path, "epm*"))
+		if err != nil {
+			return err
+		}
+		log.WithFields(log.Fields{
+			"source": epmFiles,
+			"dest":   dirToMoveTo,
+		}).Debug("Moving eris-pm artifacts.")
+		for _, epmFile := range epmFiles {
+			var err error
+			epmFile, err = filepath.Abs(epmFile)
+			if err != nil {
+				return err
+			}
+			err = os.Rename(epmFile, filepath.Join(dirToMoveTo, filepath.Base(epmFile)))
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		log.Info("EPM files do not exist on the host or are inside the app Path.")
+	}
+
+	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
+	do.Path = oldDoPath
+	do.PackagePath = oldPkgPath
+	do.ABIPath = oldAbiPath
+	return nil
 }

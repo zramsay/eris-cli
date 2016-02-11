@@ -186,6 +186,14 @@ main() {
     cross_compile "$@"
     return $?
   fi
+  if [[ "$1" == "pkgs" ]]
+  then
+    cross_compile "$@"
+    release_apt "$@"
+    release_yum "$@"
+    clean_up $?
+    return $?
+  fi
   if [[ "$1" == "pre" ]]
   then
     preRun "$@"

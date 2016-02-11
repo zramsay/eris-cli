@@ -154,6 +154,7 @@ func ChangeErisDir(erisDir string) {
 	// Chains Directories
 	dir.DefaultChainPath = filepath.Join(dir.ChainsPath, "default")
 	dir.AccountsTypePath = filepath.Join(dir.ChainsPath, "account-types")
+	dir.ChainTypePath = filepath.Join(dir.ChainsPath, "chain-types")
 
 	// Keys Directories
 	dir.KeysDataPath = filepath.Join(dir.KeysPath, "data")
