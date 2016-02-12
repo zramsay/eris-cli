@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -31,7 +30,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	runtime.GOMAXPROCS(1)
 	log.SetFormatter(logger.ErisFormatter{})
 
 	log.SetLevel(log.ErrorLevel)
@@ -41,9 +39,11 @@ func TestMain(m *testing.M) {
 	tests.IfExit(tests.TestsInit("chain"))
 	mockChainDefinitionFile(chainName)
 
-	m.Run()
+	exitCode := m.Run()
 
 	tests.IfExit(tests.TestsTearDown())
+
+	os.Exit(exitCode)
 }
 
 func TestListAllChainsRunning(t *testing.T) {
@@ -157,15 +157,7 @@ func TestStartChain(t *testing.T) {
 func TestRestartChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	do := def.NowDo()
-	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
-	do.Name = chainName
-	do.Operations.ContainerNumber = 1
-	do.Operations.PublishAllPorts = true
-	if err := NewChain(do); err != nil {
-		t.Fatalf("expected a new chain to be created, got %v", err)
-	}
-
+	create(t, chainName)
 	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 chain container, got %v", n)
 	}
@@ -201,7 +193,7 @@ func TestRestartChain(t *testing.T) {
 func TestExecChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	start(t, chainName)
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -218,7 +210,8 @@ func TestExecChain(t *testing.T) {
 
 func TestExecChainBadCommandLine(t *testing.T) {
 	defer tests.RemoveAllContainers()
-	start(t, chainName)
+
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -321,7 +314,7 @@ func TestChainsNewDirGenCustomFile(t *testing.T) {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 
-	args := []string{"cat", filepath.Join(common.ErisContainerRoot, file+".toml")}
+	args := []string{"cat", path.Join(common.ErisContainerRoot, file+".toml")}
 	if out := exec(t, chain, args); out != contents {
 		t.Fatalf("expected file contents, got %q", out)
 	}
@@ -351,7 +344,7 @@ func TestChainsNewDirGenesis(t *testing.T) {
 func TestChainsNewConfig(t *testing.T) {
 	defer tests.RemoveAllContainers()
 	const (
-		chain = "test-config-csv"
+		chain = "test-config-new"
 	)
 
 	do := def.NowDo()
@@ -407,11 +400,8 @@ func TestChainsNewConfigOpts(t *testing.T) {
 		t.Fatalf("expected to create a new chain, got %v", err)
 	}
 
-	do = def.NowDo()
-	do.Name = chain
-	do.Operations.Args = []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
-	if _, err := ExecChain(do); err != nil {
-		t.Fatalf("expected chain to execute, got %v", err)
+	if n := util.HowManyContainersRunning(chain, def.TypeChain); n != 1 {
+		t.Fatalf("expecting 1 chain container running, got %v", n)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
@@ -423,7 +413,7 @@ func TestChainsNewConfigOpts(t *testing.T) {
 func TestLogsChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	start(t, chainName)
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -437,7 +427,7 @@ func TestLogsChain(t *testing.T) {
 func TestUpdateChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	start(t, chainName)
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -455,7 +445,7 @@ func TestUpdateChain(t *testing.T) {
 func TestInspectChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	start(t, chainName)
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -532,7 +522,11 @@ func TestRenameChain(t *testing.T) {
 }
 
 func TestRmChain(t *testing.T) {
-	start(t, chainName)
+	defer tests.RemoveAllContainers()
+
+	mockChainDefinitionFile(chainName)
+
+	create(t, chainName)
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
@@ -542,7 +536,6 @@ func TestRmChain(t *testing.T) {
 
 	do = def.NowDo()
 	do.Name, do.Rm, do.RmD = chainName, false, false
-	log.WithField("=>", do.Name).Info("Stopping chain (from tests)")
 	if err := KillChain(do); err != nil {
 		t.Fatalf("expected chain to be stopped, got %v", err)
 	}
@@ -553,7 +546,6 @@ func TestRmChain(t *testing.T) {
 	do = def.NowDo()
 	do.Name = chainName
 	do.RmD = true
-	log.WithField("=>", do.Name).Info("Removing chain (from tests)")
 	if err := RmChain(do); err != nil {
 		t.Fatalf("expected chain to be removed, got %v", err)
 	}
@@ -609,6 +601,8 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
+	create(t, chainName)
+
 	if err := tests.FakeServiceDefinition(erisDir, "fake", `
 [service]
 name = "fake"
@@ -637,10 +631,13 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 }
 
 func TestServiceLink(t *testing.T) {
+	const (
+		chain = "test-chain-link"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
@@ -651,12 +648,13 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = false
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
@@ -670,7 +668,7 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
@@ -683,16 +681,19 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	}
 
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+	if len(links) != 1 || !strings.Contains(links[0], chain) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkWithDataContainer(t *testing.T) {
+	const (
+		chain = "test-chain-data-container"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
@@ -709,7 +710,7 @@ data_container = true
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
@@ -723,7 +724,7 @@ data_container = true
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
@@ -736,32 +737,35 @@ data_container = true
 	}
 
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+	if len(links) != 1 || !strings.Contains(links[0], chain) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkLiteral(t *testing.T) {
+	const (
+		chain = "test-chain-literal"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
 	if err := tests.FakeServiceDefinition(erisDir, "fake", `
-chain = "`+chainName+`:fake"
+chain = "`+chain+`:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
@@ -775,7 +779,7 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
@@ -788,16 +792,19 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	}
 
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+	if len(links) != 1 || !strings.Contains(links[0], chain) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkBadLiteral(t *testing.T) {
+	const (
+		chain = "test-chain-bad-literal"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
@@ -813,14 +820,14 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	// [pv]: probably a bug. Bad literal chain link in a definition
 	// file doesn't affect the service start. Links is not nil.
 	if err := services.StartService(do); err != nil {
@@ -828,29 +835,32 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	}
 
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 1 || !strings.Contains(links[0], chainName) {
+	if len(links) != 1 || !strings.Contains(links[0], chain) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkKeys(t *testing.T) {
+	const (
+		chain = "chain-test-keys"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
 	do = def.NowDo()
 	do.Operations.Args = []string{"keys"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
@@ -866,10 +876,13 @@ func TestServiceLinkKeys(t *testing.T) {
 }
 
 func TestServiceLinkChainedService(t *testing.T) {
+	const (
+		chain = "test-chained-service"
+	)
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Name = chainName
+	do.Name = chain
 	do.Operations.ContainerNumber = 1
 	if err := NewChain(do); err != nil {
 		t.Fatalf("could not start a new chain, got %v", err)
@@ -880,7 +893,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -899,14 +912,14 @@ data_container = true
 		t.Fatalf("can't create a sham service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
+	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
 		t.Fatalf("expecting 1 test chain containers, got %v", n)
 	}
 
 	do = def.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.Operations.ContainerNumber = 1
-	do.ChainName = chainName
+	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
@@ -926,8 +939,19 @@ data_container = true
 
 	// [pv]: second service doesn't reference the chain.
 	links := tests.Links("fake", def.TypeService, 1)
-	if len(links) != 2 || (!strings.Contains(links[1], chainName) && !strings.Contains(links[0], chainName)) {
+	if len(links) != 2 || (!strings.Contains(links[1], chain) && !strings.Contains(links[0], chain)) {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
+	}
+}
+
+func create(t *testing.T, chain string) {
+	do := def.NowDo()
+	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
+	do.Name = chain
+	do.Operations.ContainerNumber = 1
+	do.Operations.PublishAllPorts = true
+	if err := NewChain(do); err != nil {
+		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 }
 
