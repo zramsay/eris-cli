@@ -2,6 +2,7 @@ package version
 
 var (
 	SERVICE_DEFINITIONS = []string{
+		"bigchaindb.toml",
 		"btcd.toml",
 		"bitcoincore.toml",
 		"bitcoinclassic.toml",
@@ -13,6 +14,7 @@ var (
 		"logsrotate.toml",
 		"mindy.toml",
 		"openbazaar.toml",
+		"rethinkdb.toml",
 		"toadserver.toml",
 		"tinydns.toml",
 		"tor.toml",
