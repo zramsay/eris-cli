@@ -47,7 +47,7 @@ func ImportData(do *definitions.Do) error {
 		}
 
 		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		os.Chdir(do.Source)
+		// os.Chdir(do.Source)
 
 		reader, err := util.Tar(do.Source, 0)
 		if err != nil {

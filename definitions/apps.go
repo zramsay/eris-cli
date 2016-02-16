@@ -6,6 +6,8 @@ import (
 	"github.com/eris-ltd/eris-cli/version"
 )
 
+// [csk]: TODO: refactor what the hell we're doing here. move away from the restrictive eth app types into the larger area of play.
+// NOTE: this is currently unused.
 type AppType struct {
 	Name       string
 	BaseImage  string
