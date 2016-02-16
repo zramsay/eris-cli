@@ -2,6 +2,7 @@ package pkgs
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -134,7 +136,7 @@ func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error 
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM)
 	do.Service.AutoData = true
 	do.Service.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
-	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", pkg.Name)
+	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
 	do.Service.User = "eris"
 
 	srv := definitions.BlankServiceDefinition()
@@ -168,10 +170,13 @@ func PerformAppActionService(do *definitions.Do, app *definitions.Package) error
 	}).Debug()
 
 	do.Operations.ContainerType = definitions.TypeService
-	if _, err := perform.DockerExecService(do.Service, do.Operations); err != nil {
+	buf, err := perform.DockerExecService(do.Service, do.Operations)
+	if err != nil {
 		do.Result = "could not perform app action"
 		return err
 	}
+
+	io.Copy(config.GlobalConfig.Writer, buf)
 
 	log.Info("Finished performing action")
 	return nil
@@ -206,18 +211,18 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		return err // errors marmotified in getDataContainerSorted
 	}
 
-	if !do.RmD {
-		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
-	}
-
 	if !do.Rm {
 		doRemove := definitions.NowDo()
 		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
 		log.WithField("=>", doRemove.Operations.SrvContainerName).Debug("Removing data container")
-		if err := perform.DockerRemove(nil, doRemove.Operations, true, true, false); err != nil {
+		if err := perform.DockerRemove(nil, doRemove.Operations, false, true, false); err != nil {
 			return err
 		}
+	}
+
+	if !do.RmD {
+		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
+		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
 	}
 
 	return nil
@@ -306,10 +311,14 @@ func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 	// todo: rework these so they all just append to the environment variables rather than use flags as it will be more stable
 	if do.Verbose {
-		do.Service.Environment = append(do.Service.Environment, "EPM_VERBOSE=true")
+		do.Service.EntryPoint = do.Service.EntryPoint + " --verbose "
+
+		// do.Service.Environment = append(do.Service.Environment, "EPM_VERBOSE=true")
 	}
 	if do.Debug {
-		do.Service.Environment = append(do.Service.Environment, "EPM_DEBUG=true")
+		do.Service.EntryPoint = do.Service.EntryPoint + " --debug "
+
+		// do.Service.Environment = append(do.Service.Environment, "EPM_DEBUG=true")
 	}
 
 	if do.CSV != "" {
@@ -447,7 +456,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"path":        do.Path,
 			"packagePath": do.PackagePath,
-		}).Debug("Package path exists and is not in app path. Proceeding with Import/Export sequence.")
+		}).Debug("Package path exists and is not in pkg path. Proceeding with Import/Export sequence.")
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
 			doData.Source = do.PackagePath
@@ -486,7 +495,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			return err
 		}
 	} else {
-		log.Info("Package path does not exist on the host or is inside the app Path.")
+		log.Info("Package path does not exist on the host or is inside the pkg path.")
 	}
 
 	// import abi path (if exists)
@@ -494,7 +503,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"path":    do.Path,
 			"abiPath": do.ABIPath,
-		}).Debug("ABI path exists and is not in app path. Proceeding with Import/Export sequence.")
+		}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence.")
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
 			doData.Source = do.ABIPath
@@ -533,7 +542,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			return err
 		}
 	} else {
-		log.Info("ABI path does not exist on the host or is inside the app Path.")
+		log.Info("ABI path does not exist on the host or is inside the pkg path.")
 	}
 
 	// import epm.yaml (if it is in a weird place)
@@ -573,7 +582,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			}
 		}
 	} else {
-		log.Info("EPM files do not exist on the host or are inside the app Path.")
+		log.Info("EPM files do not exist on the host or are inside the pkg path.")
 	}
 
 	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)

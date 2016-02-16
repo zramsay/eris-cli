@@ -258,15 +258,19 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	// if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-	// 	log.WithField("=>", do.Name).Debug("Chain data container already exists")
-	// } else {
-	// 	ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
-	// 	if err := perform.DockerCreateData(ops); err != nil {
-	// 		return fmt.Errorf("Error creating data container =>\t%v", err)
-	// 	}
-	// }
-	// log.WithField("=>", do.Name).Debug("Chain data container built")
+	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		log.WithField("=>", do.Name).Debug("Chain data container already exists")
+	} else {
+		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		if err := perform.DockerCreateData(ops); err != nil {
+			return fmt.Errorf("Error creating data container =>\t%v", err)
+		}
+		ops.Args = []string{"mkdir", "--parents", path.Join(ErisContainerRoot, "chains", do.ChainID)}
+		if _, err := perform.DockerExecData(ops, nil); err != nil {
+			return err
+		}
+	}
+	log.WithField("=>", do.Name).Debug("Chain data container built")
 
 	// if something goes wrong, cleanup
 	defer func() {
@@ -281,8 +285,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}()
 
 	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
-	containerDst := path.Join("chains", do.Name)                    // path in container
-	dst := filepath.Join(DataContainersPath, do.Name, containerDst) // path on host
+	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
+	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
 	// TODO: deal with do.Operations.ContainerNumbers ....!
 
 	log.WithFields(log.Fields{
@@ -336,7 +340,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	importDo := definitions.NowDo()
 	importDo.Name = do.Name
 	importDo.Operations = do.Operations
-	importDo.Destination = ErisContainerRoot
+	importDo.Destination = containerDst
 	importDo.Source = dst
 	if err = data.ImportData(importDo); err != nil {
 		return err

@@ -314,7 +314,7 @@ func TestChainsNewDirGenCustomFile(t *testing.T) {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 
-	args := []string{"cat", path.Join(common.ErisContainerRoot, file+".toml")}
+	args := []string{"cat", path.Join(common.ErisContainerRoot, "chains", do.Name, file+".toml")}
 	if out := exec(t, chain, args); out != contents {
 		t.Fatalf("expected file contents, got %q", out)
 	}

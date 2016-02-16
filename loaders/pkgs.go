@@ -86,7 +86,12 @@ func marshalPackage(pkgConf *viper.Viper) (*definitions.Package, error) {
 
 func checkName(pkg *definitions.Package, name string) error {
 	if strings.Contains(pkg.Name, " ") {
-		pkg.Name = strings.Replace(pkg.Name, " ", "_", -1)
+		newName := strings.Replace(pkg.Name, " ", "_", -1)
+		log.WithFields(log.Fields{
+			"old": pkg.Name,
+			"new": newName,
+		}).Debug("Correcting package name.")
+		pkg.Name = newName
 	}
 
 	return nil

@@ -49,7 +49,7 @@ func TestsInit(testType string) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	do.Source = "toadserver" //use "rawgit" if ts down
+	do.Source = "rawgit" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}

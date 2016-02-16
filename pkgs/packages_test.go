@@ -1,7 +1,6 @@
 package pkgs
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -240,7 +238,9 @@ func TestKnownChainBoots(t *testing.T) {
 	doMake.Name = chainName
 	doMake.ChainType = "simplechain"
 	doMake.Operations.ContainerNumber = 1
+	doMake.Debug = true
 	if err := chains.MakeChain(doMake); err != nil {
+		log.Error(err)
 		t.Fatalf("unexpected error making a chain: %v", err)
 	}
 
@@ -367,8 +367,8 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("unexpectedly data containers are not turned on")
 	}
 
-	if do.Service.WorkDir != path.Join(ErisContainerRoot, "apps", pkg.Name) {
-		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(ErisContainerRoot, "apps", pkg.Name), do.Service.WorkDir)
+	if do.Service.WorkDir != path.Join(ErisContainerRoot, "apps", filepath.Base(do.Path)) {
+		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(ErisContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
 	}
 
 	if do.Service.User != "eris" {
@@ -424,7 +424,7 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 	do.Operations.ContainerNumber = 1
 
 	defer func() {
-		CleanUp(do, pkg)
+		// CleanUp(do, pkg)
 
 		if err := os.RemoveAll(dir); err != nil {
 			t.Fatalf("error removing directory: %v", err)
@@ -1190,15 +1190,13 @@ func writeEmptyPkgJson() error {
 }
 
 func exec(t *testing.T, name string, args []string) string {
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	do := definitions.NowDo()
 	do.Name = name + "_tmp_"
-	do.Operations.Args = args
 	do.Operations.ContainerNumber = 1
-	if _, err := data.ExecData(do); err != nil {
-		t.Fatalf("expected data to execute, got %v", err)
+	do.Operations.Args = args
+	buf, err := data.ExecData(do)
+	if err != nil {
+		t.Fatalf("expected %s to execute command [%s], got %v", name, strings.Join(args, " "), err)
 	}
 
 	return buf.String()

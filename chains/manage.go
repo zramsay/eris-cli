@@ -279,7 +279,7 @@ func CurrentChain(do *definitions.Do) error {
 // errors otherwise.
 //
 //  do.Name - chain name
-//  do.Type - "toml", "genesis", or "config".
+//  do.Type - "toml", "genesis", "status", "validators", or "toml"
 //
 func CatChain(do *definitions.Do) error {
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
