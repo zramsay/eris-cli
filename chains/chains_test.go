@@ -879,7 +879,10 @@ func TestServiceLinkChainedService(t *testing.T) {
 	const (
 		chain = "test-chained-service"
 	)
-	defer tests.RemoveAllContainers()
+	defer func() {
+		log.Debug("Starting Cleanup")
+		tests.RemoveAllContainers()
+	}()
 
 	do := def.NowDo()
 	do.Name = chain

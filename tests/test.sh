@@ -285,6 +285,15 @@ perform_tests() {
         test_tool_in_docker "docker18" &
         docker18_result=$!
       fi
+    elif [[ "$machine" == *1.9* ]]
+    then
+      if [ $ci ] && [ $linux ] # only do this in circle
+      then
+        docker19_machine=$machine
+        find $HOME/$dm_path/machines/$machine -type f -name "config.json" -exec sed -i "s/$USER/$testuser/g" {} + # non current docker versions still supported need to use a DinD strategy
+        test_tool_in_docker "docker19" &
+        docker19_result=$!
+      fi
     else
       docker_cur_machine=$machine
       export MACHINE_NAME=$machine && tests/test_tool.sh
@@ -295,6 +304,9 @@ perform_tests() {
   then
     machine=$docker18_machine
     wait $docker18_result
+    log_machine $?
+    machine=$docker19_machine
+    wait $docker19_result
     log_machine $?
   fi
   machine=$docker_cur_machine

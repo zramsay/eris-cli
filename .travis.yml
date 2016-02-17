@@ -6,7 +6,7 @@ install:
 - eval "$(gimme 1.5)"
 - brew update
 - brew install jq
-- sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.9.1 >/usr/local/bin/docker"
+- sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.10.1 >/usr/local/bin/docker"
 - sudo chmod +x /usr/local/bin/docker
 - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-darwin-x86_64 >/usr/local/bin/docker-machine"
 - sudo chmod +x /usr/local/bin/docker-machine

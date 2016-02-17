@@ -336,6 +336,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 		"=>":              optsServ.Name,
 		"data container":  ops.DataContainerName,
 		"entrypoint":      optsServ.Config.Entrypoint,
+		"workdir":         optsServ.Config.WorkingDir,
 		"cmd":             optsServ.Config.Cmd,
 		"ports published": optsServ.HostConfig.PublishAllPorts,
 		"environment":     optsServ.Config.Env,
@@ -344,7 +345,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
-		return nil, err
+		return buf, err
 	}
 
 	return buf, nil

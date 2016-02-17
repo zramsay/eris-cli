@@ -86,11 +86,11 @@ func MakeChain(do *definitions.Do) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Name
 	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
+	if doData.Operations.ContainerNumber == 0 {
+		doData.Operations.ContainerNumber = 1
+	}
 	doData.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
 	doData.Operations.ContainerType = "service"
-	if !do.RmD {
-		defer data.RmData(doData)
-	}
 
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
@@ -125,7 +125,15 @@ func MakeChain(do *definitions.Do) error {
 
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
-	return data.ExportData(doData)
+	if err := data.ExportData(doData); err != nil {
+		return err
+	}
+
+	if !do.RmD {
+		return data.RmData(doData)
+	}
+
+	return nil
 }
 
 // ImportChain pulls a chain definition file from IPFS and saves

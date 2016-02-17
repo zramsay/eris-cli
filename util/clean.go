@@ -78,6 +78,11 @@ func defaultClean(prompt bool) error {
 					Force:         true,
 				}
 				if err := DockerClient.RemoveContainer(removeOpts); err != nil {
+					// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
+					if fmt.Sprintf("%v", err) == "EOF" {
+						log.Debug("Weird EOF error. Not reaping.")
+						continue
+					}
 					return err
 				}
 			}
