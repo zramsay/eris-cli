@@ -172,6 +172,7 @@ func PerformAppActionService(do *definitions.Do, app *definitions.Package) error
 	do.Operations.ContainerType = definitions.TypeService
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
+		log.Error(buf)
 		do.Result = "could not perform app action"
 		return err
 	}

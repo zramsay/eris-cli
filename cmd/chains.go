@@ -376,18 +376,18 @@ $ eris chains cat simplechain genesis -- will display the genesis.json file from
 	Run: CatChain,
 }
 
-var chainsMakeGenesis = &cobra.Command{
-	Use:   "make-genesis NAME KEY",
-	Short: "Generates a genesis file.",
-	Long: `Generates a genesis file with chainNAME and a single pubkey.
+// var chainsMakeGenesis = &cobra.Command{
+// 	Use:   "make-genesis NAME KEY",
+// 	Short: "Generates a genesis file.",
+// 	Long: `Generates a genesis file with chainNAME and a single pubkey.
 
-Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
+// Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
 
-but does not require a pre-existing chain to execute.
+// but does not require a pre-existing chain to execute.
 
-see https://github.com/eris-ltd/mint-client for more info`,
-	Run: MakeGenesisFile,
-}
+// see https://github.com/eris-ltd/mint-client for more info`,
+// 	Run: MakeGenesisFile,
+// }
 
 //----------------------------------------------------------------------
 
