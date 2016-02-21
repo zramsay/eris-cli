@@ -154,6 +154,9 @@ func pullDefaultImages() error {
 		if err, ok := <-ch; ok {
 			return err
 		}
+
+		// Spacer.
+		log.Warn()
 	}
 	return nil
 }

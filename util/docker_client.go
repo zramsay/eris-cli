@@ -396,11 +396,9 @@ func mustInstallError() error {
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "mac/"))
 	case "windows":
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "windows/"))
-	default:
-		return fmt.Errorf("%s%s\n", errBase, dInst)
 	}
 
-	return nil
+	return fmt.Errorf("%s%s\n", errBase, dInst)
 }
 
 // need to add ssh.exe to PATH, it resides in GIT dir.

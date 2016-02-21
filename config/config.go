@@ -31,6 +31,7 @@ type ErisConfig struct {
 	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"`
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
+	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 
 	Verbose bool
 }
@@ -89,6 +90,7 @@ func SetDefaults() (*viper.Viper, error) {
 	var globalConfig = viper.New()
 	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
 	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
+	globalConfig.SetDefault("CrashReport", "bugsnag")
 	return globalConfig, nil
 }
 
@@ -123,6 +125,8 @@ func GetConfigValue(key string) string {
 		return GlobalConfig.Config.DockerHost
 	case "DockerCertPath":
 		return GlobalConfig.Config.DockerCertPath
+	case "CrashReport":
+		return GlobalConfig.Config.CrashReport
 	default:
 		return ""
 	}

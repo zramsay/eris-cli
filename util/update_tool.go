@@ -172,7 +172,7 @@ func ChangeDirectory(to string) {
 		err := os.Chdir(dir)
 
 		if err != nil {
-			log.Fatalf("Error changing directory: %v")
+			log.Fatalf("Error changing directory: %v", err)
 		}
 		log.WithField("dir", dir).Debug("Directory changed to")
 	}
