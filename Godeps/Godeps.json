@@ -123,9 +123,16 @@
 			"Rev": "5d6f7e02b7cdad63b06ab3877915532cd30073b4"
 		},
 		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7-53-g446d1c1",
-			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
+			"ImportPath": "github.com/docker/docker/pkg/jsonmessage",
+			"Rev": "8b3e0353166ed3f5e5ce646808815381b3a39848"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/jsonlog",
+			"Rev": "446d1c146faa8af696ba418849aeb465fb663901"
+		},
+		{
+			"ImportPath": "github.com/docker/go-units",
+			"Rev": "f49f7ea428ed3f42a846917e4a4856fcd165f6bc"
 		}
 	]
 }

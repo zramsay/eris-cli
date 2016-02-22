@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -18,9 +19,10 @@ import (
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/jsonmessage"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 var (
@@ -455,7 +457,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 			return err
 		}
 	} else {
-		if err := pullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
+		if err := pullImage(srv.Image, ioutil.Discard); err != nil {
 			return err
 		}
 	}
@@ -700,11 +702,13 @@ func pullImage(name string, writer io.Writer) error {
 		reg = repoSplit[0]
 	}
 
+	r, w := io.Pipe()
 	opts := docker.PullImageOptions{
-		Repository:   name,
-		Registry:     reg,
-		Tag:          tag,
-		OutputStream: os.Stdout,
+		Repository:    name,
+		Registry:      reg,
+		Tag:           tag,
+		OutputStream:  w,
+		RawJSONStream: true,
 	}
 
 	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
@@ -713,7 +717,17 @@ func pullImage(name string, writer io.Writer) error {
 
 	auth := docker.AuthConfiguration{}
 
-	if err := util.DockerClient.PullImage(opts, auth); err != nil {
+	ch := make(chan error, 1)
+	go func() {
+		defer w.Close()
+		defer close(ch)
+
+		if err := util.DockerClient.PullImage(opts, auth); err != nil {
+			ch <- err
+		}
+	}()
+	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	if err, ok := <-ch; ok {
 		return err
 	}
 
@@ -737,14 +751,14 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					log.Debug("User assented to pull")
 				} else {
 					log.Debug("User refused to pull")
-					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
+					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull")
 				}
 			} else {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image is not found locally")
 				log.Warn("The marmots are approved to pull it from the repository on your behalf")
 				log.Warn("This could take a few minutes")
 			}
-			if err := pullImage(opts.Config.Image, nil); err != nil {
+			if err := pullImage(opts.Config.Image, os.Stdout); err != nil {
 				return nil, err
 			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
