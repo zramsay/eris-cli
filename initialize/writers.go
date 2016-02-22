@@ -3,6 +3,7 @@ package initialize
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -10,12 +11,16 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/util"
+
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/jsonmessage"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
+
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 // XXX all files in this sequence must be added to both
@@ -94,14 +99,17 @@ func pullDefaultImages() error {
 		ver.ERIS_IMG_CM,
 	}
 
-	log.Warn("Pulling default docker images from quay.io")
+	// Spacer.
+	log.Warn()
+
+	log.Warn("Pulling default Docker images from quay.io")
 
 	// XXX can't use perform.PullImage b/c import cycle :(
 	// it's essentially re-implemented here w/ a bit more opinion
 	// fail over to docker hub is quay is down/firewalled
 	auth := docker.AuthConfiguration{}
 
-	for _, image := range images {
+	for i, image := range images {
 		var tag string = "latest"
 
 		nameSplit := strings.Split(image, ":")
@@ -113,24 +121,38 @@ func pullDefaultImages() error {
 		}
 		image = nameSplit[0]
 		img := path.Join(ver.ERIS_REG_DEF, image)
+
+		r, w := io.Pipe()
 		opts := docker.PullImageOptions{
-			Repository:   img,
-			Registry:     ver.ERIS_REG_DEF,
-			Tag:          tag,
-			OutputStream: os.Stdout,
+			Repository:    img,
+			Registry:      ver.ERIS_REG_DEF,
+			Tag:           tag,
+			OutputStream:  w,
+			RawJSONStream: true,
 		}
 
 		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
-			opts.OutputStream = nil
+			opts.OutputStream = ioutil.Discard
 		}
 
-		if err := util.DockerClient.PullImage(opts, auth); err != nil {
-			//try with hub (empty string)
-			opts.Repository = image
-			opts.Registry = ver.ERIS_REG_BAK
+		log.WithField("image", img).Warnf("Pulling image %d out of %d", i+1, len(images))
+
+		ch := make(chan error, 1)
+		go func() {
+			defer w.Close()
+			defer close(ch)
+
 			if err := util.DockerClient.PullImage(opts, auth); err != nil {
-				return err
+				opts.Repository = image
+				opts.Registry = ver.ERIS_REG_BAK
+				if err := util.DockerClient.PullImage(opts, auth); err != nil {
+					ch <- err
+				}
 			}
+		}()
+		jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+		if err, ok := <-ch; ok {
+			return err
 		}
 	}
 	return nil

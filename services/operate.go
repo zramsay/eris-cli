@@ -168,7 +168,7 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 	for _, srv := range group {
 		log.WithField("=>", srv.Name).Debug("Performing container start")
 		if err := perform.DockerRunService(srv.Service, srv.Operations); err != nil {
-			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
+			return fmt.Errorf("Error starting service %s: %v", srv.Name, err)
 		}
 	}
 	return nil
