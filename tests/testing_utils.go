@@ -16,11 +16,11 @@ import (
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 var (
-	erisDir = filepath.Join(os.TempDir(), "eris")
+	ErisDir = filepath.Join(os.TempDir(), "eris")
 
 	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
@@ -39,7 +39,7 @@ func TestsInit(testType string) (err error) {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	config.ChangeErisDir(erisDir)
+	config.ChangeErisDir(ErisDir)
 	common.InitErisDir()
 	util.DockerConnect(false, "eris")
 
@@ -188,11 +188,11 @@ func FileContents(filename string) string {
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
 func TestsTearDown() error {
-	// Move out of erisDir before deleting it.
-	parentPath := filepath.Join(erisDir, "..")
+	// Move out of ErisDir before deleting it.
+	parentPath := filepath.Join(ErisDir, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(erisDir); err != nil {
+	if err := os.RemoveAll(ErisDir); err != nil {
 		return err
 	}
 	return nil
