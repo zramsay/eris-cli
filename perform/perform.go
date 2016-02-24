@@ -967,8 +967,11 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 		}
 	}
 
-	// we expect to link to the main service container
+	// We expect to link to the main service container.
 	opts.HostConfig.Links = srv.Links
+
+	// Ignore the restart policy of a container.
+	opts.HostConfig.RestartPolicy = docker.NeverRestart()
 
 	return opts
 }

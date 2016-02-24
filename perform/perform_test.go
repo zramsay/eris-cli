@@ -3,6 +3,7 @@ package perform
 import (
 	"bytes"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -385,6 +387,146 @@ func TestExecServiceBufferNotOverwritten(t *testing.T) {
 
 	if config.GlobalConfig.ErrorWriter != buf {
 		t.Fatalf("expected global error writer unchanged after exec")
+	}
+}
+
+func TestExecServiceAlwaysRestart(t *testing.T) {
+	const (
+		name   = "restart-keys"
+		number = 99
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+restart = "always"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceMaxAttemptsRestart(t *testing.T) {
+	const (
+		name   = "restart-keys"
+		number = 99
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+restart = "max:99"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceNeverRestart(t *testing.T) {
+	const (
+		name   = "restart-keys"
+		number = 99
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
 	}
 }
 
