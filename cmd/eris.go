@@ -135,6 +135,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Data)
 	buildListCommand()
 	ErisCmd.AddCommand(List)
+	buildAgentsCommand()
+	ErisCmd.AddCommand(Agents)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()

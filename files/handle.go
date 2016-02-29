@@ -21,7 +21,19 @@ import (
 )
 
 func GetFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
+
+	if do.CSV != "" {
+		log.WithFields(log.Fields{
+			"from": do.CSV,
+			"to":   do.NewName,
+		}).Debug("Importing files")
+		if err := importFiles(do.CSV, do.NewName); err != nil {
+			return err
+		}
+	}
 
 	// where Object is a directory added recursively to ipfs
 	// do.Name is the hash
@@ -45,13 +57,14 @@ func GetFiles(do *definitions.Do) error {
 		if err := importFile(do.Name, do.Path); err != nil {
 			return err
 		}
-		do.Result = "success"
 	}
 	return nil
 }
 
 func PutFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 
 	if err := checkGatewayFlag(do); err != nil {
 		return err
@@ -165,21 +178,42 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 
 }
 func PinFiles(do *definitions.Do) error {
-	ensureRunning()
-	log.WithFields(log.Fields{
-		"file": do.Name,
-		"path": do.Path,
-	}).Debug("Pinning a file")
 	hash, err := pinFile(do.Name)
 	if err != nil {
 		return err
+		if err := EnsureIPFSrunning(); err != nil {
+			return err
+		}
+
+		if do.CSV != "" {
+			log.WithField("=>", do.CSV).Debug("Pinning all files from")
+			hashes, err := pinFiles(do.CSV)
+			if err != nil {
+				return err
+			}
+			do.Result = hashes
+		}
+
+	} else {
+		log.WithFields(log.Fields{
+			"file": do.Name,
+			"path": do.Path,
+		}).Debug("Pinning a file")
+		hash, err := pinFile(do.Name)
+		if err != nil {
+			return err
+		}
+		do.Result = hash
 	}
 	do.Result = hash
 	return nil
 }
 
 func CatFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"file": do.Name,
 		"path": do.Path,
@@ -193,7 +227,10 @@ func CatFiles(do *definitions.Do) error {
 }
 
 func ListFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"file": do.Name,
 		"path": do.Path,
@@ -207,7 +244,9 @@ func ListFiles(do *definitions.Do) error {
 }
 
 func ManagePinned(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 	if do.Rm && do.Hash != "" {
 		return fmt.Errorf("Either remove a file by hash or all of them\n")
 	}
@@ -372,15 +411,37 @@ func rmPinnedByHash(hash string) (string, error) {
 //---------------------------------------------------------
 // helpers
 
-func ensureRunning() {
+func writeCsv(hashArray, fileNames []string) error {
+	strToWrite := make([][]string, len(hashArray))
+	for i := range hashArray {
+		strToWrite[i] = []string{hashArray[i], fileNames[i]}
+
+	}
+
+	csvfile, err := os.Create("ipfs_hashes.csv")
+	if err != nil {
+		return fmt.Errorf("error creating csv file: %v", err)
+	}
+	defer csvfile.Close()
+
+	w := csv.NewWriter(csvfile)
+	w.WriteAll(strToWrite)
+
+	if err := w.Error(); err != nil {
+		return fmt.Errorf("error writing csv: %v", err)
+	}
+	return nil
+}
+
+func EnsureIPFSrunning() error {
 	doNow := definitions.NowDo()
 	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
+	if err := services.EnsureRunning(doNow); err != nil {
 		fmt.Printf("Failed to ensure IPFS is running: %v", err)
-		return
+		return err
 	}
 	log.Info("IPFS is running")
+	return nil
 }
 
 func checkGatewayFlag(do *definitions.Do) error {

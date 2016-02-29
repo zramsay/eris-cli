@@ -1,6 +1,8 @@
 package commands
 
 import (
+	//	"path/filepath"
+
 	"github.com/eris-ltd/eris-cli/agent"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -8,66 +10,58 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//TODO revisit helpers
+
 // Primary Agents Sub-Command
 var Agents = &cobra.Command{
-	Use:   "agents",
-	Short: "Start, Stop, and Manage Agents.",
-	Long: `Start, stop, and manage agents.
-`,
+	Use:   "agent",
+	Short: "Start and Stop an agent.",
+	Long: `Start and Stop an agent.
+An agent is used to deploy contract bundles
+from the eris library marketplace, The command
+requires an account and a registered chain.
+Please see (link) for more info.`,
+
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// Build the agents subcommand
+// Build the agent subcommand
 func buildAgentsCommand() {
-	Agents.AddCommand(agentsStart)
-	Agents.AddCommand(agentsStop)
+	Agents.AddCommand(agentStart)
+	Agents.AddCommand(agentStop)
 	addAgentsFlags()
 }
 
 // start a agent
-var agentsStart = &cobra.Command{
+var agentStart = &cobra.Command{
 	Use:   "start",
-	Short: "Start a agent registered with Eris.",
-	Long: `Start a agent registered with Eris. If no is give Eris
-will simply start the currently checked out agent. To stop a
-agent use: [eris agents kill name].`,
+	Short: "Start the agent.",
+	Long: `Start the agent requires to deploy contract bundles
+	from the Eris Marketplace.`,
 	Run: StartAgent,
 }
 
-// stop a running agent
-var agentsStop = &cobra.Command{
+var agentStop = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a running agent.",
-	Long: `Stop a running agent. If no is give Eris
-will simply stop the currently checked out agent.`,
-	Run: StopAgent,
+	Long:  `Stop a running agent.`,
+	Run:   StopAgent,
 }
 
 //----------------------------------------------------------------------
 // cli flags
 func addAgentsFlags() {
-	// buildFlag(actionsDo, do, "quiet", "action")
-	// buildFlag(actionsDo, do, "chain", "action")
-	// buildFlag(actionsDo, do, "services", "action")
-
-	// buildFlag(actionsRemove, do, "file", "action")
-
-	// actionsList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
 }
 
 //----------------------------------------------------------------------
 // cli command wrappers
 
 func StartAgent(cmd *cobra.Command, args []string) {
-	// IfExit(ArgCheck(2, "eq", cmd, args))
-	// do.Name = args[0]
-	// do.Path = args[1]
-	IfExit(agents.StartAgents(do))
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	IfExit(agent.StartAgent(do))
 }
 
 func StopAgent(cmd *cobra.Command, args []string) {
-	// IfExit(ArgCheck(2, "eq", cmd, args))
-	// do.Name = args[0]
-	// do.Path = args[1]
-	IfExit(agents.StopAgents(do))
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	IfExit(agent.StopAgent(do))
 }
