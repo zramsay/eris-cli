@@ -1,9 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/pkgs"
+	"github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -73,7 +77,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.PackagePath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use")
 	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory EPM should use when saving ABIs after the compile process")
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
-	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", "https://compilers.eris.industries:9090", "<ip:port> of compiler which EPM should use")
+	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "<ip:port> of compiler which EPM should use")
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "w", "1234", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use")
@@ -103,4 +107,12 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 		IfExit(err)
 	}
 	IfExit(pkgs.RunPackage(do))
+}
+
+func formCompilers() string {
+	verSplit := strings.Split(version.VERSION, ".")
+	maj, _ := strconv.Atoi(verSplit[0])
+	min, _ := strconv.Atoi(verSplit[1])
+	pat, _ := strconv.Atoi(verSplit[2])
+	return fmt.Sprintf("https://compilers-new.eris.industries:1%01d%02d%01d", maj, min, pat)
 }
