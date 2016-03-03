@@ -1,8 +1,6 @@
 package util
 
 import (
-	"fmt"
-
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 )
@@ -11,7 +9,6 @@ import (
 // short name and ops settings.
 //
 //  ops.SrvContainerName  - container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //
 func Labels(name string, ops *def.Operation) map[string]string {
@@ -23,7 +20,7 @@ func Labels(name string, ops *def.Operation) map[string]string {
 	labels[def.Namespace+":"+def.LabelEris] = "true"
 	labels[def.Namespace+":"+def.LabelShortName] = name
 	labels[def.Namespace+":"+def.LabelType] = ops.ContainerType
-	labels[def.Namespace+":"+def.LabelNumber] = fmt.Sprintf("%v", ops.ContainerNumber)
+	labels[def.Namespace+":"+def.LabelNumber] = "1"
 
 	if user, _, err := config.GitConfigUser(); err == nil {
 		labels[def.Namespace+":"+def.LabelUser] = user

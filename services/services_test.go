@@ -70,7 +70,7 @@ func TestKnownServices(t *testing.T) {
 
 func TestLoadServiceDefinition(t *testing.T) {
 	// [pv]: this test belongs to the loaders package. [csk]: agree. #496
-	srv, err := loaders.LoadServiceDefinition(servName, true, 1)
+	srv, err := loaders.LoadServiceDefinition(servName, true)
 	if err != nil {
 		t.Fatalf("expected definition to load, got %v", err)
 	}
@@ -121,7 +121,6 @@ func TestInspectService1(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Args = []string{"name"}
-	do.Operations.ContainerNumber = 1
 
 	if err := InspectService(do); err != nil {
 		t.Fatalf("expected service to be inspected, got %v", err)
@@ -136,7 +135,6 @@ func TestInspectService2(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Args = []string{"config.user"}
-	do.Operations.ContainerNumber = 1
 
 	if err := InspectService(do); err != nil {
 		t.Fatalf("expected service to be inspected, got %v", err)
@@ -490,7 +488,6 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 func start(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = publishAll
 	if err := StartService(do); err != nil {
 		t.Fatalf("expected service to start, got %v", err)

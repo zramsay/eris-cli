@@ -72,7 +72,6 @@ func MakeGenesisFile(do *def.Do) error {
 	doThr.Chain.ChainType = "throwaway" //for teardown
 	doThr.Name = "default"
 	doThr.Chain.Name = "default" //for teardown
-	doThr.Operations.ContainerNumber = 1
 	doThr.Operations.PublishAllPorts = true
 
 	log.WithField("=>", doThr.Name).Info("Making genesis.json file. Starting chain")

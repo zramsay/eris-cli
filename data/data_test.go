@@ -48,7 +48,6 @@ func TestExportData(t *testing.T) {
 	do.Name = dataName
 	do.Source = common.ErisContainerRoot
 	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
-	do.Operations.ContainerNumber = 1
 	if err := ExportData(do); err != nil {
 		log.Error(err)
 		t.FailNow()
@@ -109,7 +108,6 @@ func TestExecData(t *testing.T) {
 	do.Name = dataName
 	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
 	do.Operations.Interactive = false
-	do.Operations.ContainerNumber = 1
 
 	log.WithFields(log.Fields{
 		"data container": do.Name,
@@ -133,7 +131,6 @@ func TestRenameData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.NewName = newName
-	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"from": do.Name,
 		"to":   do.NewName,
@@ -149,7 +146,6 @@ func TestRenameData(t *testing.T) {
 	do = definitions.NowDo()
 	do.Name = newName
 	do.NewName = dataName
-	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"from": do.Name,
 		"to":   do.NewName,
@@ -170,7 +166,6 @@ func TestInspectData(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Operations.Args = []string{"name"}
-	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"data container": do.Name,
 		"args":           do.Operations.Args,
@@ -183,7 +178,6 @@ func TestInspectData(t *testing.T) {
 	do = definitions.NowDo()
 	do.Name = dataName
 	do.Operations.Args = []string{"config.network_disabled"}
-	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"data container": do.Name,
 		"args":           do.Operations.Args,
@@ -225,7 +219,6 @@ func testCreateDataByImport(t *testing.T, name string) {
 	do.Name = name
 	do.Source = filepath.Join(common.DataContainersPath, do.Name)
 	do.Destination = common.ErisContainerRoot
-	do.Operations.ContainerNumber = 1
 	log.WithField("=>", do.Name).Info("Importing data (from tests)")
 	if err := ImportData(do); err != nil {
 		log.Error(err)
@@ -241,7 +234,6 @@ func testKillDataCont(t *testing.T, name string) {
 
 	do := definitions.NowDo()
 	do.Name = name
-	do.Operations.ContainerNumber = 1
 	if err := RmData(do); err != nil {
 		log.Error(err)
 		t.Fail()

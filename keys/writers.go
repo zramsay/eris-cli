@@ -15,7 +15,6 @@ import (
 
 func GenerateKey(do *definitions.Do) error {
 	do.Name = "keys"
-	do.Operations.ContainerNumber = 1
 
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
@@ -36,7 +35,6 @@ func GenerateKey(do *definitions.Do) error {
 func GetPubKey(do *definitions.Do) error {
 
 	do.Name = "keys"
-	do.Operations.ContainerNumber = 1
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
@@ -57,7 +55,6 @@ func GetPubKey(do *definitions.Do) error {
 func ExportKey(do *definitions.Do) error {
 
 	do.Name = "keys"
-	do.Operations.ContainerNumber = 1
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
@@ -77,7 +74,6 @@ func ExportKey(do *definitions.Do) error {
 func ImportKey(do *definitions.Do) error {
 
 	do.Name = "keys"
-	do.Operations.ContainerNumber = 1
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}

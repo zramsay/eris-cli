@@ -16,12 +16,12 @@ import (
 
 func RenameData(do *definitions.Do) error {
 	log.WithFields(log.Fields{
-		"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
-		"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+		"from": do.Name,
+		"to":   do.NewName,
 	}).Info("Renaming data container")
 
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
-		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+	if util.IsDataContainer(do.Name) {
+		ops := loaders.LoadDataDefinition(do.Name)
 		util.Merge(ops, do.Operations)
 
 		err := perform.DockerRename(ops, do.NewName)
@@ -36,11 +36,11 @@ func RenameData(do *definitions.Do) error {
 }
 
 func InspectData(do *definitions.Do) error {
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	if util.IsDataContainer(do.Name) {
 		log.WithField("=>", do.Name).Info("Inspecting data container")
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName(definitions.TypeData, do.Name, do.Operations.ContainerNumber)
+		srv.Operations.SrvContainerName = util.ContainersName(definitions.TypeData, do.Name)
 
 		err := perform.DockerInspect(srv.Service, srv.Operations, do.Operations.Args[0])
 		if err != nil {
@@ -60,11 +60,11 @@ func RmData(do *definitions.Do) (err error) {
 	}
 	for _, name := range do.Operations.Args {
 		do.Name = name
-		if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+		if util.IsDataContainer(do.Name) {
 			log.WithField("=>", do.Name).Info("Removing data container")
 
 			srv := definitions.BlankServiceDefinition()
-			srv.Operations.SrvContainerName = util.ContainersName("data", do.Name, do.Operations.ContainerNumber)
+			srv.Operations.SrvContainerName = util.ContainersName("data", do.Name)
 
 			if err = perform.DockerRemove(srv.Service, srv.Operations, false, do.Volumes, false); err != nil {
 				log.Errorf("Error removing %s: %v", do.Name, err)

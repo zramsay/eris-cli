@@ -22,7 +22,7 @@ func EnsureRunning(do *definitions.Do) error {
 		return nil
 	}
 
-	srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	srv, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -37,12 +37,12 @@ func EnsureRunning(do *definitions.Do) error {
 }
 
 func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
-	log.WithField("=>", fmt.Sprintf("%s:%d", service.Name, ops.ContainerNumber)).Debug("Checking service existing")
+	log.WithField("=>", service.Name).Debug("Checking service existing")
 	return parseContainers(service, ops, true)
 }
 
 func IsServiceRunning(service *definitions.Service, ops *definitions.Operation) bool {
-	log.WithField("=>", fmt.Sprintf("%s:%d", service.Name, ops.ContainerNumber)).Debug("Checking service running")
+	log.WithField("=>", service.Name).Debug("Checking service running")
 	return parseContainers(service, ops, false)
 }
 
@@ -56,7 +56,7 @@ func FindServiceDefinitionFile(name string) string {
 
 func parseContainers(service *definitions.Service, ops *definitions.Operation, all bool) bool {
 	// populate service container specifics
-	cName := util.FindServiceContainer(service.Name, ops.ContainerNumber, all)
+	cName := util.FindServiceContainer(service.Name, all)
 	if cName == nil {
 		return false
 	}
@@ -65,7 +65,7 @@ func parseContainers(service *definitions.Service, ops *definitions.Operation, a
 
 	// populate data container specifics
 	if service.AutoData && ops.DataContainerID == "" {
-		dName := util.FindDataContainer(service.Name, ops.ContainerNumber)
+		dName := util.FindDataContainer(service.Name)
 		if dName != nil {
 			ops.DataContainerName = dName.FullName
 			ops.DataContainerID = dName.ContainerID

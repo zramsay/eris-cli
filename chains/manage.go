@@ -45,7 +45,7 @@ func MakeChain(do *definitions.Do) error {
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
-	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys", do.Operations.ContainerNumber), "keys")}
+	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys"), "keys")}
 	do.Service.Environment = []string{
 		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
 		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
@@ -58,8 +58,8 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	do.Operations.ContainerType = "service"
-	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name, do.Operations.ContainerNumber)
-	do.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name)
+	do.Operations.DataContainerName = util.DataContainersName(do.Name)
 	if do.RmD {
 		do.Operations.Remove = true
 	}
@@ -85,11 +85,8 @@ func MakeChain(do *definitions.Do) error {
 
 	doData := definitions.NowDo()
 	doData.Name = do.Name
-	doData.Operations.ContainerNumber = do.Operations.ContainerNumber
-	if doData.Operations.ContainerNumber == 0 {
-		doData.Operations.ContainerNumber = 1
-	}
-	doData.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+
+	doData.Operations.DataContainerName = util.DataContainersName(do.Name)
 	doData.Operations.ContainerType = "service"
 
 	doData.Source = AccountsTypePath
@@ -178,7 +175,7 @@ func ImportChain(do *definitions.Do) error {
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
 func InspectChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -202,7 +199,7 @@ func InspectChain(do *definitions.Do) error {
 //  do.Tail    - number of lines to display (can be "all") (optional)
 //
 func LogsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -221,7 +218,7 @@ func LogsChain(do *definitions.Do) error {
 //  do.Name - name of the chain (required)
 //
 func ExportChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -328,7 +325,7 @@ func CatChain(do *definitions.Do) error {
 //  do.Name - name of the chain to display port mappings for (required)
 //
 func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -371,7 +368,7 @@ func RenameChain(do *definitions.Do) error {
 		}).Info("Renaming chain")
 
 		log.WithField("=>", do.Name).Debug("Loading chain definition file")
-		chainDef, err := loaders.LoadChainDefinition(do.Name, false, 1) // TODO:CNUM
+		chainDef, err := loaders.LoadChainDefinition(do.Name, false)
 		if err != nil {
 			return err
 		}
@@ -415,10 +412,9 @@ func RenameChain(do *definitions.Do) error {
 
 		if !transformOnly {
 			log.WithFields(log.Fields{
-				"from": fmt.Sprintf("%s:%d", do.Name, chainDef.Operations.ContainerNumber),
-				"to":   fmt.Sprintf("%s:%d", do.NewName, chainDef.Operations.ContainerNumber),
+				"from": do.Name,
+				"to":   do.NewName,
 			}).Info("Renaming chain data container")
-			do.Operations.ContainerNumber = chainDef.Operations.ContainerNumber
 			err = data.RenameData(do)
 			if err != nil {
 				return err
@@ -433,7 +429,7 @@ func RenameChain(do *definitions.Do) error {
 }
 
 func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -454,7 +450,7 @@ func UpdateChain(do *definitions.Do) error {
 }
 
 func RmChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -481,7 +477,7 @@ func RmChain(do *definitions.Do) error {
 }
 
 func GraduateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, 1)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -521,11 +517,11 @@ func RegisterChain(do *definitions.Do) error {
 	do.ChainID = do.Name
 
 	// NOTE: registration expects you to have the data container
-	if !util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	if !util.IsDataContainer(do.Name) {
 		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -556,7 +552,7 @@ func RegisterChain(do *definitions.Do) error {
 		"=>":    chain.Service.Name,
 		"image": chain.Service.Image,
 	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name, do.Operations.ContainerNumber)
+	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name)
 	chain.Operations.Args = []string{loaders.ErisChainRegister}
 
 	_, err = perform.DockerRunData(chain.Operations, chain.Service)

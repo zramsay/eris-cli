@@ -38,7 +38,6 @@ func ListKeys(do *definitions.Do) error {
 
 	if do.Container {
 		do.Name = "keys"
-		do.Operations.ContainerNumber = 1
 		if err := srv.EnsureRunning(do); err != nil {
 			return err
 		}

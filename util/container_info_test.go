@@ -8,14 +8,12 @@ var testsGood = []struct {
 	input string
 	typ   string
 	name  string
-	num   int
 }{
-	{"eris_service_mint_1", "service", "mint", 1},
-	{"eris_service_mint_10", "service", "mint", 10},
-	{"eris_service_mint_love_10", "service", "mint_love", 10},
-	{"eris_service_mint_loves_life_5", "service", "mint_loves_life", 5},
-	{"eris_data_mint_1", "data", "mint", 1},
-	{"eris_chain_mint_100", "chain", "mint", 100},
+	{"eris_service_mint_1", "service", "mint"},
+	{"eris_service_mint_love_1", "service", "mint_love"},
+	{"eris_service_mint_loves_life_1", "service", "mint_loves_life"},
+	{"eris_data_mint_1", "data", "mint"},
+	{"eris_chain_mint_1", "chain", "mint"},
 }
 
 var testsBad = []string{
@@ -37,11 +35,8 @@ func TestContainerNameGood(t *testing.T) {
 		if c.Type != rt.typ {
 			t.Fatalf("Wrong type from %s. Got %s, expected %s", rt.input, c.Type, rt.typ)
 		}
-		if c.Number != rt.num {
-			t.Fatalf("Wrong number from %s. Got %s, expected %s", rt.input, c.Number, rt.num)
-		}
 
-		d := ContainerAssemble(rt.typ, rt.name, rt.num)
+		d := ContainerAssemble(rt.typ, rt.name)
 
 		if d.FullName != rt.input {
 			t.Fatalf("Wrong full name from %s. Got %s, expected %s", rt.input, d.FullName, rt.input)

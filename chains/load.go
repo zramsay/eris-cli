@@ -1,8 +1,6 @@
 package chains
 
 import (
-	"fmt"
-
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -10,8 +8,8 @@ import (
 )
 
 func IsChainExisting(chain *definitions.Chain) bool {
-	log.WithField("=>", fmt.Sprintf("%s:%d", chain.Name, chain.Operations.ContainerNumber)).Debug("Checking chain existing")
-	cName := util.FindChainContainer(chain.Name, chain.Operations.ContainerNumber, true)
+	log.WithField("=>", chain.Name).Debug("Checking chain existing")
+	cName := util.FindChainContainer(chain.Name, true)
 	if cName == nil {
 		return false
 	}
@@ -20,8 +18,8 @@ func IsChainExisting(chain *definitions.Chain) bool {
 }
 
 func IsChainRunning(chain *definitions.Chain) bool {
-	log.WithField("=>", fmt.Sprintf("%s:%d", chain.Name, chain.Operations.ContainerNumber)).Debug("Checking chain running")
-	cName := util.FindChainContainer(chain.Name, chain.Operations.ContainerNumber, false)
+	log.WithField("=>", chain.Name).Debug("Checking chain running")
+	cName := util.FindChainContainer(chain.Name, false)
 	if cName == nil {
 		return false
 	}
