@@ -138,6 +138,17 @@ func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return perform.DockerExecService(service.Service, service.Operations)
 }
 
+// ExecHandler implemements ExecService for use within
+// the cli for under the hood functionality
+// (wrapping) calls to respective containers
+func ExecHandler(srvName string, args []string) (buf *bytes.Buffer, err error) {
+	do := definitions.NowDo()
+	do.Name = srvName
+	do.Operations.Interactive = false
+	do.Operations.Args = args
+	return ExecService(do)
+}
+
 // TODO: test this recursion and service deps generally
 func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
 	log.WithFields(log.Fields{
