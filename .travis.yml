@@ -1,10 +1,10 @@
 os: osx
 
-env:
-- ECM_BRANCH=develop
-- EPM_BRANCH=develop
-
 language: go
+
+env:
+  - ECM_BRANCH=develop
+  - EPM_BRANCH=develop
 
 install:
 - eval "$(gimme 1.5)"
