@@ -45,28 +45,41 @@ func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName stri
 		mar = append(mar, '\n')
 		writer.Write(mar)
 	default:
-		writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
-		enc := toml.NewEncoder(writer)
-		enc.Indent = ""
-		writer.Write([]byte("name = \"" + serviceDef.Name + "\"\n\n"))
-		if serviceDef.ServiceID != "" {
-			writer.Write([]byte("service_id = \"" + serviceDef.ServiceID + "\"\n"))
-		}
-		if serviceDef.Chain != "" {
-			writer.Write([]byte("chain = \"" + serviceDef.Chain + "\"\n\n"))
-		}
-		writer.Write([]byte("[service]\n"))
-		enc.Encode(serviceDef.Service)
-		writer.Write([]byte("[dependencies]\n"))
-		if serviceDef.Dependencies != nil {
-			if len(serviceDef.Dependencies.Services) != 0 || len(serviceDef.Dependencies.Chains) != 0 {
-				enc.Encode(serviceDef.Dependencies)
-			}
-		}
-		writer.Write([]byte("\n[maintainer]\n"))
-		enc.Encode(serviceDef.Maintainer)
-		writer.Write([]byte("\n[location]\n"))
-		enc.Encode(serviceDef.Location)
+		WriteDefaultServiceTOML(writer, serviceDef)
 	}
 	return nil
+}
+
+func WriteDefaultServiceTOML(writer *os.File, serviceDef *def.ServiceDefinition) {
+
+	writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
+	enc := toml.NewEncoder(writer)
+	enc.Indent = ""
+	writer.Write([]byte("name = \"" + serviceDef.Name + "\"\n\n"))
+	if serviceDef.ServiceID != "" {
+		writer.Write([]byte("service_id = \"" + serviceDef.ServiceID + "\"\n"))
+	}
+	if serviceDef.Chain != "" {
+		writer.Write([]byte("chain = \"" + serviceDef.Chain + "\"\n\n"))
+	}
+
+	writer.Write([]byte("description = \"\"\"\n" + "# describe your service" + "\n\"\"\"\n\n"))
+	writer.Write([]byte("status = \"\"" + " # alpha, beta, ready" + "\n\n"))
+	writer.Write([]byte("[service]\n"))
+	enc.Encode(serviceDef.Service)
+	writer.Write([]byte("\n"))
+	writer.Write([]byte("[dependencies]\n"))
+	if serviceDef.Dependencies != nil {
+		if len(serviceDef.Dependencies.Services) != 0 || len(serviceDef.Dependencies.Chains) != 0 {
+			enc.Encode(serviceDef.Dependencies)
+		}
+	}
+	writer.Write([]byte("\n[maintainer]\n"))
+	enc.Encode(serviceDef.Maintainer)
+	writer.Write([]byte("\n[location]\n"))
+	enc.Encode(serviceDef.Location)
+	writer.Write([]byte("dockerfile = \"\"\n"))
+	writer.Write([]byte("repository = \"\"\n"))
+	writer.Write([]byte("website = \"\"\n"))
+
 }
