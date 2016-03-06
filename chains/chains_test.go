@@ -285,7 +285,9 @@ func TestCatChainContainerGenesis(t *testing.T) {
 	}
 }
 
-func TestChainsNewDirGenCustomFile(t *testing.T) {
+// XXX this functionality has been abolished
+// see commented out flags in cmd/chains.go
+func _TestChainsNewDirGenCustomFile(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	const (
