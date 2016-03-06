@@ -1,5 +1,9 @@
 os: osx
 
+env:
+- ECM_BRANCH=develop
+- EPM_BRANCH=develop
+
 language: go
 
 install:
