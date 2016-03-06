@@ -25,17 +25,12 @@ import (
 )
 
 func NewChain(do *definitions.Do) error {
-	//overwrites directory if --force
 	dir := filepath.Join(DataContainersPath, do.Name)
-	if _, err := os.Stat(dir); err == nil {
+	if util.DoesDirExist(dir) {
 		log.WithField("dir", dir).Debug("Chain data already exists in")
-		if do.Force {
-			log.Debug("Overwriting with new data")
-			if os.RemoveAll(dir); err != nil {
-				return err
-			}
-		} else {
-			log.Debug("Using existing data; `--force` flag not given")
+		log.Debug("Overwriting with new data")
+		if err := os.RemoveAll(dir); err != nil {
+			return err
 		}
 	}
 
