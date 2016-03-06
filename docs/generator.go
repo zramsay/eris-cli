@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	commands "github.com/eris-ltd/eris-cli/commands"
+	commands "github.com/eris-ltd/eris-cli/cmd"
 	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
