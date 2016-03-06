@@ -42,10 +42,7 @@ func ListKeys(do *definitions.Do) error {
 			return err
 		}
 
-		do.Operations.Interactive = false
-		do.Operations.Args = []string{"ls", "/home/eris/.eris/keys/data"}
-
-		keysOut, err := srv.ExecService(do)
+		keysOut, err := srv.ExecHandler(do.Name, []string{"ls", "/home/eris/.eris/keys/data"})
 		if err != nil {
 			return err
 		}

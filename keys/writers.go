@@ -19,10 +19,8 @@ func GenerateKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	do.Operations.Interactive = false
-	do.Operations.Args = []string{"eris-keys", "gen", "--no-pass"}
 
-	buf, err := srv.ExecService(do)
+	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "gen", "--no-pass"})
 	if err != nil {
 		return err
 	}
@@ -33,16 +31,12 @@ func GenerateKey(do *definitions.Do) error {
 }
 
 func GetPubKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
 
-	do.Operations.Interactive = false
-	do.Operations.Args = []string{"eris-keys", "pub", "--addr", do.Address}
-
-	buf, err := srv.ExecService(do)
+	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "pub", "--addr", do.Address})
 	if err != nil {
 		return err
 	}
@@ -53,15 +47,10 @@ func GetPubKey(do *definitions.Do) error {
 }
 
 func ExportKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-	//destination on host -> given as flag default
-	//if do.Destination == "" {
-	//	do.Destination = filepath.Join(KeysPath, "data")
-	//}
 
 	//src in container
 	do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address)
@@ -72,16 +61,13 @@ func ExportKey(do *definitions.Do) error {
 }
 
 func ImportKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
 
-	do.Operations.Interactive = false
 	dir := path.Join(ErisContainerRoot, "keys", "data", do.Address)
-	do.Operations.Args = []string{"mkdir", dir} //need to mkdir for import
-	buf, err := srv.ExecService(do)
+	buf, err := srv.ExecHandler(do.Name, []string{"mkdir", dir}) //need to mkdir for import TODO (#501)
 	if err != nil {
 		return err
 	}
@@ -103,14 +89,12 @@ func ImportKey(do *definitions.Do) error {
 }
 
 func ConvertKey(do *definitions.Do) error {
-
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
 
-	do.Operations.Args = []string{"mintkey", "mint", do.Address}
-	buf, err := srv.ExecService(do)
+	buf, err := srv.ExecHandler(do.Name, []string{"mintkey", "mint", do.Address})
 	if err != nil {
 		return err
 	}

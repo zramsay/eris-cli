@@ -100,14 +100,10 @@ func TestExportKeySingle(t *testing.T) {
 
 	address := testsGenAKey()
 
-	do := def.NowDo()
-	do.Name = "keys"
-	do.Operations.Interactive = false
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	do.Operations.Args = []string{"cat", keyPath}
-	catOut, err := srv.ExecService(do)
+	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPath})
 	if err != nil {
 		fatal(t, err)
 	}
@@ -158,13 +154,9 @@ func TestImportKeySingle(t *testing.T) {
 	keyOnHost := util.TrimString(string(key))
 
 	//rm key that was generated before import
-	doRm := def.NowDo()
-	doRm.Name = "keys"
-	doRm.Operations.Interactive = false
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
-	doRm.Operations.Args = []string{"rm", "-rf", keyPath}
-	if _, err := srv.ExecService(doRm); err != nil {
+	if _, err := srv.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
 		fatal(t, err)
 	}
 
@@ -177,14 +169,10 @@ func TestImportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 
-	doCat := def.NowDo()
-	doCat.Name = "keys"
-	doCat.Operations.Interactive = false
 	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	doCat.Operations.Args = []string{"cat", keyPathCat}
-	catOut, err := srv.ExecService(doCat)
+	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPathCat})
 	if err != nil {
 		fatal(t, err)
 	}
