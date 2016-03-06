@@ -38,7 +38,7 @@ func ImportService(do *definitions.Do) error {
 		return err
 	}
 
-	_, err = loaders.LoadServiceDefinition(do.Name, false, 0)
+	_, err = loaders.LoadServiceDefinition(do.Name, false)
 	//XXX add protections?
 	if err != nil {
 		return fmt.Errorf("Your service definition file looks improperly formatted and will not marshal.")
@@ -83,8 +83,8 @@ func EditService(do *definitions.Do) error {
 
 func RenameService(do *definitions.Do) error {
 	log.WithFields(log.Fields{
-		"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
-		"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+		"from": do.Name,
+		"to":   do.NewName,
 	}).Info("Renaming service")
 
 	if do.Name == do.NewName {
@@ -95,17 +95,15 @@ func RenameService(do *definitions.Do) error {
 	transformOnly := newNameBase == do.Name
 
 	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+		serviceDef, err := loaders.LoadServiceDefinition(do.Name, false)
 		if err != nil {
 			return err
 		}
 
-		do.Operations.ContainerNumber = serviceDef.Operations.ContainerNumber
-
 		if !transformOnly {
 			log.WithFields(log.Fields{
-				"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
-				"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+				"from": do.Name,
+				"to":   do.NewName,
 			}).Debug("Performing container rename")
 			err = perform.DockerRename(serviceDef.Operations, do.NewName)
 			if err != nil {
@@ -138,8 +136,8 @@ func RenameService(do *definitions.Do) error {
 
 		if !transformOnly {
 			log.WithFields(log.Fields{
-				"from": fmt.Sprintf("%s:%d", do.Name, do.Operations.ContainerNumber),
-				"to":   fmt.Sprintf("%s:%d", do.NewName, do.Operations.ContainerNumber),
+				"from": do.Name,
+				"to":   do.NewName,
 			}).Debug("Performing data container rename")
 			err = data.RenameData(do)
 			if err != nil {
@@ -156,7 +154,7 @@ func RenameService(do *definitions.Do) error {
 }
 
 func InspectService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -168,7 +166,7 @@ func InspectService(do *definitions.Do) error {
 }
 
 func PortsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -182,7 +180,7 @@ func PortsService(do *definitions.Do) error {
 }
 
 func LogsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -210,7 +208,7 @@ To find known services use [eris services ls --known]`)
 }
 
 func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+	service, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -226,7 +224,7 @@ func UpdateService(do *definitions.Do) error {
 
 func RmService(do *definitions.Do) error {
 	for _, servName := range do.Operations.Args {
-		service, err := loaders.LoadServiceDefinition(servName, false, do.Operations.ContainerNumber)
+		service, err := loaders.LoadServiceDefinition(servName, false)
 		if err != nil {
 			return err
 		}

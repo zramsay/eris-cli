@@ -237,7 +237,6 @@ func TestKnownChainBoots(t *testing.T) {
 	doMake := definitions.NowDo()
 	doMake.Name = chainName
 	doMake.ChainType = "simplechain"
-	doMake.Operations.ContainerNumber = 1
 	doMake.Debug = true
 	if err := chains.MakeChain(doMake); err != nil {
 		log.Error(err)
@@ -246,7 +245,6 @@ func TestKnownChainBoots(t *testing.T) {
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	doBoot := definitions.NowDo()
-	doBoot.Operations.ContainerNumber = 1
 	defer CleanUp(doBoot, pkg)
 
 	if err := BootServicesAndChain(doBoot, pkg); err != nil {
@@ -276,7 +274,6 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	doBoot := definitions.NowDo()
-	doBoot.Operations.ContainerNumber = 1
 
 	if err := BootServicesAndChain(doBoot, pkg); err != nil {
 		CleanUp(doBoot, pkg)
@@ -395,7 +392,6 @@ func TestBadPathsGiven(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		CleanUp(do, pkg)
@@ -421,7 +417,6 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		// CleanUp(do, pkg)
@@ -465,7 +460,6 @@ func TestImportEPMYamlNotInContractDir(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -535,7 +529,6 @@ func TestImportMainDirRel(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	if err := DefinePkgActionService(do, pkg); err != nil {
 		t.Fatalf("unexpected error formulating the pkg service: %v", err)
@@ -579,7 +572,6 @@ func TestImportMainDirAsFile(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		CleanUp(do, pkg)
@@ -626,7 +618,6 @@ func TestImportContractDirRel(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -687,7 +678,6 @@ func TestImportContractDirAbs(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -746,7 +736,6 @@ func TestImportContractDirAsFile(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -804,7 +793,6 @@ func TestImportABIDirRel(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -865,7 +853,6 @@ func TestImportABIDirAbs(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -924,7 +911,6 @@ func TestImportABIDirAsFile(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -977,7 +963,6 @@ func TestExportEPMOutputsInMainDir(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -1033,7 +1018,6 @@ func TestExportEPMOutputsNotInMainDir(t *testing.T) {
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
 	do := definitions.NowDo()
-	do.Operations.ContainerNumber = 1
 
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
@@ -1084,7 +1068,6 @@ func TestExportEPMOutputsNotInMainDir(t *testing.T) {
 func startKeys() error {
 	doKeys := definitions.NowDo()
 	doKeys.Operations.Args = []string{"keys"}
-	doKeys.Operations.ContainerNumber = 1
 	doKeys.Rm = true
 	doKeys.RmD = true
 	if err := services.StartService(doKeys); err != nil {
@@ -1096,7 +1079,6 @@ func startKeys() error {
 func killKeys() {
 	do := definitions.NowDo()
 	do.Operations.Args = []string{"keys"}
-	do.Operations.ContainerNumber = 1
 	do.Rm = true
 	do.RmD = true
 	services.KillService(do)
@@ -1192,7 +1174,6 @@ func writeEmptyPkgJson() error {
 func exec(t *testing.T, name string, args []string) string {
 	do := definitions.NowDo()
 	do.Name = name + "_tmp_"
-	do.Operations.ContainerNumber = 1
 	do.Operations.Args = args
 	buf, err := data.ExecData(do)
 	if err != nil {

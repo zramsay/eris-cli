@@ -34,7 +34,6 @@ var (
 //
 //  ops.DataContainerName  - data container name to be created
 //  ops.ContainerType      - container type
-//  ops.ContainerNumber    - container number
 //  ops.Labels             - container creation time labels (use LoadDataDefinition)
 //
 func DockerCreateData(ops *def.Operation) error {
@@ -67,7 +66,6 @@ func DockerCreateData(ops *def.Operation) error {
 //
 //  ops.DataContainerName - container name to be mount with `--volumes-from=[]` option.
 //  ops.ContainerType     - container type
-//  ops.ContainerNumber   - container number
 //  ops.Labels            - container creation time labels (use LoadDataDefinition)
 //  ops.Args              - if specified, run these args in a container
 //
@@ -182,7 +180,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 //
 //  ops.SrvContainerName  - service or a chain container name
 //  ops.DataContainerName - dependent data container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //                          (use LoadServiceDefinition or LoadChainDefinition)
@@ -359,7 +356,6 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 // container process ungracefully.
 //
 //  ops.SrvContainerName  - service or a chain container name to rebuild
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
@@ -427,7 +423,6 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 // DockerPull returns Docker errors on exit if not successful.
 //
 //  ops.SrvContainerName  - service or a chain container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
@@ -549,12 +544,11 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 // if the container with the new (long) name exists.
 //
 //  ops.SrvContainerName  - container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
 func DockerRename(ops *def.Operation, newName string) error {
-	longNewName := util.ContainersName(ops.ContainerType, newName, ops.ContainerNumber)
+	longNewName := util.ContainersName(ops.ContainerType, newName)
 
 	log.WithFields(log.Fields{
 		"from": ops.SrvContainerName,
@@ -977,9 +971,6 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 }
 
 func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
-	if ops.ContainerNumber == 0 {
-		ops.ContainerNumber = 1
-	}
 
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,

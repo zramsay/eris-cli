@@ -67,6 +67,7 @@ func TestActionDefinitionFile(name string) bool {
 	return true
 }
 
+//TODO rm contNum
 func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":       name,
@@ -74,7 +75,7 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 		"existing": toExist,
 	}).Info("Checking container")
 
-	if existing := FindContainer(name, t, contNum, false); existing != toExist {
+	if existing := FindContainer(name, t, false); existing != toExist {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -84,7 +85,7 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 		return ErrContainerExistMismatch
 	}
 
-	if running := FindContainer(name, t, contNum, true); running != toRun {
+	if running := FindContainer(name, t, true); running != toRun {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -99,11 +100,11 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 
 // FindContainer returns true if the container with a given
 // short name, type, number, and status exists.
-func FindContainer(name, t string, n int, running bool) bool {
+func FindContainer(name, t string, running bool) bool {
 	containers := util.ErisContainersByType(t, !running)
 
 	for _, c := range containers {
-		if c.ShortName == name && c.Number == n {
+		if c.ShortName == name {
 			return true
 		}
 	}
@@ -111,9 +112,9 @@ func FindContainer(name, t string, n int, running bool) bool {
 }
 
 // Remove a container of some name, type, and number.
-func RemoveContainer(name, t string, n int) error {
+func RemoveContainer(name, t string) error {
 	opts := docker.RemoveContainerOptions{
-		ID:            util.ContainersName(t, name, n),
+		ID:            util.ContainersName(t, name),
 		RemoveVolumes: true,
 		Force:         true,
 	}
@@ -132,8 +133,8 @@ func RemoveAllContainers() error {
 
 // Return container links. For sake of simplicity, don't expose
 // anything else.
-func Links(name, t string, n int) []string {
-	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name, n))
+func Links(name, t string) []string {
+	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name))
 	if err != nil {
 		return []string{}
 	}

@@ -15,21 +15,12 @@ import (
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
 
-func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
-	if len(cNum) == 0 {
-		cNum = append(cNum, 0)
-	}
+func LoadServiceDefinition(servName string, newCont bool) (*definitions.ServiceDefinition, error) {
 
-	if cNum[0] == 0 {
-		cNum[0] = util.AutoMagic(0, definitions.TypeService, newCont)
-		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Loading service definition (autoassigned)")
-	} else {
-		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Loading service definition")
-	}
+	log.WithField("=>", servName).Debug("Loading service definition")
 
 	srv := definitions.BlankServiceDefinition()
 	srv.Operations.ContainerType = definitions.TypeService
-	srv.Operations.ContainerNumber = cNum[0]
 	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
@@ -57,17 +48,11 @@ func LoadServiceDefinition(servName string, newCont bool, cNum ...int) (*definit
 	return srv, nil
 }
 
-func MockServiceDefinition(servName string, newCont bool, cNum ...int) *definitions.ServiceDefinition {
+func MockServiceDefinition(servName string, newCont bool) *definitions.ServiceDefinition {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = servName
 
-	if len(cNum) == 0 {
-		srv.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeService, newCont)
-		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Mocking service definition (autoassigned)")
-	} else {
-		srv.Operations.ContainerNumber = cNum[0]
-		log.WithField("=>", fmt.Sprintf("%s:%d", servName, cNum[0])).Debug("Mocking service definition")
-	}
+	log.WithField("=>", servName).Debug("Mocking service definition")
 
 	srv.Operations.ContainerType = definitions.TypeService
 	srv.Operations.Labels = util.Labels(servName, srv.Operations)
@@ -108,24 +93,24 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 		log.WithField("service", srv.Name).Debug("Defaulting to service")
 	}
 
-	container := util.FindServiceContainer(srv.Name, srv.Operations.ContainerNumber, true)
+	container := util.FindServiceContainer(srv.Name, true)
 
 	if container != nil {
 		log.WithField("=>", container.FullName).Debug("Setting service container name")
 		srv.Operations.SrvContainerName = container.FullName
 		srv.Operations.SrvContainerID = container.ContainerID
 	} else {
-		srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name, srv.Operations.ContainerNumber)
+		srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name)
 		srv.Operations.DataContainerName = util.ServiceToDataContainer(srv.Operations.SrvContainerName)
 	}
 	if srv.Service.AutoData {
-		dataContainer := util.FindDataContainer(srv.Name, srv.Operations.ContainerNumber)
+		dataContainer := util.FindDataContainer(srv.Name)
 		if dataContainer != nil {
 			log.WithField("=>", dataContainer.FullName).Debug("Setting data container name")
 			srv.Operations.DataContainerName = dataContainer.FullName
 			srv.Operations.DataContainerID = dataContainer.ContainerID
 		} else {
-			srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name, srv.Operations.ContainerNumber)
+			srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name)
 			srv.Operations.DataContainerName = util.ServiceToDataContainer(srv.Operations.SrvContainerName)
 		}
 	}
@@ -148,7 +133,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 		"link":          link,
 		"volumes from":  mount,
 	}).Debug("Connecting to service")
-	containerName := util.ContainersName(typ, name, ops.ContainerNumber)
+	containerName := util.ContainersName(typ, name)
 
 	if link {
 		newLink := containerName + ":" + internalName

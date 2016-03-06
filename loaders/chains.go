@@ -26,21 +26,10 @@ const (
 
 // viper read config file, marshal to definition struct,
 // load service, validate name and data container
-func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definitions.Chain, error) {
-	if len(cNum) == 0 {
-		cNum = append(cNum, 0)
-	}
-
-	if cNum[0] == 0 {
-		cNum[0] = util.AutoMagic(0, definitions.TypeChain, newCont)
-		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Loading chain definition (autoassigned)")
-	} else {
-		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Loading chain definition")
-	}
+func LoadChainDefinition(chainName string, newCont bool) (*definitions.Chain, error) {
 
 	chain := definitions.BlankChain()
 	chain.Name = chainName
-	chain.Operations.ContainerNumber = cNum[0]
 	chain.Operations.ContainerType = definitions.TypeChain
 	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
 	if err := setChainDefaults(chain); err != nil {
@@ -68,7 +57,7 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 
 	checkChainNames(chain)
 	log.WithFields(log.Fields{
-		"container number": chain.Operations.ContainerNumber,
+		"container number": 1,
 		"environment":      chain.Service.Environment,
 		"entrypoint":       chain.Service.EntryPoint,
 		"cmd":              chain.Service.Command,
@@ -77,8 +66,8 @@ func LoadChainDefinition(chainName string, newCont bool, cNum ...int) (*definiti
 }
 
 // Convert the chain def to a service def but keep the "eris_chains" containers prefix and set the chain id
-func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainDefinition(chainName, newCont, cNum...)
+func ChainsAsAService(chainName string, newCont bool) (*definitions.ServiceDefinition, error) {
+	chain, err := LoadChainDefinition(chainName, newCont)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +77,7 @@ func ChainsAsAService(chainName string, newCont bool, cNum ...int) (*definitions
 	}
 	// we keep the "eris_chain" prefix and set the CHAIN_ID var.
 	// the run command is set in ServiceDefFromChain
-	s.Operations.SrvContainerName = util.ChainContainersName(chainName, s.Operations.ContainerNumber)
+	s.Operations.SrvContainerName = util.ChainContainersName(chainName)
 	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
 	return s, nil
 }
@@ -120,19 +109,13 @@ func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name,
 	connectToAService(srv, ops, definitions.TypeChain, name, internalName, link, mount)
 }
 
-func MockChainDefinition(chainName, chainID string, newCont bool, cNum ...int) *definitions.Chain {
+func MockChainDefinition(chainName, chainID string, newCont bool) *definitions.Chain {
 	chn := definitions.BlankChain()
 	chn.Name = chainName
 	chn.ChainID = chainID
 	chn.Service.AutoData = true
 
-	if len(cNum) == 0 {
-		chn.Operations.ContainerNumber = util.AutoMagic(cNum[0], definitions.TypeChain, newCont)
-		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Mocking chain definition (autoassigned)")
-	} else {
-		chn.Operations.ContainerNumber = cNum[0]
-		log.WithField("=>", fmt.Sprintf("%s:%d", chainName, cNum[0])).Debug("Mocking chain definition")
-	}
+	log.WithField("=>", chainName).Debug("Mocking chain definition")
 
 	chn.Operations.ContainerType = definitions.TypeChain
 	chn.Operations.Labels = util.Labels(chainName, chn.Operations)
@@ -184,6 +167,6 @@ func setChainDefaults(chain *definitions.Chain) error {
 // validation funcs
 func checkChainNames(chain *definitions.Chain) {
 	chain.Service.Name = chain.Name
-	chain.Operations.SrvContainerName = util.ChainContainersName(chain.Name, chain.Operations.ContainerNumber)
-	chain.Operations.DataContainerName = util.DataContainersName(chain.Name, chain.Operations.ContainerNumber)
+	chain.Operations.SrvContainerName = util.ChainContainersName(chain.Name)
+	chain.Operations.DataContainerName = util.DataContainersName(chain.Name)
 }

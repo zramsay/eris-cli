@@ -103,7 +103,6 @@ func TestExportKeySingle(t *testing.T) {
 	do := def.NowDo()
 	do.Name = "keys"
 	do.Operations.Interactive = false
-	do.Operations.ContainerNumber = 1
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
@@ -162,7 +161,6 @@ func TestImportKeySingle(t *testing.T) {
 	doRm := def.NowDo()
 	doRm.Name = "keys"
 	doRm.Operations.Interactive = false
-	doRm.Operations.ContainerNumber = 1
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
 	doRm.Operations.Args = []string{"rm", "-rf", keyPath}
@@ -182,7 +180,6 @@ func TestImportKeySingle(t *testing.T) {
 	doCat := def.NowDo()
 	doCat.Name = "keys"
 	doCat.Operations.Interactive = false
-	doCat.Operations.ContainerNumber = 1
 	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
@@ -301,8 +298,7 @@ func testStartKeys(t *testing.T) {
 	serviceName := "keys"
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	do.Operations.ContainerNumber = 1
-	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (via tests)")
+	log.WithField("=>", serviceName).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
 		log.Infof("Error starting service: %v", e)

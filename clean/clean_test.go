@@ -137,9 +137,8 @@ func TestClean(t *testing.T) {
 func testStartService(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	do.Operations.ContainerNumber = 1 //util.AutoMagic(0, "service", true)
 	do.Operations.PublishAllPorts = publishAll
-	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (from tests)")
+	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, 1)).Debug("Starting service (from tests)")
 	e := srv.StartService(do)
 	if e != nil {
 		log.Infof("Error starting service: %v", e)

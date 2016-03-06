@@ -72,7 +72,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 
 	// assemble the services
 	for _, s := range do.ServicesSlice {
-		t, err := services.BuildServicesGroup(s, do.Operations.ContainerNumber, srvs...)
+		t, err := services.BuildServicesGroup(s, srvs...)
 		if err != nil {
 			return err
 		}
@@ -236,7 +236,7 @@ func bootChain(name string, do *definitions.Do) error {
 	startChain.Operations = do.Operations
 	f, err := os.Stat(filepath.Join(common.ChainsPath, startChain.Name))
 	switch {
-	case util.IsChainContainer(name, do.Operations.ContainerNumber, true):
+	case util.IsChainContainer(name, true):
 		log.WithField("name", startChain.Name).Info("Starting Chain")
 		if err := chains.StartChain(startChain); err != nil {
 			return err
@@ -249,7 +249,7 @@ func bootChain(name string, do *definitions.Do) error {
 			return err
 		}
 		do.Chain.ChainType = "chain" // setting this for tear down purposes
-	case util.IsServiceContainer(name, do.Operations.ContainerNumber, true):
+	case util.IsServiceContainer(name, true):
 		log.WithField("name", name).Info("Chain exists as a service.")
 		startService := definitions.NowDo()
 		startService.Operations = do.Operations
@@ -295,16 +295,16 @@ func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
 	if do.Chain.ChainType == "service" {
-		newLink = util.ServiceContainersName(pkg.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ServiceContainersName(pkg.ChainName) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainersName(pkg.ChainName, do.Operations.ContainerNumber) + ":" + "chain"
+		newLink = util.ChainContainersName(pkg.ChainName) + ":" + "chain"
 	}
-	newLink2 := util.ServiceContainersName("keys", do.Operations.ContainerNumber) + ":" + "keys"
+	newLink2 := util.ServiceContainersName("keys") + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
 	do.Service.Links = append(do.Service.Links, newLink2)
 
 	for _, s := range do.ServicesSlice {
-		l := util.ServiceContainersName(s, do.Operations.ContainerNumber) + ":" + s
+		l := util.ServiceContainersName(s) + ":" + s
 		do.Service.Links = append(do.Service.Links, l)
 	}
 }
@@ -373,13 +373,9 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
 	doData.Operations = do.Operations
-	if doData.Operations.ContainerNumber == 0 {
-		log.Info("Setting ops.ContainerNumber to 1")
-		doData.Operations.ContainerNumber = 1
-	}
 
 	if inbound && util.HowManyContainersExisting(doData.Name, "data") == 0 {
-		doData.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
+		doData.Operations.DataContainerName = util.DataContainersName(doData.Name)
 		doData.Operations.ContainerType = "data"
 		if err := perform.DockerCreateData(doData.Operations); err != nil {
 			return err
@@ -586,7 +582,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.Info("EPM files do not exist on the host or are inside the pkg path.")
 	}
 
-	do.Operations.DataContainerName = util.DataContainersName(doData.Name, doData.Operations.ContainerNumber)
+	do.Operations.DataContainerName = util.DataContainersName(doData.Name)
 	do.Path = oldDoPath
 	do.PackagePath = oldPkgPath
 	do.ABIPath = oldAbiPath

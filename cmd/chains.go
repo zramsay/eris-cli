@@ -432,7 +432,6 @@ func addChainsFlags() {
 	// buildFlag(chainsInstall, do, "dir", "chain")
 	// chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
 	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
-	// chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
 
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "env", "chain")

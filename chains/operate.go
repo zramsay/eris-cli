@@ -50,7 +50,7 @@ func InstallChain(do *definitions.Do) error {
 }
 
 func KillChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,6 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
 	do.Path = filepath.Join(ChainsPath, "default")
-	do.Operations.ContainerNumber = 1
 	log.WithFields(log.Fields{
 		"=>":   do.Name,
 		"path": do.Path,
@@ -109,7 +108,7 @@ func ThrowAwayChain(do *definitions.Do) error {
 
 //------------------------------------------------------------------------
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
-	chain, err := loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		log.Error("Cannot start a chain I cannot find")
 		do.Result = "no file"
@@ -166,7 +165,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 
 		// always link the chain to the exec container when doing chains exec
 		// so that there is never any problems with sending info to the service (chain) container
-		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainersName("chain", chain.Name, 1), "chain"))
+		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainersName("chain", chain.Name), "chain"))
 
 		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
@@ -194,7 +193,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 		}).Info("Booting chain dependencies")
 		for _, srvName := range chain.Dependencies.Services {
 			do.Name = srvName
-			srv, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+			srv, err := loaders.LoadServiceDefinition(do.Name, false)
 			if err != nil {
 				return err
 			}
@@ -212,7 +211,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 		do.Name = name // undo side effects
 
 		for _, chainName := range chain.Dependencies.Chains {
-			chn, err := loaders.LoadChainDefinition(chainName, false, do.Operations.ContainerNumber)
+			chn, err := loaders.LoadChainDefinition(chainName, false)
 			if err != nil {
 				return err
 			}
@@ -227,13 +226,12 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
 func setupChain(do *definitions.Do, cmd string) (err error) {
-	// XXX: if do.Name is unique, we can safely assume (and we probably should) that do.Operations.ContainerNumber = 1
 
 	// do.Name is mandatory
 	if do.Name == "" {
 		return fmt.Errorf("setupChain requires a chainame")
 	}
-	containerName := util.ChainContainersName(do.Name, do.Operations.ContainerNumber)
+	containerName := util.ChainContainersName(do.Name)
 	if do.ChainID == "" {
 		do.ChainID = do.Name
 	}
@@ -258,10 +256,10 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	if util.IsDataContainer(do.Name) {
 		log.WithField("=>", do.Name).Debug("Chain data container already exists")
 	} else {
-		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
@@ -287,7 +285,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
-	// TODO: deal with do.Operations.ContainerNumbers ....!
 
 	log.WithFields(log.Fields{
 		"container path": containerDst,
@@ -346,7 +343,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
-	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false, do.Operations.ContainerNumber)
+	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false)
 
 	//set maintainer info
 	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
@@ -362,7 +359,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}
 
-	chain, err = loaders.LoadChainDefinition(do.Name, false, do.Operations.ContainerNumber)
+	chain, err = loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
@@ -408,7 +405,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	// TODO: if do.N > 1 ...
 
-	chain.Operations.DataContainerName = util.DataContainersName(do.Name, do.Operations.ContainerNumber)
+	chain.Operations.DataContainerName = util.DataContainersName(do.Name)
 
 	if err := bootDependencies(chain, do); err != nil {
 		return err

@@ -17,18 +17,18 @@ type ContainerName struct {
 	FullName    string
 	DockersName string
 	ShortName   string
-	Number      int
+	//	Number      int
 	Type        string
 	ContainerID string
 }
 
-func ContainersName(typ, name string, number int) string {
-	return ContainerAssemble(typ, name, number).FullName
+func ContainersName(typ, name string) string {
+	return ContainerAssemble(typ, name).FullName
 }
 
-func ContainersNumber(containerName string) int {
-	return ContainerDisassemble(containerName).Number
-}
+//func ContainersNumber(containerName string) int {
+//	return ContainerDisassemble(containerName).Number
+//}
 
 func ContainersType(containerName string) string {
 	return ContainerDisassemble(containerName).Type
@@ -38,15 +38,15 @@ func ContainersShortName(containerName string) string {
 	return ContainerDisassemble(containerName).ShortName
 }
 
-func ContainerAssemble(typ, name string, number int) *ContainerName {
-	full := fmt.Sprintf("eris_%s_%s_%d", typ, name, number)
+func ContainerAssemble(typ, name string) *ContainerName {
+	full := fmt.Sprintf("eris_%s_%s_1", typ, name)
 
 	return &ContainerName{
 		FullName:    full,
 		DockersName: "/" + full,
 		ShortName:   name,
 		Type:        typ,
-		Number:      number,
+		//Number:      number,
 	}
 }
 
@@ -65,7 +65,7 @@ func ContainerDisassemble(containerName string) *ContainerName {
 
 	typ := pop[1]
 	srt := strings.Join(pop[2:len(pop)-1], "_")
-	num, err := strconv.Atoi(pop[len(pop)-1])
+	_, err := strconv.Atoi(pop[len(pop)-1])
 	if err != nil {
 		log.WithField("=>", containerName).Debug("The marmots cannot disassemble container name")
 
@@ -79,21 +79,21 @@ func ContainerDisassemble(containerName string) *ContainerName {
 		FullName:    containerName,
 		DockersName: "/" + containerName,
 		Type:        typ,
-		Number:      num,
-		ShortName:   srt,
+		//Number:      num,
+		ShortName: srt,
 	}
 }
 
-func ServiceContainersName(name string, number int) string {
-	return ContainersName("service", name, number)
+func ServiceContainersName(name string) string {
+	return ContainersName("service", name)
 }
 
-func ChainContainersName(name string, number int) string {
-	return ContainersName("chain", name, number)
+func ChainContainersName(name string) string {
+	return ContainersName("chain", name)
 }
 
-func DataContainersName(name string, number int) string {
-	return ContainersName("data", name, number)
+func DataContainersName(name string) string {
+	return ContainersName("data", name)
 }
 
 func ServiceToDataContainer(serviceContainerName string) string {
@@ -235,62 +235,62 @@ func DataContainerFullNames() []string {
 	return b
 }
 
-func FindServiceContainer(srvName string, number int, running bool) *ContainerName {
+func FindServiceContainer(srvName string, running bool) *ContainerName {
 	for _, srv := range ServiceContainers(running) {
 		if srv.ShortName == srvName {
-			if srv.Number == number {
-				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found service container")
-				return srv
-			}
+			//if srv.Number == number {
+			//log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found service container")
+			return srv
+			//}
 		}
 	}
-	log.WithField("=>", fmt.Sprintf("%s:%d", srvName, number)).Info("Could not find service container")
+	log.WithField("=>", srvName).Info("Could not find service container")
 	return nil
 }
 
 // TODO: populate the ContainerID during this portion of the general sequence
-func IsServiceContainer(name string, number int, running bool) bool {
-	if FindServiceContainer(name, number, running) == nil {
+func IsServiceContainer(name string, running bool) bool {
+	if FindServiceContainer(name, running) == nil {
 		return false
 	}
 	return true
 }
 
-func FindChainContainer(name string, number int, running bool) *ContainerName {
+func FindChainContainer(name string, running bool) *ContainerName {
 	for _, srv := range ChainContainers(running) {
 		if srv.ShortName == name {
-			if srv.Number == number {
-				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found chain container")
-				return srv
-			}
+			//if srv.Number == number {
+			//log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found chain container")
+			return srv
+			//}
 		}
 	}
-	log.WithField("=>", fmt.Sprintf("%s:%d", name, number)).Info("Could not find chain container")
+	log.WithField("=>", name).Info("Could not find chain container")
 	return nil
 }
 
-func IsChainContainer(name string, number int, running bool) bool {
-	if FindChainContainer(name, number, running) == nil {
+func IsChainContainer(name string, running bool) bool {
+	if FindChainContainer(name, running) == nil {
 		return false
 	}
 	return true
 }
 
-func FindDataContainer(name string, number int) *ContainerName {
+func FindDataContainer(name string) *ContainerName {
 	for _, srv := range DataContainers() {
 		if srv.ShortName == name {
-			if srv.Number == number {
-				log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found data container")
-				return srv
-			}
+			//if srv.Number == number {
+			//log.WithField("match", fmt.Sprintf("%s:%d", srv.ShortName, srv.Number)).Debug("Found data container")
+			return srv
+			//}
 		}
 	}
-	log.WithField("=>", fmt.Sprintf("%s:%d", name, number)).Info("Could not find data container")
+	log.WithField("=>", name).Info("Could not find data container")
 	return nil
 }
 
-func IsDataContainer(name string, number int) bool {
-	if FindDataContainer(name, number) == nil {
+func IsDataContainer(name string) bool {
+	if FindDataContainer(name) == nil {
 		return false
 	}
 	return true
@@ -312,9 +312,9 @@ func erisRegExpLinks(typ string) *regexp.Regexp {
 }
 
 // here temporarily
-func NameAndNumber(name string, num int) string {
-	return fmt.Sprintf("%s_%d", name, num)
-}
+//func NameAndNumber(name string, num int) string {
+//	return fmt.Sprintf("%s_%d", name, num)
+//}
 
 func PortAndProtocol(port string) docker.Port {
 	if len(strings.Split(port, "/")) == 1 {
