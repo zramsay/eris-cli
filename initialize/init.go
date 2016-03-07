@@ -103,7 +103,7 @@ func checkThenInitErisRoot(force bool) (bool, error) {
 
 func checkIfMigrationRequired(doYes bool) error {
 	if err := util.MigrateDeprecatedDirs(common.DirsToMigrate, !doYes); err != nil {
-		return fmt.Errorf("Error:\tcould not migrate directories.\n%s\n", err)
+		return fmt.Errorf("Could not migrate directories.\n%s", err)
 	}
 	return nil
 }
