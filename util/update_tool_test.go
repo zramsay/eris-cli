@@ -20,7 +20,7 @@ func TestCheckGitAndGo(t *testing.T) {
 	for _, g := range tests {
 		resultGit, resultGo := CheckGitAndGo(g.hasGit, g.hasGo)
 		if g.hasGit != resultGit && g.hasGo != resultGo {
-			t.Fatalf("Expected git = %b and go = %b.\nResult: git = %b, go = %b", g.hasGit, g.hasGo, resultGit, resultGo)
+			t.Fatalf("Expected git = %v and go = %v.\nResult: git = %v, go = %v", g.hasGit, g.hasGo, resultGit, resultGo)
 		}
 	}
 }

@@ -229,7 +229,7 @@ func TestKillService(t *testing.T) {
 	do.RmD = false
 	do.Operations.Args = []string{servName}
 	if err := KillService(do); err != nil {
-		t.Fatalf("expected service to be stopped, got %v")
+		t.Fatalf("expected service to be stopped, got %v", err)
 	}
 	if n := util.HowManyContainersRunning(servName, def.TypeService); n != 0 {
 		t.Fatalf("expecting 0 running service container, got %v", n)

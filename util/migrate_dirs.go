@@ -23,11 +23,9 @@ func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 		return Migrate(dirsMap)
 	} else if canWeMigrate() {
 		return Migrate(dirsMap)
-	} else {
-		return fmt.Errorf("permission to migrate not given")
 	}
 
-	return nil
+	return fmt.Errorf("permission to migrate not given")
 }
 
 //check that migration is actually needed

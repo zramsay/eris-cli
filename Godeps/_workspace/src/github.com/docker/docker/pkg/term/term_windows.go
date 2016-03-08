@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Azure/go-ansiterm/winterm"
-	"github.com/docker/docker/pkg/system"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Azure/go-ansiterm/winterm"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/system"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term/windows"
 )
 

@@ -202,10 +202,6 @@ func FormulatePortsOutput(container *docker.Container) string {
 
 func camelize(field string) string {
 	return snaker.SnakeToCamel(field)
-	if !startsUp(field) {
-		return snaker.SnakeToCamel(field)
-	}
-	return field
 }
 
 func writeTemplate(container interface{}, toParse string) error {

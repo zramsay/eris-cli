@@ -205,8 +205,6 @@ func canWeRemove(removing []string, what string) bool {
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
 		log.WithField("=>", what).Warn("Authorization given, removing")
 		return true
-	} else {
-		return false
 	}
 	return false
 }

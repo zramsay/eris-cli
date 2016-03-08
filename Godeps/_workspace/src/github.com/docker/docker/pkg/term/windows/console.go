@@ -7,9 +7,9 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/Azure/go-ansiterm/winterm"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Azure/go-ansiterm/winterm"
 
-	ansiterm "github.com/Azure/go-ansiterm"
+	ansiterm "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Azure/go-ansiterm"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"io/ioutil"
 )

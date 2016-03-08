@@ -388,7 +388,7 @@ func writeCsv(hashArray, fileNames []string) error {
 
 	csvfile, err := os.Create("ipfs_hashes.csv")
 	if err != nil {
-		return fmt.Errorf("error creating csv file:", err)
+		return fmt.Errorf("error creating csv file: %v", err)
 	}
 	defer csvfile.Close()
 
@@ -396,7 +396,7 @@ func writeCsv(hashArray, fileNames []string) error {
 	w.WriteAll(strToWrite)
 
 	if err := w.Error(); err != nil {
-		return fmt.Errorf("error writing csv: \n", err)
+		return fmt.Errorf("error writing csv: %v", err)
 	}
 	return nil
 }

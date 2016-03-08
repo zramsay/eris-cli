@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unsafe"
 
-	ansiterm "github.com/Azure/go-ansiterm"
-	"github.com/Azure/go-ansiterm/winterm"
+	ansiterm "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Azure/go-ansiterm"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Azure/go-ansiterm/winterm"
 )
 
 const (

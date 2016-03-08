@@ -3,6 +3,7 @@ package initialize
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -12,9 +13,7 @@ import (
 )
 
 func Initialize(do *definitions.Do) error {
-
-	log.Warn("Checking for eris root directory")
-	//do.Quiet forces a new dir, only used for testing
+	log.Warn("Checking for Eris root directory")
 	newDir, err := checkThenInitErisRoot(do.Quiet)
 	if err != nil {
 		return err
@@ -25,7 +24,7 @@ func Initialize(do *definitions.Do) error {
 			return err
 		}
 
-		log.Warn("Checking if migration is required")
+		log.Info("Checking if migration is required")
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
 			return err
 		}
@@ -39,15 +38,19 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	//drops: services, actions, & chain defaults from toadserver
-	log.Warn("Initializing defaults")
+	log.Warn("Initializing default service, action, and chain files")
 	if err := InitDefaults(do, newDir); err != nil {
 		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
 	}
 
+	log.Warnf(`
+Eris sends crash reports to a remote server in case something goes completely 
+wrong. You may disable this feature by adding the CrashReport = %q 
+line to the %s definition file.
+`, "don't send", filepath.Join(common.ErisRoot, "eris.toml"))
 	//TODO: when called from cli provide option to go on tour, like `ipfs tour`
 	//[zr] this'll be cleaner with `make`
-	log.Warn("The marmots have everything set up for you")
-	log.Warn("If you are just getting started please type [eris] to get an overview of the tool")
+	log.Warn("The marmots have everything set up for you. Type [eris] to get started")
 
 	return nil
 }
@@ -75,7 +78,7 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}
 
-	log.WithField("root", common.ErisRoot).Warn("Initialized eris root directory with default service, action, and chain files")
+	log.WithField("root", common.ErisRoot).Warn("Initialized Eris root directory")
 
 	return nil
 }
@@ -119,7 +122,7 @@ func checkIfCanOverwrite(doYes bool) error {
 		"services path": common.ServicesPath,
 		"actions path":  common.ActionsPath,
 		"chains path":   common.ChainsPath,
-	}).Warn("Continuing may overwrite files in:")
+	}).Warn("Continuing may overwrite files in")
 	fmt.Print("Do you wish to continue? (y/n): ")
 	if _, err := fmt.Scanln(&input); err != nil {
 		return fmt.Errorf("Error reading from stdin: %v\n", err)
@@ -127,7 +130,7 @@ func checkIfCanOverwrite(doYes bool) error {
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
 		log.Debug("Confirmation verified. Proceeding")
 	} else {
-		log.Warn("The marmots will not proceed without your permission to overwrite")
+		log.Warn("The marmots will not proceed without your permission")
 		log.Warn("Please backup your files and try again")
 		return fmt.Errorf("Error:\tno permission given to overwrite services and actions\n")
 	}
@@ -142,13 +145,15 @@ func GetTheImages(doYes bool) error {
 		log.Warn("Pulling of default images successful")
 	} else {
 		var input string
-		log.Warn(`WARNING: Approximately 1 gigabyte of docker images are about to be pulled onto your host machine
-Please ensure that you have sufficient bandwidth to handle the download
-On a remote host in the cloud, this should only take a few minutes but can sometimes take 10 or more.
-These times can double or triple on local host machines
-If you already have these images, they will be updated`)
-
-		log.WithField("ERIS_PULL_APPROVE", "true").Warn("To avoid this warning on all future pulls, set as an environment variable")
+		log.Warn(`
+WARNING: Approximately 1 gigabyte of Docker images are about to be pulled
+onto your host machine. Please ensure that you have sufficient bandwidth to
+handle the download. For a remote Docker server this should only take a few
+minutes but can sometimes take 10 or more. These times can double or triple
+on local host machines. If you already have the images, they'll be updated.
+`)
+		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
+		log.Warn()
 
 		fmt.Print("Do you wish to continue? (y/n): ")
 		if _, err := fmt.Scanln(&input); err != nil {

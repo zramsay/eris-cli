@@ -706,7 +706,7 @@ func pullImage(name string, writer io.Writer) error {
 	}
 
 	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
-		opts.OutputStream = nil
+		opts.OutputStream = ioutil.Discard
 	}
 
 	auth := docker.AuthConfiguration{}

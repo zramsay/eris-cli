@@ -133,6 +133,31 @@
 		{
 			"ImportPath": "github.com/docker/go-units",
 			"Rev": "f49f7ea428ed3f42a846917e4a4856fcd165f6bc"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.7-53-g446d1c1",
+			"Rev": "446d1c146faa8ed3f4218f056fcd165f6bcfda81"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/system",
+			"Rev": "f7e02b752bcf687aab0120e6b06ab38779371ec0"
+		},
+		{
+			"ImportPath": "github.com/Azure/go-ansiterm",
+			"Rev": "99cbe6fbe8d074bcf687aab012c3c0d5297f614a"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/bugsnag-go",
+			"Rev": "ab8487ef058074bc60171a6436fabcfac287a001"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/panicwrap",
+			"Rev": "40098faa760171a6436fab017853031334b3c8b9"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/osext",
+			"Rev": "cd2b779537780171a6436fbc39950e081b0187bb"
 		}
 	]
 }

@@ -1024,7 +1024,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
@@ -1032,7 +1032,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
@@ -1045,7 +1045,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
@@ -1074,7 +1074,7 @@ func TestRemoveWithData(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
@@ -1086,7 +1086,7 @@ func TestRemoveWithData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, true, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
@@ -1327,7 +1327,7 @@ func TestRebuildNotRunning(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, timeout); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
