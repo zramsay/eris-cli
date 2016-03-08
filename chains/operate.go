@@ -168,7 +168,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	}
 	if err != nil {
 		do.Result = "error"
-		return nil, err
+		return buf, err
 	}
 
 	return buf, nil
@@ -292,6 +292,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	// we accept two csvs: one for validators, one for accounts
 	// if there's only one, its for validators and accounts
+	// functionality is deprecated. to remove for 0.11.4
 	var csvFiles []string
 	var csvPaths string
 	if do.CSV != "" {
@@ -312,6 +313,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		{do.Priv, "priv_validator.json"},
 	}
 
+	// functionality is deprecated. to remove for 0.11.4
 	if len(csvFiles) == 1 {
 		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
 	} else if len(csvFiles) > 1 {
@@ -379,7 +381,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),                                          // for mintgen
+		fmt.Sprintf("CSV=%v", csvPaths),                                          // functionality is deprecated. to remove for 0.11.4
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),                                // for config.toml
 		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                                  // etcb host
 		fmt.Sprintf("DOCKER_FIX=%s", "                                        "), // https://github.com/docker/docker/issues/14203
@@ -413,6 +415,23 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	err = perform.DockerRunService(chain.Service, chain.Operations)
 	// this err is caught in the defer above
+
+	log.Info("Moving priv_validator.json into eris-keys")
+	doKeys := definitions.NowDo()
+	doKeys.Name = do.Name
+	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
+	if out, err := ExecChain(doKeys); err != nil {
+		log.Error(out)
+		return fmt.Errorf("Error moving keys: %v", err)
+	}
+
+	doChown := definitions.NowDo()
+	doChown.Name = do.Name
+	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
+	if out2, err2 := ExecChain(doChown); err != nil {
+		log.Error(out2)
+		return fmt.Errorf("Error changing owner: %v", err2)
+	}
 
 	return
 }
