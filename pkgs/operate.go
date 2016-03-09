@@ -418,14 +418,6 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		if inbound {
 			doData.Source = do.Path
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
-
-			log.Info("Making a directory in the data container")
-			doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))}
-			if _, err := data.ExecData(doData); err != nil {
-				return err
-			}
-			doData.Operations.Args = []string{}
-
 		} else {
 			doData.Source = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
 			doData.Destination = filepath.Dir(do.Path) // on exports we always need the parent of the directory
@@ -457,15 +449,6 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
 			doData.Source = do.PackagePath
-
-			if _, err := os.Stat(filepath.Join(do.Path, "contracts")); os.IsNotExist(err) {
-				log.Info("Making a contracts directory in the data container")
-				doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")}
-				if _, err := data.ExecData(doData); err != nil {
-					return err
-				}
-				doData.Operations.Args = []string{}
-			}
 
 			log.WithFields(log.Fields{
 				"source": doData.Source,
@@ -504,15 +487,6 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
 			doData.Source = do.ABIPath
-
-			if _, err := os.Stat(filepath.Join(do.Path, "abi")); os.IsNotExist(err) {
-				log.Info("Making a abi directory in the data container")
-				doData.Operations.Args = []string{"mkdir", "--parents", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")}
-				if _, err := data.ExecData(doData); err != nil {
-					return err
-				}
-				doData.Operations.Args = []string{}
-			}
 
 			log.WithFields(log.Fields{
 				"source": doData.Source,
