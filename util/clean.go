@@ -8,64 +8,71 @@ import (
 	"regexp"
 	"strings"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
+var toWarn = map[string]string{
+	"containers": "All Eris Containers",
+	"scratch":    "The contents of $HOME/eris/scratch",
+	"rmd":        "The Eris Root Directory ($HOME/.eris)",
+	"images":     "All Eris docker images",
+}
+
 func Clean(toClean map[string]bool) error {
 
 	if toClean["yes"] {
-		//go do shit
-		cleanHandler() //bool 3
+		if err := cleanHandler(toClean); err != nil {
+			return err
+		}
 	} else {
-		if canWeRemove(toClean) { // bool x3
-			cleanHandler()
-		}
-	}
-
-	//do this always
-	// TODO have flag to turn this behaviour off
-	if err := defaultClean(); err != nil {
-		return err
-	}
-
-	//also do this always
-	if err := cleanScratchData(); err != nil {
-		return err
-	}
-
-	if toClean["all"] {
-		toClean["rmd"] = true
-		toClean["images"] = true
-		//do.Volumes = true
-	}
-
-	if toClean["rmd"] {
-		if err := removeErisDir(); err != nil {
-			return err
-		}
-	}
-	if toClean["images"] {
-		if err := removeErisImages(); err != nil {
-			return err
+		if canWeRemove(toClean) {
+			if err := cleanHandler(toClean); err != nil {
+				return err
+			}
+		} else {
+			return nil
 		}
 	}
 
 	return nil
 }
 
-func cleanHandler() {
+func cleanHandler(toClean map[string]bool) error {
+	if toClean["containers"] {
+		if err := RemoveAllErisContainers(); err != nil {
+			return err
+		}
+	}
+
+	if toClean["scratch"] {
+		if err := CleanScratchData(); err != nil {
+			return err
+		}
+	}
+
+	if toClean["rmd"] {
+		if err := os.RemoveAll(common.ErisRoot); err != nil {
+			return err
+		}
+	}
+	if toClean["images"] {
+		if err := RemoveErisImages(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // stops and removes containers and their volumes
-func defaultClean() error {
-	//TODO actually clean data conts
-	// is this a labels issue ... ?
+func RemoveAllErisContainers() error {
+	// TODO catch all data conts
+	// use our listing functions ... ?
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		fmt.Printf("List containers error: %v\n", err)
+		return fmt.Errorf("error listing containers: %v\n", err)
 	}
 
 	for _, container := range contns {
@@ -89,9 +96,9 @@ func defaultClean() error {
 	return nil
 }
 
-func cleanScratchData() error {
-	if DoesDirExist(DataContainersPath) {
-		d, err := os.Open(DataContainersPath)
+func CleanScratchData() error {
+	if DoesDirExist(common.DataContainersPath) {
+		d, err := os.Open(common.DataContainersPath)
 		if err != nil {
 			return err
 		}
@@ -102,22 +109,16 @@ func cleanScratchData() error {
 			return err
 		}
 		for _, name := range names {
-			err = os.RemoveAll(filepath.Join(DataContainersPath, name))
+			err = os.RemoveAll(filepath.Join(common.DataContainersPath, name))
 			if err != nil {
 				return err
 			}
 		}
-	} else {
-		return nil
 	}
 	return nil
 }
 
-func removeErisDir() error {
-	return os.RemoveAll(ErisRoot)
-}
-
-func removeErisImages() error {
+func RemoveErisImages() error {
 	opts := docker.ListImagesOptions{
 		All:     true,
 		Filters: nil,
@@ -129,7 +130,6 @@ func removeErisImages() error {
 	}
 
 	//get all repo tags & IDs
-	// [zr] this could probably be cleaner
 	repoTags := make(map[int][]string)
 	imageIDs := make(map[int]string)
 	for i, image := range allTheImages {
@@ -169,18 +169,13 @@ func removeErisImages() error {
 
 func canWeRemove(toClean map[string]bool) bool {
 	var input string
-
-	toWarn := map[string]string{
-		"containers": "All Eris Containers",
-		"scratch":    "The contents of $HOME/eris/scratch",
-		"rmd":        "The Eris Root Directory ($HOME/.eris)",
-		"images":     "All Eris docker images",
-	}
+	var canWe bool
 
 	//toWarnSome := make(map[string]string)
 
 	if toClean["all"] != true {
 		for _, thing := range toWarn {
+			//TODO .. !
 			fmt.Printf("thing: %v\n", thing)
 		}
 	} else {
@@ -197,9 +192,12 @@ func canWeRemove(toClean map[string]bool) bool {
 	fmt.Scanln(&input)
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
 		log.Warn("Authorization given, removing")
-		return true
+		canWe = true
+	} else {
+		log.Warn("Authorization not given, exiting")
+		canWe = false
 	}
-	return false
+	return canWe
 }
 
 func TrimString(strang string) string {
@@ -224,8 +222,5 @@ func removeOrphanedVolumes() error {
 }
 
 func uninstallEris() error {
-	if err := removeErisDir(); err != nil { //and other things
-		return err
-	}
 	return nil
 }*/

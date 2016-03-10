@@ -16,33 +16,50 @@ import (
 )
 
 var ToTest = []struct {
-	name   string
-	prompt bool
-	rmd    bool
-	images bool
-	all    bool
-	//uninstall bool => forthcoming
-}{
+	name       string
+	all        bool
+	containers bool
+	scratch    bool
+	rmd        bool
+	images     bool
+	yes        bool
+	// uninstall bool => forthcoming
+	// volumes bool => forthcoming
+}{}
+
+/*{
 	{"no-flag", false, false, false, false},
 	{"rmd-only", false, true, false, false},
 	{"imgs-only", false, false, true, false},
 	{"imgs-rmd", false, true, true, false}, //is this  == --all -> prefered behaviour ?
 	{"all-only", false, false, false, true},
 	{"all-flags", false, true, true, true},
-}
+}*/
 
 func TestMain(m *testing.M) {
 	log.SetFormatter(logger.ErisFormatter{})
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit("clean"))
 
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
+}
+
+func TestRemoveAllErisContainers(t *testing.T) {
+
+}
+
+func TestCleanScratchData(t *testing.T) {
+
+}
+
+func TestRemoveErisImages(t *testing.T) {
+
 }
 
 func testCreateNotEris(t *testing.T) {
