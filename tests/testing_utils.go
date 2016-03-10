@@ -67,8 +67,7 @@ func TestActionDefinitionFile(name string) bool {
 	return true
 }
 
-//TODO rm contNum
-func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
+func TestExistAndRun(name, t string, toExist, toRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":       name,
 		"running":  toRun,
@@ -129,6 +128,7 @@ func TestNumbersExistAndRun(servName string, containerExist, containerRun int) e
 		return fmt.Errorf("Wrong number of existing containers")
 	}
 	log.Info("All good")
+	return nil
 }
 
 // FindContainer returns true if the container with a given
@@ -160,13 +160,14 @@ func RemoveContainer(name, t string) error {
 }
 
 // Remove everything Eris.
-// [zr] XXX ensure this stay consistent with clean minro refacotr
 func RemoveAllContainers() error {
 	toClean := map[string]bool{
-		"yes":    false,
-		"all":    false,
-		"rmd":    false,
-		"images": false,
+		"yes":        true,
+		"containers": true,
+		"scratch":    true,
+		"all":        false,
+		"rmd":        false,
+		"images":     false,
 	}
 	return util.Clean(toClean)
 }

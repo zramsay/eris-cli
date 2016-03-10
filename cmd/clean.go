@@ -36,9 +36,7 @@ func addCleanFlags() {
 }
 
 func CleanItUp(cmd *cobra.Command, args []string) {
-	//flag logic handled in Clean
 
-	//XXX put flag logic in here!
 	if do.All {
 		do.Containers = true
 		do.Scratch = true

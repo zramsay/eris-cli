@@ -293,7 +293,7 @@ func testStartKeys(t *testing.T) {
 		t.Fail()
 	}
 
-	testExistAndRun(t, serviceName, 1, true, true)
+	testExistAndRun(t, serviceName, true, true)
 	testNumbersExistAndRun(t, serviceName, 1, 1)
 }
 
@@ -312,12 +312,12 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 		log.Error(e)
 		fatal(t, e)
 	}
-	testExistAndRun(t, serviceName, 1, !wipe, false)
+	testExistAndRun(t, serviceName, !wipe, false)
 	testNumbersExistAndRun(t, serviceName, 0, 0)
 }
 
-func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
+func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {
+	if err := tests.TestExistAndRun(servName, "service", toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }

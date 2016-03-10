@@ -2,9 +2,7 @@ package util
 
 import (
 	"fmt"
-	//"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -14,15 +12,7 @@ import (
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 )
 
-var toWarn = map[string]string{
-	"containers": "All Eris Containers",
-	"scratch":    "The contents of $HOME/eris/scratch",
-	"rmd":        "The Eris Root Directory ($HOME/.eris)",
-	"images":     "All Eris docker images",
-}
-
 func Clean(toClean map[string]bool) error {
-
 	if toClean["yes"] {
 		if err := cleanHandler(toClean); err != nil {
 			return err
@@ -36,29 +26,33 @@ func Clean(toClean map[string]bool) error {
 			return nil
 		}
 	}
-
 	return nil
 }
 
 func cleanHandler(toClean map[string]bool) error {
 	if toClean["containers"] {
+		log.Debug("Removing all eris containers")
 		if err := RemoveAllErisContainers(); err != nil {
 			return err
 		}
 	}
 
 	if toClean["scratch"] {
-		if err := CleanScratchData(); err != nil {
+		log.Debug("Removing contents of DataContainersPath")
+		if err := cleanScratchData(); err != nil {
 			return err
 		}
 	}
 
 	if toClean["rmd"] {
+		log.Debug("Removing Eris Root Directory")
 		if err := os.RemoveAll(common.ErisRoot); err != nil {
 			return err
 		}
 	}
+
 	if toClean["images"] {
+		log.Debug("Removing all Eris docker images")
 		if err := RemoveErisImages(); err != nil {
 			return err
 		}
@@ -68,8 +62,6 @@ func cleanHandler(toClean map[string]bool) error {
 
 // stops and removes containers and their volumes
 func RemoveAllErisContainers() error {
-	// TODO catch all data conts
-	// use our listing functions ... ?
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		return fmt.Errorf("error listing containers: %v\n", err)
@@ -77,43 +69,49 @@ func RemoveAllErisContainers() error {
 
 	for _, container := range contns {
 		if container.Labels["eris:ERIS"] == "true" {
-
-			removeOpts := docker.RemoveContainerOptions{
-				ID:            container.ID,
-				RemoveVolumes: true,
-				Force:         true,
+			if err := removeContainer(container.ID); err != nil {
+				return fmt.Errorf("error removing container: %v\n", err)
 			}
-			if err := DockerClient.RemoveContainer(removeOpts); err != nil {
-				// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
-				if fmt.Sprintf("%v", err) == "EOF" {
-					log.Debug("Weird EOF error. Not reaping.")
-					continue
-				}
-				return err
+		}
+	}
+
+	// above doesn't catch them all ... ?
+	dataConts := DataContainers()
+	if len(dataConts) != 0 {
+		log.Warn("dangling data containers found, removing them")
+		for _, dCont := range dataConts {
+			if err := removeContainer(dCont.ContainerID); err != nil {
+				return fmt.Errorf("error removing container: %v\n", err)
 			}
 		}
 	}
 	return nil
 }
 
-func CleanScratchData() error {
-	if DoesDirExist(common.DataContainersPath) {
-		d, err := os.Open(common.DataContainersPath)
-		if err != nil {
-			return err
-		}
-		defer d.Close()
+func removeContainer(containerID string) error {
+	removeOpts := docker.RemoveContainerOptions{
+		ID:            containerID,
+		RemoveVolumes: true,
+		Force:         true,
+	}
 
-		names, err := d.Readdirnames(-1)
-		if err != nil {
-			return err
+	if err := DockerClient.RemoveContainer(removeOpts); err != nil {
+		// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
+		if fmt.Sprintf("%v", err) == "EOF" {
+			log.Debug("Weird EOF error. Not reaping.")
+			return nil
 		}
-		for _, name := range names {
-			err = os.RemoveAll(filepath.Join(common.DataContainersPath, name))
-			if err != nil {
-				return err
-			}
-		}
+		return err
+	}
+	return nil
+}
+
+func cleanScratchData() error {
+	if err := os.RemoveAll(common.DataContainersPath); err != nil {
+		return err
+	}
+	if err := os.Mkdir(common.DataContainersPath, 0777); err != nil {
+		return err
 	}
 	return nil
 }
@@ -171,12 +169,26 @@ func canWeRemove(toClean map[string]bool) bool {
 	var input string
 	var canWe bool
 
-	//toWarnSome := make(map[string]string)
+	var toWarn = map[string]string{
+		"containers": "All existing Eris containers",
+		"scratch":    "The contents of ($HOME/eris/scratch/data)",
+		"rmd":        "The Eris Root Directory ($HOME/.eris)",
+		"images":     "All Eris docker images",
+	}
 
 	if toClean["all"] != true {
-		for _, thing := range toWarn {
-			//TODO .. !
-			fmt.Printf("thing: %v\n", thing)
+		log.Warn("The marmots are about to remove")
+		if toClean["containers"] {
+			log.WithField("containers", toWarn["containers"]).Warn("")
+		}
+		if toClean["scratch"] {
+			log.WithField("scratch", toWarn["scratch"]).Warn("")
+		}
+		if toClean["rmd"] {
+			log.WithField("rmd", toWarn["rmd"]).Warn("")
+		}
+		if toClean["images"] {
+			log.WithField("images", toWarn["images"]).Warn("")
 		}
 	} else {
 		log.WithFields(log.Fields{
