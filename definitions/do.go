@@ -35,7 +35,6 @@ type Do struct {
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -66,6 +65,11 @@ type Do struct {
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
+
+	//update (go only)
+	Branch  string `mapstructure:"," json:"," yaml:"," toml:","`
+	Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
+	Version string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`

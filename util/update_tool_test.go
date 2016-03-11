@@ -26,7 +26,7 @@ func TestCheckGitAndGo(t *testing.T) {
 }
 
 func TestDownloadLatestRelease(t *testing.T) {
-	filename, err := downloadLatestRelease()
+	filename, err := DownloadLatestBinaryRelease()
 	if err != nil {
 		t.Fatal("Download failed with error:", err)
 	} else {
