@@ -258,7 +258,7 @@ func IsMinimalDockerClientVersion() bool {
 	return CompareVersions(version, ver.DVER_MIN)
 }
 
-// CompareVersions returns true if the version v1 is larger than the version v2,
+// CompareVersions returns true if the version1 is larger or equal the version2,
 // for example CompareVersions("1.10", "1.9") returns true.
 func CompareVersions(version1, version2 string) bool {
 	v1 := strings.Split(version1, ".")
@@ -396,11 +396,9 @@ func mustInstallError() error {
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "mac/"))
 	case "windows":
 		return fmt.Errorf("%s%s\n", errBase, (dInst + "windows/"))
-	default:
-		return fmt.Errorf("%s%s\n", errBase, dInst)
 	}
 
-	return nil
+	return fmt.Errorf("%s%s\n", errBase, dInst)
 }
 
 // need to add ssh.exe to PATH, it resides in GIT dir.

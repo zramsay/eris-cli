@@ -105,6 +105,7 @@ func TestSetGlobalObjectDefaultConfig(t *testing.T) {
 		"compilers host": cli.Config.CompilersHost,
 		"host":           cli.Config.DockerHost,
 		"cert path":      cli.Config.DockerCertPath,
+		"crash report":   cli.Config.CrashReport,
 		"verbose":        cli.Config.Verbose,
 	}).Info("Checking defaults")
 }
@@ -115,6 +116,7 @@ IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
+CrashReport = "quux"
 Verbose = true
 `)
 	defer removeErisDir()
@@ -140,8 +142,11 @@ Verbose = true
 	if custom, returned := "qux", cli.Config.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := true, cli.Config.Verbose; custom != returned {
+	if custom, returned := "quux", cli.Config.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
+	}
+	if custom, returned := true, cli.Config.Verbose; custom != returned {
+		t.Fatalf("expected %v, got %v", custom, returned)
 	}
 }
 
@@ -166,12 +171,13 @@ func TestSetGlobalObjectCustomEmptyConfig(t *testing.T) {
 		"compilers host": cli.Config.CompilersHost,
 		"host":           cli.Config.DockerHost,
 		"cert path":      cli.Config.DockerCertPath,
+		"crash report":   cli.Config.CrashReport,
 		"verbose":        cli.Config.Verbose,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
 	if def, returned := defaults.Get("IpfsHost"), cli.Config.IpfsHost; reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
+		t.Fatalf("expected default %v, got %v", returned, def)
 	}
 
 	if def, returned := defaults.Get("CompilersHost"), cli.Config.CompilersHost; reflect.DeepEqual(returned, def) != true {
@@ -184,8 +190,11 @@ func TestSetGlobalObjectCustomEmptyConfig(t *testing.T) {
 	if custom, returned := "", cli.Config.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := false, cli.Config.Verbose; custom != returned {
+	if custom, returned := "bugsnag", cli.Config.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
+	}
+	if custom, returned := false, cli.Config.Verbose; custom != returned {
+		t.Fatalf("expected %v, got %v", custom, returned)
 	}
 }
 
@@ -205,6 +214,7 @@ func TestSetGlobalObjectCustomBadConfig(t *testing.T) {
 		"compilers host": cli.Config.CompilersHost,
 		"host":           cli.Config.DockerHost,
 		"cert path":      cli.Config.DockerCertPath,
+		"crash report":   cli.Config.CrashReport,
 		"verbose":        cli.Config.Verbose,
 	}).Info("Checking empty values")
 
@@ -228,8 +238,11 @@ func TestSetGlobalObjectCustomBadConfig(t *testing.T) {
 	if custom, returned := "", cli.Config.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := false, cli.Config.Verbose; custom != returned {
+	if custom, returned := "bugsnag", cli.Config.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
+	}
+	if custom, returned := false, cli.Config.Verbose; custom != returned {
+		t.Fatalf("expected %v, got %v", custom, returned)
 	}
 }
 
@@ -254,6 +267,7 @@ IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
+CrashReport = "quux"
 Verbose = true
 `)
 	defer removeErisDir()
@@ -275,8 +289,11 @@ Verbose = true
 	if expected, returned := "qux", config.Get("DockerCertPath"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "quux", config.Get("CrashReport"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %q, got %q", expected, returned)
+	}
+	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
 
@@ -305,6 +322,9 @@ func TestLoadGlobalConfigEmpty(t *testing.T) {
 	}
 	if returned := config.Get("DockerCertPath"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
+	}
+	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); reflect.DeepEqual(returned, def) != true {
+		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
@@ -338,6 +358,9 @@ func TestLoadGlobalConfigBad(t *testing.T) {
 	if returned := config.Get("DockerCertPath"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
+	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); reflect.DeepEqual(returned, def) != true {
+		t.Fatalf("expected default %q, got %q", returned, def)
+	}
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
@@ -349,6 +372,7 @@ IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
+CrashReport = "quux"
 Verbose = true
 `)
 	defer removeErisDir()
@@ -370,8 +394,11 @@ Verbose = true
 	if expected, returned := "qux", config.Get("DockerCertPath"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "quux", config.Get("CrashReport"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %q, got %q", expected, returned)
+	}
+	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
 
@@ -396,6 +423,9 @@ func TestLoadViperConfigEmpty(t *testing.T) {
 	if returned := config.Get("DockerCertPath"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
+	if returned := config.Get("CrashReport"); returned != nil {
+		t.Fatalf("expected nil, got %q", returned)
+	}
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
@@ -407,21 +437,21 @@ func TestLoadViperConfigBad(t *testing.T) {
 
 	_, err := LoadViperConfig(configErisDir, "eris", "test")
 	if err == nil {
-		t.Fatalf("expected failure, got nil", err)
+		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperConfigNonExistent1(t *testing.T) {
 	_, err := LoadViperConfig(configErisDir, "eris", "test")
 	if err == nil {
-		t.Fatalf("expected failure, got nil", err)
+		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperConfigNonExistent2(t *testing.T) {
 	_, err := LoadViperConfig(configErisDir, "12345", "test")
 	if err == nil {
-		t.Fatalf("expected failure, got nil", err)
+		t.Fatalf("expected failure, got nil")
 	}
 }
 

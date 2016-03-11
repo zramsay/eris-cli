@@ -32,6 +32,16 @@ then
   version=$version-rc$2
 fi
 
+if [[ "$1" == "post" ]]
+then
+  if [[ "$2" == "" ]]
+  then
+    echo "you must tell me which release candidate this is... 1, 2, 3, etc. exiting."
+    exit 1
+  fi
+  version=$version.$2
+fi
+
 # -----------------------------------------------------------------
 # Prerequisites
 
@@ -186,9 +196,25 @@ main() {
     cross_compile "$@"
     return $?
   fi
+  if [[ "$1" == "pkgs" ]]
+  then
+    cross_compile "$@"
+    release_apt "$@"
+    release_yum "$@"
+    clean_up $?
+    return $?
+  fi
   if [[ "$1" == "pre" ]]
   then
     preRun "$@"
+    return $?
+  fi
+  if [[ "$1" == "post" ]]
+  then
+    cross_compile "$@"
+    release_apt "$@"
+    release_yum "$@"
+    clean_up $?
     return $?
   fi
   fullRun "$@"

@@ -53,6 +53,7 @@ func DefChainGen() string {
 // different from genesis above! -- used for testing
 //[zr] leave for testing - for now ?
 var DefaultPubKeys = []string{"CB3688B7561D488A2A4834E1AEE9398BEF94844D8BDBBCA980C11E3654A45906"}
+var DefaultAddr = "37236DF251AB70022B1DA351F08A20FB52443E37"
 
 func DefChainCSV() string {
 	return fmt.Sprintf("%s,", DefaultPubKeys[0])

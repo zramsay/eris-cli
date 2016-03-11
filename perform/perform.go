@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -18,9 +19,10 @@ import (
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/jsonmessage"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 var (
@@ -32,7 +34,6 @@ var (
 //
 //  ops.DataContainerName  - data container name to be created
 //  ops.ContainerType      - container type
-//  ops.ContainerNumber    - container number
 //  ops.Labels             - container creation time labels (use LoadDataDefinition)
 //
 func DockerCreateData(ops *def.Operation) error {
@@ -65,7 +66,6 @@ func DockerCreateData(ops *def.Operation) error {
 //
 //  ops.DataContainerName - container name to be mount with `--volumes-from=[]` option.
 //  ops.ContainerType     - container type
-//  ops.ContainerNumber   - container number
 //  ops.Labels            - container creation time labels (use LoadDataDefinition)
 //  ops.Args              - if specified, run these args in a container
 //
@@ -119,13 +119,14 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 }
 
 // DockerExecData runs a data container with volumes-from field set interactively.
+// It returns the container output or error on exit.
 //
 //  ops.Args         - command line parameters
 //  ops.Interactive  - if true, set Entrypoint to ops.Args,
 //                     if false, set Cmd to ops.Args
 //
 // See parameter description for DockerRunData.
-func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
+func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer, err error) {
 	log.WithFields(log.Fields{
 		"=>":   ops.DataContainerName,
 		"args": ops.Args,
@@ -136,7 +137,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 
 	_, err = createContainer(opts)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Clean up the container.
@@ -150,13 +151,23 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 		log.WithField("=>", opts.Name).Info("Data container removed")
 	}()
 
+	// Save writer values for later and restore on exit.
+	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	defer func() {
+		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+	}()
+
+	buf = new(bytes.Buffer)
+	config.GlobalConfig.Writer = buf
+	config.GlobalConfig.ErrorWriter = buf
+
 	// Start the container.
 	log.WithField("=>", opts.Name).Info("Executing interactive data container")
 	if err = startInteractiveContainer(opts); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return buf, err
 }
 
 // DockerRunService creates and runs a chain or a service container with the srv
@@ -169,7 +180,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (err error) {
 //
 //  ops.SrvContainerName  - service or a chain container name
 //  ops.DataContainerName - dependent data container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //                          (use LoadServiceDefinition or LoadChainDefinition)
@@ -263,16 +273,15 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 //                     if false, set Cmd to ops.Args
 //
 // See parameter description for DockerRunService.
-func DockerExecService(srv *def.Service, ops *def.Operation) error {
+func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer, err error) {
 	log.WithField("=>", ops.SrvContainerName).Info("Executing container")
 
 	optsServ := configureInteractiveContainer(srv, ops)
 
 	// Fix volume paths.
-	var err error
 	srv.Volumes, err = util.FixDirs(srv.Volumes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Setup data container.
@@ -281,7 +290,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	if srv.AutoData {
 		optsData, err := configureDataContainer(srv, ops, &optsServ)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if _, exists := util.ParseContainers(ops.DataContainerName, true); exists {
@@ -291,7 +300,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 
 			_, err := createContainer(optsData)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -299,7 +308,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 	log.WithField("image", srv.Image).Debug("Container does not exist. Creating")
 	_, err = createContainer(optsServ)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func() {
@@ -311,11 +320,22 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		log.WithField("=>", optsServ.Name).Info("Container removed")
 	}()
 
+	// Save writer values for later and restore on exit.
+	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	defer func() {
+		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+	}()
+
+	buf = new(bytes.Buffer)
+	config.GlobalConfig.Writer = buf
+	config.GlobalConfig.ErrorWriter = buf
+
 	// Start the container.
 	log.WithFields(log.Fields{
 		"=>":              optsServ.Name,
 		"data container":  ops.DataContainerName,
 		"entrypoint":      optsServ.Config.Entrypoint,
+		"workdir":         optsServ.Config.WorkingDir,
 		"cmd":             optsServ.Config.Cmd,
 		"ports published": optsServ.HostConfig.PublishAllPorts,
 		"environment":     optsServ.Config.Env,
@@ -324,10 +344,10 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
 	if err := startInteractiveContainer(optsServ); err != nil {
-		return err
+		return buf, err
 	}
 
-	return nil
+	return buf, nil
 }
 
 // DockerRebuild recreates the container based on the srv settings template.
@@ -336,7 +356,6 @@ func DockerExecService(srv *def.Service, ops *def.Operation) error {
 // container process ungracefully.
 //
 //  ops.SrvContainerName  - service or a chain container name to rebuild
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
@@ -404,7 +423,6 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 // DockerPull returns Docker errors on exit if not successful.
 //
 //  ops.SrvContainerName  - service or a chain container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
@@ -434,7 +452,7 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 			return err
 		}
 	} else {
-		if err := pullImage(srv.Image, bytes.NewBuffer([]byte{})); err != nil {
+		if err := pullImage(srv.Image, ioutil.Discard); err != nil {
 			return err
 		}
 	}
@@ -526,12 +544,11 @@ func DockerStop(srv *def.Service, ops *def.Operation, timeout uint) error {
 // if the container with the new (long) name exists.
 //
 //  ops.SrvContainerName  - container name
-//  ops.ContainerNumber   - container number
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
 //
 func DockerRename(ops *def.Operation, newName string) error {
-	longNewName := util.ContainersName(ops.ContainerType, newName, ops.ContainerNumber)
+	longNewName := util.ContainersName(ops.ContainerType, newName)
 
 	log.WithFields(log.Fields{
 		"from": ops.SrvContainerName,
@@ -679,20 +696,32 @@ func pullImage(name string, writer io.Writer) error {
 		reg = repoSplit[0]
 	}
 
+	r, w := io.Pipe()
 	opts := docker.PullImageOptions{
-		Repository:   name,
-		Registry:     reg,
-		Tag:          tag,
-		OutputStream: os.Stdout,
+		Repository:    name,
+		Registry:      reg,
+		Tag:           tag,
+		OutputStream:  w,
+		RawJSONStream: true,
 	}
 
 	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
-		opts.OutputStream = nil
+		opts.OutputStream = ioutil.Discard
 	}
 
 	auth := docker.AuthConfiguration{}
 
-	if err := util.DockerClient.PullImage(opts, auth); err != nil {
+	ch := make(chan error, 1)
+	go func() {
+		defer w.Close()
+		defer close(ch)
+
+		if err := util.DockerClient.PullImage(opts, auth); err != nil {
+			ch <- err
+		}
+	}()
+	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	if err, ok := <-ch; ok {
 		return err
 	}
 
@@ -716,14 +745,14 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					log.Debug("User assented to pull")
 				} else {
 					log.Debug("User refused to pull")
-					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull.\n")
+					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull")
 				}
 			} else {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image is not found locally")
 				log.Warn("The marmots are approved to pull it from the repository on your behalf")
 				log.Warn("This could take a few minutes")
 			}
-			if err := pullImage(opts.Config.Image, nil); err != nil {
+			if err := pullImage(opts.Config.Image, os.Stdout); err != nil {
 				return nil, err
 			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
@@ -800,8 +829,8 @@ func attachContainer(id string, attached chan struct{}) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
 		InputStream:  reader,
-		OutputStream: config.GlobalConfig.Writer,
-		ErrorStream:  config.GlobalConfig.ErrorWriter,
+		OutputStream: io.MultiWriter(config.GlobalConfig.Writer, config.GlobalConfig.InteractiveWriter),
+		ErrorStream:  io.MultiWriter(config.GlobalConfig.ErrorWriter, config.GlobalConfig.InteractiveErrorWriter),
 		Logs:         false,
 		Stream:       true,
 		Stdin:        true,
@@ -932,16 +961,16 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 		}
 	}
 
-	// we expect to link to the main service container
+	// We expect to link to the main service container.
 	opts.HostConfig.Links = srv.Links
+
+	// Ignore the restart policy of a container.
+	opts.HostConfig.RestartPolicy = docker.NeverRestart()
 
 	return opts
 }
 
 func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
-	if ops.ContainerNumber == 0 {
-		ops.ContainerNumber = 1
-	}
 
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,

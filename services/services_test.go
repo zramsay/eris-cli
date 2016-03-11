@@ -69,8 +69,8 @@ func TestKnownServices(t *testing.T) {
 }
 
 func TestLoadServiceDefinition(t *testing.T) {
-	// [pv]: this test belongs to the loaders package.
-	srv, err := loaders.LoadServiceDefinition(servName, true, 1)
+	// [pv]: this test belongs to the loaders package. [csk]: agree. #496
+	srv, err := loaders.LoadServiceDefinition(servName, true)
 	if err != nil {
 		t.Fatalf("expected definition to load, got %v", err)
 	}
@@ -121,7 +121,6 @@ func TestInspectService1(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Args = []string{"name"}
-	do.Operations.ContainerNumber = 1
 
 	if err := InspectService(do); err != nil {
 		t.Fatalf("expected service to be inspected, got %v", err)
@@ -136,7 +135,6 @@ func TestInspectService2(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Args = []string{"config.user"}
-	do.Operations.ContainerNumber = 1
 
 	if err := InspectService(do); err != nil {
 		t.Fatalf("expected service to be inspected, got %v", err)
@@ -163,20 +161,18 @@ func TestExecService(t *testing.T) {
 
 	start(t, servName, true)
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	do := def.NowDo()
 	do.Name = servName
 	do.Operations.Interactive = false
 	do.Operations.Args = strings.Fields("ls -la /root/")
 
-	if err := ExecService(do); err != nil {
+	buf, err := ExecService(do)
+	if err != nil {
 		t.Fatalf("expected to execute service, got %v", err)
 	}
 
-	if out := buf.String(); !strings.Contains(out, ".bashrc") {
-		t.Fatalf("expected a file in the exec output, got %v", out)
+	if !strings.Contains(buf.String(), ".bashrc") {
+		t.Fatalf("expected a file in the exec output, got %v", buf.String())
 	}
 }
 
@@ -193,7 +189,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 	do.Operations.Interactive = false
 	do.Operations.Args = strings.Fields("bad command line")
 
-	if err := ExecService(do); err == nil {
+	if _, err := ExecService(do); err == nil {
 		t.Fatal("expected executing service to fail")
 	}
 }
@@ -233,7 +229,7 @@ func TestKillService(t *testing.T) {
 	do.RmD = false
 	do.Operations.Args = []string{servName}
 	if err := KillService(do); err != nil {
-		t.Fatalf("expected service to be stopped, got %v")
+		t.Fatalf("expected service to be stopped, got %v", err)
 	}
 	if n := util.HowManyContainersRunning(servName, def.TypeService); n != 0 {
 		t.Fatalf("expecting 0 running service container, got %v", n)
@@ -492,7 +488,6 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 func start(t *testing.T, serviceName string, publishAll bool) {
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	do.Operations.ContainerNumber = 1
 	do.Operations.PublishAllPorts = publishAll
 	if err := StartService(do); err != nil {
 		t.Fatalf("expected service to start, got %v", err)

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -18,7 +19,7 @@ func StartService(do *definitions.Do) (err error) {
 	do.Operations.Args = append(do.Operations.Args, do.ServicesSlice...)
 	log.WithField("args", do.Operations.Args).Info("Building services group")
 	for _, srv := range do.Operations.Args {
-		s, e := BuildServicesGroup(srv, do.Operations.ContainerNumber)
+		s, e := BuildServicesGroup(srv)
 		if e != nil {
 			return e
 		}
@@ -73,7 +74,7 @@ func KillService(do *definitions.Do) (err error) {
 
 	log.WithField("args", do.Operations.Args).Info("Building services group")
 	for _, servName := range do.Operations.Args {
-		s, e := BuildServicesGroup(servName, do.Operations.ContainerNumber)
+		s, e := BuildServicesGroup(servName)
 		if e != nil {
 			return e
 		}
@@ -87,7 +88,7 @@ func KillService(do *definitions.Do) (err error) {
 
 	for _, service := range services {
 		if IsServiceRunning(service.Service, service.Operations) {
-			log.WithField("=>", fmt.Sprintf("%s:%d", service.Service.Name, service.Operations.ContainerNumber)).Debug("Stopping service")
+			log.WithField("=>", service.Service.Name).Debug("Stopping service")
 			if err := perform.DockerStop(service.Service, service.Operations, do.Timeout); err != nil {
 				return err
 			}
@@ -106,16 +107,16 @@ func KillService(do *definitions.Do) (err error) {
 	return nil
 }
 
-func ExecService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false, do.Operations.ContainerNumber)
+func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
+	service, err := loaders.LoadServiceDefinition(do.Name, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	util.Merge(service.Operations, do.Operations)
 
 	// Get the main service container name, check if it's running.
-	main := util.FindServiceContainer(do.Name, do.Operations.ContainerNumber, false)
+	main := util.FindServiceContainer(do.Name, false)
 	if main != nil {
 		if service.Service.ExecHost == "" {
 			log.Info("exec_host not found in service definition file")
@@ -137,20 +138,31 @@ func ExecService(do *definitions.Do) error {
 	return perform.DockerExecService(service.Service, service.Operations)
 }
 
+// ExecHandler implemements ExecService for use within
+// the cli for under the hood functionality
+// (wrapping) calls to respective containers
+func ExecHandler(srvName string, args []string) (buf *bytes.Buffer, err error) {
+	do := definitions.NowDo()
+	do.Name = srvName
+	do.Operations.Interactive = false
+	do.Operations.Args = args
+	return ExecService(do)
+}
+
 // TODO: test this recursion and service deps generally
-func BuildServicesGroup(srvName string, cNum int, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
+func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefinition) ([]*definitions.ServiceDefinition, error) {
 	log.WithFields(log.Fields{
 		"=>":        srvName,
 		"services#": len(services),
 	}).Debug("Building services group for")
-	srv, err := loaders.LoadServiceDefinition(srvName, false, cNum)
+	srv, err := loaders.LoadServiceDefinition(srvName, false)
 	if err != nil {
 		return nil, err
 	}
 	if srv.Dependencies != nil {
 		for _, sName := range srv.Dependencies.Services {
 			log.WithField("=>", sName).Debug("Found service dependency")
-			s, e := BuildServicesGroup(sName, cNum)
+			s, e := BuildServicesGroup(sName)
 			if e != nil {
 				return nil, e
 			}
@@ -167,7 +179,7 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 	for _, srv := range group {
 		log.WithField("=>", srv.Name).Debug("Performing container start")
 		if err := perform.DockerRunService(srv.Service, srv.Operations); err != nil {
-			return fmt.Errorf("StartGroup. Err starting srv =>\t%s:%v\n", srv.Name, err)
+			return fmt.Errorf("Error starting service %s: %v", srv.Name, err)
 		}
 	}
 	return nil
@@ -209,7 +221,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 			return nil, fmt.Errorf("Marmot disapproval face.\nYou tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
-	s, err := loaders.ChainsAsAService(chainName, false, srv.Operations.ContainerNumber)
+	s, err := loaders.ChainsAsAService(chainName, false)
 	if err != nil {
 		return nil, err
 	}

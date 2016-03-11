@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -17,10 +18,12 @@ import (
 var GlobalConfig *ErisCli
 
 type ErisCli struct {
-	Writer      io.Writer
-	ErrorWriter io.Writer
-	Config      *ErisConfig
-	ErisDir     string
+	Writer                 io.Writer
+	ErrorWriter            io.Writer
+	InteractiveWriter      io.Writer
+	InteractiveErrorWriter io.Writer
+	Config                 *ErisConfig
+	ErisDir                string
 }
 
 type ErisConfig struct {
@@ -28,14 +31,17 @@ type ErisConfig struct {
 	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"`
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
+	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 
 	Verbose bool
 }
 
 func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
 	e := ErisCli{
-		Writer:      writer,
-		ErrorWriter: errorWriter,
+		Writer:                 writer,
+		ErrorWriter:            errorWriter,
+		InteractiveWriter:      ioutil.Discard,
+		InteractiveErrorWriter: ioutil.Discard,
 	}
 
 	config, err := LoadGlobalConfig()
@@ -84,6 +90,7 @@ func SetDefaults() (*viper.Viper, error) {
 	var globalConfig = viper.New()
 	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
 	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
+	globalConfig.SetDefault("CrashReport", "bugsnag")
 	return globalConfig, nil
 }
 
@@ -118,6 +125,8 @@ func GetConfigValue(key string) string {
 		return GlobalConfig.Config.DockerHost
 	case "DockerCertPath":
 		return GlobalConfig.Config.DockerCertPath
+	case "CrashReport":
+		return GlobalConfig.Config.CrashReport
 	default:
 		return ""
 	}
@@ -149,6 +158,7 @@ func ChangeErisDir(erisDir string) {
 	// Chains Directories
 	dir.DefaultChainPath = filepath.Join(dir.ChainsPath, "default")
 	dir.AccountsTypePath = filepath.Join(dir.ChainsPath, "account-types")
+	dir.ChainTypePath = filepath.Join(dir.ChainsPath, "chain-types")
 
 	// Keys Directories
 	dir.KeysDataPath = filepath.Join(dir.KeysPath, "data")

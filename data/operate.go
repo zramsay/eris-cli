@@ -1,6 +1,7 @@
 package data
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,7 +25,6 @@ import (
 // in a data container. It returns an error.
 //
 //  do.Name                       - name of the data container to use (required)
-//  do.Operations.ContainerNumber - container number (optional)
 //  do.Source                     - directory which should be imported (required)
 //  do.Destination                - directory to _unload_ the payload into (required)
 //
@@ -33,9 +33,9 @@ func ImportData(do *definitions.Do) error {
 		"from": do.Source,
 		"to":   do.Destination,
 	}).Debug("Importing")
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	if util.IsDataContainer(do.Name) {
 
-		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
+		srv := PretendToBeAService(do.Name)
 		service, exists := perform.ContainerExists(srv.Operations)
 
 		if !exists {
@@ -45,8 +45,8 @@ func ImportData(do *definitions.Do) error {
 			return err
 		}
 
-		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		os.Chdir(do.Source)
+		containerName := util.DataContainersName(do.Name)
+		// os.Chdir(do.Source)
 
 		reader, err := util.Tar(do.Source, 0)
 		if err != nil {
@@ -69,7 +69,6 @@ func ImportData(do *definitions.Do) error {
 		doChown := definitions.NowDo()
 		doChown.Operations.DataContainerName = containerName
 		doChown.Operations.ContainerType = "data"
-		doChown.Operations.ContainerNumber = do.Operations.ContainerNumber
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		doChown.Operations.Args = []string{"chown", "--recursive", "eris", do.Destination}
 		_, err = perform.DockerRunData(doChown.Operations, nil)
@@ -78,7 +77,7 @@ func ImportData(do *definitions.Do) error {
 		}
 	} else {
 		log.WithField("name", do.Name).Info("Data container does not exist.")
-		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
@@ -88,36 +87,37 @@ func ImportData(do *definitions.Do) error {
 	return nil
 }
 
-func ExecData(do *definitions.Do) error {
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
+	if util.IsDataContainer(do.Name) {
 		log.WithField("=>", do.Operations.DataContainerName).Info("Executing data container")
 
-		ops := loaders.LoadDataDefinition(do.Name, do.Operations.ContainerNumber)
+		ops := loaders.LoadDataDefinition(do.Name)
 		util.Merge(ops, do.Operations)
-		if err := perform.DockerExecData(ops, nil); err != nil {
-			return err
+		buf, err = perform.DockerExecData(ops, nil)
+		if err != nil {
+			return nil, err
 		}
 	} else {
-		return fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
+		return nil, fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
 	}
 	do.Result = "success"
-	return nil
+	return buf, nil
 }
 
 //export from: do.Source(in container), to: do.Destination(on host)
 func ExportData(do *definitions.Do) error {
-	if util.IsDataContainer(do.Name, do.Operations.ContainerNumber) {
+	if util.IsDataContainer(do.Name) {
 		log.WithField("=>", do.Name).Info("Exporting data container")
 
 		// we want to export to a temp directory.
-		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name) // TODO: do.Operations.ContainerNumber ?
+		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name)
 		defer os.Remove(exportPath)
 		if err != nil {
 			return err
 		}
 
-		containerName := util.DataContainersName(do.Name, do.Operations.ContainerNumber)
-		srv := PretendToBeAService(do.Name, do.Operations.ContainerNumber)
+		containerName := util.DataContainersName(do.Name)
+		srv := PretendToBeAService(do.Name)
 		service, exists := perform.ContainerExists(srv.Operations)
 
 		if !exists {

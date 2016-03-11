@@ -200,6 +200,8 @@ flame_out() {
   echo
   docker-machine env $machine
   echo
+  unset DOCKER_USER
+  unset DOCKER_PASS
   env | grep -i "docker"
   echo
   docker version

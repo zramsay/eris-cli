@@ -7,7 +7,6 @@ type Operation struct {
 	DataContainerName string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DataContainerID   string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	ContainerType     string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	ContainerNumber   int               `json:",omitempty,omitzero" yaml:",omitempty" toml:",omitempty,omitzero"`
 	Remove            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Privileged        bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Interactive       bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`

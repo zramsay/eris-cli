@@ -34,18 +34,26 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		log.SetFormatter(logger.ErisFormatter{})
+		// Using stdout for less fuss with redirecting the log messages
+		// into a file (`eris > out`) or a viewer (`eris|more`).
+		log.SetOutput(os.Stdout)
 
-		log.SetLevel(log.WarnLevel)
+		// The baseline logging level (to record debug logging
+		// messages for remote logging, not for console).
+		log.SetLevel(log.DebugLevel)
+
+		log.SetFormatter(logger.ConsoleFormatter(log.WarnLevel))
 		if do.Verbose {
-			log.SetLevel(log.InfoLevel)
+			log.SetFormatter(logger.ConsoleFormatter(log.InfoLevel))
 		} else if do.Debug {
-			log.SetLevel(log.DebugLevel)
+			log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 		}
 
-		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
-
 		util.DockerConnect(do.Verbose, do.MachineName)
+
+		log.AddHook(CrashReportHook())
+
+		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
@@ -65,6 +73,13 @@ Complete documentation is available at https://docs.erisindustries.com
 }
 
 func Execute() {
+	// Handle panics within Execute().
+	defer func() {
+		if err := recover(); err != nil {
+			SendReport(err)
+		}
+	}()
+
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
@@ -113,6 +128,7 @@ func AddCommands() {
 		buildManCommand()
 		ErisCmd.AddCommand(ManPage)
 	}
+
 	ErisCmd.SetHelpCommand(Help)
 	ErisCmd.SetHelpTemplate(helpTemplate)
 }
@@ -125,7 +141,6 @@ var do *definitions.Do
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
-	ErisCmd.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "num", "n", 1, "container number")
 	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
 }
 

@@ -100,22 +100,15 @@ func TestExportKeySingle(t *testing.T) {
 
 	address := testsGenAKey()
 
-	catOut := new(bytes.Buffer)
-	config.GlobalConfig.Writer = catOut
-	do := def.NowDo()
-	do.Name = "keys"
-	do.Operations.Interactive = false
-	do.Operations.ContainerNumber = 1
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	do.Operations.Args = []string{"cat", keyPath}
-	if err := srv.ExecService(do); err != nil {
+	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPath})
+	if err != nil {
 		fatal(t, err)
 	}
 
-	catOutBytes := catOut.Bytes()
-	keyInCont := util.TrimString(string(catOutBytes))
+	keyInCont := util.TrimString(catOut.String())
 
 	doExp := def.NowDo()
 	doExp.Address = address
@@ -161,14 +154,9 @@ func TestImportKeySingle(t *testing.T) {
 	keyOnHost := util.TrimString(string(key))
 
 	//rm key that was generated before import
-	doRm := def.NowDo()
-	doRm.Name = "keys"
-	doRm.Operations.Interactive = false
-	doRm.Operations.ContainerNumber = 1
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
-	doRm.Operations.Args = []string{"rm", "-rf", keyPath}
-	if err := srv.ExecService(doRm); err != nil {
+	if _, err := srv.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
 		fatal(t, err)
 	}
 
@@ -181,22 +169,15 @@ func TestImportKeySingle(t *testing.T) {
 		fatal(t, err)
 	}
 
-	catOut := new(bytes.Buffer)
-	config.GlobalConfig.Writer = catOut
-	doCat := def.NowDo()
-	doCat.Name = "keys"
-	doCat.Operations.Interactive = false
-	doCat.Operations.ContainerNumber = 1
 	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	doCat.Operations.Args = []string{"cat", keyPathCat}
-	if err := srv.ExecService(doCat); err != nil {
+	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPathCat})
+	if err != nil {
 		fatal(t, err)
 	}
 
-	catOutBytes := catOut.Bytes()
-	keyInCont := util.TrimString(string(catOutBytes))
+	keyInCont := util.TrimString(catOut.String())
 
 	if keyOnHost != keyInCont {
 		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))
@@ -305,15 +286,14 @@ func testStartKeys(t *testing.T) {
 	serviceName := "keys"
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	do.Operations.ContainerNumber = 1
-	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, do.Operations.ContainerNumber)).Debug("Starting service (via tests)")
+	log.WithField("=>", serviceName).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
 		log.Infof("Error starting service: %v", e)
 		t.Fail()
 	}
 
-	testExistAndRun(t, serviceName, 1, true, true)
+	testExistAndRun(t, serviceName, true, true)
 	testNumbersExistAndRun(t, serviceName, 1, 1)
 }
 
@@ -332,12 +312,12 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 		log.Error(e)
 		fatal(t, e)
 	}
-	testExistAndRun(t, serviceName, 1, !wipe, false)
+	testExistAndRun(t, serviceName, !wipe, false)
 	testNumbersExistAndRun(t, serviceName, 0, 0)
 }
 
-func testExistAndRun(t *testing.T, servName string, containerNumber int, toExist, toRun bool) {
-	if err := tests.TestExistAndRun(servName, "service", containerNumber, toExist, toRun); err != nil {
+func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {
+	if err := tests.TestExistAndRun(servName, "service", toExist, toRun); err != nil {
 		fatal(t, nil)
 	}
 }

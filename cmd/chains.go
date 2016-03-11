@@ -2,9 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -374,18 +376,18 @@ $ eris chains cat simplechain genesis -- will display the genesis.json file from
 	Run: CatChain,
 }
 
-var chainsMakeGenesis = &cobra.Command{
-	Use:   "make-genesis NAME KEY",
-	Short: "Generates a genesis file.",
-	Long: `Generates a genesis file with chainNAME and a single pubkey.
+// var chainsMakeGenesis = &cobra.Command{
+// 	Use:   "make-genesis NAME KEY",
+// 	Short: "Generates a genesis file.",
+// 	Long: `Generates a genesis file with chainNAME and a single pubkey.
 
-Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
+// Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
 
-but does not require a pre-existing chain to execute.
+// but does not require a pre-existing chain to execute.
 
-see https://github.com/eris-ltd/mint-client for more info`,
-	Run: MakeGenesisFile,
-}
+// see https://github.com/eris-ltd/mint-client for more info`,
+// 	Run: MakeGenesisFile,
+// }
 
 //----------------------------------------------------------------------
 
@@ -413,7 +415,6 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "publish", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
 	buildFlag(chainsNew, do, "api", "chain")
-	chainsNew.PersistentFlags().BoolVarP(&do.Force, "force", "f", true, "overwrite data in  ~/.eris/data/chainName")
 	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
 
 	// buildFlag(chainsRegister, do, "links", "chain")
@@ -430,7 +431,6 @@ func addChainsFlags() {
 	// buildFlag(chainsInstall, do, "dir", "chain")
 	// chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
 	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
-	// chainsInstall.PersistentFlags().IntVarP(&do.Operations.ContainerNumber, "N", "N", 1, "container number")
 
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
@@ -500,7 +500,10 @@ func ExecChain(cmd *cobra.Command, args []string) {
 		args = strings.Split(args[0], " ")
 	}
 	do.Operations.Args = args
-	IfExit(chns.ExecChain(do))
+	config.GlobalConfig.InteractiveWriter = os.Stdout
+	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	_, err := chns.ExecChain(do)
+	IfExit(err)
 }
 
 func KillChain(cmd *cobra.Command, args []string) {
@@ -541,6 +544,11 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nThe --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these."))
 	}
+	if !do.Known {
+		config.GlobalConfig.InteractiveWriter = os.Stdout
+		config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	}
+
 	IfExit(chns.MakeChain(do))
 }
 

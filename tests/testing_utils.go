@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
@@ -16,10 +15,12 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 var (
-	erisDir = filepath.Join(os.TempDir(), "eris")
+	ErisDir = filepath.Join(os.TempDir(), "eris")
 
 	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
@@ -38,8 +39,8 @@ func TestsInit(testType string) (err error) {
 	// we have to manually override these
 	// variables to ensure that the tests
 	// run correctly.
-	config.ChangeErisDir(erisDir)
-
+	config.ChangeErisDir(ErisDir)
+	common.InitErisDir()
 	util.DockerConnect(false, "eris")
 
 	// this dumps the ipfs and keys services defs into the temp dir which
@@ -48,7 +49,6 @@ func TestsInit(testType string) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	// do.Source = "toadserver" //use "rawgit" if ts down
 	do.Source = "rawgit" //use "rawgit" if ts down
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
@@ -67,14 +67,14 @@ func TestActionDefinitionFile(name string) bool {
 	return true
 }
 
-func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
+func TestExistAndRun(name, t string, toExist, toRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":       name,
 		"running":  toRun,
 		"existing": toExist,
 	}).Info("Checking container")
 
-	if existing := FindContainer(name, t, contNum, false); existing != toExist {
+	if existing := FindContainer(name, t, false); existing != toExist {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -84,7 +84,7 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 		return ErrContainerExistMismatch
 	}
 
-	if running := FindContainer(name, t, contNum, true); running != toRun {
+	if running := FindContainer(name, t, true); running != toRun {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -97,13 +97,47 @@ func TestExistAndRun(name, t string, contNum int, toExist, toRun bool) error {
 	return nil
 }
 
+func TestNumbersExistAndRun(servName string, containerExist, containerRun int) error {
+	log.WithFields(log.Fields{
+		"=>":        servName,
+		"existing#": containerExist,
+		"running#":  containerRun,
+	}).Info("Checking number of containers for")
+
+	log.WithField("=>", servName).Debug("Checking existing containers for")
+	exist := util.HowManyContainersExisting(servName, "service")
+
+	log.WithField("=>", servName).Debug("Checking running containers for")
+	run := util.HowManyContainersRunning(servName, "service")
+
+	if exist != containerExist {
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      exist,
+		}).Info("Wrong number of existing containers")
+		return fmt.Errorf("Wrong number of existing containers")
+	}
+
+	if run != containerRun {
+		log.WithFields(log.Fields{
+			"name":     servName,
+			"expected": containerExist,
+			"got":      run,
+		}).Info("Wrong number of running containers")
+		return fmt.Errorf("Wrong number of existing containers")
+	}
+	log.Info("All good")
+	return nil
+}
+
 // FindContainer returns true if the container with a given
 // short name, type, number, and status exists.
-func FindContainer(name, t string, n int, running bool) bool {
+func FindContainer(name, t string, running bool) bool {
 	containers := util.ErisContainersByType(t, !running)
 
 	for _, c := range containers {
-		if c.ShortName == name && c.Number == n {
+		if c.ShortName == name {
 			return true
 		}
 	}
@@ -111,9 +145,9 @@ func FindContainer(name, t string, n int, running bool) bool {
 }
 
 // Remove a container of some name, type, and number.
-func RemoveContainer(name, t string, n int) error {
+func RemoveContainer(name, t string) error {
 	opts := docker.RemoveContainerOptions{
-		ID:            util.ContainersName(t, name, n),
+		ID:            util.ContainersName(t, name),
 		RemoveVolumes: true,
 		Force:         true,
 	}
@@ -127,13 +161,21 @@ func RemoveContainer(name, t string, n int) error {
 
 // Remove everything Eris.
 func RemoveAllContainers() error {
-	return util.Clean(false, false, false, false)
+	toClean := map[string]bool{
+		"yes":        true,
+		"containers": true,
+		"scratch":    true,
+		"all":        false,
+		"rmd":        false,
+		"images":     false,
+	}
+	return util.Clean(toClean)
 }
 
 // Return container links. For sake of simplicity, don't expose
 // anything else.
-func Links(name, t string, n int) []string {
-	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name, n))
+func Links(name, t string) []string {
+	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name))
 	if err != nil {
 		return []string{}
 	}
@@ -188,11 +230,11 @@ func FileContents(filename string) string {
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
 func TestsTearDown() error {
-	// Move out of erisDir before deleting it.
-	parentPath := filepath.Join(erisDir, "..")
+	// Move out of ErisDir before deleting it.
+	parentPath := filepath.Join(ErisDir, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(erisDir); err != nil {
+	if err := os.RemoveAll(ErisDir); err != nil {
 		return err
 	}
 	return nil

@@ -23,24 +23,29 @@ func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 		return Migrate(dirsMap)
 	} else if canWeMigrate() {
 		return Migrate(dirsMap)
-	} else {
-		return fmt.Errorf("permission to migrate not given")
 	}
 
-	return nil
+	return fmt.Errorf("permission to migrate not given")
 }
 
 //check that migration is actually needed
 func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
+	newMigration := make(map[string]string)
 
 	for depDir, newDir := range dirsToMigrate {
+		log.WithFields(log.Fields{
+			"old":       depDir,
+			"oldExists": DoesDirExist(depDir),
+			"new":       newDir,
+			"newExists": DoesDirExist(newDir),
+		}).Debug("Checking Directories to Migrate")
 		if !DoesDirExist(depDir) && DoesDirExist(newDir) { //already migrated, nothing to see here
-			return nil, false
+			continue
 		} else {
-			return dirsToMigrate, true
+			newMigration[depDir] = newDir
 		}
 	}
-	return dirsToMigrate, true
+	return newMigration, (len(newMigration) > 0)
 }
 
 func canWeMigrate() bool {
@@ -57,6 +62,10 @@ func canWeMigrate() bool {
 
 func Migrate(dirsToMigrate map[string]string) error {
 	for depDir, newDir := range dirsToMigrate {
+		log.WithFields(log.Fields{
+			"old": depDir,
+			"new": newDir,
+		}).Info("Migrating Directories")
 		if !DoesDirExist(depDir) && !DoesDirExist(newDir) {
 			return fmt.Errorf("neither deprecated (%s) or new (%s) exists. please run `init` prior to `update`\n", depDir, newDir)
 		} else if DoesDirExist(depDir) && !DoesDirExist(newDir) { //never updated, just rename dirs
@@ -71,11 +80,11 @@ func Migrate(dirsToMigrate map[string]string) error {
 			if err := checkFileNamesAndMigrate(depDir, newDir); err != nil {
 				return err
 			}
-			// [csk] once the files are migrated we need to remove the dir or
-			// the DoesDirExist function will return.
 			if err := os.Remove(depDir); err != nil {
 				return err
 			}
+		} else if !DoesDirExist(depDir) && DoesDirExist(newDir) { // old is gone, new is there; continue (dirCheckMaker should check this)
+			continue
 		} else { //should never throw
 			return fmt.Errorf("unknown and unresolveable conflict between directory to deprecate (%s) and new directory (%s)\n", depDir, newDir)
 		}
@@ -109,7 +118,13 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 		newFile := filepath.Join(newDir, file.Name()) //file may not actually exist (yet)
 
 		if fileNamesToCheck[file.Name()] == true { //conflict!
-			return fmt.Errorf("identical file name in deprecated dir (%s) and new dir to migrate to (%s)\nplease resolve and re-run command", depFile, newFile)
+			oldFileContents, _ := ioutil.ReadFile(depFile)
+			newFileContents, _ := ioutil.ReadFile(newFile)
+			if string(newFileContents) != string(oldFileContents) {
+				return fmt.Errorf("identical filename; different content; identified in deprecated dir (%s) and new dir to migrate to (%s)\nplease resolve and re-run command", depFile, newFile)
+			} else { // same file so no need to move
+				continue
+			}
 		} else { //filenames don't match, move file from depDir to newDir
 			if err := os.Rename(depFile, newFile); err != nil {
 				log.WithFields(log.Fields{

@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
@@ -82,40 +81,6 @@ func Merge(base, over interface{}) error {
 		}
 	}
 	return nil
-}
-
-// AutoMagic will return the highest container number which would represent the most recent
-// container to work on unless newCont == true in which case it would return the highest
-// container number plus one.
-func AutoMagic(cNum int, typ string, newCont bool) int {
-	log.WithField("automagic", cNum).Debug()
-	contns := ErisContainersByType(typ, true)
-
-	contnums := make([]int, len(contns))
-	for i, c := range contns {
-		contnums[i] = c.Number
-	}
-
-	// get highest container number
-	g := 0
-	for _, n := range contnums {
-		if n >= g {
-			g = n
-		}
-	}
-
-	// ensure outcomes appropriate
-	result := g
-	if newCont {
-		result = g + 1
-	}
-	if result == 0 {
-		result = 1
-	}
-
-	log.WithField("automagic", result).Debug()
-
-	return result
 }
 
 // Parse dependencies for internalName (ie. in /etc/hosts), whether to link, and whether to mount volumes-from

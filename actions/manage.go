@@ -44,8 +44,7 @@ func ImportAction(do *definitions.Do) error {
 	if s[0] == "ipfs" {
 
 		var err error
-		//unset 1 as default ContainerNumber, let it take flag?
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
 		if err != nil {
 			return err
 		}
@@ -83,8 +82,7 @@ func ExportAction(do *definitions.Do) error {
 		return err
 	}
 
-	//unset 1 as default ContainerNumber, let it take flag?
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false, 1)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
 	if err != nil {
 		return err
 	}

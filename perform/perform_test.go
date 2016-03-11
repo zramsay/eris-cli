@@ -3,6 +3,7 @@ package perform
 import (
 	"bytes"
 	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
@@ -34,8 +36,7 @@ func TestMain(m *testing.M) {
 
 func TestCreateDataSimple(t *testing.T) {
 	const (
-		name   = "testdata"
-		number = 199
+		name = "testdata"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -44,7 +45,7 @@ func TestCreateDataSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
@@ -61,8 +62,7 @@ func TestCreateDataSimple(t *testing.T) {
 
 func TestRunDataSimple(t *testing.T) {
 	const (
-		name   = "testdata"
-		number = 199
+		name = "testdata"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -71,7 +71,7 @@ func TestRunDataSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
@@ -84,8 +84,7 @@ func TestRunDataSimple(t *testing.T) {
 
 func TestRunDataBadCommandLine(t *testing.T) {
 	const (
-		name   = "testdata"
-		number = 199
+		name = "testdata"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -94,7 +93,7 @@ func TestRunDataBadCommandLine(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
@@ -109,8 +108,7 @@ func TestRunDataBadCommandLine(t *testing.T) {
 
 func TestExecDataSimple(t *testing.T) {
 	const (
-		name   = "testdata"
-		number = 199
+		name = "testdata"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -119,21 +117,24 @@ func TestExecDataSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
 
 	ops.Args = strings.Fields("uptime")
-	if err := DockerExecData(ops, nil); err != nil {
+	buf, err := DockerExecData(ops, nil)
+	if err != nil {
 		t.Fatalf("expected data successfully run, got %v", err)
+	}
+	if !strings.Contains(buf.String(), "up") {
+		t.Fatalf("expected to find text in the output, got %s", buf.String())
 	}
 }
 
 func TestExecDataBadCommandLine(t *testing.T) {
 	const (
-		name   = "testdata"
-		number = 199
+		name = "testdata"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -142,21 +143,53 @@ func TestExecDataBadCommandLine(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
 
 	ops.Args = strings.Fields("/bad/command/line")
-	if err := DockerExecData(ops, nil); err == nil {
+	if _, err := DockerExecData(ops, nil); err == nil {
 		t.Fatalf("expected command line error, got nil")
+	}
+}
+
+func TestExecDataBufferNotOverwritten(t *testing.T) {
+	const (
+		name = "testdata"
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	ops := loaders.LoadDataDefinition(name)
+	if err := DockerCreateData(ops); err != nil {
+		t.Fatalf("expected data container created, got %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+
+	ops.Args = strings.Fields("true")
+	if _, err := DockerExecData(ops, nil); err != nil {
+		t.Fatalf("expected data successfully run, got %v", err)
+	}
+
+	if config.GlobalConfig.Writer != buf {
+		t.Fatalf("expected global writer unchaged after exec")
+	}
+
+	if config.GlobalConfig.ErrorWriter != buf {
+		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
 
 func TestRunServiceSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -165,7 +198,7 @@ func TestRunServiceSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -184,8 +217,7 @@ func TestRunServiceSimple(t *testing.T) {
 
 func TestRunServiceNoDataContainer(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -194,7 +226,7 @@ func TestRunServiceNoDataContainer(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -212,87 +244,9 @@ func TestRunServiceNoDataContainer(t *testing.T) {
 	}
 }
 
-func TestRunServiceTwoServices(t *testing.T) {
-	const (
-		name   = "ipfs"
-		number = 99
-	)
-
-	defer tests.RemoveAllContainers()
-
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
-	}
-
-	srv1, err := loaders.LoadServiceDefinition(name, true, number)
-	if err != nil {
-		t.Fatalf("1. could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv1.Service, srv1.Operations); err != nil {
-		t.Fatalf("1. expected service container created, got %v", err)
-	}
-
-	srv2, err := loaders.LoadServiceDefinition(name, true, number+1)
-	if err != nil {
-		t.Fatalf("2. could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv2.Service, srv2.Operations); err == nil {
-		t.Fatalf("2. expected service failure due to occupied ports, got %v", err)
-	}
-
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 2 {
-		t.Fatalf("expecting 2 dependent data container, got %v", n)
-	}
-}
-
-func TestRunServiceTwoServicesPublishedPorts(t *testing.T) {
-	const (
-		name   = "ipfs"
-		number = 99
-	)
-
-	defer tests.RemoveAllContainers()
-
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
-	}
-
-	srv1, err := loaders.LoadServiceDefinition(name, true, number)
-	if err != nil {
-		t.Fatalf("1. could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv1.Service, srv1.Operations); err != nil {
-		t.Fatalf("1. expected service container created, got %v", err)
-	}
-
-	srv2, err := loaders.LoadServiceDefinition(name, true, number+1)
-	if err != nil {
-		t.Fatalf("2. could not load service definition %v", err)
-	}
-
-	srv2.Operations.PublishAllPorts = true
-	if err := DockerRunService(srv2.Service, srv2.Operations); err != nil {
-		t.Fatalf("2. expected service container created, got %v", err)
-	}
-
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 2 {
-		t.Fatalf("expecting 2 services running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 2 {
-		t.Fatalf("expecting 2 dependent data container, got %v", n)
-	}
-}
-
 func TestExecServiceSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -301,14 +255,180 @@ func TestExecServiceSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceBufferNotOverwritten(t *testing.T) {
+	const (
+		name = "ipfs"
+	)
+
+	defer tests.RemoveAllContainers()
+
+	srv, err := loaders.LoadServiceDefinition(name, true)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Args = strings.Fields("true")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+
+	if config.GlobalConfig.Writer != buf {
+		t.Fatalf("expected global writer unchaged after exec")
+	}
+
+	if config.GlobalConfig.ErrorWriter != buf {
+		t.Fatalf("expected global error writer unchanged after exec")
+	}
+}
+
+func TestExecServiceAlwaysRestart(t *testing.T) {
+	const (
+		name = "restart-keys"
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+restart = "always"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceMaxAttemptsRestart(t *testing.T) {
+	const (
+		name = "restart-keys"
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+restart = "max:99"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+
+	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 service container running, got %v", n)
+	}
+	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
+		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	}
+}
+
+func TestExecServiceNeverRestart(t *testing.T) {
+	const (
+		name = "restart-keys"
+	)
+
+	defer tests.RemoveAllContainers()
+
+	if err := tests.FakeServiceDefinition(tests.ErisDir, name, `
+name = "`+name+`"
+
+[service]
+name = "`+name+`"
+image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+data_container = true
+exec_host = "ERIS_KEYS_HOST"
+`); err != nil {
+		t.Fatalf("can't create a fake service definition: %v", err)
+	}
+
+	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
+		t.Fatalf("expecting 0 containers, got %v", n)
+	}
+
+	srv, err := loaders.LoadServiceDefinition(name, true)
+	if err != nil {
+		t.Fatalf("could not load service definition %v", err)
+	}
+
+	srv.Operations.Interactive = false
+	srv.Operations.Args = strings.Fields("uname")
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
+		t.Fatalf("expected service container created, got %v", err)
+	}
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
@@ -322,8 +442,7 @@ func TestExecServiceSimple(t *testing.T) {
 
 func TestExecServiceLogOutput(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -332,16 +451,14 @@ func TestExecServiceLogOutput(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("echo test")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service run, got %v", err)
 	}
 
@@ -352,8 +469,7 @@ func TestExecServiceLogOutput(t *testing.T) {
 
 func TestExecServiceLogOutputLongRunning(t *testing.T) {
 	const (
-		name   = "keys"
-		number = 99
+		name = "keys"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -362,16 +478,14 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("du -sh /usr")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service container run, got %v", err)
 	}
 
@@ -382,8 +496,7 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 
 func TestExecServiceLogOutputInteractive(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -392,17 +505,15 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-
 	srv.Operations.Args = strings.Fields("echo test")
 	srv.Operations.Interactive = true
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	buf, err := DockerExecService(srv.Service, srv.Operations)
+	if err != nil {
 		t.Fatalf("expected service container run, got %v", err)
 	}
 
@@ -413,8 +524,7 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 
 func TestExecServiceTwice(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -423,18 +533,19 @@ func TestExecServiceTwice(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("1. expected service container created, got %v", err)
 	}
 
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
@@ -448,8 +559,7 @@ func TestExecServiceTwice(t *testing.T) {
 
 func TestExecServiceTwiceWithoutData(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -458,7 +568,7 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -466,11 +576,11 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 	srv.Service.AutoData = false
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("1. expected service container created, got %v", err)
 	}
 
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
@@ -484,8 +594,7 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 
 func TestExecServiceBadCommandLine(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -494,14 +603,14 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
 	srv.Operations.Interactive = false
 	srv.Operations.Args = strings.Fields("/bad/command/line")
-	if err := DockerExecService(srv.Service, srv.Operations); err == nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure, got %v", err)
 	}
 
@@ -515,8 +624,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 
 func TestExecServiceNonInteractive(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -525,14 +633,14 @@ func TestExecServiceNonInteractive(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
 
 	srv.Operations.Interactive = false
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
@@ -546,8 +654,7 @@ func TestExecServiceNonInteractive(t *testing.T) {
 
 func TestExecServiceAfterRunService(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -556,7 +663,7 @@ func TestExecServiceAfterRunService(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -567,15 +674,14 @@ func TestExecServiceAfterRunService(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err == nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure due to unpublished ports, got %v", err)
 	}
 }
 
 func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -584,7 +690,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -596,7 +702,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 
@@ -610,8 +716,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 
 func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -620,7 +725,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -632,7 +737,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 	srv.Operations.PublishAllPorts = true
 	srv.Operations.Interactive = true
 	srv.Operations.Args = strings.Fields("uptime")
-	if err := DockerExecService(srv.Service, srv.Operations); err != nil {
+	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 
@@ -646,8 +751,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 
 func TestContainerExistsSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -656,7 +760,7 @@ func TestContainerExistsSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -677,8 +781,7 @@ func TestContainerExistsSimple(t *testing.T) {
 
 func TestContainerExistsBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -687,7 +790,7 @@ func TestContainerExistsBadName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -700,8 +803,7 @@ func TestContainerExistsBadName(t *testing.T) {
 
 func TestContainerExistsAfterRemove(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -710,7 +812,7 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -723,7 +825,7 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
-	tests.RemoveContainer(name, def.TypeService, number)
+	tests.RemoveContainer(name, def.TypeService)
 
 	if _, exists := ContainerExists(srv.Operations); exists == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
@@ -732,8 +834,7 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 
 func TestContainerRunningSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -742,7 +843,7 @@ func TestContainerRunningSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -763,8 +864,7 @@ func TestContainerRunningSimple(t *testing.T) {
 
 func TestContainerRunningBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -773,7 +873,7 @@ func TestContainerRunningBadName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -794,8 +894,7 @@ func TestContainerRunningBadName(t *testing.T) {
 
 func TestContainerRunningAfterRemove(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -804,7 +903,7 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -817,7 +916,7 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
-	tests.RemoveContainer(name, def.TypeService, number)
+	tests.RemoveContainer(name, def.TypeService)
 
 	if _, running := ContainerRunning(srv.Operations); running == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
@@ -826,8 +925,7 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 
 func TestDataContainerExistsSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -836,7 +934,7 @@ func TestDataContainerExistsSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -853,8 +951,7 @@ func TestDataContainerExistsSimple(t *testing.T) {
 
 func TestDataContainerExistsBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -863,7 +960,7 @@ func TestDataContainerExistsBadName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -876,8 +973,7 @@ func TestDataContainerExistsBadName(t *testing.T) {
 
 func TestDataContainerExistsAfterRemove(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -886,7 +982,7 @@ func TestDataContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -900,7 +996,7 @@ func TestDataContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
-	tests.RemoveContainer(name, def.TypeData, number)
+	tests.RemoveContainer(name, def.TypeData)
 
 	if _, exists := DataContainerExists(srv.Operations); exists == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
@@ -909,8 +1005,7 @@ func TestDataContainerExistsAfterRemove(t *testing.T) {
 
 func TestRemoveWithoutData(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -919,7 +1014,7 @@ func TestRemoveWithoutData(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -929,7 +1024,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
@@ -937,7 +1032,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
@@ -950,7 +1045,7 @@ func TestRemoveWithoutData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
@@ -960,8 +1055,7 @@ func TestRemoveWithoutData(t *testing.T) {
 
 func TestRemoveWithData(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -970,7 +1064,7 @@ func TestRemoveWithData(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -980,7 +1074,7 @@ func TestRemoveWithData(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
@@ -992,7 +1086,7 @@ func TestRemoveWithData(t *testing.T) {
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, true, true, false); err != nil {
-		t.Fatal("expected service container removed, got %v", err)
+		t.Fatalf("expected service container removed, got %v", err)
 	}
 
 	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
@@ -1006,8 +1100,7 @@ func TestRemoveWithData(t *testing.T) {
 
 func TestRemoveServiceWithoutStopping(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1016,7 +1109,7 @@ func TestRemoveServiceWithoutStopping(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1032,8 +1125,7 @@ func TestRemoveServiceWithoutStopping(t *testing.T) {
 
 func TestStopSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1042,7 +1134,7 @@ func TestStopSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1074,8 +1166,7 @@ func TestStopSimple(t *testing.T) {
 
 func TestStopDataContainer(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1084,7 +1175,7 @@ func TestStopDataContainer(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1102,7 +1193,6 @@ func TestStopDataContainer(t *testing.T) {
 func TestRebuildSimple(t *testing.T) {
 	const (
 		name    = "ipfs"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1112,7 +1202,7 @@ func TestRebuildSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1137,7 +1227,6 @@ func TestRebuildSimple(t *testing.T) {
 func TestRebuildBadName(t *testing.T) {
 	const (
 		name    = "ipfs"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1147,7 +1236,7 @@ func TestRebuildBadName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1162,7 +1251,6 @@ func TestRebuildBadName(t *testing.T) {
 func TestRebuildNotCreated(t *testing.T) {
 	const (
 		name    = "ipfs"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1172,7 +1260,7 @@ func TestRebuildNotCreated(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1186,7 +1274,6 @@ func TestRebuildNotCreated(t *testing.T) {
 func TestRebuildTimeout0(t *testing.T) {
 	const (
 		name    = "ipfs"
-		number  = 99
 		timeout = 0
 	)
 
@@ -1196,7 +1283,7 @@ func TestRebuildTimeout0(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1221,7 +1308,6 @@ func TestRebuildTimeout0(t *testing.T) {
 func TestRebuildNotRunning(t *testing.T) {
 	const (
 		name    = "ipfs"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1231,7 +1317,7 @@ func TestRebuildNotRunning(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1241,7 +1327,7 @@ func TestRebuildNotRunning(t *testing.T) {
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, timeout); err != nil {
-		t.Fatal("expected service container stopped, got %v", err)
+		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
 	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
@@ -1260,7 +1346,6 @@ func TestRebuildNotRunning(t *testing.T) {
 func TestRebuildPullDisallow(t *testing.T) {
 	const (
 		name    = "keys"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1274,7 +1359,7 @@ func TestRebuildPullDisallow(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1299,7 +1384,6 @@ func TestRebuildPullDisallow(t *testing.T) {
 func TestRebuildPull(t *testing.T) {
 	const (
 		name    = "keys"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1313,7 +1397,7 @@ func TestRebuildPull(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1338,7 +1422,6 @@ func TestRebuildPull(t *testing.T) {
 func TestRebuildPullRepeat(t *testing.T) {
 	const (
 		name    = "keys"
-		number  = 99
 		timeout = 5
 	)
 
@@ -1350,7 +1433,7 @@ func TestRebuildPullRepeat(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1374,8 +1457,7 @@ func TestRebuildPullRepeat(t *testing.T) {
 
 func TestPullSimple(t *testing.T) {
 	const (
-		name   = "keys"
-		number = 99
+		name = "keys"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1388,7 +1470,7 @@ func TestPullSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1412,8 +1494,7 @@ func TestPullSimple(t *testing.T) {
 
 func TestPullRepeat(t *testing.T) {
 	const (
-		name   = "keys"
-		number = 99
+		name = "keys"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1424,7 +1505,7 @@ func TestPullRepeat(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1448,13 +1529,12 @@ func TestPullRepeat(t *testing.T) {
 
 func TestPullBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1468,9 +1548,8 @@ func TestPullBadName(t *testing.T) {
 
 func TestLogsSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
-		tail   = "100"
+		name = "ipfs"
+		tail = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1479,7 +1558,7 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1506,9 +1585,8 @@ func TestLogsSimple(t *testing.T) {
 
 func TestLogsFollow(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
-		tail   = "1"
+		name = "ipfs"
+		tail = "1"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1517,7 +1595,7 @@ func TestLogsFollow(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1540,9 +1618,8 @@ func TestLogsFollow(t *testing.T) {
 
 func TestLogsTail(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
-		tail   = "100"
+		name = "ipfs"
+		tail = "100"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1551,7 +1628,7 @@ func TestLogsTail(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1578,9 +1655,8 @@ func TestLogsTail(t *testing.T) {
 
 func TestLogsTail0(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
-		tail   = "0"
+		name = "ipfs"
+		tail = "0"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1589,7 +1665,7 @@ func TestLogsTail0(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1616,14 +1692,13 @@ func TestLogsTail0(t *testing.T) {
 
 func TestLogsBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
-		tail   = "1"
+		name = "ipfs"
+		tail = "1"
 	)
 
 	defer tests.RemoveAllContainers()
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1637,8 +1712,7 @@ func TestLogsBadName(t *testing.T) {
 
 func TestInspectSimple(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1647,7 +1721,7 @@ func TestInspectSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1670,8 +1744,7 @@ func TestInspectSimple(t *testing.T) {
 
 func TestInspectLine(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1680,7 +1753,7 @@ func TestInspectLine(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1697,8 +1770,7 @@ func TestInspectLine(t *testing.T) {
 
 func TestInspectField(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1707,7 +1779,7 @@ func TestInspectField(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1730,13 +1802,12 @@ func TestInspectField(t *testing.T) {
 
 func TestInspectStoppedContainer(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1763,8 +1834,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 
 func TestInspectBadName(t *testing.T) {
 	const (
-		name   = "ipfs"
-		number = 99
+		name = "ipfs"
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1773,7 +1843,7 @@ func TestInspectBadName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1789,7 +1859,6 @@ func TestRenameSimple(t *testing.T) {
 	const (
 		name    = "testdata"
 		newName = "newname"
-		number  = 199
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1798,7 +1867,7 @@ func TestRenameSimple(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	ops := loaders.LoadDataDefinition(name, number)
+	ops := loaders.LoadDataDefinition(name)
 	if err := DockerCreateData(ops); err != nil {
 		t.Fatalf("expected data container created, got %v", err)
 	}
@@ -1819,7 +1888,6 @@ func TestRenameService(t *testing.T) {
 	const (
 		name    = "ipfs"
 		newName = "newname"
-		number  = 99
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1828,7 +1896,7 @@ func TestRenameService(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1867,7 +1935,6 @@ func TestRenameEmptyName(t *testing.T) {
 	const (
 		name    = "ipfs"
 		newName = ""
-		number  = 99
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1876,7 +1943,7 @@ func TestRenameEmptyName(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1902,7 +1969,6 @@ func TestRenameServiceStopped(t *testing.T) {
 	const (
 		name    = "ipfs"
 		newName = "newname"
-		number  = 99
 	)
 
 	defer tests.RemoveAllContainers()
@@ -1911,7 +1977,7 @@ func TestRenameServiceStopped(t *testing.T) {
 		t.Fatalf("expecting 0 containers, got %v", n)
 	}
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}
@@ -1953,12 +2019,11 @@ func TestRenameBadName(t *testing.T) {
 	const (
 		name    = "ipfs"
 		newName = "newname"
-		number  = 99
 	)
 
 	defer tests.RemoveAllContainers()
 
-	srv, err := loaders.LoadServiceDefinition(name, true, number)
+	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
 	}

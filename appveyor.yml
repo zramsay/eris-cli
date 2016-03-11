@@ -16,6 +16,8 @@ environment:
     secure: Lo717dojMJUNytpQPZWwyw==
   AWS_SECURITY_GROUP:
     secure: Jie7WuAzjiHVp7tX8MfaSQ==
+  ECM_BRANCH: develop
+  EPM_BRANCH: develop
 
 build_script:
 - cmd: >-
@@ -23,8 +25,8 @@ build_script:
     choco install -yr cygwin > nul
 
     choco install -yr jq
-    
-    choco install -yr docker -version 1.9.1
+
+    choco install -yr docker -version 1.10.0
 
     choco install -yr docker-machine -version 0.4.1
 
