@@ -90,9 +90,8 @@ func ListDatas(do *definitions.Do) error {
 	var result string
 	var err error
 	if do.Quiet {
-		result = strings.Join(util.DataContainerNames(), "\n")
-		do.Result = result
-		log.Warn(result)
+		do.Result = strings.Join(util.DataContainerNames(), "\n")
+		log.Warn(do.Result)
 	} else {
 		result, err = PrintTableReport("data", true, true)
 		if err != nil {
