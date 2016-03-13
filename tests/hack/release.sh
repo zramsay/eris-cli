@@ -137,7 +137,7 @@ release_gh() {
 # Send deb packages to APT repository
 
 release_apt() {
-  echo "Moving on to APT relase. Uploading files to APT server."
+  echo "Moving on to APT release. Uploading files to APT server."
   docker-machine scp $repo/tests/hack/release_deb.sh $aptmachine:~
   docker-machine scp $build_dir/$version/eris_"$version"_amd64.deb $aptmachine:~
   docker-machine ssh $aptmachine
@@ -148,13 +148,14 @@ release_apt() {
 # Send rpm packages to YUM repository
 
 release_yum() {
-  echo "Moving on to YUM relase. Uploading files to YUM server."
+  echo "Moving on to YUM release. Uploading files to YUM server."
   docker-machine scp $repo/tests/hack/release_rpm.sh $yummachine:~
   docker-machine scp $repo/tests/hack/eris-cli.spec $yummachine:~
   docker-machine scp $repo/tests/hack/eris.repo $yummachine:~
   docker-machine scp $repo/README.md $yummachine:README
   docker-machine scp $repo/LICENSE.md $yummachine:COPYING
-  docker-machine scp $GOPATH/bin/eris $yummachine:~
+  docker-machine scp $build_dir/$version/eris_"$version"_linux_amd64.tar.gz $yummachine:~
+  docker-machine ssh $yummachine tar xf --strip-components=1 eris_"$version"_linux_amd64.tar.gz
   docker-machine ssh $yummachine "echo \"$version\" > version"
   docker-machine ssh $yummachine
   echo "Finished with YUM release."

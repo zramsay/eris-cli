@@ -8,7 +8,7 @@ Standards-Version: 3.9.4
 
 Package: eris
 Architecture: amd64
-Depends: docker-engine
+Depends: docker-engine (>= 1.8) | docker.io (>= 1.8) | lxc-docker (>= 1.8)
 Homepage: https://docs.erisindustries.com
 Description: Eris is a platform for building, testing, maintaining, and operating
   distributed applications with a blockchain backend. Eris makes it easy
