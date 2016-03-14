@@ -28,8 +28,8 @@ func GetFileByNameAndType(typ, name string) string {
 	files := GetGlobalLevelConfigFilesByType(typ, true)
 
 	for _, file := range files {
-		file_base := strings.Split(filepath.Base(file), ".")[0] // quick and dirty file root
-		if file_base == name {
+		fileBase := strings.Split(filepath.Base(file), ".")[0] // quick and dirty file root
+		if fileBase == name {
 			log.WithField("file", file).Debug("This file found")
 			return file
 		}
