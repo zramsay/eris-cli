@@ -254,8 +254,25 @@ func IsMinimalDockerClientVersion() bool {
 	if err != nil {
 		return false
 	}
+	return CompareVersions(version, ver.DOCKER_VER_MIN)
+}
 
-	return CompareVersions(version, ver.DVER_MIN)
+func DockerMachineVersion() (string, error) {
+	out, err := exec.Command("docker-machine", "--version").CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	var dmVersionTrimmed string
+	if runtime.GOOS == "windows" {
+		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine.exe version ")
+	} else {
+		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine version ")
+	}
+
+	dmVersion := strings.Split(dmVersionTrimmed, ",")[0]
+
+	return dmVersion, nil
 }
 
 // CompareVersions returns true if the version1 is larger or equal the version2,

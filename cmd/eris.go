@@ -19,7 +19,8 @@ import (
 )
 
 const VERSION = version.VERSION
-const dVerMin = version.DVER_MIN
+const dVerMin = version.DOCKER_VER_MIN
+const dmVerMin = version.DM_VER_MIN
 
 // Defining the root command
 var ErisCmd = &cobra.Command{
@@ -55,15 +56,28 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
+		// compare docker client API versions
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
-			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved and the marmots will be happy to service your blockchain management needs\n\n%v", err))
+			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs\n\n%v", err))
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
+
+		// compare docker-machine versions
+		// but don't fail if not installed
+		if os.Getenv("TEST_ON_WINDOWS") != "true" {
+			dmVersion, err := util.DockerMachineVersion()
+			if err != nil {
+				log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+			} else if !util.CompareVersions(dmVersion, dmVerMin) {
+				IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+			}
+		}
 	},
+
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
 		if err != nil {

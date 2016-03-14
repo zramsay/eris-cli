@@ -2,6 +2,7 @@ version: 1.0.{build}-{branch}
 clone_folder: C:\src\github.com\eris-ltd\eris-cli
 
 environment:
+  TEST_ON_WINDOWS: "true"
   GOPATH: C:\
   GOBIN: C:\bin
   PATH: '%PATH%;C:\bin'
