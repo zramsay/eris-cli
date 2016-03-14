@@ -314,7 +314,9 @@ func CatChain(do *definitions.Do) error {
 
 	buf, err := ExecChain(do)
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	if buf != nil {
+		io.Copy(config.GlobalConfig.Writer, buf)
+	}
 
 	return err
 }
