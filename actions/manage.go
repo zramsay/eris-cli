@@ -174,13 +174,10 @@ func RmAction(do *definitions.Do) error {
 		if oldFile == "" {
 			return nil
 		}
-
-		// if !strings.Contains(oldFile, ActionsPath) {
-		// 	oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
-		// }
-
 		log.WithField("file", oldFile).Debug("Removing file")
-		os.Remove(oldFile)
+		if err := os.Remove(oldFile); err != nil {
+			return err
+		}
 	}
 	return nil
 }

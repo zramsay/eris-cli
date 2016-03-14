@@ -240,7 +240,6 @@ func RmService(do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
-			oldFile = filepath.Join(ServicesPath, oldFile) + ".toml"
 			log.WithField("file", oldFile).Warn("Removing file")
 			if err := os.Remove(oldFile); err != nil {
 				return err
