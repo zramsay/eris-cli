@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/cors"
+
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
@@ -22,7 +24,11 @@ func StartAgent(do *definitions.Do) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/install", InstallAgent)
 	fmt.Println("Starting mux agent on localhost:17552")
-	http.ListenAndServe(":17552", mux)
+	// cors.Default() sets up the middleware with default options being
+	// all origins accepted with simple methods (GET, POST).
+	// See https://github.com/rs/cors
+	handler := cors.Default().Handler(mux)
+	http.ListenAndServe(":17552", handler)
 
 	return nil
 }
