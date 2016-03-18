@@ -41,6 +41,10 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
+	if err := checkKeysRunningOrStart(); err != nil {
+		return err
+	}
+
 	do.Service.Name = do.Name
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
 	do.Service.User = "eris"
@@ -559,5 +563,21 @@ func RegisterChain(do *definitions.Do) error {
 
 	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
+	return nil
+}
+
+func checkKeysRunningOrStart() error {
+	srv, err := loaders.LoadServiceDefinition("keys", false)
+	if err != nil {
+		return err
+	}
+
+	if !services.IsServiceRunning(srv.Service, srv.Operations) {
+		do := definitions.NowDo()
+		do.Operations.Args = []string{"keys"}
+		if err := services.StartService(do); err != nil {
+			return err
+		}
+	}
 	return nil
 }
