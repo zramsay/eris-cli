@@ -1,12 +1,13 @@
 package util
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"testing"
+//	"io/ioutil"
+//	"os"
+//	"path/filepath"
+//	"testing"
 )
 
+/*
 var (
 	dir              = "idi"
 	dirToTar         = filepath.Join(os.TempDir(), dir)
@@ -63,3 +64,4 @@ func TestUnpackTarball(t *testing.T) {
 
 	//read contents of installPath
 }
+*/
