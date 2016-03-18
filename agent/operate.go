@@ -184,7 +184,7 @@ func SetTarballPath(bundleInfo map[string]string) string {
 	version := bundleInfo["version"]
 	//dirName := bundleInfo["dirName"]
 
-	return filepath.Join(common.BundlesPath, groupID, bundleID, version, "auth") //dirName) //not sure why "auth" => from slide deck
+	return filepath.Join(common.BundlesPath, groupID, bundleID, version)
 }
 
 func SetBundlePath(bundleInfo map[string]string) string {
@@ -193,7 +193,7 @@ func SetBundlePath(bundleInfo map[string]string) string {
 	version := bundleInfo["version"]
 	dirName := bundleInfo["dirName"]
 
-	return filepath.Join(common.BundlesPath, groupID, bundleID, version, "auth", dirName) //not sure why "auth" => from slide deck
+	return filepath.Join(common.BundlesPath, groupID, bundleID, version, dirName)
 
 }
 
