@@ -65,12 +65,8 @@ func ImportKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
-
 	dir := path.Join(ErisContainerRoot, "keys", "data", do.Address)
-	buf, err := srv.ExecHandler(do.Name, []string{"mkdir", dir}) //need to mkdir for import TODO (#501)
-	if err != nil {
-		return err
-	}
+
 	//src on host
 	//if default given (from flag), join addrs
 	if do.Source == filepath.Join(KeysPath, "data") {
@@ -78,12 +74,9 @@ func ImportKey(do *definitions.Do) error {
 	}
 	//dest in container
 	do.Destination = dir
-
 	if err := data.ImportData(do); err != nil {
 		return err
 	}
-
-	io.Copy(config.GlobalConfig.Writer, buf)
 
 	return nil
 }
