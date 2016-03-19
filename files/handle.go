@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -85,13 +86,6 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	// will be removed later
 	do.Destination = filepath.Join(ErisContainerRoot, "scratch", "data", do.Source)
 	do.Name = "ipfs"
-
-	//TODO rm when data-import merged
-	arguments := []string{"mkdir", "--parents", do.Destination}
-	_, err := services.ExecHandler("ipfs", arguments)
-	if err != nil {
-		return nil, err
-	}
 
 	do.Operations.Args = nil
 	do.Operations.PublishAllPorts = true
