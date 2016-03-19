@@ -145,7 +145,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 
 	do.Destination = do.Path
-	do.Source = filepath.Join(ErisContainerRoot, hash)
+	do.Source = path.Join(ErisContainerRoot, hash)
 	do.Operations.Args = nil
 	do.Operations.PublishAllPorts = false
 	if err := data.ExportData(do); err != nil {
@@ -156,7 +156,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	theDir := filepath.Join(do.Destination, hash)
+	theDir := path.Join(do.Destination, hash)
 	newDir := do.Destination
 
 	if err := data.MoveOutOfDirAndRmDir(theDir, newDir); err != nil {
