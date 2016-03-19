@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	//	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -88,16 +87,14 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	do.Name = "ipfs"
 
 	//TODO rm when data-import merged
-	do.Operations.Interactive = false
-	do.Operations.PublishAllPorts = true
-	do.Operations.Args = []string{"mkdir", "--parents", do.Destination}
-	_, err := services.ExecService(do)
+	arguments := []string{"mkdir", "--parents", do.Destination}
+	_, err := services.ExecHandler("ipfs", arguments)
 	if err != nil {
 		return nil, err
 	}
 
 	do.Operations.Args = nil
-	do.Operations.PublishAllPorts = false
+	do.Operations.PublishAllPorts = true
 	if err := data.ImportData(do); err != nil {
 		return nil, err
 	}
@@ -114,11 +111,9 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
 
-	do.Operations.Interactive = false
-	do.Operations.PublishAllPorts = true
-	do.Operations.Args = []string{"ipfs", "add", "-r", do.Destination, "--api", api}
+	argumentsAdd := []string{"ipfs", "add", "-r", do.Destination, "--api", api}
 
-	buf, err := services.ExecService(do)
+	buf, err := services.ExecHandler("ipfs", argumentsAdd)
 	if err != nil {
 		return nil, err
 	}
@@ -129,12 +124,9 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	hash := do.Name
 
-	// path to dir on host
-	// path to source in cont (doesn't exist, need to make it)
-	// exec'ing ipfs get will save files in Root hash named dir
-
 	ip := new(bytes.Buffer)
 	config.GlobalConfig.Writer = ip
+
 	do.Name = "ipfs"
 	do.Operations.Interactive = false
 	do.Operations.PublishAllPorts = true
@@ -145,18 +137,13 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
 
-	do.Operations.Interactive = false
-	do.Operations.PublishAllPorts = true
-	//will save to /home/eris/.eris in hash dir.
-	do.Operations.Args = []string{"ipfs", "get", hash, "--api", api}
+	argumentsGet := []string{"ipfs", "get", hash, "--api", api}
 
-	buf, err := services.ExecService(do)
+	buf, err := services.ExecHandler("ipfs", argumentsGet)
 	if err != nil {
 		return nil, err
 	}
 
-	//get src/dest right
-	//on host
 	do.Destination = do.Path
 	do.Source = filepath.Join(ErisContainerRoot, hash)
 	do.Operations.Args = nil

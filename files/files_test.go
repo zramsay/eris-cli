@@ -2,9 +2,7 @@ package files
 
 import (
 	"bytes"
-	//"fmt"
 	"io/ioutil"
-	//"strings"
 	"net/http"
 	"os"
 	"path/filepath"
