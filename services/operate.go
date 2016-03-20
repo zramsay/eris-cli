@@ -146,6 +146,7 @@ func ExecHandler(srvName string, args []string) (buf *bytes.Buffer, err error) {
 	do.Name = srvName
 	do.Operations.Interactive = false
 	do.Operations.Args = args
+	do.Operations.PublishAllPorts = true
 	return ExecService(do)
 }
 

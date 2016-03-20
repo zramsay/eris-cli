@@ -2,73 +2,73 @@ package files
 
 import (
 	"bytes"
-	"encoding/csv"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
 )
 
 func GetFiles(do *definitions.Do) error {
 	ensureRunning()
-	var err error
-	if do.CSV != "" {
-		log.WithFields(log.Fields{
-			"from": do.CSV,
-			"to":   do.NewName,
-		}).Debug("Importing files")
-		err = importFiles(do.CSV, do.NewName)
 
-	} else {
+	dirBool := checkPath(do.Path)
+
+	if dirBool {
 		log.WithFields(log.Fields{
-			"file": do.Name,
+			"hash": do.Name,
 			"path": do.Path,
-		}).Debug("Importing a file")
-		err = importFile(do.Name, do.Path)
+		}).Warn("Getting a directory")
+		buf, err := importDirectory(do)
+		if err != nil {
+			return err
+		}
+		log.Warn("Directory object getted succesfully.")
+		log.Warn(util.TrimString(buf.String()))
+		//get like you put dir
+	} else {
+		if err := importFile(do.Name, do.Path); err != nil {
+			return err
+		}
+		do.Result = "success"
 	}
-	if err != nil {
-		return err
-	}
-	do.Result = "success"
 	return nil
 }
 
 func PutFiles(do *definitions.Do) error {
 	ensureRunning()
 
-	if do.Gateway != "" {
-		_, err := url.Parse(do.Gateway)
-		if err != nil {
-			return fmt.Errorf("Invalid gateway URL provided %v\n", err)
-		}
-		log.WithField("gateway", do.Gateway).Debug("Posting to")
-	} else {
-		log.Debug("Posting to gateway.ipfs.io")
+	if err := checkGatewayFlag(do); err != nil {
+		return err
 	}
 
-	if do.AddDir {
-		log.WithFields(log.Fields{
-			"dir":     do.Name,
-			"gateway": do.Gateway,
-		}).Debug("Adding contents of a directory")
-		hashes, err := exportDir(do.Name, do.Gateway)
+	//check if do.Name is dir or file ...
+	f, err := os.Stat(do.Name)
+	if err != nil {
+		return err
+	}
+
+	if f.IsDir() {
+		//can't use gateway - check & throw err
+		log.WithField("dir", do.Name).Warn("Adding contents of a directory")
+		buf, err := exportDirectory(do)
 		if err != nil {
 			return err
 		}
-		do.Result = hashes
+		log.Warn("Directory object added succesfully")
+		log.Warn(util.TrimString(buf.String()))
 	} else {
-		log.WithFields(log.Fields{
-			"file":    do.Name,
-			"gateway": do.Gateway,
-		}).Debug("Adding a file")
 		hash, err := exportFile(do.Name, do.Gateway)
 		if err != nil {
 			return err
@@ -78,27 +78,99 @@ func PutFiles(do *definitions.Do) error {
 	return nil
 }
 
+func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
+
+	// path to dir on host
+	do.Source = do.Name
+	// path to dest in cont (doesn't exist, need to make it)
+	// will be removed later
+	do.Destination = filepath.Join(ErisContainerRoot, "scratch", "data", do.Source)
+	do.Name = "ipfs"
+
+	do.Operations.Args = nil
+	do.Operations.PublishAllPorts = true
+	if err := data.ImportData(do); err != nil {
+		return nil, err
+	}
+
+	ip := new(bytes.Buffer)
+	config.GlobalConfig.Writer = ip
+
+	do.Operations.Interactive = false
+	do.Operations.PublishAllPorts = true
+	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
+
+	if err := services.InspectService(do); err != nil {
+		return nil, err
+	}
+	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
+
+	argumentsAdd := []string{"ipfs", "add", "-r", do.Destination, "--api", api}
+
+	buf, err := services.ExecHandler("ipfs", argumentsAdd)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
+	hash := do.Name
+
+	ip := new(bytes.Buffer)
+	config.GlobalConfig.Writer = ip
+
+	do.Name = "ipfs"
+	do.Operations.Interactive = false
+	do.Operations.PublishAllPorts = true
+	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
+
+	if err := services.InspectService(do); err != nil {
+		return nil, err
+	}
+	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
+
+	argumentsGet := []string{"ipfs", "get", hash, "--api", api}
+
+	buf, err := services.ExecHandler("ipfs", argumentsGet)
+	if err != nil {
+		return nil, err
+	}
+
+	do.Destination = do.Path
+	do.Source = path.Join(ErisContainerRoot, hash)
+	do.Operations.Args = nil
+	do.Operations.PublishAllPorts = false
+	if err := data.ExportData(do); err != nil {
+		return nil, err
+	}
+
+	_, err = os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	theDir := path.Join(do.Destination, hash)
+	newDir := do.Destination
+
+	if err := data.MoveOutOfDirAndRmDir(theDir, newDir); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+
+}
 func PinFiles(do *definitions.Do) error {
 	ensureRunning()
-	if do.CSV != "" {
-		log.WithField("=>", do.CSV).Debug("Pinning all files from")
-		hashes, err := pinFiles(do.CSV)
-		if err != nil {
-			return err
-		}
-		do.Result = hashes
-
-	} else {
-		log.WithFields(log.Fields{
-			"file": do.Name,
-			"path": do.Path,
-		}).Debug("Pinning a file")
-		hash, err := pinFile(do.Name)
-		if err != nil {
-			return err
-		}
-		do.Result = hash
+	log.WithFields(log.Fields{
+		"file": do.Name,
+		"path": do.Path,
+	}).Debug("Pinning a file")
+	hash, err := pinFile(do.Name)
+	if err != nil {
+		return err
 	}
+	do.Result = hash
 	return nil
 }
 
@@ -164,6 +236,11 @@ func ManagePinned(do *definitions.Do) error {
 func importFile(hash, fileName string) error {
 	var err error
 
+	log.WithFields(log.Fields{
+		"from hash": hash,
+		"to path":   fileName,
+	}).Debug("Importing a file")
+
 	if log.GetLevel() > 0 {
 		err = ipfs.GetFromIPFS(hash, fileName, "", os.Stdout)
 	} else {
@@ -175,37 +252,14 @@ func importFile(hash, fileName string) error {
 	return nil
 }
 
-func importFiles(csvfile, newdir string) error {
-	var err error
-
-	csvFile, err := os.Open(csvfile)
-	if err != nil {
-		return fmt.Errorf("error opening csv file: %v\n", err)
-	}
-	defer csvFile.Close()
-
-	reader := csv.NewReader(csvFile)
-	rawCSVdata, err := reader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("error reading csv file: %v\n", err)
-	}
-
-	for _, each := range rawCSVdata {
-		if log.GetLevel() > 0 {
-			err = ipfs.GetFromIPFS(each[0], each[1], newdir, os.Stdout)
-		} else {
-			err = ipfs.GetFromIPFS(each[0], each[1], newdir, bytes.NewBuffer([]byte{}))
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func exportFile(fileName, gateway string) (string, error) {
 	var hash string
 	var err error
+
+	log.WithFields(log.Fields{
+		"file":    fileName,
+		"gateway": gateway,
+	}).Debug("Adding a file")
 
 	if log.GetLevel() > 0 {
 		hash, err = ipfs.SendToIPFS(fileName, gateway, os.Stdout)
@@ -217,45 +271,6 @@ func exportFile(fileName, gateway string) (string, error) {
 	}
 
 	return hash, nil
-}
-
-func exportDir(dirName, gateway string) (string, error) {
-	var hashes string
-	var err error
-
-	files, err := ioutil.ReadDir(dirName)
-	if err != nil {
-		return "", fmt.Errorf("error reading directory %v\n", err)
-	}
-	gwd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("error getting working directory %v\n", err)
-	}
-	hashArray := make([]string, len(files))
-	fileNames := make([]string, len(files))
-	//the dir ends up in the loop & tries to post
-	for i := range files {
-		//hacky
-		file := filepath.Join(gwd, dirName, files[i].Name())
-		if log.GetLevel() > 0 {
-			hashArray[i], err = ipfs.SendToIPFS(file, gateway, os.Stdout)
-		} else {
-			hashArray[i], err = ipfs.SendToIPFS(file, gateway, bytes.NewBuffer([]byte{}))
-		}
-		if err != nil {
-			return "", fmt.Errorf("error reading file %v\n", err)
-		}
-		fileNames[i] = files[i].Name()
-	}
-
-	err = writeCsv(hashArray, fileNames)
-	if err != nil {
-		return "", err
-	}
-
-	hashes = strings.Join(hashArray, "\n")
-
-	return hashes, nil
 }
 
 func pinFile(fileHash string) (string, error) {
@@ -271,36 +286,6 @@ func pinFile(fileHash string) (string, error) {
 		return "", err
 	}
 	return hash, nil
-}
-
-func pinFiles(csvfile string) (string, error) {
-	var err error
-
-	csvFile, err := os.Open(csvfile)
-	if err != nil {
-		return "", fmt.Errorf("error opening csv file: %v\n", err)
-	}
-	defer csvFile.Close()
-
-	reader := csv.NewReader(csvFile)
-	rawCSVdata, err := reader.ReadAll()
-	if err != nil {
-		return "", fmt.Errorf("error reading csv file: %v\n", err)
-	}
-
-	hashArray := make([]string, len(rawCSVdata))
-	for i, each := range rawCSVdata {
-		if log.GetLevel() > 0 {
-			hashArray[i], err = ipfs.PinToIPFS(each[0], os.Stdout)
-		} else {
-			hashArray[i], err = ipfs.PinToIPFS(each[0], bytes.NewBuffer([]byte{}))
-		}
-		if err != nil {
-			return "", err
-		}
-	}
-	hashes := strings.Join(hashArray, "\n")
-	return hashes, nil
 }
 
 func catFile(fileHash string) (string, error) {
@@ -379,28 +364,6 @@ func rmPinnedByHash(hash string) (string, error) {
 //---------------------------------------------------------
 // helpers
 
-func writeCsv(hashArray, fileNames []string) error {
-	strToWrite := make([][]string, len(hashArray))
-	for i := range hashArray {
-		strToWrite[i] = []string{hashArray[i], fileNames[i]}
-
-	}
-
-	csvfile, err := os.Create("ipfs_hashes.csv")
-	if err != nil {
-		return fmt.Errorf("error creating csv file: %v", err)
-	}
-	defer csvfile.Close()
-
-	w := csv.NewWriter(csvfile)
-	w.WriteAll(strToWrite)
-
-	if err := w.Error(); err != nil {
-		return fmt.Errorf("error writing csv: %v", err)
-	}
-	return nil
-}
-
 func ensureRunning() {
 	doNow := definitions.NowDo()
 	doNow.Name = "ipfs"
@@ -410,4 +373,30 @@ func ensureRunning() {
 		return
 	}
 	log.Info("IPFS is running")
+}
+
+func checkGatewayFlag(do *definitions.Do) error {
+	if do.Gateway != "" {
+		_, err := url.Parse(do.Gateway)
+		if err != nil {
+			return fmt.Errorf("Invalid gateway URL provided %v\n", err)
+		}
+		log.WithField("gateway", do.Gateway).Debug("Posting to")
+	} else {
+		log.Debug("Posting to gateway.ipfs.io")
+	}
+	return nil
+}
+
+func checkPath(path string) bool {
+	dirBool := false
+	thing := strings.Split(path, ".")
+	if len(thing) == 1 {
+		log.Warn("No file extension detected, assuming directory.")
+		return true
+	} else {
+		log.Warn("File extension detected, assuming file.")
+		return false
+	}
+	return dirBool
 }
