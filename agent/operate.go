@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -55,7 +56,6 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			"groupId":  params["groupId"],
 			"bundleId": params["bundleId"],
 			"version":  params["version"],
-			//"dirName":  params["dirName"],
 		}
 
 		installPath := SetTarballPath(bundleInfo)
@@ -92,6 +92,13 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		if err := DeployContractBundle(contractsPath, params["chainName"], params["address"]); err != nil {
 			w.Write([]byte(fmt.Sprintf("error deploying contract bundle: %v\n", err)))
 		}
+
+		epmJSON := filepath.Join(contractsPath, "epm.json")
+		epmByte, err := ioutil.ReadFile(epmJSON)
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf("error reading file: %v\n", err)))
+		}
+		w.Write(epmByte)
 	}
 }
 
