@@ -38,7 +38,7 @@ The `eris` tool is centered around a very few concepts:
 * `pkgs` -- our smart contract tool chain
 * `keys` -- wrapping of our key management tooling
 * `actions` -- step by step processes
-* `files` -- working the the IPFS "permanent web"
+* `files` -- working the IPFS "permanent web"
 * `data` -- take the pain out of data persistence on docker
 
 These concepts provide the core functionality of what we think a true smart contract application platform requires.
