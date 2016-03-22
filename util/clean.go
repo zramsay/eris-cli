@@ -199,7 +199,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		}).Warn("The marmots are about to remove")
 	}
 
-	fmt.Print("Please confirm (y/N): ")
+	fmt.Print("Please confirm (y/n): ")
 
 	fmt.Scanln(&input)
 	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {

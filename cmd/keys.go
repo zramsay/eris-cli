@@ -108,9 +108,11 @@ the [eris services exec keys "ls /home/eris/.eris/keys/data"] command.`,
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", DefKeysPathHost, "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
+	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
 
 	keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from. give full filepath to key")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
+	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 
 	keysList.Flags().BoolVarP(&do.Host, "host", "", false, "list keys on host: looks in $HOME/.eris/keys/data")
 	keysList.Flags().BoolVarP(&do.Container, "container", "", false, "list keys in container: looks in /home/eris/.eris/keys/data")
@@ -119,7 +121,6 @@ func addKeysFlags() {
 
 func GenerateKey(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
-
 	IfExit(keys.GenerateKey(do))
 }
 
@@ -130,14 +131,22 @@ func GetPubKey(cmd *cobra.Command, args []string) {
 }
 
 func ExportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Address = strings.TrimSpace(args[0])
+	if do.All {
+		IfExit(ArgCheck(0, "eq", cmd, args))
+	} else {
+		IfExit(ArgCheck(1, "eq", cmd, args))
+		do.Address = strings.TrimSpace(args[0])
+	}
 	IfExit(keys.ExportKey(do))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Address = strings.TrimSpace(args[0])
+	if do.All {
+		IfExit(ArgCheck(0, "eq", cmd, args))
+	} else {
+		IfExit(ArgCheck(1, "eq", cmd, args))
+		do.Address = strings.TrimSpace(args[0])
+	}
 	IfExit(keys.ImportKey(do))
 }
 
