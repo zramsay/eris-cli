@@ -10,7 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func GenerateKey(do *definitions.Do) error {
@@ -52,6 +52,8 @@ func ExportKey(do *definitions.Do) error {
 		return err
 	}
 
+	//	do.Destination = ?
+
 	//src in container
 	do.Source = path.Join(ErisContainerRoot, "keys", "data", do.Address)
 	if err := data.ExportData(do); err != nil {
@@ -69,8 +71,14 @@ func ImportKey(do *definitions.Do) error {
 
 	//src on host
 	//if default given (from flag), join addrs
-	if do.Source == filepath.Join(KeysPath, "data") {
-		do.Source = filepath.Join(KeysPath, "data", do.Address, do.Address)
+	if do.Source == filepath.Join(common.KeysPath, "data") {
+		do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
+	} else { // either relative or absolute path given. get absolute
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		do.Source = common.AbsolutePath(wd, do.Source)
 	}
 	//dest in container
 	do.Destination = dir
