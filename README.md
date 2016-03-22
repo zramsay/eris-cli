@@ -155,12 +155,16 @@ eris data
 
 Are Welcome! Before submitting a pull request please:
 
+* read up on [How The Marmots Git](https://github.com/eris-ltd/coding/wiki/How-The-Marmots-Git)
+* fork from `develop`
 * go fmt your changes
 * have tests
 * pull request
 * be awesome
 
-That's pretty much it (for now).
+That's pretty much it. 
+
+See our [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for more details.
 
 Please note that this repository is GPLv3.0 per the LICENSE file. Any code which is contributed via pull request shall be deemed to have consented to GPLv3.0 via submission of the code (were such code accepted into the repository).
 
@@ -168,14 +172,7 @@ Please note that this repository is GPLv3.0 per the LICENSE file. Any code which
 
 Found a bug in our stack? Make an issue!
 
-Issues should contain four things:
-
-* The operating system. Please be specific. Include the Docker version and, if applicable, which VM you are using (Toolbox/Kitematic/boot2docker) if you are not on Linux.
-* The reproduction steps. Starting from a fresh environment, what are all the steps that lead to the bug? Also include the branch you're working from.
-* What you expected to happen. Provide a sample output.
-* What actually happened. Error messages, logs, etc. Please rerun the offending command with `--debug` flag to provide the most information. This is essential for us to help you debug whether there is a problem with Eris or simply a nuance in usage. For lengthy outputs, link to a gist or pastebin please.
-
-Finally, add a label to your bug (critical or minor). Critical bugs will likely be addressed quickly while minor ones may take awhile. Pull requests welcome for either, just let us know you're working on one in the issue (we use the in-progress label accordingly).
+The [issue template](.github/ISSUE_TEMPLATE.md] specifies what needs to be included in your issue and will autopopulate the issue.
 
 # License
 
