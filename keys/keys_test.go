@@ -119,6 +119,86 @@ func TestExportKeySingle(t *testing.T) {
 	}
 }
 
+func TestImportKeyAll(t *testing.T) {
+	testStartKeys(t)
+
+	// gen some keys
+	addrs := make(map[string]bool)
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+
+	// export them to host
+	doExp := def.NowDo()
+	doExp.All = true
+
+	//export
+	if err := ExportKey(doExp); err != nil {
+		t.Fatalf("error exporting: %v\n", err)
+	}
+
+	// kill container
+	testKillService(t, "keys", true)
+
+	// start keys
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+
+	// eris keys import --all
+	doImp := def.NowDo()
+	doImp.All = true
+
+	//export
+	if err := ImportKey(doImp); err != nil {
+		t.Fatalf("error exporting: %v\n", err)
+	}
+
+	// check that they in container
+	output := testListKeys("container")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+	}
+
+}
+
+func TestExportKeyAll(t *testing.T) {
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+	// gen some keys
+	addrs := make(map[string]bool)
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+
+	// export them all
+	doExp := def.NowDo()
+	doExp.All = true
+	//export
+	if err := ExportKey(doExp); err != nil {
+		t.Fatalf("error exporting: %v\n", err)
+	}
+	// check that they on host
+	output := testListKeys("host")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+	}
+
+}
+
 func TestImportKeySingle(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true)
@@ -183,7 +263,6 @@ func TestListKeyContainer(t *testing.T) {
 	addrs := make(map[string]bool)
 	addrs[testsGenAKey()] = true
 	addrs[testsGenAKey()] = true
-	addrs[testsGenAKey()] = true
 
 	output := testListKeys("container")
 
@@ -194,8 +273,8 @@ func TestListKeyContainer(t *testing.T) {
 		}
 	}
 
-	if i != 3 {
-		t.Fatalf("Expected 3 keys, got (%v)\n", i)
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)\n", i)
 	}
 }
 
