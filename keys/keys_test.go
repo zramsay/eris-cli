@@ -44,11 +44,11 @@ func TestGenerateKey(t *testing.T) {
 	output := testListKeys("container")
 
 	if len(output) != 1 {
-		t.Fatalf("Expected one key, got (%v)\n", len(output))
+		t.Fatalf("Expected one key, got (%v)", len(output))
 	}
 
 	if address != output[0] {
-		t.Fatalf("Expected (%s), got (%s)\n", address, output[0])
+		t.Fatalf("Expected (%s), got (%s)", address, output[0])
 	}
 }
 
@@ -62,7 +62,7 @@ func TestGetPubKey(t *testing.T) {
 	pub := new(bytes.Buffer)
 	config.GlobalConfig.Writer = pub
 	if err := GetPubKey(doPub); err != nil {
-		t.Fatalf("error getting pubkey: %v\n", err)
+		t.Fatalf("error getting pubkey: %v", err)
 	}
 
 	pubkey := util.TrimString(pub.String())
@@ -72,13 +72,13 @@ func TestGetPubKey(t *testing.T) {
 	doKey := def.NowDo()
 	doKey.Address = doPub.Address
 	if err := ConvertKey(doKey); err != nil {
-		t.Fatalf("error converting key: %v\n", err)
+		t.Fatalf("error converting key: %v", err)
 	}
 
 	converted := regexp.MustCompile(`"pub_key":\[1,"([^"]+)"\]`).FindStringSubmatch(key.String())[1]
 
 	if converted != pubkey {
-		t.Fatalf("Expected (%s), got (%s)\n", pubkey, converted)
+		t.Fatalf("Expected (%s), got (%s)", pubkey, converted)
 	}
 }
 
@@ -93,7 +93,7 @@ func TestExportKeySingle(t *testing.T) {
 	//cat container contents of new key
 	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPath})
 	if err != nil {
-		t.Fatalf("error exec-ing: %v\n", err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	keyInCont := util.TrimString(catOut.String())
@@ -104,18 +104,18 @@ func TestExportKeySingle(t *testing.T) {
 
 	//export
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting: %v\n", err)
+		t.Fatalf("error exporting: %v", err)
 	}
 
 	//cat host contents
 	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
-		t.Fatalf("error reading file: %v\n", err)
+		t.Fatalf("error reading file: %v", err)
 	}
 
 	keyOnHost := util.TrimString(string(key))
 	if keyInCont != keyOnHost {
-		t.Fatalf("Expected (%s), got (%s)\n", keyInCont, keyOnHost)
+		t.Fatalf("Expected (%s), got (%s)", keyInCont, keyOnHost)
 	}
 }
 
@@ -133,7 +133,7 @@ func TestImportKeyAll(t *testing.T) {
 
 	//export
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting: %v\n", err)
+		t.Fatalf("error exporting: %v", err)
 	}
 
 	// kill container
@@ -147,9 +147,8 @@ func TestImportKeyAll(t *testing.T) {
 	doImp := def.NowDo()
 	doImp.All = true
 
-	//export
 	if err := ImportKey(doImp); err != nil {
-		t.Fatalf("error exporting: %v\n", err)
+		t.Fatalf("error exporting: %v", err)
 	}
 
 	// check that they in container
@@ -163,9 +162,8 @@ func TestImportKeyAll(t *testing.T) {
 	}
 
 	if i != 2 {
-		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
-
 }
 
 func TestExportKeyAll(t *testing.T) {
@@ -181,7 +179,7 @@ func TestExportKeyAll(t *testing.T) {
 	doExp.All = true
 	//export
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting: %v\n", err)
+		t.Fatalf("error exporting: %v", err)
 	}
 	// check that they on host
 	output := testListKeys("host")
@@ -194,9 +192,8 @@ func TestExportKeyAll(t *testing.T) {
 	}
 
 	if i != 2 {
-		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
-
 }
 
 func TestImportKeySingle(t *testing.T) {
@@ -211,12 +208,12 @@ func TestImportKeySingle(t *testing.T) {
 	doExp.Destination = filepath.Join(KeysPath, "data") //is default set by flag
 
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting key: %v\n", err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
-		t.Fatalf("error reading file: %v\n", err)
+		t.Fatalf("error reading file: %v", err)
 	}
 	//key b4 import
 	keyOnHost := util.TrimString(string(key))
@@ -225,7 +222,7 @@ func TestImportKeySingle(t *testing.T) {
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
 	if _, err := srv.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
-		t.Fatalf("error exec-ing: %v\n", err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	doImp := def.NowDo()
@@ -234,7 +231,7 @@ func TestImportKeySingle(t *testing.T) {
 	doImp.Source = filepath.Join(KeysPath, "data")
 
 	if err := ImportKey(doImp); err != nil {
-		t.Fatalf("error importing key: %v\n", err)
+		t.Fatalf("error importing key: %v", err)
 	}
 
 	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
@@ -242,13 +239,13 @@ func TestImportKeySingle(t *testing.T) {
 	//cat container contents of new key
 	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPathCat})
 	if err != nil {
-		t.Fatalf("error exec-ing: %v\n", err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	keyInCont := util.TrimString(catOut.String())
 
 	if keyOnHost != keyInCont {
-		t.Fatalf("Expected (%s), got (%s)\n", keyOnHost, keyInCont)
+		t.Fatalf("Expected (%s), got (%s)", keyOnHost, keyInCont)
 	}
 }
 
@@ -274,7 +271,7 @@ func TestListKeyContainer(t *testing.T) {
 	}
 
 	if i != 2 {
-		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
 }
 
@@ -294,12 +291,12 @@ func TestListKeyHost(t *testing.T) {
 	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting key: %v\n", err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	doExp.Address = addr1
 	if err := ExportKey(doExp); err != nil {
-		t.Fatalf("error exporting key: %v\n", err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	output := testListKeys("host")
@@ -312,11 +309,10 @@ func TestListKeyHost(t *testing.T) {
 	}
 
 	if i != 2 {
-		t.Fatalf("Expected 2 keys, got (%v)\n", i)
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
 }
 
-//
 func testListKeys(typ string) []string {
 	do := def.NowDo()
 
@@ -332,9 +328,7 @@ func testListKeys(typ string) []string {
 		tests.IfExit(err)
 	}
 
-	res := strings.Split(do.Result, ",")
-
-	return res
+	return strings.Split(do.Result, ",")
 }
 
 //returns an addr for tests
@@ -345,8 +339,7 @@ func testsGenAKey() string {
 	tests.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
-	address := util.TrimString(string(addrBytes))
-	return address
+	return util.TrimString(string(addrBytes))
 }
 
 func testStartKeys(t *testing.T) {
@@ -375,7 +368,7 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	}
 	e := srv.KillService(do)
 	if e != nil {
-		t.Fatalf("error killing services: %v\n", e)
+		t.Fatalf("error killing service: %v", e)
 	}
 	testExistAndRun(t, serviceName, !wipe, false)
 	testNumbersExistAndRun(t, serviceName, 0, 0)
