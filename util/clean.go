@@ -168,11 +168,12 @@ func RemoveErisImages() error {
 func canWeRemove(toClean map[string]bool) bool {
 	var input string
 	var canWe bool
-
+	
+	home := os.Getenv("HOME")
 	var toWarn = map[string]string{
 		"containers": "All existing Eris containers",
-		"scratch":    "The contents of ($HOME/eris/scratch/data)",
-		"rmd":        "The Eris Root Directory ($HOME/.eris)",
+		"scratch":    fmt.Sprintf("The contents of (%s/.eris/scratch/data)", home),
+		"rmd":        fmt.Sprintf("The Eris Root Directory (%s/.eris)", home),
 		"images":     "All Eris docker images",
 	}
 
