@@ -103,7 +103,7 @@ func ImportKey(do *definitions.Do) error {
 		keyArray := strings.Split(do.Result, ",")
 
 		for _, addr := range keyArray {
-			do.Source = path.Join(common.KeysPath, "data", addr)
+			do.Source = filepath.Join(common.KeysPath, "data", addr)
 			do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", addr)
 			if err := data.ImportData(do); err != nil {
 				return err
