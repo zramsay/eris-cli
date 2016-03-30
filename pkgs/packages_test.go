@@ -149,7 +149,7 @@ func TestPkgsLoadEmptyDir(t *testing.T) {
 
 	pkg, err := loaders.LoadPackage(filepath.Dir(emptyPkg), "")
 	if err != nil {
-		t.Fatalf("unexpected error loading default package was recieved: %v", err)
+		t.Fatalf("unexpected error loading default package was received: %v", err)
 	}
 
 	if pkg.Name != "empty" {
@@ -197,11 +197,11 @@ func TestServicesBooted(t *testing.T) {
 
 	// check dependencies on
 	for _, servName := range pkg.Dependencies.Services {
-		if n := util.HowManyContainersRunning(servName, definitions.TypeService); n != 1 {
-			t.Fatalf("expecting 1 running service container, got %v", n)
+		if !util.Running(definitions.TypeService, servName) {
+			t.Fatalf("expected service to run")
 		}
-		if n := util.HowManyContainersExisting(servName, definitions.TypeData); n != 1 {
-			t.Fatalf("expecting 1 data container, got %v", n)
+		if !util.Exists(definitions.TypeData, servName) {
+			t.Fatalf("expected data container to exist")
 		}
 	}
 
@@ -216,11 +216,11 @@ func TestServicesBooted(t *testing.T) {
 
 	// check dependencies off
 	for _, servName := range pkg.Dependencies.Services {
-		if n := util.HowManyContainersRunning(servName, definitions.TypeService); n != 0 {
-			t.Fatalf("expecting 0 running service container, got %v", n)
+		if util.Running(definitions.TypeService, servName) {
+			t.Fatalf("expected service to stop")
 		}
-		if n := util.HowManyContainersExisting(servName, definitions.TypeData); n != 0 {
-			t.Fatalf("expecting 0 data container, got %v", n)
+		if util.Exists(definitions.TypeData, servName) {
+			t.Fatalf("expected data container not existing")
 		}
 	}
 }
@@ -252,11 +252,11 @@ func TestKnownChainBoots(t *testing.T) {
 		t.Fatalf("error booting chains and services: %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(chainName, definitions.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 running chain container, got %v", n)
+	if !util.Running(definitions.TypeChain, chainName) {
+		t.Fatalf("expected chain to run")
 	}
-	if n := util.HowManyContainersExisting(chainName, definitions.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data container, got %v", n)
+	if !util.Exists(definitions.TypeData, chainName) {
+		t.Fatalf("expected data container to exist")
 	}
 
 	doMake.Rm = true
@@ -280,12 +280,12 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 		t.Fatalf("error booting chans and services: %v", err)
 	}
 
-	running := util.ChainContainerNames(true)
+	running := util.ErisContainersByType(definitions.TypeChain, true)
 	var thisChain string
 	matcher := regexp.MustCompile(fmt.Sprintf("%s.*", name))
 	for _, chn := range running {
-		if matcher.MatchString(chn) {
-			thisChain = chn
+		if matcher.MatchString(chn.ShortName) {
+			thisChain = chn.ShortName
 		}
 	}
 
@@ -293,21 +293,31 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 		t.Fatalf("could not find a matching chain running")
 	}
 
-	if n := util.HowManyContainersRunning(thisChain, definitions.TypeChain); n != 1 {
-		log.WithField("chains", util.ChainContainerNames(true)).Warn("Running chains")
-		t.Fatalf("expecting 1 running chain container, got %v", n)
+	if !util.Running(definitions.TypeChain, thisChain) {
+		var names []string
+		util.ErisContainers(func(name string, details *util.Details) bool {
+			if details.Type != definitions.TypeChain {
+				return false
+			}
+
+			names = append(names, details.ShortName)
+
+			return true
+		}, true)
+
+		log.WithField("chains", names).Warn("Running chains")
+		t.Fatalf("expecting chain container to run")
 	}
-	if n := util.HowManyContainersExisting(thisChain, definitions.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data container, got %v", n)
+	if !util.Exists(definitions.TypeData, thisChain) {
+		t.Fatalf("expected chain data container to exist")
 	}
 
 	CleanUp(doBoot, pkg)
-
-	if n := util.HowManyContainersRunning(thisChain, definitions.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 running chain container, got %v", n)
+	if util.Running(definitions.TypeService, thisChain) {
+		t.Fatalf("expected chain stopped ")
 	}
-	if n := util.HowManyContainersExisting(thisChain, definitions.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data container, got %v", n)
+	if util.Exists(definitions.TypeData, thisChain) {
+		t.Fatalf("expected data container does not exist")
 	}
 }
 
@@ -373,10 +383,9 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 	}
 
 	for _, dep := range do.ServicesSlice {
-		matcher := regexp.MustCompile(fmt.Sprintf("eris_.*?:%s", dep))
 		match := false
 		for _, link := range do.Service.Links {
-			if matcher.MatchString(link) {
+			if strings.HasSuffix(link, ":"+dep) {
 				match = true
 			}
 		}
@@ -403,7 +412,7 @@ func TestBadPathsGiven(t *testing.T) {
 
 	do.Path = "/qwerty"
 	if err := getDataContainerSorted(do, true); err == nil {
-		t.Fatalf("expected error not recieved")
+		t.Fatalf("expected error not received")
 	}
 }
 
@@ -419,8 +428,6 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 	do := definitions.NowDo()
 
 	defer func() {
-		// CleanUp(do, pkg)
-
 		if err := os.RemoveAll(dir); err != nil {
 			t.Fatalf("error removing directory: %v", err)
 		}
@@ -439,7 +446,7 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
@@ -497,7 +504,7 @@ func TestImportEPMYamlNotInContractDir(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir2, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
@@ -553,7 +560,7 @@ func TestImportMainDirRel(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
@@ -594,7 +601,7 @@ func TestImportMainDirAsFile(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
@@ -647,7 +654,7 @@ func TestImportContractDirRel(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
@@ -705,7 +712,7 @@ func TestImportContractDirAbs(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
@@ -763,7 +770,7 @@ func TestImportContractDirAsFile(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
@@ -822,7 +829,7 @@ func TestImportABIDirRel(t *testing.T) {
 	do.ABIPath = filepath.Join(".", filepath.Base(dir2))
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
@@ -880,7 +887,7 @@ func TestImportABIDirAbs(t *testing.T) {
 	do.ABIPath = dir2
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
@@ -938,7 +945,7 @@ func TestImportABIDirAsFile(t *testing.T) {
 	do.ABIPath = filepath.Join(dir2, "fakeContract")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
@@ -987,7 +994,7 @@ func TestExportEPMOutputsInMainDir(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.csv", dirName)}
@@ -1046,7 +1053,7 @@ func TestExportEPMOutputsNotInMainDir(t *testing.T) {
 	do.ABIPath = filepath.Join(dir, "abi")
 	do.EPMConfigFile = filepath.Join(dir2, "epm.yaml")
 	if err := getDataContainerSorted(do, true); err != nil {
-		t.Fatalf("unexpected error recieved on data import: %v", err)
+		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.csv", dirName)}

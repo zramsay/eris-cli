@@ -22,14 +22,14 @@ func ListKeys(do *definitions.Do) error {
 		}
 		if !do.Quiet {
 			if len(addrs) == 0 {
-				log.Warn("No keys found on host.")
+				log.Warn("No keys found on host")
 			} else {
 				hostAddrs := make([]string, len(addrs))
 				for i, addr := range addrs {
 					hostAddrs[i] = addr.Name()
 				}
 				do.Result = strings.Join(hostAddrs, ",")
-				log.WithField("=>", hostAddrs[0]).Warn("The keys on your host kind marmot:")
+				log.WithField("=>", hostAddrs[0]).Warn("The keys on your host kind marmot")
 				hostAddrs = append(hostAddrs[:0], hostAddrs[1:]...)
 				for _, addr := range hostAddrs {
 					log.WithField("=>", addr).Warn()
@@ -52,9 +52,9 @@ func ListKeys(do *definitions.Do) error {
 		do.Result = strings.Join(keysOutString, ",")
 		if !do.Quiet {
 			if len(keysOutString) == 0 || keysOutString[0] == "" {
-				log.Warn("No keys found in container.")
+				log.Warn("No keys found in container")
 			} else {
-				log.WithField("=>", keysOutString[0]).Warn("The keys in your container kind marmot:")
+				log.WithField("=>", keysOutString[0]).Warn("The keys in your container kind marmot")
 				keysOutString = append(keysOutString[:0], keysOutString[1:]...)
 				for _, addr := range keysOutString {
 					log.WithField("=>", addr).Warn()

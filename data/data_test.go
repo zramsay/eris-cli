@@ -1,16 +1,12 @@
 package data
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/tests"
-	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -55,46 +51,6 @@ func TestExportData(t *testing.T) {
 
 	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
 		log.Errorf("Tragic! Exported file does not exist: %s", err)
-		t.Fail()
-	}
-
-}
-
-func TestListDataContainers(t *testing.T) {
-	dataName1 := fmt.Sprintf("%s%s", dataName, "one")
-	dataName2 := fmt.Sprintf("%s%s", dataName, "two")
-
-	datas := make(map[string]bool)
-	datas[dataName] = true
-	datas[dataName1] = true
-	datas[dataName2] = true
-
-	testCreateDataByImport(t, dataName)
-	testCreateDataByImport(t, dataName1)
-	testCreateDataByImport(t, dataName2)
-	defer testKillDataCont(t, dataName)
-	defer testKillDataCont(t, dataName1)
-	defer testKillDataCont(t, dataName2)
-
-	do := definitions.NowDo()
-	do.Quiet = true
-
-	if err := list.ListDatas(do); err != nil {
-		log.Error(err)
-		t.FailNow()
-	}
-
-	output := strings.Split(do.Result, "\n")
-
-	i := 0
-	for _, out := range output {
-		if datas[util.TrimString(out)] == true {
-			i++
-		}
-	}
-
-	if i != 3 {
-		log.Error(fmt.Errorf("Expected 3 data containers, got (%v)\n", i))
 		t.Fail()
 	}
 

@@ -16,9 +16,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 // ImportData does what it says. It imports from a host's Source to a Dest
@@ -42,25 +42,23 @@ func ImportData(do *definitions.Do) error {
 		"to":   do.Destination,
 	}).Debug("Importing")
 
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		srv := PretendToBeAService(do.Name)
-		service, exists := perform.ContainerExists(srv.Operations)
+		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
-			return fmt.Errorf("There is no data container for that service.")
+			return fmt.Errorf("There is no data container for service %q", do.Name, srv.Operations.SrvContainerName)
 		}
 		if err := checkErisContainerRoot(do, "import"); err != nil {
 			return err
 		}
 
-		containerName := util.DataContainersName(do.Name)
+		containerName := util.DataContainerName(do.Name)
 
 		doCheck := definitions.NowDo()
 		doCheck.Name = do.Name
-		doCheck.Operations.Args = []string{"ls", do.Destination}
+		doCheck.Operations.Args = []string{"test", "-d", do.Destination}
 		_, err := ExecData(doCheck)
-		// if an error ls-ing, try importing again
-		// but by making the dir first
 		if err != nil {
 			if err := runData(containerName, []string{"mkdir", "-p", do.Destination}); err != nil {
 				return err
@@ -82,9 +80,10 @@ func ImportData(do *definitions.Do) error {
 
 		log.WithField("=>", containerName).Info("Copying into container")
 		log.WithField("path", do.Source).Debug()
-		if err := util.DockerClient.UploadToContainer(service.ID, opts); err != nil {
+		if err := util.DockerClient.UploadToContainer(srv.Operations.SrvContainerName, opts); err != nil {
 			return err
 		}
+
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		// and eris images have the `eris` user by default
 		if err := runData(containerName, []string{"chown", "--recursive", "eris", do.Destination}); err != nil {
@@ -92,11 +91,12 @@ func ImportData(do *definitions.Do) error {
 		}
 
 	} else {
-		log.WithField("name", do.Name).Info("Data container does not exist, creating it.")
+		log.WithField("name", do.Name).Info("Data container does not exist, creating it")
 		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container %v.", err)
 		}
+
 		return ImportData(do)
 	}
 	do.Result = "success"
@@ -116,7 +116,7 @@ func runData(name string, args []string) error {
 }
 
 func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		log.WithField("=>", do.Operations.DataContainerName).Info("Executing data container")
 
 		ops := loaders.LoadDataDefinition(do.Name)
@@ -134,7 +134,7 @@ func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 
 //export from: do.Source(in container), to: do.Destination(on host)
 func ExportData(do *definitions.Do) error {
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
@@ -149,9 +149,9 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 
-		containerName := util.DataContainersName(do.Name)
+		containerName := util.DataContainerName(do.Name)
 		srv := PretendToBeAService(do.Name)
-		service, exists := perform.ContainerExists(srv.Operations)
+		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
 			return fmt.Errorf("There is no data container for that service.")
@@ -171,7 +171,7 @@ func ExportData(do *definitions.Do) error {
 		go func() {
 			log.WithField("=>", containerName).Info("Copying out of container")
 			log.WithField("path", do.Source).Debug()
-			IfExit(util.DockerClient.DownloadFromContainer(service.ID, opts)) // TODO: be smarter about catching this error
+			IfExit(util.DockerClient.DownloadFromContainer(srv.Operations.SrvContainerName, opts))
 			writer.Close()
 		}()
 

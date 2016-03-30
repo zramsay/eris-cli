@@ -75,9 +75,22 @@ var actionsNew = &cobra.Command{
 //TODO [zr] (eventually) list all + flags, see issue #231
 var actionsList = &cobra.Command{
 	Use:   "ls",
-	Short: "List all registered action definition files.",
-	Long:  `List all registered action definition files.`,
-	Run:   ListActions,
+	Short: "List known action definition files.",
+	Long: `List known action definition files.
+
+The --json flag dumps the known definition file information 
+in the JSON format.
+
+The -f flag specifies an alternate format for the list, using the syntax
+of Go text templates. The struct passed to the Go template is this
+
+  type Definition struct {
+    Name       string       // action name
+    Definition string       // definition file name
+  }
+`,
+
+	Run: ListActions,
 }
 
 var actionsDo = &cobra.Command{
@@ -141,8 +154,6 @@ var actionsRemove = &cobra.Command{
 	Run:   RmAction,
 }
 
-//----------------------------------------------------------------------
-// cli flags
 func addActionsFlags() {
 	buildFlag(actionsDo, do, "quiet", "action")
 	buildFlag(actionsDo, do, "chain", "action")
@@ -150,12 +161,10 @@ func addActionsFlags() {
 
 	buildFlag(actionsRemove, do, "file", "action")
 
-	actionsList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
-
+	buildFlag(actionsList, do, "known", "action")
+	actionsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
+	actionsList.Flags().StringVarP(&do.Format, "format", "", "", "alternate format for columnized output")
 }
-
-//----------------------------------------------------------------------
-// cli command wrappers
 
 func ImportAction(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
@@ -173,9 +182,11 @@ func NewAction(cmd *cobra.Command, args []string) {
 }
 
 func ListActions(cmd *cobra.Command, args []string) {
-	// TODO: add scoping for when projects done.
 	IfExit(ArgCheck(0, "eq", cmd, args))
-	IfExit(list.ListActions(do))
+	if do.JSON {
+		do.Format = "json"
+	}
+	IfExit(list.Known("actions", do.Format))
 }
 
 func EditAction(cmd *cobra.Command, args []string) {

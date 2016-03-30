@@ -87,7 +87,7 @@ func KillService(do *definitions.Do) (err error) {
 	}
 
 	for _, service := range services {
-		if IsServiceRunning(service.Service, service.Operations) {
+		if util.IsService(service.Service.Name, true) {
 			log.WithField("=>", service.Service.Name).Debug("Stopping service")
 			if err := perform.DockerStop(service.Service, service.Operations, do.Timeout); err != nil {
 				return err
@@ -116,8 +116,8 @@ func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	util.Merge(service.Operations, do.Operations)
 
 	// Get the main service container name, check if it's running.
-	main := util.FindServiceContainer(do.Name, false)
-	if main != nil {
+	main := util.ServiceContainerName(do.Name)
+	if util.IsService(do.Name, true) {
 		if service.Service.ExecHost == "" {
 			log.Info("exec_host not found in service definition file")
 			log.WithField("service", do.Name).Info("May not be able to communicate with the service")
@@ -127,7 +127,7 @@ func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 		}
 
 		// Use service's short name as a link alias.
-		service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:%s", main.FullName, do.Name))
+		service.Service.Links = append(service.Service.Links, fmt.Sprintf("%s:%s", main, do.Name))
 	}
 
 	// Override links on the command line.

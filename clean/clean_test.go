@@ -159,7 +159,7 @@ func testStartService(serviceName string, t *testing.T) {
 	}
 
 	tests.IfExit(tests.TestExistAndRun(serviceName, "service", true, true))
-	tests.IfExit(tests.TestNumbersExistAndRun(serviceName, 1, 1))
+	tests.IfExit(tests.TestNumbersExistAndRun(serviceName, true, true))
 }
 
 func testStartChain(chainName string, t *testing.T) {

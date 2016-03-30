@@ -7,13 +7,12 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
 )
-
-//----------------------------------------------------
 
 // Primary Data Sub-Command
 var Data = &cobra.Command{
@@ -79,8 +78,15 @@ Container path enters at /home/eris/.eris.`,
 var dataList = &cobra.Command{
 	Use:   "ls",
 	Short: "List the data containers eris manages for you",
-	Long:  `List the data containers eris manages for you`,
-	Run:   ListKnownData,
+	Long: `List data containers.
+
+The --json flag dumps the container or known files information
+in the JSON format.
+
+The -f flag specifies an alternate format for the list, using the syntax
+of Go text templates. See the more detailed description in the help
+output for the [eris ls] command.`,
+	Run: ListData,
 }
 
 var dataExec = &cobra.Command{
@@ -134,18 +140,24 @@ var dataRm = &cobra.Command{
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 
-	dataList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
+	dataList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
+	dataList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
+	dataList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
 
 	buildFlag(dataRm, do, "rm-volumes", "data")
 
 	buildFlag(dataExec, do, "interactive", "data")
+
 }
 
-//----------------------------------------------------
-func ListKnownData(cmd *cobra.Command, args []string) {
-	if err := list.ListDatas(do); err != nil {
-		return
+func ListData(cmd *cobra.Command, args []string) {
+	if do.All {
+		do.Format = "extended"
 	}
+	if do.JSON {
+		do.Format = "json"
+	}
+	IfExit(list.Containers(def.TypeData, do.Format, false))
 }
 
 func RenameData(cmd *cobra.Command, args []string) {
@@ -174,7 +186,6 @@ func RmData(cmd *cobra.Command, args []string) {
 	IfExit(data.RmData(do))
 }
 
-//src on host, dest in container
 func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]

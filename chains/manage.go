@@ -41,7 +41,8 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
-	if err := checkKeysRunningOrStart(); err != nil {
+	err := checkKeysRunningOrStart()
+	if err != nil {
 		return err
 	}
 
@@ -49,7 +50,7 @@ func MakeChain(do *definitions.Do) error {
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
-	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys"), "keys")}
+	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
 	do.Service.Environment = []string{
 		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
 		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
@@ -61,9 +62,10 @@ func MakeChain(do *definitions.Do) error {
 		fmt.Sprintf("ERIS_CHAINMANAGER_DEBUG=%v", do.Debug),
 	}
 
-	do.Operations.ContainerType = "service"
-	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name)
-	do.Operations.DataContainerName = util.DataContainersName(do.Name)
+	do.Operations.ContainerType = definitions.TypeService
+	do.Operations.SrvContainerName = util.ServiceContainerName(do.Name)
+	do.Operations.DataContainerName = util.DataContainerName(do.Name)
+	do.Operations.Labels = util.Labels(do.Name, do.Operations)
 	if do.RmD {
 		do.Operations.Remove = true
 	}
@@ -90,7 +92,7 @@ func MakeChain(do *definitions.Do) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Name
 
-	doData.Operations.DataContainerName = util.DataContainersName(do.Name)
+	doData.Operations.DataContainerName = util.DataContainerName(do.Name)
 	doData.Operations.ContainerType = "service"
 
 	doData.Source = AccountsTypePath
@@ -177,7 +179,7 @@ func InspectChain(do *definitions.Do) error {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
 		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
@@ -219,7 +221,7 @@ func ExportChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		doNow := definitions.NowDo()
 		doNow.Name = "ipfs"
 		services.EnsureRunning(doNow)
@@ -329,9 +331,9 @@ func PortsChain(do *definitions.Do) error {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
-		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Operations.Args)
+		return util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args)
 	}
 
 	return nil
@@ -434,7 +436,7 @@ func UpdateChain(do *definitions.Do) error {
 	}
 
 	// set the right env vars and command
-	if IsChainRunning(chain) {
+	if util.IsChain(chain.Name, true) {
 		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
 		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
 		chain.Service.Links = append(chain.Service.Links, do.Links...)
@@ -454,7 +456,7 @@ func RmChain(do *definitions.Do) error {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
 			return err
 		}
@@ -516,7 +518,7 @@ func RegisterChain(do *definitions.Do) error {
 	do.ChainID = do.Name
 
 	// NOTE: registration expects you to have the data container
-	if !util.IsDataContainer(do.Name) {
+	if !util.IsData(do.Name) {
 		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
 	}
 
@@ -565,7 +567,7 @@ func checkKeysRunningOrStart() error {
 		return err
 	}
 
-	if !services.IsServiceRunning(srv.Service, srv.Operations) {
+	if !util.IsService(srv.Service.Name, true) {
 		do := definitions.NowDo()
 		do.Operations.Args = []string{"keys"}
 		if err := services.StartService(do); err != nil {

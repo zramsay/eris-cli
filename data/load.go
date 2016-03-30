@@ -1,8 +1,6 @@
 package data
 
 import (
-	"fmt"
-
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -21,17 +19,10 @@ func giveMeAllTheNames(name string, srv *def.ServiceDefinition) {
 	log.WithField("=>", name).Debug("Giving myself all the names")
 	srv.Name = name
 	srv.Service.Name = name
-	srv.Operations.SrvContainerName = util.DataContainersName(srv.Name)
-	srv.Operations.DataContainerName = util.DataContainersName(srv.Name)
+	srv.Operations.SrvContainerName = util.DataContainerName(srv.Name)
+	srv.Operations.DataContainerName = util.DataContainerName(srv.Name)
 	log.WithFields(log.Fields{
 		"data container":    srv.Operations.DataContainerName,
 		"service container": srv.Operations.SrvContainerName,
 	}).Debug("Using names")
-}
-
-func checkServiceGiven(args []string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("No Data Container Given. Please rerun command with a known data container.")
-	}
-	return nil
 }

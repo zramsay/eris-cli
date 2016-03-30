@@ -41,8 +41,8 @@ func TestCreateDataSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -50,8 +50,8 @@ func TestCreateDataSimple(t *testing.T) {
 		t.Fatalf("expected data container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 containers, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container existing")
 	}
 
 	// Try to create a duplicate.
@@ -67,8 +67,8 @@ func TestRunDataSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -89,8 +89,8 @@ func TestRunDataBadCommandLine(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -113,8 +113,8 @@ func TestExecDataSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -139,8 +139,8 @@ func TestExecDataBadCommandLine(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -161,8 +161,8 @@ func TestExecDataBufferNotOverwritten(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -194,8 +194,8 @@ func TestRunServiceSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -207,11 +207,11 @@ func TestRunServiceSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container existing")
 	}
 }
 
@@ -222,8 +222,8 @@ func TestRunServiceNoDataContainer(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -236,11 +236,11 @@ func TestRunServiceNoDataContainer(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting no dependent data containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting no dependend data container existing")
 	}
 }
 
@@ -251,8 +251,8 @@ func TestExecServiceSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -266,11 +266,11 @@ func TestExecServiceSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -323,8 +323,8 @@ restart = "always"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -341,11 +341,11 @@ restart = "always"
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -369,8 +369,8 @@ restart = "max:99"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -387,11 +387,11 @@ restart = "max:99"
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -414,8 +414,8 @@ exec_host = "ERIS_KEYS_HOST"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -432,11 +432,11 @@ exec_host = "ERIS_KEYS_HOST"
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -447,8 +447,8 @@ func TestExecServiceLogOutput(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -474,8 +474,8 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -501,10 +501,9 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
-
 	srv, err := loaders.LoadServiceDefinition(name, true)
 	if err != nil {
 		t.Fatalf("could not load service definition %v", err)
@@ -529,8 +528,8 @@ func TestExecServiceTwice(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -549,11 +548,11 @@ func TestExecServiceTwice(t *testing.T) {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -564,8 +563,8 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -584,11 +583,11 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 		t.Fatalf("2. expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 dependent data containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container doesn't exist")
 	}
 }
 
@@ -599,8 +598,8 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -614,11 +613,11 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 		t.Fatalf("expected failure, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -629,8 +628,8 @@ func TestExecServiceNonInteractive(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -644,11 +643,11 @@ func TestExecServiceNonInteractive(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container not running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -659,8 +658,8 @@ func TestExecServiceAfterRunService(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -686,8 +685,8 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -706,11 +705,11 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -721,8 +720,8 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -741,11 +740,11 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 		t.Fatalf("expected exec container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 dependent data container, got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting dependend data container existing")
 	}
 }
 
@@ -756,8 +755,8 @@ func TestContainerExistsSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -769,12 +768,12 @@ func TestContainerExistsSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if _, exists := ContainerExists(srv.Operations); exists != true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != true {
 		t.Fatalf("expecting service container existing, got false")
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if _, exists := ContainerExists(srv.Operations); exists != true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != true {
 		t.Fatalf("expecting data container existing, got false")
 	}
 }
@@ -786,8 +785,8 @@ func TestContainerExistsBadName(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -796,7 +795,7 @@ func TestContainerExistsBadName(t *testing.T) {
 	}
 
 	srv.Operations.SrvContainerName = "some-random-name"
-	if _, exists := ContainerExists(srv.Operations); exists != false {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists != false {
 		t.Fatalf("expecting service container not existing, got true")
 	}
 }
@@ -808,8 +807,8 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -821,13 +820,13 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if _, exists := ContainerExists(srv.Operations); exists == false {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists == false {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
 	tests.RemoveContainer(name, def.TypeService)
 
-	if _, exists := ContainerExists(srv.Operations); exists == true {
+	if exists := ContainerExists(srv.Operations.SrvContainerName); exists == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
 	}
 }
@@ -839,8 +838,8 @@ func TestContainerRunningSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -852,12 +851,12 @@ func TestContainerRunningSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if _, running := ContainerRunning(srv.Operations); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
 		t.Fatalf("expecting service container running, got false")
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if _, running := ContainerRunning(srv.Operations); running == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
 		t.Fatalf("expecting data container not running, got true")
 	}
 }
@@ -869,8 +868,8 @@ func TestContainerRunningBadName(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -882,12 +881,12 @@ func TestContainerRunningBadName(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if _, running := ContainerRunning(srv.Operations); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
 		t.Fatalf("expecting service container running, got false")
 	}
 
 	srv.Operations.SrvContainerName = "random-bad-name"
-	if _, running := ContainerRunning(srv.Operations); running == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
 		t.Fatalf("expecting data container not running, got true")
 	}
 }
@@ -899,8 +898,8 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -912,93 +911,13 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if _, running := ContainerRunning(srv.Operations); running == false {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == false {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
 	tests.RemoveContainer(name, def.TypeService)
 
-	if _, running := ContainerRunning(srv.Operations); running == true {
-		t.Fatalf("expecting service container not existing after remove, got true")
-	}
-}
-
-func TestDataContainerExistsSimple(t *testing.T) {
-	const (
-		name = "ipfs"
-	)
-
-	defer tests.RemoveAllContainers()
-
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name, true)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-
-	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if _, exists := DataContainerExists(srv.Operations); exists != true {
-		t.Fatalf("expecting data container existing, got false")
-	}
-}
-
-func TestDataContainerExistsBadName(t *testing.T) {
-	const (
-		name = "ipfs"
-	)
-
-	defer tests.RemoveAllContainers()
-
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name, true)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	srv.Operations.SrvContainerName = "some-random-name"
-	if _, exists := DataContainerExists(srv.Operations); exists != false {
-		t.Fatalf("expecting service container not existing, got true")
-	}
-}
-
-func TestDataContainerExistsAfterRemove(t *testing.T) {
-	const (
-		name = "ipfs"
-	)
-
-	defer tests.RemoveAllContainers()
-
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name, true)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-
-	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if _, exists := DataContainerExists(srv.Operations); exists == false {
-		t.Fatalf("expecting service container exists, got false")
-	}
-
-	tests.RemoveContainer(name, def.TypeData)
-
-	if _, exists := DataContainerExists(srv.Operations); exists == true {
+	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
 	}
 }
@@ -1010,8 +929,8 @@ func TestRemoveWithoutData(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1027,29 +946,29 @@ func TestRemoveWithoutData(t *testing.T) {
 		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running (before removal), got %v", n)
+	if !util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container existing (before removal)")
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
 		t.Fatalf("expected service container removed, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running (after removal), got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist (after removal)")
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data container existing (before removal), got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expected data container existing (before removal)")
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, false, true, false); err != nil {
 		t.Fatalf("expected service container removed, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data container running (after removal), got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist (after removal)")
 	}
 }
 
@@ -1060,8 +979,8 @@ func TestRemoveWithData(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1077,24 +996,24 @@ func TestRemoveWithData(t *testing.T) {
 		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing (before removal), got %v", n)
+	if !util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container exist (before removal)")
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data container existing (before removal), got %v", n)
+	if !util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container exist (before removal)")
 	}
 
 	if err := DockerRemove(srv.Service, srv.Operations, true, true, false); err != nil {
 		t.Fatalf("expected service container removed, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running (after removal), got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist (after removal)")
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data container running (after removal), got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting data container doesn't exist (after removal)")
 	}
 }
 
@@ -1105,8 +1024,8 @@ func TestRemoveServiceWithoutStopping(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1130,8 +1049,8 @@ func TestStopSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1143,24 +1062,20 @@ func TestStopSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service containers running, got %v", n)
-	}
-
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service containers existing, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
 		t.Fatalf("expected service container to stop, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers running (after stop), got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container don't run (after stop)")
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers existing (after stop), got %v", n)
+	if util.Running(def.TypeData, name) {
+		t.Fatalf("expecting data container don't run (after stop)")
 	}
 }
 
@@ -1171,8 +1086,8 @@ func TestStopDataContainer(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1185,8 +1100,8 @@ func TestStopDataContainer(t *testing.T) {
 	}
 
 	srv.Operations.SrvContainerName = srv.Operations.DataContainerName
-	if err := DockerStop(srv.Service, srv.Operations, 5); err == nil {
-		t.Fatalf("expected stop to fail, got %v", err)
+	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
+		t.Fatalf("expected container to stop, got %v", err)
 	}
 }
 
@@ -1198,8 +1113,8 @@ func TestRebuildSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1211,16 +1126,16 @@ func TestRebuildSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, false, timeout); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1232,8 +1147,8 @@ func TestRebuildBadName(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1256,8 +1171,8 @@ func TestRebuildNotCreated(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1279,8 +1194,8 @@ func TestRebuildTimeout0(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1292,16 +1207,16 @@ func TestRebuildTimeout0(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, false, timeout); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1313,8 +1228,8 @@ func TestRebuildNotRunning(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1330,16 +1245,16 @@ func TestRebuildNotRunning(t *testing.T) {
 		t.Fatalf("expected service container stopped, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't run")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, false, 5); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't run")
 	}
 }
 
@@ -1355,8 +1270,8 @@ func TestRebuildPullDisallow(t *testing.T) {
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1368,16 +1283,16 @@ func TestRebuildPullDisallow(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, false, timeout); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1393,8 +1308,8 @@ func TestRebuildPull(t *testing.T) {
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1406,16 +1321,16 @@ func TestRebuildPull(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, true, timeout); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1429,8 +1344,8 @@ func TestRebuildPullRepeat(t *testing.T) {
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1442,16 +1357,16 @@ func TestRebuildPullRepeat(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRebuild(srv.Service, srv.Operations, true, timeout); err != nil {
 		t.Fatalf("expected container rebuilt, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1466,8 +1381,8 @@ func TestPullSimple(t *testing.T) {
 
 	tests.RemoveImage(name)
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1479,16 +1394,16 @@ func TestPullSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerPull(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected image pulled, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1501,8 +1416,8 @@ func TestPullRepeat(t *testing.T) {
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1514,16 +1429,16 @@ func TestPullRepeat(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerPull(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected image pulled, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 }
 
@@ -1554,8 +1469,8 @@ func TestLogsSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1591,8 +1506,8 @@ func TestLogsFollow(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1624,8 +1539,8 @@ func TestLogsTail(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1661,8 +1576,8 @@ func TestLogsTail0(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1717,8 +1632,8 @@ func TestInspectSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1749,8 +1664,8 @@ func TestInspectLine(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1775,8 +1690,8 @@ func TestInspectField(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1839,8 +1754,8 @@ func TestInspectBadName(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1863,8 +1778,8 @@ func TestRenameSimple(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	ops := loaders.LoadDataDefinition(name)
@@ -1876,11 +1791,12 @@ func TestRenameSimple(t *testing.T) {
 		t.Fatalf("expected container renamed, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(name, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeData, name) {
+		t.Fatalf("expecting old data container doesn't exist")
 	}
-	if n := util.HowManyContainersExisting(newName, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 containers, got %v", n)
+
+	if !util.Exists(def.TypeData, newName) {
+		t.Fatalf("expecting renamed data container exists")
 	}
 }
 
@@ -1892,8 +1808,8 @@ func TestRenameService(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1905,29 +1821,20 @@ func TestRenameService(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	if err := DockerRename(srv.Operations, newName); err != nil {
 		t.Fatalf("expected container renamed, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container existing, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting old service container not running")
 	}
 
-	if n := util.HowManyContainersRunning(newName, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(newName, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing, got %v", n)
+	if !util.Running(def.TypeService, newName) {
+		t.Fatalf("expecting new service container running")
 	}
 }
 
@@ -1939,8 +1846,8 @@ func TestRenameEmptyName(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1952,11 +1859,8 @@ func TestRenameEmptyName(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing, got %v", n)
+	if !util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container running")
 	}
 
 	// XXX: DockerRename bug.
@@ -1973,8 +1877,8 @@ func TestRenameServiceStopped(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 containers, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't exist")
 	}
 
 	srv, err := loaders.LoadServiceDefinition(name, true)
@@ -1989,29 +1893,26 @@ func TestRenameServiceStopped(t *testing.T) {
 		t.Fatalf("expected service container be stopped, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, name) {
+		t.Fatalf("expecting service container doesn't run")
 	}
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing, got %v", n)
+	if !util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting service container exist")
 	}
 
 	if err := DockerRename(srv.Operations, newName); err != nil {
 		t.Fatalf("expected container renamed, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
-	}
-	if n := util.HowManyContainersExisting(name, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container existing, got %v", n)
+	if util.Exists(def.TypeService, name) {
+		t.Fatalf("expecting old service container doesn't exist")
 	}
 
-	if n := util.HowManyContainersRunning(newName, def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service container running, got %v", n)
+	if util.Running(def.TypeService, newName) {
+		t.Fatalf("expecting new service container doesn't run")
 	}
-	if n := util.HowManyContainersExisting(newName, def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service container existing, got %v", n)
+	if !util.Exists(def.TypeService, newName) {
+		t.Fatalf("expecting new service container exist")
 	}
 }
 

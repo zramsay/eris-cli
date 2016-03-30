@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -34,7 +35,7 @@ image.`,
 func buildServicesCommand() {
 	Services.AddCommand(servicesNew)
 	Services.AddCommand(servicesImport)
-	Services.AddCommand(servicesListAll)
+	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
@@ -53,20 +54,30 @@ func buildServicesCommand() {
 // Services Sub-sub-Commands
 
 //lists all or specify flag
-var servicesListAll = &cobra.Command{
+var servicesList = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists everything service related.",
-	Long: `Lists all: service definition files (--known), current existing containers
-for each service (--existing), and current running containers
-for each service (--running).
+	Long: `List services or known service definition files.
 
-Known services can be started with the [eris services start NAME] command.
-To install a new service, use [eris services import]. Services include
-all executable services supported by the Eris platform which are
-NOT blockchains or key managers.
+The -r flag limits the output to running services only.
 
-Blockchains are handled using the [eris chains] command.`,
-	Run: ListAllServices,
+The --json flag dumps the container or known files information
+in the JSON format.
+
+The -q flag is equivalent to the '{{.ShortName}}' format.
+
+The -f flag specifies an alternate format for the list, using the syntax
+of Go text templates. See the more detailed description in the help
+output for the [eris ls] command. The struct passed to the Go template
+for the -k flag is this
+
+  type Definition struct {
+    Name       string       // service name
+    Definition string       // definition file name
+  }
+
+The -k flag displays the known definition files.`,
+	Run: ListServices,
 }
 
 var servicesImport = &cobra.Command{
@@ -256,15 +267,14 @@ func addServicesFlags() {
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
 
-	buildFlag(servicesListAll, do, "known", "service")
-	buildFlag(servicesListAll, do, "existing", "service")
-	buildFlag(servicesListAll, do, "running", "service")
-	buildFlag(servicesListAll, do, "quiet", "service")
+	buildFlag(servicesList, do, "known", "service")
+	servicesList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
+	servicesList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
+	servicesList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers only")
+	servicesList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of service names")
+	servicesList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
 
 }
-
-//----------------------------------------------------------------------
-// cli command wrappers
 
 func StartService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
@@ -365,28 +375,20 @@ func UpdateService(cmd *cobra.Command, args []string) {
 	IfExit(srv.UpdateService(do))
 }
 
-func ListAllServices(cmd *cobra.Command, args []string) {
-	//if no flags are set, list all the things
-	//otherwise, allow only a single flag
-	if !(do.Known || do.Running || do.Existing) {
-		do.All = true
+func ListServices(cmd *cobra.Command, args []string) {
+	if do.All {
+		do.Format = "extended"
+	}
+	if do.Quiet {
+		do.Format = "{{.ShortName}}"
+	}
+	if do.JSON {
+		do.Format = "json"
+	}
+	if do.Known {
+		IfExit(list.Known("services", do.Format))
 	} else {
-		flargs := []bool{do.Known, do.Running, do.Existing}
-		flags := []string{}
-
-		for _, f := range flargs {
-			if f == true {
-				flags = append(flags, "true")
-			}
-		}
-		IfExit(FlagCheck(1, "eq", cmd, flags))
-	}
-
-	if err := list.ListAll(do, "services"); err != nil {
-		return
-	}
-	if !do.All { //do.All will output a pretty table on its own
-		fmt.Println(do.Result)
+		IfExit(list.Containers(def.TypeService, do.Format, do.Running))
 	}
 }
 

@@ -51,9 +51,6 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-
-		log.AddHook(CrashReportHook())
-
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
 		// compare docker client API versions
@@ -65,6 +62,7 @@ Complete documentation is available at https://docs.erisindustries.com
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
+		log.AddHook(CrashReportHook(dockerVersion))
 
 		// compare docker-machine versions
 		// but don't fail if not installed
@@ -112,23 +110,12 @@ func AddCommands() {
 	ErisCmd.AddCommand(Keys)
 	buildActionsCommand()
 	ErisCmd.AddCommand(Actions)
-
-	// TODO
-	// buildApplicationsCommand()
-	// ErisCmd.AddCommand(Applications)
-	// buildRemotesCommand()
-	// ErisCmd.AddCommand(Remotes)
-
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
-	ErisCmd.AddCommand(ListEverything)
-
-	// TODO
-	// buildAgentsCommand()
-	// ErisCmd.AddCommand(Agents)
-
+	buildListCommand()
+	ErisCmd.AddCommand(List)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()

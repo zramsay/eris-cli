@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -11,7 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/oleiade/reflections"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/serenize/snaker"
 )
@@ -19,7 +18,7 @@ import (
 func PrintInspectionReport(cont *docker.Container, field string) error {
 	switch field {
 	case "line":
-		parts, err := printLine(cont, false) //can only inspect a running container...?
+		parts, err := printLine(cont, false)
 		if err != nil {
 			return err
 		}
@@ -28,7 +27,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 		for _, obj := range []interface{}{cont, cont.Config, cont.HostConfig, cont.NetworkSettings} {
 			t, err := reflections.Fields(obj)
 			if err != nil {
-				return fmt.Errorf("The PrintInspectionReport marmot had an error getting the fields using reflection.Fields\n%s", err)
+				return fmt.Errorf("The marmots had an error trying to print a nice report\n%s", err)
 			}
 			for _, f := range t {
 				printReport(obj, f)
@@ -55,8 +54,12 @@ func PrintPortMappings(id string, ports []string) error {
 		return err
 	}
 
-	exposedPorts := cont.NetworkSettings.Ports
+	log.Warn(ParsePortMappings(cont.NetworkSettings.Ports, ports))
 
+	return nil
+}
+
+func ParsePortMappings(bindings map[docker.Port][]docker.PortBinding, ports []string) string {
 	var minimalDisplay bool
 	if len(ports) == 1 {
 		minimalDisplay = true
@@ -64,7 +67,7 @@ func PrintPortMappings(id string, ports []string) error {
 
 	// Display everything if no port's requested.
 	if len(ports) == 0 {
-		for exposed := range exposedPorts {
+		for exposed := range bindings {
 			ports = append(ports, string(exposed))
 		}
 	}
@@ -80,20 +83,21 @@ func PrintPortMappings(id string, ports []string) error {
 		}
 	}
 
+	var elements []string
 	for _, port := range normalizedPorts {
-		for _, binding := range exposedPorts[docker.Port(port)] {
+		for _, binding := range bindings[docker.Port(port)] {
 			hostAndPortBinding := fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort)
 
 			// If only one port request, display just the binding.
 			if minimalDisplay {
-				log.Warn(hostAndPortBinding)
+				elements = append(elements, hostAndPortBinding)
 			} else {
-				log.Warnf("%s -> %s", port, hostAndPortBinding)
+				elements = append(elements, fmt.Sprintf("%s->%s", port, hostAndPortBinding))
 			}
 		}
 	}
 
-	return nil
+	return strings.Join(elements, ", ")
 }
 
 // this function populates the listing functions only for flags/tests
@@ -111,9 +115,9 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 		running = "No"
 	}
 
-	Names := ContainerDisassemble(n)
+	details := ContainerDetails(n)
 
-	parts := []string{Names.ShortName, "", running, Names.FullName, FormulatePortsOutput(container)}
+	parts := []string{details.ShortName, "", running, details.FullName, FormulatePortsOutput(container)}
 	if err := CheckParts(parts); err != nil {
 		return []string{}, err
 	}
@@ -167,9 +171,6 @@ func printReport(container interface{}, field string) error {
 	return writeTemplate(container, line)
 }
 
-// ----------------------------------------------------------------------------
-// Helpers
-
 func probablyHasDataContainer(container *docker.Container) bool {
 	eFolder := container.Volumes["/home/eris/.eris"]
 	if eFolder != "" {
@@ -186,18 +187,14 @@ func FormulatePortsOutput(container *docker.Container) string {
 		if len(v) != 0 {
 			ports = ports + fmt.Sprintf("%v:%v->%v ", v[0].HostIP, v[0].HostPort, k) // published ports
 		} else {
-			ports = ports + fmt.Sprintf("%v ", k) // exposed, but not published ports
+			ports = ports + fmt.Sprintf("%v ", k)
 		}
 	}
 
-	split := strings.Split(ports, ",")
-	ports = ""
+	split := strings.Split(strings.Trim(ports, " "), " ")
 	sort.Sort(sort.StringSlice(split))
-	for _, p := range split {
-		ports = ports + p + " "
-	}
 
-	return ports
+	return strings.Join(split, ", ")
 }
 
 func camelize(field string) string {
@@ -220,53 +217,6 @@ func writeTemplate(container interface{}, toParse string) error {
 
 func startsUp(field string) bool {
 	return unicode.IsUpper([]rune(field)[0])
-}
-
-//XXX moved from /perform/docker_run.go
-func ParseContainers(name string, all bool) (docker.APIContainers, bool) {
-	category := "existing"
-	if all == false {
-		category = "running"
-	}
-	log.WithField("=>", fmt.Sprintf("%s:%s", name, category)).Debug("Parsing containers")
-	containers := listContainers(all)
-
-	r := regexp.MustCompile(name)
-
-	if len(containers) != 0 {
-		for _, container := range containers {
-			for _, n := range container.Names {
-				if r.MatchString(n) {
-					log.WithField("=>", name).Debug("Container found")
-					return container, true
-				}
-			}
-		}
-	}
-	log.WithField("=>", name).Debug("Container not found")
-	return docker.APIContainers{}, false
-}
-
-func listContainers(all bool) []docker.APIContainers {
-	var container []docker.APIContainers
-
-	// Match `/eris_chain_test_1`, but not `/eris_chain_test_1/keys`.
-	r := regexp.MustCompile(`(?m)^/eris_(?:service|chain|data)_.+_\d+$`)
-
-	contns, _ := DockerClient.ListContainers(docker.ListContainersOptions{All: all})
-	for _, con := range contns {
-		for _, c := range con.Names {
-			if r.MatchString(c) {
-				// Since the container may have multiple names,
-				// leave only the one that matches.
-				con.Names = []string{c}
-
-				container = append(container, con)
-			}
-		}
-	}
-
-	return container
 }
 
 // a checker for building tables cf. listing funcs

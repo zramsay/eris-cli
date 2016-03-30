@@ -12,7 +12,6 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
@@ -44,44 +43,6 @@ func TestMain(m *testing.M) {
 	tests.IfExit(tests.TestsTearDown())
 
 	os.Exit(exitCode)
-}
-
-func TestListAllChainsRunning(t *testing.T) {
-	if err := mockChainDefinitionFile("test-chain-list1"); err != nil {
-		t.Fatalf("can't create a fake service definition: %v", err)
-	}
-
-	do := def.NowDo()
-	do.Known = true
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	if err := list.ListAll(do, "chains"); err != nil {
-		t.Fatalf("expected list to succeed, got %v", err)
-	}
-
-	if strings.Contains(do.Result, "test-chain-list1") {
-		t.Fatalf("expected the chain not found")
-	}
-}
-
-func TestListAllChainsKnown(t *testing.T) {
-	if err := mockChainDefinitionFile("test-chain-list2"); err != nil {
-		t.Fatalf("can't create a fake service definition: %v", err)
-	}
-
-	do := def.NowDo()
-	do.Known = true
-	do.Existing = false
-	do.Running = false
-	do.Quiet = true
-	if err := list.ListAll(do, "chains"); err != nil {
-		t.Fatalf("expected list to succeed, got %v", err)
-	}
-
-	if !strings.Contains(do.Result, "test-chain-list2") {
-		t.Fatalf("expected the chain to be found")
-	}
 }
 
 func TestChainGraduate(t *testing.T) {
@@ -138,19 +99,19 @@ func TestStartChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	start(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain running")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting dependent data container exists")
 	}
 
 	kill(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain container, got %v", n)
+	if util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain doesn't run")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 }
 
@@ -158,35 +119,35 @@ func TestRestartChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain running")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting data container exists")
 	}
 
 	kill(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain container, got %v", n)
+	if util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain doesn't run")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 
 	start(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain running")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting data container exists")
 	}
 
 	kill(t, chainName)
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain container, got %v", n)
+	if util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain doesn't run")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting data container doesn't exist")
 	}
 }
 
@@ -339,8 +300,8 @@ func TestChainsNewKeysImported(t *testing.T) {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container running, got %v", n)
+	if !util.Running(def.TypeChain, chain) {
+		t.Fatalf("expecting chain running")
 	}
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", ini.DefaultAddr, ini.DefaultAddr)}
@@ -376,8 +337,8 @@ func TestUpdateChain(t *testing.T) {
 		t.Fatalf("expected chain to update, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container running, got %v", n)
+	if !util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain running")
 	}
 }
 
@@ -408,11 +369,11 @@ func TestRenameChain(t *testing.T) {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, chain) {
+		t.Fatalf("expecting chain running")
 	}
-	if n := util.HowManyContainersExisting(chain, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, chain) {
+		t.Fatalf("expecting data container exists")
 	}
 
 	do = def.NowDo()
@@ -422,18 +383,17 @@ func TestRenameChain(t *testing.T) {
 		t.Fatalf("expected chain to be renamed #1, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(chain, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain container, got %v", n)
+	if util.Running(def.TypeChain, chain) {
+		t.Fatalf("expecting old chain running")
 	}
-	if n := util.HowManyContainersExisting(chain, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, chain) {
+		t.Fatalf("expecting old data container exists")
 	}
-
-	if n := util.HowManyContainersRunning(rename1, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, rename1) {
+		t.Fatalf("expecting renamed chain running")
 	}
-	if n := util.HowManyContainersExisting(rename1, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, rename1) {
+		t.Fatalf("expecting renamed data container exists")
 	}
 
 	do = def.NowDo()
@@ -443,18 +403,17 @@ func TestRenameChain(t *testing.T) {
 		t.Fatalf("expected chain to be renamed #2, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning(rename1, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain container, got %v", n)
+	if util.Running(def.TypeChain, rename1) {
+		t.Fatalf("expecting renamed chain not running")
 	}
-	if n := util.HowManyContainersExisting(rename1, def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, rename1) {
+		t.Fatalf("expecting renamed data container doesn't exist")
 	}
-
-	if n := util.HowManyContainersRunning(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain container, got %v", n)
+	if !util.Running(def.TypeChain, chainName) {
+		t.Fatalf("expecting renamed again chain running")
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, chainName) {
+		t.Fatalf("expecting renamed again data container exists")
 	}
 }
 
@@ -476,8 +435,8 @@ func TestRmChain(t *testing.T) {
 	if err := KillChain(do); err != nil {
 		t.Fatalf("expected chain to be stopped, got %v", err)
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain running")
 	}
 
 	do = def.NowDo()
@@ -486,8 +445,8 @@ func TestRmChain(t *testing.T) {
 	if err := RmChain(do); err != nil {
 		t.Fatalf("expected chain to be removed, got %v", err)
 	}
-	if n := util.HowManyContainersExisting(chainName, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 chain containers, got %v", n)
+	if util.Exists(def.TypeChain, chainName) {
+		t.Fatalf("expecting chain to be removed")
 	}
 }
 
@@ -556,14 +515,13 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 		t.Fatalf("expect service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service containers, got %v", n)
+	if !util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
 }
-
 func TestServiceLink(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
@@ -586,15 +544,14 @@ data_container = false
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chain) {
+		t.Fatalf("expecting fake chain container")
 	}
-
-	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers, got %v", n)
+	if util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service not running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
 	do = def.NowDo()
@@ -604,15 +561,15 @@ data_container = false
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	if !util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
 	links := tests.Links("fake", def.TypeService)
-	if len(links) != 1 || !strings.Contains(links[0], chain) {
+	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -639,15 +596,14 @@ data_container = true
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chain) {
+		t.Fatalf("expecting test chain container")
 	}
-
-	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers, got %v", n)
+	if util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service not running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
 	do = def.NowDo()
@@ -657,15 +613,15 @@ data_container = true
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 service containers, got %v", n)
+	if !util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 data containers, got %v", n)
+	if !util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container exists")
 	}
 
 	links := tests.Links("fake", def.TypeService)
-	if len(links) != 1 || !strings.Contains(links[0], chain) {
+	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -691,15 +647,14 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chain) {
+		t.Fatalf("expecting fake chain container")
 	}
-
-	if n := util.HowManyContainersExisting("fake", def.TypeService); n != 0 {
-		t.Fatalf("expecting 0 service containers, got %v", n)
+	if util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service not running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
 	do = def.NowDo()
@@ -709,15 +664,15 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	if !util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container exists")
 	}
 
 	links := tests.Links("fake", def.TypeService)
-	if len(links) != 1 || !strings.Contains(links[0], chain) {
+	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -743,8 +698,8 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Running(def.TypeChain, chain) {
+		t.Fatalf("expecting test chain container")
 	}
 
 	do = def.NowDo()
@@ -757,7 +712,7 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 	}
 
 	links := tests.Links("fake", def.TypeService)
-	if len(links) != 1 || !strings.Contains(links[0], chain) {
+	if len(links) != 1 || !strings.Contains(links[0], "/blah") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -791,8 +746,8 @@ data_container = true
 		t.Fatalf("can't create a sham service definition: %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 0 {
-		t.Fatalf("expecting 0 test chain containers, got %v", n)
+	if util.Running(def.TypeChain, chain) {
+		t.Fatalf("expecting test chain container doesn't run")
 	}
 
 	do := def.NowDo()
@@ -801,8 +756,8 @@ data_container = true
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chain) {
+		t.Fatalf("expecting test chain container exists")
 	}
 
 	do = def.NowDo()
@@ -812,22 +767,23 @@ data_container = true
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersRunning("fake", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 fake service containers, got %v", n)
+	if !util.Running(def.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
-	if n := util.HowManyContainersExisting("fake", def.TypeData); n != 0 {
-		t.Fatalf("expecting 0 fake data containers, got %v", n)
+	if util.Exists(def.TypeData, "fake") {
+		t.Fatalf("expecting fake data container doesn't exist")
 	}
-	if n := util.HowManyContainersRunning("sham", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 sham service containers, got %v", n)
+	if !util.Running(def.TypeService, "sham") {
+		t.Fatalf("expecting sham service running")
 	}
-	if n := util.HowManyContainersExisting("sham", def.TypeData); n != 1 {
-		t.Fatalf("expecting 1 sham data containers, got %v", n)
+	if !util.Exists(def.TypeData, "sham") {
+		t.Fatalf("expecting sham data container exist")
 	}
 
 	// [pv]: second service doesn't reference the chain.
 	links := tests.Links("fake", def.TypeService)
-	if len(links) != 2 || (!strings.Contains(links[1], chain) && !strings.Contains(links[0], chain)) {
+
+	if len(links) != 2 || !strings.Contains(strings.Join(links, " "), "/fake") || !strings.Contains(strings.Join(links, " "), "/sham") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
@@ -843,8 +799,8 @@ func TestServiceLinkKeys(t *testing.T) {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting(chain, def.TypeChain); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Exists(def.TypeChain, chain) {
+		t.Fatalf("expecting test chain running")
 	}
 
 	do = def.NowDo()
@@ -854,8 +810,8 @@ func TestServiceLinkKeys(t *testing.T) {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if n := util.HowManyContainersExisting("keys", def.TypeService); n != 1 {
-		t.Fatalf("expecting 1 test chain containers, got %v", n)
+	if !util.Running(def.TypeService, "keys") {
+		t.Fatalf("expecting keys service running")
 	}
 
 	links := tests.Links("keys", def.TypeService)
