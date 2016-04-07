@@ -324,12 +324,3 @@ func SetLabel(labels map[string]string, name, value string) map[string]string {
 
 	return labels
 }
-
-// PortAndProtocol splits the port setting into a port and protocol
-// type (defaulting to "tcp").
-func PortAndProtocol(port string) docker.Port {
-	if len(strings.Split(port, "/")) == 1 {
-		port += "/tcp"
-	}
-	return docker.Port(port)
-}
