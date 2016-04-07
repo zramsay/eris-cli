@@ -48,7 +48,9 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// and deploy to running chain
 		params, err := ParseInstallURL(fmt.Sprintf("%s", r.URL))
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("error parsing url: %v\n", err)))
+			http.Error(w, `error parsing url`, http.StatusBadRequest)
+			//w.WriteHeader(http.StatusBadRequest)
+			//w.Write([]byte(fmt.Sprintf("error parsing url: %v\n", err)))
 			return
 		}
 
@@ -56,6 +58,17 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			"groupId":  params["groupId"],
 			"bundleId": params["bundleId"],
 			"version":  params["version"],
+		}
+
+		log.Warn(fmt.Sprintf("%v", bundleInfo))
+
+		for _, bI := range bundleInfo {
+			if bI == "" {
+				http.Error(w, `empty field detected`, http.StatusBadRequest)
+				//w.WriteHeader(http.StatusBadRequest)
+				//w.Write([]byte("empty field detected"))
+				return
+			}
 		}
 
 		installPath := SetTarballPath(bundleInfo)
@@ -66,7 +79,9 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// ensure chain to deploy on is running
 		// might want to perform some other checks ... ?
 		if !IsChainRunning(params["chainName"]) {
-			w.Write([]byte(fmt.Sprintf("chainName is not running: %v\n", err)))
+			http.Error(w, `chain name provided is not running`, http.StatusNotFound)
+			//w.WriteHeader(http.StatusNotFound)
+			//w.Write([]byte(fmt.Sprintf("specified chain name is not running: %v\n", err)))
 			return
 		}
 
@@ -74,13 +89,17 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// let's get that tarball
 		tarBallPath, err := GetTarballFromIPFS(params["hash"], installPath)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("error getting from IPFS: %v\n", err)))
+			http.Error(w, `error getting from IPFS`, http.StatusInternalServerError)
+			//w.WriteHeader(http.StatusInternalServerError)
+			//w.Write([]byte(fmt.Sprintf("error getting from IPFS: %v\n", err)))
 			return
 		}
 
 		// return something...?
 		if err = UnpackTarball(tarBallPath, installPath); err != nil {
-			w.Write([]byte(fmt.Sprintf("error unpacking tarball: %v\n", err)))
+			http.Error(w, `error unpacking tarball`, http.StatusInternalServerError)
+			//w.WriteHeader(http.StatusInternalServerError)
+			//w.Write([]byte(fmt.Sprintf("error unpacking tarball: %v\n", err)))
 			return
 		}
 
@@ -90,13 +109,19 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// time to deploy
 
 		if err := DeployContractBundle(contractsPath, params["chainName"], params["address"]); err != nil {
-			w.Write([]byte(fmt.Sprintf("error deploying contract bundle: %v\n", err)))
+			http.Error(w, `error deploying contract bundle`, http.StatusForbidden)
+			// TODO reap bad addr error
+			//w.WriteHeader(http.StatusForbidden)
+			//w.Write([]byte(fmt.Sprintf("error deploying contract bundle: %v\n", err)))
+			return
 		}
 
 		epmJSON := filepath.Join(contractsPath, "epm.json")
 		epmByte, err := ioutil.ReadFile(epmJSON)
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("error reading file: %v\n", err)))
+			http.Error(w, `error reading epm.json file`, http.StatusInternalServerError)
+			//w.WriteHeader(http.StatusInternalServerError)
+			//w.Write([]byte(fmt.Sprintf("error reading file: %v\n", err)))
 		}
 		w.Write(epmByte)
 	}
