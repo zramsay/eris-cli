@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/chains"
+	//"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
 	"github.com/eris-ltd/eris-cli/pkgs"
@@ -78,7 +78,8 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 
 		// ensure chain to deploy on is running
 		// might want to perform some other checks ... ?
-		if !IsChainRunning(params["chainName"]) {
+		// true for chain that is running
+		if IsChainRunning(params["chainName"]) {
 			http.Error(w, `chain name provided is not running`, http.StatusNotFound)
 			//w.WriteHeader(http.StatusNotFound)
 			//w.Write([]byte(fmt.Sprintf("specified chain name is not running: %v\n", err)))
@@ -157,9 +158,7 @@ func AuthenticateUser(user string) bool {
 }
 
 func IsChainRunning(chainName string) bool {
-	doCh := definitions.BlankChain()
-	doCh.Name = chainName
-	return chains.IsChainRunning(doCh)
+	return util.IsChain(chainName, true)
 }
 
 func GetTarballFromIPFS(hash, installPath string) (string, error) {
