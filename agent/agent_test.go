@@ -75,7 +75,7 @@ func TestParsePayload(t *testing.T) {
 
 	rawUrl := fmt.Sprintf("https://localhost:17552/install?groupId=%s&bundleId=%s&version=%s&dirName=%s&hash=%s&chainName=%s&address=%s", toTest["groupId"], toTest["bundleId"], toTest["version"], toTest["dirName"], toTest["hash"], toTest["chainName"], toTest["address"])
 
-	parsed, err := ParseInstallURL(rawUrl)
+	parsed, err := ParseURL(rawUrl)
 	if err != nil {
 		t.Fatalf("error parsing url (%s): err:\n%v", rawUrl, err)
 	}

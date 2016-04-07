@@ -8,20 +8,21 @@ import (
 	"path/filepath"
 	"strings"
 
-	//"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/rs/cors"
 )
 
 func StartAgent(do *definitions.Do) error {
 	// unknown: auth details/https
 	mux := http.NewServeMux()
+	mux.HandleFunc("/chains", ListChains)
+	mux.HandleFunc("/download", DownloadAgent)
 	mux.HandleFunc("/install", InstallAgent)
 	fmt.Println("Starting mux agent on localhost:17552")
 	// cors.Default() sets up the middleware with default options being
@@ -38,15 +39,77 @@ func StopAgent(do *definitions.Do) error {
 	return nil
 }
 
-func InstallAgent(w http.ResponseWriter, r *http.Request) {
-	// TODO define an error type or something
+func ListChains(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		var deets []*util.Details
+
+		deets = util.ErisContainersByType(definitions.TypeChain, true)
+		names := make([]string, len(deets))
+		for i, chainName := range deets {
+			names[i] = chainName.ShortName
+		}
+
+		chainz := []string{}
+		lenChainz := len(names) - 1
+		for i, fmtName := range names {
+			if i == 0 {
+				chainz = append(chainz, "[")
+			}
+			if i == lenChainz {
+				chainz = append(chainz, fmt.Sprintf("{ name: '%s' }]", fmtName))
+				break
+			}
+			chainz = append(chainz, fmt.Sprintf("{ name: '%s' }, ", fmtName))
+		}
+		w.Write([]byte(strings.Join(chainz, "")))
+	}
+}
+
+func DownloadAgent(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		log.Warn("Receiving request to install contract bundle")
+		log.Warn("Receiving request to download a contract bundle")
+		params, err := ParseURL(fmt.Sprintf("%s", r.URL))
+		if err != nil {
+			http.Error(w, `error parsing url`, http.StatusBadRequest)
+			return
+		}
+
+		bundleInfo := map[string]string{
+			"groupId":  params["groupId"],
+			"bundleId": params["bundleId"],
+			"version":  params["version"],
+		}
+
+		for _, bI := range bundleInfo {
+			if bI == "" {
+				http.Error(w, `empty field detected`, http.StatusBadRequest)
+				return
+			}
+		}
+
+		installPath := SetTarballPath(bundleInfo)
+
+		tarBallPath, err := GetTarballFromIPFS(params["hash"], installPath)
+		if err != nil {
+			http.Error(w, `error getting from IPFS`, http.StatusInternalServerError)
+			return
+		}
+
+		if err = UnpackTarball(tarBallPath, installPath); err != nil {
+			http.Error(w, `error unpacking tarball`, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func InstallAgent(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		log.Warn("Receiving request to download and deploy a contract bundle")
 
 		// parse response into various components
 		// required to pull tarball, unpack on path
 		// and deploy to running chain
-		params, err := ParseInstallURL(fmt.Sprintf("%s", r.URL))
+		params, err := ParseURL(fmt.Sprintf("%s", r.URL))
 		if err != nil {
 			http.Error(w, `error parsing url`, http.StatusBadRequest)
 			//w.WriteHeader(http.StatusBadRequest)
@@ -59,8 +122,6 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			"bundleId": params["bundleId"],
 			"version":  params["version"],
 		}
-
-		log.Warn(fmt.Sprintf("%v", bundleInfo))
 
 		for _, bI := range bundleInfo {
 			if bI == "" {
@@ -96,7 +157,6 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// return something...?
 		if err = UnpackTarball(tarBallPath, installPath); err != nil {
 			http.Error(w, `error unpacking tarball`, http.StatusInternalServerError)
 			//w.WriteHeader(http.StatusInternalServerError)
@@ -131,7 +191,7 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 // takes URL request for bundle install &
 // returns a map of the things we need for installation
 // assume it comes in as r.URL.Path[1:]
-func ParseInstallURL(url string) (map[string]string, error) {
+func ParseURL(url string) (map[string]string, error) {
 	payload := strings.Split(url, "?")[1]
 	infos := strings.Split(payload, "&")
 	parsed := make(map[string]string, len(infos))
