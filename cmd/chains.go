@@ -55,6 +55,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
+	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
 	// Chains.AddCommand(chainsMakeGenesis)
@@ -124,8 +125,14 @@ unless the --options or --dir flag is passed.
 Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
 unless the --serverconf or --dir flag is passed.
 
-If you would like to create a genesis.json then please utilize [eris chains make]`,
+If you would like to create a genesis.json then please utilize [eris chains make]
+
+You can redefine the chain ports accessible over the network with the --ports flag.
+`,
 	Run: NewChain,
+	Example: `$ eris chains new simplechain --ports 4000 -- map the first port from the definition file to the host port 40000
+$ eris chains new simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
+$ eris chains new simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var chainsRegister = &cobra.Command{
@@ -268,7 +275,11 @@ var chainsStart = &cobra.Command{
 background so its logs will not be viewable from the command line.
 
 To stop the chain use:      [eris chains stop NAME].
-To view a chain's logs use: [eris chains logs NAME].`,
+To view a chain's logs use: [eris chains logs NAME].
+
+You can redefine the chain ports accessible over the network with the --ports flag.
+See the [eris chains new] command for examples.
+`,
 	Run: StartChain,
 }
 
@@ -353,6 +364,13 @@ by the update command.
 	Run: UpdateChain,
 }
 
+var chainsRestart = &cobra.Command{
+	Use:   "restart NAME",
+	Short: "Restart chain.",
+	Long:  `Restart chain.`,
+	Run:   RestartChain,
+}
+
 var chainsGraduate = &cobra.Command{
 	Use:   "graduate NAME",
 	Short: "Graduate a chain to a service.",
@@ -421,6 +439,7 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
+	buildFlag(chainsNew, do, "ports", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
 	buildFlag(chainsNew, do, "api", "chain")
 	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
@@ -441,6 +460,7 @@ func addChainsFlags() {
 	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 
 	buildFlag(chainsStart, do, "publish", "chain")
+	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	buildFlag(chainsStart, do, "api", "chain")
@@ -450,6 +470,7 @@ func addChainsFlags() {
 	buildFlag(chainsLogs, do, "tail", "chain")
 
 	buildFlag(chainsExec, do, "publish", "chain")
+	buildFlag(chainsExec, do, "ports", "chain")
 	buildFlag(chainsExec, do, "interactive", "chain")
 	buildFlag(chainsExec, do, "links", "chain")
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
@@ -678,6 +699,13 @@ func UpdateChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	IfExit(chns.UpdateChain(do))
+}
+
+func RestartChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Pull = false
 	IfExit(chns.UpdateChain(do))
 }
 

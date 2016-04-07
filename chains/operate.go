@@ -360,6 +360,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
+	chain.Operations.Ports = do.Operations.Ports
 
 	// cmd should be "new" or "install"
 	chain.Service.Command = cmd

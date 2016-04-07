@@ -13,12 +13,12 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/jsonmessage"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -1002,31 +1002,18 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 
 	// Don't fill in port bindings if randomizing the ports.
 	if !ops.PublishAllPorts {
-		for _, port := range srv.Ports {
-			pS := strings.Split(port, ":")
-			pC := docker.Port(util.PortAndProtocol(pS[len(pS)-1]))
+		ports := util.MapPorts(srv.Ports, strings.Fields(ops.Ports))
 
-			opts.Config.ExposedPorts[pC] = struct{}{}
-			if len(pS) > 1 {
-				pH := docker.PortBinding{
-					HostPort: pS[len(pS)-2],
-				}
+		for _, entry := range srv.Ports {
+			ip, _, exposed := util.PortComponents(entry)
+			published := ports[exposed]
 
-				if len(pS) == 3 {
-					// ipv4
-					pH.HostIP = pS[0]
-				} else if len(pS) > 3 {
-					// ipv6
-					pH.HostIP = strings.Join(pS[:len(pS)-2], ":")
-				}
+			opts.Config.ExposedPorts[docker.Port(exposed)] = struct{}{}
 
-				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
-			} else {
-				pH := docker.PortBinding{
-					HostPort: pS[0],
-				}
-				opts.HostConfig.PortBindings[pC] = []docker.PortBinding{pH}
-			}
+			opts.HostConfig.PortBindings[docker.Port(exposed)] = []docker.PortBinding{docker.PortBinding{
+				HostPort: published,
+				HostIP:   ip,
+			}}
 		}
 	}
 

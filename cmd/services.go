@@ -130,8 +130,16 @@ service into the background so its logs will not be viewable
 from the command line.
 
 To stop the service use:      [eris services stop NAME].
-To view a service's logs use: [eris services logs NAME].`,
+To view a service's logs use: [eris services logs NAME].
+
+You can redefine service ports accessible over the network with
+the --ports flag.
+`,
 	Run: StartService,
+
+	Example: `$ eris services start ipfs --ports 17000 -- map the first port from the definition file to the host port 17000
+$ eris services start ipfs --ports 17000,18000- -- redefine the first and the second port mappings and autoincrement the rest
+$ eris services start ipfs --ports 50000:5001 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var servicesInspect = &cobra.Command{
@@ -246,6 +254,7 @@ func addServicesFlags() {
 	buildFlag(servicesExec, do, "links", "service")
 	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
 	buildFlag(servicesExec, do, "publish", "service")
+	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
 
 	buildFlag(servicesUpdate, do, "pull", "service")
@@ -259,6 +268,7 @@ func addServicesFlags() {
 	buildFlag(servicesRm, do, "rm-volumes", "service")
 
 	buildFlag(servicesStart, do, "publish", "service")
+	buildFlag(servicesStart, do, "ports", "service")
 	buildFlag(servicesStart, do, "env", "service")
 	buildFlag(servicesStart, do, "links", "service")
 	buildFlag(servicesStart, do, "chain", "service")
