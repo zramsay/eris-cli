@@ -26,7 +26,7 @@ func buildInitCommand() {
 
 func addInitFlags() {
 	Init.Flags().BoolVarP(&do.Pull, "pull-images", "", true, "by default, pulls and/or update latest primary images. use flag to skip pulling/updating of images.")
-	Init.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts")
+	Init.Flags().BoolVarP(&do.Yes, "yes", "y", false, "over-ride command-line prompts")
 	Init.Flags().StringVarP(&do.Source, "source", "", "rawgit", "source from which to download definition files for the eris platform. if toadserver fails, use: rawgit")
 	Init.Flags().BoolVarP(&do.Quiet, "testing", "", false, "DO NOT USE (for testing only)")
 }
