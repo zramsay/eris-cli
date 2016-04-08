@@ -294,18 +294,6 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 	}
 
 	if !util.Running(definitions.TypeChain, thisChain) {
-		var names []string
-		util.ErisContainers(func(name string, details *util.Details) bool {
-			if details.Type != definitions.TypeChain {
-				return false
-			}
-
-			names = append(names, details.ShortName)
-
-			return true
-		}, true)
-
-		log.WithField("chains", names).Warn("Running chains")
 		t.Fatalf("expecting chain container to run")
 	}
 	if !util.Exists(definitions.TypeData, thisChain) {

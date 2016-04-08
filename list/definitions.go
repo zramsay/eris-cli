@@ -11,9 +11,10 @@ import (
 	"text/tabwriter"
 	"text/template"
 
+	"github.com/eris-ltd/eris-cli/util"
+
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/kr/text/colwriter"
-	"github.com/eris-ltd/eris-cli/util"
 )
 
 // Definition holds useful data about definition files
@@ -100,8 +101,8 @@ func customKnown(definitions []Definition, format string) error {
 		buf.WriteString("\n")
 	}
 
-	// 16 - minwidth, 0 - tabwidth (tab characters width), 3 - padding, ' ' - padchar, 0 - flags.
-	tw := tabwriter.NewWriter(os.Stdout, 16, 0, 3, ' ', 0)
+	// 6 - minwidth, 1 - tabwidth (tab characters width), 5 - padding, ' ' - padchar, 0 - flags.
+	tw := tabwriter.NewWriter(os.Stdout, 6, 1, 5, ' ', 0)
 	buf.WriteTo(tw)
 	tw.Flush()
 

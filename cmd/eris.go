@@ -53,7 +53,11 @@ Complete documentation is available at https://docs.erisindustries.com
 		util.DockerConnect(do.Verbose, do.MachineName)
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
-		// compare docker client API versions
+		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
+			return
+		}
+
+		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
 			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs\n\n%v", err))
@@ -64,15 +68,12 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 		log.AddHook(CrashReportHook(dockerVersion))
 
-		// compare docker-machine versions
-		// but don't fail if not installed
-		if os.Getenv("TEST_ON_WINDOWS") != "true" {
-			dmVersion, err := util.DockerMachineVersion()
-			if err != nil {
-				log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
-			} else if !util.CompareVersions(dmVersion, dmVerMin) {
-				IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
-			}
+		// Compare `docker-machine` versions but don't fail if not installed.
+		dmVersion, err := util.DockerMachineVersion()
+		if err != nil {
+			log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+		} else if !util.CompareVersions(dmVersion, dmVerMin) {
+			IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 

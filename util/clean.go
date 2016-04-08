@@ -6,11 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
 func Clean(toClean map[string]bool) error {
@@ -167,7 +167,7 @@ func canWeRemove(toClean map[string]bool) bool {
 	}
 
 	if toClean["all"] != true {
-		log.Warn("The marmots are about to remove these Eris files")
+		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
 			log.WithField("containers", toWarn["containers"]).Warn("")
 		}

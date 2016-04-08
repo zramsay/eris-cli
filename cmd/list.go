@@ -10,22 +10,18 @@ import (
 var List = &cobra.Command{
 	Use:   "ls",
 	Short: "List all the things eris knows about.",
-	Long: `List all Eris services, chains, and data containers.
+	Long: `List all Eris service, chain, and data containers.
 
-The default output shows containers in three sections. The -a flag adds a few
-columns with additional information on container images and open ports.
+The default output shows containers in three sections. The -a flag
+adds a few additional informational columns for each container.
 
-The -r flag limits the output to running service or chains only.
+The -r flag limits the output to running services or chains only.
 
 The --json flag dumps the container information in the JSON format.
 
-The -f flag specifies an alternate format for the list, using the syntax
-of Go text templates.
-
-The default output is equivalent to this format:
-
-  {{asterisk .Info.State.Running}} {{.ShortName}}\t
-  {{short .Info.ID}}\t{{short (dependent .ShortName)}}
+The -f flag specifies an alternative format for the list, using the syntax
+of Go text templates. If the fields to be displayed are separated by the 
+'\t' tab character, the output will be columnized.
 
 The struct being passed to the template is:
 
@@ -38,11 +34,13 @@ The struct being passed to the template is:
     Info   *docker.Container  // Docker client library Container info 
   }
 
-The full list of useful Container struct fields can be checked by issuing
+The full list of available fields can be observed by issuing
 the [eris ls --json] command.
 
-Each field in the in the format input can be separated with the '\t' symbol
-to columnize the output.
+The default [eris ls] output is equivalent to this custom format:
+
+  {{.ShortName}}\t{{asterisk .Info.State.Running}}\t
+  {{short .Info.ID}}\t{{short (dependent .ShortName)}}
 
 The are a few helper functions available to prefix the fields with:
 
@@ -50,7 +48,7 @@ The are a few helper functions available to prefix the fields with:
   toupper     make the value upper case
   ports       prettify exposed container ports (used as {{ports .Info}})
   short       shorten the container ID (or any other value) to 10 symbols
-  asterisk    show the '*' symbol if the value is true
+  asterisk    show the '*' symbol if the value is true, '-' otherwise
   dependent   find a dependent data container for the given service or chain
 `,
 	Example: `$ eris ls -rf "{{.ShortName}}, {{.Type}}, {{ports .Info}}"

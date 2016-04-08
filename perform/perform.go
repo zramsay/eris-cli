@@ -203,13 +203,6 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	optsServ := configureServiceContainer(srv, ops)
 
-	// Fix volume paths.
-	var err error
-	srv.Volumes, err = util.FixDirs(srv.Volumes)
-	if err != nil {
-		return err
-	}
-
 	// Setup data container.
 	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
 	if srv.AutoData {
@@ -278,12 +271,6 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 	log.WithField("=>", ops.SrvContainerName).Info("Executing container")
 
 	optsServ := configureInteractiveContainer(srv, ops)
-
-	// Fix volume paths.
-	srv.Volumes, err = util.FixDirs(srv.Volumes)
-	if err != nil {
-		return nil, err
-	}
 
 	// Setup data container.
 	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
@@ -395,14 +382,9 @@ func DockerRebuild(srv *def.Service, ops *def.Operation, pullImage bool, timeout
 	}
 
 	opts := configureServiceContainer(srv, ops)
-	var err error
-	srv.Volumes, err = util.FixDirs(srv.Volumes)
-	if err != nil {
-		return err
-	}
 
 	log.WithField("=>", ops.SrvContainerName).Info("Recreating container")
-	_, err = createContainer(opts)
+	_, err := createContainer(opts)
 	if err != nil {
 		return err
 	}
@@ -910,7 +892,7 @@ func removeContainer(id string, volumes, force bool) error {
 func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
 	opts := configureServiceContainer(srv, ops)
 
-	opts.Name = util.UniqueName()
+	opts.Name = util.UniqueName("interactive")
 	if srv.User == "" {
 		opts.Config.User = "root"
 	} else {
@@ -1058,7 +1040,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 func configureVolumesFromContainer(ops *def.Operation, service *def.Service) docker.CreateContainerOptions {
 	// Set the defaults.
 	opts := docker.CreateContainerOptions{
-		Name: util.UniqueName(),
+		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
 			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE),
 			User:            "root",

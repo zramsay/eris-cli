@@ -11,24 +11,25 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+
+	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 const (
 	// `eris ls` format.
-	standardTmplHeader = "  {{toupper .}}\tCONTAINER ID\tDATA CONTAINER"
-	standardTmpl       = "{{asterisk .Info.State.Running}} {{.ShortName}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}"
+	standardTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER"
+	standardTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}"
 
 	// `eris ls -a` format.
-	extendedTmplHeader = "  {{toupper .}}\tCONTAINER ID\tDATA CONTAINER\tIMAGE\tCOMMAND\tPORTS"
-	extendedTmpl       = "{{asterisk .Info.State.Running}} {{.ShortName}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}\t{{.Info.Config.Image}}\t{{.Info.Config.Cmd}}\t{{ports .Info}}"
+	extendedTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER\tIMAGE\tCOMMAND\tPORTS"
+	extendedTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}\t{{.Info.Config.Image}}\t{{.Info.Config.Cmd}}\t{{ports .Info}}"
 
 	// Data section.
-	dataTmplHeader = "  {{toupper .}}\tCONTAINER ID"
-	dataTmpl       = "{{asterisk .Info.State.Running}} {{.ShortName}}\t{{short .Info.ID}}"
+	dataTmplHeader = "{{toupper .}}\tON\tCONTAINER ID"
+	dataTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}"
 )
 
 var (
@@ -47,7 +48,7 @@ var (
 			if running {
 				return "*"
 			}
-			return " "
+			return "-"
 		},
 		// Truncate the longer ID version (handy for copying and pasting).
 		"short": func(id string) string {
@@ -160,17 +161,45 @@ func Containers(t, format string, running bool) error {
 	}
 
 	for _, p := range renderParams[t][key] {
+		// Skip the Data section altogether if there's nothing to show.
+		if p.DontShowData == true && isOrphanDataContainers() == false {
+			continue
+		}
 		if err := render(buf, p.Type, p.DontShowData, p.Header, p.Template); err != nil {
 			return err
 		}
 	}
 
-	// 16 - minwidth, 0 - tabwidth (tab characters width), 3 - padding, ' ' - padchar, 0 - flags.
-	tw := tabwriter.NewWriter(os.Stdout, 16, 0, 3, ' ', 0)
+	// 6 - minwidth, 1 - tabwidth (tab characters width), 5 - padding, ' ' - padchar, 0 - flags.
+	tw := tabwriter.NewWriter(os.Stdout, 6, 1, 5, ' ', 0)
 	buf.WriteTo(tw)
 	tw.Flush()
 
 	return nil
+}
+
+func isOrphanDataContainers() bool {
+	for _, container := range erisContainers {
+		if container.Type == def.TypeData {
+			if isMasterContainer(container.ShortName) {
+				continue
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func isMasterContainer(name string) bool {
+	// Found chain.
+	if _, err := util.Lookup(def.TypeChain, name); err == nil {
+		return true
+	}
+	// Found service.
+	if _, err := util.Lookup(def.TypeService, name); err == nil {
+		return true
+	}
+	return false
 }
 
 func render(buf *bytes.Buffer, t string, truncate bool, header, format string) error {
@@ -199,12 +228,7 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 
 		// Display only orphaned data containers in `eris ls` or `eris ls -a` mode.
 		if truncate {
-			// Found chain, not showing.
-			if _, err := util.Lookup(def.TypeChain, container.ShortName); err == nil {
-				continue
-			}
-			// Found service, not showing.
-			if _, err := util.Lookup(def.TypeService, container.ShortName); err == nil {
+			if isMasterContainer(container.ShortName) {
 				continue
 			}
 		}

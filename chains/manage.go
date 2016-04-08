@@ -41,8 +41,7 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
-	err := checkKeysRunningOrStart()
-	if err != nil {
+	if err := checkKeysRunningOrStart(); err != nil {
 		return err
 	}
 

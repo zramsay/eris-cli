@@ -3,8 +3,9 @@ package util
 import (
 	"testing"
 
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 	def "github.com/eris-ltd/eris-cli/definitions"
+
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 )
 
 func init() {
@@ -12,8 +13,8 @@ func init() {
 }
 
 func TestUniqueName(t *testing.T) {
-	pass1 := UniqueName()
-	pass2 := UniqueName()
+	pass1 := UniqueName("keys")
+	pass2 := UniqueName("keys")
 
 	if pass1 == pass2 {
 		t.Fatalf("returned names %v and %v are equal", pass1, pass2)

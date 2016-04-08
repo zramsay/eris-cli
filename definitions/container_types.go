@@ -1,8 +1,6 @@
 package definitions
 
 const (
-	ContainerNamePrefix = "ipfs-"
-
 	Namespace = "eris"
 
 	LabelEris      = Namespace + ":" + "ERIS"

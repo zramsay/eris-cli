@@ -4,6 +4,7 @@ language: go
 
 env:
   global:
+    - TEST_ON_MACOSX=true
     - ECM_BRANCH=develop
     - EPM_BRANCH=develop
 

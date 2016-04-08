@@ -1863,9 +1863,8 @@ func TestRenameEmptyName(t *testing.T) {
 		t.Fatalf("expecting service container running")
 	}
 
-	// XXX: DockerRename bug.
-	if err := DockerRename(srv.Operations, newName); err != nil {
-		t.Fatalf("expected container renamed, got %v", err)
+	if err := DockerRename(srv.Operations, newName); err == nil {
+		t.Fatalf("expected empty name rename to fail")
 	}
 }
 

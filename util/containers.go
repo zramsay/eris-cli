@@ -2,17 +2,14 @@ package util
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
+
+	"github.com/eris-ltd/eris-cli/config"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
 )
 
 // Details stores useful container information like its type, short name,
@@ -45,14 +42,14 @@ var (
 	ErrNameNotFound = errors.New("container name not found")
 )
 
-// UniqueName() returns a unique container name, prefixed with the IPFS token,
-// e.g. `ipfs-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
+// UniqueName() returns a unique container name, prefixed with the short
+// container name, e.g. `ipfs-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
 //
 // [pv]: might be a good idea to truncate this long name to ~20 characters
 // without much danger of bumping into collisions, e.g. `ipfs-6ba7b811-9dad-11d1`
 // which arguably looks better in logs and `docker ps` output.
-func UniqueName() string {
-	return def.ContainerNamePrefix + uuid.NewRandom().String()
+func UniqueName(name string) string {
+	return name + "-" + uuid.NewRandom().String()
 }
 
 // ContainerName returns a long container name by a given container type
@@ -60,7 +57,7 @@ func UniqueName() string {
 func ContainerName(t, name string) string {
 	lookup, err := Lookup(t, name)
 	if err != nil {
-		containerName := UniqueName()
+		containerName := UniqueName(name)
 
 		// Save the container's name in the cache (so that when the
 		// ContainerName() is called the second time, the name would
@@ -146,7 +143,7 @@ func DataContainerName(name string) string {
 // ErisContainers returns a list of full container names matching the filter
 // criteria filter, applied to container names and details.
 func ErisContainers(filter func(name string, details *Details) bool, running bool) []string {
-	log.WithField("running", running).Info("Searching for Eris containers")
+	log.WithField("running", running).Info("Discovering Eris containers")
 
 	var erisContainers []string
 
@@ -165,7 +162,7 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 
 		details := ContainerDetails(name)
 
-		// cache names.
+		// Cache names.
 		containerCache.c[key{
 			ShortName: details.Labels[def.LabelShortName],
 			Type:      details.Labels[def.LabelType],
@@ -188,19 +185,42 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 }
 
 // ErisContainersByType generates a list of container details for a given
-// container type and status: running (running=true) and existing (running=false).
+// container type and status: running (running=true) or existing (running=false).
 func ErisContainersByType(t string, running bool) []*Details {
+	log.WithFields(log.Fields{
+		"running": running,
+		"type":    t,
+	}).Info("Discovering Eris containers")
+
 	var erisContainers []*Details
 
-	ErisContainers(func(name string, details *Details) bool {
-		if details.Type != t {
-			return false
+	containers, err := DockerClient.ListContainers(docker.ListContainersOptions{All: !running})
+	if err != nil {
+		return erisContainers
+	}
+
+	for _, c := range containers {
+		name := strings.TrimLeft(c.Names[0], "/")
+
+		// A container belongs to Eris if it has the "ERIS" label.
+		if _, ok := c.Labels[def.LabelEris]; !ok {
+			continue
 		}
 
-		erisContainers = append(erisContainers, details)
+		if c.Labels[def.LabelType] != t {
+			continue
+		}
 
-		return true
-	}, running)
+		details := ContainerDetails(name)
+
+		// Cache names.
+		containerCache.c[key{
+			ShortName: details.Labels[def.LabelShortName],
+			Type:      details.Labels[def.LabelType],
+		}] = name
+
+		erisContainers = append(erisContainers, details)
+	}
 
 	return erisContainers
 }
@@ -312,33 +332,4 @@ func PortAndProtocol(port string) docker.Port {
 		port += "/tcp"
 	}
 	return docker.Port(port)
-}
-
-// $(pwd) doesn't execute properly in golangs subshells; replace it
-// use $eris as a shortcut.
-func FixDirs(arg []string) ([]string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return []string{}, err
-	}
-
-	for n, a := range arg {
-		if strings.Contains(a, "$eris") {
-			tmp := strings.Split(a, ":")[0]
-			keep := strings.Replace(a, tmp+":", "", 1)
-			if runtime.GOOS == "windows" {
-				winTmp := strings.Split(tmp, "/")
-				tmp = filepath.Join(winTmp...)
-			}
-			tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
-			arg[n] = strings.Join([]string{tmp, keep}, ":")
-			continue
-		}
-
-		if strings.Contains(a, "$pwd") {
-			arg[n] = strings.Replace(a, "$pwd", dir, 1)
-		}
-	}
-
-	return arg, nil
 }
