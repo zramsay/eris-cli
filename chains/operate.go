@@ -116,7 +116,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		return nil, nil
 	}
 
-	// boot the dependencies (eg. keys, logsrotate)
+	// boot the dependencies (eg. keys, logrotate)
 	if err := bootDependencies(chain, do); err != nil {
 		return nil, err
 	}
@@ -177,8 +177,8 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 // boot chain dependencies
 // TODO: this currently only supports simple services (with no further dependencies)
 func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
-	if do.Logsrotate {
-		chain.Dependencies.Services = append(chain.Dependencies.Services, "logsrotate")
+	if do.Logrotate {
+		chain.Dependencies.Services = append(chain.Dependencies.Services, "logrotate")
 	}
 	if chain.Dependencies != nil {
 		name := do.Name

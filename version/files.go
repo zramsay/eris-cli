@@ -11,7 +11,7 @@ var (
 		"ipfs.toml",
 		"keys.toml",
 		"logspout.toml",
-		"logsrotate.toml",
+		"logrotate.toml",
 		"mindy.toml",
 		"openbazaar.toml",
 		"rethinkdb.toml",
