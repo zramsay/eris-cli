@@ -106,6 +106,12 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 		do.Path, err = os.Getwd()
 		IfExit(err)
 	}
+	if do.ChainName == "" {
+		IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
+	}
+	if do.DefaultAddr == "" {
+		IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
+	}
 	IfExit(pkgs.RunPackage(do))
 }
 
