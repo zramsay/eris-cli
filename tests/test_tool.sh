@@ -118,39 +118,44 @@ setup() {
 }
 
 packagesToTest() {
-  go test ./initialize/... && passed Initialize
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./util/... && passed Util
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./config/... && passed Config
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./perform/... && passed Perform
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./data/... && passed Data
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./files/... && passed Files
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./services/... && passed Services
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./chains/... && passed Chains
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./keys/... && passed Keys
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./pkgs/... && passed Packages
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./actions/... && passed Actions
-  if [ $? -ne 0 ]; then return 1; fi
-  # go test ./remotes/... && passed Remotes
-  # if [ $? -ne 0 ]; then return 1; fi
-  # go test ./apps/... && passed Apps
-  # if [ $? -ne 0 ]; then return 1; fi
-  # go test ./agent/... && passed Agent
-  # if [ $? -ne 0 ]; then return 1; fi
-  go test ./cmd/... && passed Commands
-  if [ $? -ne 0 ]; then return 1; fi
-  go test ./clean/... && passed Clean
-  if [ $? -ne 0 ]; then return 1; fi
-  if [[ "$SKIP_STACK" != "true" ]] # the appveyor.yml currently SKIP_STACK; otherwise this is here if faster testing needed; set in your shell before calling tests/test.sh or tests/test_tool.sh
+  if [[ "$SKIP_PACKAGES" != "true" ]]
+  then
+    go test ./initialize/... && passed Initialize
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./util/... && passed Util
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./config/... && passed Config
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./perform/... && passed Perform
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./data/... && passed Data
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./files/... && passed Files
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./services/... && passed Services
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./chains/... && passed Chains
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./keys/... && passed Keys
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./pkgs/... && passed Packages
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./actions/... && passed Actions
+    if [ $? -ne 0 ]; then return 1; fi
+    # go test ./remotes/... && passed Remotes
+    # if [ $? -ne 0 ]; then return 1; fi
+    # go test ./apps/... && passed Apps
+    # if [ $? -ne 0 ]; then return 1; fi
+    # go test ./agent/... && passed Agent
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./cmd/... && passed Commands
+    if [ $? -ne 0 ]; then return 1; fi
+    go test ./clean/... && passed Clean
+    if [ $? -ne 0 ]; then return 1; fi
+  fi
+  # the appveyor.yml currently uses SKIP_STACK; otherwise this is here if faster testing needed;
+  # set in your shell before calling tests/test.sh or tests/test_tool.sh
+  if [[ "$SKIP_STACK" != "true" ]]
   then
     echo "Running Stack Tests"
     echo
