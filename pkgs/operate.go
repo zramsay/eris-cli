@@ -105,7 +105,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 				log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
 				err = bootChain(head, do)
 			} else { // if no chain is checked out and no --chain given, default to a throwaway
-				return fmt.Errorf("The package definition file needs a checked out chain to continue. Please check out the appropriate chain or rerun with a chain flag.")
+				return fmt.Errorf("The package definition file needs a checked out chain to continue. Please check out the appropriate chain or rerun with a chain flag")
 			}
 		case "t", "tmp", "temp", "temporary", "throwaway", "thr", "throw":
 			log.Info("No chain was given, booting a throwaway chain")
@@ -118,7 +118,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 		log.Info("No chain was given, booting a throwaway chain")
 		err = bootThrowAwayChain(pkg.Name, do)
 	default:
-		log.WithField("=>", do.ChainName).Info("Booting chain from chain flag.")
+		log.WithField("=>", do.ChainName).Info("Booting chain from chain flag")
 		err = bootChain(do.ChainName, do)
 	}
 
@@ -236,7 +236,7 @@ func bootChain(name string, do *definitions.Do) error {
 	startChain.Operations = do.Operations
 	f, err := os.Stat(filepath.Join(common.ChainsPath, startChain.Name))
 	switch {
-	case util.IsChainContainer(name, true):
+	case util.IsChain(name, true):
 		log.WithField("name", startChain.Name).Info("Starting Chain")
 		if err := chains.StartChain(startChain); err != nil {
 			return err
@@ -249,8 +249,8 @@ func bootChain(name string, do *definitions.Do) error {
 			return err
 		}
 		do.Chain.ChainType = "chain" // setting this for tear down purposes
-	case util.IsServiceContainer(name, true):
-		log.WithField("name", name).Info("Chain exists as a service.")
+	case util.IsService(name, false):
+		log.WithField("name", name).Info("Chain exists as a service")
 		startService := definitions.NowDo()
 		startService.Operations = do.Operations
 		startService.Operations.Args = []string{name}
@@ -260,7 +260,7 @@ func bootChain(name string, do *definitions.Do) error {
 		}
 		do.Chain.ChainType = "service" // setting this for tear down purposes
 	default:
-		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command.")
+		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command")
 	}
 
 	do.Chain.Name = name // setting this for tear down purposes
@@ -295,16 +295,16 @@ func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
 	if do.Chain.ChainType == "service" {
-		newLink = util.ServiceContainersName(pkg.ChainName) + ":" + "chain"
+		newLink = util.ServiceContainerName(pkg.ChainName) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainersName(pkg.ChainName) + ":" + "chain"
+		newLink = util.ChainContainerName(pkg.ChainName) + ":" + "chain"
 	}
-	newLink2 := util.ServiceContainersName("keys") + ":" + "keys"
+	newLink2 := util.ServiceContainerName("keys") + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
 	do.Service.Links = append(do.Service.Links, newLink2)
 
 	for _, s := range do.ServicesSlice {
-		l := util.ServiceContainersName(s) + ":" + s
+		l := util.ServiceContainerName(s) + ":" + s
 		do.Service.Links = append(do.Service.Links, l)
 	}
 }
@@ -372,11 +372,12 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 
 	doData := definitions.NowDo()
 	doData.Name = do.Service.Name
-	doData.Operations = do.Operations
+	doData.Operations = loaders.LoadDataDefinition(doData.Name)
+	util.Merge(doData.Operations, do.Operations)
 
-	if inbound && util.HowManyContainersExisting(doData.Name, "data") == 0 {
-		doData.Operations.DataContainerName = util.DataContainersName(doData.Name)
-		doData.Operations.ContainerType = "data"
+	if inbound && util.Exists(definitions.TypeData, doData.Name) == false {
+		doData.Operations.DataContainerName = util.DataContainerName(doData.Name)
+		doData.Operations.ContainerType = definitions.TypeData
 		if err := perform.DockerCreateData(doData.Operations); err != nil {
 			return err
 		}
@@ -437,7 +438,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			}
 		}
 	} else {
-		return fmt.Errorf("That path does not exist. Please rerun command with a proper path.")
+		return fmt.Errorf("That path does not exist. Please rerun command with a proper path")
 	}
 
 	// import contracts path (if exists)
@@ -445,7 +446,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"path":        do.Path,
 			"packagePath": do.PackagePath,
-		}).Debug("Package path exists and is not in pkg path. Proceeding with Import/Export sequence.")
+		}).Debug("Package path exists and is not in pkg path. Proceeding with Import/Export sequence")
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
 			doData.Source = do.PackagePath
@@ -461,7 +462,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			log.WithFields(log.Fields{
 				"source": filepath.Join(do.Path, "contracts"),
 				"dest":   do.PackagePath,
-			}).Debug("Moving contracts into position.")
+			}).Debug("Moving contracts into position")
 			if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
 				return err
 			}
@@ -470,12 +471,12 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": filepath.Join(do.Path, "contracts"),
 			"dest":   do.PackagePath,
-		}).Debug("Moving contracts into position.")
+		}).Debug("Moving contracts into position")
 		if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
 			return err
 		}
 	} else {
-		log.Info("Package path does not exist on the host or is inside the pkg path.")
+		log.Info("Package path does not exist on the host or is inside the pkg path")
 	}
 
 	// import abi path (if exists)
@@ -483,7 +484,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"path":    do.Path,
 			"abiPath": do.ABIPath,
-		}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence.")
+		}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence")
 		if inbound {
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
 			doData.Source = do.ABIPath
@@ -491,7 +492,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			log.WithFields(log.Fields{
 				"source": doData.Source,
 				"dest":   doData.Destination,
-			}).Debug("Importing abi path.")
+			}).Debug("Importing ABI path")
 			if err := data.ImportData(doData); err != nil {
 				return err
 			}
@@ -499,7 +500,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			log.WithFields(log.Fields{
 				"source": filepath.Join(do.Path, "abi"),
 				"dest":   do.ABIPath,
-			}).Debug("Moving abi into position.")
+			}).Debug("Moving ABI into position")
 			if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
 				return err
 			}
@@ -508,12 +509,12 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": filepath.Join(do.Path, "abi"),
 			"dest":   do.ABIPath,
-		}).Debug("Moving abi into position.")
+		}).Debug("Moving ABI into position")
 		if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
 			return err
 		}
 	} else {
-		log.Info("ABI path does not exist on the host or is inside the pkg path.")
+		log.Info("ABI path does not exist on the host or is inside the pkg path")
 	}
 
 	// import epm.yaml (if it is in a weird place)
@@ -523,7 +524,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": doData.Source,
 			"dest":   doData.Destination,
-		}).Debug("Importing eris-pm config file.")
+		}).Debug("Importing eris-pm config file")
 		if err := data.ImportData(doData); err != nil {
 			return err
 		}
@@ -540,7 +541,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": epmFiles,
 			"dest":   dirToMoveTo,
-		}).Debug("Moving eris-pm artifacts.")
+		}).Debug("Moving eris-pm artifacts")
 		for _, epmFile := range epmFiles {
 			var err error
 			epmFile, err = filepath.Abs(epmFile)
@@ -553,10 +554,10 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			}
 		}
 	} else {
-		log.Info("EPM files do not exist on the host or are inside the pkg path.")
+		log.Info("EPM files do not exist on the host or are inside the pkg path")
 	}
 
-	do.Operations.DataContainerName = util.DataContainersName(doData.Name)
+	do.Operations.DataContainerName = util.DataContainerName(doData.Name)
 	do.Path = oldDoPath
 	do.PackagePath = oldPkgPath
 	do.ABIPath = oldAbiPath

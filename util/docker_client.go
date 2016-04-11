@@ -15,7 +15,7 @@ import (
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
@@ -113,7 +113,6 @@ func CheckDockerClient() error {
 		return nil
 	}
 
-	var input string
 	dockerHost, dockerCertPath := popHostAndPath()
 
 	if dockerCertPath == "" || dockerHost == "" {
@@ -128,10 +127,7 @@ func CheckDockerClient() error {
 		if _, _, err := getMachineDeets("default"); err == nil {
 			fmt.Println("A Docker Machine VM exists, which Eris can use")
 			fmt.Println("However, our marmots recommend that you have a VM dedicated to Eris dev-ing")
-			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
-			fmt.Scanln(&input)
-
-			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
 				log.Debug("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
@@ -148,13 +144,9 @@ func CheckDockerClient() error {
 			}
 
 		} else {
-
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
 			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
-			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
-			fmt.Scanln(&input)
-
-			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
 				log.Warn("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err

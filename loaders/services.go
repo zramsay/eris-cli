@@ -11,6 +11,7 @@ import (
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
 )
@@ -93,25 +94,23 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 		log.WithField("service", srv.Name).Debug("Defaulting to service")
 	}
 
-	container := util.FindServiceContainer(srv.Name, true)
+	container := util.ContainerName(def.TypeService, srv.Name)
 
-	if container != nil {
-		log.WithField("=>", container.FullName).Debug("Setting service container name")
-		srv.Operations.SrvContainerName = container.FullName
-		srv.Operations.SrvContainerID = container.ContainerID
+	if util.IsService(srv.Name, true) {
+		log.WithField("=>", container).Debug("Setting service container name")
+		srv.Operations.SrvContainerName = container
 	} else {
-		srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name)
-		srv.Operations.DataContainerName = util.ServiceToDataContainer(srv.Operations.SrvContainerName)
+		srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
+		srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
 	}
 	if srv.Service.AutoData {
-		dataContainer := util.FindDataContainer(srv.Name)
-		if dataContainer != nil {
-			log.WithField("=>", dataContainer.FullName).Debug("Setting data container name")
-			srv.Operations.DataContainerName = dataContainer.FullName
-			srv.Operations.DataContainerID = dataContainer.ContainerID
+		dataContainer := util.ContainerName(def.TypeData, srv.Name)
+		if util.IsData(srv.Name) {
+			log.WithField("=>", dataContainer).Debug("Setting data container name")
+			srv.Operations.DataContainerName = dataContainer
 		} else {
-			srv.Operations.SrvContainerName = util.ServiceContainersName(srv.Name)
-			srv.Operations.DataContainerName = util.ServiceToDataContainer(srv.Operations.SrvContainerName)
+			srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
+			srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
 		}
 	}
 }
@@ -133,7 +132,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 		"link":          link,
 		"volumes from":  mount,
 	}).Debug("Connecting to service")
-	containerName := util.ContainersName(typ, name)
+	containerName := util.ContainerName(typ, name)
 
 	if link {
 		newLink := containerName + ":" + internalName

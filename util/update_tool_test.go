@@ -30,10 +30,10 @@ func TestDownloadLatestRelease(t *testing.T) {
 	if err != nil {
 		t.Fatal("Download failed with error:", err)
 	} else {
-		t.Log("Latest Release downloads successfully. Removing...")
+		t.Log("Latest release downloads successfully. Removing")
 		err := os.Remove(filename)
 		if err != nil {
-			t.Error("could not remove eris-cli binary test-download.", err)
+			t.Error("Could not remove Eris binary", err)
 		}
 	}
 

@@ -1,7 +1,7 @@
 package files
 
 import (
-	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -120,31 +120,12 @@ func TestGetFiles(t *testing.T) {
 	}
 }
 
-// no fake servers for the time being
-// all in one so we don't have to wake ipfs up twice
 func TestPutAndGetDirectory(t *testing.T) {
-	testStartIPFS(t)
-	defer testKillIPFS(t)
-
-	testPutDirectoryToIPFS(t)
-	testGetDirectoryFromIPFS(t)
-
-	pathGot := filepath.Join(erisDir, "recurse.toml")
-	pathPut := fileInNewDir
-
-	fGot, err := ioutil.ReadFile(pathGot)
+	buf, err := services.ExecHandler("ipfs", []string{"bash", "-c", "ipfs init; ipfs get `ipfs add -qr /root`"})
 	if err != nil {
-		t.Fatalf("err reading filepath got: %s\n%v\n", pathGot, err)
+		t.Fatalf("Failed to put and get a directory from IPFS: %v : %s", err, buf.String())
 	}
-
-	fPut, err := ioutil.ReadFile(pathPut)
-	if err != nil {
-		t.Fatalf("err reading filepath put: %s\n%v\n", pathPut, err)
-	}
-
-	if !bytes.Equal(fGot, fPut) {
-		t.Fatalf("files not equal. got (%s), expecting (%s)", string(fGot), string(fPut))
-	}
+	fmt.Println(buf.String())
 }
 
 func testGetDirectoryFromIPFS(t *testing.T) {

@@ -27,23 +27,13 @@ func EnsureRunning(do *definitions.Do) error {
 		return err
 	}
 
-	if !IsServiceRunning(srv.Service, srv.Operations) {
-		e := fmt.Sprintf("The requested service is not running, start it with `eris services start %s`", do.Name)
+	if !util.IsService(srv.Service.Name, true) {
+		e := fmt.Sprintf("The requested service is not running, start it with [eris services start %s]", do.Name)
 		return errors.New(e)
 	} else {
 		log.WithField("=>", do.Name).Info("Service is running")
 	}
 	return nil
-}
-
-func IsServiceExisting(service *definitions.Service, ops *definitions.Operation) bool {
-	log.WithField("=>", service.Name).Debug("Checking service existing")
-	return parseContainers(service, ops, true)
-}
-
-func IsServiceRunning(service *definitions.Service, ops *definitions.Operation) bool {
-	log.WithField("=>", service.Name).Debug("Checking service running")
-	return parseContainers(service, ops, false)
 }
 
 func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bool {
@@ -52,27 +42,6 @@ func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bo
 
 func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
-}
-
-func parseContainers(service *definitions.Service, ops *definitions.Operation, all bool) bool {
-	// populate service container specifics
-	cName := util.FindServiceContainer(service.Name, all)
-	if cName == nil {
-		return false
-	}
-	ops.SrvContainerName = cName.FullName
-	ops.SrvContainerID = cName.ContainerID
-
-	// populate data container specifics
-	if service.AutoData && ops.DataContainerID == "" {
-		dName := util.FindDataContainer(service.Name)
-		if dName != nil {
-			ops.DataContainerName = dName.FullName
-			ops.DataContainerID = dName.ContainerID
-		}
-	}
-
-	return true
 }
 
 func parseKnown(name string) bool {

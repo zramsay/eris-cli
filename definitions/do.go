@@ -7,6 +7,7 @@ type Do struct {
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	JSON          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -47,7 +48,7 @@ type Do struct {
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Format        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`

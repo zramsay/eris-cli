@@ -6,6 +6,10 @@ env:
   global:
     - ECM_BRANCH=develop
     - EPM_BRANCH=develop
+    - TEST_ON_MACOSX=true
+  matrix:
+    - SKIP_STACK=true
+    - SKIP_PACKAGES=true
 
 install:
 - eval "$(gimme 1.5)"
@@ -15,9 +19,9 @@ install:
 - sudo chmod +x /usr/local/bin/docker
 - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-darwin-x86_64 >/usr/local/bin/docker-machine"
 - sudo chmod +x /usr/local/bin/docker-machine
+- go install ./cmd/eris
 
 script:
-- go install ./cmd/eris
 - tests/test.sh
 
 notifications:

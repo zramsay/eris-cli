@@ -11,7 +11,6 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	ini "github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/util"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
@@ -74,7 +73,7 @@ func TestExistAndRun(name, t string, toExist, toRun bool) error {
 		"existing": toExist,
 	}).Info("Checking container")
 
-	if existing := FindContainer(name, t, false); existing != toExist {
+	if existing := util.Exists(t, name); existing != toExist {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -84,7 +83,7 @@ func TestExistAndRun(name, t string, toExist, toRun bool) error {
 		return ErrContainerExistMismatch
 	}
 
-	if running := FindContainer(name, t, true); running != toRun {
+	if running := util.Running(t, name); running != toRun {
 		log.WithFields(log.Fields{
 			"=>":       name,
 			"expected": toExist,
@@ -97,7 +96,7 @@ func TestExistAndRun(name, t string, toExist, toRun bool) error {
 	return nil
 }
 
-func TestNumbersExistAndRun(servName string, containerExist, containerRun int) error {
+func TestNumbersExistAndRun(servName string, containerExist, containerRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":        servName,
 		"existing#": containerExist,
@@ -105,10 +104,10 @@ func TestNumbersExistAndRun(servName string, containerExist, containerRun int) e
 	}).Info("Checking number of containers for")
 
 	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.HowManyContainersExisting(servName, "service")
+	exist := util.Exists(def.TypeService, servName)
 
 	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.HowManyContainersRunning(servName, "service")
+	run := util.Running(def.TypeService, servName)
 
 	if exist != containerExist {
 		log.WithFields(log.Fields{
@@ -131,23 +130,10 @@ func TestNumbersExistAndRun(servName string, containerExist, containerRun int) e
 	return nil
 }
 
-// FindContainer returns true if the container with a given
-// short name, type, number, and status exists.
-func FindContainer(name, t string, running bool) bool {
-	containers := util.ErisContainersByType(t, !running)
-
-	for _, c := range containers {
-		if c.ShortName == name {
-			return true
-		}
-	}
-	return false
-}
-
 // Remove a container of some name, type, and number.
 func RemoveContainer(name, t string) error {
 	opts := docker.RemoveContainerOptions{
-		ID:            util.ContainersName(t, name),
+		ID:            util.ContainerName(t, name),
 		RemoveVolumes: true,
 		Force:         true,
 	}
@@ -175,7 +161,7 @@ func RemoveAllContainers() error {
 // Return container links. For sake of simplicity, don't expose
 // anything else.
 func Links(name, t string) []string {
-	container, err := util.DockerClient.InspectContainer(util.ContainersName(t, name))
+	container, err := util.DockerClient.InspectContainer(util.ContainerName(t, name))
 	if err != nil {
 		return []string{}
 	}
@@ -259,14 +245,8 @@ func checkIPFSnotRunning() {
 	do.Running = true
 	do.Quiet = true
 	log.Debug("Finding the running services")
-	if err := list.ListAll(do, "services"); err != nil {
-		IfExit(err)
-	}
-	res := strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			IfExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
-		}
+	if util.IsService("ipfs", true) {
+		IfExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
 	}
 	// make sure ipfs container does not exist
 	do = def.NowDo()
@@ -275,13 +255,7 @@ func checkIPFSnotRunning() {
 	do.Running = false
 	do.Quiet = true
 	log.Debug("Finding the existing services")
-	if err := list.ListAll(do, "services"); err != nil {
-		IfExit(err)
-	}
-	res = strings.Split(do.Result, "\n")
-	for _, r := range res {
-		if r == "ipfs" {
-			IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
-		}
+	if util.IsService("ipfs", false) {
+		IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
 	}
 }

@@ -51,12 +51,13 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-
-		log.AddHook(CrashReportHook())
-
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
-		// compare docker client API versions
+		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
+			return
+		}
+
+		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
 			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs\n\n%v", err))
@@ -65,16 +66,14 @@ Complete documentation is available at https://docs.erisindustries.com
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
+		log.AddHook(CrashReportHook(dockerVersion))
 
-		// compare docker-machine versions
-		// but don't fail if not installed
-		if os.Getenv("TEST_ON_WINDOWS") != "true" {
-			dmVersion, err := util.DockerMachineVersion()
-			if err != nil {
-				log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
-			} else if !util.CompareVersions(dmVersion, dmVerMin) {
-				IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
-			}
+		// Compare `docker-machine` versions but don't fail if not installed.
+		dmVersion, err := util.DockerMachineVersion()
+		if err != nil {
+			log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+		} else if !util.CompareVersions(dmVersion, dmVerMin) {
+			IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 
@@ -112,23 +111,12 @@ func AddCommands() {
 	ErisCmd.AddCommand(Keys)
 	buildActionsCommand()
 	ErisCmd.AddCommand(Actions)
-
-	// TODO
-	// buildApplicationsCommand()
-	// ErisCmd.AddCommand(Applications)
-	// buildRemotesCommand()
-	// ErisCmd.AddCommand(Remotes)
-
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
-	ErisCmd.AddCommand(ListEverything)
-
-	// TODO
-	// buildAgentsCommand()
-	// ErisCmd.AddCommand(Agents)
-
+	buildListCommand()
+	ErisCmd.AddCommand(List)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()

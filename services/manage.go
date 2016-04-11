@@ -171,9 +171,9 @@ func PortsService(do *definitions.Do) error {
 		return err
 	}
 
-	if IsServiceExisting(service.Service, service.Operations) {
+	if util.IsService(service.Service.Name, false) {
 		log.Debug("Service exists, getting port mapping")
-		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Operations.Args)
+		return util.PrintPortMappings(service.Operations.SrvContainerName, do.Operations.Args)
 	}
 
 	return nil
@@ -228,7 +228,7 @@ func RmService(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		if IsServiceExisting(service.Service, service.Operations) {
+		if util.IsService(service.Service.Name, false) {
 			err = perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force)
 			if err != nil {
 				return err

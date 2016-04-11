@@ -346,19 +346,16 @@ func testStartKeys(t *testing.T) {
 	serviceName := "keys"
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	log.WithField("=>", serviceName).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
 		t.Fatalf("Error starting service: %v", e)
 	}
 
 	testExistAndRun(t, serviceName, true, true)
-	testNumbersExistAndRun(t, serviceName, 1, 1)
+	testNumbersExistAndRun(t, serviceName, true, true)
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
-
 	do := def.NowDo()
 	do.Name = serviceName
 	do.Operations.Args = []string{serviceName}
@@ -371,23 +368,23 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 		t.Fatalf("error killing service: %v", e)
 	}
 	testExistAndRun(t, serviceName, !wipe, false)
-	testNumbersExistAndRun(t, serviceName, 0, 0)
+	testNumbersExistAndRun(t, serviceName, false, false)
 }
 
 func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {
 	tests.IfExit(tests.TestExistAndRun(servName, "service", toExist, toRun))
 }
 
-func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
+func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun bool) {
 	log.WithFields(log.Fields{
 		"=>":        servName,
 		"existing#": containerExist,
 		"running#":  containerRun,
 	}).Info("Checking number of containers for")
 	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.HowManyContainersExisting(servName, "service")
+	exist := util.Exists(def.TypeService, servName)
 	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.HowManyContainersRunning(servName, "service")
+	run := util.Running(def.TypeService, servName)
 
 	if exist != containerExist {
 		log.WithFields(log.Fields{

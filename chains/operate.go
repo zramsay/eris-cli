@@ -15,7 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
-	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
@@ -54,7 +53,7 @@ func KillChain(do *definitions.Do) error {
 		do.Timeout = 0 //overrides 10 sec default
 	}
 
-	if IsChainRunning(chain) {
+	if util.IsChain(chain.Name, true) {
 		if err := perform.DockerStop(chain.Service, chain.Operations, do.Timeout); err != nil {
 			return err
 		}
@@ -160,7 +159,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 
 		// always link the chain to the exec container when doing chains exec
 		// so that there is never any problems with sending info to the service (chain) container
-		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainersName("chain", chain.Name), "chain"))
+		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
 
 		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
@@ -194,9 +193,8 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 			}
 
 			// Start corresponding service.
-			if !services.IsServiceRunning(srv.Service, srv.Operations) {
-				name := strings.ToUpper(do.Name)
-				log.WithField("=>", name).Info("Dependency not running. Starting now")
+			if !util.IsService(srv.Service.Name, true) {
+				log.WithField("=>", do.Name).Info("Dependency not running. Starting now")
 				if err = perform.DockerRunService(srv.Service, srv.Operations); err != nil {
 					return err
 				}
@@ -210,7 +208,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
-			if !IsChainRunning(chn) {
+			if !util.IsChain(chn.Name, true) {
 				return fmt.Errorf("chain %s depends on chain %s but %s is not running", chain.Name, chainName, chainName)
 			}
 		}
@@ -221,12 +219,12 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 // the main function for setting up a chain container
 // handles both "new" and "fetch" - most of the differentiating logic is in the container
 func setupChain(do *definitions.Do, cmd string) (err error) {
-
 	// do.Name is mandatory
 	if do.Name == "" {
 		return fmt.Errorf("setupChain requires a chainame")
 	}
-	containerName := util.ChainContainersName(do.Name)
+
+	containerName := util.ChainContainerName(do.Name)
 	if do.ChainID == "" {
 		do.ChainID = do.Name
 	}
@@ -251,7 +249,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// ensure/create data container
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		log.WithField("=>", do.Name).Debug("Chain data container already exists")
 	} else {
 		ops := loaders.LoadDataDefinition(do.Name)
@@ -399,18 +397,17 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}).Debug()
 	chain.Service.Environment = append(chain.Service.Environment, envVars...)
 	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	// TODO: if do.N > 1 ...
-
-	chain.Operations.DataContainerName = util.DataContainersName(do.Name)
+	chain.Operations.DataContainerName = util.DataContainerName(do.Name)
 
 	if err := bootDependencies(chain, do); err != nil {
 		return err
 	}
 
 	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
+		"=>":           chain.Service.Name,
+		"links":        chain.Service.Links,
+		"volumes from": chain.Service.VolumesFrom,
+		"image":        chain.Service.Image,
 	}).Debug("Performing chain container start")
 
 	err = perform.DockerRunService(chain.Service, chain.Operations)

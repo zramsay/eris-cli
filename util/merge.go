@@ -2,13 +2,7 @@ package util
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
 	"reflect"
-	"runtime"
-	"strings"
-
-	dirs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 var (
@@ -81,61 +75,4 @@ func Merge(base, over interface{}) error {
 		}
 	}
 	return nil
-}
-
-// Parse dependencies for internalName (ie. in /etc/hosts), whether to link, and whether to mount volumes-from
-// eg. `tinydns:tiny:l` to link to the tinydns container as tiny
-func ParseDependency(nameAndOpts string) (name, internalName string, link, mount bool) {
-	spl := strings.Split(nameAndOpts, ":")
-	name = spl[0]
-
-	// defaults
-	link, mount = true, true
-	internalName = name
-
-	if len(spl) > 1 {
-		if spl[1] != "" {
-			internalName = spl[1]
-		}
-	}
-	if len(spl) > 2 {
-		switch spl[2] {
-		case "l": // link
-			link, mount = true, false
-		case "m", "v": // mount/volumes-from
-			link, mount = false, true
-		case "_": // nothing!
-			link, mount = false, false
-		}
-	}
-	return
-}
-
-// $(pwd) doesn't execute properly in golangs subshells; replace it
-// use $eris as a shortcut
-func FixDirs(arg []string) ([]string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return []string{}, err
-	}
-
-	for n, a := range arg {
-		if strings.Contains(a, "$eris") {
-			tmp := strings.Split(a, ":")[0]
-			keep := strings.Replace(a, tmp+":", "", 1)
-			if runtime.GOOS == "windows" {
-				winTmp := strings.Split(tmp, "/")
-				tmp = filepath.Join(winTmp...)
-			}
-			tmp = strings.Replace(tmp, "$eris", dirs.ErisRoot, 1)
-			arg[n] = strings.Join([]string{tmp, keep}, ":")
-			continue
-		}
-
-		if strings.Contains(a, "$pwd") {
-			arg[n] = strings.Replace(a, "$pwd", dir, 1)
-		}
-	}
-
-	return arg, nil
 }

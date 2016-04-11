@@ -15,8 +15,8 @@ func LoadDataDefinition(dataName string) *definitions.Operation {
 
 	ops := definitions.BlankOperation()
 	ops.ContainerType = definitions.TypeData
-	ops.SrvContainerName = util.DataContainersName(dataName)
-	ops.DataContainerName = util.DataContainersName(dataName)
+	ops.SrvContainerName = util.DataContainerName(dataName)
+	ops.DataContainerName = util.DataContainerName(dataName)
 	ops.Labels = util.Labels(dataName, ops)
 
 	return ops
