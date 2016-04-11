@@ -51,8 +51,9 @@ The are a few helper functions available to prefix the fields with:
   asterisk    show the '*' symbol if the value is true, '-' otherwise
   dependent   find a dependent data container for the given service or chain
 `,
-	Example: `$ eris ls -rf "{{.ShortName}}, {{.Type}}, {{ports .Info}}"
-$ eris ls  -f "{{.ShortName}}\t{{.Type}}\t{{.Info.NetworkSettings.IPAddress}}"`,
+	Example: `$ eris ls -rf '{{.ShortName}}, {{.Type}}, {{ports .Info}}'
+$ eris ls  -f '{{.ShortName}}\t{{.Type}}\t{{.Info.NetworkSettings.IPAddress}}'
+$ eris ls  -f '{{.ShortName}}\t{{.Info.Config.Env}}'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListAll()
 	},

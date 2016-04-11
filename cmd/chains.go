@@ -184,6 +184,8 @@ for the -k flag is this
 The -k flag displays the known definition files. `,
 
 	Run: ListChains,
+	Example: `$ eris chains ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
+$ eris chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 }
 
 var chainsImport = &cobra.Command{

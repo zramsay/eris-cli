@@ -87,6 +87,9 @@ The -f flag specifies an alternate format for the list, using the syntax
 of Go text templates. See the more detailed description in the help
 output for the [eris ls] command.`,
 	Run: ListData,
+	Example: `$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{index .Labels "eris:SERVICE"}}' -- show data container image and owner service name
+$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}' -- show data container volumes and mounts
+$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Env}}' -- container environment`,
 }
 
 var dataExec = &cobra.Command{
@@ -142,7 +145,7 @@ func addDataFlags() {
 
 	dataList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	dataList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
-	dataList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
+	dataList.Flags().BoolVarP(&do.All, "all", "a", false, "dummy flag for symmetry with [services ls -a] and [chains ls -a]")
 
 	buildFlag(dataRm, do, "rm-volumes", "data")
 
