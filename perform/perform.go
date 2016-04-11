@@ -1,6 +1,7 @@
 package perform
 
 import (
+	"archive/tar"
 	"bytes"
 	"errors"
 	"fmt"
@@ -645,6 +646,30 @@ func DockerRemoveImage(name string, force bool) error {
 		Force: force,
 	}
 	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
+}
+
+// TODO (explainer)
+func DockerBuild(dockerfile string) error {
+	// below has been hacked from : https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
+	// and could probably be much more elegant
+	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
+	tr := tar.NewWriter(inputbuf)
+	//tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: 10, ModTime: t, AccessTime: t, ChangeTime: t})
+	tr.Write([]byte(dockerfile))
+	tr.Close()
+	//picked only what's necessary for now: this may change with #611
+	imgOpts := docker.BuildImageOptions{
+		Name: "no_name",
+		//Dockerfile: dockerfile,
+		RmTmpContainer: false,
+		InputStream: inputbuf,
+		OutputStream: outputbuf,
+
+	}
+	if err := util.DockerClient.BuildImage(imgOpts); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ContainerExists returns true if the container specified

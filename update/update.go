@@ -15,7 +15,6 @@ import (
 )
 
 func UpdateEris(do *definitions.Do) error {
-
 	whichEris, err := GoOrBinary()
 	if err != nil {
 		return err
@@ -60,7 +59,16 @@ func GoOrBinary() (string, error) {
 	eris := util.TrimString(toCheck[length-1]) //sometimes ya just gotta trim
 
 	gopath := filepath.Join(os.Getenv("GOPATH"), bin, eris)
+	
+	erisLook, err := exec.LookPath("eris")
+	if err != nil {
+		return "", err
+	}
 
+	if string(which) != erisLook {
+		return "", fmt.Errorf("`which eris` returned (%s) while the exec.LookPath(`eris`) command returned (%s). these need to match", string(which), erisLook)
+	}
+	
 	if bin == "bin" && eris == "eris" {
 		if util.TrimString(gopath) == util.TrimString(string(which)) { // gotta trim those strings!
 			log.Debug("looks like eris was instaled via go")
@@ -72,7 +80,7 @@ func GoOrBinary() (string, error) {
 			return "binary", nil
 		}
 	} else {
-		return "", fmt.Errorf("could not determine how eris is isntalled")
+		return "", fmt.Errorf("could not determine how eris is installed")
 	}
 	return "", err
 }
