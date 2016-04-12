@@ -1002,7 +1002,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 
 	// Don't fill in port bindings if randomizing the ports.
 	if !ops.PublishAllPorts {
-		ports := util.MapPorts(srv.Ports, strings.Fields(ops.Ports))
+		ports := util.MapPorts(srv.Ports, strings.Split(ops.Ports, ","))
 
 		for _, entry := range srv.Ports {
 			ip, _, exposed := util.PortComponents(entry)
