@@ -13,7 +13,6 @@ import (
 )
 
 func Initialize(do *definitions.Do) error {
-	log.Warn("Checking for Eris root directory")
 	newDir, err := checkThenInitErisRoot(do.Quiet)
 	if err != nil {
 		return err
@@ -86,16 +85,16 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 func checkThenInitErisRoot(force bool) (bool, error) {
 	var newDir bool
 	if force { //for testing only
-		log.Warn("Force initializing eris root directory")
+		log.Warn("Force initializing Eris root directory")
 		if err := common.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
 		}
 		return true, nil
 	}
 	if !util.DoesDirExist(common.ErisRoot) {
-		log.Warn("Eris root directory does not exist. The marmots will initialize this directory for you")
+		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := common.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
+			return true, fmt.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
 		}
 		newDir = true
 	} else { // ErisRoot exists, prompt for overwrite
@@ -116,7 +115,7 @@ func checkIfCanOverwrite(doYes bool) error {
 	if doYes {
 		return nil
 	}
-	log.WithField("path", common.ErisRoot).Warn("Eris root directory already exists")
+	log.WithField("path", common.ErisRoot).Warn("Eris root directory")
 	log.WithFields(log.Fields{
 		"services path": common.ServicesPath,
 		"actions path":  common.ActionsPath,

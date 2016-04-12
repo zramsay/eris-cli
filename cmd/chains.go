@@ -86,7 +86,7 @@ be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-the [eris chains new chainName --dir chainName] for that which will import all 
+the [eris chains new chainName --dir chainName] for that which will import all
 of the files which make creates into containers and start your shiny new chain.
 
 If you have any questions on eris chains make, please see the eris-cm (chain manager)
