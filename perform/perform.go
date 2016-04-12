@@ -642,6 +642,8 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 }
 
 // DockerRemoveImage removes the image specified by name
+// Image will be force removed if force = true
+// Function is ~ to `docker rmi imageName`
 func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
 		Force: force,
@@ -649,27 +651,32 @@ func DockerRemoveImage(name string, force bool) error {
 	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
 }
 
-// TODO (explainer)
-func DockerBuild(dockerfile string) error {
-	// below has been hacked from : https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
+// DockerBuild will build an image with imageName
+// and a Dockerfile passed in as strings
+// Function is ~ to `docker build -t imageName .`
+// where a Dockerfile is in the `pwd`
+func DockerBuild(imageName, dockerfile string) error {
+	// below has been adapted from: 
+	// https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
 	// and could probably be much more elegant
 	t := time.Now()
 	inputbuf := bytes.NewBuffer(nil)
 	writer := os.Stdout
-	//inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	tr := tar.NewWriter(inputbuf)
-	//toWrite := "FROM base\nMAINTAINER Eris Industries <support@erisindustries.com>\nRUN mkdir -p fuck"
-	size := len([]byte(dockerfile))
-	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(size), ModTime: t, AccessTime: t, ChangeTime: t})
+	sizeDockerfile := int64(len([]byte(dockerfile)))
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: sizeDockerfile, ModTime: t, AccessTime: t, ChangeTime: t})
 	tr.Write([]byte(dockerfile))
 	tr.Close()
-	//picked only what's necessary for now: this may change with #611
 
+	//log.Debug(dockerfile)
+	//log.Debug(imageName)
+
+	//picked only what's necessary for now: this may change with #611
 	r, w := io.Pipe()
 	imgOpts := docker.BuildImageOptions{
-		Name: "eris/update/temp",
+		Name: imageName,
 		//Dockerfile: dockerfile,
-		RmTmpContainer: false,
+		RmTmpContainer: true,
 		InputStream: inputbuf,
 		OutputStream: w,
 		//OutputStream: outputbuf,
@@ -687,13 +694,18 @@ func DockerBuild(dockerfile string) error {
 	}()
 	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	if err, ok := <-ch; ok {
-		return err
+		// doesn't catch the build error; that's OK, it'll be displayed to user
+		// from json stream & the image will be checked by checkImageExists
+		return util.DockerError(err)
 	}
 
-
-//	log.Warn("about to build image...")
-//	log.Warn("DAFUQ")
-//	log.Warn(fmt.Sprintf("Error: %v", err))
+	ok, err := checkImageExists(imageName)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("Image does not exist. Something went wrong. Exiting")
+	}
 
 	return nil
 }
@@ -1181,4 +1193,24 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	}
 
 	return opts, nil
+}
+
+func checkImageExists(imageName string) (bool, error) {
+	fail := false
+
+	opts := docker.ListImagesOptions{
+		Filter: imageName,
+	}
+
+	anImage, err := util.DockerClient.ListImages(opts)
+	if err != nil {
+		return fail, util.DockerError(err)
+	}
+	if len(anImage) != 1 {
+		return fail, nil
+	} else {
+		return true, nil
+	}
+
+	return fail, nil
 }

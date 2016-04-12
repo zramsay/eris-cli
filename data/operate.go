@@ -160,9 +160,12 @@ func ExportData(do *definitions.Do) error {
 		reader, writer := io.Pipe()
 		defer reader.Close()
 
-		//if err := checkErisContainerRoot(do, "export"); err != nil {
-		//	return err
-		//}
+		if !do.Operations.SkipCheck { // sometimes you want greater flexibility
+			if err := checkErisContainerRoot(do, "export"); err != nil {
+				return err
+			}
+		}
+
 		opts := docker.DownloadFromContainerOptions{
 			OutputStream: writer,
 			Path:         do.Source,
@@ -238,7 +241,7 @@ func MoveOutOfDirAndRmDir(src, dest string) error {
 // check path for ErisContainerRoot
 // XXX this is opiniated & we may want to change in future
 // for more flexibility with filesystem of data conts
-// [zr] yes, it is opiniated, silenced in ExportData for flexibility
+// [zr] yes, it is opiniated; do.Operations.SkipCheck will silence it when needed
 func checkErisContainerRoot(do *definitions.Do, typ string) error {
 
 	r, err := regexp.Compile(ErisContainerRoot)

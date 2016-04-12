@@ -5,137 +5,163 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/perform"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/common/go/common"
 )
 
 func UpdateEris(do *definitions.Do) error {
-	
-	log.Warn("building eris bin container with branch:")
-	log.Warn(do.Branch)
-	binPath := "" //get from stuff below
-	if err := BuildErisBinContainer(do.Branch, binPath); err != nil {
-		return err
-	}
 
-/*	whichEris, err := GoOrBinary()
+	whichEris, binPath, err := GoOrBinary()
 	if err != nil {
 		return err
 	}
-	// TODO check flags!
 
 	if whichEris == "go" {
+		// ensure git and go are installed
 		hasGit, hasGo := CheckGitAndGo(true, true)
 		if !hasGit || !hasGo {
 			return fmt.Errorf("either git or go is not installed. both are required for non-binary update")
 		}
-		if err := UpdateErisGo(do); err != nil {
+
+		log.WithField("branch", do.Branch).Warn("Building eris binary via go with:")
+		if err := UpdateErisGo(do.Branch); err != nil {
 			return err
 		}
 	} else if whichEris == "binary" {
-		if err := UpdateErisBinary(); err != nil {
+		if err := UpdateErisViaBinary(do.Branch, binPath); err != nil {
 			return err
 		}
+
 	} else {
-		return fmt.Errorf("The marmots could not figure out how eris was installed")
-	}*/
+		return fmt.Errorf("The marmots could not figure out how eris was installed. Exiting.")
+	}
 
 	//checks for deprecated dir names and renames them
 	// false = no prompt
 	if err := util.MigrateDeprecatedDirs(common.DirsToMigrate, false); err != nil {
-		log.Warn(fmt.Sprintf("Directory migration error: %v\nContinuing update without migration", err))
+		log.Warn(fmt.Sprintf("Directory migration error: %v\nCheck your eris directory.", err))
 	}
-	log.Warn("Eris update successful. Please re-run `eris init`.")
+	log.Warn("Eris update successful. Please re-run [eris init]")
 	return nil
 }
 
-func BuildErisBinContainer(branch, binaryPath string) error {
-	// quay.io does not parse!
-	//dTest := fmt.Sprintf("FROM base\nMAINTAINER Eris Industries <support@erisindustries.com>\n")
-	dockerfile := `FROM base
-MAINTAINER Eris Industries <support@erisindustries.com>
+func UpdateErisViaBinary(branch, binPath string) error {
 
-ENV NAME         eris-cli
-ENV REPO 	 eris-ltd/$NAME
-ENV BRANCH       ` + branch + `
-ENV CLONE_PATH   $GOPATH/src/github.com/eris-ltd/eris-cli
-
-RUN mkdir --parents $CLONE_PATH
-
-RUN git clone -q https://github.com/$REPO $CLONE_PATH
-RUN cd $CLONE_PATH && git checkout -q $BRANCH
-RUN cd $CLONE_PATH/cmd/eris && go build -o $INSTALL_BASE/eris
-
-CMD ["/bin/bash"]`
-
-	//log.Warn(dockerfile)
-	if err := perform.DockerBuild(dockerfile); err != nil {
+	log.WithField("branch", branch).Warn("Building Eris binary in container with:")
+	if err := BuildErisBinContainer(branch, binPath); err != nil {
 		return err
 	}
-	
-	doUpdate := definitions.NowDo()
-	doUpdate.Operations.Args = []string{"update"}
-	
-	if err := services.StartService(doUpdate); err != nil {
-		return nil
-	}
 
-	doCp := definitions.NowDo()
-	doCp.Name = "update"
+	platform := runtime.GOOS
+	if platform != "windows" {
+		ver, err := version() //because version.Version will be in RAM.
+		if err != nil {
+			return err
+		}
 
-	//$INSTALL_BASE/eris
-	doCp.Source = "/usr/local/bin/eris"
-	doCp.Destination = binaryPath
-	if err := data.ExportData(doCp); err != nil {
-		return err
-	}
+		log.WithField("=>", ver).Warn("The marmots have updated Eris successfully")
+	} // else: { windows instructions already sent displayed }
 
 	return nil
 }
 
-func GoOrBinary() (string, error) {
-	which, err := exec.Command("which", "eris").CombinedOutput()
+func UpdateErisGo(branch string) error {
+	// all the following functions are in gitandgo.go
+
+	// change pwd to eris-cli for the next functions
+	if err := ChangeDirectoryToCLI(); err != nil {
+		return err
+	}
+
+	if err := CheckoutBranch(branch); err != nil {
+		return err
+	}
+
+	if err := PullBranch(branch); err != nil {
+		return err
+	}
+
+	if err := InstallErisGo(); err != nil {
+		return err
+	}
+
+	ver, err := version() //because version.Version will be in RAM.
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	toCheck := strings.Split(string(which), "/")
+	log.WithField("=>", ver).Warn("The marmots have updated Eris successfully")
+	return nil
+}
+
+// returns a string of each the type of installation
+// and path to the binary; the latter is only used for
+// non-go binary installation
+func GoOrBinary() (string, string, error) {
+
+	erisLook, err := exec.LookPath("eris")
+	if err != nil {
+		return "", "", err
+	}
+
+	toCheck := strings.Split(string(erisLook), "/")
 	length := len(toCheck)
-	usr := toCheck[length-3]
 	bin := util.TrimString(toCheck[length-2])
 	eris := util.TrimString(toCheck[length-1]) //sometimes ya just gotta trim
 
 	gopath := filepath.Join(os.Getenv("GOPATH"), bin, eris)
-	
-	erisLook, err := exec.LookPath("eris")
-	if err != nil {
-		return "", err
-	}
 
-	if string(which) != erisLook {
-		return "", fmt.Errorf("`which eris` returned (%s) while the exec.LookPath(`eris`) command returned (%s). these need to match", string(which), erisLook)
-	}
-	
-	if bin == "bin" && eris == "eris" {
-		if util.TrimString(gopath) == util.TrimString(string(which)) { // gotta trim those strings!
-			log.Debug("looks like eris was instaled via go")
-			return "go", nil
-		} else if usr == "usr" { //binary check
-			log.Debug("looks like eris was instaled via binary")
-			// lookPath ...?
-			// "usr/bin/eris"
-			return "binary", nil
+	trimEris := util.TrimString(string(erisLook))
+
+	if eris == "eris" {
+		// check if eris is installed via go
+		if util.TrimString(gopath) == trimEris {
+			goWarn := fmt.Sprintf(`The marmots have detected a source installation located at: (%s)
+Continuing will update eris to either the latest version, or the branch you've specified.
+Do you wish to continue?`, trimEris)
+			if util.QueryYesOrNo(goWarn) == util.Yes {
+				return "go", erisLook, nil
+			} else {
+				return "", "", fmt.Errorf("Permission to update denied; exiting.")
+			}
+		} else { // eris is installed via binary
+			binWarn := fmt.Sprintf(`The marmots have detected a binary installation located at: (%s)
+Continuing will update eris to either the latest version, or the branch you've specified.
+Do you wish to continue?`, trimEris)
+			if util.QueryYesOrNo(binWarn) == util.Yes {
+				return "binary", erisLook, nil
+			} else {
+				return "", "", fmt.Errorf("Permission to update denied; exiting.")
+			}
 		}
-	} else {
-		return "", fmt.Errorf("could not determine how eris is installed")
 	}
-	return "", err
+	return "", "", fmt.Errorf("could not determine how eris is installed")
+}
+
+func CheckGitAndGo(git, gO bool) (bool, bool) {
+	hasGit := false
+	hasGo := false
+	if git {
+		stdOut1, err := exec.Command("git", "version").CombinedOutput()
+		if err != nil {
+			log.WithField("version", string(stdOut1)).Warn("Ensure you have git installed.")
+		} else {
+			hasGit = true
+		}
+	}
+	if gO {
+		stdOut2, err := exec.Command("go", "version").CombinedOutput()
+		if err != nil {
+			log.WithField("version", string(stdOut2)).Warn("Ensure you have Go installed.")
+		} else {
+			hasGo = true
+		}
+	}
+	return hasGit, hasGo
 }

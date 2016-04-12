@@ -35,9 +35,9 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 	for depDir, newDir := range dirsToMigrate {
 		log.WithFields(log.Fields{
 			"old":       depDir,
-			"oldExists": DoesDirExist(depDir),
+			"old exists": DoesDirExist(depDir),
 			"new":       newDir,
-			"newExists": DoesDirExist(newDir),
+			"new exists": DoesDirExist(newDir),
 		}).Debug("Checking Directories to Migrate")
 		if !DoesDirExist(depDir) && DoesDirExist(newDir) { //already migrated, nothing to see here
 			continue

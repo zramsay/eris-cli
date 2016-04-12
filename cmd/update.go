@@ -4,6 +4,7 @@ import (
 	"github.com/eris-ltd/eris-cli/update"
 
 	"github.com/spf13/cobra"
+	. "github.com/eris-ltd/common/go/common"
 )
 
 var Update = &cobra.Command{
@@ -28,12 +29,11 @@ func buildUpdateCommand() {
 }
 
 func addUpdateFlags() {
-	Update.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from. requires that eris was installed via go and, git installed")
-	Update.Flags().StringVarP(&do.Commit, "commit", "", "", "specify a commit to update from. requires that eris was installed via go and, git installed")
-	Update.Flags().StringVarP(&do.Version, "version", "", "", "specify a branch to update from. requires that eris was installed via go and, git installed")
+	Update.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from")
+	//Update.Flags().StringVarP(&do.Commit, "commit", "", "", "specify a commit to update from")
+	//Update.Flags().StringVarP(&do.Version, "version", "", "", "specify a version to update from")
 }
 
 func UpdateTool(cmd *cobra.Command, args []string) {
-	//arg check?
-	update.UpdateEris(do)
+	IfExit(update.UpdateEris(do))
 }

@@ -66,10 +66,11 @@ type Do struct {
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	//update (go only)
+	// update 
 	Branch  string `mapstructure:"," json:"," yaml:"," toml:","`
-	Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
-	Version string `mapstructure:"," json:"," yaml:"," toml:","`
+	// XXX below requested by @kootpv. to implement once command is stable
+	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
+	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
@@ -77,6 +78,7 @@ type Do struct {
 	Images     bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall  bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes    bool `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//data import/export
 	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`
