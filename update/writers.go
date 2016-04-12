@@ -1,4 +1,4 @@
-package util
+package update
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func InstallErisGo() {
 		log.Fatalf("Error with go install ./cmd/eris: %v", string(stdOut))
 	}
 
-	log.Debug("Go install worked correctly")
+	log.Debug("go install worked correctly")
 }
 
 func version() string {
@@ -58,7 +58,6 @@ func version() string {
 
 }
 
-// TODO break this up!!!
 func DownloadLatestBinaryRelease() (string, error) {
 
 	filename, fileURL, version, err := getLatestBinaryInfo()

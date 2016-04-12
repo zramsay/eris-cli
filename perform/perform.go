@@ -1,6 +1,7 @@
 package perform
 
 import (
+	"time"
 	"archive/tar"
 	"bytes"
 	"errors"
@@ -652,23 +653,48 @@ func DockerRemoveImage(name string, force bool) error {
 func DockerBuild(dockerfile string) error {
 	// below has been hacked from : https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
 	// and could probably be much more elegant
-	inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
+	t := time.Now()
+	inputbuf := bytes.NewBuffer(nil)
+	writer := os.Stdout
+	//inputbuf, outputbuf := bytes.NewBuffer(nil), bytes.NewBuffer(nil)
 	tr := tar.NewWriter(inputbuf)
-	//tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: 10, ModTime: t, AccessTime: t, ChangeTime: t})
+	//toWrite := "FROM base\nMAINTAINER Eris Industries <support@erisindustries.com>\nRUN mkdir -p fuck"
+	size := len([]byte(dockerfile))
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(size), ModTime: t, AccessTime: t, ChangeTime: t})
 	tr.Write([]byte(dockerfile))
 	tr.Close()
 	//picked only what's necessary for now: this may change with #611
+
+	r, w := io.Pipe()
 	imgOpts := docker.BuildImageOptions{
-		Name: "no_name",
+		Name: "eris/update/temp",
 		//Dockerfile: dockerfile,
 		RmTmpContainer: false,
 		InputStream: inputbuf,
-		OutputStream: outputbuf,
-
+		OutputStream: w,
+		//OutputStream: outputbuf,
+		RawJSONStream: true,
 	}
-	if err := util.DockerClient.BuildImage(imgOpts); err != nil {
+
+	ch := make(chan error, 1)
+	go func() {
+		defer w.Close()
+		defer close(ch)
+
+		if err := util.DockerClient.BuildImage(imgOpts); err != nil {
+			ch <- err
+		}
+	}()
+	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	if err, ok := <-ch; ok {
 		return err
 	}
+
+
+//	log.Warn("about to build image...")
+//	log.Warn("DAFUQ")
+//	log.Warn(fmt.Sprintf("Error: %v", err))
+
 	return nil
 }
 
