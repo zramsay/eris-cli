@@ -243,7 +243,7 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 	if header != "" {
 		// Tabs are necessary so that the Tabwriter doesn't break
 		// on a newline (1 tab per column).
-		buf.WriteString("\t\t\t\t\t\n")
+		buf.WriteString("\t\t\t\t\t\t\n")
 	}
 	return nil
 }

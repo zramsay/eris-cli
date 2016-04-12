@@ -57,6 +57,14 @@ Complete documentation is available at https://docs.erisindustries.com
 			return
 		}
 
+		if !util.DoesDirExist(ErisRoot) {
+			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
+			if err := InitErisDir(); err != nil {
+				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+			}
+			log.Warn()
+		}
+
 		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
