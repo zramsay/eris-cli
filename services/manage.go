@@ -229,8 +229,13 @@ func RmService(do *definitions.Do) error {
 			return err
 		}
 		if util.IsService(service.Service.Name, false) {
-			err = perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force)
-			if err != nil {
+			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force); err != nil {
+				return err
+			}
+		}
+
+		if do.RmImage {
+			if err := perform.DockerRemoveImage(service.Service.Image, true); err != nil {
 				return err
 			}
 		}

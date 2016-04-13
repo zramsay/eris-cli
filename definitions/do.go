@@ -13,6 +13,7 @@ type Do struct {
 	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	RmImage       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Services      bool     `mapstructure:"," json:"," yaml:"," toml:","`

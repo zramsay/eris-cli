@@ -266,6 +266,7 @@ func addServicesFlags() {
 	buildFlag(servicesRm, do, "file", "service")
 	buildFlag(servicesRm, do, "data", "service")
 	buildFlag(servicesRm, do, "rm-volumes", "service")
+	servicesRm.Flags().BoolVarP(&do.RmImage, "image", "", false, "remove the services' docker image")
 
 	buildFlag(servicesStart, do, "publish", "service")
 	buildFlag(servicesStart, do, "ports", "service")
