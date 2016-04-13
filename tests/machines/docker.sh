@@ -50,7 +50,7 @@
 # -----------------------------------------------------------------------------
 # Set defaults
 
-default_docker="1.10.1"
+default_docker="1.10.2"
 
 # -----------------------------------------------------------------------------
 # Check Ubuntu
@@ -116,6 +116,7 @@ echo "Docker installed"
 
 echo "Restarting Newly Installed Docker"
 echo
+sed -i.bak -e 's/--raw-logs//g' /etc/init/docker.conf
 service docker start
 sleep 3 # boot time
 
