@@ -8,9 +8,9 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/gopkg.in/yaml.v2"
+	"github.com/BurntSushi/toml"
+	log "github.com/Sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // if given empty string for fileName will use Service

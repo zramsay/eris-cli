@@ -3,7 +3,7 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/clean"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 //TODO better explanations of command

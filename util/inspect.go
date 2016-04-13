@@ -9,10 +9,10 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/oleiade/reflections"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/serenize/snaker"
+	log "github.com/Sirupsen/logrus"
+	docker "github.com/fsouza/go-dockerclient"
+	"github.com/oleiade/reflections"
+	"github.com/serenize/snaker"
 )
 
 func PrintInspectionReport(cont *docker.Container, field string) error {

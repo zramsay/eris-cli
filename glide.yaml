@@ -1,0 +1,27 @@
+package: github.com/eris-ltd/eris-cli
+import:
+- package: github.com/BurntSushi/toml
+- package: github.com/Sirupsen/logrus
+- package: github.com/docker/docker
+  subpackages:
+  - pkg/jsonmessage
+  - pkg/term
+- package: github.com/eris-ltd/common
+  subpackages:
+  - go/common
+  - go/ipfs
+  - go/log
+- package: github.com/fsouza/go-dockerclient
+  subpackages:
+  - external/github.com/docker/docker/pkg/archive
+- package: github.com/kr/text
+  subpackages:
+  - colwriter
+- package: github.com/oleiade/reflections
+- package: github.com/pborman/uuid
+- package: github.com/serenize/snaker
+- package: github.com/spf13/cobra
+- package: github.com/spf13/pflag
+- package: github.com/spf13/viper
+- package: github.com/tcnksm/go-gitconfig
+- package: gopkg.in/yaml.v2

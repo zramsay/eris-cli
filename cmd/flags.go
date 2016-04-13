@@ -5,7 +5,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 //XXX flags were not deduplicated if only one known instance of being used

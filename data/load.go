@@ -4,7 +4,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 func PretendToBeAService(serviceYourPretendingToBe string) *def.ServiceDefinition {

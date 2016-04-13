@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/spf13/viper"
 )
 
 func Edit(conf *viper.Viper, configVals []string) error {

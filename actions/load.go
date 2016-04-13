@@ -7,10 +7,10 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	dir "github.com/eris-ltd/common/go/common"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	"github.com/spf13/viper"
 )
 
 func LoadActionDefinition(actionName string) (*def.Action, []string, error) {

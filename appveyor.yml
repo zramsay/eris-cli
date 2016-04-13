@@ -5,6 +5,7 @@ environment:
   TEST_ON_WINDOWS: "true"
   GOPATH: C:\
   GOBIN: C:\bin
+  GO15VENDOREXPERIMENT: 1
   PATH: '%PATH%;C:\bin'
   MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
   SKIP_STACK: "true" # remove later when stack tests work on windows.

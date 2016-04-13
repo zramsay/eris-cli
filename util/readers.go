@@ -4,8 +4,8 @@ import (
 	"io"
 	"strings"
 
-	ipfs "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
+	ipfs "github.com/eris-ltd/common/go/ipfs"
+	"github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
 )
 
 func Tar(path string, compression archive.Compression) (io.ReadCloser, error) {

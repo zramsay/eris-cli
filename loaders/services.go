@@ -9,11 +9,11 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	"github.com/spf13/viper"
 )
 
 func LoadServiceDefinition(servName string, newCont bool) (*definitions.ServiceDefinition, error) {

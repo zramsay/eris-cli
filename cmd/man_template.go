@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/pflag"
+	"github.com/spf13/pflag"
 )
 
 // Rendering Cobra commands directly to groff_mdoc(7).

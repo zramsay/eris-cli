@@ -13,8 +13,8 @@ import (
 
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/kr/text/colwriter"
+	"github.com/docker/docker/pkg/term"
+	"github.com/kr/text/colwriter"
 )
 
 // Definition holds useful data about definition files

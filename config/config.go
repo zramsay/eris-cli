@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	dir "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	dir "github.com/eris-ltd/common/go/common"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/BurntSushi/toml"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/tcnksm/go-gitconfig"
+	"github.com/BurntSushi/toml"
+	"github.com/spf13/viper"
+	"github.com/tcnksm/go-gitconfig"
 )
 
 // Properly scope the globalConfig.
