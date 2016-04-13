@@ -42,15 +42,16 @@ func Initialize(do *definitions.Do) error {
 		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
 	}
 
-	log.Warnf(`
+	if !do.Quiet {
+		log.Warnf(`
 Eris sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
 `, "don't send", filepath.Join(common.ErisRoot, "eris.toml"))
-	//TODO: when called from cli provide option to go on tour, like `ipfs tour`
-	//[zr] this'll be cleaner with `make`
-	log.Warn("The marmots have everything set up for you. Type [eris] to get started")
-
+		//TODO: when called from cli provide option to go on tour, like `ipfs tour`
+		//[zr] this'll be cleaner with `make`
+		log.Warn("The marmots have everything set up for you. Type [eris] to get started")
+	}
 	return nil
 }
 
@@ -85,7 +86,7 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 func checkThenInitErisRoot(force bool) (bool, error) {
 	var newDir bool
 	if force { //for testing only
-		log.Warn("Force initializing Eris root directory")
+		log.Info("Force initializing Eris root directory")
 		if err := common.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
 		}
