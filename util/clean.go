@@ -8,9 +8,9 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	log "github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/common/go/common"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 func Clean(toClean map[string]bool) error {

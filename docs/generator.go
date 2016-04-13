@@ -6,7 +6,7 @@ import (
 	commands "github.com/eris-ltd/eris-cli/cmd"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 )
 
 var RENDER_DIR = fmt.Sprintf("./docs/eris-cli/%s/", version.VERSION)

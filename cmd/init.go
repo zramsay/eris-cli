@@ -5,8 +5,8 @@ import (
 
 	ini "github.com/eris-ltd/eris-cli/initialize"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 // flags to add: --no-clone

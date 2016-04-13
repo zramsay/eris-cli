@@ -12,7 +12,7 @@ env:
     - SKIP_PACKAGES=true
 
 install:
-- eval "$(gimme 1.5)"
+- eval "$(gimme 1.6)"
 - brew update
 - brew install jq
 - sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.10.1 >/usr/local/bin/docker"

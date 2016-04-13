@@ -1,6 +1,6 @@
 package commands
 
-import "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+import "github.com/spf13/cobra"
 
 const helpTemplate = `Usage: {{.UseLine}}{{if .Runnable}}{{if .HasSubCommands}} COMMAND{{end}}{{if .HasFlags}} [FLAG...]{{end}}{{end}}
 

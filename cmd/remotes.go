@@ -3,7 +3,7 @@ package commands
 import (
 	rem "github.com/eris-ltd/eris-cli/remotes"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var Remotes = &cobra.Command{

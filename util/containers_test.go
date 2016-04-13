@@ -5,7 +5,7 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 func init() {
