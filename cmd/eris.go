@@ -8,6 +8,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -59,9 +60,15 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		if !util.DoesDirExist(ErisRoot) {
 			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
-			if err := InitErisDir(); err != nil {
+			do := definitions.NowDo()
+			do.Yes = true
+			do.Pull = false
+			do.Source = "rawgit"
+			do.Quiet = true
+			if err := initialize.Initialize(do); err != nil {
 				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
 			}
+
 			log.Warn()
 		}
 

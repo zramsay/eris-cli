@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 
 	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/config"
@@ -641,7 +642,7 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 // DockerRemoveImage removes the image specified by name
 func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
-		Force:         force,
+		Force: force,
 	}
 	return util.DockerClient.RemoveImageExtended(name, removeOpts)
 }
@@ -1010,7 +1011,9 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 
 	// Don't fill in port bindings if randomizing the ports.
 	if !ops.PublishAllPorts {
-		ports := util.MapPorts(srv.Ports, strings.Split(ops.Ports, ","))
+		ports := util.MapPorts(srv.Ports, strings.FieldsFunc(ops.Ports, func(c rune) bool {
+			return unicode.IsSpace(c) || c == ','
+		}))
 
 		for _, entry := range srv.Ports {
 			ip, _, exposed := util.PortComponents(entry)
