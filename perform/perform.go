@@ -638,6 +638,14 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 	return nil
 }
 
+// DockerRemoveImage removes the image specified by name
+func DockerRemoveImage(name string, force bool) error {
+	removeOpts := docker.RemoveImageOptions{
+		Force:         force,
+	}
+	return util.DockerClient.RemoveImageExtended(name, removeOpts)
+}
+
 // ContainerExists returns true if the container specified
 // by a long name exists, false otherwise.
 func ContainerExists(name string) bool {
