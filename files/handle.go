@@ -23,7 +23,12 @@ import (
 func GetFiles(do *definitions.Do) error {
 	ensureRunning()
 
-	dirBool := checkPath(do.Path)
+	// where Object is a directory added recursively to ipfs
+	// do.Name is the hash
+	dirBool, err := isHashAnObject(do.Name)
+	if err != nil {
+		return err
+	}
 
 	if dirBool {
 		log.WithFields(log.Fields{
@@ -36,7 +41,6 @@ func GetFiles(do *definitions.Do) error {
 		}
 		log.Warn("Directory object getted succesfully.")
 		log.Warn(util.TrimString(buf.String()))
-		//get like you put dir
 	} else {
 		if err := importFile(do.Name, do.Path); err != nil {
 			return err
@@ -311,7 +315,11 @@ func listFile(objectHash string) (string, error) {
 		hash, err = ipfs.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
 	}
 	if err != nil {
-		return "", err
+		if fmt.Sprintf("%v", err) != "EOF" {
+			return "", err
+		} else {
+			return hash, nil
+		}
 	}
 	return hash, nil
 }
@@ -388,15 +396,19 @@ func checkGatewayFlag(do *definitions.Do) error {
 	return nil
 }
 
-func checkPath(path string) bool {
+// checks an ipfs hash to see if it is an object or a file
+// returns true if an object (to be saved as a directory)
+func isHashAnObject(ipfsHash string) (bool, error) {
 	dirBool := false
-	thing := strings.Split(path, ".")
-	if len(thing) == 1 {
-		log.Warn("No file extension detected, assuming directory.")
-		return true
-	} else {
-		log.Warn("File extension detected, assuming file.")
-		return false
+
+	result, err := listFile(ipfsHash)
+	if err != nil {
+		return dirBool, err
 	}
-	return dirBool
+	if util.TrimString(result) == "" { //not a dir
+		return dirBool, nil // false
+	} else { //something is in there, must be a dir
+		return true, nil
+	}
+	return dirBool, nil
 }

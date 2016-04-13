@@ -103,8 +103,21 @@ func TestGetFiles(t *testing.T) {
 	})
 	defer ipfs.Close()
 
-	if err := GetFiles(do); err != nil {
-		t.Fatalf("err getting files %v\n", err)
+	passed := false
+	for i := 0; i < 5; i++ {
+		if err := GetFiles(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+	// final time will throw
+		if err := GetFiles(do); err != nil {
+			t.Fatalf("err getting files %v\n", err)
+		}
 	}
 
 	if expected := "/ipfs/" + hash; ipfs.Path() != expected {
