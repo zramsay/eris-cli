@@ -312,17 +312,17 @@ func create(t, name string) error {
 
 	_, err := DockerClient.CreateContainer(opts)
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 	return nil
 }
 
 func start(name string) error {
-	return DockerClient.StartContainer(name, nil)
+	return DockerError(DockerClient.StartContainer(name, nil))
 }
 
 func stop(name string) error {
-	return DockerClient.StopContainer(name, 10)
+	return DockerError(DockerClient.StopContainer(name, 10))
 }
 
 func remove(name string) error {

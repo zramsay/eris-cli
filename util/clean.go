@@ -65,13 +65,13 @@ func cleanHandler(toClean map[string]bool) error {
 func RemoveAllErisContainers() error {
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		return fmt.Errorf("error listing containers: %v\n", err)
+		return fmt.Errorf("Error listing containers: %v", DockerError(err))
 	}
 
 	for _, container := range contns {
 		if container.Labels[def.LabelEris] == "true" {
 			if err := removeContainer(container.ID); err != nil {
-				return fmt.Errorf("error removing container: %v\n", err)
+				return fmt.Errorf("Error removing container: %v", DockerError(err))
 			}
 		}
 	}
@@ -116,7 +116,7 @@ func RemoveErisImages() error {
 	}
 	allTheImages, err := DockerClient.ListImages(opts)
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 
 	//get all repo tags & IDs
@@ -151,7 +151,7 @@ func RemoveErisImages() error {
 			"id": imageID,
 		}).Debug("Removing image")
 		if err := DockerClient.RemoveImage(imageID); err != nil {
-			return err
+			return DockerError(err)
 		}
 	}
 	return nil

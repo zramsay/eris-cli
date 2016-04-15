@@ -43,7 +43,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 func PrintLineByContainerID(containerID string, existing bool) ([]string, error) {
 	cont, err := DockerClient.InspectContainer(containerID)
 	if err != nil {
-		return nil, err
+		return nil, DockerError(err)
 	}
 	return printLine(cont, existing)
 }
@@ -51,7 +51,7 @@ func PrintLineByContainerID(containerID string, existing bool) ([]string, error)
 func PrintPortMappings(id string, ports []string) error {
 	cont, err := DockerClient.InspectContainer(id)
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 
 	log.Warn(ParsePortMappings(cont.NetworkSettings.Ports, ports))
