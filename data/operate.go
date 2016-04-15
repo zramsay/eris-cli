@@ -81,13 +81,13 @@ func ImportData(do *definitions.Do) error {
 		log.WithField("=>", containerName).Info("Copying into container")
 		log.WithField("path", do.Source).Debug()
 		if err := util.DockerClient.UploadToContainer(srv.Operations.SrvContainerName, opts); err != nil {
-			return err
+			return util.DockerError(err)
 		}
 
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		// and eris images have the `eris` user by default
 		if err := runData(containerName, []string{"chown", "--recursive", "eris", do.Destination}); err != nil {
-			return err
+			return util.DockerError(err)
 		}
 
 	} else {

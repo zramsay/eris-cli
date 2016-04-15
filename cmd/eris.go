@@ -75,7 +75,7 @@ Complete documentation is available at https://docs.erisindustries.com
 		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
-			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs\n\n%v", err))
+			IfExit(fmt.Errorf("There was an error connecting to your Docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs: %v", util.DockerError(err)))
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {

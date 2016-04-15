@@ -542,7 +542,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 	log.WithField("=>", ops.SrvContainerName).Debug("Checking container exists")
 	container, err := util.DockerClient.InspectContainer(ops.SrvContainerName)
 	if err != nil {
-		return err
+		return util.DockerError(err)
 	}
 
 	log.WithField("=>", longNewName).Debug("Checking new container exists")
@@ -567,7 +567,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 		Force:         true,
 	}
 	if err := util.DockerClient.RemoveContainer(removeOpts); err != nil {
-		return err
+		return util.DockerError(err)
 	}
 
 	log.Debug("Creating new container")
@@ -598,7 +598,7 @@ func DockerRename(ops *def.Operation, newName string) error {
 	newContainer, err := util.DockerClient.CreateContainer(createOpts)
 	if err != nil {
 		log.Debug("Container not created")
-		return err
+		return util.DockerError(err)
 	}
 
 	// Was running before remove.
@@ -644,7 +644,7 @@ func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
 		Force: force,
 	}
-	return util.DockerClient.RemoveImageExtended(name, removeOpts)
+	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
 }
 
 // ContainerExists returns true if the container specified
@@ -698,7 +698,7 @@ func pullImage(name string, writer io.Writer) error {
 		defer close(ch)
 
 		if err := util.DockerClient.PullImage(opts, auth); err != nil {
-			ch <- err
+			ch <- util.DockerError(err)
 		}
 	}()
 	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
@@ -730,14 +730,14 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 				log.Warn("This could take a few minutes")
 			}
 			if err := pullImage(opts.Config.Image, os.Stdout); err != nil {
-				return nil, err
+				return nil, util.DockerError(err)
 			}
 			dockerContainer, err = util.DockerClient.CreateContainer(opts)
 			if err != nil {
-				return nil, err
+				return nil, util.DockerError(err)
 			}
 		} else {
-			return nil, err
+			return nil, util.DockerError(err)
 		}
 	}
 	return dockerContainer, nil
@@ -748,7 +748,7 @@ func startContainer(opts docker.CreateContainerOptions) error {
 	// is deprecated since Docker v1.10.0.
 	opts.HostConfig = nil
 
-	return util.DockerClient.StartContainer(opts.Name, opts.HostConfig)
+	return util.DockerError(util.DockerClient.StartContainer(opts.Name, opts.HostConfig))
 }
 
 func startInteractiveContainer(opts docker.CreateContainerOptions) error {
@@ -817,7 +817,7 @@ func attachContainer(id string, attached chan struct{}) error {
 		Success:      attached,
 	}
 
-	return util.DockerClient.AttachToContainer(opts)
+	return util.DockerError(util.DockerClient.AttachToContainer(opts))
 }
 
 func waitContainer(id string) error {
@@ -860,7 +860,7 @@ func logsContainer(id string, follow bool, tail string) error {
 	}
 
 	if err := util.DockerClient.Logs(opts); err != nil {
-		return err
+		return util.DockerError(err)
 	}
 	return nil
 }
@@ -868,7 +868,7 @@ func logsContainer(id string, follow bool, tail string) error {
 func inspectContainer(id, field string) error {
 	cont, err := util.DockerClient.InspectContainer(id)
 	if err != nil {
-		return err
+		return util.DockerError(err)
 	}
 	util.PrintInspectionReport(cont, field)
 
@@ -878,7 +878,7 @@ func inspectContainer(id, field string) error {
 func stopContainer(id string, timeout uint) error {
 	err := util.DockerClient.StopContainer(id, timeout)
 	if err != nil {
-		return err
+		return util.DockerError(err)
 	}
 	return nil
 }
@@ -892,7 +892,7 @@ func removeContainer(id string, volumes, force bool) error {
 
 	err := util.DockerClient.RemoveContainer(opts)
 	if err != nil {
-		return err
+		return util.DockerError(err)
 	}
 
 	return nil

@@ -42,7 +42,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			log.WithField("=>", endpoint).Debug("Connecting to Docker")
 			DockerClient, err = docker.NewClient(endpoint)
 			if err != nil {
-				IfExit(fmt.Errorf("%v\n", mustInstallError()))
+				IfExit(DockerError(mustInstallError()))
 			}
 		} else {
 			log.WithFields(log.Fields{
@@ -87,7 +87,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				log.Debugf("Error: %v", err)
 				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
-					IfExit(fmt.Errorf("%v\n", e2))
+					IfExit(DockerError(e2))
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
@@ -224,7 +224,7 @@ func getMachineDeets(machName string) (string, string, error) {
 func DockerClientVersion() (string, error) {
 	info, err := DockerClient.Version()
 	if err != nil {
-		return "", err
+		return "", DockerError(err)
 	}
 
 	return info.Get("Version"), nil
@@ -233,7 +233,7 @@ func DockerClientVersion() (string, error) {
 func DockerAPIVersion() (string, error) {
 	info, err := DockerClient.Version()
 	if err != nil {
-		return "", err
+		return "", DockerError(err)
 	}
 
 	return info.Get("APIVersion"), nil
@@ -366,7 +366,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 	}).Debug("Connecting to Docker via TLS")
 	DockerClient, err = docker.NewTLSClient(dockerHost, filepath.Join(dockerCertPath, "cert.pem"), filepath.Join(dockerCertPath, "key.pem"), filepath.Join(dockerCertPath, "ca.pem"))
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 
 	log.Debug("Connected via TLS")
@@ -435,4 +435,11 @@ func setIPFSHostViaDockerHost(dockerHost string) {
 
 	log.WithField("url", dockerIP).Debug("Setting ERIS_IPFS_HOST")
 	os.Setenv("ERIS_IPFS_HOST", dockerIP)
+}
+
+func DockerError(err error) error {
+	if _, ok := err.(*docker.Error); ok {
+		return fmt.Errorf("Docker: %v", err.(*docker.Error).Message)
+	}
+	return err
 }

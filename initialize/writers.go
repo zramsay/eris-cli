@@ -146,7 +146,7 @@ func pullDefaultImages() error {
 				opts.Repository = image
 				opts.Registry = ver.ERIS_REG_BAK
 				if err := util.DockerClient.PullImage(opts, auth); err != nil {
-					ch <- err
+					ch <- util.DockerError(err)
 				}
 			}
 		}()
