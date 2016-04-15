@@ -9,6 +9,8 @@ environment:
   PATH: '%PATH%;C:\bin'
   MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
   SKIP_STACK: "true" # remove later when stack tests work on windows.
+  DOCKER_VERSION: 1.10.0
+  DOCKER_MACHINE_VERSION: 0.4.1
   AWS_ACCESS_KEY_ID:
     secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
   AWS_SECRET_ACCESS_KEY:
@@ -28,9 +30,9 @@ build_script:
 
     choco install -yr jq
 
-    choco install -yr docker -version 1.10.0
+    choco install -yr docker -version %DOCKER_VERSION%
 
-    choco install -yr docker-machine -version 0.4.1
+    choco install -yr docker-machine -version %DOCKER_MACHINE_VERSION%
 
     cd c:\src\github.com\eris-ltd\eris-cli\cmd\eris
 
