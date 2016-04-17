@@ -960,7 +960,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
-			Tty:             true,
+			Tty:             false,
 			OpenStdin:       false,
 			Env:             srv.Environment,
 			Labels:          ops.Labels,
