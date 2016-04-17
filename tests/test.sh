@@ -108,7 +108,8 @@ check_build() {
   then
     echo "Could not build eris image. Rebuilding eris image."
     sleep 5
-    build_eris $BRANCH
+    build_eris $BRANCH &
+    wait $!
     build_result=$?
     check_build "rebuild"
   elif [ "$build_result" -ne 0 ] && [ ! -z $1 ]
