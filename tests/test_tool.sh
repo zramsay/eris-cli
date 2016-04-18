@@ -77,7 +77,8 @@ setup() {
   fi
 
   echo "Checking the Host <-> Docker Connection"
-  docker pull busybox &>/dev/null # needed for clean package tests; also tester for docker connection
+  # Used by clean/clean_test.go.
+  docker pull busybox &>/dev/null
   if [ $? -ne 0 ] && [ -z $1 ]
   then
     echo "Could not connect to Docker backend. Attempting to regenerate certificates."
@@ -153,8 +154,11 @@ packagesToTest() {
     go test ./clean/... && passed Clean
     if [ $? -ne 0 ]; then return 1; fi
   fi
-  # the appveyor.yml currently uses SKIP_STACK; otherwise this is here if faster testing needed;
-  # set in your shell before calling tests/test.sh or tests/test_tool.sh
+  # The appveyor.yml and circle.yml currently use SKIP_PACKAGES and 
+  # SKIP_STACK to parallelize Go and stack tests; otherwise this is 
+  # here for faster test runs when needed.
+  # Set either variable in your shell before calling `tests/test.sh` 
+  # or `tests/test_tool.sh`
   if [[ "$SKIP_STACK" != "true" ]]
   then
     echo "Running Stack Tests"
@@ -218,7 +222,6 @@ flame_out() {
 
 # ---------------------------------------------------------------------------
 # Go!
-
 echo "Hello! The marmots will begin testing now."
 if [[ "$machine" == "eris-test-local" ]]
 then
