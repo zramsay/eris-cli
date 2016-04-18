@@ -3,7 +3,7 @@ package xhandler
 import (
 	"net/http"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/golang.org/x/net/context"
+	"golang.org/x/net/context"
 )
 
 // Chain is an helper to chain middleware handlers together for an easier

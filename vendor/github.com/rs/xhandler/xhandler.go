@@ -14,7 +14,7 @@ package xhandler
 import (
 	"net/http"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/golang.org/x/net/context"
+	"golang.org/x/net/context"
 )
 
 // HandlerC is a net/context aware http.Handler

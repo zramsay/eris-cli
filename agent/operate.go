@@ -15,7 +15,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/rs/cors"
+	"github.com/rs/cors"
 )
 
 func StartAgent(do *definitions.Do) error {
