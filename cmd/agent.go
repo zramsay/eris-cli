@@ -1,8 +1,6 @@
 package commands
 
 import (
-	//	"path/filepath"
-
 	"github.com/eris-ltd/eris-cli/agent"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -28,8 +26,8 @@ Please see (link) for more info.`,
 // Build the agent subcommand
 func buildAgentsCommand() {
 	Agents.AddCommand(agentStart)
-	Agents.AddCommand(agentStop)
-	addAgentsFlags()
+	//Agents.AddCommand(agentStop)
+	//addAgentsFlags()
 }
 
 // start a agent
@@ -41,12 +39,12 @@ var agentStart = &cobra.Command{
 	Run: StartAgent,
 }
 
-var agentStop = &cobra.Command{
+/*var agentStop = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a running agent.",
 	Long:  `Stop a running agent.`,
 	Run:   StopAgent,
-}
+}*/
 
 //----------------------------------------------------------------------
 // cli flags
@@ -61,7 +59,7 @@ func StartAgent(cmd *cobra.Command, args []string) {
 	IfExit(agent.StartAgent(do))
 }
 
-func StopAgent(cmd *cobra.Command, args []string) {
+/*func StopAgent(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
 	IfExit(agent.StopAgent(do))
-}
+}*/

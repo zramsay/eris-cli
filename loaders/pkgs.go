@@ -36,7 +36,7 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	}
 
 	if err != nil {
-		log.Warn("The marmots could not read that package.json. Will use defaults.")
+		log.Info("The marmots could not read that package.json. Will use defaults.")
 		pkg = DefaultPackage(name, chainName)
 	} else {
 		// marshal chain and always reset the operational requirements

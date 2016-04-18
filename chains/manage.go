@@ -97,15 +97,13 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
 	if err := data.ImportData(doData); err != nil {
-		return fmt.Errorf("import data error: %v\n", err)
-		//return err
+		return err
 	}
 
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
-		return fmt.Errorf("import data error: %v\n", err)
-		//return err
+		return err
 	}
 
 	chnPath := filepath.Join(ChainsPath, do.Name)
@@ -117,8 +115,7 @@ func MakeChain(do *definitions.Do) error {
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
-		return fmt.Errorf("exec service error: %v\n", err)
-		//return err
+		return err
 	}
 
 	io.Copy(config.GlobalConfig.Writer, buf)
@@ -126,8 +123,7 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
 	if err := data.ExportData(doData); err != nil {
-		return fmt.Errorf("export data error: %v\n", err)
-		//return err
+		return err
 	}
 
 	if !do.RmD {

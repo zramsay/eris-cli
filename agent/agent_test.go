@@ -60,9 +60,9 @@ func TestMain(m *testing.M) {
 }
 
 // ensure url format satifies required schema
+//TODO parse each kinds of payload (chains, dowload, install)
 func TestParsePayload(t *testing.T) {
 
-	//TODO update
 	toTest := map[string]string{
 		"groupId":   bundleInfo["groupId"],  // needed to buildpath
 		"bundleId":  bundleInfo["bundleId"], // ibid
@@ -106,6 +106,7 @@ func TestDeployContract(t *testing.T) {
 	address := strings.Split(doKey.Result, ",")[0]
 
 	// hack but fmt ipfs
+	// XXX TODO not rely on this dir! => write temp files!
 	// assume wd = agent/
 	wd, err := os.Getwd()
 	if err != nil {
@@ -121,7 +122,7 @@ func TestDeployContract(t *testing.T) {
 	// TODO check that chainCode matches expected code
 }
 
-// setup fake server & his install endpoint ... ?
+// setup fake server & hit install endpoint ... ?
 func TestInstallAgent(t *testing.T) {
 }
 
@@ -262,6 +263,62 @@ func testStopAgent(t *testing.T, agentName string) {
 	}
 
 }
+
+/* XXX write these to file to get the tests sorted
+
+------- /idi/idi.sol ------
+contract IdisContractsFTW {
+  uint storedData;
+
+  function set(uint x) {
+    storedData = x;
+  }
+
+  function get() constant returns (uint retVal) {
+    return storedData;
+  }
+}
+--------------------------
+
+
+-------- /idi/epm.yaml -------
+jobs:
+
+- name: setStorageBase
+  job:
+    set:
+      val: 5
+
+- name: deployStorageK
+  job:
+    deploy:
+      contract: idi.sol
+      wait: true
+
+- name: setStorage
+  job:
+    call:
+      destination: $deployStorageK
+      data: set $setStorageBase
+      wait: true
+
+- name: queryStorage
+  job:
+    query-contract:
+      destination: $deployStorageK
+      data: get
+
+- name: assertStorage
+  job:
+    assert:
+      key: $queryStorage
+      relation: eq
+      val: $setStorageBase
+-----------------------------------
+
+*/
+
+
 
 ///TODO! deal with all this
 func _TestAuthenticateUser(t *testing.T) {
