@@ -110,7 +110,7 @@ func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
 
-	keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from. give full filepath to key")
+	keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 
