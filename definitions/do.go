@@ -25,6 +25,7 @@ type Do struct {
 	ZipFile       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Output        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Overwrite     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`

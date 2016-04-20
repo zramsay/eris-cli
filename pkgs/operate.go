@@ -321,6 +321,11 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 
 		// do.Service.Environment = append(do.Service.Environment, "EPM_DEBUG=true")
 	}
+	if do.Overwrite {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --overwrite "
+
+		// do.Service.Environment = append(do.Service.Environment, "EPM_OVERWRITE_APPROVE=true")
+	}
 
 	if do.CSV != "" {
 		log.WithField("format", do.CSV).Debug("Setting output format to")
