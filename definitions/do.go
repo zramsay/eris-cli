@@ -35,7 +35,6 @@ type Do struct {
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -67,12 +66,19 @@ type Do struct {
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
+	// update 
+	Branch  string `mapstructure:"," json:"," yaml:"," toml:","`
+	// XXX below requested by @kootpv. to implement once command is stable
+	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
+	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Scratch    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Images     bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall  bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes    bool `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//data import/export
 	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`

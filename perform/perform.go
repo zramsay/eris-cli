@@ -1,6 +1,8 @@
 package perform
 
 import (
+	"time"
+	"archive/tar"
 	"bytes"
 	"errors"
 	"fmt"
@@ -640,11 +642,72 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 }
 
 // DockerRemoveImage removes the image specified by name
+// Image will be force removed if force = true
+// Function is ~ to `docker rmi imageName`
 func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
 		Force: force,
 	}
 	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
+}
+
+// DockerBuild will build an image with imageName
+// and a Dockerfile passed in as strings
+// Function is ~ to `docker build -t imageName .`
+// where a Dockerfile is in the `pwd`
+func DockerBuild(imageName, dockerfile string) error {
+	// below has been adapted from: 
+	// https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
+	// and could probably be much more elegant
+	t := time.Now()
+	inputbuf := bytes.NewBuffer(nil)
+	writer := os.Stdout
+	tr := tar.NewWriter(inputbuf)
+	sizeDockerfile := int64(len([]byte(dockerfile)))
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: sizeDockerfile, ModTime: t, AccessTime: t, ChangeTime: t})
+	tr.Write([]byte(dockerfile))
+	tr.Close()
+
+	//log.Debug(dockerfile)
+	//log.Debug(imageName)
+
+	//picked only what's necessary for now: this may change with #611
+	r, w := io.Pipe()
+	imgOpts := docker.BuildImageOptions{
+		Name: imageName,
+		//Dockerfile: dockerfile,
+		RmTmpContainer: true,
+		InputStream: inputbuf,
+		OutputStream: w,
+		//OutputStream: outputbuf,
+		RawJSONStream: true,
+	}
+
+	ch := make(chan error, 1)
+	go func() {
+		defer w.Close()
+		defer close(ch)
+
+		if err := util.DockerClient.BuildImage(imgOpts); err != nil {
+			ch <- err
+		}
+	}()
+	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	if err, ok := <-ch; ok {
+		// doesn't catch the build error; that's OK, it'll be displayed to user
+		// from json stream & the image will be checked by checkImageExists
+		return util.DockerError(err)
+	}
+
+	ok, err := checkImageExists(imageName)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("Image does not exist. Something went wrong. Exiting")
+	}
+
+	return nil
 }
 
 // ContainerExists returns true if the container specified
@@ -1130,4 +1193,24 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	}
 
 	return opts, nil
+}
+
+func checkImageExists(imageName string) (bool, error) {
+	fail := false
+
+	opts := docker.ListImagesOptions{
+		Filter: imageName,
+	}
+
+	anImage, err := util.DockerClient.ListImages(opts)
+	if err != nil {
+		return fail, util.DockerError(err)
+	}
+	if len(anImage) != 1 {
+		return fail, nil
+	} else {
+		return true, nil
+	}
+
+	return fail, nil
 }
