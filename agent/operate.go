@@ -30,7 +30,10 @@ func StartAgent(do *definitions.Do) error {
 	// all origins accepted with simple methods (GET, POST).
 	// See https://github.com/rs/cors
 	handler := cors.Default().Handler(mux)
-	http.ListenAndServe(":17552", handler)
+
+	if err := http.ListenAndServe(":17552", handler); err != nil {
+		return fmt.Errorf("Error starting agent: %v", err)
+	}
 
 	return nil
 }
@@ -119,7 +122,6 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `error parsing url`, http.StatusBadRequest)
 			return
 		}
-
 
 		// ensure chain to deploy on is running
 		// might want to perform some other checks ... ?
