@@ -8,18 +8,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//TODO revisit helpers
-
 // Primary Agents Sub-Command
 var Agents = &cobra.Command{
 	Use:   "agent",
-	Short: "Start and Stop an agent.",
-	Long: `Start and Stop an agent.
-An agent is used to deploy contract bundles
-from the eris library marketplace, The command
-requires an account and a registered chain.
-Please see (link) for more info.`,
+	Short: "Start an agent.",
+	Long: `Start an agent.
+An agent is local server that, when started,  exposes three endpoints:
+  
+  /chains	=> list running chains on the host (GET)
+  /download	=> download a tar'ed contract bundle
+  /install	=> download and deploy and tar'ed bundle
 
+The command is used to support the Eris Contracts Library Marketplace.
+
+Please see the pull request for more information about using the agent and its endpoints
+ 
+  https://github.com/eris-ltd/eris-cli/pull/632
+  
+The agent is stopped with Ctrl+C`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
