@@ -62,19 +62,22 @@ The below guidelines are more observations of how things are done now rather tha
 
 #### Errors
 
-* Error messages should be short and concise, not containing the `\n`, `\t`, `=>` or other formatting characters, and not ending with a period or a colon. 
+* Error messages should be short and concise, not containing the `\n`, `\t`, `=>`, or other formatting characters, and not ending with a period or a colon. 
 * Ideally, it should fit one line and be less than 80 characters long. 
 * If you really need to make it multi-line, use back tick quotes or Go text templates.
 * Prefer the present tense to the past tense or the subjunctive mood.
 * Multiple sentences within the same error are separated with a dot and a space.
 
-* Returned error messages from top level functions (the ones invoked via Cobra package and from the `cmd` subdirectory) should start with a capital letter, state the nature of the problem, and, if necessary, include the lower level error (separated from the main message via a colon and a space). The message should be stated from the point of view of the software user and don't include names of functions, packages, or terms which are not found somewhere in the tutorials. Also, make an effort not to use the word `error` in the message at all:
+  ```
+  fmt.Errorf("I don't know that service. Please retry with a known service")
+  ```
+* Returned error messages from top level functions (the ones invoked via [Cobra](https://github.com/spf13/cobra/cobra) package and from the `cmd` subdirectory) should start with a capital letter, state the nature of the problem, and, if necessary, include the lower level error (separated from the main message via a colon and a space). The message should be stated from the point of view of the software user and don't include names of functions, packages, or terms which are not found somewhere in the tutorials:
 
   ```
   return fmt.Errorf("I cannot find that service. Please check the service name you sent me")
   return fmt.Errorf("Could not add ssh.exe to PATH: %v", err)
   ```
-* Returned error messages from package level or utility functions which in turn be used by the top level functions should start with a small letter and, if necessary, include the lower level error (separated from the main message via a colon and a space) or use prefabricated errors. The message should be stated from the point of view of the package or library user:
+* Returned error messages from package level or utility functions which in turn be used by the top level functions should start with a small letter and, if necessary, include the lower level error (separated from the main message via a colon and a space) or use prefabricated errors. The message should be stated from the point of view of the package or library user (Eris developer):
 
   ```
   return fmt.Errorf("there is no chain checked out")
@@ -90,21 +93,21 @@ The below guidelines are more observations of how things are done now rather tha
   return DockerError(DockerClient.StartContainer(name, nil))
   ```
 
-* Errors that are printed to the console which don't interrupt the flow of the function should use `logrus.Error`.
+* Errors that are printed to the console (that is not returned) should use the `logrus.Error` function.
 
 #### Log Messages
 
-* Log messages should be complete sentences and not simply nouns or names, not containing the `\n`, `\t`, or other formatting characters, and not ending with a period or a colon. 
+* Log messages should be complete sentences (not standalone nouns or names), not containing the `\n`, `\t`, or other formatting characters, and not ending with a period or a colon. 
 * Ideally, the message should fit one line and be less than 80 characters long.
 * The company mascot is the [Doug the Marmot](https://erisindustries.com/assets/erismascot-b172ba7ede37ffa134d9c0aa20527f59.png), so marmots themed log messages are welcome if not overused.
 * Use `Info` log level for optional messages software users somehow might benefit from (`--verbose` flag).
 * Use `Debug` log level for optional messages targeted at developers only (`--debug` flag).
-* Prefer dropping articles from log messages (magazine heading style)
+* Prefer dropping articles from log messages (magazine heading style) to make them shorter
   
   ```
   log.Debug("Getting connection details from environment")
   ```
-* Multiple sentences on the same line are separated with a dot:
+* Multiple sentences on the same line are separated with a dot and a space:
 
    ```
    log.Info("Chain not currently running. Skipping")
