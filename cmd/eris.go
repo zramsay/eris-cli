@@ -93,9 +93,12 @@ Complete documentation is available at https://docs.erisindustries.com
 	},
 
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
-		if err != nil {
-			log.Errorln(err)
+		if !util.DoesDirExist(ErisRoot) {
+			return
+		}
+
+		if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
+			log.Error(err)
 		}
 	},
 }

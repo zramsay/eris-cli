@@ -3,6 +3,8 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/clean"
 
+	. "github.com/eris-ltd/common/go/common"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +35,6 @@ func addCleanFlags() {
 }
 
 func CleanItUp(cmd *cobra.Command, args []string) {
-
 	if do.All {
 		do.Containers = true
 		do.Scratch = true
@@ -41,7 +42,5 @@ func CleanItUp(cmd *cobra.Command, args []string) {
 		do.Images = true
 	}
 
-	if err := clean.Clean(do); err != nil {
-		return
-	}
+	IfExit(clean.Clean(do))
 }
