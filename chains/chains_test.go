@@ -442,7 +442,7 @@ func TestRmChain(t *testing.T) {
 	do = def.NowDo()
 	do.Name = chainName
 	do.RmD = true
-	if err := RmChain(do); err != nil {
+	if err := RemoveChain(do); err != nil {
 		t.Fatalf("expected chain to be removed, got %v", err)
 	}
 	if util.Exists(def.TypeChain, chainName) {

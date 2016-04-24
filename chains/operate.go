@@ -268,7 +268,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err != nil {
 			log.Infof("Error on setting up chain: %v", err)
 			log.Info("Cleaning up")
-			if err2 := RmChain(do); err2 != nil {
+			if err2 := RemoveChain(do); err2 != nil {
 				// maybe be less dramatic
 				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
 			}
