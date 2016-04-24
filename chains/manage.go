@@ -449,7 +449,7 @@ func UpdateChain(do *definitions.Do) error {
 	return nil
 }
 
-func RmChain(do *definitions.Do) error {
+func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
@@ -473,6 +473,16 @@ func RmChain(do *definitions.Do) error {
 			return err
 		}
 	}
+
+	if do.RmHF {
+		dirPath := filepath.Join(ChainsPath, do.Name) // the dir
+
+		log.WithField("directory", dirPath).Warn("Removing directory")
+		if err := os.RemoveAll(dirPath); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

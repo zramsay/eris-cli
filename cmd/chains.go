@@ -473,12 +473,13 @@ func addChainsFlags() {
 	buildFlag(chainsExec, do, "ports", "chain")
 	buildFlag(chainsExec, do, "interactive", "chain")
 	buildFlag(chainsExec, do, "links", "chain")
-	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
+	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "docker image")
 
 	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "file", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
+	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in ~/.eris/chains")
 
 	buildFlag(chainsUpdate, do, "pull", "chain")
 	buildFlag(chainsUpdate, do, "timeout", "chain")
@@ -712,7 +713,7 @@ func RestartChain(cmd *cobra.Command, args []string) {
 func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.RmChain(do))
+	IfExit(chns.RemoveChain(do))
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
