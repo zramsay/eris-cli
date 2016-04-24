@@ -72,15 +72,18 @@ func ListChains(w http.ResponseWriter, r *http.Request) {
 func DownloadAgent(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		log.Warn("Receiving request to download a contract bundle")
-		params, err := ParseDownloadURL(fmt.Sprintf("%s", r.URL))
+		reqArgs := []string{"groupId", "bundleId", "version", "hash"}
+		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
 		if err != nil {
-			http.Error(w, `error parsing url`, http.StatusBadRequest)
+			errMsg := fmt.Sprintf("error parsing url: %v", err)
+			http.Error(w, errMsg, http.StatusBadRequest)
 			return
 		}
 
 		_, err = downloadBundle(params)
 		if err != nil {
-			// clean error handling...
+			errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -93,9 +96,11 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// parse response into various components
 		// required to pull tarball, unpack on path
 		// and deploy to running chain
-		params, err := ParseInstallURL(fmt.Sprintf("%s", r.URL))
+		reqArgs := []string{"groupId", "bundleId", "version", "hash", "chainName", "address"}
+		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
 		if err != nil {
-			http.Error(w, `error parsing url`, http.StatusBadRequest)
+			errMsg := fmt.Sprintf("error parsing url: %v", err)
+			http.Error(w, errMsg, http.StatusBadRequest)
 			return
 		}
 
@@ -108,7 +113,8 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 
 		installPath, err := downloadBundle(params)
 		if err != nil {
-			// clean error handling...
+			errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
 		}
 		//contractsPath := filepath.Join(installPath, params["dirName"])
@@ -118,7 +124,8 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		// contract bundle unbundled
 		// time to deploy
 		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
-			http.Error(w, `error deploying contract bundle`, http.StatusForbidden)
+			errMsg := fmt.Sprintf("error deploying contract bundle: %v", err)
+			http.Error(w, errMsg, http.StatusForbidden)
 			// TODO reap bad addr error
 			return
 		}
@@ -126,7 +133,8 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		epmJSON := filepath.Join(installPath, "epm.json")
 		epmByte, err := ioutil.ReadFile(epmJSON)
 		if err != nil {
-			http.Error(w, `error reading epm.json file`, http.StatusInternalServerError)
+			errMsg := fmt.Sprintf("error reading epm.json file: %v", err)
+			http.Error(w, errMsg, http.StatusInternalServerError)
 		}
 		w.Write(epmByte)
 	}
@@ -156,46 +164,32 @@ func downloadBundle(params map[string]string) (string, error) {
 	return installPath, nil
 }
 
-func ParseDownloadURL(url string) (map[string]string, error) {
-	parsedURL, err := ParseURL(url)
-	if err != nil {
-		return nil, err
-	}
-	// TODO check fields
-
-	return parsedURL, nil
-}
-
-func ParseInstallURL(url string) (map[string]string, error) {
-	parsedURL, err := ParseURL(url)
-	if err != nil {
-		return nil, err
-	}
-	// TODO check fields
-
-	return parsedURL, nil
-}
-
 // takes URL request for bundle install &
 // returns a map of the things we need for installation
 // assume it comes in as r.URL.Path[1:]
-func ParseURL(url string) (map[string]string, error) {
+func ParseURL(requiredArguments []string, url string) (map[string]string, error) {
+	reqArgs := requiredArguments
+
 	payload := strings.Split(url, "?")[1]
 	infos := strings.Split(payload, "&")
-	parsed := make(map[string]string, len(infos))
+	parsedURL := make(map[string]string, len(infos))
 
 	for _, field := range infos {
 		info := strings.Split(field, "=")
-		parsed[info[0]] = info[1] // this is not very resilient
+		parsedURL[info[0]] = info[1] // this is not very resilient
 	}
 
-	for _, p := range parsed {
-		if p == "" {
-			return nil, fmt.Errorf("empty field detected")
+	if len(parsedURL) != len(reqArgs) {
+		return nil, fmt.Errorf("Wrong number of arguments:\n%v\nThese %v arguments are required:\n%s", parsedURL, len(reqArgs), strings.Join(reqArgs, ", "))
+	}
+
+	for _, arg := range reqArgs {
+		if parsedURL[arg] == "" {
+			return nil, fmt.Errorf("Missing field or bad argument name:\n%v\nThese fields cannot be empty:\n%s", parsedURL, strings.Join(reqArgs, ", "))
 		}
 	}
 
-	return parsed, nil
+	return parsedURL, nil
 }
 
 func IsChainRunning(chainName string) bool {
@@ -251,15 +245,6 @@ func SetTarballPath(bundleInfo map[string]string) string {
 
 	return filepath.Join(common.BundlesPath, groupID, bundleID, version)
 }
-
-/*func SetBundlePath(bundleInfo map[string]string) string {
-	groupID := strings.Replace(bundleInfo["groupId"], ".", "/", 1)
-	bundleID := bundleInfo["bundleId"]
-	version := bundleInfo["version"]
-	dirName := bundleInfo["dirName"]
-
-	return filepath.Join(common.BundlesPath, groupID, bundleID, version, dirName)
-}*/
 
 // ensure user is valid
 // by querying the accounts chain
