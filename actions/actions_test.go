@@ -18,7 +18,7 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
