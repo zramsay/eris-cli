@@ -27,8 +27,7 @@ var chnDefDir = filepath.Join(chnDir, "default")
 var toadUp bool
 
 func TestMain(m *testing.M) {
-
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)

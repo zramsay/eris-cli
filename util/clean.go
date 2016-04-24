@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/eris-ltd/common/go/common"
 	def "github.com/eris-ltd/eris-cli/definitions"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/common/go/common"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -69,11 +69,16 @@ func RemoveAllErisContainers() error {
 	}
 
 	for _, container := range contns {
-		if container.Labels[def.LabelEris] == "true" {
+		// [pv]: Make sure legacy data containers are removed as well.
+		// The prefix bit is to be removed in 0.12.
+		if container.Labels[def.LabelEris] == "true" ||
+			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "eris_") {
+
 			if err := removeContainer(container.ID); err != nil {
 				return fmt.Errorf("Error removing container: %v", DockerError(err))
 			}
 		}
+
 	}
 
 	return nil
@@ -186,7 +191,7 @@ func canWeRemove(toClean map[string]bool) bool {
 			"scratch":    toWarn["scratch"],
 			"rmd":        toWarn["rmd"],
 			"images":     toWarn["images"],
-		}).Warn("The marmots are about to remove")
+		}).Warn("The marmots are about to remove the following")
 	}
 
 	if QueryYesOrNo("Please confirm") == Yes {

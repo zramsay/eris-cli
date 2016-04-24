@@ -26,7 +26,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -114,7 +114,7 @@ func TestGetFiles(t *testing.T) {
 		}
 	}
 	if !passed {
-	// final time will throw
+		// final time will throw
 		if err := GetFiles(do); err != nil {
 			t.Fatalf("err getting files %v\n", err)
 		}

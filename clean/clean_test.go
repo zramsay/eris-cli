@@ -16,11 +16,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
 	logger "github.com/eris-ltd/common/go/log"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)

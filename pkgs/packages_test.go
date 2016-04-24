@@ -29,7 +29,7 @@ var badPkg string = filepath.Join(AppsPath, "bad", "package.json")
 var emptyPkg string = filepath.Join(AppsPath, "empty", "package.json")
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)

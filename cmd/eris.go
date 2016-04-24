@@ -58,7 +58,7 @@ Complete documentation is available at https://docs.erisindustries.com
 			return
 		}
 
-		if !util.DoesDirExist(ErisRoot) {
+		if !util.DoesDirExist(ErisRoot) && cmd.Use != "init" {
 			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 			do := definitions.NowDo()
 			do.Yes = true
