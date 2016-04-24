@@ -28,7 +28,6 @@ var (
 		"groupId":  "com.erisindustries",
 		"bundleId": "marmoty-contracts",
 		"version":  "2.1.2", //don't use ints since path joining
-		"dirName":  "idi",
 	}
 	hash      = "QmdbzmNH1iDg2H86Uk3USuJ2vaugvwU7HubvCxMC2fUykm"
 	chainName = "agent-test"
@@ -37,8 +36,8 @@ var (
 	// build the path
 	//TODO make a test for this func!
 
-	installPath   = SetTarballPath(bundleInfo)                        // where the tarball is dropped
-	contractsPath = filepath.Join(installPath, bundleInfo["dirName"]) // the dir in which contracts are to be deployed
+	installPath   = SetTarballPath(bundleInfo) // where the tarball is dropped
+	contractsPath = installPath
 
 	// expected from deploying idi.sol = > to test XXX
 	chainCode = "60606040526000357C01000000000000000000000000000000000000000000000000000000009004806360FE47B11460415780636D4CE63C14605757603F565B005B605560048080359060200190919050506078565B005B606260048050506086565B6040518082815260200191505060405180910390F35B806000600050819055505B50565B600060006000505490506094565B9056"
@@ -64,16 +63,16 @@ func TestMain(m *testing.M) {
 func TestParsePayload(t *testing.T) {
 
 	toTest := map[string]string{
-		"groupId":   bundleInfo["groupId"],  // needed to buildpath
-		"bundleId":  bundleInfo["bundleId"], // ibid
-		"version":   bundleInfo["version"],  // ibid
-		"dirName":   bundleInfo["dirName"],  // ibid
-		"hash":      hash,                   // hash of tarball
-		"chainName": chainName,              // chain to deploy
-		"address":   address,                // account to deploy from
+		"groupId":  bundleInfo["groupId"],  // needed to buildpath
+		"bundleId": bundleInfo["bundleId"], // ibid
+		"version":  bundleInfo["version"],  // ibid
+		//"dirName":   bundleInfo["dirName"],  // ibid
+		"hash":      hash,      // hash of tarball
+		"chainName": chainName, // chain to deploy
+		"address":   address,   // account to deploy from
 	}
 
-	rawUrl := fmt.Sprintf("https://localhost:17552/install?groupId=%s&bundleId=%s&version=%s&dirName=%s&hash=%s&chainName=%s&address=%s", toTest["groupId"], toTest["bundleId"], toTest["version"], toTest["dirName"], toTest["hash"], toTest["chainName"], toTest["address"])
+	rawUrl := fmt.Sprintf("https://localhost:17552/install?groupId=%s&bundleId=%s&version=%s&hash=%s&chainName=%s&address=%s", toTest["groupId"], toTest["bundleId"], toTest["version"], toTest["hash"], toTest["chainName"], toTest["address"])
 
 	parsed, err := ParseURL(rawUrl)
 	if err != nil {
@@ -113,7 +112,8 @@ func TestDeployContract(t *testing.T) {
 		t.Fatalf("error getting wd: %v\n", err)
 	}
 
-	contractsPath = filepath.Join(wd, bundleInfo["dirName"])
+	contractsPath = wd
+	//filepath.Join(wd, bundleInfo["dirName"])
 
 	if err := DeployContractBundle(contractsPath, chainName, address); err != nil {
 		t.Fatalf("error deploying contract bundle: %v\n", err)
@@ -317,8 +317,6 @@ jobs:
 -----------------------------------
 
 */
-
-
 
 ///TODO! deal with all this
 func _TestAuthenticateUser(t *testing.T) {

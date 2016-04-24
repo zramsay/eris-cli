@@ -86,6 +86,52 @@ func DownloadAgent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func InstallAgent(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		log.Warn("Receiving request to download and deploy a contract bundle")
+
+		// parse response into various components
+		// required to pull tarball, unpack on path
+		// and deploy to running chain
+		params, err := ParseInstallURL(fmt.Sprintf("%s", r.URL))
+		if err != nil {
+			http.Error(w, `error parsing url`, http.StatusBadRequest)
+			return
+		}
+
+		// ensure chain to deploy on is running
+		// might want to perform some other checks ... ?
+		if !IsChainRunning(params["chainName"]) {
+			http.Error(w, `chain name provided is not running`, http.StatusNotFound)
+			return
+		}
+
+		installPath, err := downloadBundle(params)
+		if err != nil {
+			// clean error handling...
+			return
+		}
+		//contractsPath := filepath.Join(installPath, params["dirName"])
+
+		// user is authenticated
+		// chain is running
+		// contract bundle unbundled
+		// time to deploy
+		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
+			http.Error(w, `error deploying contract bundle`, http.StatusForbidden)
+			// TODO reap bad addr error
+			return
+		}
+
+		epmJSON := filepath.Join(installPath, "epm.json")
+		epmByte, err := ioutil.ReadFile(epmJSON)
+		if err != nil {
+			http.Error(w, `error reading epm.json file`, http.StatusInternalServerError)
+		}
+		w.Write(epmByte)
+	}
+}
+
 func downloadBundle(params map[string]string) (string, error) {
 	bundleInfo := map[string]string{
 		"groupId":  params["groupId"],
@@ -110,57 +156,13 @@ func downloadBundle(params map[string]string) (string, error) {
 	return installPath, nil
 }
 
-func InstallAgent(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		log.Warn("Receiving request to download and deploy a contract bundle")
-
-		// parse response into various components
-		// required to pull tarball, unpack on path
-		// and deploy to running chain
-		params, err := ParseInstallURL(fmt.Sprintf("%s", r.URL))
-		if err != nil {
-			http.Error(w, `error parsing url`, http.StatusBadRequest)
-			return
-		}
-
-		// ensure chain to deploy on is running
-		// might want to perform some other checks ... ?
-		if IsChainRunning(params["chainName"]) {
-			http.Error(w, `chain name provided is not running`, http.StatusNotFound)
-			return
-		}
-
-		installPath, err := downloadBundle(params)
-		if err != nil {
-			// clean error handling...
-			return
-		}
-		contractsPath := filepath.Join(installPath, params["dirName"])
-
-		// user is authenticated
-		// chain is running
-		// contract bundle unbundled
-		// time to deploy
-		if err := DeployContractBundle(contractsPath, params["chainName"], params["address"]); err != nil {
-			http.Error(w, `error deploying contract bundle`, http.StatusForbidden)
-			// TODO reap bad addr error
-			return
-		}
-
-		epmJSON := filepath.Join(contractsPath, "epm.json")
-		epmByte, err := ioutil.ReadFile(epmJSON)
-		if err != nil {
-			http.Error(w, `error reading epm.json file`, http.StatusInternalServerError)
-		}
-		w.Write(epmByte)
-	}
-}
-
 func ParseDownloadURL(url string) (map[string]string, error) {
 	parsedURL, err := ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
+	// TODO check fields
+
 	return parsedURL, nil
 }
 
@@ -169,7 +171,7 @@ func ParseInstallURL(url string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	// check all the fields are correct & match!
+	// TODO check fields
 
 	return parsedURL, nil
 }
@@ -177,7 +179,6 @@ func ParseInstallURL(url string) (map[string]string, error) {
 // takes URL request for bundle install &
 // returns a map of the things we need for installation
 // assume it comes in as r.URL.Path[1:]
-// TODO route each endpoint through this function
 func ParseURL(url string) (map[string]string, error) {
 	payload := strings.Split(url, "?")[1]
 	infos := strings.Split(payload, "&")
@@ -190,8 +191,7 @@ func ParseURL(url string) (map[string]string, error) {
 
 	for _, p := range parsed {
 		if p == "" {
-			//http.Error(w, `empty field detected`, http.StatusBadRequest)
-			return nil, fmt.Errorf("empty field detected") //TODO
+			return nil, fmt.Errorf("empty field detected")
 		}
 	}
 
@@ -202,6 +202,7 @@ func IsChainRunning(chainName string) bool {
 	return util.IsChain(chainName, true)
 }
 
+// returns path to downloaded tarball
 func GetTarballFromIPFS(hash, installPath string) (string, error) {
 	if !util.DoesDirExist(installPath) {
 		if err := os.MkdirAll(installPath, 0777); err != nil {
@@ -251,14 +252,14 @@ func SetTarballPath(bundleInfo map[string]string) string {
 	return filepath.Join(common.BundlesPath, groupID, bundleID, version)
 }
 
-func SetBundlePath(bundleInfo map[string]string) string {
+/*func SetBundlePath(bundleInfo map[string]string) string {
 	groupID := strings.Replace(bundleInfo["groupId"], ".", "/", 1)
 	bundleID := bundleInfo["bundleId"]
 	version := bundleInfo["version"]
 	dirName := bundleInfo["dirName"]
 
 	return filepath.Join(common.BundlesPath, groupID, bundleID, version, dirName)
-}
+}*/
 
 // ensure user is valid
 // by querying the accounts chain

@@ -17,7 +17,6 @@ func TarForDocker(pathToTar string, compression archive.Compression) (io.ReadClo
 	return archive.Tar(pathToTar, compression)
 }
 
-// used only for docker cp
 // or for just untarring :)
 func UntarForDocker(reader io.Reader, name, dest string) error {
 	return archive.Untar(reader, dest, &archive.TarOptions{NoLchown: true}) //, Name: name})
@@ -52,12 +51,12 @@ func PackTarball(pathToTar, nameOfTar string) (string, error) {
 // and the target installation directory
 // for the ball in question
 func UnpackTarball(tarBallPath, installPath string) error {
-	// open file for reading
+	// open tarball for reading
 	reader, err := os.Open(tarBallPath)
-	if err != nil {
-		return fmt.Errorf("err opening %s: %v\n", tarBallPath, err)
-	}
 	defer reader.Close()
+	if err != nil {
+		return fmt.Errorf("error opening %s: %v\n", tarBallPath, err)
+	}
 
 	return UntarForDocker(reader, "", installPath)
 }
