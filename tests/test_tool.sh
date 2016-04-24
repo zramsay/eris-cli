@@ -146,7 +146,7 @@ packagesToTest() {
     # if [ $? -ne 0 ]; then return 1; fi
     # go test ./apps/... && passed Apps
     # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./agent/... && passed Agent
+    go test ./agent/... && passed Agent
     if [ $? -ne 0 ]; then return 1; fi
     go test ./cmd/... && passed Commands
     if [ $? -ne 0 ]; then return 1; fi
