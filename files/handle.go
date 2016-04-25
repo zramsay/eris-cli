@@ -21,7 +21,9 @@ import (
 )
 
 func GetFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 
 	// where Object is a directory added recursively to ipfs
 	// do.Name is the hash
@@ -45,13 +47,14 @@ func GetFiles(do *definitions.Do) error {
 		if err := importFile(do.Name, do.Path); err != nil {
 			return err
 		}
-		do.Result = "success"
 	}
 	return nil
 }
 
 func PutFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 
 	if err := checkGatewayFlag(do); err != nil {
 		return err
@@ -83,11 +86,8 @@ func PutFiles(do *definitions.Do) error {
 }
 
 func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
-
 	// path to dir on host
 	do.Source = do.Name
-	// path to dest in cont (doesn't exist, need to make it)
-	// will be removed later
 	do.Destination = filepath.Join(ErisContainerRoot, "scratch", "data", do.Source)
 	do.Name = "ipfs"
 
@@ -165,7 +165,9 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 
 }
 func PinFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 	log.WithFields(log.Fields{
 		"file": do.Name,
 		"path": do.Path,
@@ -179,7 +181,10 @@ func PinFiles(do *definitions.Do) error {
 }
 
 func CatFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"file": do.Name,
 		"path": do.Path,
@@ -193,7 +198,10 @@ func CatFiles(do *definitions.Do) error {
 }
 
 func ListFiles(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"file": do.Name,
 		"path": do.Path,
@@ -207,7 +215,9 @@ func ListFiles(do *definitions.Do) error {
 }
 
 func ManagePinned(do *definitions.Do) error {
-	ensureRunning()
+	if err := EnsureIPFSrunning(); err != nil {
+		return err
+	}
 	if do.Rm && do.Hash != "" {
 		return fmt.Errorf("Either remove a file by hash or all of them\n")
 	}
@@ -372,15 +382,15 @@ func rmPinnedByHash(hash string) (string, error) {
 //---------------------------------------------------------
 // helpers
 
-func ensureRunning() {
+func EnsureIPFSrunning() error {
 	doNow := definitions.NowDo()
 	doNow.Name = "ipfs"
-	err := services.EnsureRunning(doNow)
-	if err != nil {
+	if err := services.EnsureRunning(doNow); err != nil {
 		fmt.Printf("Failed to ensure IPFS is running: %v", err)
-		return
+		return err
 	}
 	log.Info("IPFS is running")
+	return nil
 }
 
 func checkGatewayFlag(do *definitions.Do) error {

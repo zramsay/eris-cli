@@ -99,11 +99,13 @@ func MakeChain(do *definitions.Do) error {
 	if err := data.ImportData(doData); err != nil {
 		return err
 	}
+
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
 		return err
 	}
+
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	doData.Source = chnPath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)

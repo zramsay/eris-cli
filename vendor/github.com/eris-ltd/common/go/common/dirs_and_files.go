@@ -25,7 +25,8 @@ var (
 
 	// Major Directories
 	ActionsPath  = filepath.Join(ErisRoot, "actions")
-	AppsPath     = filepath.Join(ErisRoot, "apps")   // previously "dapps"
+	AppsPath     = filepath.Join(ErisRoot, "apps") // previously "dapps"
+	BundlesPath  = filepath.Join(ErisRoot, "bundles")
 	ChainsPath   = filepath.Join(ErisRoot, "chains") // previously "blockchains"
 	KeysPath     = filepath.Join(ErisRoot, "keys")
 	RemotesPath  = filepath.Join(ErisRoot, "remotes")
@@ -62,6 +63,7 @@ var MajorDirs = []string{
 	ErisRoot,
 	ActionsPath,
 	AppsPath,
+	BundlesPath,
 	ChainsPath,
 	DefaultChainPath,
 	AccountsTypePath,

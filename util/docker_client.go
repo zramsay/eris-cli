@@ -116,7 +116,7 @@ func CheckDockerClient() error {
 	dockerHost, dockerCertPath := popHostAndPath()
 
 	if dockerCertPath == "" || dockerHost == "" {
-		driver := "virtualbox" // when we use agents we'll wanna turn this driver into a flag
+		driver := "virtualbox" // when we use agent we'll wanna turn this driver into a flag
 
 		if runtime.GOOS == "windows" {
 			if err := prepWin(); err != nil {
