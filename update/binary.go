@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/services"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/Sirupsen/logrus"
@@ -32,7 +32,7 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	// new the service for which the image has just been built
 	doNew := definitions.NowDo()
 	doNew.Name = serviceName
-	doNew.Operations.Args  = []string{imageName}
+	doNew.Operations.Args = []string{imageName}
 	if err := services.NewService(doNew); err != nil {
 		return err
 	}
@@ -51,8 +51,12 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	doCp.Name = serviceName
 	// where the bin will go; see below
 	newPath := filepath.Join(common.ScratchPath, "bin")
-	//$INSTALL_BASE/eris as set by 
-	doCp.Source = "/usr/local/bin/eris"
+	//$INSTALL_BASE/eris as set by
+	if runtime.GOOS == "windows" {
+		doCp.Source = "/usr/local/bin/eris.exe"
+	} else {
+		doCp.Source = "/usr/local/bin/eris"
+	}
 	doCp.Destination = newPath
 	doCp.Operations.SkipCheck = true
 	if err := data.ExportData(doCp); err != nil {
@@ -62,11 +66,11 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	// remove all trace of the service and its image
 	doRm := definitions.NowDo()
 	doRm.Operations.Args = []string{serviceName}
-	doRm.RmD = true		// remove data container
-	doRm.Volumes = true	// remove volumes
-	doRm.Force = true	// remove by force (no pesky warnings)
-	doRm.File = true	// remove the service defintion file
-	doRm.RmImage = true	// remove the temporary image
+	doRm.RmD = true     // remove data container
+	doRm.Volumes = true // remove volumes
+	doRm.Force = true   // remove by force (no pesky warnings)
+	doRm.File = true    // remove the service defintion file
+	doRm.RmImage = true // remove the temporary image
 
 	if err := services.RmService(doRm); err != nil {
 		return err
@@ -81,11 +85,10 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 }
 
 // takes a new binary and replaces the old one
-// prompts windows users to do manually 
+// prompts windows users to do manually
 func ReplaceOldBinaryWithNew(oldPath, newPath string) error {
 
-	platform := runtime.GOOS
-	if platform != "windows" {
+	if runtime.GOOS != "windows" {
 		if err := os.Remove(oldPath); err != nil {
 			return err
 		}
@@ -106,7 +109,7 @@ func ReplaceOldBinaryWithNew(oldPath, newPath string) error {
 To complete the update on Windows, run:
 
 del /f ` + oldPath + `
-ren ` + cpString + `
+move ` + cpString + `
 `)
 	}
 
@@ -133,13 +136,13 @@ RUN git clone --quiet https://github.com/$REPO $CLONE_PATH
 `, branch)
 
 	if branch == "master" {
-		one := "RUN cd $CLONE_PATH/cmd/eris && go build -o $INSTALL_BASE/eris"
+		one := fmt.Sprintf("RUN cd $CLONE_PATH/cmd/eris && GOOS=%s go build -o $INSTALL_BASE/eris", runtime.GOOS)
 		two := `CMD ["/bin/bash"]`
 		dockerfile = fmt.Sprintf("FROM %s\n%s\n%s\n%s", baseImage, baseDockerfile, one, two)
 		return dockerfile
 	} else {
 		one := "RUN cd $CLONE_PATH && git checkout --quiet -b $BRANCH && git pull --quiet origin $BRANCH"
-		two := "RUN cd $CLONE_PATH/cmd/eris && go build -o $INSTALL_BASE/eris"
+		two := fmt.Sprintf("RUN cd $CLONE_PATH/cmd/eris && GOOS=%s go build -o $INSTALL_BASE/eris", runtime.GOOS)
 		three := `CMD ["/bin/bash"]`
 		dockerfile = fmt.Sprintf("FROM %s\n%s\n%s\n%s\n%s", baseImage, baseDockerfile, one, two, three)
 		return dockerfile
