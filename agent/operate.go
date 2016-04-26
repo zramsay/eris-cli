@@ -151,7 +151,7 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		} else if whichHash == "ipfs-hash" { // not directly tarball, get from ipfs
+		} else if whichHash == "ipfs-hash" {
 			if err := downloadBundleFromIPFS(params); err != nil {
 				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
 				http.Error(w, errMsg, http.StatusInternalServerError)
@@ -182,18 +182,17 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 func checkHash(hash string) (string, error) {
 	splitHash := strings.Split(hash, ".")
 	if len(splitHash) >= 3 { // somefile.tar.gz for example
-		log.Warn("maybe a tarball")
 		lenTAR := len(splitHash) - 2
 		lenGZ := len(splitHash) - 1
 		//probably not ipfs hash & probably tar ball
 		if splitHash[lenGZ] == "gz" && splitHash[lenTAR] == "tar" {
-			log.Warn("is a tarball")
+			log.Debug("hash provided appears to be a tarball")
 			return "tarball", nil
 		}
 	}
 
 	if len(hash) == 46 { // ipfs hash
-		log.Warn("is a IPFs hash")
+		log.Debug("hash provided appears to be an IPFS hash")
 		return "ipfs-hash", nil
 	}
 
