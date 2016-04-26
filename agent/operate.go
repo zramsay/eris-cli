@@ -19,7 +19,6 @@ import (
 )
 
 func StartAgent(do *definitions.Do) error {
-	// unknown: auth details/https
 	mux := http.NewServeMux()
 	mux.HandleFunc("/chains", ListChains)
 	mux.HandleFunc("/download", DownloadAgent)
@@ -38,10 +37,10 @@ func StartAgent(do *definitions.Do) error {
 	return nil
 }
 
-//func StopAgent(do *definitions.Do) error {
-//	fmt.Println("Gracefully shutting down agent")
-//	return nil
-//}
+/*func StopAgent(do *definitions.Do) error {
+	fmt.Println("Gracefully shutting down agent")
+	return nil
+}*/
 
 func ListChains(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
@@ -80,11 +79,32 @@ func DownloadAgent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = downloadBundle(params)
+		installPath := SetTarballPath(params)
+		whichHash, err := checkHash(params["hash"])
 		if err != nil {
-			errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
 			return
+		}
+
+		if whichHash == "tarball" {
+			tarBody, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				errMsg := fmt.Sprintf("error reading tarball body: %v", err)
+				http.Error(w, errMsg, http.StatusInternalServerError)
+				return
+			}
+
+			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
+				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+				http.Error(w, errMsg, http.StatusInternalServerError)
+				return
+			}
+
+		} else if whichHash == "ipfs-hash" { // not directly tarball, get from ipfs
+			if err := downloadBundleFromIPFS(params); err != nil {
+				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+				http.Error(w, errMsg, http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 }
@@ -111,22 +131,43 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		installPath, err := downloadBundle(params)
+		installPath := SetTarballPath(params)
+		whichHash, err := checkHash(params["hash"])
 		if err != nil {
-			errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
+			errMsg := fmt.Sprintf("error checking hash: %v", err)
+			http.Error(w, errMsg, http.StatusBadRequest)
 			return
 		}
-		//contractsPath := filepath.Join(installPath, params["dirName"])
 
-		// user is authenticated
+		if whichHash == "tarball" {
+			tarBody, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				errMsg := fmt.Sprintf("error reading tarball body: %v", err)
+				http.Error(w, errMsg, http.StatusInternalServerError)
+				return
+			}
+
+			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
+				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+				http.Error(w, errMsg, http.StatusBadRequest)
+				return
+			}
+
+		} else if whichHash == "ipfs-hash" {
+			if err := downloadBundleFromIPFS(params); err != nil {
+				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
+				http.Error(w, errMsg, http.StatusInternalServerError)
+				return
+			}
+		}
+
 		// chain is running
 		// contract bundle unbundled
 		// time to deploy
 		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
 			errMsg := fmt.Sprintf("error deploying contract bundle: %v", err)
 			http.Error(w, errMsg, http.StatusForbidden)
-			// TODO reap bad addr error
+			// TODO reap bad addr error => func AuthenticateUser()
 			return
 		}
 
@@ -140,28 +181,57 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func downloadBundle(params map[string]string) (string, error) {
-	bundleInfo := map[string]string{
-		"groupId":  params["groupId"],
-		"bundleId": params["bundleId"],
-		"version":  params["version"],
-		"hash":     params["hash"],
+func checkHash(hash string) (string, error) {
+	splitHash := strings.Split(hash, ".")
+	if len(splitHash) >= 3 { // somefile.tar.gz for example
+		lenTAR := len(splitHash) - 2
+		lenGZ := len(splitHash) - 1
+		//probably not ipfs hash & probably tar ball
+		if splitHash[lenTAR] == "tar" && splitHash[lenGZ] == "gz" {
+			log.Debug("hash provided appears to be a tarball")
+			return "tarball", nil
+		}
 	}
 
-	installPath := SetTarballPath(bundleInfo)
+	if len(hash) == 46 { // ipfs hash
+		log.Debug("hash provided appears to be an IPFS hash")
+		return "ipfs-hash", nil
+	}
+	return "", fmt.Errorf("unable to decipher hash")
+}
 
-	tarBallPath, err := GetTarballFromIPFS(bundleInfo["hash"], installPath)
+func downloadBundleFromIPFS(params map[string]string) error {
+
+	installPath := SetTarballPath(params)
+
+	tarBallPath, err := GetTarballFromIPFS(params["hash"], installPath)
 	if err != nil {
 		//http.Error(w, `error getting from IPFS`, http.StatusInternalServerError)
-		return "", err
+		return err
 	}
 
 	if err = UnpackTarball(tarBallPath, installPath); err != nil {
 		//http.Error(w, `error unpacking tarball`, http.StatusInternalServerError)
-		return "", err
+		return err
 	}
 
-	return installPath, nil
+	return nil
+}
+
+func downloadBundleFromTarball(body []byte, installPath, fileName string) error {
+	if err := os.MkdirAll(installPath, 0777); err != nil {
+		return err
+	}
+
+	tarBallPath := filepath.Join(installPath, fileName)
+	if err := ioutil.WriteFile(tarBallPath, body, 0777); err != nil {
+		return err
+	}
+
+	if err := UnpackTarball(tarBallPath, installPath); err != nil {
+		return err
+	}
+	return nil
 }
 
 // takes URL request for bundle install &
@@ -237,7 +307,6 @@ func DeployContractBundle(path, chainName, address string) error {
 	return nil
 }
 
-// deduplicate these two functions?
 func SetTarballPath(bundleInfo map[string]string) string {
 	groupID := strings.Replace(bundleInfo["groupId"], ".", "/", 1)
 	bundleID := bundleInfo["bundleId"]

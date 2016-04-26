@@ -9,11 +9,9 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	//	"time"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
-	//	"github.com/eris-ltd/eris-cli/files"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
@@ -136,7 +134,7 @@ func testMakeABundle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-
+	// [zr] we could pull these from GH ...?
 	// write to them
 	idiSol := `
 contract IdisContractsFTW {
@@ -268,17 +266,15 @@ func kill(t *testing.T, serviceName string, wipe bool) {
 	}
 }
 
-///TODO! deal with all this
+//TODO set this up right
 /*
 func _TestAuthenticateUser(t *testing.T) {
-	//TODO set this up right
 	user := "sire"
 	if !AuthenticateUser(user) {
 		t.Fatalf("permissioned denied")
 	}
 }
 
-// XXX ignoring this feature for now
 func _TestAuthenticateAgent(t *testing.T) {
 	// is the name of the agent registered with eris?
 	// similar to above, or duplicate??

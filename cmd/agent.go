@@ -16,16 +16,17 @@ var Agents = &cobra.Command{
 An agent is local server that, when started,  exposes three endpoints:
   
   /chains	=> list running chains on the host (GET)
-  /download	=> download a tar'ed contract bundle
-  /install	=> download and deploy and tar'ed bundle
+  /download	=> download a tar'ed contract bundle (POST)
+  /install	=> download and deploy and tar'ed bundle (POST)
 
 The command is used to support the Eris Contracts Library Marketplace.
 
-Please see the pull request for more information about using the agent and its endpoints
+Please see the pull request for more information about using 
+the agent and its endpoints:
  
   https://github.com/eris-ltd/eris-cli/pull/632
   
-The agent is stopped with Ctrl+C`,
+The agent is stopped with ctrl+c.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -40,9 +41,8 @@ func buildAgentsCommand() {
 var agentStart = &cobra.Command{
 	Use:   "start",
 	Short: "Start the agent.",
-	Long: `Start the agent requires to deploy contract bundles
-	from the Eris Marketplace.`,
-	Run: StartAgent,
+	Long:  `Start the agent. Stop the agent with ctrl+c.`,
+	Run:   StartAgent,
 }
 
 /*var agentStop = &cobra.Command{
