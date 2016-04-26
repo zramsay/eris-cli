@@ -110,14 +110,17 @@ func GoOrBinary() (string, string, error) {
 		return "", "", err
 	}
 
-	toCheck := strings.Split(string(erisLook), "/")
+	toCheck := strings.Split(string(erisLook), string(filepath.Separator))
 	length := len(toCheck)
 	bin := util.TrimString(toCheck[length-2])
 	eris := util.TrimString(toCheck[length-1]) //sometimes ya just gotta trim
 
 	gopath := filepath.Join(os.Getenv("GOPATH"), bin, eris)
-
 	trimEris := util.TrimString(string(erisLook))
+
+	if runtime.GOOS == "windows" {
+		eris = strings.Split(eris, ".")[0] //strip off ".exe"
+	}
 
 	if eris == "eris" {
 		// check if eris is installed via go
