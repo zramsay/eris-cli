@@ -25,6 +25,8 @@ go get github.com/eris-ltd/eris-cli/cmd/eris
 eris init
 ```
 
+See below for the directory structure created by `init`.
+
 # Install (For Non-Developers)
 
 Please see our [getting started page](https://docs.erisindustries.com/tutorials/getting-started/) for those who are not familiar with go and/or docker.
@@ -150,6 +152,36 @@ To see the various ways in which `eris` can help you manage your data containers
 ```
 eris data
 ```
+
+## Directory Structure
+
+Created by `eris init` in $HOME directory:
+
+```
+├── .eris/
+│   ├── eris.toml
+│   ├── actions/
+│   ├── apps/
+│   ├── bundles/
+│   ├── chains/
+│       ├── default/config.toml
+│   ├── keys/
+│       ├── data/
+│   ├── remotes/
+│   ├── scratch/
+│       ├── data/
+│       ├── languages/
+│       ├── lllc/
+│       ├── ser/
+│       ├── sol/
+│   ├── services/
+│       ├── global/
+│       ├── btcd.toml
+│       ├── ipfs.toml
+│       ├── keys.toml
+```
+
+With several more default services also pulled in.
 
 # Contributions
 
