@@ -134,6 +134,8 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		installPath := SetTarballPath(params)
 		whichHash, err := checkHash(params["hash"])
 		if err != nil {
+			errMsg := fmt.Sprintf("error checking hash: %v", err)
+			http.Error(w, errMsg, http.StatusBadRequest)
 			return
 		}
 
@@ -165,7 +167,7 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) {
 		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
 			errMsg := fmt.Sprintf("error deploying contract bundle: %v", err)
 			http.Error(w, errMsg, http.StatusForbidden)
-			// TODO reap bad addr error
+			// TODO reap bad addr error => func AuthenticateUser()
 			return
 		}
 
@@ -185,7 +187,7 @@ func checkHash(hash string) (string, error) {
 		lenTAR := len(splitHash) - 2
 		lenGZ := len(splitHash) - 1
 		//probably not ipfs hash & probably tar ball
-		if splitHash[lenGZ] == "gz" && splitHash[lenTAR] == "tar" {
+		if splitHash[lenTAR] == "tar" && splitHash[lenGZ] == "gz" {
 			log.Debug("hash provided appears to be a tarball")
 			return "tarball", nil
 		}
@@ -195,21 +197,14 @@ func checkHash(hash string) (string, error) {
 		log.Debug("hash provided appears to be an IPFS hash")
 		return "ipfs-hash", nil
 	}
-
 	return "", fmt.Errorf("unable to decipher hash")
 }
 
 func downloadBundleFromIPFS(params map[string]string) error {
-	bundleInfo := map[string]string{
-		"groupId":  params["groupId"],
-		"bundleId": params["bundleId"],
-		"version":  params["version"],
-		"hash":     params["hash"],
-	}
 
-	installPath := SetTarballPath(bundleInfo)
+	installPath := SetTarballPath(params)
 
-	tarBallPath, err := GetTarballFromIPFS(bundleInfo["hash"], installPath)
+	tarBallPath, err := GetTarballFromIPFS(params["hash"], installPath)
 	if err != nil {
 		//http.Error(w, `error getting from IPFS`, http.StatusInternalServerError)
 		return err
@@ -312,7 +307,6 @@ func DeployContractBundle(path, chainName, address string) error {
 	return nil
 }
 
-// deduplicate these two functions?
 func SetTarballPath(bundleInfo map[string]string) string {
 	groupID := strings.Replace(bundleInfo["groupId"], ".", "/", 1)
 	bundleID := bundleInfo["bundleId"]
