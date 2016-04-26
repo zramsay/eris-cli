@@ -143,7 +143,7 @@ func TestExecService(t *testing.T) {
 		t.Fatalf("expected to execute service, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), ".bashrc") {
+	if !strings.Contains(buf.String(), ".") {
 		t.Fatalf("expected a file in the exec output, got %v", buf.String())
 	}
 }
