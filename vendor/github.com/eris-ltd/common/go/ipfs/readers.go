@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -153,14 +154,25 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 		defer outputFile.Close()
 	}
 
-	// adding manual timeouts as IPFS hangs for a while
-	transport := http.Transport{
-		Dial: dialTimeout,
+	transport := http.Transport{Dial: dialTimeout}
+
+	if proxyURL == "" {
+		transport = http.Transport{Proxy: nil}
+	} else {
+		urli := url.URL{}
+		urlProxy, err := urli.Parse(proxyURL)
+		if err != nil {
+			return err
+		}
+		transport = http.Transport{Proxy: http.ProxyURL(urlProxy)}
 	}
+
+	// adding manual timeouts as IPFS hangs for a while
 	client := http.Client{
 		Transport: &transport,
 	}
-	response, err := client.Get(url)
+
+	response, err := client.Get(url0)
 	if err != nil {
 		return err
 	}

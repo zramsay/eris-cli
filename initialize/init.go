@@ -27,7 +27,6 @@ func Initialize(do *definitions.Do) error {
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
 			return nil
 		}
-
 	}
 
 	if do.Pull { //true by default; if imgs already exist, will check for latest anyways
@@ -97,8 +96,8 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 	actPath = common.ActionsPath
 	chnPath = common.ChainsPath
 
-	tsErrorFix := "toadserver may be down: re-run with `--source=rawgit`"
-
+	tsErrorFix := "error getting files from github"
+	//"toadserver may be down: re-run with `--source=rawgit`"
 	if err := dropServiceDefaults(srvPath, do.Source, do.Proxy); err != nil {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}

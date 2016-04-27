@@ -61,7 +61,7 @@ func UnpackTarball(tarBallPath, installPath string) error {
 	return UntarForDocker(reader, "", installPath)
 }
 
-func GetFromGithub(org, repo, branch, path, directory, fileName string) error {
+func GetFromGithub(org, repo, branch, path, directory, fileName, proxy string) error {
 	url := "https://raw.githubusercontent.com/" + strings.Join([]string{org, repo, branch, path}, "/")
-	return ipfs.DownloadFromUrlToFile(url, fileName, directory)
+	return ipfs.DownloadFromUrlToFile(url, fileName, directory, proxy)
 }
