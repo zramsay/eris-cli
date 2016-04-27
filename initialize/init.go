@@ -99,15 +99,15 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 
 	tsErrorFix := "toadserver may be down: re-run with `--source=rawgit`"
 
-	if err := dropServiceDefaults(srvPath, do.Source); err != nil {
+	if err := dropServiceDefaults(srvPath, do.Source, do.Proxy); err != nil {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}
 
-	if err := dropActionDefaults(actPath, do.Source); err != nil {
+	if err := dropActionDefaults(actPath, do.Source, do.Proxy); err != nil {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}
 
-	if err := dropChainDefaults(chnPath, do.Source); err != nil {
+	if err := dropChainDefaults(chnPath, do.Source, do.Proxy); err != nil {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}
 

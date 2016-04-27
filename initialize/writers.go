@@ -27,8 +27,8 @@ import (
 
 // XXX all files in this sequence must be added to both
 // the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
-func dropServiceDefaults(dir, from string) error {
-	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from); err != nil {
+func dropServiceDefaults(dir, from, proxy string) error {
+	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from, proxy); err != nil {
 		return err
 	}
 	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys); err != nil {
@@ -40,8 +40,8 @@ func dropServiceDefaults(dir, from string) error {
 	return nil
 }
 
-func dropActionDefaults(dir, from string) error {
-	if err := drops(ver.ACTION_DEFINITIONS, "actions", dir, from); err != nil {
+func dropActionDefaults(dir, from, proxy string) error {
+	if err := drops(ver.ACTION_DEFINITIONS, "actions", dir, from, proxy); err != nil {
 		return err
 	}
 	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
@@ -50,8 +50,8 @@ func dropActionDefaults(dir, from string) error {
 	return nil
 }
 
-func dropChainDefaults(dir, from string) error {
-	if err := drops(ver.CHAIN_DEFINITIONS, "chains", dir, from); err != nil {
+func dropChainDefaults(dir, from, proxy string) error {
+	if err := drops(ver.CHAIN_DEFINITIONS, "chains", dir, from, proxy); err != nil {
 		return err
 	}
 
@@ -186,7 +186,7 @@ This is likely a network performance issue with our Docker hosting provider`)
 	return nil
 }
 
-func drops(files []string, typ, dir, from string) error {
+func drops(files []string, typ, dir, from, proxy string) error {
 	//to get from rawgit
 	var repo string
 	if typ == "services" {
@@ -218,14 +218,14 @@ func drops(files []string, typ, dir, from string) error {
 				"from": url,
 				"to":   dir,
 			}).Debug("Moving file")
-			if err := ipfs.DownloadFromUrlToFile(url, file, dir); err != nil {
+			if err := ipfs.DownloadFromUrlToFile(url, file, dir, proxy); err != nil {
 				return err
 			}
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
 			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file); err != nil {
+			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file, proxy); err != nil {
 				return err
 			}
 		}
