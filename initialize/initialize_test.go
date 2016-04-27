@@ -97,31 +97,31 @@ func testDrops(dir, kind string) error {
 	case "services":
 		//pull from toadserver
 		if toadUp {
-			if err := dropServiceDefaults(dirToad, "toadserver"); err != nil {
+			if err := dropServiceDefaults(dirToad, "toadserver", ""); err != nil {
 				ifExit(err)
 			}
 		}
 		//pull from rawgit
-		if err := dropServiceDefaults(dirGit, "rawgit"); err != nil {
+		if err := dropServiceDefaults(dirGit, "rawgit", ""); err != nil {
 			ifExit(err)
 		}
 	case "actions":
 		if toadUp {
-			if err := dropActionDefaults(dirToad, "toadserver"); err != nil {
+			if err := dropActionDefaults(dirToad, "toadserver", ""); err != nil {
 				ifExit(err)
 			}
 		}
-		if err := dropActionDefaults(dirGit, "rawgit"); err != nil {
+		if err := dropActionDefaults(dirGit, "rawgit", ""); err != nil {
 			ifExit(err)
 		}
 
 	case "chains":
 		if toadUp {
-			if err := dropChainDefaults(dirToad, "toadserver"); err != nil {
+			if err := dropChainDefaults(dirToad, "toadserver", ""); err != nil {
 				ifExit(err)
 			}
 		}
-		if err := dropChainDefaults(dirGit, "rawgit"); err != nil {
+		if err := dropChainDefaults(dirGit, "rawgit", ""); err != nil {
 			ifExit(err)
 		}
 	}
