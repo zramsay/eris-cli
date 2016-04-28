@@ -40,6 +40,9 @@ build_script:
 
     go install
 
+after_test:
+  - bash c:\src\github.com\eris-ltd\eris-cli\tests\dm_cleanup.sh
+
 test_script:
 - cmd: >-
 
