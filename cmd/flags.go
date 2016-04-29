@@ -5,7 +5,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 //XXX flags were not deduplicated if only one known instance of being used
@@ -47,6 +47,8 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 		//exec (services, chains)
 	case "publish":
 		cmd.PersistentFlags().BoolVarP(&do.Operations.PublishAllPorts, "publish", "p", false, "publish random ports")
+	case "ports":
+		cmd.PersistentFlags().StringVarP(&do.Operations.Ports, "ports", "", "", "reassign ports")
 	case "interactive":
 		cmd.Flags().BoolVarP(&do.Operations.Interactive, "interactive", "i", false, "interactive shell")
 		//update

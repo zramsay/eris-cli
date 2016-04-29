@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 //XXX this command absolutely needs a good test!!
@@ -35,9 +35,9 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 	for depDir, newDir := range dirsToMigrate {
 		log.WithFields(log.Fields{
 			"old":       depDir,
-			"oldExists": DoesDirExist(depDir),
+			"old exists": DoesDirExist(depDir),
 			"new":       newDir,
-			"newExists": DoesDirExist(newDir),
+			"new exists": DoesDirExist(newDir),
 		}).Debug("Checking Directories to Migrate")
 		if !DoesDirExist(depDir) && DoesDirExist(newDir) { //already migrated, nothing to see here
 			continue
@@ -49,10 +49,8 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 }
 
 func canWeMigrate() bool {
-	fmt.Print("Permission to migrate deprecated directories required: would you like to continue? (y/n): ")
-	var input string
-	fmt.Scanln(&input)
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+	log.Warn("Permission to migrate deprecated directories required")
+	if QueryYesOrNo("Would you like to continue?") == Yes {
 		log.Debug("Confirmation verified. Proceeding")
 		return true
 	} else {

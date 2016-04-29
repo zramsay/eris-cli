@@ -14,10 +14,10 @@ import (
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	log "github.com/Sirupsen/logrus"
+	docker "github.com/fsouza/go-dockerclient"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	. "github.com/eris-ltd/common/go/common"
 )
 
 // Docker Client initialization
@@ -42,7 +42,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			log.WithField("=>", endpoint).Debug("Connecting to Docker")
 			DockerClient, err = docker.NewClient(endpoint)
 			if err != nil {
-				IfExit(fmt.Errorf("%v\n", mustInstallError()))
+				IfExit(DockerError(mustInstallError()))
 			}
 		} else {
 			log.WithFields(log.Fields{
@@ -87,7 +87,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				log.Debugf("Error: %v", err)
 				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
-					IfExit(fmt.Errorf("%v\n", e2))
+					IfExit(DockerError(e2))
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
@@ -113,11 +113,10 @@ func CheckDockerClient() error {
 		return nil
 	}
 
-	var input string
 	dockerHost, dockerCertPath := popHostAndPath()
 
 	if dockerCertPath == "" || dockerHost == "" {
-		driver := "virtualbox" // when we use agents we'll wanna turn this driver into a flag
+		driver := "virtualbox" // when we use agent we'll wanna turn this driver into a flag
 
 		if runtime.GOOS == "windows" {
 			if err := prepWin(); err != nil {
@@ -128,10 +127,7 @@ func CheckDockerClient() error {
 		if _, _, err := getMachineDeets("default"); err == nil {
 			fmt.Println("A Docker Machine VM exists, which Eris can use")
 			fmt.Println("However, our marmots recommend that you have a VM dedicated to Eris dev-ing")
-			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
-			fmt.Scanln(&input)
-
-			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
 				log.Debug("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
@@ -148,13 +144,9 @@ func CheckDockerClient() error {
 			}
 
 		} else {
-
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
 			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
-			fmt.Print("Would you like the marmots to create a machine for you? (y/n): ")
-			fmt.Scanln(&input)
-
-			if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
 				log.Warn("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
@@ -232,7 +224,7 @@ func getMachineDeets(machName string) (string, string, error) {
 func DockerClientVersion() (string, error) {
 	info, err := DockerClient.Version()
 	if err != nil {
-		return "", err
+		return "", DockerError(err)
 	}
 
 	return info.Get("Version"), nil
@@ -241,7 +233,7 @@ func DockerClientVersion() (string, error) {
 func DockerAPIVersion() (string, error) {
 	info, err := DockerClient.Version()
 	if err != nil {
-		return "", err
+		return "", DockerError(err)
 	}
 
 	return info.Get("APIVersion"), nil
@@ -254,8 +246,25 @@ func IsMinimalDockerClientVersion() bool {
 	if err != nil {
 		return false
 	}
+	return CompareVersions(version, ver.DOCKER_VER_MIN)
+}
 
-	return CompareVersions(version, ver.DVER_MIN)
+func DockerMachineVersion() (string, error) {
+	out, err := exec.Command("docker-machine", "--version").CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	var dmVersionTrimmed string
+	if runtime.GOOS == "windows" {
+		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine.exe version ")
+	} else {
+		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine version ")
+	}
+
+	dmVersion := strings.Split(dmVersionTrimmed, ",")[0]
+
+	return dmVersion, nil
 }
 
 // CompareVersions returns true if the version1 is larger or equal the version2,
@@ -357,7 +366,7 @@ func connectDockerTLS(dockerHost, dockerCertPath string) error {
 	}).Debug("Connecting to Docker via TLS")
 	DockerClient, err = docker.NewTLSClient(dockerHost, filepath.Join(dockerCertPath, "cert.pem"), filepath.Join(dockerCertPath, "key.pem"), filepath.Join(dockerCertPath, "ca.pem"))
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 
 	log.Debug("Connected via TLS")
@@ -426,4 +435,11 @@ func setIPFSHostViaDockerHost(dockerHost string) {
 
 	log.WithField("url", dockerIP).Debug("Setting ERIS_IPFS_HOST")
 	os.Setenv("ERIS_IPFS_HOST", dockerIP)
+}
+
+func DockerError(err error) error {
+	if _, ok := err.(*docker.Error); ok {
+		return fmt.Errorf("Docker: %v", err.(*docker.Error).Message)
+	}
+	return err
 }

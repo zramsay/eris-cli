@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	"github.com/eris-ltd/common/go/common"
+	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 func Clean(toClean map[string]bool) error {
@@ -45,14 +46,14 @@ func cleanHandler(toClean map[string]bool) error {
 	}
 
 	if toClean["rmd"] {
-		log.Debug("Removing Eris Root Directory")
+		log.Debug("Removing Eris root directory")
 		if err := os.RemoveAll(common.ErisRoot); err != nil {
 			return err
 		}
 	}
 
 	if toClean["images"] {
-		log.Debug("Removing all Eris docker images")
+		log.Debug("Removing all Eris Docker images")
 		if err := RemoveErisImages(); err != nil {
 			return err
 		}
@@ -64,27 +65,22 @@ func cleanHandler(toClean map[string]bool) error {
 func RemoveAllErisContainers() error {
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
-		return fmt.Errorf("error listing containers: %v\n", err)
+		return fmt.Errorf("Error listing containers: %v", DockerError(err))
 	}
 
 	for _, container := range contns {
-		if container.Labels["eris:ERIS"] == "true" {
+		// [pv]: Make sure legacy data containers are removed as well.
+		// The prefix bit is to be removed in 0.12.
+		if container.Labels[def.LabelEris] == "true" ||
+			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "eris_") {
+
 			if err := removeContainer(container.ID); err != nil {
-				return fmt.Errorf("error removing container: %v\n", err)
+				return fmt.Errorf("Error removing container: %v", DockerError(err))
 			}
 		}
+
 	}
 
-	// above doesn't catch them all ... ?
-	dataConts := DataContainers()
-	if len(dataConts) != 0 {
-		log.Warn("dangling data containers found, removing them")
-		for _, dCont := range dataConts {
-			if err := removeContainer(dCont.ContainerID); err != nil {
-				return fmt.Errorf("error removing container: %v\n", err)
-			}
-		}
-	}
 	return nil
 }
 
@@ -96,9 +92,10 @@ func removeContainer(containerID string) error {
 	}
 
 	if err := DockerClient.RemoveContainer(removeOpts); err != nil {
-		// in 1.10.1 there is a weird EOF error which occurs here even though the container is removed. ignoring that.
+		// In 1.10.1 there is a weird EOF error which occurs here
+		// even though the container is removed. ignoring that.
 		if fmt.Sprintf("%v", err) == "EOF" {
-			log.Debug("Weird EOF error. Not reaping.")
+			log.Debug("Weird EOF error. Not reaping")
 			return nil
 		}
 		return err
@@ -124,7 +121,7 @@ func RemoveErisImages() error {
 	}
 	allTheImages, err := DockerClient.ListImages(opts)
 	if err != nil {
-		return err
+		return DockerError(err)
 	}
 
 	//get all repo tags & IDs
@@ -159,25 +156,23 @@ func RemoveErisImages() error {
 			"id": imageID,
 		}).Debug("Removing image")
 		if err := DockerClient.RemoveImage(imageID); err != nil {
-			return err
+			return DockerError(err)
 		}
 	}
 	return nil
 }
 
 func canWeRemove(toClean map[string]bool) bool {
-	var input string
-	var canWe bool
-
+	home := os.Getenv("HOME")
 	var toWarn = map[string]string{
-		"containers": "All existing Eris containers",
-		"scratch":    "The contents of ($HOME/eris/scratch/data)",
-		"rmd":        "The Eris Root Directory ($HOME/.eris)",
-		"images":     "All Eris docker images",
+		"containers": "all",
+		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", home),
+		"rmd":        fmt.Sprintf("%s/.eris", home),
+		"images":     "all",
 	}
 
 	if toClean["all"] != true {
-		log.Warn("The marmots are about to remove")
+		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
 			log.WithField("containers", toWarn["containers"]).Warn("")
 		}
@@ -196,43 +191,17 @@ func canWeRemove(toClean map[string]bool) bool {
 			"scratch":    toWarn["scratch"],
 			"rmd":        toWarn["rmd"],
 			"images":     toWarn["images"],
-		}).Warn("The marmots are about to remove")
+		}).Warn("The marmots are about to remove the following")
 	}
 
-	fmt.Print("Please confirm (y/Y): ")
-
-	fmt.Scanln(&input)
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+	if QueryYesOrNo("Please confirm") == Yes {
 		log.Warn("Authorization given, removing")
-		canWe = true
-	} else {
-		log.Warn("Authorization not given, exiting")
-		canWe = false
+		return true
 	}
-	return canWe
+	log.Warn("Authorization not given, exiting")
+	return false
 }
 
 func TrimString(strang string) string {
 	return strings.TrimSpace(strings.Trim(strang, "\n"))
 }
-
-/* TODO
-if do.Volumes {
-	if err := removeOrphanedVolumes(yes); err != nil {
-		return err
-	}
-}
-
-if do.Uninstall {
-	if err := uninstallEris(yes); err != nil { //will also removeErisDir
-		return err
-	}
-}
-
-func removeOrphanedVolumes() error {
-	return nil
-}
-
-func uninstallEris() error {
-	return nil
-}*/

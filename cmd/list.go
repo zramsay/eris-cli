@@ -3,39 +3,76 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/list"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/spf13/cobra"
 )
 
-var ListEverything = &cobra.Command{
+var List = &cobra.Command{
 	Use:   "ls",
 	Short: "List all the things eris knows about.",
-	Long: `List all known definition files for services
-and chains. Also lists all existing and running services and
-chains and, data containers.
+	Long: `List all Eris service, chain, and data containers.
 
-For more detailed output, use [eris services ls], [eris chains ls], 
-and [eris data ls] commands with respective flags (--known, --existing, 
---running).`,
+The default output shows containers in three sections. The -a flag
+adds a few additional informational columns for each container.
 
+The -r flag limits the output to running services or chains only.
+
+The --json flag dumps the container information in the JSON format.
+
+The -f flag specifies an alternative format for the list, using the syntax
+of Go text templates. If the fields to be displayed are separated by the 
+'\t' tab character, the output will be columnized.
+
+The struct being passed to the template is:
+
+  type Details struct {
+    Type      string          // container type
+    ShortName string          // chain, service, or data name
+    FullName  string          // container name
+
+    Labels map[string]string  // container labels
+    Info   *docker.Container  // Docker client library Container info 
+  }
+
+The full list of available fields can be observed by issuing
+the [eris ls --json] command.
+
+The default [eris ls] output is equivalent to this custom format:
+
+  {{.ShortName}}\t{{asterisk .Info.State.Running}}\t
+  {{short .Info.ID}}\t{{short (dependent .ShortName)}}
+
+The are a few helper functions available to prefix the fields with:
+
+  quote       quote the value
+  toupper     make the value upper case
+  ports       prettify exposed container ports (used as {{ports .Info}})
+  short       shorten the container ID (or any other value) to 10 symbols
+  asterisk    show the '*' symbol if the value is true, '-' otherwise
+  dependent   find a dependent data container for the given service or chain
+`,
+	Example: `$ eris ls -rf '{{.ShortName}}, {{.Type}}, {{ports .Info}}'
+$ eris ls  -f '{{.ShortName}}\t{{.Type}}\t{{.Info.NetworkSettings.IPAddress}}'
+$ eris ls  -f '{{.ShortName}}\t{{.Info.Config.Env}}'`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ListAllTheThings()
+		ListAll()
 	},
 }
 
-func ListAllTheThings() {
-	//do.All for known/existing/running
-	do.All = true
+func buildListCommand() {
+	List.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
+	List.Flags().BoolVarP(&do.Running, "running", "r", false, "show only running containers")
+	List.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
+	List.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
+}
 
-	typs := []string{"chains", "services"}
-	for _, typ := range typs {
-		if err := list.ListAll(do, typ); err != nil {
-			return
-		}
+func ListAll() {
+	if do.All {
+		do.Format = "extended"
 	}
-	if err := list.ListDatas(do); err != nil {
-		return
+	if do.JSON {
+		do.Format = "json"
 	}
-	if err := list.ListActions(do); err != nil {
-		return
-	}
+
+	IfExit(list.Containers("all", do.Format, do.Running))
 }

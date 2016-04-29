@@ -11,13 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 )
 
-var docker18s = []string{"1.8.0", "1.8.1", "1.8.2", "1.8.3"}
 var docker19s = []string{"1.9.0", "1.9.1"}
-var docker110s = []string{"1.10.0", "1.10.1", "1.10.2", "1.10.3"}
-var dockerAll = [][]string{docker18s, docker19s, docker110s}
+var docker110s = []string{"1.10.2", "1.10.3"}
+var dockerAll = [][]string{docker19s, docker110s}
 
 var dmDriver = "amazonec2"
 var script = "docker.sh"

@@ -15,10 +15,10 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/ipfs"
 )
 
 func ImportService(do *definitions.Do) error {
@@ -171,9 +171,9 @@ func PortsService(do *definitions.Do) error {
 		return err
 	}
 
-	if IsServiceExisting(service.Service, service.Operations) {
+	if util.IsService(service.Service.Name, false) {
 		log.Debug("Service exists, getting port mapping")
-		return util.PrintPortMappings(service.Operations.SrvContainerID, do.Operations.Args)
+		return util.PrintPortMappings(service.Operations.SrvContainerName, do.Operations.Args)
 	}
 
 	return nil
@@ -228,9 +228,14 @@ func RmService(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		if IsServiceExisting(service.Service, service.Operations) {
-			err = perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force)
-			if err != nil {
+		if util.IsService(service.Service.Name, false) {
+			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force); err != nil {
+				return err
+			}
+		}
+
+		if do.RmImage {
+			if err := perform.DockerRemoveImage(service.Service.Image, true); err != nil {
 				return err
 			}
 		}
@@ -240,7 +245,6 @@ func RmService(do *definitions.Do) error {
 			if err != nil {
 				return err
 			}
-			oldFile = filepath.Join(ServicesPath, oldFile) + ".toml"
 			log.WithField("file", oldFile).Warn("Removing file")
 			if err := os.Remove(oldFile); err != nil {
 				return err

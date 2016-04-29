@@ -8,18 +8,20 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/ipfs"
+	logger "github.com/eris-ltd/common/go/log"
+	"github.com/spf13/cobra"
 )
 
 const VERSION = version.VERSION
-const dVerMin = version.DVER_MIN
+const dVerMin = version.DOCKER_VER_MIN
+const dmVerMin = version.DM_VER_MIN
 
 // Defining the root command
 var ErisCmd = &cobra.Command{
@@ -50,24 +52,53 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-
-		log.AddHook(CrashReportHook())
-
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 
+		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
+			return
+		}
+
+		if !util.DoesDirExist(ErisRoot) && cmd.Use != "init" {
+			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
+			do := definitions.NowDo()
+			do.Yes = true
+			do.Pull = false
+			do.Source = "rawgit"
+			do.Quiet = true
+			if err := initialize.Initialize(do); err != nil {
+				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+			}
+
+			log.Warn()
+		}
+
+		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
-			IfExit(fmt.Errorf("There was an error connecting to your docker daemon.\nCome back after you have resolved and the marmots will be happy to service your blockchain management needs\n\n%v", err))
+			IfExit(fmt.Errorf("There was an error connecting to your Docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs: %v", util.DockerError(err)))
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		err := config.SaveGlobalConfig(config.GlobalConfig.Config)
+		log.AddHook(CrashReportHook(dockerVersion))
+
+		// Compare `docker-machine` versions but don't fail if not installed.
+		dmVersion, err := util.DockerMachineVersion()
 		if err != nil {
-			log.Errorln(err)
+			log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+		} else if !util.CompareVersions(dmVersion, dmVerMin) {
+			IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+		}
+	},
+
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if !util.DoesDirExist(ErisRoot) {
+			return
+		}
+
+		if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
+			log.Error(err)
 		}
 	},
 }
@@ -98,23 +129,14 @@ func AddCommands() {
 	ErisCmd.AddCommand(Keys)
 	buildActionsCommand()
 	ErisCmd.AddCommand(Actions)
-
-	// TODO
-	// buildApplicationsCommand()
-	// ErisCmd.AddCommand(Applications)
-	// buildRemotesCommand()
-	// ErisCmd.AddCommand(Remotes)
-
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
 	buildDataCommand()
 	ErisCmd.AddCommand(Data)
-	ErisCmd.AddCommand(ListEverything)
-
-	// TODO
-	// buildAgentsCommand()
-	// ErisCmd.AddCommand(Agents)
-
+	buildListCommand()
+	ErisCmd.AddCommand(List)
+	buildAgentsCommand()
+	ErisCmd.AddCommand(Agents)
 	buildCleanCommand()
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()

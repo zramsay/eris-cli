@@ -7,11 +7,13 @@ type Do struct {
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	JSON          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Logsrotate    bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	RmImage       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Services      bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -23,6 +25,7 @@ type Do struct {
 	ZipFile       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Output        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Overwrite     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -32,7 +35,6 @@ type Do struct {
 	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Branch        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -47,7 +49,7 @@ type Do struct {
 	Path          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	CSV           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	NewName       string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ResultFormt   string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Format        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Priv          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Volume        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -64,12 +66,19 @@ type Do struct {
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
+	// update 
+	Branch  string `mapstructure:"," json:"," yaml:"," toml:","`
+	// XXX below requested by @kootpv. to implement once command is stable
+	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
+	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Scratch    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Images     bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall  bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Volumes    bool `mapstructure:"," json:"," yaml:"," toml:","`
+
 	//data import/export
 	Source      string `mapstructure:"," json:"," yaml:"," toml:","`
 	Destination string `mapstructure:"," json:"," yaml:"," toml:","`

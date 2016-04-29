@@ -10,8 +10,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
 )
 
 func RenameData(do *definitions.Do) error {
@@ -20,7 +20,7 @@ func RenameData(do *definitions.Do) error {
 		"to":   do.NewName,
 	}).Info("Renaming data container")
 
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		ops := loaders.LoadDataDefinition(do.Name)
 		util.Merge(ops, do.Operations)
 
@@ -36,11 +36,11 @@ func RenameData(do *definitions.Do) error {
 }
 
 func InspectData(do *definitions.Do) error {
-	if util.IsDataContainer(do.Name) {
+	if util.IsData(do.Name) {
 		log.WithField("=>", do.Name).Info("Inspecting data container")
 
 		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainersName(definitions.TypeData, do.Name)
+		srv.Operations.SrvContainerName = util.ContainerName(definitions.TypeData, do.Name)
 
 		err := perform.DockerInspect(srv.Service, srv.Operations, do.Operations.Args[0])
 		if err != nil {
@@ -60,11 +60,11 @@ func RmData(do *definitions.Do) (err error) {
 	}
 	for _, name := range do.Operations.Args {
 		do.Name = name
-		if util.IsDataContainer(do.Name) {
+		if util.IsData(do.Name) {
 			log.WithField("=>", do.Name).Info("Removing data container")
 
 			srv := definitions.BlankServiceDefinition()
-			srv.Operations.SrvContainerName = util.ContainersName("data", do.Name)
+			srv.Operations.SrvContainerName = util.ContainerName("data", do.Name)
 
 			if err = perform.DockerRemove(srv.Service, srv.Operations, false, do.Volumes, false); err != nil {
 				log.Errorf("Error removing %s: %v", do.Name, err)

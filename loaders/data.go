@@ -4,7 +4,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 // LoadDataDefinition returns an Operation structure for a blank data container
@@ -15,8 +15,8 @@ func LoadDataDefinition(dataName string) *definitions.Operation {
 
 	ops := definitions.BlankOperation()
 	ops.ContainerType = definitions.TypeData
-	ops.SrvContainerName = util.DataContainersName(dataName)
-	ops.DataContainerName = util.DataContainersName(dataName)
+	ops.SrvContainerName = util.DataContainerName(dataName)
+	ops.DataContainerName = util.DataContainerName(dataName)
 	ops.Labels = util.Labels(dataName, ops)
 
 	return ops

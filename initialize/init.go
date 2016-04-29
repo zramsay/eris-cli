@@ -5,15 +5,14 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 )
 
 func Initialize(do *definitions.Do) error {
-	log.Warn("Checking for Eris root directory")
 	newDir, err := checkThenInitErisRoot(do.Quiet)
 	if err != nil {
 		return err
@@ -21,12 +20,12 @@ func Initialize(do *definitions.Do) error {
 
 	if !newDir { //new ErisRoot won't have either...can skip
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
-			return err
+			return nil
 		}
 
 		log.Info("Checking if migration is required")
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
-			return err
+			return nil
 		}
 
 	}
@@ -43,15 +42,16 @@ func Initialize(do *definitions.Do) error {
 		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
 	}
 
-	log.Warnf(`
-Eris sends crash reports to a remote server in case something goes completely 
-wrong. You may disable this feature by adding the CrashReport = %q 
+	if !do.Quiet {
+		log.Warnf(`
+Eris sends crash reports to a remote server in case something goes completely
+wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
 `, "don't send", filepath.Join(common.ErisRoot, "eris.toml"))
-	//TODO: when called from cli provide option to go on tour, like `ipfs tour`
-	//[zr] this'll be cleaner with `make`
-	log.Warn("The marmots have everything set up for you. Type [eris] to get started")
-
+		//TODO: when called from cli provide option to go on tour, like `ipfs tour`
+		//[zr] this'll be cleaner with `make`
+		log.Warn("The marmots have everything set up for you. Type [eris] to get started")
+	}
 	return nil
 }
 
@@ -86,16 +86,16 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 func checkThenInitErisRoot(force bool) (bool, error) {
 	var newDir bool
 	if force { //for testing only
-		log.Warn("Force initializing eris root directory")
+		log.Info("Force initializing Eris root directory")
 		if err := common.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
 		}
 		return true, nil
 	}
 	if !util.DoesDirExist(common.ErisRoot) {
-		log.Warn("Eris root directory does not exist. The marmots will initialize this directory for you")
+		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := common.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
+			return true, fmt.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
 		}
 		newDir = true
 	} else { // ErisRoot exists, prompt for overwrite
@@ -116,23 +116,18 @@ func checkIfCanOverwrite(doYes bool) error {
 	if doYes {
 		return nil
 	}
-	var input string
-	log.WithField("path", common.ErisRoot).Warn("Eris root directory already exists")
+	log.WithField("path", common.ErisRoot).Warn("Eris root directory")
 	log.WithFields(log.Fields{
 		"services path": common.ServicesPath,
 		"actions path":  common.ActionsPath,
 		"chains path":   common.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
-	fmt.Print("Do you wish to continue? (y/n): ")
-	if _, err := fmt.Scanln(&input); err != nil {
-		return fmt.Errorf("Error reading from stdin: %v\n", err)
-	}
-	if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 		log.Debug("Confirmation verified. Proceeding")
 	} else {
 		log.Warn("The marmots will not proceed without your permission")
 		log.Warn("Please backup your files and try again")
-		return fmt.Errorf("Error:\tno permission given to overwrite services and actions\n")
+		return fmt.Errorf("Error: no permission given to overwrite services and actions")
 	}
 	return nil
 }
@@ -142,9 +137,8 @@ func GetTheImages(doYes bool) error {
 		if err := pullDefaultImages(); err != nil {
 			return err
 		}
-		log.Warn("Pulling of default images successful")
+		log.Warn("Successfully pulled default images")
 	} else {
-		var input string
 		log.Warn(`
 WARNING: Approximately 1 gigabyte of Docker images are about to be pulled
 onto your host machine. Please ensure that you have sufficient bandwidth to
@@ -155,15 +149,11 @@ on local host machines. If you already have the images, they'll be updated.
 		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
 		log.Warn()
 
-		fmt.Print("Do you wish to continue? (y/n): ")
-		if _, err := fmt.Scanln(&input); err != nil {
-			return fmt.Errorf("Error reading from stdin: %v\n", err)
-		}
-		if input == "Y" || input == "y" || input == "YES" || input == "Yes" || input == "yes" {
+		if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 			if err := pullDefaultImages(); err != nil {
 				return err
 			}
-			log.Warn("Pulling of default images successful")
+			log.Warn("Successfully pulled default images")
 		}
 	}
 	return nil

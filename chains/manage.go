@@ -19,9 +19,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/ipfs"
 )
 
 // MakeChain runs the `eris-cm make` command in a docker container.
@@ -41,11 +41,15 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
+	if err := checkKeysRunningOrStart(); err != nil {
+		return err
+	}
+
 	do.Service.Name = do.Name
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
-	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainersName("keys"), "keys")}
+	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
 	do.Service.Environment = []string{
 		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
 		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
@@ -57,9 +61,10 @@ func MakeChain(do *definitions.Do) error {
 		fmt.Sprintf("ERIS_CHAINMANAGER_DEBUG=%v", do.Debug),
 	}
 
-	do.Operations.ContainerType = "service"
-	do.Operations.SrvContainerName = util.ServiceContainersName(do.Name)
-	do.Operations.DataContainerName = util.DataContainersName(do.Name)
+	do.Operations.ContainerType = definitions.TypeService
+	do.Operations.SrvContainerName = util.ServiceContainerName(do.Name)
+	do.Operations.DataContainerName = util.DataContainerName(do.Name)
+	do.Operations.Labels = util.Labels(do.Name, do.Operations)
 	if do.RmD {
 		do.Operations.Remove = true
 	}
@@ -86,7 +91,7 @@ func MakeChain(do *definitions.Do) error {
 	doData := definitions.NowDo()
 	doData.Name = do.Name
 
-	doData.Operations.DataContainerName = util.DataContainersName(do.Name)
+	doData.Operations.DataContainerName = util.DataContainerName(do.Name)
 	doData.Operations.ContainerType = "service"
 
 	doData.Source = AccountsTypePath
@@ -94,23 +99,18 @@ func MakeChain(do *definitions.Do) error {
 	if err := data.ImportData(doData); err != nil {
 		return err
 	}
+
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
 		return err
 	}
+
 	chnPath := filepath.Join(ChainsPath, do.Name)
-	if _, err := os.Stat(chnPath); !os.IsNotExist(err) {
-		doData.Operations.Args = []string{"mkdir", "--parents", path.Join(ErisContainerRoot, "chains", do.Name)}
-		if _, err := data.ExecData(doData); err != nil {
-			return err
-		}
-		doData.Operations.Args = []string{}
-		doData.Source = chnPath
-		doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
-		if err := data.ImportData(doData); err != nil {
-			return err
-		}
+	doData.Source = chnPath
+	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
+	if err := data.ImportData(doData); err != nil {
+		return err
 	}
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
@@ -180,7 +180,7 @@ func InspectChain(do *definitions.Do) error {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
 		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
@@ -222,7 +222,7 @@ func ExportChain(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		doNow := definitions.NowDo()
 		doNow.Name = "ipfs"
 		services.EnsureRunning(doNow)
@@ -314,7 +314,9 @@ func CatChain(do *definitions.Do) error {
 
 	buf, err := ExecChain(do)
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	if buf != nil {
+		io.Copy(config.GlobalConfig.Writer, buf)
+	}
 
 	return err
 }
@@ -330,9 +332,9 @@ func PortsChain(do *definitions.Do) error {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
-		return util.PrintPortMappings(chain.Operations.SrvContainerID, do.Operations.Args)
+		return util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args)
 	}
 
 	return nil
@@ -435,7 +437,7 @@ func UpdateChain(do *definitions.Do) error {
 	}
 
 	// set the right env vars and command
-	if IsChainRunning(chain) {
+	if util.IsChain(chain.Name, true) {
 		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
 		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
 		chain.Service.Links = append(chain.Service.Links, do.Links...)
@@ -449,13 +451,13 @@ func UpdateChain(do *definitions.Do) error {
 	return nil
 }
 
-func RmChain(do *definitions.Do) error {
+func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name, false)
 	if err != nil {
 		return err
 	}
 
-	if IsChainExisting(chain) {
+	if util.IsChain(chain.Name, false) {
 		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
 			return err
 		}
@@ -473,6 +475,16 @@ func RmChain(do *definitions.Do) error {
 			return err
 		}
 	}
+
+	if do.RmHF {
+		dirPath := filepath.Join(ChainsPath, do.Name) // the dir
+
+		log.WithField("directory", dirPath).Warn("Removing directory")
+		if err := os.RemoveAll(dirPath); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -517,7 +529,7 @@ func RegisterChain(do *definitions.Do) error {
 	do.ChainID = do.Name
 
 	// NOTE: registration expects you to have the data container
-	if !util.IsDataContainer(do.Name) {
+	if !util.IsData(do.Name) {
 		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
 	}
 
@@ -557,5 +569,21 @@ func RegisterChain(do *definitions.Do) error {
 
 	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
+	return nil
+}
+
+func checkKeysRunningOrStart() error {
+	srv, err := loaders.LoadServiceDefinition("keys", false)
+	if err != nil {
+		return err
+	}
+
+	if !util.IsService(srv.Service.Name, true) {
+		do := definitions.NowDo()
+		do.Operations.Args = []string{"keys"}
+		if err := services.StartService(do); err != nil {
+			return err
+		}
+	}
 	return nil
 }

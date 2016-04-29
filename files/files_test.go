@@ -2,31 +2,31 @@ package files
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/common/go/log"
 )
 
-var erisDir string = filepath.Join(os.TempDir(), "eris")
-
-var DEAD bool // XXX: don't double panic (TODO: Flushing twice blocks)
-func fatal(t *testing.T, err error) {
-	if !DEAD {
-		tests.TestsTearDown()
-		DEAD = true
-		panic(err)
-	}
-}
+var (
+	erisDir      = filepath.Join(os.TempDir(), "eris")
+	newDir       = filepath.Join(erisDir, "addRecursively")
+	fileInNewDir = filepath.Join(newDir, "recurse.toml")
+	content      = "test contents"
+	filename     = filepath.Join(erisDir, "test-file.toml")
+)
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -35,17 +35,13 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	tests.IfExit(testsInit())
+	tests.IfExit(tests.TestsInit("files"))
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
 }
 
 func TestPutFiles(t *testing.T) {
-	var (
-		content  = "test contents"
-		filename = filepath.Join(erisDir, "test-file.toml")
-	)
 	tests.FakeDefinitionFile(erisDir, "test-file", content)
 
 	do := definitions.NowDo()
@@ -66,23 +62,23 @@ func TestPutFiles(t *testing.T) {
 	defer ipfs.Close()
 
 	if err := PutFiles(do); err != nil {
-		fatal(t, err)
+		t.Fatalf("err putting files: %v\n", err)
 	}
 
 	if expected := "/ipfs/"; ipfs.Path() != expected {
-		fatal(t, fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+		t.Fatalf("called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path())
 	}
 
 	if expected := "POST"; ipfs.Method() != expected {
-		fatal(t, fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
 	}
 
 	if ipfs.Body() != content {
-		fatal(t, fmt.Errorf("Put the bad file; expected %q, got %q\n", content, ipfs.Body()))
+		t.Fatalf("Put the bad file; expected %q, got %q\n", content, ipfs.Body())
 	}
 
 	if hash != do.Result {
-		fatal(t, fmt.Errorf("Hash mismatch; expected %q, got %q\n", hash, do.Result))
+		t.Fatalf("Hash mismatch; expected %q, got %q\n", hash, do.Result)
 	}
 
 	log.WithField("result", do.Result).Debug("Finished putting a file")
@@ -90,13 +86,13 @@ func TestPutFiles(t *testing.T) {
 
 func TestGetFiles(t *testing.T) {
 	var (
-		filename = filepath.Join(erisDir, "tset file.toml")
-		content  = "test contents"
 		hash     = "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
+		fileName = filepath.Join(erisDir, "tset file.toml")
 	)
+
 	do := definitions.NowDo()
 	do.Name = hash
-	do.Path = filename
+	do.Path = fileName
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
@@ -107,27 +103,130 @@ func TestGetFiles(t *testing.T) {
 	})
 	defer ipfs.Close()
 
-	if err := GetFiles(do); err != nil {
-		fatal(t, err)
+	passed := false
+	for i := 0; i < 5; i++ {
+		if err := GetFiles(do); err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+	if !passed {
+		// final time will throw
+		if err := GetFiles(do); err != nil {
+			t.Fatalf("err getting files %v\n", err)
+		}
 	}
 
 	if expected := "/ipfs/" + hash; ipfs.Path() != expected {
-		fatal(t, fmt.Errorf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path()))
+		t.Fatalf("Called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path())
 	}
 
 	if expected := "GET"; ipfs.Method() != expected {
-		fatal(t, fmt.Errorf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method()))
+		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
 	}
 
-	if returned := tests.FileContents(filename); content != returned {
-		fatal(t, fmt.Errorf("Returned unexpected content; expected %q, got %q", content, returned))
+	if returned := tests.FileContents(fileName); content != returned {
+		t.Fatalf("Returned unexpected content; expected %q, got %q", content, returned)
 	}
 }
 
-func testsInit() error {
-	if err := tests.TestsInit("files"); err != nil {
-		return err
+func TestPutAndGetDirectory(t *testing.T) {
+	buf, err := services.ExecHandler("ipfs", []string{"bash", "-c", "ipfs init; ipfs get `ipfs add -qr /root`"})
+	if err != nil {
+		t.Fatalf("Failed to put and get a directory from IPFS: %v : %s", err, buf.String())
+	}
+	fmt.Println(buf.String())
+}
+
+func testGetDirectoryFromIPFS(t *testing.T) {
+	var err error
+	hash := "QmYwjCPtWkduz81UnAqMJYCag5pock5y2S8yZQEd4qoyzf"
+
+	do := definitions.NowDo()
+	do.Name = hash
+	do.Path = erisDir
+
+	passed := false
+	for i := 0; i < 10; i++ { //usually needs 3-4
+		_, err = importDirectory(do)
+		if err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
 	}
 
-	return nil
+	if !passed {
+		_, err = importDirectory(do)
+		if err != nil {
+			t.Fatalf("error putting dir to IPFS: %v\n", err)
+
+		}
+	}
+}
+
+// get a dir up in there
+// adapted from agent/agent_test.go
+// eventually deduplicate
+func testPutDirectoryToIPFS(t *testing.T) {
+	var err error
+
+	if err := os.MkdirAll(newDir, 0777); err != nil {
+		t.Fatalf("err mkdir: %v\n", err)
+	}
+
+	if err := ioutil.WriteFile(fileInNewDir, []byte(content), 0777); err != nil {
+		t.Fatalf("err writing file: %v\n", err)
+	}
+
+	do := definitions.NowDo()
+	do.Name = newDir
+
+	passed := false
+	for i := 0; i < 10; i++ { //usually needs 3-4
+		_, err = exportDirectory(do)
+		if err != nil {
+			time.Sleep(2 * time.Second)
+			continue
+		} else {
+			passed = true
+			break
+		}
+	}
+
+	if !passed {
+		_, err = exportDirectory(do)
+		if err != nil {
+			t.Fatalf("error putting dir to IPFS: %v\n", err)
+
+		}
+	}
+}
+
+func testStartIPFS(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = "ipfs"
+	do.Operations.Args = []string{"ipfs"}
+	do.Operations.PublishAllPorts = false
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expected service to start, got %v", err)
+	}
+	// because it might help ... ?
+	time.Sleep(1 * time.Second)
+}
+
+func testKillIPFS(t *testing.T) {
+	do := definitions.NowDo()
+	do.Name = "ipfs"
+	do.Operations.Args = []string{"ipfs"}
+	do.Rm = true
+	do.RmD = true
+	if err := services.KillService(do); err != nil {
+		t.Fatalf("expected service to be stopped, got %v", err)
+	}
 }

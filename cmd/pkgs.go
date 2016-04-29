@@ -9,10 +9,10 @@ import (
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // Primary Packages Sub-Command
@@ -81,6 +81,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "w", "1234", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use")
+	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
 }
 
 //----------------------------------------------------
@@ -105,6 +106,12 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 		var err error
 		do.Path, err = os.Getwd()
 		IfExit(err)
+	}
+	if do.ChainName == "" {
+		IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
+	}
+	if do.DefaultAddr == "" {
+		IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
 	IfExit(pkgs.RunPackage(do))
 }

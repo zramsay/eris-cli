@@ -1,10 +1,10 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/update"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
+	. "github.com/eris-ltd/common/go/common"
 )
 
 var Update = &cobra.Command{
@@ -30,12 +30,10 @@ func buildUpdateCommand() {
 
 func addUpdateFlags() {
 	Update.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from")
-	Update.Flags().BoolVarP(&do.Pull, "pull-images", "", true, "by default, pulls and/or update latest primary images. use flag to skip pulling/updating of images.")
-	Update.Flags().BoolVarP(&do.Yes, "yes", "", false, "over-ride command-line prompts")
-	Update.Flags().StringVarP(&do.Source, "source", "", "rawgit", "source from which to download definition files for the eris platform. if toadserver fails, use: rawgit")
+	//Update.Flags().StringVarP(&do.Commit, "commit", "", "", "specify a commit to update from")
+	//Update.Flags().StringVarP(&do.Version, "version", "", "", "specify a version to update from")
 }
 
 func UpdateTool(cmd *cobra.Command, args []string) {
-	util.UpdateEris(do.Branch, true, true)
-	initialize.Initialize(do)
+	IfExit(update.UpdateEris(do))
 }

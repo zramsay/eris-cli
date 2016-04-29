@@ -1,18 +1,15 @@
 package actions
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/tests"
-	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/Sirupsen/logrus"
+	logger "github.com/eris-ltd/common/go/log"
 )
 
 var actionName string = "do not use"
@@ -21,7 +18,7 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -33,37 +30,6 @@ func TestMain(m *testing.M) {
 	log.Info("Tearing tests down")
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
-}
-
-func TestListKnownActions(t *testing.T) {
-	do := definitions.NowDo()
-	do.Quiet = true
-	tests.IfExit(list.ListActions(do))
-	k := strings.Split(do.Result, "\n") // tests output formatting.
-
-	ver.ACTION_DEFINITIONS = append(ver.ACTION_DEFINITIONS, "do_not_use.toml")
-
-	if len(k) != len(ver.ACTION_DEFINITIONS) {
-		tests.IfExit(fmt.Errorf("Did not find correct number of action definitions files, Expected %v, found %v.\n", len(ver.ACTION_DEFINITIONS), len(k)))
-	}
-
-	actDefs := make(map[string]bool)
-
-	for _, act := range ver.ACTION_DEFINITIONS {
-		actDef := strings.Split(act, ".")
-		actDefs[actDef[0]] = true
-	}
-
-	i := 0
-	for _, actFile := range k {
-		if actDefs[actFile] == true {
-			i++
-		}
-	}
-
-	if i != len(ver.ACTION_DEFINITIONS) {
-		tests.IfExit(fmt.Errorf("Could not find all the expected action definition files.\n"))
-	}
 }
 
 func TestLoadActionDefinition(t *testing.T) {

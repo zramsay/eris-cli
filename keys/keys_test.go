@@ -2,7 +2,6 @@ package keys
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -17,23 +16,13 @@ import (
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/Sirupsen/logrus"
+	. "github.com/eris-ltd/common/go/common"
+	logger "github.com/eris-ltd/common/go/log"
 )
 
-var DEAD bool
-
-func fatal(t *testing.T, err error) {
-	if !DEAD {
-		tests.TestsTearDown()
-		DEAD = true
-		panic(err)
-	}
-}
-
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -55,11 +44,11 @@ func TestGenerateKey(t *testing.T) {
 	output := testListKeys("container")
 
 	if len(output) != 1 {
-		fatal(t, fmt.Errorf("Expected one key, got (%v)\n", len(output)))
+		t.Fatalf("Expected one key, got (%v)", len(output))
 	}
 
 	if address != output[0] {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", address, output[0]))
+		t.Fatalf("Expected (%s), got (%s)", address, output[0])
 	}
 }
 
@@ -73,24 +62,23 @@ func TestGetPubKey(t *testing.T) {
 	pub := new(bytes.Buffer)
 	config.GlobalConfig.Writer = pub
 	if err := GetPubKey(doPub); err != nil {
-		fatal(t, err)
+		t.Fatalf("error getting pubkey: %v", err)
 	}
 
-	pubBytes := pub.Bytes()
-	pubkey := util.TrimString(string(pubBytes))
+	pubkey := util.TrimString(pub.String())
 
 	key := new(bytes.Buffer)
 	config.GlobalConfig.Writer = key
 	doKey := def.NowDo()
 	doKey.Address = doPub.Address
 	if err := ConvertKey(doKey); err != nil {
-		fatal(t, err)
+		t.Fatalf("error converting key: %v", err)
 	}
 
 	converted := regexp.MustCompile(`"pub_key":\[1,"([^"]+)"\]`).FindStringSubmatch(key.String())[1]
 
 	if converted != pubkey {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", pubkey, converted))
+		t.Fatalf("Expected (%s), got (%s)", pubkey, converted)
 	}
 }
 
@@ -105,7 +93,7 @@ func TestExportKeySingle(t *testing.T) {
 	//cat container contents of new key
 	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPath})
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	keyInCont := util.TrimString(catOut.String())
@@ -116,18 +104,95 @@ func TestExportKeySingle(t *testing.T) {
 
 	//export
 	if err := ExportKey(doExp); err != nil {
-		fatal(t, err)
+		t.Fatalf("error exporting: %v", err)
 	}
 
 	//cat host contents
 	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error reading file: %v", err)
 	}
 
 	keyOnHost := util.TrimString(string(key))
 	if keyInCont != keyOnHost {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyInCont, keyOnHost))
+		t.Fatalf("Expected (%s), got (%s)", keyInCont, keyOnHost)
+	}
+}
+
+func TestImportKeyAll(t *testing.T) {
+	testStartKeys(t)
+
+	// gen some keys
+	addrs := make(map[string]bool)
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+
+	// export them to host
+	doExp := def.NowDo()
+	doExp.All = true
+
+	//export
+	if err := ExportKey(doExp); err != nil {
+		t.Fatalf("error exporting: %v", err)
+	}
+
+	// kill container
+	testKillService(t, "keys", true)
+
+	// start keys
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+
+	// eris keys import --all
+	doImp := def.NowDo()
+	doImp.All = true
+
+	if err := ImportKey(doImp); err != nil {
+		t.Fatalf("error exporting: %v", err)
+	}
+
+	// check that they in container
+	output := testListKeys("container")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)", i)
+	}
+}
+
+func TestExportKeyAll(t *testing.T) {
+	testStartKeys(t)
+	defer testKillService(t, "keys", true)
+	// gen some keys
+	addrs := make(map[string]bool)
+	addrs[testsGenAKey()] = true
+	addrs[testsGenAKey()] = true
+
+	// export them all
+	doExp := def.NowDo()
+	doExp.All = true
+	//export
+	if err := ExportKey(doExp); err != nil {
+		t.Fatalf("error exporting: %v", err)
+	}
+	// check that they on host
+	output := testListKeys("host")
+
+	i := 0
+	for _, out := range output {
+		if addrs[util.TrimString(out)] == true {
+			i++
+		}
+	}
+
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
 }
 
@@ -143,12 +208,12 @@ func TestImportKeySingle(t *testing.T) {
 	doExp.Destination = filepath.Join(KeysPath, "data") //is default set by flag
 
 	if err := ExportKey(doExp); err != nil {
-		fatal(t, err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	key, err := ioutil.ReadFile(filepath.Join(doExp.Destination, address, address))
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error reading file: %v", err)
 	}
 	//key b4 import
 	keyOnHost := util.TrimString(string(key))
@@ -157,7 +222,7 @@ func TestImportKeySingle(t *testing.T) {
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
 
 	if _, err := srv.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
-		fatal(t, err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	doImp := def.NowDo()
@@ -166,7 +231,7 @@ func TestImportKeySingle(t *testing.T) {
 	doImp.Source = filepath.Join(KeysPath, "data")
 
 	if err := ImportKey(doImp); err != nil {
-		fatal(t, err)
+		t.Fatalf("error importing key: %v", err)
 	}
 
 	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
@@ -174,13 +239,13 @@ func TestImportKeySingle(t *testing.T) {
 	//cat container contents of new key
 	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPathCat})
 	if err != nil {
-		fatal(t, err)
+		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	keyInCont := util.TrimString(catOut.String())
 
 	if keyOnHost != keyInCont {
-		fatal(t, fmt.Errorf("Expected (%s), got (%s)\n", keyOnHost, keyInCont))
+		t.Fatalf("Expected (%s), got (%s)", keyOnHost, keyInCont)
 	}
 }
 
@@ -195,7 +260,6 @@ func TestListKeyContainer(t *testing.T) {
 	addrs := make(map[string]bool)
 	addrs[testsGenAKey()] = true
 	addrs[testsGenAKey()] = true
-	addrs[testsGenAKey()] = true
 
 	output := testListKeys("container")
 
@@ -206,8 +270,8 @@ func TestListKeyContainer(t *testing.T) {
 		}
 	}
 
-	if i != 3 {
-		fatal(t, fmt.Errorf("Expected 3 keys, got (%v)\n", i))
+	if i != 2 {
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
 }
 
@@ -227,12 +291,12 @@ func TestListKeyHost(t *testing.T) {
 	doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	if err := ExportKey(doExp); err != nil {
-		fatal(t, err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	doExp.Address = addr1
 	if err := ExportKey(doExp); err != nil {
-		fatal(t, err)
+		t.Fatalf("error exporting key: %v", err)
 	}
 
 	output := testListKeys("host")
@@ -245,11 +309,10 @@ func TestListKeyHost(t *testing.T) {
 	}
 
 	if i != 2 {
-		fatal(t, fmt.Errorf("Expected 2 keys, got (%v)\n", i))
+		t.Fatalf("Expected 2 keys, got (%v)", i)
 	}
 }
 
-//
 func testListKeys(typ string) []string {
 	do := def.NowDo()
 
@@ -265,9 +328,7 @@ func testListKeys(typ string) []string {
 		tests.IfExit(err)
 	}
 
-	res := strings.Split(do.Result, ",")
-
-	return res
+	return strings.Split(do.Result, ",")
 }
 
 //returns an addr for tests
@@ -278,28 +339,23 @@ func testsGenAKey() string {
 	tests.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
-	address := util.TrimString(string(addrBytes))
-	return address
+	return util.TrimString(string(addrBytes))
 }
 
 func testStartKeys(t *testing.T) {
 	serviceName := "keys"
 	do := def.NowDo()
 	do.Operations.Args = []string{serviceName}
-	log.WithField("=>", serviceName).Debug("Starting service (via tests)")
 	e := srv.StartService(do)
 	if e != nil {
-		log.Infof("Error starting service: %v", e)
-		t.Fail()
+		t.Fatalf("Error starting service: %v", e)
 	}
 
 	testExistAndRun(t, serviceName, true, true)
-	testNumbersExistAndRun(t, serviceName, 1, 1)
+	testNumbersExistAndRun(t, serviceName, true, true)
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	log.WithField("=>", serviceName).Debug("Stopping service (from tests)")
-
 	do := def.NowDo()
 	do.Name = serviceName
 	do.Operations.Args = []string{serviceName}
@@ -309,29 +365,26 @@ func testKillService(t *testing.T, serviceName string, wipe bool) {
 	}
 	e := srv.KillService(do)
 	if e != nil {
-		log.Error(e)
-		fatal(t, e)
+		t.Fatalf("error killing service: %v", e)
 	}
 	testExistAndRun(t, serviceName, !wipe, false)
-	testNumbersExistAndRun(t, serviceName, 0, 0)
+	testNumbersExistAndRun(t, serviceName, false, false)
 }
 
 func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {
-	if err := tests.TestExistAndRun(servName, "service", toExist, toRun); err != nil {
-		fatal(t, nil)
-	}
+	tests.IfExit(tests.TestExistAndRun(servName, "service", toExist, toRun))
 }
 
-func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun int) {
+func testNumbersExistAndRun(t *testing.T, servName string, containerExist, containerRun bool) {
 	log.WithFields(log.Fields{
 		"=>":        servName,
 		"existing#": containerExist,
 		"running#":  containerRun,
 	}).Info("Checking number of containers for")
 	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.HowManyContainersExisting(servName, "service")
+	exist := util.Exists(def.TypeService, servName)
 	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.HowManyContainersRunning(servName, "service")
+	run := util.Running(def.TypeService, servName)
 
 	if exist != containerExist {
 		log.WithFields(log.Fields{
@@ -339,7 +392,7 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 			"expected": containerExist,
 			"got":      exist,
 		}).Error("Wrong number of existing containers")
-		fatal(t, nil)
+		t.Fatalf("Bad failure")
 	}
 
 	if run != containerRun {
@@ -348,7 +401,7 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 			"expected": containerExist,
 			"got":      run,
 		}).Error("Wrong number of running containers")
-		fatal(t, nil)
+		t.Fatalf("Bad failure")
 	}
 
 	log.Info("All good")

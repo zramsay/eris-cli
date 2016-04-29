@@ -10,10 +10,10 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	. "github.com/eris-ltd/common/go/common"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -77,7 +77,7 @@ func ChainsAsAService(chainName string, newCont bool) (*definitions.ServiceDefin
 	}
 	// we keep the "eris_chain" prefix and set the CHAIN_ID var.
 	// the run command is set in ServiceDefFromChain
-	s.Operations.SrvContainerName = util.ChainContainersName(chainName)
+	s.Operations.SrvContainerName = util.ChainContainerName(chainName)
 	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
 	return s, nil
 }
@@ -167,6 +167,6 @@ func setChainDefaults(chain *definitions.Chain) error {
 // validation funcs
 func checkChainNames(chain *definitions.Chain) {
 	chain.Service.Name = chain.Name
-	chain.Operations.SrvContainerName = util.ChainContainersName(chain.Name)
-	chain.Operations.DataContainerName = util.DataContainersName(chain.Name)
+	chain.Operations.SrvContainerName = util.ChainContainerName(chain.Name)
+	chain.Operations.DataContainerName = util.DataContainerName(chain.Name)
 }

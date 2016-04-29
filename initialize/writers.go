@@ -12,15 +12,15 @@ import (
 
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/jsonmessage"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/docker/docker/pkg/term"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/term"
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	docker "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/fsouza/go-dockerclient"
+	log "github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/ipfs"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // XXX all files in this sequence must be added to both
@@ -146,7 +146,7 @@ func pullDefaultImages() error {
 				opts.Repository = image
 				opts.Registry = ver.ERIS_REG_BAK
 				if err := util.DockerClient.PullImage(opts, auth); err != nil {
-					ch <- err
+					ch <- util.DockerError(err)
 				}
 			}
 		}()

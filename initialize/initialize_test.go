@@ -13,13 +13,11 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/ipfs"
-	logger "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/Sirupsen/logrus"
+	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/ipfs"
+	logger "github.com/eris-ltd/common/go/log"
 )
-
-//XXX can't dry because testutils imports this package
 
 var erisDir = filepath.Join(os.TempDir(), "eris")
 var servDir = filepath.Join(erisDir, "services")
@@ -29,8 +27,7 @@ var chnDefDir = filepath.Join(chnDir, "default")
 var toadUp bool
 
 func TestMain(m *testing.M) {
-
-	log.SetFormatter(logger.ErisFormatter{})
+	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
 
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -186,7 +183,7 @@ func testsInit() error {
 
 	util.DockerConnect(false, "eris")
 
-	log.Info("Test init completed. Starting main test sequence now.")
+	log.Info("Test init completed. Starting main test sequence now")
 	return nil
 
 }
@@ -223,7 +220,6 @@ func ifExit(err error) {
 		if err := testsTearDown(); err != nil {
 			log.Error(err)
 		}
-		//	log.Flush()
 		os.Exit(1)
 	}
 }

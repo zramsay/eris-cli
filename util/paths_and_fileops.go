@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	. "github.com/eris-ltd/common/go/common"
 )
 
 func ChainsPathChecker(name string) (string, error) {
@@ -28,8 +28,8 @@ func GetFileByNameAndType(typ, name string) string {
 	files := GetGlobalLevelConfigFilesByType(typ, true)
 
 	for _, file := range files {
-		file_base := strings.Split(filepath.Base(file), ".")[0] // quick and dirty file root
-		if file_base == name {
+		fileBase := strings.Split(filepath.Base(file), ".")[0] // quick and dirty file root
+		if fileBase == name {
 			log.WithField("file", file).Debug("This file found")
 			return file
 		}

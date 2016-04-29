@@ -9,9 +9,9 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/viper"
+	"github.com/spf13/viper"
 
-	log "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 func LoadPackage(path, chainName string) (*definitions.Package, error) {

@@ -3,71 +3,69 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/agent"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	. "github.com/eris-ltd/common/go/common"
 
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 // Primary Agents Sub-Command
 var Agents = &cobra.Command{
-	Use:   "agents",
-	Short: "Start, Stop, and Manage Agents.",
-	Long: `Start, stop, and manage agents.
-`,
+	Use:   "agent",
+	Short: "Start an agent.",
+	Long: `Start an agent.
+An agent is local server that, when started,  exposes three endpoints:
+  
+  /chains	=> list running chains on the host (GET)
+  /download	=> download a tar'ed contract bundle (POST)
+  /install	=> download and deploy and tar'ed bundle (POST)
+
+The command is used to support the Eris Contracts Library Marketplace.
+
+Please see the pull request for more information about using 
+the agent and its endpoints:
+ 
+  https://github.com/eris-ltd/eris-cli/pull/632
+  
+The agent is stopped with ctrl+c.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// Build the agents subcommand
+// Build the agent subcommand
 func buildAgentsCommand() {
-	Agents.AddCommand(agentsStart)
-	Agents.AddCommand(agentsStop)
-	addAgentsFlags()
+	Agents.AddCommand(agentStart)
+	//Agents.AddCommand(agentStop)
+	//addAgentsFlags()
 }
 
 // start a agent
-var agentsStart = &cobra.Command{
+var agentStart = &cobra.Command{
 	Use:   "start",
-	Short: "Start a agent registered with Eris.",
-	Long: `Start a agent registered with Eris. If no is give Eris
-will simply start the currently checked out agent. To stop a
-agent use: [eris agents kill name].`,
-	Run: StartAgent,
+	Short: "Start the agent.",
+	Long:  `Start the agent. Stop the agent with ctrl+c.`,
+	Run:   StartAgent,
 }
 
-// stop a running agent
-var agentsStop = &cobra.Command{
+/*var agentStop = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop a running agent.",
-	Long: `Stop a running agent. If no is give Eris
-will simply stop the currently checked out agent.`,
-	Run: StopAgent,
-}
+	Long:  `Stop a running agent.`,
+	Run:   StopAgent,
+}*/
 
 //----------------------------------------------------------------------
 // cli flags
 func addAgentsFlags() {
-	// buildFlag(actionsDo, do, "quiet", "action")
-	// buildFlag(actionsDo, do, "chain", "action")
-	// buildFlag(actionsDo, do, "services", "action")
-
-	// buildFlag(actionsRemove, do, "file", "action")
-
-	// actionsList.Flags().BoolVarP(&do.Quiet, "quiet", "", false, "machine readable output; also used in tests")
 }
 
 //----------------------------------------------------------------------
 // cli command wrappers
 
 func StartAgent(cmd *cobra.Command, args []string) {
-	// IfExit(ArgCheck(2, "eq", cmd, args))
-	// do.Name = args[0]
-	// do.Path = args[1]
-	IfExit(agents.StartAgents(do))
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	IfExit(agent.StartAgent(do))
 }
 
-func StopAgent(cmd *cobra.Command, args []string) {
-	// IfExit(ArgCheck(2, "eq", cmd, args))
-	// do.Name = args[0]
-	// do.Path = args[1]
-	IfExit(agents.StopAgents(do))
-}
+/*func StopAgent(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(0, "eq", cmd, args))
+	IfExit(agent.StopAgent(do))
+}*/

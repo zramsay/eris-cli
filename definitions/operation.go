@@ -11,9 +11,11 @@ type Operation struct {
 	Privileged        bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Interactive       bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Follow            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	SkipCheck         bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	AppName           string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	DockerHostConn    string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Volume            string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Ports             string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Labels            map[string]string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	PublishAllPorts   bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	CapAdd            []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`

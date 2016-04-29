@@ -7,14 +7,12 @@ import (
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 
-	. "github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/Godeps/_workspace/src/github.com/spf13/cobra"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/spf13/cobra"
 )
-
-//----------------------------------------------------------------------
-// cli definitions
 
 // Primary Chains Sub-Command
 var Chains = &cobra.Command{
@@ -43,7 +41,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsImport)
-	Chains.AddCommand(chainsListAll)
+	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPorts)
@@ -57,6 +55,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
+	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
 	Chains.AddCommand(chainsGraduate)
 	// Chains.AddCommand(chainsMakeGenesis)
@@ -81,29 +80,24 @@ wizard (no flags) or when using with the other flags then keys will be made alon
 with the genesis.jsons and priv_validator.jsons so that everything is ready to go
 for you to [eris chains new].
 
-Optionally chains make provides packages of outputed priv_validator and genesis.json
+Optionally chains make provides packages of outputted priv_validator and genesis.json
 which you can email or send on your slack to your coworkers. These packages can
 be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-
-[eris chains new chainName --dir chainName]
-
-for that which will import all of the files which make creates into containers and
-start your shiny new chain.
+the [eris chains new chainName --dir chainName] for that which will import all
+of the files which make creates into containers and start your shiny new chain.
 
 If you have any questions on eris chains make, please see the eris-cm (chain manager)
 documentation here:
-https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/
-`,
+https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/`,
 	Example: `$ eris chains make myChain -- will use the chain-making wizard and make your chain named myChain (interactive)
 $ eris chains make myChain --chain-type=simplechain --  will use the chain type definition files to make your chain named myChain (non-interactive)
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 --chain-type=simplechain -- account types trump chain types, this command will use the flags to make the chain (non-interactive)
 $ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
-$ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains
-`,
+$ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
 	Run: MakeChain,
 }
 
@@ -131,8 +125,14 @@ unless the --options or --dir flag is passed.
 Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
 unless the --serverconf or --dir flag is passed.
 
-If you would like to create a genesis.json then please utilize [eris chains make]`,
+If you would like to create a genesis.json then please utilize [eris chains make]
+
+You can redefine the chain ports accessible over the network with the --ports flag.
+`,
 	Run: NewChain,
+	Example: `$ eris chains new simplechain --ports 4000 -- map the first port from the definition file to the host port 40000
+$ eris chains new simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
+$ eris chains new simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var chainsRegister = &cobra.Command{
@@ -143,7 +143,7 @@ var chainsRegister = &cobra.Command{
 etcb is Eris's blockchain which is a public blockchain that can be used to
 register *other* blockchains. In other words it is an easy way to "share"
 your blockchains with others. [eris chains register] is made to work
-seemlessly with [eris chains install] so that other users and/or colleagues
+seamlessly with [eris chains install] so that other users and/or colleagues
 should be able to use your registered blockchain by simply using the install
 command.
 
@@ -166,18 +166,33 @@ Install an existing erisdb based blockchain for use locally.
 	Run: InstallChain,
 }
 
-var chainsListAll = &cobra.Command{
+var chainsList = &cobra.Command{
 	Use:   "ls",
 	Short: "Lists everything chain related.",
-	Long: `Lists all: chain definition files (--known), current existing
-containers for each chain (--existing), current running containers for each
-chain (--running).
+	Long: `List chains or known chain definition files.
 
-If no known chains exist yet, create a new blockchain with: [eris chains new NAME]
-command.
+The -r flag limits the output to running chains only.
 
-Services are handled using the [eris services] command.`,
-	Run: ListAllChains,
+The --json flag dumps the container or known files information
+in the JSON format.
+
+The -q flag is equivalent to the '{{.ShortName}}' format.
+
+The -f flag specifies an alternate format for the list, using the syntax
+of Go text templates. See the more detailed description in the help
+output for the [eris ls] command. The struct passed to the Go template
+for the -k flag is this
+
+  type Definition struct {
+    Name       string       // chain name
+    Definition string       // definition file name
+  }
+
+The -k flag displays the known definition files. `,
+
+	Run: ListChains,
+	Example: `$ eris chains ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
+$ eris chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 }
 
 var chainsImport = &cobra.Command{
@@ -260,7 +275,11 @@ var chainsStart = &cobra.Command{
 background so its logs will not be viewable from the command line.
 
 To stop the chain use:      [eris chains stop NAME].
-To view a chain's logs use: [eris chains logs NAME].`,
+To view a chain's logs use: [eris chains logs NAME].
+
+You can redefine the chain ports accessible over the network with the --ports flag.
+See the [eris chains new] command for examples.
+`,
 	Run: StartChain,
 }
 
@@ -345,6 +364,13 @@ by the update command.
 	Run: UpdateChain,
 }
 
+var chainsRestart = &cobra.Command{
+	Use:   "restart NAME",
+	Short: "Restart chain.",
+	Long:  `Restart chain.`,
+	Run:   RestartChain,
+}
+
 var chainsGraduate = &cobra.Command{
 	Use:   "graduate NAME",
 	Short: "Graduate a chain to a service.",
@@ -413,9 +439,10 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
+	buildFlag(chainsNew, do, "ports", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
 	buildFlag(chainsNew, do, "api", "chain")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
+	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	// buildFlag(chainsRegister, do, "links", "chain")
 	// buildFlag(chainsRegister, do, "env", "chain")
@@ -433,23 +460,26 @@ func addChainsFlags() {
 	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 
 	buildFlag(chainsStart, do, "publish", "chain")
+	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	buildFlag(chainsStart, do, "api", "chain")
-	chainsStart.PersistentFlags().BoolVarP(&do.Logsrotate, "logsrotate", "z", false, "turn on logsrotate as a dependency to handle long output")
+	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
 	buildFlag(chainsLogs, do, "tail", "chain")
 
 	buildFlag(chainsExec, do, "publish", "chain")
+	buildFlag(chainsExec, do, "ports", "chain")
 	buildFlag(chainsExec, do, "interactive", "chain")
 	buildFlag(chainsExec, do, "links", "chain")
-	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "Docker image")
+	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "docker image")
 
 	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "file", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
+	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in ~/.eris/chains")
 
 	buildFlag(chainsUpdate, do, "pull", "chain")
 	buildFlag(chainsUpdate, do, "timeout", "chain")
@@ -462,14 +492,13 @@ func addChainsFlags() {
 	buildFlag(chainsStop, do, "timeout", "chain")
 	buildFlag(chainsStop, do, "volumes", "chain")
 
-	buildFlag(chainsListAll, do, "known", "chain")
-	buildFlag(chainsListAll, do, "existing", "chain")
-	buildFlag(chainsListAll, do, "running", "chain")
-	buildFlag(chainsListAll, do, "quiet", "chain")
+	buildFlag(chainsList, do, "known", "chain")
+	chainsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
+	chainsList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
+	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of chain names")
+	chainsList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
+	chainsList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers")
 }
-
-//----------------------------------------------------------------------
-// cli command wrappers
 
 func StartChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
@@ -643,28 +672,20 @@ func ExportChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.ExportChain(do))
 }
 
-func ListAllChains(cmd *cobra.Command, args []string) {
-	//if no flags are set, list all the things
-	//otherwise, allow only a single flag
-	if !(do.Known || do.Running || do.Existing) {
-		do.All = true
+func ListChains(cmd *cobra.Command, args []string) {
+	if do.All {
+		do.Format = "extended"
+	}
+	if do.Quiet {
+		do.Format = "{{.ShortName}}"
+	}
+	if do.JSON {
+		do.Format = "json"
+	}
+	if do.Known {
+		IfExit(list.Known("chains", do.Format))
 	} else {
-		flargs := []bool{do.Known, do.Running, do.Existing}
-		flags := []string{}
-
-		for _, f := range flargs {
-			if f == true {
-				flags = append(flags, "true")
-			}
-		}
-		IfExit(FlagCheck(1, "eq", cmd, flags))
-	}
-
-	if err := list.ListAll(do, "chains"); err != nil {
-		return
-	}
-	if !do.All {
-		fmt.Println(do.Result)
+		IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
 	}
 }
 
@@ -682,10 +703,17 @@ func UpdateChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.UpdateChain(do))
 }
 
+func RestartChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Pull = false
+	IfExit(chns.UpdateChain(do))
+}
+
 func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.RmChain(do))
+	IfExit(chns.RemoveChain(do))
 }
 
 func GraduateChain(cmd *cobra.Command, args []string) {
