@@ -27,48 +27,23 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 	var err error
 	var dockerHost string
 	var dockerCertPath string
-	if runtime.GOOS == "linux" {
-		// this means we aren't gonna use docker-machine (kind of)
-		if (machName == "eris" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
-			//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
-			endpoint := "unix:///var/run/docker.sock"
 
-			log.WithField("=>", endpoint).Debug("Checking Linux Docker socket")
-			u, _ := url.Parse(endpoint)
-			_, err := net.Dial(u.Scheme, u.Path)
-			if err != nil {
-				IfExit(fmt.Errorf("%v\n", mustInstallError()))
-			}
-			log.WithField("=>", endpoint).Debug("Connecting to Docker")
-			DockerClient, err = docker.NewClient(endpoint)
-			if err != nil {
-				IfExit(DockerError(mustInstallError()))
-			}
-		} else {
-			log.WithFields(log.Fields{
-				"host":      os.Getenv("DOCKER_HOST"),
-				"cert path": os.Getenv("DOCKER_CERT_PATH"),
-			}).Debug("Getting connection details from environment")
-			log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
-			dockerHost, dockerCertPath, err = getMachineDeets(machName)
-			if err != nil {
-				IfExit(fmt.Errorf("Error getting Docker Machine details for connection via TLS.\nERROR =>\t\t\t%v\n\nEither re-run the command without a machine or correct your machine name.\n", err))
-			}
+	// This means we aren't gonna use docker-machine (kind of).
+	if (machName == "eris" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
+		//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
+		endpoint := "unix:///var/run/docker.sock"
 
-			log.WithFields(log.Fields{
-				"host":      dockerHost,
-				"cert path": dockerCertPath,
-			}).Debug()
-
-			if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-				IfExit(fmt.Errorf("Error connecting to Docker via TLS.\nERROR =>\t\t\t%v\n", err))
-			}
-
-			setIPFSHostViaDockerHost(dockerHost)
+		log.WithField("=>", endpoint).Debug("Checking Linux Docker socket")
+		u, _ := url.Parse(endpoint)
+		_, err := net.Dial(u.Scheme, u.Path)
+		if err != nil {
+			IfExit(fmt.Errorf("%v\n", mustInstallError()))
 		}
-
-		log.Debug("Successfully connected to Docker daemon")
-
+		log.WithField("=>", endpoint).Debug("Connecting to Docker")
+		DockerClient, err = docker.NewClient(endpoint)
+		if err != nil {
+			IfExit(DockerError(mustInstallError()))
+		}
 	} else {
 		log.WithFields(log.Fields{
 			"host":      os.Getenv("DOCKER_HOST"),
@@ -77,7 +52,6 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
 
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
-
 		if err != nil {
 			log.Debug("Could not connect to Eris Docker Machine")
 			log.Errorf("Trying %q Docker Machine: %v", "default", err)
@@ -91,7 +65,6 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
-
 		}
 
 		log.WithFields(log.Fields{
