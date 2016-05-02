@@ -57,7 +57,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
-	Chains.AddCommand(chainsGraduate)
 	// Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
@@ -369,26 +368,6 @@ var chainsRestart = &cobra.Command{
 	Short: "Restart chain.",
 	Long:  `Restart chain.`,
 	Run:   RestartChain,
-}
-
-var chainsGraduate = &cobra.Command{
-	Use:   "graduate NAME",
-	Short: "Graduate a chain to a service.",
-	Long: `Graduate a chain to a service.
-
-Graduate works by translating the chain's definition into a service definition
-file with the chain_id set as the service name and everything set for you to
-more simply turn the chain on or off.
-
-Graduate should be used whenever you are "finished" working "on" the chain and
-you feel the chain is stable. While chains work just fine by turning them "on"
-or "off" with [eris chains start] and [eris chains stop], some feel that it is
-easier to work with chains as a service rather than as a chain when they are
-stable and not longer need to be worked "on" which is why this functionality
-exists. Ultimately, graduate is a convenience function as there is little to
-no difference in how chains and services "run", however the [eris chains]
-functions have more convenience functions for working "on" chains themselves.`,
-	Run: GraduateChain,
 }
 
 var chainsCat = &cobra.Command{
@@ -714,13 +693,6 @@ func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.RemoveChain(do))
-}
-
-func GraduateChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.GraduateChain(do))
 }
 
 func MakeGenesisFile(cmd *cobra.Command, args []string) {

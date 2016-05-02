@@ -45,35 +45,6 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestChainGraduate(t *testing.T) {
-	do := def.NowDo()
-	do.Name = chainName
-	if err := GraduateChain(do); err != nil {
-		t.Fatalf("expected chain to graduate, got %v", err)
-	}
-
-	srvDef, err := loaders.LoadServiceDefinition(chainName, false)
-	if err != nil {
-		t.Fatalf("expected service definition to be loaded")
-	}
-
-	if image := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DB); srvDef.Service.Image != image {
-		t.Fatalf("bad image on graduate, expected %s, got: %s", image, srvDef.Service.Image)
-	}
-
-	if srvDef.Service.Command != loaders.ErisChainStart {
-		t.Fatalf("improper service command on graduate, expected %s, got %s", loaders.ErisChainStart, srvDef.Service.Command)
-	}
-
-	if !srvDef.Service.AutoData {
-		t.Fatalf("improper service autodata value on graduate, expected %t, got %t", true, srvDef.Service.AutoData)
-	}
-
-	if len(srvDef.Dependencies.Services) != 1 {
-		t.Fatalf("improper service deps on graduate, expected: [%q], got %s", "keys", srvDef.Dependencies.Services)
-	}
-}
-
 func TestLoadChainDefinition(t *testing.T) {
 	// [pv]: this test belongs to the loaders package.
 	var err error

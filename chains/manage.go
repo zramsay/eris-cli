@@ -488,19 +488,6 @@ func RemoveChain(do *definitions.Do) error {
 	return nil
 }
 
-func GraduateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
-	if err != nil {
-		return err
-	}
-
-	serv := loaders.ServiceDefFromChain(chain, loaders.ErisChainStart)
-	if err := services.WriteServiceDefinitionFile(serv, filepath.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
-		return err
-	}
-	return nil
-}
-
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
