@@ -17,7 +17,12 @@ import (
 func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	var name string
 	var dir bool
-	f, _ := os.Stat(path)
+
+	var err error
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 	if f.IsDir() {
 		name = filepath.Base(path)
 		dir = true
@@ -28,7 +33,6 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 
 	var pkgConf *viper.Viper
 	var pkg *definitions.Package
-	var err error
 	if dir {
 		pkgConf, err = loadPackage(path)
 	} else {
