@@ -2,7 +2,6 @@ package util
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,7 +54,7 @@ func UnpackTarball(tarBallPath, installPath string) error {
 	reader, err := os.Open(tarBallPath)
 	defer reader.Close()
 	if err != nil {
-		return fmt.Errorf("error opening %s: %v\n", tarBallPath, err)
+		return err
 	}
 
 	return UntarForDocker(reader, "", installPath)

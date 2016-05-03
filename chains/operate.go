@@ -13,6 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -29,24 +30,21 @@ func NewChain(do *definitions.Do) error {
 		log.WithField("dir", dir).Debug("Chain data already exists in")
 		log.Debug("Overwriting with new data")
 		if err := os.RemoveAll(dir); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
 	// for now we just let setupChain force do.ChainID = do.Name
 	// and we overwrite using jq in the container
 	log.WithField("=>", do.Name).Debug("Setting up chain")
+	//setupChain will throw an ErisError
 	return setupChain(do, loaders.ErisChainNew)
-}
-
-func InstallChain(do *definitions.Do) error {
-	return setupChain(do, loaders.ErisChainInstall)
 }
 
 func KillChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if do.Force {
@@ -55,7 +53,7 @@ func KillChain(do *definitions.Do) error {
 
 	if util.IsChain(chain.Name, true) {
 		if err := perform.DockerStop(chain.Service, chain.Operations, do.Timeout); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	} else {
 		log.Info("Chain not currently running. Skipping")
@@ -63,13 +61,14 @@ func KillChain(do *definitions.Do) error {
 
 	if do.Rm {
 		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
 	return nil
 }
 
+// startChain will return an ErisError
 func StartChain(do *definitions.Do) error {
 	_, err := startChain(do, false)
 
@@ -101,23 +100,22 @@ func ThrowAwayChain(do *definitions.Do) error {
 }
 
 //------------------------------------------------------------------------
+// returns ErisError for simplicity/convenience
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		log.Error("Cannot start a chain I cannot find")
 		do.Result = "no file"
-		return nil, nil
+		return nil, &ErisError{404, err, ""}
 	}
 
 	if chain.Name == "" {
-		log.Error("Cannot start a chain without a name")
 		do.Result = "no name"
-		return nil, nil
+		return nil, &ErisError{404, ErrNoChainName, "provide a chain name in the chain definition file"}
 	}
 
 	// boot the dependencies (eg. keys, logrotate)
 	if err := bootDependencies(chain, do); err != nil {
-		return nil, err
+		return nil, &ErisError{404, err, "check that your service definition files are available and properly formatted"}
 	}
 
 	chain.Service.Command = loaders.ErisChainStart
@@ -161,12 +159,15 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
 
 		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
+		if err != nil {
+			do.Result = "error"
+			return buf, &ErisError{404, err, ""}
+		}
 	} else {
-		err = perform.DockerRunService(chain.Service, chain.Operations)
-	}
-	if err != nil {
-		do.Result = "error"
-		return buf, err
+		if err = perform.DockerRunService(chain.Service, chain.Operations); err != nil {
+			do.Result = "error"
+			return nil, &ErisError{404, err, ""}
+		}
 	}
 
 	return buf, nil
@@ -174,6 +175,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 
 // boot chain dependencies
 // TODO: this currently only supports simple services (with no further dependencies)
+// TODO nice errors!
 func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 	if do.Logrotate {
 		chain.Dependencies.Services = append(chain.Dependencies.Services, "logrotate")
@@ -208,7 +210,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 				return err
 			}
 			if !util.IsChain(chn.Name, true) {
-				return fmt.Errorf("chain %s depends on chain %s but %s is not running", chain.Name, chainName, chainName)
+				return BaseErrorESS(ErrChainMissing, chn.Name, chainName)
 			}
 		}
 	}
@@ -220,7 +222,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 func setupChain(do *definitions.Do, cmd string) (err error) {
 	// do.Name is mandatory
 	if do.Name == "" {
-		return fmt.Errorf("setupChain requires a chainame")
+		return &ErisError{404, ErrNoChainName, "provide a chain name"}
 	}
 
 	containerName := util.ChainContainerName(do.Name)
@@ -236,14 +238,14 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 			log.WithField("path", "$HOME/.eris/chains/"+do.Path).Info("Trying")
 			do.Path, err = util.ChainsPathChecker(do.Path)
 			if err != nil {
-				return err
+				return &ErisError{404, err, ""}
 			}
 		}
-	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
+	} else if do.GenesisFile == "" && len(do.ConfigOpts) == 0 {
 		// NOTE: this expects you to have ~/.eris/chains/default/ (ie. to have run `eris init`)
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
@@ -253,11 +255,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	} else {
 		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
-			return fmt.Errorf("Error creating data container =>\t%v", err)
+			return &ErisError{404, BaseError(ErrCreatingDataCont, err), "check your eris/data image"}
 		}
 		ops.Args = []string{"mkdir", "-p", path.Join(ErisContainerRoot, "chains", do.ChainID)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
@@ -265,16 +267,16 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	// if something goes wrong, cleanup
 	defer func() {
 		if err != nil {
-			log.Infof("Error on setting up chain: %v", err)
-			log.Info("Cleaning up")
+			log.Warn(ErrSettingUpChain)
+			// do.Force?
 			if err2 := RemoveChain(do); err2 != nil {
 				// maybe be less dramatic
-				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
+				err = &ErisError{404, BaseErrorEE(ErrCleaningUpChain, err, err2), "use [docker rm -vf <containerID>] carefully"}
 			}
 		}
 	}()
 
-	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
+	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
 
@@ -284,23 +286,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}).Debug()
 
 	if err = os.MkdirAll(dst, 0700); err != nil {
-		return fmt.Errorf("Error making data directory: %v", err)
-	}
-
-	// we accept two csvs: one for validators, one for accounts
-	// if there's only one, its for validators and accounts
-	// functionality is deprecated. to remove for 0.11.4
-	var csvFiles []string
-	var csvPaths string
-	if do.CSV != "" {
-		csvFiles = strings.Split(do.CSV, ",")
-		if len(csvFiles) > 1 {
-			csvPath1 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "validators.csv")
-			csvPath2 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "accounts.csv")
-			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
-		} else {
-			csvPaths = fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "genesis.csv")
-		}
+		return &ErisError{404, err, ""}
 	}
 
 	filesToCopy := []stringPair{
@@ -310,17 +296,9 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		{do.Priv, "priv_validator.json"},
 	}
 
-	// functionality is deprecated. to remove for 0.11.4
-	if len(csvFiles) == 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
-	} else if len(csvFiles) > 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "validators.csv"})
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
-	}
-
 	log.Info("Copying chain files into the correct location")
 	if err := copyFiles(dst, filesToCopy); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	// copy from host to container
@@ -334,7 +312,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	importDo.Destination = containerDst
 	importDo.Source = dst
 	if err = data.ImportData(importDo); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID)
@@ -349,13 +327,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	fileName := filepath.Join(ChainsPath, do.Name) + ".toml"
 	if _, err = os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
-			return fmt.Errorf("error writing chain definition to file: %v", err)
+			return &ErisError{404, BaseError(ErrWritingDefinitionFile, err), ""}
 		}
 	}
 
 	chain, err = loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
@@ -369,7 +347,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	for _, cv := range do.ConfigOpts {
 		spl := strings.Split(cv, "=")
 		if len(spl) != 2 {
-			return fmt.Errorf("Config options should be <key>=<value> pairs. Got %s", cv)
+			return &ErisError{404, BaseErrorES(ErrBadConfigOptions, cv), ""}
 		}
 		buf.WriteString(fmt.Sprintf(" --%s=%s", spl[0], spl[1]))
 	}
@@ -379,7 +357,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),                                          // functionality is deprecated. to remove for 0.11.4
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),                                // for config.toml
 		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                                  // etcb host
 		fmt.Sprintf("DOCKER_FIX=%s", "                                        "), // https://github.com/docker/docker/issues/14203
@@ -400,7 +377,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	chain.Operations.DataContainerName = util.DataContainerName(do.Name)
 
 	if err := bootDependencies(chain, do); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	log.WithFields(log.Fields{
@@ -419,7 +396,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
 	if out, err := ExecChain(doKeys); err != nil {
 		log.Error(out)
-		return fmt.Errorf("Error moving keys: %v", err)
+		return &ErisError{404, BaseErrorESE(ErrExecChain, "moving keys", err), ""}
 	}
 
 	doChown := definitions.NowDo()
@@ -427,7 +404,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
 	if out2, err2 := ExecChain(doChown); err != nil {
 		log.Error(out2)
-		return fmt.Errorf("Error changing owner: %v", err2)
+		return &ErisError{404, BaseErrorESE(ErrExecChain, "chainging owner", err2), ""}
 	}
 
 	return
@@ -453,11 +430,11 @@ func getChainIDFromGenesis(genesis, name string) (string, error) {
 
 	b, err := ioutil.ReadFile(genesis)
 	if err != nil {
-		return "", fmt.Errorf("Error reading genesis file: %v", err)
+		return "", BaseError(ErrReadingGenesisFile, err)
 	}
 
 	if err = json.Unmarshal(b, &hasChainID); err != nil {
-		return "", fmt.Errorf("Error reading chain id from genesis file: %v", err)
+		return "", BaseErrorESE(ErrReadingFromGenesisFile, "chain id", err)
 	}
 
 	chainID := hasChainID.ChainID

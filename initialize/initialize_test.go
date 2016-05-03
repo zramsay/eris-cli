@@ -185,7 +185,9 @@ func testsInit() error {
 	// run correctly.
 	config.ChangeErisDir(erisDir)
 
-	util.DockerConnect(false, "eris")
+	if err := util.DockerConnect(false, "eris"); err != nil {
+		return err
+	}
 
 	log.Info("Test init completed. Starting main test sequence now")
 	return nil

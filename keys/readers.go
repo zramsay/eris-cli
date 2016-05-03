@@ -8,6 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
+	. "github.com/eris-ltd/eris-cli/errors"
 
 	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
@@ -18,9 +19,9 @@ func ListKeys(do *definitions.Do) error {
 		keysPath := filepath.Join(KeysPath, "data")
 		addrs, err := ioutil.ReadDir(keysPath)
 		if err != nil {
-			return err
+			return &ErisError{ErrGo, err, "check your keys path"}
 		}
-		if !do.Quiet {
+		if !do.Quiet { // [zr] ... ?
 			if len(addrs) == 0 {
 				log.Warn("No keys found on host")
 			} else {
@@ -41,12 +42,12 @@ func ListKeys(do *definitions.Do) error {
 	if do.Container {
 		do.Name = "keys"
 		if err := srv.EnsureRunning(do); err != nil {
-			return err
+			return &ErisError{ErrEris, err, "[eris services start keys]"}
 		}
 
 		keysOut, err := srv.ExecHandler(do.Name, []string{"ls", "/home/eris/.eris/keys/data"})
 		if err != nil {
-			return err
+			return &ErisError{ErrDocker, err, "check that..."}
 		}
 		keysOutString := strings.Split(util.TrimString(keysOut.String()), "\n")
 		do.Result = strings.Join(keysOutString, ",")

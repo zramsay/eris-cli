@@ -9,6 +9,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -17,14 +18,13 @@ import (
 
 func GenerateKey(do *definitions.Do) error {
 	do.Name = "keys"
-
 	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		return &ErisError{ErrEris, err, "[eris services start keys]"}
 	}
 
 	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "gen", "--no-pass"})
 	if err != nil {
-		return err
+		return &ErisError{ErrDocker, err, "check that..."}
 	}
 
 	io.Copy(config.GlobalConfig.Writer, buf)
@@ -35,12 +35,12 @@ func GenerateKey(do *definitions.Do) error {
 func GetPubKey(do *definitions.Do) error {
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		return &ErisError{ErrEris, err, "[eris services start keys]"}
 	}
 
 	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "pub", "--addr", do.Address})
 	if err != nil {
-		return err
+		return &ErisError{ErrDocker, err, "check that..."}
 	}
 
 	io.Copy(config.GlobalConfig.Writer, buf)
@@ -51,7 +51,7 @@ func GetPubKey(do *definitions.Do) error {
 func ExportKey(do *definitions.Do) error {
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		return &ErisError{ErrEris, err, "[eris services start keys]"}
 	}
 
 	// do.Destination = given by flag default or overriden
@@ -61,7 +61,7 @@ func ExportKey(do *definitions.Do) error {
 		doLs.Host = false
 		doLs.Quiet = true
 		if err := ListKeys(doLs); err != nil {
-			return err
+			return err // returns ErisError
 		}
 		keyArray := strings.Split(do.Result, ",")
 
@@ -69,13 +69,13 @@ func ExportKey(do *definitions.Do) error {
 			do.Destination = common.KeysPath
 			do.Source = path.Join(common.ErisContainerRoot, "keys", "data", addr)
 			if err := data.ExportData(do); err != nil {
-				return err
+				return err // return ErisError
 			}
 		}
 	} else {
 		do.Source = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
 		if err := data.ExportData(do); err != nil {
-			return err
+			return err // ibid
 		}
 	}
 	return nil
@@ -84,7 +84,7 @@ func ExportKey(do *definitions.Do) error {
 func ImportKey(do *definitions.Do) error {
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		return &ErisError{ErrEris, err, "[eris services start keys]"}
 	}
 
 	//src on host
@@ -98,7 +98,7 @@ func ImportKey(do *definitions.Do) error {
 		doLs.Host = true
 		doLs.Quiet = true
 		if err := ListKeys(doLs); err != nil {
-			return err
+			return err // returns ErisError
 		}
 		keyArray := strings.Split(do.Result, ",")
 
@@ -106,19 +106,18 @@ func ImportKey(do *definitions.Do) error {
 			do.Source = filepath.Join(common.KeysPath, "data", addr)
 			do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", addr)
 			if err := data.ImportData(do); err != nil {
-				return err
+				return err // ibid
 			}
 		}
 		//list keys
 		//for each, import data
-
 	} else {
 		if do.Source == filepath.Join(common.KeysPath, "data") {
 			do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
 		} else { // either relative or absolute path given. get absolute
 			wd, err := os.Getwd()
 			if err != nil {
-				return err
+				return &ErisError{ErrGo, err, "ensure you are in a directory...?"}
 			}
 			do.Source = common.AbsolutePath(wd, do.Source)
 		}
@@ -130,15 +129,16 @@ func ImportKey(do *definitions.Do) error {
 	return nil
 }
 
+// TODO deprecate ... ?
 func ConvertKey(do *definitions.Do) error {
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		return err // TODO have srv.EnsureRunning return an ErisError
 	}
 
 	buf, err := srv.ExecHandler(do.Name, []string{"mintkey", "mint", do.Address})
 	if err != nil {
-		return err
+		return &ErisError{ErrDocker, err, "check that..."}
 	}
 
 	io.Copy(config.GlobalConfig.Writer, buf)

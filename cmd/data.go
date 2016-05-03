@@ -1,13 +1,13 @@
 package commands
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -137,13 +137,13 @@ var dataRm = &cobra.Command{
 }
 
 func addDataFlags() {
-	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 
 	dataList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	dataList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
 	dataList.Flags().BoolVarP(&do.All, "all", "a", false, "dummy flag for symmetry with [services ls -a] and [chains ls -a]")
 
 	buildFlag(dataRm, do, "rm-volumes", "data")
+	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
 
 	buildFlag(dataExec, do, "interactive", "data")
 
@@ -209,7 +209,7 @@ func ExecData(cmd *cobra.Command, args []string) {
 	// if interactive, we ignore args. if not, run args as command
 	if !do.Operations.Interactive {
 		if len(args) < 2 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			Exit(ErrNonInteractiveExec)
 		}
 		args = args[1:]
 		if len(args) == 1 {

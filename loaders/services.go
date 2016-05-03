@@ -1,13 +1,13 @@
 package loaders
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -29,11 +29,15 @@ func LoadServiceDefinition(servName string) (*definitions.ServiceDefinition, err
 	srv.Operations.Labels = util.Labels(servName, srv.Operations)
 	serviceConf, err := loadServiceDefinition(servName)
 	if err != nil {
-		return nil, err
+		return nil, BaseError(ErrLoadingDefFile, err)
 	}
 
 	if err = MarshalServiceDefinition(serviceConf, srv); err != nil {
-		return nil, err
+		return nil, BaseError(ErrLoadingDefFile, err)
+	}
+
+	if srv.Service == nil {
+		return nil, ErrNoServiceGiven
 	}
 
 	if err = checkImage(srv.Service); err != nil {
@@ -66,8 +70,7 @@ func MockServiceDefinition(servName string) *definitions.ServiceDefinition {
 func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.ServiceDefinition) error {
 	err := serviceConf.Unmarshal(srv)
 	if err != nil {
-		// Vipers error messages are atrocious.
-		return fmt.Errorf("Sorry, the marmots could not figure that service definition out.\nPlease check for known services with [eris services ls --known] and retry.\n")
+		return err
 	}
 
 	// toml bools don't really marshal well
@@ -140,9 +143,8 @@ func loadServiceDefinition(servName string) (*viper.Viper, error) {
 func checkImage(srv *definitions.Service) error {
 	// Services must be given an image. Flame out if they do not.
 	if srv.Image == "" {
-		return fmt.Errorf(`An "image" field is required in the service definition file`)
+		return ErrNoImage
 	}
-
 	return nil
 }
 

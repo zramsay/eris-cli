@@ -15,8 +15,8 @@ import (
 
 // if given empty string for fileName will use Service
 // Definition Name
+// TODO return ErisError? maybe not
 func WriteServiceDefinitionFile(serviceDef *def.ServiceDefinition, fileName string) error {
-	// writer := os.Stdout
 
 	if filepath.Ext(fileName) == "" {
 		fileName = serviceDef.Service.Name + ".toml"
@@ -81,5 +81,4 @@ func WriteDefaultServiceTOML(writer *os.File, serviceDef *def.ServiceDefinition)
 	writer.Write([]byte("dockerfile = \"\"\n"))
 	writer.Write([]byte("repository = \"\"\n"))
 	writer.Write([]byte("website = \"\"\n"))
-
 }

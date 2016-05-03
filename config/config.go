@@ -1,16 +1,16 @@
 package config
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	dir "github.com/eris-ltd/common/go/common"
 	"github.com/tcnksm/go-gitconfig"
+	. "github.com/eris-ltd/eris-cli/errors"
 
 	"github.com/BurntSushi/toml"
+	dir "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/viper"
 )
 
@@ -65,18 +65,7 @@ func LoadViperConfig(configPath, configName string) (*viper.Viper, error) {
 	conf.SetConfigName(configName)
 	err := conf.ReadInConfig()
 	if err != nil {
-		errmsg := fmt.Sprintf(`Unable to load the %q config. Check the file name existence and formatting: %v
-`, configName, err)
-
-		switch configPath {
-		case dir.ChainsPath, dir.ServicesPath, dir.ActionsPath:
-			errknown := fmt.Sprintf(`
-List available definitions with the [eris %s ls --known] command
-`, filepath.Base(configPath))
-			return nil, fmt.Errorf("%s%s", errmsg, errknown)
-		}
-
-		return nil, fmt.Errorf(errmsg)
+		return nil, BaseError(ErrLoadViperConfig, err)
 	}
 
 	return conf, nil
@@ -186,6 +175,7 @@ func ChangeErisDir(erisDir string) {
 func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
 	err := globalConfig.Unmarshal(config)
 	if err != nil {
+	// TODO error?
 		return err
 	}
 
@@ -201,13 +191,8 @@ func GitConfigUser() (uName string, email string, err error) {
 	if err != nil {
 		email = ""
 	}
-
-	if uName == "" && email == "" {
-		err = fmt.Errorf("Can not find username or email in git config. Using \"\" for both\n")
-	} else if uName == "" {
-		err = fmt.Errorf("Can not find username in git config. Using \"\"\n")
-	} else if email == "" {
-		err = fmt.Errorf("Can not find email in git config. Using \"\"\n")
+	if uName == "" || email == "" {
+		err = ErrGitConfigUser
 	}
 	return
 }

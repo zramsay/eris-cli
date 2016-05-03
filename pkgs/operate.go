@@ -1,7 +1,6 @@
 package pkgs
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -14,6 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
@@ -31,7 +31,7 @@ func RunPackage(do *definitions.Do) error {
 	var err error
 	pwd, err = os.Getwd()
 	if err != nil {
-		return err
+		return &ErisError{ErrGo, err, "ensure you are in a directory"} // TODO deduplicate fix message (see, e.g., data.Import()
 	}
 
 	log.WithFields(log.Fields{
@@ -41,25 +41,25 @@ func RunPackage(do *definitions.Do) error {
 	pkg, err := loaders.LoadPackage(do.Path, do.ChainName)
 	if err != nil {
 		do.Result = "could not load package"
-		return err
+		return &ErisError{ErrEris, err, "ensure your package is on a valid path"}
 	}
 
 	if err := BootServicesAndChain(do, pkg); err != nil {
 		do.Result = "could not boot chain or services"
 		CleanUp(do, pkg)
-		return err
+		return &ErisError{ErrEris, err, "ensure your services and chains are properly setup"}
 	}
 
 	if err := DefinePkgActionService(do, pkg); err != nil {
 		do.Result = "could not define pkg action service"
 		CleanUp(do, pkg)
-		return err
+		return &ErisError{ErrEris, err, ""}
 	}
 
 	if err := PerformAppActionService(do, pkg); err != nil {
 		do.Result = "could not perform pkg action service"
 		CleanUp(do, pkg)
-		return err
+		return &ErisError{ErrEris, err, ""}
 	}
 
 	do.Result = "success"
@@ -106,7 +106,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 				log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
 				err = bootChain(head, do)
 			} else { // if no chain is checked out and no --chain given, default to a throwaway
-				return fmt.Errorf("The package definition file needs a checked out chain to continue. Please check out the appropriate chain or rerun with a chain flag")
+				return ErrNeedChainCheckedOut
 			}
 		case "t", "tmp", "temp", "temporary", "throwaway", "thr", "throw":
 			log.Info("No chain was given, booting a throwaway chain")
@@ -260,7 +260,7 @@ func bootChain(name string, do *definitions.Do) error {
 		}
 		do.Chain.ChainType = "service" // setting this for tear down purposes
 	default:
-		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command")
+		return ErrCantFindChain
 	}
 
 	do.Chain.Name = name // setting this for tear down purposes
@@ -452,7 +452,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			}
 		}
 	} else {
-		return fmt.Errorf("That path does not exist. Please rerun command with a proper path")
+		return BaseErrorES(ErrPathDoesNotExist, do.Path)
 	}
 
 	// import contracts path (if exists)

@@ -43,11 +43,7 @@ Available endpoints are:
 	return nil
 }
 
-/*func StopAgent(do *definitions.Do) error {
-	fmt.Println("Gracefully shutting down agent")
-	return nil
-}*/
-
+// TODO move to errors packags
 type agentError struct {
 	Error   error
 	Message string
@@ -62,7 +58,6 @@ func (endpoint agentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO move to errors packags
 var (
 	ErrorDownloadingBundle       = "error downloading bundle:"
 	ErrorReadingTarball          = "error reading tarball:"
@@ -76,10 +71,9 @@ var (
 StatusBadRequest = 400
 StatusNotFound = 404
 StatusInternalServerError = 500
-
 */
 
-// todo catch an error??
+// TODO catch an error??
 func ListChains(w http.ResponseWriter, r *http.Request) *agentError {
 	if r.Method == "GET" {
 		var deets []*util.Details

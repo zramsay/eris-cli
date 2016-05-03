@@ -4,6 +4,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/eris-ltd/common/go/common"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -11,7 +12,7 @@ import (
 )
 
 func init() {
-	DockerConnect(false, "eris")
+	common.IfExit(DockerConnect(false, "eris"))
 }
 
 func TestUniqueName(t *testing.T) {

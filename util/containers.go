@@ -1,11 +1,11 @@
 package util
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 
 	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
@@ -38,8 +38,6 @@ var (
 	containerCache cache = cache{
 		c: make(map[key]string),
 	}
-
-	ErrNameNotFound = errors.New("container name not found")
 )
 
 // UniqueName() returns a unique container name, prefixed with the short
@@ -80,7 +78,7 @@ func Lookup(t, name string) (string, error) {
 		return lookup, nil
 	}
 
-	return "", ErrNameNotFound
+	return "", ErrContainerNameNotFound
 }
 
 func initializeCache() {

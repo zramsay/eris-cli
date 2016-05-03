@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -34,12 +34,12 @@ func ImportService(do *definitions.Do) error {
 	}
 
 	if err != nil {
-		return err
+		return &ErisError{404, BaseError(ErrCantGetFromIPFS, err), FixGetFromIPFS}
 	}
 
 	_, err = loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
-		return fmt.Errorf("error loading service:\n%v", err)
+		return err // has nice error
 	}
 
 	do.Result = "success"
@@ -67,7 +67,7 @@ func MakeService(do *definitions.Do) error {
 	}).Debug("Creating a new service definition file")
 	err = WriteServiceDefinitionFile(srv, filepath.Join(ServicesPath, do.Name+".toml"))
 	if err != nil {
-		return err
+		return &ErisError{ErrEris, BaseError(ErrWritingDefinitionFile, err), "fix"}
 	}
 	do.Result = "success"
 	return nil
@@ -87,7 +87,7 @@ func RenameService(do *definitions.Do) error {
 	}).Info("Renaming service")
 
 	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
+		return &ErisError{ErrEris, ErrRenaming, "use a different name"}
 	}
 
 	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
@@ -106,7 +106,7 @@ func RenameService(do *definitions.Do) error {
 			}).Debug("Performing container rename")
 			err = perform.DockerRename(serviceDef.Operations, do.NewName)
 			if err != nil {
-				return err
+				return &ErisError{ErrDocker, err, ""}
 			}
 		} else {
 			log.Info("Changing service definition file only. Not renaming container")
@@ -130,7 +130,7 @@ func RenameService(do *definitions.Do) error {
 		serviceDef.Name = serviceDef.Service.Name
 		err = WriteServiceDefinitionFile(serviceDef, newFile)
 		if err != nil {
-			return err
+			return &ErisError{ErrEris, BaseError(ErrWritingDefinitionFile, err), "fix"}
 		}
 
 		if !transformOnly {
@@ -140,13 +140,13 @@ func RenameService(do *definitions.Do) error {
 			}).Debug("Performing data container rename")
 			err = data.RenameData(do)
 			if err != nil {
-				return err
+				return err // throws ErisError
 			}
 		}
 
 		os.Remove(oldFile)
 	} else {
-		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
+		return &ErisError{ErrEris, ErrCannotFindService, "provide a known service"}
 	}
 	do.Result = "success"
 	return nil
@@ -159,7 +159,7 @@ func InspectService(do *definitions.Do) error {
 	}
 	err = InspectServiceByService(service.Service, service.Operations, do.Operations.Args[0])
 	if err != nil {
-		return err
+		return &ErisError{ErrEris, err, ""}
 	}
 	return nil
 }
@@ -183,7 +183,10 @@ func LogsService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
+	if err := perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail); err != nil {
+		return &ErisError{ErrDocker, err, ""}
+	}
+	return nil
 }
 
 func ExportService(do *definitions.Do) error {
@@ -192,7 +195,7 @@ func ExportService(do *definitions.Do) error {
 		doNow.Name = "ipfs"
 		err := EnsureRunning(doNow)
 		if err != nil {
-			return err
+			return err // ought to throw ErisError
 		}
 
 		hash, _ := exportFile(do.Name)
@@ -200,8 +203,7 @@ func ExportService(do *definitions.Do) error {
 		log.WithField("hash", hash).Warn()
 
 	} else {
-		return fmt.Errorf(`I don't know that service. Please retry with a known service.
-To find known services use [eris services ls --known]`)
+		return &ErisError{ErrEris, ErrCannotFindService, "provide a known service"}
 	}
 	return nil
 }
@@ -215,7 +217,7 @@ func UpdateService(do *definitions.Do) error {
 	service.Service.Links = append(service.Service.Links, do.Links...)
 	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
 	if err != nil {
-		return err
+		return &ErisError{ErrDocker, err, ""}
 	}
 	do.Result = "success"
 	return nil
@@ -229,12 +231,14 @@ func RmService(do *definitions.Do) error {
 		}
 		if util.IsService(service.Service.Name, false) {
 			if err := perform.DockerRemove(service.Service, service.Operations, do.RmD, do.Volumes, do.Force); err != nil {
+				return &ErisError{ErrDocker, err, ""}
 				return err
 			}
 		}
 
 		if do.RmImage {
 			if err := perform.DockerRemoveImage(service.Service.Image, true); err != nil {
+				return &ErisError{ErrDocker, err, ""}
 				return err
 			}
 		}
@@ -242,11 +246,12 @@ func RmService(do *definitions.Do) error {
 		if do.File {
 			oldFile := util.GetFileByNameAndType("services", servName)
 			if err != nil {
+				return &ErisError{ErrEris, err, ""}
 				return err
 			}
 			log.WithField("file", oldFile).Warn("Removing file")
 			if err := os.Remove(oldFile); err != nil {
-				return err
+				return &ErisError{ErrGo, err, ""}
 			}
 		}
 	}
@@ -261,14 +266,14 @@ func CatService(do *definitions.Do) error {
 		if cName == do.Name {
 			cat, err := ioutil.ReadFile(c)
 			if err != nil {
-				return err
+				return &ErisError{ErrGo, err, ""}
 			}
 			do.Result = string(cat)
 			log.Warn(string(cat))
 			return nil
 		}
 	}
-	return fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
+	return &ErisError{ErrEris, ErrCannotFindService, "provide a known service"}
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {

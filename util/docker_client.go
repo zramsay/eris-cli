@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/eris-ltd/eris-cli/errors"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-logger"
@@ -24,7 +25,7 @@ import (
 // Docker Client initialization
 var DockerClient *docker.Client
 
-func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
+func DockerConnect(verbose bool, machName string) error {
 	var err error
 	var dockerHost string
 	var dockerCertPath string
@@ -38,12 +39,12 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		u, _ := url.Parse(endpoint)
 		_, err := net.Dial(u.Scheme, u.Path)
 		if err != nil {
-			IfExit(fmt.Errorf("%v\n", mustInstallError()))
+			return MustInstallDockerError()
 		}
 		log.WithField("=>", endpoint).Debug("Connecting to Docker")
 		DockerClient, err = docker.NewClient(endpoint)
 		if err != nil {
-			IfExit(DockerError(mustInstallError()))
+			return DockerError(MustInstallDockerError())
 		}
 	} else {
 		log.WithFields(log.Fields{
@@ -54,6 +55,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
 		if err != nil {
+			// TODO something with these errors/logs
 			log.Debug("Could not connect to Eris Docker Machine")
 			log.Errorf("Trying %q Docker Machine: %v", "default", err)
 			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
@@ -62,7 +64,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				log.Debugf("Error: %v", err)
 				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
-					IfExit(DockerError(e2))
+					return DockerError(e2)
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
@@ -74,12 +76,13 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug()
 
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
+			return &ErisError{404, BaseError(ErrConnectDockerTLS, err), ""}
 		}
 		log.Debug("Successfully connected to Docker daemon")
 
 		setIPFSHostViaDockerHost(dockerHost)
 	}
+	return nil
 }
 
 func CheckDockerClient() error {
@@ -94,7 +97,7 @@ func CheckDockerClient() error {
 
 		if runtime.GOOS == "windows" {
 			if err := prepWin(); err != nil {
-				return fmt.Errorf("Could not add ssh.exe to PATH.\nError:%v\n", err)
+				return &ErisError{404, BaseError(ErrDockerWindows, err), ""}
 			}
 		}
 
@@ -132,10 +135,8 @@ func CheckDockerClient() error {
 					return err
 				}
 			}
-
 		}
 	}
-
 	log.Info("Docker client connected")
 	return nil
 }
@@ -144,7 +145,6 @@ func getMachineDeets(machName string) (string, string, error) {
 	var out = new(bytes.Buffer)
 	var out2 = new(bytes.Buffer)
 
-	noConnectError := fmt.Errorf("Could not evaluate the env vars for the %s docker-machine.\n", machName)
 	dHost, dPath := popHostAndPath()
 
 	if (dHost != "" && dPath != "") && (machName == "eris" || machName == "default") {
@@ -156,7 +156,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	cmd := exec.Command("docker-machine", "url", machName)
 	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
-		return "", "", fmt.Errorf("%vError:\t%v\n", noConnectError, err)
+		return "", "", &ErisError{404, BaseErrorESE(ErrConnectDockerMachine, machName, err), ""}
 	}
 	dHost = strings.TrimSpace(out.String())
 	log.WithField("host", dHost).Debug()
@@ -167,7 +167,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	cmd2.Stdout = out2
 	//cmd2.Stderr = os.Stderr
 	if err := cmd2.Run(); err != nil {
-		return "", "", fmt.Errorf("%vError:\t%v\n", noConnectError, err)
+		return "", "", &ErisError{404, BaseErrorESE(ErrConnectDockerMachine, machName, err), ""}
 	}
 	dPath = out2.String()
 	dPath = strings.Replace(dPath, "'", "", -1)
@@ -175,7 +175,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	log.WithField("cert path", dPath).Debug()
 
 	if dPath == "" || dHost == "" {
-		return "", "", noConnectError
+		return "", "", &ErisError{404, BaseErrorESE(ErrConnectDockerMachine, machName, nil), ""}
 	}
 
 	log.Info("Querying host and user have access to the right files for TLS connection to Docker")
@@ -305,8 +305,7 @@ func createErisMachine(driver string) error {
 	cmd := "docker-machine"
 	args := []string{"create", "--driver", driver, "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		log.Debugf("There was an error creating the Eris Docker Machine: %v", err)
-		return mustInstallError()
+		return MustInstallDockerError()
 	}
 	log.Debug("Eris Docker Machine created")
 
@@ -318,7 +317,7 @@ func startErisMachine() error {
 	cmd := "docker-machine"
 	args := []string{"start", "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
+		return &ErisError{404, BaseError(ErrStartingDockerMachine, err), ""}
 	}
 	log.Debug("Eris Docker Machine started")
 
@@ -351,34 +350,13 @@ func checkKeysAndCerts(dPath string) error {
 		f = filepath.Join(dPath, f)
 		if _, err := os.Stat(f); err != nil {
 			if os.IsNotExist(err) {
-				return fmt.Errorf("The marmots could not find a file that was required to connect to Docker.\nThey get a file does not exist error from the OS.\nFile needed:\t%s\n", f)
-			} else if os.IsNotExist(err) {
-				return fmt.Errorf("The marmots could not find a file that was required to connect to Docker.\nThey get a permissions error for the file.\nPlease check your file permissions.\nFile needed:\t%s\n", f)
+				return ErrCheckKeysAndCerts("They get a file does not exist error from the OS.", f, err)
 			} else {
-				return fmt.Errorf("The marmots could not find a file that was required to connect to Docker.\nThe file exists and the user has the right permissions.\nColor the marmots confused.\nFile needed:\t%s\nError:\t%v\n", f, err)
+				return ErrCheckKeysAndCerts("The file exists and the user has the right permissions.", f, err)
 			}
 		}
 	}
 	return nil
-}
-
-func mustInstallError() error {
-	install := `The marmots cannot connect to Docker. Do you have Docker installed?
-If not, please visit here: https://docs.docker.com/installation/`
-
-	switch runtime.GOOS {
-	case "linux":
-		run := `Do you have Docker running? If not, please type [sudo service docker start].
-Also check that your user is in the "docker" group. If not, you can add it
-using the [sudo usermod -a -G docker $USER] command or rerun as [sudo eris]`
-
-		return fmt.Errorf("%slinux/\n\n%s", install, run)
-	case "darwin":
-		return fmt.Errorf("%smac/", install)
-	case "windows":
-		return fmt.Errorf("%swindows/", install)
-	}
-	return fmt.Errorf(install)
 }
 
 // need to add ssh.exe to PATH, it resides in GIT dir.
@@ -395,12 +373,11 @@ func prepWin() error {
 func setIPFSHostViaDockerHost(dockerHost string) {
 	u, err := url.Parse(dockerHost)
 	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
+		IfExit(&ErisError{404, BaseErrorESE(ErrParseIPFS, ParseIPFShost, err), ""})
 	}
 	dIP, _, err := net.SplitHostPort(u.Host)
 	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
-
+		IfExit(&ErisError{404, BaseErrorESE(ErrParseIPFS, SplitHP, err), ""})
 	}
 	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
 

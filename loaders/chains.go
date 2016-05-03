@@ -7,6 +7,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -35,18 +36,19 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 	chain.Operations.ContainerType = definitions.TypeChain
 	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
 	if err := setChainDefaults(chain); err != nil {
-		return nil, err
+		return nil, &ErisError{404, err, ""}
 	}
 
 	definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
 	if err != nil {
-		return nil, err
+		return nil, &ErisError{404, err, ""}
 	}
 
-	// Overwrite chain.ChainID and chain.Service according from
-	// the definition.
+	// marshal chain and always reset the operational requirements
+	// this will make sure to sync with docker so that if changes
+	// have occured in the interim they are caught.
 	if err = MarshalChainDefinition(definition, chain); err != nil {
-		return nil, err
+		return nil, &ErisError{404, err, ""}
 	}
 
 	if chain.Dependencies != nil {

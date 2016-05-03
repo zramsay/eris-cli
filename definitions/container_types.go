@@ -17,4 +17,6 @@ const (
 	TypeChain   = "chain"
 	TypeService = "service"
 	TypeData    = "data"
+	TypePkgs    = "pkgs"
+	TypeAction  = "action"
 )

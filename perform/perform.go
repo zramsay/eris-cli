@@ -3,7 +3,6 @@ package perform
 import (
 	"archive/tar"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
@@ -26,10 +26,6 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	docker "github.com/fsouza/go-dockerclient"
-)
-
-var (
-	ErrContainerExists = errors.New("container exists")
 )
 
 // DockerCreateData creates a blank data container. It returns ErrContainerExists
@@ -47,12 +43,9 @@ func DockerCreateData(ops *def.Operation) error {
 		return ErrContainerExists
 	}
 
-	optsData, err := configureDataContainer(def.BlankService(), ops, nil)
-	if err != nil {
-		return err
-	}
+	optsData := configureDataContainer(def.BlankService(), ops, nil)
 
-	_, err = createContainer(optsData)
+	_, err := createContainer(optsData)
 	if err != nil {
 		return err
 	}
@@ -91,7 +84,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 		log.WithField("=>", opts.Name).Info("Removing data container")
 		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
-				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+				err = BaseErrorEE(ErrRmDataContainer, err, err2)
 			}
 		}
 		log.WithField("=>", opts.Name).Info("Container removed")
@@ -100,12 +93,12 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 	// Start the container.
 	log.WithField("=>", opts.Name).Info("Starting data container")
 	if err = startContainer(opts); err != nil {
-		return nil, err
+		return nil, err // TODO custom error?
 	}
 
 	log.WithField("=>", opts.Name).Info("Waiting for data container to exit")
 	if err := waitContainer(opts.Name); err != nil {
-		return nil, err
+		return nil, err // TODO custom error?
 	}
 
 	log.WithField("=>", opts.Name).Info("Getting logs from container")
@@ -149,7 +142,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 		log.WithField("=>", opts.Name).Info("Removing data container")
 		if err2 := removeContainer(opts.Name, true, false); err2 != nil {
 			if os.Getenv("CIRCLE_BRANCH") == "" {
-				err = fmt.Errorf("Tragic! Error removing data container after executing (%v): %v", err, err2)
+				err = BaseErrorEE(ErrRmDataContainer, err, err2)
 			}
 		}
 		log.WithField("=>", opts.Name).Info("Data container removed")
@@ -208,10 +201,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	// Setup data container.
 	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
 	if srv.AutoData {
-		optsData, err := configureDataContainer(srv, ops, &optsServ)
-		if err != nil {
-			return err
-		}
+		optsData := configureDataContainer(srv, ops, &optsServ)
 
 		if exists := util.FindContainer(ops.DataContainerName, false); exists {
 			log.Info("Data container already exists. Not creating")
@@ -271,10 +261,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 	log.WithField("autodata", srv.AutoData).Info("Manage data containers?")
 
 	if srv.AutoData {
-		optsData, err := configureDataContainer(srv, ops, &optsServ)
-		if err != nil {
-			return nil, err
-		}
+		optsData := configureDataContainer(srv, ops, &optsServ)
 
 		if exists := util.FindContainer(ops.DataContainerName, false); exists {
 			log.Info("Data container already exists, am not creating")
@@ -668,7 +655,7 @@ func DockerBuild(image, dockerfile string) error {
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("Image does not exist. Something went wrong. Exiting")
+		return ErrImageNotExist
 	}
 
 	return nil
@@ -749,7 +736,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 					log.Debug("User assented to pull")
 				} else {
 					log.Debug("User refused to pull")
-					return nil, fmt.Errorf("Cannot start a container based on an image you will not let me pull")
+					return nil, ErrNotLetMePull
 				}
 			} else {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image is not found locally")
@@ -786,7 +773,7 @@ func startInteractiveContainer(opts docker.CreateContainerOptions, terminal bool
 		<-c
 		log.WithField("=>", opts.Name).Info("Caught signal. Stopping container")
 		if err := stopContainer(opts.Name, 5); err != nil {
-			log.Errorf("Error stopping container: %v", err)
+			log.Errorf(fmt.Sprintf(ErrStoppingContainer, err))
 		}
 	}()
 
@@ -859,9 +846,9 @@ func attachContainer(id string, terminal bool, attached chan struct{}) (docker.C
 func waitContainer(id string) error {
 	exitCode, err := util.DockerClient.WaitContainer(id)
 	if exitCode != 0 {
-		err1 := fmt.Errorf("Container %s exited with status %d", id, exitCode)
+		err1 := BaseErrorEI(ErrContainerExit, id, exitCode)
 		if err != nil {
-			err = fmt.Errorf("%s. Error: %v", err1.Error(), err)
+			err = fmt.Errorf("error: %v\n%v", err1, err)
 		} else {
 			err = err1
 		}
@@ -1030,7 +1017,6 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 		opts.Config.WorkingDir = srv.WorkDir
 	}
 
-	//[zr] used to be ops.Restart
 	if srv.Restart == "always" {
 		opts.HostConfig.RestartPolicy = docker.AlwaysRestart()
 	} else if strings.Contains(srv.Restart, "max") {
@@ -1119,8 +1105,8 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	return opts
 }
 
-func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *docker.CreateContainerOptions) (docker.CreateContainerOptions, error) {
-	// by default data containers will rely on the image used by
+func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *docker.CreateContainerOptions) docker.CreateContainerOptions {
+	//   by default data containers will rely on the image used by
 	//   the base service. sometimes, tho, especially for testing
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
@@ -1168,7 +1154,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 		HostConfig: &docker.HostConfig{},
 	}
 
-	return opts, nil
+	return opts
 }
 
 func checkImageExists(image string) (bool, error) {

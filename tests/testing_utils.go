@@ -48,7 +48,7 @@ func TestsInit(steps int) (err error) {
 		return nil
 	}
 
-	util.DockerConnect(false, "eris")
+	IfExit(util.DockerConnect(false, "eris"))
 
 	// Don't pull default definition files.
 	if steps == DontPull {

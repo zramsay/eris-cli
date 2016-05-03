@@ -2,15 +2,16 @@ package data
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -33,7 +34,7 @@ import (
 func ImportData(do *definitions.Do) error {
 	wd, err := os.Getwd()
 	if err != nil {
-		return err
+		return &ErisError{ErrGo, err, "ensure you are in a directory"}
 	}
 	do.Source = AbsolutePath(wd, do.Source)
 
@@ -47,10 +48,10 @@ func ImportData(do *definitions.Do) error {
 		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
-			return fmt.Errorf("There is no data container for service %q", do.Name)
+			return &ErisError{ErrEris, ErrCantFindData, ""}
 		}
 		if err := checkErisContainerRoot(do, "import"); err != nil {
-			return err
+			return &ErisError{ErrEris, err, ""}
 		}
 
 		containerName := util.DataContainerName(do.Name)
@@ -61,14 +62,14 @@ func ImportData(do *definitions.Do) error {
 		_, err := ExecData(doCheck)
 		if err != nil {
 			if err := runData(containerName, []string{"mkdir", "-p", do.Destination}); err != nil {
-				return err
+				return &ErisError{ErrDocker, util.DockerError(err), ""}
 			}
 			return ImportData(do)
 		}
 
 		reader, err := util.TarForDocker(do.Source, 0)
 		if err != nil {
-			return err
+			return &ErisError{ErrEris, err, ""}
 		}
 		defer reader.Close()
 
@@ -81,20 +82,20 @@ func ImportData(do *definitions.Do) error {
 		log.WithField("=>", containerName).Info("Copying into container")
 		log.WithField("path", do.Source).Debug()
 		if err := util.DockerClient.UploadToContainer(srv.Operations.SrvContainerName, opts); err != nil {
-			return util.DockerError(err)
+			return &ErisError{ErrDocker, util.DockerError(err), ""}
 		}
 
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		// and eris images have the `eris` user by default
 		if err := runData(containerName, []string{"chown", "--recursive", "eris", do.Destination}); err != nil {
-			return util.DockerError(err)
+			return &ErisError{ErrDocker, util.DockerError(err), ""}
 		}
 
 	} else {
 		log.WithField("name", do.Name).Info("Data container does not exist, creating it")
 		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
-			return fmt.Errorf("Error creating data container %v.", err)
+			return &ErisError{ErrDocker, BaseError(ErrCreatingDataCont, err), ""}
 		}
 
 		return ImportData(do)
@@ -110,7 +111,7 @@ func runData(name string, args []string) error {
 	doRun.Operations.Args = args
 	_, err := perform.DockerRunData(doRun.Operations, nil)
 	if err != nil {
-		return fmt.Errorf("Error running args: %v\n%v\n", args, err)
+		return BaseErrorESE(ErrRunningArguments, strings.Join(args, ", "), err)
 	}
 	return nil
 }
@@ -123,10 +124,10 @@ func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 		util.Merge(ops, do.Operations)
 		buf, err = perform.DockerExecData(ops, nil)
 		if err != nil {
-			return nil, err
+			return nil, &ErisError{ErrDocker, err, ""}
 		}
 	} else {
-		return nil, fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
+		return nil, &ErisError{ErrEris, ErrCantFindData, ""}
 	}
 	do.Result = "success"
 	return buf, nil
@@ -137,7 +138,7 @@ func ExportData(do *definitions.Do) error {
 	if util.IsData(do.Name) {
 		wd, err := os.Getwd()
 		if err != nil {
-			return err
+			return &ErisError{ErrGo, err, "ensure you are in a directory"}
 		}
 		do.Destination = AbsolutePath(wd, do.Destination)
 		log.WithField("=>", do.Name).Info("Exporting data container")
@@ -146,7 +147,7 @@ func ExportData(do *definitions.Do) error {
 		exportPath, err := ioutil.TempDir(os.TempDir(), do.Name)
 		defer os.Remove(exportPath)
 		if err != nil {
-			return err
+			return &ErisError{ErrGo, err, ""}
 		}
 
 		containerName := util.DataContainerName(do.Name)
@@ -154,7 +155,7 @@ func ExportData(do *definitions.Do) error {
 		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
-			return fmt.Errorf("There is no data container for that service.")
+			return &ErisError{ErrGo, ErrCantFindData, ""}
 		}
 
 		reader, writer := io.Pipe()
@@ -162,7 +163,7 @@ func ExportData(do *definitions.Do) error {
 
 		if !do.Operations.SkipCheck { // sometimes you want greater flexibility
 			if err := checkErisContainerRoot(do, "export"); err != nil {
-				return err
+				return &ErisError{ErrEris, err, ""}
 			}
 		}
 
@@ -180,27 +181,27 @@ func ExportData(do *definitions.Do) error {
 
 		log.WithField("=>", exportPath).Debug("Untarring package from container")
 		if err = util.UntarForDocker(reader, do.Name, exportPath); err != nil {
-			return err
+			return &ErisError{ErrEris, err, ""}
 		}
 
 		// now if docker dumps to exportPath/.eris we should remove
 		// move everything from .eris to exportPath
 		if err := MoveOutOfDirAndRmDir(filepath.Join(exportPath, ".eris"), exportPath); err != nil {
-			return err
+			return &ErisError{ErrEris, err, ""}
 		}
 
 		// finally remove everything in the data directory and move
 		// the temp contents there
 		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
 			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
-				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
+				return &ErisError{ErrGo, BaseErrorESE(ErrMakingDirectory, do.Destination, e2), ""}
 			}
 		}
 		if err := MoveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
-			return err
+			return &ErisError{ErrEris, err, ""}
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return &ErisError{ErrEris, ErrCantFindData, ""}
 	}
 
 	do.Result = "success"

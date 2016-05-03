@@ -1,12 +1,13 @@
 package util
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
-	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
+	. "github.com/eris-ltd/eris-cli/errors"
+
+	"github.com/eris-ltd/common/go/common"
 )
 
 // Maximum entries in the HEAD file
@@ -43,7 +44,7 @@ func GetHead() (string, error) {
 	head := fspl[0]
 
 	if head == "" {
-		return "", fmt.Errorf("There is no chain checked out")
+		return "", ErrNeedChainCheckedOut
 	}
 
 	return head, nil

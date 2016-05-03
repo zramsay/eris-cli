@@ -1,7 +1,6 @@
 package chains
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,14 +12,15 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/files"
 
 	. "github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/common/go/ipfs"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -42,7 +42,7 @@ import (
 //
 func MakeChain(do *definitions.Do) error {
 	if err := checkKeysRunningOrStart(); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	do.Service.Name = do.Name
@@ -97,25 +97,25 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	doData.Source = chnPath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	io.Copy(config.GlobalConfig.Writer, buf)
@@ -123,7 +123,7 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
 	if err := data.ExportData(doData); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if !do.RmD {
@@ -137,35 +137,22 @@ func MakeChain(do *definitions.Do) error {
 // that file into ChainPath. It returns an error.
 //
 //  do.Name          - name of the chain to be imported (required)
-//  do.Path          - path to export to; currently only supports ipfs (example: ipfs:QmVdjShTMLAD6YTEgQ1wen1ym4p19ZWepCYTf1MNC1f1Ft) (required)
-//
+//  do.Path          - path to export to; currently only supports ipfs (example: QmVdjShTMLAD6YTEgQ1wen1ym4p19ZWepCYTf1MNC1f1Ft) (required) 
 func ImportChain(do *definitions.Do) error {
 	fileName := filepath.Join(ChainsPath, do.Name)
 	if filepath.Ext(fileName) == "" {
 		fileName = fileName + ".toml"
 	}
 
-	s := strings.Split(do.Path, ":")
-	if s[0] == "ipfs" {
-		var err error
-		if log.GetLevel() > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", os.Stdout)
-		} else {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
-		}
-
-		if err != nil {
-			return err
-		}
-		return nil
+	doGet := definitions.NowDo()
+	doGet.Hash = do.Hash
+	doGet.Path = fileName
+	if err := files.GetFiles(doGet); err != nil {
+		return err // returns an ErisError
 	}
+	log.WithField("path", doGet.Path).Warn("Your chain has been succesfully added to")
 
-	if strings.Contains(s[0], "github") {
-		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
-		return nil
-	}
-
-	return fmt.Errorf("I do not know how to get that file. Sorry.")
+	return nil
 }
 
 // InspectChain is eris' version of docker inspect. It returns
@@ -177,14 +164,14 @@ func ImportChain(do *definitions.Do) error {
 func InspectChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
 		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
@@ -201,12 +188,12 @@ func InspectChain(do *definitions.Do) error {
 func LogsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	err = perform.DockerLogs(chain.Service, chain.Operations, do.Follow, do.Tail)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	return nil
@@ -220,23 +207,23 @@ func LogsChain(do *definitions.Do) error {
 func ExportChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 	if util.IsChain(chain.Name, false) {
 		doNow := definitions.NowDo()
 		doNow.Name = "ipfs"
 		services.EnsureRunning(doNow)
 
-		hash, err := exportFile(do.Name)
-		if err != nil {
-			return err
+		doPut := definitions.NowDo()
+		doPut.Name = do.Name
+		if err := files.PutFiles(doPut); err != nil {
+			return err // returns an ErisError
 		}
-		log.Warn(hash)
+
+		log.Warn(doPut.Result)
 
 	} else {
-		return fmt.Errorf(`I don't known of that chain.
-Please retry with a known chain.
-To find known chains use: eris chains ls --known`)
+		return &ErisError{404, ErrCantFindChain, ""}
 	}
 	return nil
 }
@@ -302,12 +289,12 @@ func CatChain(do *definitions.Do) error {
 	case "toml":
 		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 		config.GlobalConfig.Writer.Write(cat)
 		return nil
 	default:
-		return fmt.Errorf("unknown cat subcommand %q", do.Type)
+		return &ErisError{404, BaseErrorES(ErrUnknownCatCmd, fmt.Sprintf("%q", do.Type)), ""}
 	}
 	do.Operations.PublishAllPorts = true
 	log.WithField("args", do.Operations.Args).Debug("Executing command")
@@ -318,7 +305,7 @@ func CatChain(do *definitions.Do) error {
 		io.Copy(config.GlobalConfig.Writer, buf)
 	}
 
-	return err
+	return &ErisError{404, err, ""}
 }
 
 // PortsChain displays the port mapping for a particular chain.
@@ -329,12 +316,14 @@ func CatChain(do *definitions.Do) error {
 func PortsChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
-		return util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args)
+		if err := util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args); err != nil {
+			return &ErisError{404, err, ""}
+		}
 	}
 
 	return nil
@@ -357,7 +346,7 @@ func EditChain(do *definitions.Do) error {
 // XXX: What's going on here? => [csk]: magic
 func RenameChain(do *definitions.Do) error {
 	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
+		return &ErisError{404, ErrRenaming, ""}
 	}
 
 	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
@@ -372,20 +361,20 @@ func RenameChain(do *definitions.Do) error {
 		log.WithField("=>", do.Name).Debug("Loading chain definition file")
 		chainDef, err := loaders.LoadChainDefinition(do.Name)
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 
 		if !transformOnly {
 			log.Debug("Renaming chain container")
 			err = perform.DockerRename(chainDef.Operations, do.NewName)
 			if err != nil {
-				return err
+				return &ErisError{404, err, ""}
 			}
 		}
 
 		oldFile := util.GetFileByNameAndType("chains", do.Name)
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 
 		if filepath.Base(oldFile) == do.NewName {
@@ -409,7 +398,7 @@ func RenameChain(do *definitions.Do) error {
 		chainDef.Service.Image = ""
 		err = WriteChainDefinitionFile(chainDef, newFile)
 		if err != nil {
-			return err
+			return &ErisError{404, BaseError(ErrWritingDefinitionFile, err), ""}
 		}
 
 		if !transformOnly {
@@ -419,13 +408,15 @@ func RenameChain(do *definitions.Do) error {
 			}).Info("Renaming chain data container")
 			err = data.RenameData(do)
 			if err != nil {
-				return err
+				return &ErisError{404, err, ""}
 			}
 		}
 
-		os.Remove(oldFile)
+		if err := os.Remove(oldFile); err != nil {
+			return &ErisError{404, err, ""}
+		}
 	} else {
-		return fmt.Errorf("I cannot find that chain. Please check the chain name you sent me.")
+		return &ErisError{404, ErrCantFindChain, ""}
 	}
 	return nil
 }
@@ -433,7 +424,7 @@ func RenameChain(do *definitions.Do) error {
 func UpdateChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	// set the right env vars and command
@@ -446,7 +437,7 @@ func UpdateChain(do *definitions.Do) error {
 
 	err = perform.DockerRebuild(chain.Service, chain.Operations, do.Pull, do.Timeout)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 	return nil
 }
@@ -454,12 +445,12 @@ func UpdateChain(do *definitions.Do) error {
 func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if util.IsChain(chain.Name, false) {
 		if err = perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	} else {
 		log.Info("Chain container does not exist")
@@ -468,11 +459,11 @@ func RemoveChain(do *definitions.Do) error {
 	if do.File {
 		oldFile := util.GetFileByNameAndType("chains", do.Name)
 		if err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 		log.WithField("file", oldFile).Warn("Removing file")
 		if err := os.Remove(oldFile); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
@@ -481,82 +472,11 @@ func RemoveChain(do *definitions.Do) error {
 
 		log.WithField("directory", dirPath).Warn("Removing directory")
 		if err := os.RemoveAll(dirPath); err != nil {
-			return err
+			return &ErisError{404, err, ""}
 		}
 	}
 
 	return nil
-}
-
-func exportFile(chainName string) (string, error) {
-	fileName := util.GetFileByNameAndType("chains", chainName)
-
-	var hash string
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
-	} else {
-		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
-}
-
-// TODO: remove
-func RegisterChain(do *definitions.Do) error {
-	// do.Name is mandatory
-	if do.Name == "" {
-		return fmt.Errorf("RegisterChain requires a chainame")
-	}
-	etcbChain := do.ChainID
-	do.ChainID = do.Name
-
-	// NOTE: registration expects you to have the data container
-	if !util.IsData(do.Name) {
-		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
-	}
-
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-
-	// set chainid and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
-	}
-	envVars = append(envVars, do.Env...)
-
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug("Registering chain with")
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
-	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name)
-	chain.Operations.Args = []string{loaders.ErisChainRegister}
-
-	_, err = perform.DockerRunData(chain.Operations, chain.Service)
-
-	return err
 }
 
 func checkKeysRunningOrStart() error {

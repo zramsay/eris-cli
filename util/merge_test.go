@@ -3,6 +3,8 @@ package util
 import (
 	"reflect"
 	"testing"
+
+	. "github.com/eris-ltd/eris-cli/errors"
 )
 
 type S struct {
@@ -168,7 +170,7 @@ func TestMergeError(t *testing.T) {
 		t.Fatalf("e3: expected error, got %v", err)
 	}
 	if err := Merge(S{}, S{}); err != ErrMergeParameters {
-		t.Fatalf("e4: expected error, got %v", err)
+		t.Fatalf("e4: expected error, ot %v", err)
 	}
 	if err := Merge(&S{}, "a"); err != ErrMergeParameters {
 		t.Fatalf("e5: expected error, got %v", err)

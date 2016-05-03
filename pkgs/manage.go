@@ -1,11 +1,11 @@
 package pkgs
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/files"
 
 	log "github.com/eris-ltd/eris-logger"
@@ -18,7 +18,7 @@ func ImportPackage(do *definitions.Do) error {
 	doGet.Hash = do.Hash
 	doGet.Path = filepath.Join(common.AppsPath, do.Name)
 	if err := files.GetFiles(doGet); err != nil {
-		return err
+		return err // returns an ErisError
 	}
 	log.WithField("path", doGet.Path).Warn("Your package has been succesfully added to")
 
@@ -33,16 +33,16 @@ func ExportPackage(do *definitions.Do) error {
 		return err
 	}
 	if !f.IsDir() {
-		return fmt.Errorf("path (%s) is not a directory; please provide a path to a directory", do.Name)
+		return &ErisError{ErrGo, BaseErrorES(ErrPathIsNotDirectory, do.Name), "ensure the path provided is a directory"}
 	}
 
 	doPut := definitions.NowDo()
 	doPut.Name = do.Name
 	if err := files.PutFiles(doPut); err != nil {
-		return err
+		return err // returns an ErisError
 	}
 
-	log.Warn("The last entry in the list above is the hash required for [eris pkgs import].")
+	log.Warn("The last entry in the list above is the hash required for [eris pkgs import HASH]. Save it.")
 
 	return nil
 }

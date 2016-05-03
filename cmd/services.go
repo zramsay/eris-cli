@@ -7,6 +7,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
 
@@ -297,7 +298,7 @@ func ExecService(cmd *cobra.Command, args []string) {
 	args = args[1:]
 	if !do.Operations.Interactive {
 		if len(args) == 0 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			Exit(ErrNonInteractiveExec)
 		}
 	}
 	if len(args) == 1 {

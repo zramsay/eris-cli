@@ -9,6 +9,7 @@ import (
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/list"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -129,37 +130,6 @@ You can redefine the chain ports accessible over the network with the --ports fl
 	Example: `$ eris chains new simplechain --ports 4000 -- map the first port from the definition file to the host port 40000
 $ eris chains new simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
 $ eris chains new simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
-}
-
-var chainsRegister = &cobra.Command{
-	Use:   "register NAME",
-	Short: "register a blockchain on etcb (a blockchain for registering other blockchains)",
-	Long: `register a blockchain on etcb
-
-etcb is Eris's blockchain which is a public blockchain that can be used to
-register *other* blockchains. In other words it is an easy way to "share"
-your blockchains with others. [eris chains register] is made to work
-seamlessly with [eris chains install] so that other users and/or colleagues
-should be able to use your registered blockchain by simply using the install
-command.
-
-The [eris chains register] command is not the *only* way to
-share your blockchains. You can also export your chain definition file and
-genesis.json to IPFS, and share the hash of the chain definition file and
-genesis.json with any colleagues or users who need to be able to connect
-into the blockchain.`,
-	Run: RegisterChain,
-}
-
-var chainsInstall = &cobra.Command{
-	Use:   "install NAME",
-	Short: "Install a blockchain from the etcb registry",
-	Long: `install a blockchain from the etcb registry
-
-Install an existing erisdb based blockchain for use locally.
-
-(Currently a work in progress.)`,
-	Run: InstallChain,
 }
 
 var chainsList = &cobra.Command{
@@ -378,6 +348,8 @@ $ eris chains cat simplechain genesis -- will display the genesis.json file from
 	Run: CatChain,
 }
 
+//----------------------------------------------------------------------
+
 func addChainsFlags() {
 	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account-types; incompatible with and overrides chain-type")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain-types")
@@ -459,7 +431,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	args = args[1:]
 	if !do.Operations.Interactive {
 		if len(args) == 0 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			Exit(ErrNonInteractiveExec)
 		}
 	}
 	if len(args) == 1 {
@@ -480,15 +452,15 @@ func KillChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.KillChain(do))
 }
 
-func InstallChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.InstallChain(do))
-}
-
+// make the genesis files for a chain
+//
+// MakeChain will assemble the necessary files for a new blockchain. it does not
+// actually make the chain or start it (that happens in new), but it does create
+// the predicate files for more complex chains than is typically used in default
 func MakeChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	// TODO errors
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nIf you are using the --known flag the --validators *and* the --accounts flags are both required."))
@@ -518,20 +490,6 @@ func NewChain(cmd *cobra.Command, args []string) {
 		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
 	}
 	IfExit(chns.NewChain(do))
-}
-
-func RegisterChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Operations.Args = args[1:]
-	IfExit(chns.RegisterChain(do))
-}
-
-func ImportChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(chns.ImportChain(do))
 }
 
 func CheckoutChain(cmd *cobra.Command, args []string) {
@@ -640,12 +598,4 @@ func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.RemoveChain(do))
-}
-
-func MakeGenesisFile(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Chain.Name = strings.TrimSpace(args[0])
-	do.Pubkey = strings.TrimSpace(args[1])
-	IfExit(chns.MakeGenesisFile(do))
-
 }

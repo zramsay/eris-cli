@@ -8,6 +8,7 @@ import (
 	"unicode"
 
 	"github.com/eris-ltd/eris-cli/config"
+	. "github.com/eris-ltd/eris-cli/errors"
 
 	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
@@ -27,7 +28,7 @@ func PrintInspectionReport(cont *docker.Container, field string) error {
 		for _, obj := range []interface{}{cont, cont.Config, cont.HostConfig, cont.NetworkSettings} {
 			t, err := reflections.Fields(obj)
 			if err != nil {
-				return fmt.Errorf("The marmots had an error trying to print a nice report\n%s", err)
+				return &ErisError{404, BaseError(ErrBadReport, err), ""}
 			}
 			for _, f := range t {
 				printReport(obj, f)
@@ -222,7 +223,7 @@ func startsUp(field string) bool {
 // a checker for building tables cf. listing funcs
 func CheckParts(parts []string) error {
 	if len(parts) != 5 {
-		return fmt.Errorf("part length !=5")
+		return BaseErrorEI(ErrWrongLength, "part", 5)
 	}
 	return nil
 }

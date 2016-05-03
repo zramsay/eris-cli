@@ -1,11 +1,11 @@
 package data
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
@@ -24,12 +24,11 @@ func RenameData(do *definitions.Do) error {
 		ops := loaders.LoadDataDefinition(do.Name)
 		util.Merge(ops, do.Operations)
 
-		err := perform.DockerRename(ops, do.NewName)
-		if err != nil {
-			return err
+		if err := perform.DockerRename(ops, do.NewName); err != nil {
+			return &ErisError{ErrDocker, err, ""}
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return &ErisError{ErrEris, ErrCantFindData, ""}
 	}
 	do.Result = "success"
 	return nil
@@ -44,10 +43,10 @@ func InspectData(do *definitions.Do) error {
 
 		err := perform.DockerInspect(srv.Service, srv.Operations, do.Operations.Args[0])
 		if err != nil {
-			return err
+			return &ErisError{ErrDocker, err, ""}
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return &ErisError{ErrEris, ErrCantFindData, ""}
 	}
 	do.Result = "success"
 	return nil
@@ -67,20 +66,17 @@ func RmData(do *definitions.Do) (err error) {
 			srv.Operations.SrvContainerName = util.ContainerName("data", do.Name)
 
 			if err = perform.DockerRemove(srv.Service, srv.Operations, false, do.Volumes, false); err != nil {
-				log.Errorf("Error removing %s: %v", do.Name, err)
-				return err
+				// TODO error
+				return &ErisError{ErrDocker, err, ""}
 			}
-
 		} else {
-			err = fmt.Errorf("I cannot find that data container for %s. Please check the data container name you sent me.", do.Name)
-			log.Error(err)
-			return err
+			return &ErisError{ErrDocker, ErrCantFindData, ""}
 		}
 
 		if do.RmHF {
 			log.WithField("=>", do.Name).Warn("Removing host directory")
 			if err = os.RemoveAll(filepath.Join(DataContainersPath, do.Name)); err != nil {
-				return err
+				return &ErisError{ErrGo, err, "use force"}
 			}
 		}
 	}

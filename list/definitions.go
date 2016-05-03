@@ -11,6 +11,7 @@ import (
 	"text/tabwriter"
 	"text/template"
 
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/docker/docker/pkg/term"
@@ -88,13 +89,13 @@ func customKnown(definitions []Definition, format string) error {
 	r := strings.NewReplacer(`\t`, "\t", `\n`, "\n")
 	tmpl, err := template.New("known").Parse(r.Replace(format))
 	if err != nil {
-		return fmt.Errorf("Template error: %v", err)
+		return &ErisError{404, BaseErrorESE(ErrBadTemplate, "", err), ""}
 	}
 
 	buf := new(bytes.Buffer)
 	for _, definition := range definitions {
 		if err := tmpl.Execute(buf, definition); err != nil {
-			return fmt.Errorf("Template exec error: %v", err)
+			return &ErisError{404, BaseErrorESE(ErrBadTemplate, "", err), ""}
 		}
 		buf.WriteString("\n")
 	}

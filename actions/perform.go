@@ -9,6 +9,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
+	. "github.com/eris-ltd/eris-cli/errors"
 	"github.com/eris-ltd/eris-cli/services"
 
 	log "github.com/eris-ltd/eris-logger"
@@ -24,7 +25,7 @@ func Do(do *definitions.Do) error {
 	var actionVars []string
 	do.Action, actionVars, err = LoadActionDefinition(strings.Join(do.Operations.Args, "_"))
 	if err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	resolveServices(do)
@@ -32,11 +33,11 @@ func Do(do *definitions.Do) error {
 	fixChain(do.Action, do.ChainName)
 
 	if err := StartServicesAndChains(do); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	if err := PerformCommand(do.Action, actionVars, do.Quiet); err != nil {
-		return err
+		return &ErisError{404, err, ""}
 	}
 
 	return nil
@@ -105,7 +106,7 @@ func PerformCommand(action *definitions.Action, actionVars []string, quiet bool)
 
 		prev, err := cmd.Output()
 		if err != nil {
-			return fmt.Errorf("error running command (%v): %s", err, prev)
+			return BaseErrorESE(ErrRunningCommand, string(prev), err)
 		}
 
 		if !quiet {

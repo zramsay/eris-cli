@@ -1,15 +1,15 @@
 package util
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	log "github.com/eris-ltd/eris-logger"
+	. "github.com/eris-ltd/eris-cli/errors"
+
 )
 
-//XXX this command absolutely needs a good test!!
 func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 	dirsMap, isMigNeed := dirCheckMaker(dirsToMigrate)
 	if isMigNeed {
@@ -25,7 +25,7 @@ func MigrateDeprecatedDirs(dirsToMigrate map[string]string, prompt bool) error {
 		return Migrate(dirsMap)
 	}
 
-	return fmt.Errorf("permission to migrate not given")
+	return ErrNoPermGiven
 }
 
 //check that migration is actually needed
@@ -65,7 +65,7 @@ func Migrate(dirsToMigrate map[string]string) error {
 			"new": newDir,
 		}).Info("Migrating Directories")
 		if !DoesDirExist(depDir) && !DoesDirExist(newDir) {
-			return fmt.Errorf("neither deprecated (%s) or new (%s) exists. please run `init` prior to `update`\n", depDir, newDir)
+			return BaseErrorESS(ErrNoDirectories, depDir, newDir)
 		} else if DoesDirExist(depDir) && !DoesDirExist(newDir) { //never updated, just rename dirs
 			if err := os.Rename(depDir, newDir); err != nil {
 				return err
@@ -83,11 +83,6 @@ func Migrate(dirsToMigrate map[string]string) error {
 			}
 		} else if !DoesDirExist(depDir) && DoesDirExist(newDir) { // old is gone, new is there; continue (dirCheckMaker should check this)
 			continue
-		} else { //should never throw
-			return fmt.Errorf("unknown and unresolveable conflict between directory to deprecate (%s) and new directory (%s)\n", depDir, newDir)
-		}
-		if DoesDirExist(depDir) {
-			return fmt.Errorf("deprecated directory (%s) still exists, something went wrong", depDir)
 		}
 	}
 
@@ -97,11 +92,11 @@ func Migrate(dirsToMigrate map[string]string) error {
 func checkFileNamesAndMigrate(depDir, newDir string) error {
 	depDirFiles, err := ioutil.ReadDir(depDir)
 	if err != nil {
-		return fmt.Errorf("could not read files from dir to be deprecated %s:\n%v\n", depDir, err)
+		return err
 	}
 	newDirFiles, err := ioutil.ReadDir(newDir)
 	if err != nil {
-		return fmt.Errorf("could not read files from new dir %s:\n%v\n", newDir, err)
+		return err
 	}
 
 	fileNamesToCheck := make(map[string]bool) //map of filenames in new dir
@@ -115,27 +110,18 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 		depFile := filepath.Join(depDir, file.Name())
 		newFile := filepath.Join(newDir, file.Name()) //file may not actually exist (yet)
 
-		if fileNamesToCheck[file.Name()] == true { //conflict!
-			oldFileContents, _ := ioutil.ReadFile(depFile)
-			newFileContents, _ := ioutil.ReadFile(newFile)
-			if string(newFileContents) != string(oldFileContents) {
-				return fmt.Errorf("identical filename; different content; identified in deprecated dir (%s) and new dir to migrate to (%s)\nplease resolve and re-run command", depFile, newFile)
-			} else { // same file so no need to move
-				continue
-			}
-		} else { //filenames don't match, move file from depDir to newDir
-			if err := os.Rename(depFile, newFile); err != nil {
-				log.WithFields(log.Fields{
-					"from": depFile,
-					"to":   newFile,
-				}).Warn("File migration NOT successful")
-				return err
-			}
+		if err := os.Rename(depFile, newFile); err != nil {
 			log.WithFields(log.Fields{
 				"from": depFile,
 				"to":   newFile,
-			}).Warn("File migration successful")
+			}).Warn("File migration not successful")
+			return err
 		}
+
+		log.WithFields(log.Fields{
+			"from": depFile,
+			"to":   newFile,
+		}).Warn("File migration successful")
 	}
 	return nil
 }

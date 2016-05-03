@@ -16,6 +16,7 @@ func Clean(do *definitions.Do) error {
 		"images":     do.Images,
 	}
 	if err := util.Clean(toClean); err != nil {
+		// returns an ErisError
 		return err
 	}
 	return nil
