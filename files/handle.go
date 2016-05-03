@@ -26,7 +26,7 @@ func GetFiles(do *definitions.Do) error {
 	}
 
 	// where Object is a directory added recursively to ipfs
-	// do.Name is the hash
+	// do.Name is the hash // which is fucking annoying
 	dirBool, err := isHashAnObject(do.Name)
 	if err != nil {
 		return err

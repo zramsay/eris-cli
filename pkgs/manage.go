@@ -3,17 +3,27 @@ package pkgs
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
 
 	log "github.com/Sirupsen/logrus"
-	//. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 )
 
 func ImportPackage(do *definitions.Do) error {
-	// do.Path
+	// do.Hash
 	// do.Name -> ~/.eris/apps/do.Name
+
+	doGet := definitions.NowDo()
+	doGet.Name = do.Hash
+	doGet.Path = filepath.Join(common.AppsPath, do.Name)
+	if err := files.GetFiles(doGet); err != nil {
+		return err
+	}
+
+	log.Warn("some erro msg or instruction")
 
 	return nil
 }
