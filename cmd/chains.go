@@ -420,7 +420,6 @@ func addChainsFlags() {
 	buildFlag(chainsNew, do, "publish", "chain")
 	buildFlag(chainsNew, do, "ports", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
-	buildFlag(chainsNew, do, "api", "chain")
 	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	// buildFlag(chainsRegister, do, "links", "chain")
@@ -442,7 +441,6 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
-	buildFlag(chainsStart, do, "api", "chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
@@ -483,6 +481,7 @@ func StartChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	do.Run = true
 	IfExit(chns.StartChain(do))
 }
 
@@ -566,6 +565,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	do.Run = true
 	IfExit(chns.NewChain(do))
 }
 

@@ -91,7 +91,5 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 		cmd.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
 	case "dir":
 		cmd.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	case "api":
-		cmd.PersistentFlags().BoolVarP(&do.Run, "api", "a", true, "turn the chain on using erisdb's api")
 	}
 }
