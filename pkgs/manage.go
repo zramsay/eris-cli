@@ -17,7 +17,7 @@ func ImportPackage(do *definitions.Do) error {
 	// do.Name -> ~/.eris/apps/do.Name
 
 	doGet := definitions.NowDo()
-	doGet.Name = do.Hash
+	doGet.Hash = do.Hash
 	doGet.Path = filepath.Join(common.AppsPath, do.Name)
 	if err := files.GetFiles(doGet); err != nil {
 		return err

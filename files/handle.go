@@ -25,16 +25,15 @@ func GetFiles(do *definitions.Do) error {
 		return err
 	}
 
-	// where Object is a directory added recursively to ipfs
-	// do.Name is the hash // which is fucking annoying
-	dirBool, err := isHashAnObject(do.Name)
+	// where Object is a directory already added recursively to ipfs
+	dirBool, err := isHashAnObject(do.Hash)
 	if err != nil {
 		return err
 	}
 
 	if dirBool {
 		log.WithFields(log.Fields{
-			"hash": do.Name,
+			"hash": do.Hash,
 			"path": do.Path,
 		}).Warn("Getting a directory")
 		buf, err := importDirectory(do)
@@ -44,7 +43,7 @@ func GetFiles(do *definitions.Do) error {
 		log.Warn("Directory object getted succesfully.")
 		log.Warn(util.TrimString(buf.String()))
 	} else {
-		if err := importFile(do.Name, do.Path); err != nil {
+		if err := importFile(do.Hash, do.Path); err != nil {
 			return err
 		}
 	}
@@ -119,7 +118,7 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 }
 
 func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
-	hash := do.Name
+	hash := do.Hash
 
 	ip := new(bytes.Buffer)
 	config.GlobalConfig.Writer = ip

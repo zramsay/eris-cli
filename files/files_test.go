@@ -91,7 +91,7 @@ func TestGetFiles(t *testing.T) {
 	)
 
 	do := definitions.NowDo()
-	do.Name = hash
+	do.Hash = hash
 	do.Path = fileName
 
 	// Fake IPFS server.
@@ -146,7 +146,7 @@ func testGetDirectoryFromIPFS(t *testing.T) {
 	hash := "QmYwjCPtWkduz81UnAqMJYCag5pock5y2S8yZQEd4qoyzf"
 
 	do := definitions.NowDo()
-	do.Name = hash
+	do.Hash = hash
 	do.Path = erisDir
 
 	passed := false

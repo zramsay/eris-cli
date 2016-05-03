@@ -100,7 +100,7 @@ func addFilesFlags() {
 
 func FilesGet(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0] // hash
+	do.Hash = args[0]
 	do.Path = args[1] // where it is saved
 	// TODO make above a flag with `-o` (--output)
 	// similar to curl GET -o

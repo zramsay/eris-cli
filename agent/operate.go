@@ -274,7 +274,7 @@ func GetTarballFromIPFS(hash, installPath string) (string, error) {
 		}
 	}
 	do := definitions.NowDo()
-	do.Name = hash
+	do.Hash = hash
 
 	do.Path = filepath.Join(installPath, fmt.Sprintf("%s%s", hash, ".tar.gz"))
 	if err := files.GetFiles(do); err != nil {
