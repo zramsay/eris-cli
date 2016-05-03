@@ -9,7 +9,6 @@ import (
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
@@ -26,14 +25,9 @@ smart contract packages for use by your application.`,
 
 // build the contracts subcommand
 func buildPackagesCommand() {
-	// TODO: finish when the PR which is blocking
-	//   eris files put --dir is integrated into
-	//   ipfs
-	// [zr] looks like that's now the case ...
-	// XXX see https://github.com/ipfs/go-ipfs/pull/1845
-	// Packages.AddCommand(packagesImport)
-	// Packages.AddCommand(packagesExport)
 	Packages.AddCommand(packagesDo)
+	Packages.AddCommand(packagesImport)
+	Packages.AddCommand(packagesExport)
 	addPackagesFlags()
 }
 
@@ -41,12 +35,12 @@ var packagesImport = &cobra.Command{
 	Use:   "import HASH PACKAGE",
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
-via its hash and save it locally.`,
+via its hash and save it locally to ~/.eris/apps/PACKAGE.`,
 	Run: PackagesImport,
 }
 
 var packagesExport = &cobra.Command{
-	Use:   "export",
+	Use:   "export DIR",
 	Short: "Post a package of smart contracts to IPFS.",
 	Long:  `Post a package of smart contracts to IPFS.`,
 	Run:   PackagesExport,
@@ -88,16 +82,16 @@ func addPackagesFlags() {
 
 func PackagesImport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(pkgs.GetPackage(do))
+	do.Hash = args[0]
+	do.Name = args[1]
+	IfExit(pkgs.ImportPackage(do))
 }
 
 func PackagesExport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(pkgs.PutPackage(do))
-	log.Warn(do.Result)
+	IfExit(pkgs.ExportPackage(do))
+	//log.Warn(do.Result) -> handled in above func
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {

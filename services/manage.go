@@ -39,9 +39,8 @@ func ImportService(do *definitions.Do) error {
 	}
 
 	_, err = loaders.LoadServiceDefinition(do.Name, false)
-	//XXX add protections?
 	if err != nil {
-		return fmt.Errorf("Your service definition file looks improperly formatted and will not marshal.")
+		return fmt.Errorf("error loading service:\n%v", err)
 	}
 
 	do.Result = "success"
@@ -59,6 +58,7 @@ func NewService(do *definitions.Do) error {
 	//get maintainer info
 	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
+		// don't return -> field not required
 		log.Debug(err.Error())
 	}
 

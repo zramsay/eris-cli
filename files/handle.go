@@ -67,7 +67,6 @@ func PutFiles(do *definitions.Do) error {
 	}
 
 	if f.IsDir() {
-		//can't use gateway - check & throw err
 		log.WithField("dir", do.Name).Warn("Adding contents of a directory")
 		buf, err := exportDirectory(do)
 		if err != nil {
@@ -386,8 +385,7 @@ func EnsureIPFSrunning() error {
 	doNow := definitions.NowDo()
 	doNow.Name = "ipfs"
 	if err := services.EnsureRunning(doNow); err != nil {
-		fmt.Printf("Failed to ensure IPFS is running: %v", err)
-		return err
+		return fmt.Errorf("Failed to ensure IPFS is running: %v", err)
 	}
 	log.Info("IPFS is running")
 	return nil
