@@ -32,18 +32,21 @@ func buildPackagesCommand() {
 }
 
 var packagesImport = &cobra.Command{
-	Use:   "import HASH PACKAGE",
+	Use:   "import HASH NAME",
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
-via its hash and save it locally to ~/.eris/apps/PACKAGE.`,
+via its hash and save it locally to ~/.eris/apps/NAME.
+This package needs to have been added as directory to ipfs,
+with [eris pkgs export someDir/].`,
 	Run: PackagesImport,
 }
 
 var packagesExport = &cobra.Command{
 	Use:   "export DIR",
 	Short: "Post a package of smart contracts to IPFS.",
-	Long:  `Post a package of smart contracts to IPFS.`,
-	Run:   PackagesExport,
+	Long: `Post a package of smart contracts to IPFS.
+Give a path to a directory, which will be added to ipfs recusively.`,
+	Run: PackagesExport,
 }
 
 var packagesDo = &cobra.Command{
@@ -51,7 +54,7 @@ var packagesDo = &cobra.Command{
 	Short: "Deploy or test a package of smart contracts to a chain.",
 	Long: `Deploy or test a package of smart contracts to a chain.
 
-eris pkgs do will perform the required functionality included
+[eris pkgs do] will perform the required functionality included
 in a package definition file.`,
 	Run: PackagesDo,
 }
@@ -91,7 +94,6 @@ func PackagesExport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	IfExit(pkgs.ExportPackage(do))
-	//log.Warn(do.Result) -> handled in above func
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
