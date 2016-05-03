@@ -7,7 +7,7 @@ var (
 		"bitcoincore.toml",
 		"bitcoinclassic.toml",
 		"compilers.toml",
-		"eth.toml",
+		"geth.toml",
 		"ipfs.toml",
 		"keys.toml",
 		"logspout.toml",
