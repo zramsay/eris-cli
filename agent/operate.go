@@ -3,7 +3,6 @@ package agent
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,171 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	"github.com/rs/cors"
 )
-
-func StartAgent(do *definitions.Do) error {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/chains", ListChains)
-	mux.HandleFunc("/download", DownloadAgent)
-	mux.HandleFunc("/install", InstallAgent)
-	fmt.Println("Starting agent on localhost:17552")
-
-	// cors.Default() sets up the middleware with default options being
-	// all origins accepted with simple methods (GET, POST).
-	// See https://github.com/rs/cors
-	handler := cors.Default().Handler(mux)
-
-	if err := http.ListenAndServe(":17552", handler); err != nil {
-		return fmt.Errorf("Error starting agent: %v", err)
-	}
-
-	return nil
-}
-
-/*func StopAgent(do *definitions.Do) error {
-	fmt.Println("Gracefully shutting down agent")
-	return nil
-}*/
-
-func ListChains(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		var deets []*util.Details
-
-		deets = util.ErisContainersByType(definitions.TypeChain, true)
-		names := make([]string, len(deets))
-		for i, chainName := range deets {
-			names[i] = chainName.ShortName
-		}
-
-		chainz := []string{}
-		lenChainz := len(names) - 1
-		for i, fmtName := range names {
-			if i == 0 {
-				chainz = append(chainz, "[")
-			}
-			if i == lenChainz {
-				chainz = append(chainz, fmt.Sprintf("{ name: '%s' }]", fmtName))
-				break
-			}
-			chainz = append(chainz, fmt.Sprintf("{ name: '%s' }, ", fmtName))
-		}
-		w.Write([]byte(strings.Join(chainz, "")))
-	}
-}
-
-func DownloadAgent(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		log.Warn("Receiving request to download a contract bundle")
-		reqArgs := []string{"groupId", "bundleId", "version", "hash"}
-		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
-		if err != nil {
-			errMsg := fmt.Sprintf("error parsing url: %v", err)
-			http.Error(w, errMsg, http.StatusBadRequest)
-			return
-		}
-
-		installPath := SetTarballPath(params)
-		whichHash, err := checkHash(params["hash"])
-		if err != nil {
-			return
-		}
-
-		if whichHash == "tarball" {
-			tarBody, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				errMsg := fmt.Sprintf("error reading tarball body: %v", err)
-				http.Error(w, errMsg, http.StatusInternalServerError)
-				return
-			}
-
-			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
-				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-				http.Error(w, errMsg, http.StatusInternalServerError)
-				return
-			}
-
-		} else if whichHash == "ipfs-hash" { // not directly tarball, get from ipfs
-			if err := downloadBundleFromIPFS(params); err != nil {
-				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-				http.Error(w, errMsg, http.StatusInternalServerError)
-				return
-			}
-		}
-	}
-}
-
-func InstallAgent(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		log.Warn("Receiving request to download and deploy a contract bundle")
-
-		// parse response into various components
-		// required to pull tarball, unpack on path
-		// and deploy to running chain
-		reqArgs := []string{"groupId", "bundleId", "version", "hash", "chainName", "address"}
-		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
-		if err != nil {
-			errMsg := fmt.Sprintf("error parsing url: %v", err)
-			http.Error(w, errMsg, http.StatusBadRequest)
-			return
-		}
-
-		// ensure chain to deploy on is running
-		// might want to perform some other checks ... ?
-		if !IsChainRunning(params["chainName"]) {
-			http.Error(w, `chain name provided is not running`, http.StatusNotFound)
-			return
-		}
-
-		installPath := SetTarballPath(params)
-		whichHash, err := checkHash(params["hash"])
-		if err != nil {
-			errMsg := fmt.Sprintf("error checking hash: %v", err)
-			http.Error(w, errMsg, http.StatusBadRequest)
-			return
-		}
-
-		if whichHash == "tarball" {
-			tarBody, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				errMsg := fmt.Sprintf("error reading tarball body: %v", err)
-				http.Error(w, errMsg, http.StatusInternalServerError)
-				return
-			}
-
-			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
-				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-				http.Error(w, errMsg, http.StatusBadRequest)
-				return
-			}
-
-		} else if whichHash == "ipfs-hash" {
-			if err := downloadBundleFromIPFS(params); err != nil {
-				errMsg := fmt.Sprintf("error downloading bundle: %v", err)
-				http.Error(w, errMsg, http.StatusInternalServerError)
-				return
-			}
-		}
-
-		// chain is running
-		// contract bundle unbundled
-		// time to deploy
-		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
-			errMsg := fmt.Sprintf("error deploying contract bundle: %v", err)
-			http.Error(w, errMsg, http.StatusForbidden)
-			// TODO reap bad addr error => func AuthenticateUser()
-			return
-		}
-
-		epmJSON := filepath.Join(installPath, "epm.json")
-		epmByte, err := ioutil.ReadFile(epmJSON)
-		if err != nil {
-			errMsg := fmt.Sprintf("error reading epm.json file: %v", err)
-			http.Error(w, errMsg, http.StatusInternalServerError)
-		}
-		w.Write(epmByte)
-	}
-}
 
 func checkHash(hash string) (string, error) {
 	splitHash := strings.Split(hash, ".")
@@ -197,7 +32,7 @@ func checkHash(hash string) (string, error) {
 		log.Debug("hash provided appears to be an IPFS hash")
 		return "ipfs-hash", nil
 	}
-	return "", fmt.Errorf("unable to decipher hash")
+	return "", fmt.Errorf("unable to decipher ipfs hash provided")
 }
 
 func downloadBundleFromIPFS(params map[string]string) error {
@@ -206,12 +41,10 @@ func downloadBundleFromIPFS(params map[string]string) error {
 
 	tarBallPath, err := GetTarballFromIPFS(params["hash"], installPath)
 	if err != nil {
-		//http.Error(w, `error getting from IPFS`, http.StatusInternalServerError)
 		return err
 	}
 
 	if err = UnpackTarball(tarBallPath, installPath); err != nil {
-		//http.Error(w, `error unpacking tarball`, http.StatusInternalServerError)
 		return err
 	}
 
