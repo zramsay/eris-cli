@@ -58,7 +58,7 @@ type agentHandler func(http.ResponseWriter, *http.Request) *agentError
 
 func (endpoint agentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := endpoint(w, r); err != nil {
-		http.Error(w, err.Message, err.Code)
+		http.Error(w, fmt.Sprintf("%s %v", err.Message, err.Error), err.Code)
 	}
 }
 
@@ -115,28 +115,28 @@ func DownloadAgent(w http.ResponseWriter, r *http.Request) *agentError {
 		reqArgs := []string{"groupId", "bundleId", "version", "hash"}
 		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
 		if err != nil {
-			return &agentError{err, spr(ErrorParsingURL, err), 400}
+			return &agentError{err, ErrorParsingURL, 400}
 		}
 
 		installPath := SetTarballPath(params)
 		whichHash, err := checkHash(params["hash"])
 		if err != nil {
-			return &agentError{err, spr(ErrorCheckingIPFShash, err), 400}
+			return &agentError{err, ErrorCheckingIPFShash, 400}
 		}
 
 		if whichHash == "tarball" {
 			tarBody, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				return &agentError{err, spr(ErrorReadingTarball, err), 400}
+				return &agentError{err, ErrorReadingTarball, 400}
 			}
 
 			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
-				return &agentError{err, spr(ErrorDownloadingBundle, err), 500}
+				return &agentError{err, ErrorDownloadingBundle, 500}
 			}
 
 		} else if whichHash == "ipfs-hash" { // not directly tarball, get from ipfs
 			if err := downloadBundleFromIPFS(params); err != nil {
-				return &agentError{err, spr(ErrorDownloadingBundle, err), 500}
+				return &agentError{err, ErrorDownloadingBundle, 500}
 			}
 		}
 	}
@@ -153,7 +153,7 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) *agentError {
 		reqArgs := []string{"groupId", "bundleId", "version", "hash", "chainName", "address"}
 		params, err := ParseURL(reqArgs, fmt.Sprintf("%s", r.URL))
 		if err != nil {
-			return &agentError{err, spr(ErrorParsingURL, err), 400}
+			return &agentError{err, ErrorParsingURL, 400}
 		}
 
 		// ensure chain to deploy on is running
@@ -165,22 +165,22 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) *agentError {
 		installPath := SetTarballPath(params)
 		whichHash, err := checkHash(params["hash"])
 		if err != nil {
-			return &agentError{err, spr(ErrorCheckingIPFShash, err), 400}
+			return &agentError{err, ErrorCheckingIPFShash, 400}
 		}
 
 		if whichHash == "tarball" {
 			tarBody, err := ioutil.ReadAll(r.Body)
 			if err != nil {
-				return &agentError{err, spr(ErrorReadingTarball, err), 400}
+				return &agentError{err, ErrorReadingTarball, 400}
 			}
 
 			if err := downloadBundleFromTarball(tarBody, installPath, params["hash"]); err != nil {
-				return &agentError{err, spr(ErrorDownloadingBundle, err), 500}
+				return &agentError{err, ErrorDownloadingBundle, 500}
 			}
 
 		} else if whichHash == "ipfs-hash" {
 			if err := downloadBundleFromIPFS(params); err != nil {
-				return &agentError{err, spr(ErrorDownloadingBundle, err), 500}
+				return &agentError{err, ErrorDownloadingBundle, 500}
 			}
 		}
 
@@ -188,20 +188,16 @@ func InstallAgent(w http.ResponseWriter, r *http.Request) *agentError {
 		// contract bundle unbundled
 		// time to deploy
 		if err := DeployContractBundle(installPath, params["chainName"], params["address"]); err != nil {
-			return &agentError{err, spr(ErrorDeployingContractBundle, err), 403}
+			return &agentError{err, ErrorDeployingContractBundle, 403}
 			// TODO reap bad addr error => func AuthenticateUser()
 		}
 
 		epmJSON := filepath.Join(installPath, "epm.json")
 		epmByte, err := ioutil.ReadFile(epmJSON)
 		if err != nil {
-			return &agentError{err, spr(ErrorReadingEPMjson, err), 500}
+			return &agentError{err, ErrorReadingEPMjson, 500}
 		}
 		w.Write(epmByte)
 	}
 	return nil
-}
-
-func spr(msg string, err error) string {
-	return fmt.Sprintf("%s %v", msg, err)
 }
