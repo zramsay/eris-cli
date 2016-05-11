@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -228,16 +229,10 @@ func DockerMachineVersion() (string, error) {
 		return "", err
 	}
 
-	var dmVersionTrimmed string
-	if runtime.GOOS == "windows" {
-		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine.exe version ")
-	} else {
-		dmVersionTrimmed = strings.TrimPrefix(string(out), "docker-machine version ")
-	}
-
-	dmVersion := strings.Split(dmVersionTrimmed, ",")[0]
-
-	return dmVersion, nil
+	// docker-machine version 0.7.0, build a650a40
+	//                ^^^^^^^^^^^^^ - submatch 0
+	//                        ^^^^^ - submatch 1
+	return string(regexp.MustCompile(`version (\d+\.\d+\.\d+)`).FindSubmatch(out)[1]), nil
 }
 
 // CompareVersions returns true if the version1 is larger or equal the version2,
