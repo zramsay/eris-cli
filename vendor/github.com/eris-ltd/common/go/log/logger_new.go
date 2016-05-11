@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 
 	"github.com/docker/docker/pkg/term"
@@ -120,6 +121,10 @@ func (f ErisFormatter) Highlight(tag, comment string) (adjustedOffset int, text 
 // tput asks the terminfo database for a particular escape sequence.
 func tput(command string, params ...interface{}) []byte {
 	args := []string{command}
+
+	if runtime.GOOS == "windows" {
+		return []byte{}
+	}
 
 	for _, param := range params {
 		switch param.(type) {
