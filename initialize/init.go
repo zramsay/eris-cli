@@ -43,13 +43,46 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	if !do.Quiet {
+		log.Warn(`
+Directory structure initialized:
+
+├── .eris/
+│   ├── eris.toml
+│   ├── actions/
+│   ├── apps/
+│   ├── bundles/
+│   ├── chains/
+│       ├── account-types
+│       ├── chain-types
+│       ├── default/config.toml
+│       ├── default.toml
+│   ├── keys/
+│       ├── data/
+│       ├── names/
+│   ├── remotes/
+│   ├── scratch/
+│       ├── data/
+│       ├── languages/
+│       ├── lllc/
+│       ├── ser/
+│       ├── sol/
+│   ├── services/
+│       ├── global/
+│       ├── btcd.toml
+│       ├── ipfs.toml
+│       ├── keys.toml
+
+Several more services were also added; see them with:
+[eris services ls --known]
+
+Consider running [docker images] to see the images that were added.`)
+
 		log.Warnf(`
 Eris sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
 `, "don't send", filepath.Join(common.ErisRoot, "eris.toml"))
-		//TODO: when called from cli provide option to go on tour, like `ipfs tour`
-		//[zr] this'll be cleaner with `make`
+
 		log.Warn("The marmots have everything set up for you. Type [eris] to get started")
 	}
 	return nil

@@ -164,9 +164,13 @@ Created by `eris init` in $HOME directory:
 │   ├── apps/
 │   ├── bundles/
 │   ├── chains/
+│       ├── account-types
+│       ├── chain-types
 │       ├── default/config.toml
+│       ├── default.toml
 │   ├── keys/
 │       ├── data/
+│       ├── names/
 │   ├── remotes/
 │   ├── scratch/
 │       ├── data/
@@ -181,7 +185,11 @@ Created by `eris init` in $HOME directory:
 │       ├── keys.toml
 ```
 
-With several more default services also pulled in.
+With some additional default actions, chain, and services files dropped in from:
+- [eris-actions](https://github.com/eris-ltd/eris-actions)
+- [eris-chains](https://github.com/eris-ltd/eris-chains)
+- [eris-services](https://github.com/eris-ltd/eris-services)
+
 
 # Contributions
 
