@@ -46,31 +46,31 @@ func Initialize(do *definitions.Do) error {
 		log.Warn(`
 Directory structure initialized:
 
-├── .eris/
-│   ├── eris.toml
-│   ├── actions/
-│   ├── apps/
-│   ├── bundles/
-│   ├── chains/
-│       ├── account-types
-│       ├── chain-types
-│       ├── default/config.toml
-│       ├── default.toml
-│   ├── keys/
-│       ├── data/
-│       ├── names/
-│   ├── remotes/
-│   ├── scratch/
-│       ├── data/
-│       ├── languages/
-│       ├── lllc/
-│       ├── ser/
-│       ├── sol/
-│   ├── services/
-│       ├── global/
-│       ├── btcd.toml
-│       ├── ipfs.toml
-│       ├── keys.toml
++-- .eris/
+¦   +-- eris.toml
+¦   +-- actions/
+¦   +-- apps/
+¦   +-- bundles/
+¦   +-- chains/
+¦       +-- account-types
+¦       +-- chain-types
+¦       +-- default/config.toml
+¦       +-- default.toml
+¦   +-- keys/
+¦       +-- data/
+¦       +-- names/
+¦   +-- remotes/
+¦   +-- scratch/
+¦       +-- data/
+¦       +-- languages/
+¦       +-- lllc/
+¦       +-- ser/
+¦       +-- sol/
+¦   +-- services/
+¦       +-- global/
+¦       +-- btcd.toml
+¦       +-- ipfs.toml
+¦       +-- keys.toml
 
 Several more services were also added; see them with:
 [eris services ls --known]
