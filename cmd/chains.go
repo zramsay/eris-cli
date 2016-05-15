@@ -397,8 +397,8 @@ $ eris chains cat simplechain genesis -- will display the genesis.json file from
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
-	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account_types; incompatible with and overrides chain-type")
-	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain_types")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account-types; incompatible with and overrides chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain-types")
 	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in ~/.eris/chains, make tarballs; incompatible with and overrides zip")
 	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in ~/.eris/chains, make zip files")
 	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
