@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 //XXX this command absolutely needs a good test!!

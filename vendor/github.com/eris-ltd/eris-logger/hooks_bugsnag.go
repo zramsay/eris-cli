@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime/debug"
 
-	log "github.com/Sirupsen/logrus"
 	bugsnag "github.com/bugsnag/bugsnag-go"
 )
 
@@ -14,11 +13,11 @@ import (
 // environment variable.
 var APIKey = "1b9565bb7a4f8fd6dc446f2efd238fa3"
 
-// Bugsnag implements the CrashReporter and the logrus.Hook interfaces.
+// Bugsnag implements the CrashReporter and the Eris logger Hook interfaces.
 type Bugsnag struct {
 	config map[string]string
 
-	remoteLogger *log.Logger
+	remoteLogger *Logger
 }
 
 // NewBugsnagReporter configures the Bugsnag library and sets up a logger
@@ -34,43 +33,42 @@ func NewBugsnagReporter(config map[string]string) Bugsnag {
 		AppVersion:   config["version"],
 		ReleaseStage: config["branch"],
 		// Bugsnag tries to say something itself occasionally.
-		Logger: &log.Logger{
+		Logger: &Logger{
 			Out:       os.Stdout,
-			Formatter: ConsoleFormatter(log.DebugLevel),
-			Level:     log.DebugLevel,
+			Formatter: ErisFormatter{},
+			Level:     DebugLevel,
 		},
 		// Using our own panic recover.
 		PanicHandler: func() {},
 	})
 
 	return Bugsnag{
-		// Logger for silently collecting logging messages on all levels.
-		remoteLogger: &log.Logger{
+		remoteLogger: &Logger{
 			Out:       new(bytes.Buffer),
-			Formatter: RemoteFormatter(log.DebugLevel),
-			Level:     log.DebugLevel,
+			Formatter: ErisFormatter{IgnoreLevel: true},
+			Level:     DebugLevel,
 		},
 		config: config,
 	}
 }
 
-func (b Bugsnag) Hook() log.Hook {
+func (b Bugsnag) Hook() Hook {
 	return b
 }
 
-func (b Bugsnag) Levels() []log.Level {
+func (b Bugsnag) Levels() []Level {
 	// Collecting messages on all levels.
-	return []log.Level{
-		log.PanicLevel,
-		log.FatalLevel,
-		log.ErrorLevel,
-		log.WarnLevel,
-		log.InfoLevel,
-		log.DebugLevel,
+	return []Level{
+		PanicLevel,
+		FatalLevel,
+		ErrorLevel,
+		WarnLevel,
+		InfoLevel,
+		DebugLevel,
 	}
 }
 
-func (b Bugsnag) Fire(e *log.Entry) error {
+func (b Bugsnag) Fire(e *Entry) error {
 	out, err := b.remoteLogger.Formatter.Format(e)
 	if err != nil {
 		// Not important.
@@ -92,12 +90,13 @@ func (b Bugsnag) SendReport(message interface{}) error {
 		bugsnag.SeverityError,
 		bugsnag.User{Id: b.config["user"], Email: b.config["email"]},
 		bugsnag.MetaData{
-			"Log": {
-				"Debug Output": b.remoteLogger.Out.(*bytes.Buffer).String(),
+			"log": {
+				"debug": b.remoteLogger.Out.(*bytes.Buffer).String(),
 			},
-			"Docker": {
-				"Client": b.config["docker client"],
+			"docker": {
+				"client": b.config["docker client"],
 			},
 		},
 	)
+	return nil
 }

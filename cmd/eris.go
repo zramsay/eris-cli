@@ -12,10 +12,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 	"github.com/spf13/cobra"
 )
 
@@ -40,15 +39,11 @@ Complete documentation is available at https://docs.erisindustries.com
 		// into a file (`eris > out`) or a viewer (`eris|more`).
 		log.SetOutput(os.Stdout)
 
-		// The baseline logging level (to record debug logging
-		// messages for remote logging, not for console).
-		log.SetLevel(log.DebugLevel)
-
-		log.SetFormatter(logger.ConsoleFormatter(log.WarnLevel))
+		log.SetLevel(log.WarnLevel)
 		if do.Verbose {
-			log.SetFormatter(logger.ConsoleFormatter(log.InfoLevel))
+			log.SetLevel(log.InfoLevel)
 		} else if do.Debug {
-			log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
+			log.SetLevel(log.DebugLevel)
 		}
 
 		// Don't try to connect to Docker for informational

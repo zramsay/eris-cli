@@ -1,9 +1,8 @@
 package commands
 
 import (
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
 	"github.com/eris-ltd/eris-cli/config"
+	log "github.com/eris-ltd/eris-logger"
 
 	"github.com/eris-ltd/eris-cli/version"
 )
@@ -19,13 +18,13 @@ type CrashReport interface {
 
 // CrashReportHook sets up a remote logging implementation (depending on
 // the 'CrashReport' value in the `eris.toml` configuration file) and returns
-// a hook for the logrus logging library.
+// a hook for the Eris logging library.
 func CrashReportHook(dockerVersion string) log.Hook {
 	switch config.GlobalConfig.Config.CrashReport {
 	case "bugsnag":
-		crashReport = logger.NewBugsnagReporter(ConfigureCrashReport(dockerVersion))
+		crashReport = log.NewBugsnagReporter(ConfigureCrashReport(dockerVersion))
 	default:
-		crashReport = logger.NewStubReporter(nil)
+		crashReport = log.NewStubReporter(nil)
 	}
 
 	return crashReport.Hook()

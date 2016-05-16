@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"fmt"
@@ -8,17 +8,14 @@ import (
 	"sort"
 
 	"github.com/docker/docker/pkg/term"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 type ErisFormatter struct {
-	// Override the logging level to be able to collect logger messages
-	// at a level lower (more verbose) than the one is used for the console.
-	Level log.Level
-
-	// Provide color formatting for log messages.
+	// Set to true to ignore TTY checks for color highlights.
 	Color bool
+
+	// Set to true to ignore level set by the log.SetLevel() function.
+	IgnoreLevel bool
 }
 
 const (
@@ -39,23 +36,11 @@ var (
 	escTag = tput("setaf", 241)
 )
 
-// RemoteFormatter returns the ErisFormatter with settings
-// suitable for the remote logging.
-func RemoteFormatter(level log.Level) ErisFormatter {
-	return ErisFormatter{Level: level}
-}
-
-// ConsoleFormatter returns the ErisFormatter with settings
-// suitable for the console media.
-func ConsoleFormatter(level log.Level) ErisFormatter {
-	return ErisFormatter{Level: level, Color: true}
-}
-
-// Format implements the logrus.Formatter interface. It returns a formatted
+// Format implements the logger.Formatter interface. It returns a formatted
 // log line as a slice of bytes.
-func (f ErisFormatter) Format(entry *log.Entry) (out []byte, err error) {
+func (f ErisFormatter) Format(entry *Entry) (out []byte, err error) {
 	// Check if output is necessary.
-	if entry.Level > f.Level {
+	if !f.IgnoreLevel && entry.Level > GetLevel() {
 		return []byte{}, nil
 	}
 

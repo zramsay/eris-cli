@@ -19,7 +19,7 @@ import (
 
 	. "github.com/eris-ltd/common/go/common"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	"github.com/pborman/uuid"
 )
 

@@ -7,8 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -16,8 +15,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)

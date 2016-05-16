@@ -16,15 +16,16 @@ import (
 	"time"
 	"unicode"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
+	dirs "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
+
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	dirs "github.com/eris-ltd/common/go/common"
 	docker "github.com/fsouza/go-dockerclient"
 )
 

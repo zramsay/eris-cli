@@ -9,8 +9,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func StartService(do *definitions.Do) (err error) {

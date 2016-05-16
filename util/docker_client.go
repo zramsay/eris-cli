@@ -15,7 +15,7 @@ import (
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 
 	. "github.com/eris-ltd/common/go/common"

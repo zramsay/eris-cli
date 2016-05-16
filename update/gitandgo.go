@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
 )
 

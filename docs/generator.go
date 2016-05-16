@@ -5,8 +5,6 @@ import (
 
 	commands "github.com/eris-ltd/eris-cli/cmd"
 	"github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var RENDER_DIR = fmt.Sprintf("./docs/eris-cli/%s/", version.VERSION)
@@ -29,6 +27,6 @@ func main() {
 	commands.InitializeConfig()
 	commands.AddGlobalFlags()
 	commands.AddCommands()
-	specs := common.GenerateSpecs(SPECS_DIR, RENDER_DIR, FRONT_MATTER)
-	common.GenerateTree(eris, RENDER_DIR, specs, FRONT_MATTER, BASE_URL)
+	specs := GenerateSpecs(SPECS_DIR, RENDER_DIR, FRONT_MATTER)
+	GenerateTree(eris, RENDER_DIR, specs, FRONT_MATTER, BASE_URL)
 }

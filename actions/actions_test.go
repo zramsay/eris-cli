@@ -8,8 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var actionName string = "do not use"
@@ -18,8 +17,6 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)

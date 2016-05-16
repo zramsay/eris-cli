@@ -13,8 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -26,11 +25,9 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
-	log.SetLevel(log.ErrorLevel)
+	// log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")

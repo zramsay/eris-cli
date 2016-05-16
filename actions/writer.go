@@ -9,7 +9,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 
 	"github.com/BurntSushi/toml"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	"gopkg.in/yaml.v2"
 )
 

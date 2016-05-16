@@ -16,9 +16,8 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -41,8 +40,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ErisFormatter{})
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)

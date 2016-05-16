@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/eris-ltd/eris-cli/files"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 	"github.com/spf13/cobra"
 )
 

@@ -8,17 +8,14 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
