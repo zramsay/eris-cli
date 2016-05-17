@@ -47,7 +47,7 @@ func ImportService(do *definitions.Do) error {
 	return nil
 }
 
-func NewService(do *definitions.Do) error {
+func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
 	srv.Service.Name = do.Name

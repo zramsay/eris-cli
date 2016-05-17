@@ -33,7 +33,7 @@ image.`,
 
 // build the services subcommand
 func buildServicesCommand() {
-	Services.AddCommand(servicesNew)
+	Services.AddCommand(servicesMake)
 	Services.AddCommand(servicesImport)
 	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
@@ -92,16 +92,16 @@ var servicesImport = &cobra.Command{
 	Run:     ImportService,
 }
 
-var servicesNew = &cobra.Command{
-	Use:   "new NAME IMAGE",
+var servicesMake = &cobra.Command{
+	Use:   "make NAME IMAGE",
 	Short: "Create a new service.",
 	Long: `Create a new service.
 
 Command must be given a NAME and a container IMAGE using the standard
 docker format of [repository/organization/image].`,
-	Example: "$ eris services new eth eris/eth\n" +
-		"$ eris services new mint tutum.co/tendermint/tendermint",
-	Run: NewService,
+	Example: "$ eris services make eth eris/eth\n" +
+		"$ eris services make mint tutum.co/tendermint/tendermint",
+	Run: MakeService,
 }
 
 var servicesEdit = &cobra.Command{
@@ -288,7 +288,6 @@ func addServicesFlags() {
 	servicesList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers only")
 	servicesList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of service names")
 	servicesList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
-
 }
 
 func StartService(cmd *cobra.Command, args []string) {
@@ -337,11 +336,11 @@ func ImportService(cmd *cobra.Command, args []string) {
 	IfExit(srv.ImportService(do))
 }
 
-func NewService(cmd *cobra.Command, args []string) {
+func MakeService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = []string{args[1]}
-	IfExit(srv.NewService(do))
+	IfExit(srv.MakeService(do))
 }
 
 func EditService(cmd *cobra.Command, args []string) {

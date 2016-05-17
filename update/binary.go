@@ -33,7 +33,7 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	doNew := definitions.NowDo()
 	doNew.Name = serviceName
 	doNew.Operations.Args = []string{imageName}
-	if err := services.NewService(doNew); err != nil {
+	if err := services.MakeService(doNew); err != nil {
 		return err
 	}
 

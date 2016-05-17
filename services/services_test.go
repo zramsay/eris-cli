@@ -319,14 +319,14 @@ image = "` + path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS) + `"`
 	}
 }
 
-func TestNewService(t *testing.T) {
+func TestMakeService(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
 	do.Operations.Args = []string{path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)}
-	if err := NewService(do); err != nil {
+	if err := MakeService(do); err != nil {
 		t.Fatalf("expected a new service to be created, got %v", err)
 	}
 
