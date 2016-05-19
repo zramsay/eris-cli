@@ -10,6 +10,7 @@ type Operation struct {
 	Remove            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Privileged        bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Interactive       bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Terminal          bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Follow            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	SkipCheck         bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	AppName           string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`

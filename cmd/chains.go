@@ -506,6 +506,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
+	do.Operations.Terminal = true
 	do.Operations.Args = args
 	config.GlobalConfig.InteractiveWriter = os.Stdout
 	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
@@ -554,6 +555,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	if !do.Known {
 		config.GlobalConfig.InteractiveWriter = os.Stdout
 		config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+		do.Operations.Terminal = true
 	}
 
 	IfExit(chns.MakeChain(do))

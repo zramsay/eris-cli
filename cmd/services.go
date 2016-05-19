@@ -315,6 +315,7 @@ func ExecService(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
+	do.Operations.Terminal = true
 	do.Operations.Args = args
 	config.GlobalConfig.InteractiveWriter = os.Stdout
 	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
