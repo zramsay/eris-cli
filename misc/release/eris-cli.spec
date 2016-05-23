@@ -1,6 +1,7 @@
 %{define} home %{getenv:HOME}
 %{define} version %{getenv:ERIS_VERSION}
 %{define} release %{getenv:ERIS_RELEASE}
+%{define} gorepo %{_builddir}/src/github.com/eris-ltd/eris-cli
 
 Summary: Eris is a platform for building, testing, maintaining, and operating distributed applications with a blockchain backend. Eris makes it easy and simple to wrangle the dragons of smart contract blockchains.
 Name: eris-cli
@@ -20,24 +21,31 @@ Eris makes it easy and simple to wrangle
 the dragons of smart contract blockchains.
 
 %prep
-cp %{home}/README %{_builddir}/README
-cp %{home}/COPYING %{_builddir}/COPYING
-cp %{home}/eris %{_builddir}/eris
-mkdir --parents ${RPM_BUILD_ROOT}/%{_mandir}/man1
-cp %{home}/eris.1 ${RPM_BUILD_ROOT}/%{_mandir}/man1/eris.1
+rm -fr %{_builddir}/*
+mkdir -p %{gorepo}
+git clone https://github.com/eris-ltd/eris-cli %{gorepo}
+
+pushd %{gorepo}
+git fetch origin ${ERIS_BRANCH}
+git checkout ${ERIS_BRANCH}
+popd
 
 %build
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get github.com/eris-ltd/eris-cli/cmd/eris
 
 %install
-mkdir --parents ${RPM_BUILD_ROOT}/%{_bindir}
-install eris ${RPM_BUILD_ROOT}/%{_bindir}
+rm -rf ${RPM_BUILD_ROOT}
+mkdir -p ${RPM_BUILD_ROOT}/%{_bindir} ${RPM_BUILD_ROOT}/%{_mandir}/man1
+install %{_builddir}/eris ${RPM_BUILD_ROOT}/%{_bindir}
+# TODO: manual page addition is pending the issue
+# https://github.com/eris-ltd/eris-cli/issues/712.
+cp %{gorepo}/README.md %{_builddir}/README
+cp %{gorepo}/LICENSE.md %{_builddir}/COPYING
 
 %files
 %defattr(-, root, root, 0755)
-%doc README
-%license COPYING
-%{_mandir}/man1/*
+%doc README COPYING
 %{_bindir}/*
 
 %clean
-if [ -d $RPM_BUILD_ROOT ]; then rm -rf $RPM_BUILD_ROOT; fi
+if [ -d ${RPM_BUILD_ROOT} ]; then rm -rf $RPM_BUILD_ROOT; fi

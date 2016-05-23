@@ -1,0 +1,40 @@
+FROM ubuntu:15.04
+
+MAINTAINER Eris Industries <support@erisindustries.com>
+
+RUN apt-get update \
+   && apt-get install -y sudo \
+                    git \
+                    gcc \
+                    curl \
+                    gpgv2 \
+                    lintian \
+                    vim-common \
+                    reprepro \
+                    debsigs \
+                    expect \
+                    build-essential
+
+RUN curl -o - -q http://s3tools.org/repo/deb-all/stable/s3tools.key | apt-key add - \
+    && curl -o /etc/apt/sources.list.d/s3tools.list http://s3tools.org/repo/deb-all/stable/s3tools.list \
+    && apt-get update \
+    && apt-get install -y s3cmd
+
+ENV GOLANG_VERSION 1.6
+ENV GOROOT /usr/local/go
+ENV GOPATH /root
+ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+ENV GOLANG_DOWNLOAD_SHA256 5470eac05d273c74ff8bac7bef5bad0b5abbd1c4052efbdbc8db45332e836b0b
+RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
+  && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
+  && tar -C /usr/local -xzf golang.tar.gz \
+  && rm golang.tar.gz
+ENV PATH $GOPATH/bin:$GOROOT/bin:$PATH
+
+WORKDIR /root
+
+COPY linux-private-key.asc /root/
+COPY linux-public-key.asc /root/
+COPY builddeb.sh   /root/
+
+ENTRYPOINT ["/root/builddeb.sh"]
