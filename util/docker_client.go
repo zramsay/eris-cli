@@ -363,19 +363,22 @@ func checkKeysAndCerts(dPath string) error {
 }
 
 func mustInstallError() error {
-	errBase := "The marmots cannot connect to Docker.\nDo you have docker installed?\nIf not please visit here:\t"
-	dInst := "https://docs.docker.com/installation/"
+	install := `The marmots cannot connect to Docker. Do you have Docker installed?
+If not, please visit here: https://docs.docker.com/installation/`
 
 	switch runtime.GOOS {
 	case "linux":
-		return fmt.Errorf("%s%s\nDo you have docker installed and running?\nIf not please [sudo service docker start] on Ubuntu.\nAlso check that your user is in the docker group (or rerun with sudo).\nTo fix this please run [sudo usermod -a -G docker $USER] on Ubuntu with your user substituted.", errBase, dInst)
-	case "darwin":
-		return fmt.Errorf("%s%s\n", errBase, (dInst + "mac/"))
-	case "windows":
-		return fmt.Errorf("%s%s\n", errBase, (dInst + "windows/"))
-	}
+		run := `Do you have Docker running? If not, please type [sudo service docker start].
+Also check that your user is in the "docker" group. If not, you can add it
+using the [sudo usermod -a -G docker $USER] command or rerun as [sudo eris]`
 
-	return fmt.Errorf("%s%s\n", errBase, dInst)
+		return fmt.Errorf("%slinux/\n\n%s", install, run)
+	case "darwin":
+		return fmt.Errorf("%smac/", install)
+	case "windows":
+		return fmt.Errorf("%swindows/", install)
+	}
+	return fmt.Errorf(install)
 }
 
 // need to add ssh.exe to PATH, it resides in GIT dir.
