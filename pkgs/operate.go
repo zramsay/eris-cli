@@ -19,8 +19,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var pwd string
@@ -234,17 +234,17 @@ func bootChain(name string, do *definitions.Do) error {
 	startChain := definitions.NowDo()
 	startChain.Name = name
 	startChain.Operations = do.Operations
-	f, err := os.Stat(filepath.Join(common.ChainsPath, startChain.Name))
+	dir := filepath.Join(common.ChainsPath, startChain.Name)
 	switch {
 	case util.IsChain(name, true):
-		log.WithField("name", startChain.Name).Info("Starting Chain")
+		log.WithField("name", startChain.Name).Info("Starting chain")
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
 		do.Chain.ChainType = "chain" // setting this for tear down purposes
-	case !os.IsNotExist(err) && f.IsDir():
-		log.WithField("name", startChain.Name).Info("Trying New Chain")
-		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
+	case util.DoesDirExist(dir):
+		log.WithField("name", startChain.Name).Info("Trying new chain")
+		startChain.Path = dir
 		if err := chains.NewChain(startChain); err != nil {
 			return err
 		}
@@ -254,8 +254,7 @@ func bootChain(name string, do *definitions.Do) error {
 		startService := definitions.NowDo()
 		startService.Operations = do.Operations
 		startService.Operations.Args = []string{name}
-		err = services.StartService(startService)
-		if err != nil {
+		if err := services.StartService(startService); err != nil {
 			return err
 		}
 		do.Chain.ChainType = "service" // setting this for tear down purposes
