@@ -1,5 +1,11 @@
 package initialize
 
+import (
+	"path"
+
+	"github.com/eris-ltd/eris-cli/version"
+)
+
 func defServiceIPFS() string {
 	return `
 # For more information on configurations, see the services specification:
@@ -21,7 +27,7 @@ This eris service is all but essential as part of the eris tool. The [eris files
 status = "alpha"
 
 [service]
-image = "quay.io/eris/ipfs"
+image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_IPFS) + `"
 data_container = true
 ports = ["4001:4001", "5001:5001", "8080:8080"]
 user = "root"

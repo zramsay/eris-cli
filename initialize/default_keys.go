@@ -1,6 +1,8 @@
 package initialize
 
 import (
+	"path"
+
 	"github.com/eris-ltd/eris-cli/version"
 )
 
@@ -25,7 +27,7 @@ This service is usually linked to a chain and/or an application. Its functionali
 status = "unfit for production"
 
 [service]
-image = "quay.io/eris/keys:` + version.VERSION + `"
+image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_KEYS) + `"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 #restart = "always"
