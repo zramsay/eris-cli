@@ -10,7 +10,7 @@ var (
 
 	ERIS_IMG_BASE = "eris/base"
 	ERIS_IMG_DATA = "eris/data"
-	ERIS_IMG_KEYS = "eris/keys"
+	ERIS_IMG_KEYS = fmt.Sprintf("eris/keys:%s", VERSION)
 	ERIS_IMG_DB   = fmt.Sprintf("eris/erisdb:%s", VERSION)
 	ERIS_IMG_PM   = fmt.Sprintf("eris/epm:%s", VERSION)
 	ERIS_IMG_CM   = fmt.Sprintf("eris/eris-cm:%s", VERSION)

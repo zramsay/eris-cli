@@ -29,6 +29,9 @@ func dropServiceDefaults(dir, from string) error {
 	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from); err != nil {
 		return err
 	}
+	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys); err != nil {
+		return fmt.Errorf("Cannot add default keys.toml: %s.\n", err)
+	}
 	return nil
 }
 

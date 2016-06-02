@@ -1,5 +1,7 @@
 package version
-
+// DEPRECATION warning: to be replaced by pulling from toadserver
+// && [eris services ls] which'll query the toadserver for available
+// service definition files which can then be imported.
 var (
 	SERVICE_DEFINITIONS = []string{
 		"bigchaindb.toml",
@@ -9,7 +11,7 @@ var (
 		"compilers.toml",
 		"geth.toml",
 		"ipfs.toml",
-		"keys.toml",
+		//"keys.toml", now in eris-cli binary so we can version
 		"logspout.toml",
 		"logrotate.toml",
 		"mindy.toml",
