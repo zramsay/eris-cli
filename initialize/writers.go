@@ -32,6 +32,9 @@ func dropServiceDefaults(dir, from string) error {
 	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys); err != nil {
 		return fmt.Errorf("Cannot add default keys.toml: %s.\n", err)
 	}
+	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS); err != nil {
+		return fmt.Errorf("Cannot add default ipfs.toml: %s.\n", err)
+	}
 	return nil
 }
 

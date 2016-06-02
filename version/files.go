@@ -10,7 +10,7 @@ var (
 		"bitcoinclassic.toml",
 		"compilers.toml",
 		"geth.toml",
-		"ipfs.toml",
+		//"ipfs.toml",
 		//"keys.toml", now in eris-cli binary so we can version
 		"logspout.toml",
 		"logrotate.toml",
