@@ -256,7 +256,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
-		ops.Args = []string{"mkdir", "--parents", path.Join(ErisContainerRoot, "chains", do.ChainID)}
+		ops.Args = []string{"mkdir", "-p", path.Join(ErisContainerRoot, "chains", do.ChainID)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
