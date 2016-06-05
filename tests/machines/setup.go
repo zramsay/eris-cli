@@ -39,30 +39,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	branch, err := getBranch()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "getBranch error: %v\n", err)
-		os.Exit(1)
-	}
-
-	allOrFew := false
-	for _, b := range buildAllBranches {
-		if branch == b {
-			allOrFew = true
-		}
-	}
-
 	var machines []string
 
-	if runtime.GOOS == "linux" {
-		if allOrFew {
-			machines = allBackends()
-		} else {
-			machines = curBackend()
-		}
-	} else {
-		machines = curBackend()
-	}
+	machines = curBackend()
 
 	failOut := make(chan bool, len(machines))
 	go timeOutTicker(machines)
