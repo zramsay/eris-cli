@@ -119,8 +119,8 @@ move ` + cpString + `
 func MakeDockerfile(branch string) string {
 	var dockerfile string
 
-	// baseImage is `quay.io/eris/base`
-	baseImage := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE)
+	// baseImage is `quay.io/eris/data` // because the user already has it
+	baseImage := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
 	// todo: clean up Dockerfile as much as possible
 
 	baseDockerfile := fmt.Sprintf(`

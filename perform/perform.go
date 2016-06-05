@@ -1113,7 +1113,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE),
+			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,

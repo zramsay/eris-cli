@@ -96,7 +96,7 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		ver.ERIS_IMG_BASE,
+		//ver.ERIS_IMG_BASE,
 		ver.ERIS_IMG_DATA,
 		ver.ERIS_IMG_KEYS,
 		ver.ERIS_IMG_IPFS,
