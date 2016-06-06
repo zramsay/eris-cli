@@ -32,7 +32,9 @@ release_maj=$(echo $release_min | cut -d . -f 1-2)
 
 # ---------------------------------------------------------------------------
 # Go!
+mkdir $repo/data
 cd $repo/data
+curl -o Dockerfile https://raw.githubusercontent.com/eris-ltd/common/master/docker/data/Dockerfile
 
 if [[ "$branch" = "master" ]]
 then

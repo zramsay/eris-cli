@@ -40,12 +40,12 @@ deployment:
       - docker push quay.io/eris/eris
       - docs/build.sh master
       # build data image because it is versioned
-      - tests/build_data_image.sh
+      - tests/build_other_images.sh
       - docker push quay.io/eris/data
   develop:
     branch: develop
     commands:
       - docs/build.sh
       # see above
-      - tests/build_data_image.sh
+      - tests/build_other_images.sh
       - docker push quay.io/eris/data
