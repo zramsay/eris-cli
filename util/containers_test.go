@@ -1,8 +1,8 @@
 package util
 
 import (
-	"testing"
 	"path"
+	"testing"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/version"
@@ -308,7 +308,7 @@ func create(t, name string) error {
 	opts := docker.CreateContainerOptions{
 		Name: ContainerName(t, name),
 		Config: &docker.Config{
-			Image: keysImage,
+			Image:  keysImage,
 			Labels: labels,
 		},
 	}

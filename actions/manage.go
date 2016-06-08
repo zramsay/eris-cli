@@ -131,10 +131,6 @@ func RenameAction(do *definitions.Do) error {
 	}
 	log.WithField("file", oldFile).Debug("Found action definition file")
 
-	// if !strings.Contains(oldFile, ActionsPath) {
-	// 	oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
-	// }
-
 	var newFile string
 	newNameBase := strings.Replace(strings.Replace(do.NewName, " ", "_", -1), filepath.Ext(do.NewName), "", 1)
 
@@ -162,9 +158,8 @@ func RenameAction(do *definitions.Do) error {
 	}
 
 	log.WithField("file", oldFile).Debug("Removing old file")
-	os.Remove(oldFile)
 
-	return nil
+	return os.Remove(oldFile)
 }
 
 func RmAction(do *definitions.Do) error {

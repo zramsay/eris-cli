@@ -10,15 +10,16 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 
 	"github.com/spf13/viper"
 )
 
+// Standard package commands.
 const (
 	ErisChainStart    = "run"
-	ErisChainStartApi = "api"
+	ErisChainStartAPI = "api"
 	ErisChainInstall  = "install"
 	ErisChainNew      = "new"
 	ErisChainRegister = "register"
@@ -37,7 +38,7 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 		return nil, err
 	}
 
-	definition, err := config.LoadViperConfig(filepath.Join(ChainsPath), chainName)
+	definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,9 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 	return chain, nil
 }
 
-// Convert the chain def to a service def but keep the "eris_chains" containers prefix and set the chain id
+// ChainsAsAService convert the chain definition to a service one
+// and set the CHAIN_ID environment variable. ChainsAsAService
+// can return config load errors.
 func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) {
 	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
@@ -94,10 +97,15 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 	return s, nil
 }
 
+// ConnectToAChain operates in two ways
+//  - if link is true, sets srv.Links to point to a chain container specifiend by name:internalName
+//  - if mount is true, sets srv.VolumesFrom to point to a chain container specified by name
 func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
 	connectToAService(srv, ops, definitions.TypeChain, name, internalName, link, mount)
 }
 
+// MockChainDefinition creates a chain definition with necessary fields
+// already filled in.
 func MockChainDefinition(chainName, chainID string) *definitions.Chain {
 	chn := definitions.BlankChain()
 	chn.Name = chainName
@@ -139,7 +147,7 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) e
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(filepath.Join(ChainsPath), "default")
+	cfg, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), "default")
 	if err != nil {
 		return err
 	}

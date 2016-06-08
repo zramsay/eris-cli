@@ -55,10 +55,9 @@ func TestListChains(t *testing.T) {
 
 }
 
-// ensure url format satifies required schema
+// Ensure url format satisfies required schema
 //TODO parse each kinds of payload (chains, dowload, install)
 func TestParsePayload(t *testing.T) {
-
 	toTest := map[string]string{
 		"groupId":   bundleInfo["groupId"],  // needed to buildpath
 		"bundleId":  bundleInfo["bundleId"], // ibid
@@ -237,7 +236,7 @@ func testKillChain(t *testing.T, chainName string) {
 	doCh.Rm = true
 	doCh.Force = true
 	if err := chains.KillChain(doCh); err != nil {
-		t.Fatal("error killing chain: %v\n", err)
+		t.Fatalf("error killing chain: %v", err)
 	}
 }
 

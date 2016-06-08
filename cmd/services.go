@@ -272,7 +272,7 @@ func addServicesFlags() {
 	buildFlag(servicesStart, do, "ports", "service")
 	buildFlag(servicesStart, do, "env", "service")
 	buildFlag(servicesStart, do, "links", "service")
-	buildFlag(servicesStart, do, "chain", "service")
+	servicesStart.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service depends on")
 
 	buildFlag(servicesStop, do, "rm", "service")
 	buildFlag(servicesStop, do, "volumes", "service")

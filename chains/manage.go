@@ -556,7 +556,7 @@ func RegisterChain(do *definitions.Do) error {
 
 	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
-	return nil
+	return err
 }
 
 func checkKeysRunningOrStart() error {

@@ -231,7 +231,7 @@ func FileContents(filename string) string {
 	return string(content)
 }
 
-// each pacakge will need its own custom stuff if need be
+// each package will need its own custom stuff if need be
 // do it through a custom pre-process ifExit in each package that
 // calls tests.IfExit()
 func TestsTearDown() error {

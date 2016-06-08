@@ -48,11 +48,9 @@ func Known(t, format string) error {
 		return jsonKnown(definitions)
 	case format != "":
 		return customKnown(definitions, format)
-	default:
-		return columnizeKnown(definitions)
 	}
 
-	return nil
+	return columnizeKnown(definitions)
 }
 
 func jsonKnown(definitions []Definition) error {

@@ -137,7 +137,6 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	}).Debug()
 
 	if exec {
-
 		if do.Image != "" {
 			chain.Service.Image = do.Image
 		}

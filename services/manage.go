@@ -195,7 +195,7 @@ func ExportService(do *definitions.Do) error {
 			return err
 		}
 
-		hash, err := exportFile(do.Name)
+		hash, _ := exportFile(do.Name)
 		do.Result = hash
 		log.WithField("hash", hash).Warn()
 

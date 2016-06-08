@@ -15,9 +15,9 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func GetFiles(do *definitions.Do) error {
@@ -412,10 +412,9 @@ func isHashAnObject(ipfsHash string) (bool, error) {
 	if err != nil {
 		return dirBool, err
 	}
-	if util.TrimString(result) == "" { //not a dir
-		return dirBool, nil // false
-	} else { //something is in there, must be a dir
+	if util.TrimString(result) != "" { //not a dir
 		return true, nil
 	}
+
 	return dirBool, nil
 }

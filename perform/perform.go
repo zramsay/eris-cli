@@ -1182,9 +1182,7 @@ func checkImageExists(image string) (bool, error) {
 	if err != nil {
 		return fail, util.DockerError(err)
 	}
-	if len(anImage) != 1 {
-		return fail, nil
-	} else {
+	if len(anImage) == 1 {
 		return true, nil
 	}
 

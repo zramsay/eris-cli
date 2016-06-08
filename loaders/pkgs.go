@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// LoadPackage loads a package definition specified by the directory or
+// filename path and chainName and returns a package definition structure.
+// LoadPackage can also return missing files or package loading errors.
 func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	var name string
 	var dir bool
@@ -45,7 +48,7 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	} else {
 		// marshal chain and always reset the operational requirements
 		// this will make sure to sync with docker so that if changes
-		// have occured in the interim they are caught.
+		// have occurred in the interim they are caught.
 		pkg, err = marshalPackage(pkgConf)
 		if err != nil {
 			return nil, err
@@ -62,7 +65,8 @@ func loadPackage(path string) (*viper.Viper, error) {
 	return config.LoadViperConfig(path, "package")
 }
 
-// set's the defaults
+// DefaultPackage creates a package definition structure
+// with some fields already filled in.
 func DefaultPackage(name, chainName string) *definitions.Package {
 	pkg := definitions.BlankPackage()
 	pkg.Name = name

@@ -234,7 +234,7 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 		}
 
 		if err := tmplTable.Execute(buf, container); err != nil {
-			return fmt.Errorf("Listing template exec error: %v\n")
+			return fmt.Errorf("Listing template exec error: %v\n", err)
 		}
 
 		buf.WriteString("\n")

@@ -25,9 +25,9 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	// log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")

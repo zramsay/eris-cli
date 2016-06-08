@@ -19,9 +19,9 @@ type Operation struct {
 	Ports             string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Labels            map[string]string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	PublishAllPorts   bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	CapAdd            []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	CapDrop           []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	Args              []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	CapAdd            []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	CapDrop           []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Args              []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 }
 
 func BlankOperation() *Operation {
