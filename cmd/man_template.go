@@ -9,7 +9,7 @@ import (
 )
 
 // Rendering Cobra commands directly to groff_mdoc(7).
-// This method is preffered here to using Cobra's GenMan() and GenManTree()
+// This method is preferred here to using Cobra's GenMan() and GenManTree()
 // functions. Those unjustifiably use intermediary Markdown format and in turn
 // convert it to the old-fashioned and less flexible groff_man(7)
 // macros using the "github.com/cpuguy83/go-md2man/md2man" package.

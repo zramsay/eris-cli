@@ -53,7 +53,6 @@ Complete documentation is available at https://docs.erisindustries.com
 			return
 		}
 
-
 		util.DockerConnect(do.Verbose, do.MachineName)
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
 

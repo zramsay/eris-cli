@@ -107,7 +107,7 @@ func KillService(do *definitions.Do) (err error) {
 }
 
 func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefiniti
 		"=>":        srvName,
 		"services#": len(services),
 	}).Debug("Building services group for")
-	srv, err := loaders.LoadServiceDefinition(srvName, false)
+	srv, err := loaders.LoadServiceDefinition(srvName)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 			return nil, fmt.Errorf("Marmot disapproval face.\nYou tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
-	s, err := loaders.ChainsAsAService(chainName, false)
+	s, err := loaders.ChainsAsAService(chainName)
 	if err != nil {
 		return nil, err
 	}

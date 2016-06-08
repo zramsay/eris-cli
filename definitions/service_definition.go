@@ -10,7 +10,7 @@ type ServiceDefinition struct {
 	Chain string `json:"chain,omitempty" yaml:"chain,omitempty" toml:"chain,omitempty"`
 
 	Service      *Service      `json:"service" yaml:"service" toml:"service"`
-	Dependencies *Dependencies `json:"dependencies,omitempty", yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
+	Dependencies *Dependencies `json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
 	Maintainer   *Maintainer   `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
 	Location     *Location     `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
 	Machine      *Machine      `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`

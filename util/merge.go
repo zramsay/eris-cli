@@ -14,29 +14,11 @@ var (
 // Merge returns ErrMergeParameters if either base or over are not
 // pointers to structs.
 func Merge(base, over interface{}) error {
-	if base == nil || over == nil {
-		return ErrMergeParameters
+	if err := checkStructsAreMergeable(base, over); err != nil {
+		return err
 	}
 
-	// If not pointers, it won't be possible to store the result in base.
-	if reflect.ValueOf(base).Kind() != reflect.Ptr ||
-		reflect.ValueOf(over).Kind() != reflect.Ptr {
-		return ErrMergeParameters
-	}
-
-	// Not structs.
-	if reflect.ValueOf(base).Elem().Kind() != reflect.Struct ||
-		reflect.ValueOf(over).Elem().Kind() != reflect.Struct {
-		return ErrMergeParameters
-	}
-
-	// Structs, but varying number of fields.
 	baseFields := reflect.TypeOf(base).Elem().NumField()
-	overFields := reflect.TypeOf(over).Elem().NumField()
-	if baseFields != overFields {
-		return ErrMergeParameters
-	}
-
 	for i := 0; i < baseFields; i++ {
 		a := reflect.ValueOf(base).Elem().Field(i)
 		b := reflect.ValueOf(over).Elem().Field(i)
@@ -74,5 +56,30 @@ func Merge(base, over interface{}) error {
 			a.Set(b)
 		}
 	}
+	return nil
+}
+
+func checkStructsAreMergeable(base, over interface{}) error {
+	if base == nil || over == nil {
+		return ErrMergeParameters
+	}
+
+	// If not pointers, it won't be possible to store the result in base.
+	if reflect.ValueOf(base).Kind() != reflect.Ptr ||
+		reflect.ValueOf(over).Kind() != reflect.Ptr {
+		return ErrMergeParameters
+	}
+
+	// Not structs.
+	if reflect.ValueOf(base).Elem().Kind() != reflect.Struct ||
+		reflect.ValueOf(over).Elem().Kind() != reflect.Struct {
+		return ErrMergeParameters
+	}
+
+	// Structs, but varying number of fields.
+	if reflect.TypeOf(base).Elem().NumField() != reflect.TypeOf(over).Elem().NumField() {
+		return ErrMergeParameters
+	}
+
 	return nil
 }

@@ -21,7 +21,7 @@ func EnsureRunning(do *definitions.Do) error {
 		return nil
 	}
 
-	srv, err := loaders.LoadServiceDefinition(do.Name, false)
+	srv, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}

@@ -13,8 +13,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func NewAction(do *definitions.Do) error {
@@ -44,7 +44,7 @@ func ImportAction(do *definitions.Do) error {
 	if s[0] == "ipfs" {
 
 		var err error
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs")
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func ExportAction(do *definitions.Do) error {
 		return err
 	}
 
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs")
 	if err != nil {
 		return err
 	}
@@ -131,10 +131,6 @@ func RenameAction(do *definitions.Do) error {
 	}
 	log.WithField("file", oldFile).Debug("Found action definition file")
 
-	// if !strings.Contains(oldFile, ActionsPath) {
-	// 	oldFile = filepath.Join(ActionsPath, oldFile) + ".toml"
-	// }
-
 	var newFile string
 	newNameBase := strings.Replace(strings.Replace(do.NewName, " ", "_", -1), filepath.Ext(do.NewName), "", 1)
 
@@ -162,9 +158,8 @@ func RenameAction(do *definitions.Do) error {
 	}
 
 	log.WithField("file", oldFile).Debug("Removing old file")
-	os.Remove(oldFile)
 
-	return nil
+	return os.Remove(oldFile)
 }
 
 func RmAction(do *definitions.Do) error {

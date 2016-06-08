@@ -21,14 +21,14 @@ type Package struct {
 	// Dependencies to be booted before the package is ran
 	Dependencies *Dependencies `mapstructure:"dependencies" json:"dependencies" yaml:"dependencies" toml:"dependencies"`
 
-	Maintainer *Maintainer `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
-	Location   *Location   `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
-	AppType    *AppType    `json:"app_type,omitempty" yaml:"app_type,omitempty" toml:"app_type,omitempty"`
-	Chain      *Chain
-	Srvs       []*Service
-	Operations *Operation
+	Maintainer        *Maintainer `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
+	Location          *Location   `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
+	AppType           *AppType    `json:"app_type,omitempty" yaml:"app_type,omitempty" toml:"app_type,omitempty"`
+	Chain             *Chain
+	Srvs              []*Service
+	Operations        *Operation
 	SkipContractsPath bool
-	SkipABIPath bool
+	SkipABIPath       bool
 }
 
 func BlankPackageDefinition() *PackageDefinition {

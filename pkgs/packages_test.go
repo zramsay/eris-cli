@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("pkgs"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 
 	exitCode := m.Run()
 	killKeys()
@@ -367,16 +367,8 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("wrong user for the containers, expected %s, got %s", "eris", do.Service.User)
 	}
 
-	for _, dep := range do.ServicesSlice {
-		match := false
-		for _, link := range do.Service.Links {
-			if strings.HasSuffix(link, ":"+dep) {
-				match = true
-			}
-		}
-		if !match {
-			t.Fatalf("chain or service not properly linked: %s", dep)
-		}
+	if err := checkLinks(do); err != nil {
+		t.Fatalf("expected links to check out, got %v", err)
 	}
 }
 
@@ -1161,6 +1153,22 @@ func writeEmptyPkgJson() error {
 		}
 	}
 	return ioutil.WriteFile(emptyPkg, []byte{}, 0644)
+}
+
+func checkLinks(do *definitions.Do) error {
+	for _, dep := range do.ServicesSlice {
+		match := false
+		for _, link := range do.Service.Links {
+			if strings.HasSuffix(link, ":"+dep) {
+				match = true
+			}
+		}
+		if !match {
+			return fmt.Errorf("chain or service not properly linked: %s", dep)
+		}
+	}
+
+	return nil
 }
 
 func exec(t *testing.T, name string, args []string) string {

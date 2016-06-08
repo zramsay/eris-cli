@@ -14,8 +14,8 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 // branch to update in build container
@@ -69,7 +69,7 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	doRm.RmD = true     // remove data container
 	doRm.Volumes = true // remove volumes
 	doRm.Force = true   // remove by force (no pesky warnings)
-	doRm.File = true    // remove the service defintion file
+	doRm.File = true    // remove the service definition file
 	doRm.RmImage = true // remove the temporary image
 
 	if err := services.RmService(doRm); err != nil {
