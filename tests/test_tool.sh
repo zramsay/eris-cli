@@ -127,6 +127,8 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./config/... && passed Config
     if [ $? -ne 0 ]; then return 1; fi
+    go test ./loaders/... && passed Loaders
+    if [ $? -ne 0 ]; then return 1; fi
     go test ./perform/... && passed Perform
     if [ $? -ne 0 ]; then return 1; fi
     go test ./data/... && passed Data

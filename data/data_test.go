@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("data"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())

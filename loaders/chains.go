@@ -11,8 +11,8 @@ import (
 	"github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
-
 	log "github.com/eris-ltd/eris-logger"
+
 	"github.com/spf13/viper"
 )
 
@@ -24,10 +24,11 @@ const (
 	ErisChainRegister = "register"
 )
 
-// viper read config file, marshal to definition struct,
-// load service, validate name and data container
-func LoadChainDefinition(chainName string, newCont bool) (*definitions.Chain, error) {
-
+// LoadChainDefinition reads the "default" then chainName definition files
+// from the common.ChainsPath directory and returns a chain structure set
+// accordingly. LoadChainDefinition also returns missing files or definition
+// reading errors, if any.
+func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 	chain := definitions.BlankChain()
 	chain.Name = chainName
 	chain.Operations.ContainerType = definitions.TypeChain
@@ -36,23 +37,19 @@ func LoadChainDefinition(chainName string, newCont bool) (*definitions.Chain, er
 		return nil, err
 	}
 
-	chainConf, err := config.LoadViperConfig(filepath.Join(ChainsPath), chainName, "chain")
+	definition, err := config.LoadViperConfig(filepath.Join(ChainsPath), chainName)
 	if err != nil {
 		return nil, err
 	}
 
-	// marshal chain and always reset the operational requirements
-	// this will make sure to sync with docker so that if changes
-	// have occured in the interim they are caught.
-	if err = MarshalChainDefinition(chainConf, chain); err != nil {
+	// Overwrite chain.ChainID and chain.Service according from
+	// the definition.
+	if err = MarshalChainDefinition(definition, chain); err != nil {
 		return nil, err
 	}
 
-	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
-	if util.IsMinimalDockerClientVersion() {
-		if chain.Dependencies != nil {
-			addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
-		}
+	if chain.Dependencies != nil {
+		addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
 	}
 
 	checkChainNames(chain)
@@ -66,31 +63,19 @@ func LoadChainDefinition(chainName string, newCont bool) (*definitions.Chain, er
 }
 
 // Convert the chain def to a service def but keep the "eris_chains" containers prefix and set the chain id
-func ChainsAsAService(chainName string, newCont bool) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainDefinition(chainName, newCont)
+func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) {
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return nil, err
 	}
-	s, err := ServiceDefFromChain(chain, ErisChainStart), nil
-	if err != nil {
-		return nil, err
-	}
-	// we keep the "eris_chain" prefix and set the CHAIN_ID var.
-	// the run command is set in ServiceDefFromChain
-	s.Operations.SrvContainerName = util.ChainContainerName(chainName)
-	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
-	return s, nil
-}
 
-func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.ServiceDefinition {
-	// chainID := chain.ChainID
 	setChainDefaults(chain)
-	chain.Service.Name = chain.Name // this let's the data containers flow thru
+	chain.Service.Name = chain.Name
 	chain.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_DB)
-	chain.Service.AutoData = true // default. they can turn it off. it's like BarBri
-	chain.Service.Command = cmd
+	chain.Service.AutoData = true
+	chain.Service.Command = ErisChainStart
 
-	srv := &definitions.ServiceDefinition{
+	s := &definitions.ServiceDefinition{
 		Name:         chain.Name,
 		ServiceID:    chain.ChainID,
 		Dependencies: &definitions.Dependencies{Services: []string{"keys"}},
@@ -100,16 +85,20 @@ func ServiceDefFromChain(chain *definitions.Chain, cmd string) *definitions.Serv
 		Location:     chain.Location,
 		Machine:      chain.Machine,
 	}
-	ServiceFinalizeLoad(srv) // these are mostly operational considerations that we want to ensure are met
 
-	return srv
+	// These are mostly operational considerations that we want to ensure are met.
+	ServiceFinalizeLoad(s)
+
+	s.Operations.SrvContainerName = util.ChainContainerName(chainName)
+	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName)
+	return s, nil
 }
 
 func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
 	connectToAService(srv, ops, definitions.TypeChain, name, internalName, link, mount)
 }
 
-func MockChainDefinition(chainName, chainID string, newCont bool) *definitions.Chain {
+func MockChainDefinition(chainName, chainID string) *definitions.Chain {
 	chn := definitions.BlankChain()
 	chn.Name = chainName
 	chn.ChainID = chainID
@@ -124,24 +113,23 @@ func MockChainDefinition(chainName, chainID string, newCont bool) *definitions.C
 	return chn
 }
 
-// marshal from viper to definitions struct
-func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) error {
+// MarshalChainDefinition reads the definition file and sets the chain.ChainID
+// and chain.Service fields in the chain structure. Returns config read errors.
+func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) error {
 	log.Debug("Marshalling chain")
 	chnTemp := definitions.BlankChain()
-	err := chainConf.Unmarshal(chnTemp)
+	err := definition.Unmarshal(chnTemp)
 	if err != nil {
-		return fmt.Errorf("The marmots coult not marshal from viper to chain def: %v", err)
+		return fmt.Errorf("The marmots coult not read the chain definition: %v", err)
 	}
 
 	util.Merge(chain.Service, chnTemp.Service)
 	chain.ChainID = chnTemp.ChainID
 
-	// toml bools don't really marshal well
-	// data_container can be in the chain or
-	// in the service layer. this is very
-	// opinionated. we know.
+	// toml bools don't really marshal well "data_container". It can be
+	// in the chain or in the service layer.
 	for _, s := range []string{"", "service."} {
-		if chainConf.GetBool(s + "data_container") {
+		if definition.GetBool(s + "data_container") {
 			chain.Service.AutoData = true
 			log.WithField("autodata", chain.Service.AutoData).Debug()
 		}
@@ -151,7 +139,7 @@ func MarshalChainDefinition(chainConf *viper.Viper, chain *definitions.Chain) er
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(filepath.Join(ChainsPath), "default", "chain")
+	cfg, err := config.LoadViperConfig(filepath.Join(ChainsPath), "default")
 	if err != nil {
 		return err
 	}

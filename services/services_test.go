@@ -11,7 +11,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
@@ -26,7 +25,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("services"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
@@ -35,30 +34,6 @@ func TestMain(m *testing.M) {
 	log.Info("Tearing tests down")
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
-}
-
-func TestLoadServiceDefinition(t *testing.T) {
-	// [pv]: this test belongs to the loaders package. [csk]: agree. #496
-	srv, err := loaders.LoadServiceDefinition(servName, true)
-	if err != nil {
-		t.Fatalf("expected definition to load, got %v", err)
-	}
-
-	if srv.Name != servName {
-		t.Fatalf("improper name on load, expected %v, got %v", servName, srv.Name)
-	}
-
-	if srv.Service.Name != servName {
-		t.Fatalf("improper service name on load, expected %v, got %v", servName, srv.Service.Name)
-	}
-
-	if !srv.Service.AutoData {
-		t.Fatal("data_container not properly read on load")
-	}
-
-	if srv.Operations.DataContainerName == "" {
-		t.Fatal("data_container_name not set")
-	}
 }
 
 func TestStartKillService(t *testing.T) {

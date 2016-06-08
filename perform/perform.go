@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/eris-ltd/eris-cli/config"
@@ -190,7 +189,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 //                          (use LoadServiceDefinition or LoadChainDefinition)
 // Container parameters:
 //
-//  ops.Remove            - remove container on exit (similar to `docker run --rm`)
 //  ops.PublishAllPorts   - if true, publish exposed ports to random ports
 //  ops.CapAdd            - add linux capabilities (similar to `docker run --cap-add=[]`)
 //  ops.CapDrop           - add linux capabilities (similar to `docker run --cap-drop=[]`)
@@ -201,7 +199,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	running := ContainerRunning(ops.SrvContainerName)
 	if running {
-		log.WithField("=>", ops.SrvContainerName).Info("Container already started. Skipping")
+		log.WithField("=>", ops.SrvContainerName).Info("Container already running. Skipping")
 		return nil
 	}
 
@@ -250,13 +248,6 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	}).Info("Starting container")
 	if err := startContainer(optsServ); err != nil {
 		return err
-	}
-
-	if ops.Remove {
-		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false, false); err != nil {
-			return err
-		}
 	}
 
 	log.WithField("=>", optsServ.Name).Info("Container started")
@@ -457,20 +448,12 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 // output. If follow is true, it behaves like `tail -f`. It returns Docker
 // errors on exit if not successful.
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
-	if exists := ContainerExists(ops.SrvContainerName); exists {
-		log.WithFields(log.Fields{
-			"=>":     ops.SrvContainerName,
-			"follow": follow,
-			"tail":   tail,
-		}).Info("Getting logs")
-		if err := logsContainer(ops.SrvContainerName, follow, tail); err != nil {
-			return err
-		}
-	} else {
-		log.Info("Container does not exist. Cannot display logs")
-	}
-
-	return nil
+	log.WithFields(log.Fields{
+		"=>":     ops.SrvContainerName,
+		"follow": follow,
+		"tail":   tail,
+	}).Info("Getting logs")
+	return logsContainer(ops.SrvContainerName, follow, tail)
 }
 
 // DockerInspect displays container ops.SrvContainerName data on the terminal.
@@ -478,16 +461,8 @@ func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) 
 // either "line" to display a short info line or "all" to display everything. I
 // DockerInspect returns Docker errors on exit in not successful.
 func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
-	if exists := ContainerExists(ops.SrvContainerName); exists {
-		log.WithField("=>", ops.SrvContainerName).Info("Inspecting")
-		err := inspectContainer(ops.SrvContainerName, field)
-		if err != nil {
-			return err
-		}
-	} else {
-		log.Info("Container does not exist. Cannot inspect")
-	}
-	return nil
+	log.WithField("=>", ops.SrvContainerName).Info("Inspecting")
+	return inspectContainer(ops.SrvContainerName, field)
 }
 
 // DockerStop stops a running ops.SrvContainerName container unforcedly.
@@ -642,9 +617,9 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 	return nil
 }
 
-// DockerRemoveImage removes the image specified by name
-// Image will be force removed if force = true
-// Function is ~ to `docker rmi imageName`
+// DockerRemoveImage removes the image specified by the name. Image will be
+// force removed if force = true. DockerRemoveImage returns Docker errors
+// on exit if not successful.
 func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
 		Force: force,
@@ -652,36 +627,26 @@ func DockerRemoveImage(name string, force bool) error {
 	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
 }
 
-// DockerBuild will build an image with imageName
-// and a Dockerfile passed in as strings
-// Function is ~ to `docker build -t imageName .`
-// where a Dockerfile is in the `pwd`
-func DockerBuild(imageName, dockerfile string) error {
-	// below has been adapted from:
-	// https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
-	// and could probably be much more elegant
-	t := time.Now()
+// DockerBuild builds an image with image name and dockerfile text passed
+// as parameters. It behaves the same way as the command `docker build -t <image> .`
+// where the dockerfile text is in the Dockerfile within the same directory.
+// DockerBuild returns Docker errors on exit if not successful.
+func DockerBuild(image, dockerfile string) error {
+	// Below has been adapted from https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
 	inputbuf := bytes.NewBuffer(nil)
-	writer := os.Stdout
 	tr := tar.NewWriter(inputbuf)
-	sizeDockerfile := int64(len([]byte(dockerfile)))
-	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: sizeDockerfile, ModTime: t, AccessTime: t, ChangeTime: t})
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(len([]byte(dockerfile)))})
 	tr.Write([]byte(dockerfile))
 	tr.Close()
 
-	//log.Debug(dockerfile)
-	//log.Debug(imageName)
-
-	//picked only what's necessary for now: this may change with #611
 	r, w := io.Pipe()
 	imgOpts := docker.BuildImageOptions{
-		Name: imageName,
-		//Dockerfile: dockerfile,
-		RmTmpContainer: true,
-		InputStream:    inputbuf,
-		OutputStream:   w,
-		//OutputStream: outputbuf,
-		RawJSONStream: true,
+		Name:                image,
+		RmTmpContainer:      true,
+		ForceRmTmpContainer: true,
+		InputStream:         inputbuf,
+		OutputStream:        w,
+		RawJSONStream:       true,
 	}
 
 	ch := make(chan error, 1)
@@ -693,14 +658,12 @@ func DockerBuild(imageName, dockerfile string) error {
 			ch <- err
 		}
 	}()
-	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	if err, ok := <-ch; ok {
-		// doesn't catch the build error; that's OK, it'll be displayed to user
-		// from json stream & the image will be checked by checkImageExists
 		return util.DockerError(err)
 	}
 
-	ok, err := checkImageExists(imageName)
+	ok, err := checkImageExists(image)
 	if err != nil {
 		return err
 	}
@@ -1102,6 +1065,9 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 	}
 
 	for _, vol := range srv.Volumes {
+		if !strings.Contains(vol, ":") {
+			continue
+		}
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
@@ -1205,11 +1171,11 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	return opts, nil
 }
 
-func checkImageExists(imageName string) (bool, error) {
+func checkImageExists(image string) (bool, error) {
 	fail := false
 
 	opts := docker.ListImagesOptions{
-		Filter: imageName,
+		Filter: image,
 	}
 
 	anImage, err := util.DockerClient.ListImages(opts)

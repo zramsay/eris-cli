@@ -13,8 +13,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func NewAction(do *definitions.Do) error {
@@ -44,7 +44,7 @@ func ImportAction(do *definitions.Do) error {
 	if s[0] == "ipfs" {
 
 		var err error
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
+		ipfsService, err := loaders.LoadServiceDefinition("ipfs")
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func ExportAction(do *definitions.Do) error {
 		return err
 	}
 
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs", false)
+	ipfsService, err := loaders.LoadServiceDefinition("ipfs")
 	if err != nil {
 		return err
 	}

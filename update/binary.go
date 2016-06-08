@@ -14,8 +14,8 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 // branch to update in build container

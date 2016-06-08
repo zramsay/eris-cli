@@ -7,17 +7,16 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
+	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	log "github.com/eris-ltd/eris-logger"
 
 	"github.com/spf13/viper"
 )
 
-func LoadServiceDefinition(servName string, newCont bool) (*definitions.ServiceDefinition, error) {
-
+func LoadServiceDefinition(servName string) (*definitions.ServiceDefinition, error) {
 	log.WithField("=>", servName).Debug("Loading service definition")
 
 	srv := definitions.BlankServiceDefinition()
@@ -32,24 +31,21 @@ func LoadServiceDefinition(servName string, newCont bool) (*definitions.ServiceD
 		return nil, err
 	}
 
-	if srv.Service == nil {
-		return nil, fmt.Errorf("No service given.")
-	}
+	// if srv.Service == nil {
+	// 	return nil, fmt.Errorf("No service given.")
+	// }
 
 	if err = checkImage(srv.Service); err != nil {
 		return nil, err
 	}
 
-	// Docker 1.6 (which eris doesn't support) had different linking mechanism.
-	if util.IsMinimalDockerClientVersion() {
-		addDependencyVolumesAndLinks(srv.Dependencies, srv.Service, srv.Operations)
-	}
+	addDependencyVolumesAndLinks(srv.Dependencies, srv.Service, srv.Operations)
 
 	ServiceFinalizeLoad(srv)
 	return srv, nil
 }
 
-func MockServiceDefinition(servName string, newCont bool) *definitions.ServiceDefinition {
+func MockServiceDefinition(servName string) *definitions.ServiceDefinition {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = servName
 
@@ -94,25 +90,8 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 		log.WithField("service", srv.Name).Debug("Defaulting to service")
 	}
 
-	container := util.ContainerName(def.TypeService, srv.Name)
-
-	if util.IsService(srv.Name, true) {
-		log.WithField("=>", container).Debug("Setting service container name")
-		srv.Operations.SrvContainerName = container
-	} else {
-		srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
-		srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
-	}
-	if srv.Service.AutoData {
-		dataContainer := util.ContainerName(def.TypeData, srv.Name)
-		if util.IsData(srv.Name) {
-			log.WithField("=>", dataContainer).Debug("Setting data container name")
-			srv.Operations.DataContainerName = dataContainer
-		} else {
-			srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
-			srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
-		}
-	}
+	srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
+	srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
 }
 
 func ConnectToAService(srv *definitions.Service, ops *definitions.Operation, name, internalName string, link, mount bool) {
@@ -150,13 +129,13 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return config.LoadViperConfig(filepath.Join(ServicesPath), servName, "service")
+	return config.LoadViperConfig(filepath.Join(ServicesPath), servName)
 }
 
 // Services must be given an image. Flame out if they do not.
 func checkImage(srv *definitions.Service) error {
 	if srv.Image == "" {
-		return fmt.Errorf("An \"image\" field is required in the service definition file.")
+		return fmt.Errorf(`An "image" field is required in the service definition file`)
 	}
 
 	return nil

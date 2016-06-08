@@ -9,9 +9,9 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/spf13/viper"
-
 	log "github.com/eris-ltd/eris-logger"
+
+	"github.com/spf13/viper"
 )
 
 func LoadPackage(path, chainName string) (*definitions.Package, error) {
@@ -52,16 +52,14 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 		}
 	}
 
-	if err := checkName(pkg, chainName); err != nil {
-		return nil, err
-	}
+	checkName(pkg, chainName)
 
 	return pkg, nil
 }
 
 // read the config file into viper
 func loadPackage(path string) (*viper.Viper, error) {
-	return config.LoadViperConfig(path, "package", "pkg")
+	return config.LoadViperConfig(path, "package")
 }
 
 // set's the defaults
@@ -69,7 +67,7 @@ func DefaultPackage(name, chainName string) *definitions.Package {
 	pkg := definitions.BlankPackage()
 	pkg.Name = name
 	pkg.ChainName = chainName
-	pkg.PackageID = "" // TODO hash it
+	pkg.PackageID = "" // TODO hash it. [pv]: would util.UniqueName(chainName) do?
 	return pkg
 }
 
@@ -77,26 +75,25 @@ func marshalPackage(pkgConf *viper.Viper) (*definitions.Package, error) {
 	pkgDef := definitions.BlankPackageDefinition()
 	err := pkgConf.Unmarshal(pkgDef)
 	pkg := pkgDef.Package
+
 	if pkgDef.Name != "" {
 		pkg.Name = pkgDef.Name
 	}
-
 	if err != nil {
-		return nil, fmt.Errorf("%v\n\nSorry, the marmots could not figure that package.json out.\nPlease check your package.json is properly formatted.\n", err)
+		return nil, fmt.Errorf(`Sorry, the marmots could not figure that package.json out: %v
+Please check your package.json file is properly formatted`, err)
 	}
 
 	return pkg, nil
 }
 
-func checkName(pkg *definitions.Package, name string) error {
+func checkName(pkg *definitions.Package, name string) {
 	if strings.Contains(pkg.Name, " ") {
 		newName := strings.Replace(pkg.Name, " ", "_", -1)
 		log.WithFields(log.Fields{
 			"old": pkg.Name,
 			"new": newName,
-		}).Debug("Correcting package name.")
+		}).Debug("Correcting package name")
 		pkg.Name = newName
 	}
-
-	return nil
 }

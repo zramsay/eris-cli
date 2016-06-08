@@ -25,24 +25,37 @@ var (
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
 )
 
-//testType = one of each package, will switch over it for
-//make additional tempDirs and vars as needed -> [zr] or not, TBD
-func TestsInit(testType string) (err error) {
+const (
+	ConnectAndPull = iota
+	DontPull
+	Quick
+)
+
+func TestsInit(steps int) (err error) {
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
 
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
+	// common is initialized on import so we have to manually override
+	// these variables to ensure that the tests run correctly.
 	config.ChangeErisDir(ErisDir)
 	common.InitErisDir()
+
+	// Don't connect to Docker daemon and don't pull default definitions.
+	if steps == Quick {
+		return nil
+	}
+
 	util.DockerConnect(false, "eris")
 
-	// this dumps the ipfs and keys services defs into the temp dir which
+	// Don't pull default definition files.
+	if steps == DontPull {
+		return nil
+	}
+
+	// This dumps the ipfs and keys services defs into the temp dir which
 	// has been set as the erisRoot.
 	do := def.NowDo()
 	do.Pull = false //don't pull imgs
@@ -169,12 +182,18 @@ func Links(name, t string) []string {
 }
 
 // Write a fake service definition file in a tmpDir Eris home directory.
-func FakeServiceDefinition(tmpDir, name, definition string) error {
-	return FakeDefinitionFile(filepath.Join(tmpDir, "services"), name, definition)
+func FakeServiceDefinition(name, definition string) error {
+	return FakeDefinitionFile(common.ServicesPath, name, definition)
 }
 
 // Write a fake definition file in a tmpDir Eris home directory.
 func FakeDefinitionFile(tmpDir, name, definition string) error {
+	if !util.DoesDirExist(tmpDir) {
+		if err := os.MkdirAll(tmpDir, 0755); err != nil {
+			return err
+		}
+	}
+
 	filename := filepath.Join(tmpDir, name+".toml")
 	out, err := os.Create(filename)
 	if err != nil {

@@ -37,7 +37,7 @@ func ImportService(do *definitions.Do) error {
 		return err
 	}
 
-	_, err = loaders.LoadServiceDefinition(do.Name, false)
+	_, err = loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return fmt.Errorf("error loading service:\n%v", err)
 	}
@@ -94,7 +94,7 @@ func RenameService(do *definitions.Do) error {
 	transformOnly := newNameBase == do.Name
 
 	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name, false)
+		serviceDef, err := loaders.LoadServiceDefinition(do.Name)
 		if err != nil {
 			return err
 		}
@@ -153,7 +153,7 @@ func RenameService(do *definitions.Do) error {
 }
 
 func InspectService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func InspectService(do *definitions.Do) error {
 }
 
 func PortsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func PortsService(do *definitions.Do) error {
 }
 
 func LogsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ To find known services use [eris services ls --known]`)
 }
 
 func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func UpdateService(do *definitions.Do) error {
 
 func RmService(do *definitions.Do) error {
 	for _, servName := range do.Operations.Args {
-		service, err := loaders.LoadServiceDefinition(servName, false)
+		service, err := loaders.LoadServiceDefinition(servName)
 		if err != nil {
 			return err
 		}

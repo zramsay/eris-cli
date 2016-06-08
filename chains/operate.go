@@ -44,7 +44,7 @@ func InstallChain(do *definitions.Do) error {
 }
 
 func KillChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func ThrowAwayChain(do *definitions.Do) error {
 
 //------------------------------------------------------------------------
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		log.Error("Cannot start a chain I cannot find")
 		do.Result = "no file"
@@ -187,7 +187,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 		}).Info("Booting chain dependencies")
 		for _, srvName := range chain.Dependencies.Services {
 			do.Name = srvName
-			srv, err := loaders.LoadServiceDefinition(do.Name, false)
+			srv, err := loaders.LoadServiceDefinition(do.Name)
 			if err != nil {
 				return err
 			}
@@ -204,7 +204,7 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 		do.Name = name // undo side effects
 
 		for _, chainName := range chain.Dependencies.Chains {
-			chn, err := loaders.LoadChainDefinition(chainName, false)
+			chn, err := loaders.LoadChainDefinition(chainName)
 			if err != nil {
 				return err
 			}
@@ -338,7 +338,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
-	chain := loaders.MockChainDefinition(do.Name, do.ChainID, false)
+	chain := loaders.MockChainDefinition(do.Name, do.ChainID)
 
 	//set maintainer info
 	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
@@ -354,7 +354,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}
 
-	chain, err = loaders.LoadChainDefinition(do.Name, false)
+	chain, err = loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}

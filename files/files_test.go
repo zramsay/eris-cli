@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	tests.IfExit(tests.TestsInit("files"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)

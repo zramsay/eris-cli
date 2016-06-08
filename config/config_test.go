@@ -374,7 +374,7 @@ Verbose = true
 `)
 	defer removeErisDir()
 
-	config, err := LoadViperConfig(configErisDir, "eris", "test")
+	config, err := LoadViperConfig(configErisDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -403,7 +403,7 @@ func TestLoadViperConfigEmpty(t *testing.T) {
 	placeErisConfig(``)
 	defer removeErisDir()
 
-	config, err := LoadViperConfig(configErisDir, "eris", "test")
+	config, err := LoadViperConfig(configErisDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -432,21 +432,21 @@ func TestLoadViperConfigBad(t *testing.T) {
 	placeErisConfig(`*`)
 	defer removeErisDir()
 
-	_, err := LoadViperConfig(configErisDir, "eris", "test")
+	_, err := LoadViperConfig(configErisDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperConfigNonExistent1(t *testing.T) {
-	_, err := LoadViperConfig(configErisDir, "eris", "test")
+	_, err := LoadViperConfig(configErisDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperConfigNonExistent2(t *testing.T) {
-	_, err := LoadViperConfig(configErisDir, "12345", "test")
+	_, err := LoadViperConfig(configErisDir, "12345")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
