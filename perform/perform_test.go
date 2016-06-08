@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"runtime"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -500,6 +501,12 @@ func TestExecServiceVolume(t *testing.T) {
 		name = "ipfs"
 	)
 
+	// Don't work on Windows without MSYS or Cygwin.
+	// https://github.com/docker/docker/issues/12751
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer tests.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
@@ -529,6 +536,12 @@ func TestExecServiceMount(t *testing.T) {
 	const (
 		name = "ipfs"
 	)
+
+	// Don't work on Windows without MSYS or Cygwin.
+	// https://github.com/docker/docker/issues/12751
+	if runtime.GOOS == "windows" {
+		return
+	}
 
 	defer tests.RemoveAllContainers()
 
