@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"errors"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
@@ -413,7 +414,6 @@ func addChainsFlags() {
 	// chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
 	// chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
 	// chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
-	// chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
@@ -567,6 +567,9 @@ func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Run = true
+	if do.Name != "default" && do.Path == "" { //not default & no --dir given
+		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
+	}
 	IfExit(chns.NewChain(do))
 }
 
