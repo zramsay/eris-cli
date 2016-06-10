@@ -1,5 +1,7 @@
 // +build !arm
 
+// Conditional build for ARM relatd to the issure: https://github.com/eris-ltd/eris-cli/issues/751
+// TODO: Will be cleaned after issue fixed
 package commands
 
 import (

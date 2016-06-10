@@ -1,3 +1,5 @@
+// Added for ARM since the issue: https://github.com/eris-ltd/eris-cli/issues/751
+// TODO: Remove after issue fixed.
 package commands
 
 import (
