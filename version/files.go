@@ -1,4 +1,7 @@
+// +build !arm
+
 package version
+
 // DEPRECATION warning: to be replaced by pulling from toadserver
 // && [eris services ls] which'll query the toadserver for available
 // service definition files which can then be imported.
