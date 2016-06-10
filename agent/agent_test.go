@@ -82,7 +82,7 @@ func TestParsePayload(t *testing.T) {
 }
 
 // the test that matters!
-func _TestDeployContract(t *testing.T) {
+func TestDeployContract(t *testing.T) {
 	defer tests.RemoveAllContainers()
 	start(t, "keys", false)
 	defer kill(t, "keys", true)

@@ -32,8 +32,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-// TODO fix because alpine
-func _TestGenerateKey(t *testing.T) {
+func TestGenerateKey(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true)
 
@@ -117,8 +116,7 @@ func TestExportKeySingle(t *testing.T) {
 	}
 }
 
-// TODO fix because alpine
-func _TestImportKeyAll(t *testing.T) {
+func TestImportKeyAll(t *testing.T) {
 	testStartKeys(t)
 
 	// gen some keys
@@ -252,8 +250,7 @@ func TestConvertKey(t *testing.T) {
 	// tested in TestGetPubKey
 }
 
-// TODO fix because alpine
-func _TestListKeyContainer(t *testing.T) {
+func TestListKeyContainer(t *testing.T) {
 	testStartKeys(t)
 	defer testKillService(t, "keys", true)
 
