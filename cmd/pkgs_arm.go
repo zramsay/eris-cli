@@ -1,7 +1,5 @@
-// +build !arm
-
-// Conditional build for ARM relatd to the issure: https://github.com/eris-ltd/eris-cli/issues/751
-// TODO: Will be cleaned after issue fixed
+// Added for ARM since the issue: https://github.com/eris-ltd/eris-cli/issues/751
+// TODO: Remove after issue fixed.
 package commands
 
 import (
@@ -11,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/pkgs"
-	"github.com/eris-ltd/eris-cli/version"
+	_ "github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
 
@@ -117,7 +115,7 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 }
 
 func formCompilers() string {
-	verSplit := strings.Split(version.VERSION, ".")
+	verSplit := strings.Split("0.11.3", ".")
 	maj, _ := strconv.Atoi(verSplit[0])
 	min, _ := strconv.Atoi(verSplit[1])
 	pat, _ := strconv.Atoi(verSplit[2])
