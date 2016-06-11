@@ -40,6 +40,8 @@ build_script:
 
     go install
 
+
+
 after_test:
   - bash c:\src\github.com\eris-ltd\eris-cli\tests\dm_cleanup.sh
 
@@ -47,3 +49,6 @@ test_script:
 - cmd: >-
 
     bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh
+
+on_finish:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
