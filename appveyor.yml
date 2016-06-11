@@ -48,5 +48,4 @@ test_script:
 
     bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh
     
-artifacts:
-  - path: c:\bin\eris.exe
+    appveyor PushArtifact c:\bin\eris.exe
