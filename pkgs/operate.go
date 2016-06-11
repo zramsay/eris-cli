@@ -342,6 +342,10 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --set " + toAdd
 	}
 
+	if do.EPMConfigFile != "" {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --file " + path.Join(".", filepath.Base(do.EPMConfigFile))
+	}
+
 	if do.OutputTable {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --summary "
 	}
