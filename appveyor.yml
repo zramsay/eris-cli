@@ -45,7 +45,8 @@ after_test:
 
 test_script:
 - cmd: >-
-
-    bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh
     
     appveyor PushArtifact c:\bin\eris.exe
+
+on_finish:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
