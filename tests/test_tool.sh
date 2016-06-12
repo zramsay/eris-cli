@@ -78,7 +78,6 @@ setup() {
 
   echo "Checking the Host <-> Docker Connection"
   # Used by clean/clean_test.go.
-  docker pull busybox &>/dev/null
   if [ $? -ne 0 ] && [ -z $1 ]
   then
     echo "Could not connect to Docker backend. Attempting to regenerate certificates."

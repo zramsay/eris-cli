@@ -12,7 +12,7 @@ func Clean(do *definitions.Do) error {
 		"all":        do.All,
 		"containers": do.Containers,
 		"scratch":    do.Scratch,
-		"rmd":        do.RmD,
+		"root":       do.RmD,
 		"images":     do.Images,
 	}
 	if err := util.Clean(toClean); err != nil {
