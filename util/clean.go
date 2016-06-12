@@ -122,6 +122,9 @@ func RemoveErisImages() error {
 		if !strings.Contains(i.RepoTags[0], "eris/") {
 			continue
 		}
+		log.WithFields(log.Fields{
+			"image": i.RepoTags[0],
+		}).Debug("Removing image")
 		if err := DockerClient.RemoveImageExtended(i.ID, docker.RemoveImageOptions{Force: true, NoPrune: true}); err != nil {
 			return DockerError(err)
 		}
