@@ -22,7 +22,7 @@ echo
 gpg --import linux-public-key.asc
 gpg --import linux-private-key.asc
 
-export GOREPO=${GOPATH}/src/eris-ltd/eris-cli
+export GOREPO=${GOPATH}/src/github.com/eris-ltd/eris-cli
 git clone https://github.com/eris-ltd/eris-cli ${GOREPO}
 pushd ${GOREPO}/cmd/eris
 git fetch origin ${ERIS_BRANCH}

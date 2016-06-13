@@ -212,7 +212,7 @@ Please note that this repository is GPLv3.0 per the LICENSE file. Any code which
 
 Found a bug in our stack? Make an issue!
 
-The [issue template](.github/ISSUE_TEMPLATE.md] specifies what needs to be included in your issue and will autopopulate the issue.
+The [issue template](.github/ISSUE_TEMPLATE.md) specifies what needs to be included in your issue and will autopopulate the issue.
 
 # License
 
