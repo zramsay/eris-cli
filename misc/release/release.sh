@@ -59,12 +59,14 @@
 REPO=${GOPATH}/src/github.com/eris-ltd/eris-cli
 BUILD_DIR=${REPO}/builds
 ERIS_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
+LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
 ERIS_RELEASE=1
-# NOTE: Please, set these up before continuing:
-# 
-export GITHUB_TOKEN=67432031494d1e66e46bc52681a237dde7c6f77d
-export AWS_ACCESS_KEY=AKIAJZIE4UXLTCNWSANQ
-export AWS_SECRET_ACCESS_KEY=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
+
+# NOTE: Set these up before continuing:
+export GITHUB_TOKEN=
+export AWS_ACCESS_KEY=
+export AWS_SECRET_ACCESS_KEY=
+
 export AWS_S3_RPM_REPO=eris-rpm
 export AWS_S3_RPM_PACKAGES=eris-rpm-files
 export AWS_S3_DEB_REPO=eris-deb
@@ -73,7 +75,7 @@ export KEY_NAME="Eris Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@er
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {
-  read -p "Have you done the [git tag -a v${ERIS_VERSION}] and filled out the changelog yet? (y/n) " -n 1 -r
+  read -p "Have you tagged the release and filled out the changelog yet? (y/n) " -n 1 -r
   echo
   if [[ ! ${REPLY} =~ ^[Yy]$ ]]
   then
@@ -83,14 +85,13 @@ pre_check() {
   echo "OK. Moving on then"
   echo ""
   echo ""
-  LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
-  #if [[ "${LATEST_TAG}" != "${ERIS_VERSION}}" ]]
-  #then
-  #  echo "Something isn't right. The last tagged version does not match the version to be released"
-  #  echo "Last tagged: ${LATEST_TAG}"
-  #  echo "This version: ${ERIS_VERSION}"
-  #  exit 1
-  #fi
+  if ! echo ${LATEST_TAG}|grep ${ERIS_VERSION}
+  then
+    echo "Something isn't right. The last tagged version does not match the version to be released"
+    echo "Last tagged: ${LATEST_TAG}"
+    echo "This version: ${ERIS_VERSION}"
+    exit 1
+  fi
 }
 
 keys_check() {
@@ -116,6 +117,14 @@ keys_check() {
   fi
 }
 
+token_check() {
+  if [ -z "${GITHUB_TOKEN}" ]
+  then
+    echo "You have to have the GITHUB_TOKEN variable set to publish releases"
+    exit 1
+  fi
+}
+
 cross_compile() {
   echo "Starting cross compile"
   pushd ${REPO}/cmd/eris
@@ -132,22 +141,23 @@ cross_compile() {
 }
 
 prepare_gh() {
-  DESCRIPTION="$(git show v${ERIS_VERSION}-rc1)"
+  DESCRIPTION="$(git show v${LATEST_TAG})"
+
   if [[ "$1" == "pre" ]]
   then
     github-release release \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION}-rc1 \
-      --name "Release of Version: ${ERIS_VERSION}-rc1" \
+      --tag v${LATEST_TAG} \
+      --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
       --pre-release
   else
     github-release release \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION}-rc1 \
-      --name "Release of Version: ${ERIS_VERSION}-rc1" \
+      --tag v${LATEST_TAG} \
+      --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
   fi
   echo "Finished sending release info to Github"
@@ -164,7 +174,7 @@ release_gh() {
     github-release upload \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION}-rc1 \
+      --tag v${LATEST_TAG} \
       --name ${file} \
       --file ${file}
   done
@@ -276,11 +286,12 @@ main() {
     usage "$@"
     ;;
   *)
-    #pre_check "$@"
-    #keys_check "$@"
-    #cross_compile "$@"
-    #release_deb "$@"
-    #release_rpm "$@"
+    pre_check "$@"
+    keys_check "$@"
+    token_check "$@"
+    cross_compile "$@"
+    release_deb "$@"
+    release_rpm "$@"
     prepare_gh "$@"
     release_gh "$@"
   esac
