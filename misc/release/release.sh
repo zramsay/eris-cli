@@ -62,14 +62,15 @@ ERIS_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr 
 ERIS_RELEASE=1
 # NOTE: Please, set these up before continuing:
 # 
-# AWS_ACCESS_KEY=
-# AWS_SECRET_ACCESS_KEY=
-AWS_S3_RPM_REPO=eris-rpm
-AWS_S3_RPM_PACKAGES=eris-rpm-files
-AWS_S3_DEB_REPO=eris-deb
-AWS_S3_DEB_PACKAGES=eris-deb-files
-KEY_NAME="Eris Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@erisindustries.com>"
-KEY_PASSWORD="one1two!three"
+export GITHUB_TOKEN=67432031494d1e66e46bc52681a237dde7c6f77d
+export AWS_ACCESS_KEY=AKIAJZIE4UXLTCNWSANQ
+export AWS_SECRET_ACCESS_KEY=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
+export AWS_S3_RPM_REPO=eris-rpm
+export AWS_S3_RPM_PACKAGES=eris-rpm-files
+export AWS_S3_DEB_REPO=eris-deb
+export AWS_S3_DEB_PACKAGES=eris-deb-files
+export KEY_NAME="Eris Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@erisindustries.com>"
+export KEY_PASSWORD="one1two!three"
 
 pre_check() {
   read -p "Have you done the [git tag -a v${ERIS_VERSION}] and filled out the changelog yet? (y/n) " -n 1 -r
@@ -83,13 +84,13 @@ pre_check() {
   echo ""
   echo ""
   LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
-  if [[ "${LATEST_TAG}" != "${ERIS_VERSION}}" ]]
-  then
-    echo "Something isn't right. The last tagged version does not match the version to be released"
-    echo "Last tagged: ${LATEST_TAG}"
-    echo "This version: ${ERIS_VERSION}"
-    exit 1
-  fi
+  #if [[ "${LATEST_TAG}" != "${ERIS_VERSION}}" ]]
+  #then
+  #  echo "Something isn't right. The last tagged version does not match the version to be released"
+  #  echo "Last tagged: ${LATEST_TAG}"
+  #  echo "This version: ${ERIS_VERSION}"
+  #  exit 1
+  #fi
 }
 
 keys_check() {
@@ -131,43 +132,43 @@ cross_compile() {
 }
 
 prepare_gh() {
-  echo "Pushing tags to Github and creating a Github release"
-  git push origin --tags
-  DESCRIPTION=$(git show v${ERIS_VERSION})
+  DESCRIPTION="$(git show v${ERIS_VERSION}-rc1)"
   if [[ "$1" == "pre" ]]
   then
     github-release release \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION} \
-      --name "Release of Version: ${ERIS_VERSION}" \
+      --tag v${ERIS_VERSION}-rc1 \
+      --name "Release of Version: ${ERIS_VERSION}-rc1" \
       --description "${DESCRIPTION}" \
       --pre-release
   else
     github-release release \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION} \
-      --name "Release of Version: ${ERIS_VERSION}" \
+      --tag v${ERIS_VERSION}-rc1 \
+      --name "Release of Version: ${ERIS_VERSION}-rc1" \
       --description "${DESCRIPTION}"
   fi
-  echo "Finished sending tags and release info to Github"
+  echo "Finished sending release info to Github"
   echo ""
   echo ""
 }
 
 release_gh() {
   echo "Uploading binaries to Github"
-  for file in ${BUILD_DIR}/*
+  pushd ${BUILD_DIR}
+  for file in *
   do
     echo "Uploading: ${file}"
     github-release upload \
       --user eris-ltd \
       --repo eris-cli \
-      --tag v${ERIS_VERSION} \
+      --tag v${ERIS_VERSION}-rc1 \
       --name ${file} \
       --file ${file}
   done
+  popd
   echo "Uploading completed"
   echo ""
   echo ""
@@ -235,11 +236,6 @@ release_rpm() {
   echo "Finished releasing RPM packages"
 }
 
-clean_up() {
-  echo "Cleaning up and exiting... Billings Shipit!"
-  rm -rf ${BUILD_DIR}
-}
-
 usage() {
   echo "Usage: release.sh [pre|build|pkgs|rpm|deb|help]"
   echo "Release Eris CLI to Github. Publish Linux packages to Amazon S3"
@@ -280,14 +276,13 @@ main() {
     usage "$@"
     ;;
   *)
-    pre_check "$@"
-    keys_check "$@"
-    cross_compile "$@"
+    #pre_check "$@"
+    #keys_check "$@"
+    #cross_compile "$@"
+    #release_deb "$@"
+    #release_rpm "$@"
     prepare_gh "$@"
     release_gh "$@"
-    release_deb "$@"
-    release_rpm "$@"
-    clean_up $?
   esac
   return $?
 }

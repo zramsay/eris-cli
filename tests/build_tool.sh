@@ -12,7 +12,7 @@ else
 fi
 
 testimage="quay.io/eris/eris"
-release_min=$(cat version/version.go | tail -n 2 | head -n 1 | cut -d \  -f 4 | tr -d '"')
+release_min=$(grep -w VERSION version/version.go | cut -d \  -f 4 | tr -d '"')
 release_maj=$(echo $release_min | cut -d . -f 1-2)
 
 cd $repo
