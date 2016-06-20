@@ -3,13 +3,12 @@ package util
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/eris-ltd/common/go/common"
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -45,7 +44,7 @@ func cleanHandler(toClean map[string]bool) error {
 		}
 	}
 
-	if toClean["rmd"] {
+	if toClean["root"] {
 		log.Debug("Removing Eris root directory")
 		if err := os.RemoveAll(common.ErisRoot); err != nil {
 			return err
@@ -114,51 +113,23 @@ func cleanScratchData() error {
 }
 
 func RemoveErisImages() error {
-	opts := docker.ListImagesOptions{
-		All:     true,
-		Filters: nil,
-		Digests: false,
-	}
-	allTheImages, err := DockerClient.ListImages(opts)
+	images, err := DockerClient.ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
 		return DockerError(err)
 	}
 
-	//get all repo tags & IDs
-	repoTags := make(map[int][]string)
-	imageIDs := make(map[int]string)
-	for i, image := range allTheImages {
-		repoTags[i] = image.RepoTags
-		imageIDs[i] = image.ID
-	}
-
-	erisImages := []string{}
-	erisImageIDs := []string{}
-
-	//searches through repo tags for eris images & "maps" to ID
-	for i, repoTag := range repoTags {
-		for _, rt := range repoTag {
-			r, err := regexp.Compile(`eris`)
-			if err != nil {
-				log.Errorf("Regexp error: %v", err)
-			}
-
-			if r.MatchString(rt) == true {
-				erisImages = append(erisImages, rt)
-				erisImageIDs = append(erisImageIDs, imageIDs[i])
-			}
+	for _, i := range images {
+		if !strings.Contains(i.RepoTags[0], "eris/") {
+			continue
 		}
-	}
-
-	for i, imageID := range erisImageIDs {
 		log.WithFields(log.Fields{
-			"=>": erisImages[i],
-			"id": imageID,
+			"image": i.RepoTags[0],
 		}).Debug("Removing image")
-		if err := DockerClient.RemoveImage(imageID); err != nil {
+		if err := DockerClient.RemoveImageExtended(i.ID, docker.RemoveImageOptions{Force: true, NoPrune: true}); err != nil {
 			return DockerError(err)
 		}
 	}
+
 	return nil
 }
 
@@ -167,7 +138,7 @@ func canWeRemove(toClean map[string]bool) bool {
 	var toWarn = map[string]string{
 		"containers": "all",
 		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", home),
-		"rmd":        fmt.Sprintf("%s/.eris", home),
+		"root":       fmt.Sprintf("%s/.eris", home),
 		"images":     "all",
 	}
 
@@ -179,8 +150,8 @@ func canWeRemove(toClean map[string]bool) bool {
 		if toClean["scratch"] {
 			log.WithField("scratch", toWarn["scratch"]).Warn("")
 		}
-		if toClean["rmd"] {
-			log.WithField("rmd", toWarn["rmd"]).Warn("")
+		if toClean["root"] {
+			log.WithField("root", toWarn["root"]).Warn("")
 		}
 		if toClean["images"] {
 			log.WithField("images", toWarn["images"]).Warn("")
@@ -189,7 +160,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		log.WithFields(log.Fields{
 			"containers": toWarn["containers"],
 			"scratch":    toWarn["scratch"],
-			"rmd":        toWarn["rmd"],
+			"root":       toWarn["root"],
 			"images":     toWarn["images"],
 		}).Warn("The marmots are about to remove the following")
 	}

@@ -10,6 +10,7 @@ type Operation struct {
 	Remove            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Privileged        bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Interactive       bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Terminal          bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Follow            bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	SkipCheck         bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	AppName           string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
@@ -18,9 +19,9 @@ type Operation struct {
 	Ports             string            `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	Labels            map[string]string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 	PublishAllPorts   bool              `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	CapAdd            []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	CapDrop           []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
-	Args              []string          `mapstructure:",omitempty", json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	CapAdd            []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	CapDrop           []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
+	Args              []string          `mapstructure:",omitempty" json:",omitempty" yaml:",omitempty" toml:",omitempty"`
 }
 
 func BlankOperation() *Operation {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"errors"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
@@ -57,7 +58,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
-	Chains.AddCommand(chainsGraduate)
 	// Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
@@ -371,26 +371,6 @@ var chainsRestart = &cobra.Command{
 	Run:   RestartChain,
 }
 
-var chainsGraduate = &cobra.Command{
-	Use:   "graduate NAME",
-	Short: "Graduate a chain to a service.",
-	Long: `Graduate a chain to a service.
-
-Graduate works by translating the chain's definition into a service definition
-file with the chain_id set as the service name and everything set for you to
-more simply turn the chain on or off.
-
-Graduate should be used whenever you are "finished" working "on" the chain and
-you feel the chain is stable. While chains work just fine by turning them "on"
-or "off" with [eris chains start] and [eris chains stop], some feel that it is
-easier to work with chains as a service rather than as a chain when they are
-stable and not longer need to be worked "on" which is why this functionality
-exists. Ultimately, graduate is a convenience function as there is little to
-no difference in how chains and services "run", however the [eris chains]
-functions have more convenience functions for working "on" chains themselves.`,
-	Run: GraduateChain,
-}
-
 var chainsCat = &cobra.Command{
 	Use:     "cat NAME [config|genesis]",
 	Short:   "Display chain information.",
@@ -418,30 +398,27 @@ $ eris chains cat simplechain genesis -- will display the genesis.json file from
 //----------------------------------------------------------------------
 
 func addChainsFlags() {
-	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account_types; incompatible with and overrides chain-type")
-	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain_types")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account-types; incompatible with and overrides chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain-types")
 	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in ~/.eris/chains, make tarballs; incompatible with and overrides zip")
 	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in ~/.eris/chains, make zip files")
 	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
-	buildFlag(chainsMake, do, "data", "chain-make")
+	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 
 	// [csk]: the flags below are commented out to reduce the complexity of this command. chains new should just use dirs....
 	// buildFlag(chainsNew, do, "config", "chain")
-	// buildFlag(chainsNew, do, "csv", "chain")
 	// buildFlag(chainsNew, do, "serverconf", "chain")
 	// chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
 	// chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
 	// chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
-	// chainsNew.PersistentFlags().UintVarP(&do.N, "N", "", 1, "make a new genesis.json with this many validators and create data containers for each")
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
 	buildFlag(chainsNew, do, "ports", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
-	buildFlag(chainsNew, do, "api", "chain")
 	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	// buildFlag(chainsRegister, do, "links", "chain")
@@ -463,7 +440,6 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
-	buildFlag(chainsStart, do, "api", "chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")
@@ -504,6 +480,7 @@ func StartChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	do.Run = true
 	IfExit(chns.StartChain(do))
 }
 
@@ -528,6 +505,7 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	if len(args) == 1 {
 		args = strings.Split(args[0], " ")
 	}
+	do.Operations.Terminal = true
 	do.Operations.Args = args
 	config.GlobalConfig.InteractiveWriter = os.Stdout
 	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
@@ -576,6 +554,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	if !do.Known {
 		config.GlobalConfig.InteractiveWriter = os.Stdout
 		config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+		do.Operations.Terminal = true
 	}
 
 	IfExit(chns.MakeChain(do))
@@ -587,6 +566,10 @@ func MakeChain(cmd *cobra.Command, args []string) {
 func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
+	do.Run = true
+	if do.Name != "default" && do.Path == "" { //not default & no --dir given
+		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
+	}
 	IfExit(chns.NewChain(do))
 }
 
@@ -714,13 +697,6 @@ func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.RemoveChain(do))
-}
-
-func GraduateChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.GraduateChain(do))
 }
 
 func MakeGenesisFile(cmd *cobra.Command, args []string) {

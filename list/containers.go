@@ -14,7 +14,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -234,7 +234,7 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 		}
 
 		if err := tmplTable.Execute(buf, container); err != nil {
-			return fmt.Errorf("Listing template exec error: %v\n")
+			return fmt.Errorf("Listing template exec error: %v\n", err)
 		}
 
 		buf.WriteString("\n")

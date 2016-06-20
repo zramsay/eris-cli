@@ -18,9 +18,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -29,13 +28,11 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("chain"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 	mockChainDefinitionFile(chainName)
 
 	exitCode := m.Run()
@@ -43,56 +40,6 @@ func TestMain(m *testing.M) {
 	tests.IfExit(tests.TestsTearDown())
 
 	os.Exit(exitCode)
-}
-
-func TestChainGraduate(t *testing.T) {
-	do := def.NowDo()
-	do.Name = chainName
-	if err := GraduateChain(do); err != nil {
-		t.Fatalf("expected chain to graduate, got %v", err)
-	}
-
-	srvDef, err := loaders.LoadServiceDefinition(chainName, false)
-	if err != nil {
-		t.Fatalf("expected service definition to be loaded")
-	}
-
-	if image := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DB); srvDef.Service.Image != image {
-		t.Fatalf("bad image on graduate, expected %s, got: %s", image, srvDef.Service.Image)
-	}
-
-	if srvDef.Service.Command != loaders.ErisChainStart {
-		t.Fatalf("improper service command on graduate, expected %s, got %s", loaders.ErisChainStart, srvDef.Service.Command)
-	}
-
-	if !srvDef.Service.AutoData {
-		t.Fatalf("improper service autodata value on graduate, expected %t, got %t", true, srvDef.Service.AutoData)
-	}
-
-	if len(srvDef.Dependencies.Services) != 1 {
-		t.Fatalf("improper service deps on graduate, expected: [%q], got %s", "keys", srvDef.Dependencies.Services)
-	}
-}
-
-func TestLoadChainDefinition(t *testing.T) {
-	// [pv]: this test belongs to the loaders package.
-	var err error
-	chain, err := loaders.LoadChainDefinition(chainName, false)
-	if err != nil {
-		t.Fatalf("expected chain definition to be loaded, got %v", err)
-	}
-
-	if chain.Service.Name != chainName {
-		t.Fatalf("improper service name on load, expected %s, got %s", chainName, chain.Service.Name)
-	}
-
-	if !chain.Service.AutoData {
-		t.Fatalf("data_container not properly read on load, expected false")
-	}
-
-	if chain.Operations.DataContainerName == "" {
-		t.Fatalf("data_container_name not set")
-	}
 }
 
 func TestStartChain(t *testing.T) {
@@ -453,7 +400,7 @@ func TestRmChain(t *testing.T) {
 func TestServiceLinkNoChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -474,7 +421,7 @@ data_container = true
 func TestServiceLinkBadChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -497,7 +444,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 
 	create(t, chainName)
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
 image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
@@ -522,6 +469,7 @@ image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 }
+
 func TestServiceLink(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
@@ -533,7 +481,7 @@ func TestServiceLink(t *testing.T) {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -548,7 +496,7 @@ data_container = false
 		t.Fatalf("expecting fake chain container")
 	}
 	if util.Running(def.TypeService, "fake") {
-		t.Fatalf("expecting fake service not running")
+		t.Fatalf("expecting fake service running")
 	}
 	if util.Exists(def.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
@@ -562,7 +510,7 @@ data_container = false
 	}
 
 	if !util.Running(def.TypeService, "fake") {
-		t.Fatalf("expecting fake service running")
+		t.Fatalf("expecting fake service not running")
 	}
 	if util.Exists(def.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
@@ -585,7 +533,7 @@ func TestServiceLinkWithDataContainer(t *testing.T) {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -637,7 +585,7 @@ func TestServiceLinkLiteral(t *testing.T) {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "`+chain+`:fake"
 
 [service]
@@ -688,7 +636,7 @@ func TestServiceLinkBadLiteral(t *testing.T) {
 		t.Fatalf("could not start a new chain, got %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "blah-blah:blah"
 
 [service]
@@ -722,7 +670,7 @@ func TestServiceLinkChainedService(t *testing.T) {
 
 	const chain = "test-chained-service"
 
-	if err := tests.FakeServiceDefinition(erisDir, "fake", `
+	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -735,7 +683,7 @@ services = [ "sham" ]
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition(erisDir, "sham", `
+	if err := tests.FakeServiceDefinition("sham", `
 chain = "$chain:sham"
 
 [service]
@@ -867,7 +815,7 @@ func exec(t *testing.T, chain string, args []string) string {
 }
 
 func mockChainDefinitionFile(name string) error {
-	definition := loaders.MockChainDefinition(name, name, false)
+	definition := loaders.MockChainDefinition(name, name)
 
 	return WriteChainDefinitionFile(definition, filepath.Join(erisDir, "chains", name))
 }

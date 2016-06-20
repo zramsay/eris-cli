@@ -19,9 +19,9 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 // MakeChain runs the `eris-cm make` command in a docker container.
@@ -175,7 +175,7 @@ func ImportChain(do *definitions.Do) error {
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
 func InspectChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func InspectChain(do *definitions.Do) error {
 //  do.Tail    - number of lines to display (can be "all") (optional)
 //
 func LogsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func LogsChain(do *definitions.Do) error {
 //  do.Name - name of the chain (required)
 //
 func ExportChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -327,7 +327,7 @@ func CatChain(do *definitions.Do) error {
 //  do.Name - name of the chain to display port mappings for (required)
 //
 func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func RenameChain(do *definitions.Do) error {
 		}).Info("Renaming chain")
 
 		log.WithField("=>", do.Name).Debug("Loading chain definition file")
-		chainDef, err := loaders.LoadChainDefinition(do.Name, false)
+		chainDef, err := loaders.LoadChainDefinition(do.Name)
 		if err != nil {
 			return err
 		}
@@ -431,7 +431,7 @@ func RenameChain(do *definitions.Do) error {
 }
 
 func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -452,7 +452,7 @@ func UpdateChain(do *definitions.Do) error {
 }
 
 func RemoveChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -488,19 +488,6 @@ func RemoveChain(do *definitions.Do) error {
 	return nil
 }
 
-func GraduateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
-	if err != nil {
-		return err
-	}
-
-	serv := loaders.ServiceDefFromChain(chain, loaders.ErisChainStart)
-	if err := services.WriteServiceDefinitionFile(serv, filepath.Join(ServicesPath, chain.ChainID+".toml")); err != nil {
-		return err
-	}
-	return nil
-}
-
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
@@ -533,7 +520,7 @@ func RegisterChain(do *definitions.Do) error {
 		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name, false)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -569,11 +556,11 @@ func RegisterChain(do *definitions.Do) error {
 
 	_, err = perform.DockerRunData(chain.Operations, chain.Service)
 
-	return nil
+	return err
 }
 
 func checkKeysRunningOrStart() error {
-	srv, err := loaders.LoadServiceDefinition("keys", false)
+	srv, err := loaders.LoadServiceDefinition("keys")
 	if err != nil {
 		return err
 	}

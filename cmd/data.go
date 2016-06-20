@@ -221,7 +221,7 @@ func ExecData(cmd *cobra.Command, args []string) {
 			args = strings.Split(args[0], " ")
 		}
 	}
-
+	do.Operations.Terminal = true
 	do.Operations.Args = args
 	config.GlobalConfig.InteractiveWriter = os.Stdout
 	config.GlobalConfig.InteractiveErrorWriter = os.Stderr

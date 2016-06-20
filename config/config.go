@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 
 	dir "github.com/eris-ltd/common/go/common"
+	"github.com/tcnksm/go-gitconfig"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
-	"github.com/tcnksm/go-gitconfig"
 )
 
 // Properly scope the globalConfig.
@@ -58,14 +58,25 @@ func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
 	return &e, nil
 }
 
-func LoadViperConfig(configPath, configName, typ string) (*viper.Viper, error) {
+func LoadViperConfig(configPath, configName string) (*viper.Viper, error) {
 	var conf = viper.New()
 
 	conf.AddConfigPath(configPath)
 	conf.SetConfigName(configName)
 	err := conf.ReadInConfig()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to load the %s's config for the %s in %s.\nCheck your known %ss with [eris %ss ls --known]\nThere may also be an error with the formatting of the .toml file:\n%v", typ, configName, configPath, typ, typ, err)
+		errmsg := fmt.Sprintf(`Unable to load the %q config. Check the file name existence and formatting: %v
+`, configName, err)
+
+		switch configPath {
+		case dir.ChainsPath, dir.ServicesPath, dir.ActionsPath:
+			errknown := fmt.Sprintf(`
+List available definitions with the [eris %s ls --known] command
+`, filepath.Base(configPath))
+			return nil, fmt.Errorf("%s%s", errmsg, errknown)
+		}
+
+		return nil, fmt.Errorf(errmsg)
 	}
 
 	return conf, nil

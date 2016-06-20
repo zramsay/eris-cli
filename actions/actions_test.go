@@ -8,8 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var actionName string = "do not use"
@@ -18,34 +17,16 @@ var newName string = "yeah lets test shit"
 var hash string
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("actions"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 	exitCode := m.Run()
 
 	log.Info("Tearing tests down")
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
-}
-
-func TestLoadActionDefinition(t *testing.T) {
-	var e error
-	actionName = strings.Replace(actionName, " ", "_", -1)
-	act, _, e := LoadActionDefinition(actionName)
-	if e != nil {
-		log.Errorf("Error: action did not load properly: %v", e)
-		t.FailNow()
-	}
-
-	actionName = strings.Replace(actionName, "_", " ", -1)
-	if act.Name != actionName {
-		log.Errorf("Error: improper action name on LOAD. expected: %s got: %s", actionName, act.Name)
-		t.Fail()
-	}
 }
 
 func TestDoAction(t *testing.T) {

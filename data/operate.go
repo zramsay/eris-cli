@@ -15,7 +15,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -47,7 +47,7 @@ func ImportData(do *definitions.Do) error {
 		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
-			return fmt.Errorf("There is no data container for service %q", do.Name, srv.Operations.SrvContainerName)
+			return fmt.Errorf("There is no data container for service %q", do.Name)
 		}
 		if err := checkErisContainerRoot(do, "import"); err != nil {
 			return err

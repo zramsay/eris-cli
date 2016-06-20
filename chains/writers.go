@@ -9,7 +9,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 
 	. "github.com/eris-ltd/common/go/common"
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 //XXX this command absolutely needs a good test!!
@@ -34,9 +34,9 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 
 	for depDir, newDir := range dirsToMigrate {
 		log.WithFields(log.Fields{
-			"old":       depDir,
+			"old":        depDir,
 			"old exists": DoesDirExist(depDir),
-			"new":       newDir,
+			"new":        newDir,
 			"new exists": DoesDirExist(newDir),
 		}).Debug("Checking Directories to Migrate")
 		if !DoesDirExist(depDir) && DoesDirExist(newDir) { //already migrated, nothing to see here
@@ -141,9 +141,12 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 }
 
 func DoesDirExist(dir string) bool {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	f, err := os.Stat(dir)
+	if err != nil {
 		return false
-	} else {
-		return true
 	}
+	if !f.IsDir() {
+		return false
+	}
+	return true
 }

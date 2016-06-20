@@ -13,8 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -26,8 +25,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
@@ -35,7 +32,7 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	tests.IfExit(tests.TestsInit("files"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)
@@ -91,7 +88,7 @@ func TestGetFiles(t *testing.T) {
 	)
 
 	do := definitions.NowDo()
-	do.Name = hash
+	do.Hash = hash
 	do.Path = fileName
 
 	// Fake IPFS server.
@@ -146,7 +143,7 @@ func testGetDirectoryFromIPFS(t *testing.T) {
 	hash := "QmYwjCPtWkduz81UnAqMJYCag5pock5y2S8yZQEd4qoyzf"
 
 	do := definitions.NowDo()
-	do.Name = hash
+	do.Hash = hash
 	do.Path = erisDir
 
 	passed := false

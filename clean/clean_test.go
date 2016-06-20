@@ -1,32 +1,34 @@
 package clean
 
 import (
-	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/perform"
 	srv "github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
+
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
+const customImage = "sample"
 
+func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit("clean"))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
@@ -34,11 +36,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestRemoveAllErisContainers(t *testing.T) {
-	testFailIfAnyContainers(t)
+	defer util.RemoveAllErisContainers()
 
-	// start a bunch of eris containers
+	// Start a bunch of eris containers.
 	testStartService("ipfs", t)
-	testStartService("tor", t)
 	testStartService("keys", t)
 
 	testStartChain("dirty-chain0", t)
@@ -47,48 +48,33 @@ func TestRemoveAllErisContainers(t *testing.T) {
 	testCreateDataContainer("filthy-data0", t)
 	testCreateDataContainer("filthy-data1", t)
 
-	// start some not eris containers (using busybox)
+	// Start some non-Eris containers.
 	notEris0 := testCreateNotEris("not_eris0", t)
 	notEris1 := testCreateNotEris("not_eris1", t)
 
-	// run the command
 	tests.IfExit(util.RemoveAllErisContainers())
 
-	// check that both not_eris still exist
-	// and no Eris containers exist
+	// Check that both not_eris still exist and no Eris containers exist.
 	testCheckSimple(notEris0, t)
 	testCheckSimple(notEris1, t)
 
-	// remove what's left
+	// Remove what's left.
 	testRemoveNotEris(notEris0, t)
 	testRemoveNotEris(notEris1, t)
 
-	// fail is anything remains
-	testFailIfAnyContainers(t)
-
-}
-
-func testFailIfAnyContainers(t *testing.T) {
-	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
-	if err != nil {
-		t.Fatalf("error listing containers: %v", err)
-	}
-
-	if len(contns) != 0 {
-		t.Fatalf("found (%v) remaining containers, something went wrong\n", len(contns))
-	}
-}
-
-// it works...any working test
-// will take too long IMO [zr]
-func TestRemoveErisImages(t *testing.T) {
+	// Remove custom built image.
+	testRemoveNotErisImage(t)
 }
 
 func testCreateNotEris(name string, t *testing.T) string {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)); err != nil {
+		t.Fatalf("expected to build a custom image, got %v", err)
+	}
+
 	opts := docker.CreateContainerOptions{
 		Name: name,
 		Config: &docker.Config{
-			Image:           "busybox",
+			Image:           customImage,
 			AttachStdin:     false,
 			AttachStdout:    false,
 			AttachStderr:    false,
@@ -119,21 +105,25 @@ func testRemoveNotEris(contID string, t *testing.T) {
 	}
 }
 
+func testRemoveNotErisImage(t *testing.T) {
+	if err := perform.DockerRemoveImage(customImage, true); err != nil {
+		t.Fatalf("expected custom image to be removed, got %v", err)
+	}
+}
+
 func testCheckSimple(newContID string, t *testing.T) {
 	contns, err := util.DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		t.Fatalf("error listing containers: %v", err)
 	}
 
-	//if any Eris, fail
-	for _, container := range contns {
-		if container.Labels["eris:ERIS"] == "true" {
-			t.Fatalf("Eris container detected. Clean did not do its job\n")
-		}
-	}
+	// If any Eris containers exist, fail.
+	util.ErisContainers(func(name string, details *util.Details) bool {
+		t.Fatalf("expected no Eris containers running")
+		return true
+	}, false)
 
 	var notEris bool
-	//make sure "not_eris" still exists
 	for _, container := range contns {
 		if container.ID == newContID {
 			notEris = true
@@ -144,18 +134,16 @@ func testCheckSimple(newContID string, t *testing.T) {
 	}
 
 	if !notEris {
-		t.Fatalf("Expected running container, did not find %s\n", newContID)
+		t.Fatalf("expected running container, did not find %s", newContID)
 	}
 }
 
-//from /services/services_test.go
 func testStartService(serviceName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Operations.Args = []string{serviceName}
 	do.Operations.PublishAllPorts = true
-	log.WithField("=>", fmt.Sprintf("%s:%d", serviceName, 1)).Debug("Starting service (from tests)")
 	if err := srv.StartService(do); err != nil {
-		t.Fatalf("Error starting service: %v", err)
+		t.Fatalf("error starting service: %v", err)
 	}
 
 	tests.IfExit(tests.TestExistAndRun(serviceName, "service", true, true))
@@ -174,12 +162,12 @@ func testStartChain(chainName string, t *testing.T) {
 func testCreateDataContainer(dataName string, t *testing.T) {
 	newDataDir := filepath.Join(common.DataContainersPath, dataName)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
-		t.Fatalf("err mkdir: %v\n", err)
+		t.Fatalf("error mkdir: %v\n", err)
 	}
 
 	f, err := os.Create(filepath.Join(newDataDir, "test"))
 	if err != nil {
-		t.Fatalf("err creating file: %v\n", err)
+		t.Fatalf("error creating file: %v", err)
 	}
 	defer f.Close()
 
@@ -187,13 +175,12 @@ func testCreateDataContainer(dataName string, t *testing.T) {
 	do.Name = dataName
 	do.Source = filepath.Join(common.DataContainersPath, do.Name)
 	do.Destination = common.ErisContainerRoot
-	log.WithField("=>", do.Name).Info("Importing data (from tests)")
 	if err := data.ImportData(do); err != nil {
-		t.Fatalf("error importing data: %v\n", err)
+		t.Fatalf("error importing data: %v", err)
 	}
 
 	if err := tests.TestExistAndRun(dataName, "data", true, false); err != nil {
-		t.Fatalf("error creating data cont: %v\n", err)
+		t.Fatalf("error creating data cont: %v", err)
 	}
 
 }

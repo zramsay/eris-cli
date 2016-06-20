@@ -23,6 +23,7 @@ install:
 
 script:
 - tests/test.sh
+- tests/dm_cleanup.sh
 
 notifications:
   email: false

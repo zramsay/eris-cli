@@ -1,9 +1,11 @@
 package util
 
 import (
+	"path"
 	"testing"
 
 	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -302,10 +304,11 @@ func create(t, name string) error {
 	labels[def.LabelShortName] = name
 	labels[def.LabelType] = t
 
+	keysImage := path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_KEYS)
 	opts := docker.CreateContainerOptions{
 		Name: ContainerName(t, name),
 		Config: &docker.Config{
-			Image:  "quay.io/eris/keys",
+			Image:  keysImage,
 			Labels: labels,
 		},
 	}

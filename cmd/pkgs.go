@@ -1,3 +1,8 @@
+// +build !arm
+
+// Conditional build for ARM.
+// Related to issue #751
+// TODO: remove file after issue fixed
 package commands
 
 import (
@@ -9,7 +14,6 @@ import (
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
@@ -26,30 +30,28 @@ smart contract packages for use by your application.`,
 
 // build the contracts subcommand
 func buildPackagesCommand() {
-	// TODO: finish when the PR which is blocking
-	//   eris files put --dir is integrated into
-	//   ipfs
-	// [zr] looks like that's now the case ...
-	// XXX see https://github.com/ipfs/go-ipfs/pull/1845
-	// Packages.AddCommand(packagesImport)
-	// Packages.AddCommand(packagesExport)
 	Packages.AddCommand(packagesDo)
+	Packages.AddCommand(packagesImport)
+	Packages.AddCommand(packagesExport)
 	addPackagesFlags()
 }
 
 var packagesImport = &cobra.Command{
-	Use:   "import HASH PACKAGE",
+	Use:   "import HASH NAME",
 	Short: "Pull a package of smart contracts from IPFS.",
 	Long: `Pull a package of smart contracts from IPFS
-via its hash and save it locally.`,
+via its hash and save it locally to ~/.eris/apps/NAME.
+This package needs to have been added as directory to ipfs,
+with [eris pkgs export someDir/].`,
 	Run: PackagesImport,
 }
 
 var packagesExport = &cobra.Command{
-	Use:   "export",
+	Use:   "export DIR",
 	Short: "Post a package of smart contracts to IPFS.",
-	Long:  `Post a package of smart contracts to IPFS.`,
-	Run:   PackagesExport,
+	Long: `Post a package of smart contracts to IPFS.
+Give a path to a directory, which will be added to ipfs recusively.`,
+	Run: PackagesExport,
 }
 
 var packagesDo = &cobra.Command{
@@ -57,7 +59,7 @@ var packagesDo = &cobra.Command{
 	Short: "Deploy or test a package of smart contracts to a chain.",
 	Long: `Deploy or test a package of smart contracts to a chain.
 
-eris pkgs do will perform the required functionality included
+[eris pkgs do] will perform the required functionality included
 in a package definition file.`,
 	Run: PackagesDo,
 }
@@ -88,16 +90,15 @@ func addPackagesFlags() {
 
 func PackagesImport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(pkgs.GetPackage(do))
+	do.Hash = args[0]
+	do.Name = args[1]
+	IfExit(pkgs.ImportPackage(do))
 }
 
 func PackagesExport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(pkgs.PutPackage(do))
-	log.Warn(do.Result)
+	IfExit(pkgs.ExportPackage(do))
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {

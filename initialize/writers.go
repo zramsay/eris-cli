@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/util"
@@ -17,9 +18,9 @@ import (
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -28,6 +29,12 @@ import (
 func dropServiceDefaults(dir, from string) error {
 	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from); err != nil {
 		return err
+	}
+	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys); err != nil {
+		return fmt.Errorf("Cannot add default keys.toml: %s.\n", err)
+	}
+	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS); err != nil {
+		return fmt.Errorf("Cannot add default ipfs.toml: %s.\n", err)
 	}
 	return nil
 }
@@ -90,7 +97,7 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		ver.ERIS_IMG_BASE,
+		//ver.ERIS_IMG_BASE,
 		ver.ERIS_IMG_DATA,
 		ver.ERIS_IMG_KEYS,
 		ver.ERIS_IMG_IPFS,
@@ -171,6 +178,13 @@ func drops(files []string, typ, dir, from string) error {
 	} else if typ == "chains" {
 		repo = "eris-chains"
 	}
+	// on different arch
+	archPrefix := ""
+	if runtime.GOARCH == "arm" {
+		if repo != "eris-actions" {
+			archPrefix = "arm/"
+		}
+	}
 
 	if !util.DoesDirExist(dir) {
 		if err := os.MkdirAll(dir, 0777); err != nil {
@@ -191,7 +205,7 @@ func drops(files []string, typ, dir, from string) error {
 	} else if from == "rawgit" {
 		for _, file := range files {
 			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", file, dir, file, buf); err != nil {
+			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file, buf); err != nil {
 				return err
 			}
 		}

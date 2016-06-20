@@ -7,7 +7,7 @@ import (
 
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	dir "github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/viper"

@@ -13,10 +13,9 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var erisDir = filepath.Join(os.TempDir(), "eris")
@@ -27,8 +26,6 @@ var chnDefDir = filepath.Join(chnDir, "default")
 var toadUp bool
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
@@ -38,7 +35,6 @@ func TestMain(m *testing.M) {
 	toadUp = toadServerUp()
 
 	exitCode := m.Run()
-	log.Info("Commensing with Tests Tear Down.")
 	ifExit(testsTearDown())
 	os.Exit(exitCode)
 }
@@ -96,6 +92,7 @@ func testDrops(dir, kind string) error {
 	if err := os.MkdirAll(dirGit, 0777); err != nil {
 		ifExit(err)
 	}
+
 	switch kind {
 	case "services":
 		//pull from toadserver
@@ -128,6 +125,13 @@ func testDrops(dir, kind string) error {
 			ifExit(err)
 		}
 	}
+
+	readDirs(dirToad, dirGit, toadUp)
+
+	return nil
+}
+
+func readDirs(dirToad, dirGit string, toadUp bool) {
 	//read dirs
 	toads, err := ioutil.ReadDir(dirToad)
 	if err != nil {
@@ -152,7 +156,7 @@ func testDrops(dir, kind string) error {
 			}
 		}
 	}
-	return nil
+
 }
 
 func toadServerUp() bool {

@@ -7,7 +7,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pborman/uuid"
 )
@@ -43,7 +43,7 @@ var (
 )
 
 // UniqueName() returns a unique container name, prefixed with the short
-// container name, e.g. `ipfs-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
+// entity name, e.g. `ipfs-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
 //
 // [pv]: might be a good idea to truncate this long name to ~20 characters
 // without much danger of bumping into collisions, e.g. `ipfs-6ba7b811-9dad-11d1`

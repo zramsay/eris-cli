@@ -5,7 +5,7 @@ import (
 
 	ini "github.com/eris-ltd/eris-cli/initialize"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	"github.com/spf13/cobra"
 )
 

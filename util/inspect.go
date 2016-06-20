@@ -9,7 +9,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/oleiade/reflections"
 	"github.com/serenize/snaker"

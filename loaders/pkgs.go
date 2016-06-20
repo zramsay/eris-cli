@@ -9,15 +9,23 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	"github.com/spf13/viper"
+	log "github.com/eris-ltd/eris-logger"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
+// LoadPackage loads a package definition specified by the directory or
+// filename path and chainName and returns a package definition structure.
+// LoadPackage can also return missing files or package loading errors.
 func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	var name string
 	var dir bool
-	f, _ := os.Stat(path)
+
+	var err error
+	f, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 	if f.IsDir() {
 		name = filepath.Base(path)
 		dir = true
@@ -28,7 +36,6 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 
 	var pkgConf *viper.Viper
 	var pkg *definitions.Package
-	var err error
 	if dir {
 		pkgConf, err = loadPackage(path)
 	} else {
@@ -41,31 +48,30 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 	} else {
 		// marshal chain and always reset the operational requirements
 		// this will make sure to sync with docker so that if changes
-		// have occured in the interim they are caught.
+		// have occurred in the interim they are caught.
 		pkg, err = marshalPackage(pkgConf)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if err := checkName(pkg, chainName); err != nil {
-		return nil, err
-	}
+	checkName(pkg, chainName)
 
 	return pkg, nil
 }
 
 // read the config file into viper
 func loadPackage(path string) (*viper.Viper, error) {
-	return config.LoadViperConfig(path, "package", "pkg")
+	return config.LoadViperConfig(path, "package")
 }
 
-// set's the defaults
+// DefaultPackage creates a package definition structure
+// with some fields already filled in.
 func DefaultPackage(name, chainName string) *definitions.Package {
 	pkg := definitions.BlankPackage()
 	pkg.Name = name
 	pkg.ChainName = chainName
-	pkg.PackageID = "" // TODO hash it
+	pkg.PackageID = "" // TODO hash it. [pv]: would util.UniqueName(chainName) do?
 	return pkg
 }
 
@@ -73,26 +79,25 @@ func marshalPackage(pkgConf *viper.Viper) (*definitions.Package, error) {
 	pkgDef := definitions.BlankPackageDefinition()
 	err := pkgConf.Unmarshal(pkgDef)
 	pkg := pkgDef.Package
+
 	if pkgDef.Name != "" {
 		pkg.Name = pkgDef.Name
 	}
-
 	if err != nil {
-		return nil, fmt.Errorf("%v\n\nSorry, the marmots could not figure that package.json out.\nPlease check your package.json is properly formatted.\n", err)
+		return nil, fmt.Errorf(`Sorry, the marmots could not figure that package.json out: %v
+Please check your package.json file is properly formatted`, err)
 	}
 
 	return pkg, nil
 }
 
-func checkName(pkg *definitions.Package, name string) error {
+func checkName(pkg *definitions.Package, name string) {
 	if strings.Contains(pkg.Name, " ") {
 		newName := strings.Replace(pkg.Name, " ", "_", -1)
 		log.WithFields(log.Fields{
 			"old": pkg.Name,
 			"new": newName,
-		}).Debug("Correcting package name.")
+		}).Debug("Correcting package name")
 		pkg.Name = newName
 	}
-
-	return nil
 }

@@ -155,11 +155,11 @@ var actionsRemove = &cobra.Command{
 }
 
 func addActionsFlags() {
-	buildFlag(actionsDo, do, "quiet", "action")
-	buildFlag(actionsDo, do, "chain", "action")
 	buildFlag(actionsDo, do, "services", "action")
+	actionsDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "run action against a particular chain")
+	actionsDo.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "suppress action output")
 
-	buildFlag(actionsRemove, do, "file", "action")
+	actionsRemove.Flags().BoolVarP(&do.File, "file", "f", false, "remove action definition file")
 
 	buildFlag(actionsList, do, "known", "action")
 	actionsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")

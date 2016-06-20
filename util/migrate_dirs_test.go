@@ -10,8 +10,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
-	log "github.com/Sirupsen/logrus"
-	logger "github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var erisDir string = filepath.Join(os.TempDir(), "eris")
@@ -27,8 +26,6 @@ var apps string = filepath.Join(erisDir, "apps")
 var newDirs = []string{chains, apps}
 
 func TestMain(m *testing.M) {
-	log.SetFormatter(logger.ConsoleFormatter(log.DebugLevel))
-
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)

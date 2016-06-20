@@ -1,0 +1,39 @@
+FROM centos:6
+
+MAINTAINER Eris Industries <support@erisindustries.com>
+
+COPY s3tools.repo /etc/yum.repos.d
+
+RUN yum -y update \
+    && yum -y install sudo \
+                      git \
+                      gcc \
+                      which \
+                      vim \
+                      expect \
+                      rpm-build \
+                      rpm-sign \
+                      rpmdevtools \
+                      createrepo \
+                      s3cmd \
+    && yum -y clean all
+
+ENV GOLANG_VERSION 1.6
+ENV GOROOT /usr/local/go
+ENV GOPATH /root
+ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+ENV GOLANG_DOWNLOAD_SHA256 5470eac05d273c74ff8bac7bef5bad0b5abbd1c4052efbdbc8db45332e836b0b
+RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
+  && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
+  && tar -C /usr/local -xzf golang.tar.gz \
+  && rm golang.tar.gz
+ENV PATH $GOPATH/bin:$GOROOT/bin:$PATH
+
+WORKDIR /root
+
+COPY linux-private-key.asc /root
+COPY linux-public-key.asc /root
+COPY eris-cli.spec /root/rpmbuild/SPECS/
+COPY buildrpm.sh   /root/
+
+ENTRYPOINT ["/root/buildrpm.sh"]

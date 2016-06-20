@@ -14,8 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -38,17 +37,16 @@ func ImportService(do *definitions.Do) error {
 		return err
 	}
 
-	_, err = loaders.LoadServiceDefinition(do.Name, false)
-	//XXX add protections?
+	_, err = loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
-		return fmt.Errorf("Your service definition file looks improperly formatted and will not marshal.")
+		return fmt.Errorf("error loading service:\n%v", err)
 	}
 
 	do.Result = "success"
 	return nil
 }
 
-func NewService(do *definitions.Do) error {
+func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
 	srv.Service.Name = do.Name
@@ -59,6 +57,7 @@ func NewService(do *definitions.Do) error {
 	//get maintainer info
 	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
+		// don't return -> field not required
 		log.Debug(err.Error())
 	}
 
@@ -95,7 +94,7 @@ func RenameService(do *definitions.Do) error {
 	transformOnly := newNameBase == do.Name
 
 	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name, false)
+		serviceDef, err := loaders.LoadServiceDefinition(do.Name)
 		if err != nil {
 			return err
 		}
@@ -154,7 +153,7 @@ func RenameService(do *definitions.Do) error {
 }
 
 func InspectService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -166,7 +165,7 @@ func InspectService(do *definitions.Do) error {
 }
 
 func PortsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -180,7 +179,7 @@ func PortsService(do *definitions.Do) error {
 }
 
 func LogsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -196,7 +195,7 @@ func ExportService(do *definitions.Do) error {
 			return err
 		}
 
-		hash, err := exportFile(do.Name)
+		hash, _ := exportFile(do.Name)
 		do.Result = hash
 		log.WithField("hash", hash).Warn()
 
@@ -208,7 +207,7 @@ To find known services use [eris services ls --known]`)
 }
 
 func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name, false)
+	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -224,7 +223,7 @@ func UpdateService(do *definitions.Do) error {
 
 func RmService(do *definitions.Do) error {
 	for _, servName := range do.Operations.Args {
-		service, err := loaders.LoadServiceDefinition(servName, false)
+		service, err := loaders.LoadServiceDefinition(servName)
 		if err != nil {
 			return err
 		}

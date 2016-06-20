@@ -15,9 +15,9 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/Sirupsen/logrus"
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func GetFiles(do *definitions.Do) error {
@@ -25,16 +25,15 @@ func GetFiles(do *definitions.Do) error {
 		return err
 	}
 
-	// where Object is a directory added recursively to ipfs
-	// do.Name is the hash
-	dirBool, err := isHashAnObject(do.Name)
+	// where Object is a directory already added recursively to ipfs
+	dirBool, err := isHashAnObject(do.Hash)
 	if err != nil {
 		return err
 	}
 
 	if dirBool {
 		log.WithFields(log.Fields{
-			"hash": do.Name,
+			"hash": do.Hash,
 			"path": do.Path,
 		}).Warn("Getting a directory")
 		buf, err := importDirectory(do)
@@ -44,7 +43,7 @@ func GetFiles(do *definitions.Do) error {
 		log.Warn("Directory object getted succesfully.")
 		log.Warn(util.TrimString(buf.String()))
 	} else {
-		if err := importFile(do.Name, do.Path); err != nil {
+		if err := importFile(do.Hash, do.Path); err != nil {
 			return err
 		}
 	}
@@ -67,7 +66,6 @@ func PutFiles(do *definitions.Do) error {
 	}
 
 	if f.IsDir() {
-		//can't use gateway - check & throw err
 		log.WithField("dir", do.Name).Warn("Adding contents of a directory")
 		buf, err := exportDirectory(do)
 		if err != nil {
@@ -120,7 +118,7 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 }
 
 func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
-	hash := do.Name
+	hash := do.Hash
 
 	ip := new(bytes.Buffer)
 	config.GlobalConfig.Writer = ip
@@ -386,8 +384,7 @@ func EnsureIPFSrunning() error {
 	doNow := definitions.NowDo()
 	doNow.Name = "ipfs"
 	if err := services.EnsureRunning(doNow); err != nil {
-		fmt.Printf("Failed to ensure IPFS is running: %v", err)
-		return err
+		return fmt.Errorf("Failed to ensure IPFS is running: %v", err)
 	}
 	log.Info("IPFS is running")
 	return nil
@@ -415,10 +412,9 @@ func isHashAnObject(ipfsHash string) (bool, error) {
 	if err != nil {
 		return dirBool, err
 	}
-	if util.TrimString(result) == "" { //not a dir
-		return dirBool, nil // false
-	} else { //something is in there, must be a dir
+	if util.TrimString(result) != "" { //not a dir
 		return true, nil
 	}
+
 	return dirBool, nil
 }

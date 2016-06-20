@@ -14,8 +14,8 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	ver "github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 // branch to update in build container
@@ -33,7 +33,7 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	doNew := definitions.NowDo()
 	doNew.Name = serviceName
 	doNew.Operations.Args = []string{imageName}
-	if err := services.NewService(doNew); err != nil {
+	if err := services.MakeService(doNew); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func BuildErisBinContainer(branch, binaryPath string) error {
 	doRm.RmD = true     // remove data container
 	doRm.Volumes = true // remove volumes
 	doRm.Force = true   // remove by force (no pesky warnings)
-	doRm.File = true    // remove the service defintion file
+	doRm.File = true    // remove the service definition file
 	doRm.RmImage = true // remove the temporary image
 
 	if err := services.RmService(doRm); err != nil {
@@ -119,8 +119,8 @@ move ` + cpString + `
 func MakeDockerfile(branch string) string {
 	var dockerfile string
 
-	// baseImage is `quay.io/eris/base`
-	baseImage := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE)
+	// baseImage is `quay.io/eris/data` // because the user already has it
+	baseImage := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
 	// todo: clean up Dockerfile as much as possible
 
 	baseDockerfile := fmt.Sprintf(`

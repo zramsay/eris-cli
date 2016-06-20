@@ -8,8 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/util"
-
-	log "github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -22,7 +21,7 @@ func EnsureRunning(do *definitions.Do) error {
 		return nil
 	}
 
-	srv, err := loaders.LoadServiceDefinition(do.Name, false)
+	srv, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 |[![GoDoc](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris?status.png)](https://godoc.org/github.com/eris-ltd/eris-cli/cmd/eris) | Linux | OSX | Windows |
 |---|-------|-----|---------|
-| Master | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/master.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=master)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/master?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
-| Develop | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/develop.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=develop)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/develop?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
+| Master | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/master.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli/tree/master) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=master)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/master?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
+| Develop | [![Linux](https://circleci.com/gh/eris-ltd/eris-cli/tree/develop.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris-cli/tree/develop) | [![OSX](https://travis-ci.org/eris-ltd/eris-cli.svg?branch=develop)](https://travis-ci.org/eris-ltd/eris-cli) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/develop?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris-cli) |
 
 # Introduction
 
@@ -164,9 +164,13 @@ Created by `eris init` in $HOME directory:
 │   ├── apps/
 │   ├── bundles/
 │   ├── chains/
+│       ├── account-types
+│       ├── chain-types
 │       ├── default/config.toml
+│       ├── default.toml
 │   ├── keys/
 │       ├── data/
+│       ├── names/
 │   ├── remotes/
 │   ├── scratch/
 │       ├── data/
@@ -181,7 +185,11 @@ Created by `eris init` in $HOME directory:
 │       ├── keys.toml
 ```
 
-With several more default services also pulled in.
+With some additional default actions, chain, and services files dropped in from:
+- [eris-actions](https://github.com/eris-ltd/eris-actions)
+- [eris-chains](https://github.com/eris-ltd/eris-chains)
+- [eris-services](https://github.com/eris-ltd/eris-services)
+
 
 # Contributions
 
@@ -204,7 +212,7 @@ Please note that this repository is GPLv3.0 per the LICENSE file. Any code which
 
 Found a bug in our stack? Make an issue!
 
-The [issue template](.github/ISSUE_TEMPLATE.md] specifies what needs to be included in your issue and will autopopulate the issue.
+The [issue template](.github/ISSUE_TEMPLATE.md) specifies what needs to be included in your issue and will autopopulate the issue.
 
 # License
 

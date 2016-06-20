@@ -1,7 +1,6 @@
 package perform
 
 import (
-	"time"
 	"archive/tar"
 	"bytes"
 	"errors"
@@ -16,15 +15,16 @@ import (
 	"strings"
 	"unicode"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
+	dirs "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
+
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	dirs "github.com/eris-ltd/common/go/common"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -167,7 +167,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 
 	// Start the container.
 	log.WithField("=>", opts.Name).Info("Executing interactive data container")
-	if err = startInteractiveContainer(opts); err != nil {
+	if err = startInteractiveContainer(opts, ops.Terminal); err != nil {
 		return nil, err
 	}
 
@@ -189,7 +189,6 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 //                          (use LoadServiceDefinition or LoadChainDefinition)
 // Container parameters:
 //
-//  ops.Remove            - remove container on exit (similar to `docker run --rm`)
 //  ops.PublishAllPorts   - if true, publish exposed ports to random ports
 //  ops.CapAdd            - add linux capabilities (similar to `docker run --cap-add=[]`)
 //  ops.CapDrop           - add linux capabilities (similar to `docker run --cap-drop=[]`)
@@ -200,7 +199,7 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 
 	running := ContainerRunning(ops.SrvContainerName)
 	if running {
-		log.WithField("=>", ops.SrvContainerName).Info("Container already started. Skipping")
+		log.WithField("=>", ops.SrvContainerName).Info("Container already running. Skipping")
 		return nil
 	}
 
@@ -249,13 +248,6 @@ func DockerRunService(srv *def.Service, ops *def.Operation) error {
 	}).Info("Starting container")
 	if err := startContainer(optsServ); err != nil {
 		return err
-	}
-
-	if ops.Remove {
-		log.WithField("=>", optsServ.Name).Info("Removing container")
-		if err := removeContainer(optsServ.Name, false, false); err != nil {
-			return err
-		}
 	}
 
 	log.WithField("=>", optsServ.Name).Info("Container started")
@@ -334,7 +326,7 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 		"user":            optsServ.Config.User,
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
-	if err := startInteractiveContainer(optsServ); err != nil {
+	if err := startInteractiveContainer(optsServ, ops.Terminal); err != nil {
 		return buf, err
 	}
 
@@ -456,20 +448,12 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 // output. If follow is true, it behaves like `tail -f`. It returns Docker
 // errors on exit if not successful.
 func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) error {
-	if exists := ContainerExists(ops.SrvContainerName); exists {
-		log.WithFields(log.Fields{
-			"=>":     ops.SrvContainerName,
-			"follow": follow,
-			"tail":   tail,
-		}).Info("Getting logs")
-		if err := logsContainer(ops.SrvContainerName, follow, tail); err != nil {
-			return err
-		}
-	} else {
-		log.Info("Container does not exist. Cannot display logs")
-	}
-
-	return nil
+	log.WithFields(log.Fields{
+		"=>":     ops.SrvContainerName,
+		"follow": follow,
+		"tail":   tail,
+	}).Info("Getting logs")
+	return logsContainer(ops.SrvContainerName, follow, tail)
 }
 
 // DockerInspect displays container ops.SrvContainerName data on the terminal.
@@ -477,16 +461,8 @@ func DockerLogs(srv *def.Service, ops *def.Operation, follow bool, tail string) 
 // either "line" to display a short info line or "all" to display everything. I
 // DockerInspect returns Docker errors on exit in not successful.
 func DockerInspect(srv *def.Service, ops *def.Operation, field string) error {
-	if exists := ContainerExists(ops.SrvContainerName); exists {
-		log.WithField("=>", ops.SrvContainerName).Info("Inspecting")
-		err := inspectContainer(ops.SrvContainerName, field)
-		if err != nil {
-			return err
-		}
-	} else {
-		log.Info("Container does not exist. Cannot inspect")
-	}
-	return nil
+	log.WithField("=>", ops.SrvContainerName).Info("Inspecting")
+	return inspectContainer(ops.SrvContainerName, field)
 }
 
 // DockerStop stops a running ops.SrvContainerName container unforcedly.
@@ -641,9 +617,9 @@ func DockerRemove(srv *def.Service, ops *def.Operation, withData, volumes, force
 	return nil
 }
 
-// DockerRemoveImage removes the image specified by name
-// Image will be force removed if force = true
-// Function is ~ to `docker rmi imageName`
+// DockerRemoveImage removes the image specified by the name. Image will be
+// force removed if force = true. DockerRemoveImage returns Docker errors
+// on exit if not successful.
 func DockerRemoveImage(name string, force bool) error {
 	removeOpts := docker.RemoveImageOptions{
 		Force: force,
@@ -651,36 +627,26 @@ func DockerRemoveImage(name string, force bool) error {
 	return util.DockerError(util.DockerClient.RemoveImageExtended(name, removeOpts))
 }
 
-// DockerBuild will build an image with imageName
-// and a Dockerfile passed in as strings
-// Function is ~ to `docker build -t imageName .`
-// where a Dockerfile is in the `pwd`
-func DockerBuild(imageName, dockerfile string) error {
-	// below has been adapted from: 
-	// https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
-	// and could probably be much more elegant
-	t := time.Now()
+// DockerBuild builds an image with image name and dockerfile text passed
+// as parameters. It behaves the same way as the command `docker build -t <image> .`
+// where the dockerfile text is in the Dockerfile within the same directory.
+// DockerBuild returns Docker errors on exit if not successful.
+func DockerBuild(image, dockerfile string) error {
+	// Below has been adapted from https://godoc.org/github.com/fsouza/go-dockerclient#Client.BuildImage
 	inputbuf := bytes.NewBuffer(nil)
-	writer := os.Stdout
 	tr := tar.NewWriter(inputbuf)
-	sizeDockerfile := int64(len([]byte(dockerfile)))
-	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: sizeDockerfile, ModTime: t, AccessTime: t, ChangeTime: t})
+	tr.WriteHeader(&tar.Header{Name: "Dockerfile", Size: int64(len([]byte(dockerfile)))})
 	tr.Write([]byte(dockerfile))
 	tr.Close()
 
-	//log.Debug(dockerfile)
-	//log.Debug(imageName)
-
-	//picked only what's necessary for now: this may change with #611
 	r, w := io.Pipe()
 	imgOpts := docker.BuildImageOptions{
-		Name: imageName,
-		//Dockerfile: dockerfile,
-		RmTmpContainer: true,
-		InputStream: inputbuf,
-		OutputStream: w,
-		//OutputStream: outputbuf,
-		RawJSONStream: true,
+		Name:                image,
+		RmTmpContainer:      true,
+		ForceRmTmpContainer: true,
+		InputStream:         inputbuf,
+		OutputStream:        w,
+		RawJSONStream:       true,
 	}
 
 	ch := make(chan error, 1)
@@ -692,14 +658,12 @@ func DockerBuild(imageName, dockerfile string) error {
 			ch <- err
 		}
 	}()
-	jsonmessage.DisplayJSONMessagesStream(r, writer, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	if err, ok := <-ch; ok {
-		// doesn't catch the build error; that's OK, it'll be displayed to user
-		// from json stream & the image will be checked by checkImageExists
 		return util.DockerError(err)
 	}
 
-	ok, err := checkImageExists(imageName)
+	ok, err := checkImageExists(image)
 	if err != nil {
 		return err
 	}
@@ -814,7 +778,7 @@ func startContainer(opts docker.CreateContainerOptions) error {
 	return util.DockerError(util.DockerClient.StartContainer(opts.Name, opts.HostConfig))
 }
 
-func startInteractiveContainer(opts docker.CreateContainerOptions) error {
+func startInteractiveContainer(opts docker.CreateContainerOptions, terminal bool) error {
 	// Trap signals so we can drop out of the container.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)
@@ -827,9 +791,10 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 	}()
 
 	attached := make(chan struct{})
-	go func(chan struct{}) {
-		attachContainer(opts.Name, attached)
-	}(attached)
+	cw, err := attachContainer(opts.Name, terminal, attached)
+	if err != nil {
+		return util.DockerError(err)
+	}
 
 	// Wait for a console prompt to appear.
 	_, ok := <-attached
@@ -844,43 +809,51 @@ func startInteractiveContainer(opts docker.CreateContainerOptions) error {
 	log.WithField("=>", opts.Name).Info("Waiting for container to exit")
 
 	// Set terminal into raw mode, and restore upon container exit.
-	savedState, err := term.SetRawTerminal(os.Stdin.Fd())
-	if err != nil {
-		log.Info("Cannot set the terminal into raw mode")
-	} else {
-		defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+	if terminal && term.IsTerminal(os.Stdin.Fd()) {
+		savedState, err := term.SetRawTerminal(os.Stdin.Fd())
+		if err != nil {
+			log.Info("Cannot set the terminal into raw mode")
+		} else {
+			defer term.RestoreTerminal(os.Stdin.Fd(), savedState)
+		}
 	}
 
 	if err := waitContainer(opts.Name); err != nil {
 		return err
 	}
 
+	cw.Wait()
+	cw.Close()
+
 	return nil
 }
 
-func attachContainer(id string, attached chan struct{}) error {
-	// Use a proxy pipe between os.Stdin and an attached container, so that
-	// when the reader end of the pipe is closed, os.Stdin is still open.
-	reader, writer := io.Pipe()
-	go func() {
-		io.Copy(writer, os.Stdin)
-	}()
-
+func attachContainer(id string, terminal bool, attached chan struct{}) (docker.CloseWaiter, error) {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
-		InputStream:  reader,
 		OutputStream: io.MultiWriter(config.GlobalConfig.Writer, config.GlobalConfig.InteractiveWriter),
 		ErrorStream:  io.MultiWriter(config.GlobalConfig.ErrorWriter, config.GlobalConfig.InteractiveErrorWriter),
 		Logs:         false,
 		Stream:       true,
-		Stdin:        true,
 		Stdout:       true,
 		Stderr:       true,
 		RawTerminal:  true,
 		Success:      attached,
 	}
 
-	return util.DockerError(util.DockerClient.AttachToContainer(opts))
+	if terminal {
+		// Use a proxy pipe between os.Stdin and an attached container, so that
+		// when the reader end of the pipe is closed, os.Stdin is still open.
+		reader, writer := io.Pipe()
+		go func() {
+			io.Copy(writer, os.Stdin)
+		}()
+
+		opts.InputStream = reader
+		opts.Stdin = true
+	}
+
+	return util.DockerClient.AttachToContainerNonBlocking(opts)
 }
 
 func waitContainer(id string) error {
@@ -1092,6 +1065,9 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 	}
 
 	for _, vol := range srv.Volumes {
+		if !strings.Contains(vol, ":") {
+			continue
+		}
 		opts.Config.Volumes[strings.Split(vol, ":")[1]] = struct{}{}
 	}
 
@@ -1103,7 +1079,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_BASE),
+			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1195,20 +1171,18 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	return opts, nil
 }
 
-func checkImageExists(imageName string) (bool, error) {
+func checkImageExists(image string) (bool, error) {
 	fail := false
 
 	opts := docker.ListImagesOptions{
-		Filter: imageName,
+		Filter: image,
 	}
 
 	anImage, err := util.DockerClient.ListImages(opts)
 	if err != nil {
 		return fail, util.DockerError(err)
 	}
-	if len(anImage) != 1 {
-		return fail, nil
-	} else {
+	if len(anImage) == 1 {
 		return true, nil
 	}
 

@@ -7,7 +7,7 @@ machine:
     EPM_BRANCH: develop
     MINDY_BRANCH: master
     DOCKER_VERSION: 1.9.1
-    DOCKER_MACHINE_VERSION: 0.6.0
+    DOCKER_MACHINE_VERSION: 0.7.0
   post:
     - git config --global user.email "billings@erisindustries.com"
     - git config --global user.name "Billings the Bot"
@@ -19,16 +19,18 @@ dependencies:
   override:
     - sudo curl -sSL -o /usr/bin/docker http://s3-external-1.amazonaws.com/circle-downloads/docker-$DOCKER_VERSION-circleci; sudo chmod 0755 /usr/bin/docker
     - sudo curl -sSL -o /usr/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine-linux-x86_64; sudo chmod 0755 /usr/bin/docker-machine
-    - sudo service docker start
+    - sudo start docker
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
     - go version
     - docker version
     - docker-machine version
+    - cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install
 
 test:
   override:
-    - "cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install"
-    - "tests/test.sh | tee $CIRCLE_ARTIFACTS/output.log ; test ${PIPESTATUS[0]} -eq 0"
+    - case ${CIRCLE_NODE_INDEX} in 0) SKIP_STACK=true tests/test.sh;; 1) SKIP_PACKAGES=true tests/test.sh;; esac:
+        parallel: true
+    - "tests/dm_cleanup.sh"
 
 deployment:
   master:
@@ -37,7 +39,13 @@ deployment:
       - docker rmi quay.io/eris/eris:master
       - docker push quay.io/eris/eris
       - docs/build.sh master
+      # build data image because it is versioned
+      - tests/build_other_images.sh
+      - docker push quay.io/eris/data
   develop:
     branch: develop
     commands:
       - docs/build.sh
+      # see above
+      - tests/build_other_images.sh
+      - docker push quay.io/eris/data
