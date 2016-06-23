@@ -471,7 +471,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 				"source": filepath.Join(do.Path, "contracts"),
 				"dest":   do.PackagePath,
 			}).Debug("Moving contracts into position")
-			if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
+			if err := util.MoveTree(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
 				return err
 			}
 		}
@@ -480,20 +480,20 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			"source": filepath.Join(do.Path, "contracts"),
 			"dest":   do.PackagePath,
 		}).Debug("Moving contracts into position")
-		if err := os.Rename(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
+		if err := util.MoveTree(filepath.Join(do.Path, "contracts"), do.PackagePath); err != nil {
 			return err
 		}
 	} else {
 		log.Info("Package path does not exist on the host or is inside the pkg path")
 	}
 
-	// import abi path (if exists)
-	if _, err := os.Stat(do.ABIPath); !os.IsNotExist(err) && !strings.Contains(do.ABIPath, do.Path) {
-		log.WithFields(log.Fields{
-			"path":    do.Path,
-			"abiPath": do.ABIPath,
-		}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence")
-		if inbound {
+	if inbound {
+		// Import ABI path (if exists).
+		if _, err := os.Stat(do.ABIPath); !os.IsNotExist(err) && !strings.Contains(do.ABIPath, do.Path) {
+			log.WithFields(log.Fields{
+				"path":     do.Path,
+				"abi path": do.ABIPath,
+			}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence")
 			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
 			doData.Source = do.ABIPath
 
@@ -501,31 +501,34 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 				"source": doData.Source,
 				"dest":   doData.Destination,
 			}).Debug("Importing ABI path")
+
 			if err := data.ImportData(doData); err != nil {
 				return err
 			}
-		} else {
+		}
+	} else {
+		// Export ABI path.
+		if do.ABIPath != filepath.Join(do.Path, "abi") {
 			log.WithFields(log.Fields{
 				"source": filepath.Join(do.Path, "abi"),
 				"dest":   do.ABIPath,
 			}).Debug("Moving ABI into position")
-			if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
+
+			if err := os.RemoveAll(do.ABIPath); err != nil {
+				return err
+			}
+
+			if err := os.MkdirAll(do.ABIPath, 0755); err != nil {
+				return err
+			}
+
+			if err := util.MoveTree(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
 				return err
 			}
 		}
-	} else if !strings.Contains(do.ABIPath, do.Path) {
-		log.WithFields(log.Fields{
-			"source": filepath.Join(do.Path, "abi"),
-			"dest":   do.ABIPath,
-		}).Debug("Moving ABI into position")
-		if err := os.Rename(filepath.Join(do.Path, "abi"), do.ABIPath); err != nil {
-			return err
-		}
-	} else {
-		log.Info("ABI path does not exist on the host or is inside the pkg path")
 	}
 
-	// import epm.yaml (if it is in a weird place)
+	// Import epm.yaml (if it is in a weird place).
 	if inbound && !strings.Contains(do.EPMConfigFile, do.Path) { // note <- is the default, if we change the default we'll have to change this.
 		doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
 		doData.Source = do.EPMConfigFile
