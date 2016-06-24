@@ -191,8 +191,8 @@ var servicesStop = &cobra.Command{
 
 var servicesRename = &cobra.Command{
 	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "Rename an installed service.",
-	Long:  `Rename an installed service.`,
+	Short: "rename an installed service",
+	Long:  `rename an installed service`,
 	Run:   RenameService,
 }
 
