@@ -6,9 +6,9 @@ import (
 
 var Config = &cobra.Command{
 	Use:   "config",
-	Short: "Manage configuration settings.",
-	Long: `Display and manage configuration settings for various components of the
-Eris platform and for the platform itself.
+	Short: "manage configuration settings",
+	Long: `display and manage configuration settings for various components of the
+Eris platform and for the platform itself
 
 The [eris config] command is only for configuring the Eris platform:
 it will not work to configure any of the blockchains, services
@@ -20,44 +20,33 @@ to configure projects use [eris projects config] command.`,
 
 var Cum []int
 
-// build the config subcommand
 func buildConfigCommand() {
 	Config.AddCommand(configPlop)
 	Config.AddCommand(configSet)
 	Config.AddCommand(configEdit)
-	// configPlop.Flags().IntSliceVar(&Cum, "cum", "c", []int{}, "suppress action output")
 }
 
-// set
 var configSet = &cobra.Command{
 	Use:   "set KEY:VALUE",
-	Short: "Set a config value.",
-	Long: `Set a config value.
+	Short: "set a config value",
+	Long: `set a config value
 NOTE: the [eris config set] command only operates on the settings 
 for the eris CLI. To set the config for a blockchain use [eris chains config]
 command, and to set the config for a service use [eris services config] 
 command.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO
-	},
+	Run: func(cmd *cobra.Command, args []string) {},
 }
 
-// show
 var configPlop = &cobra.Command{
 	Use:   "show",
-	Short: "Display the config.",
-	Long:  `Display the config.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO
-	},
+	Short: "display the config",
+	Long:  `display the config`,
+	Run:   func(cmd *cobra.Command, args []string) {},
 }
 
-// edit
 var configEdit = &cobra.Command{
 	Use:   "edit",
-	Short: "Edit a config for in an editor.",
-	Long:  `Edit a config for in your default editor.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// TODO
-	},
+	Short: "ddit a config for in an editor",
+	Long:  `edit a config for in your default editor`,
+	Run:   func(cmd *cobra.Command, args []string) {},
 }

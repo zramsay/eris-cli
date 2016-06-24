@@ -8,11 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Primary Agents Sub-Command
 var Agents = &cobra.Command{
 	Use:   "agent",
-	Short: "Start an agent.",
-	Long: `Start an agent.
+	Short: "start an agent",
+	Long: `start an agent
 An agent is local server that, when started,  exposes three endpoints:
   
   /chains	=> list running chains on the host (GET)
@@ -33,39 +32,16 @@ The agent is stopped with ctrl+c.`,
 // Build the agent subcommand
 func buildAgentsCommand() {
 	Agents.AddCommand(agentStart)
-	//Agents.AddCommand(agentStop)
-	//addAgentsFlags()
 }
 
-// start a agent
 var agentStart = &cobra.Command{
 	Use:   "start",
-	Short: "Start the agent.",
-	Long:  `Start the agent. Stop the agent with ctrl+c.`,
+	Short: "start the agent",
+	Long:  `Start the agent. Stop the agent with Ctrl+C`,
 	Run:   StartAgent,
 }
-
-/*var agentStop = &cobra.Command{
-	Use:   "stop",
-	Short: "Stop a running agent.",
-	Long:  `Stop a running agent.`,
-	Run:   StopAgent,
-}*/
-
-//----------------------------------------------------------------------
-// cli flags
-func addAgentsFlags() {
-}
-
-//----------------------------------------------------------------------
-// cli command wrappers
 
 func StartAgent(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
 	IfExit(agent.StartAgent(do))
 }
-
-/*func StopAgent(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args))
-	IfExit(agent.StopAgent(do))
-}*/

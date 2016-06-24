@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//XXX flags were not deduplicated if only one known instance of being used
-//this command can probably be refactored...it's quite the bloated
 func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doesn't return anything; just sets the command
 	switch flag {
 	case "known":

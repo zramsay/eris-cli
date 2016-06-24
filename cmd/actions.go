@@ -11,16 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//----------------------------------------------------------------------
-// cli definitions
-
-// Primary Actions Sub-Command
-// flags to add: --global --project
 var Actions = &cobra.Command{
 	Use:   "actions",
-	Short: "Manage and perform structured actions.",
-	Long: `Display and manage actions for various components of the
-Eris platform and for the platform itself.
+	Short: "manage and perform structured actions",
+	Long: `display and manage actions for various components of the
+Eris platform and for the platform itself
 
 Actions are bundles of commands which rely upon a project
 which is currently in scope or on a global set of actions.
@@ -56,27 +51,25 @@ func buildActionsCommand() {
 // Actions Sub-sub-Commands
 var actionsImport = &cobra.Command{
 	Use:   "import NAME LOCATION",
-	Short: "Import an action definition file from Github or IPFS.",
-	Long: `Import an action definition for your platform.
+	Short: "import an action definition file from Github or IPFS",
+	Long: `import an action definition for your platform
 
-By default, Eris will import from ipfs.`,
+By default, Eris will import from IPFS`,
 	Example: "$ eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
 	Run:     ImportAction,
 }
 
-// flags to add: template
 var actionsNew = &cobra.Command{
 	Use:   "new NAME",
-	Short: "Create a new action definition file.",
-	Long:  `Create a new action definition file optionally from a template.`,
+	Short: "create a new action definition file",
+	Long:  `create a new action definition file optionally from a template`,
 	Run:   NewAction,
 }
 
-//TODO [zr] (eventually) list all + flags, see issue #231
 var actionsList = &cobra.Command{
 	Use:   "ls",
-	Short: "List known action definition files.",
-	Long: `List known action definition files.
+	Short: "list known action definition files",
+	Long: `list known action definition files
 
 The --json flag dumps the known definition file information 
 in the JSON format.
@@ -95,8 +88,8 @@ of Go text templates. The struct passed to the Go template is this
 
 var actionsDo = &cobra.Command{
 	Use:   "do NAME",
-	Short: "Perform an action.",
-	Long: `Perform an action according to the action definition file.
+	Short: "perform an action",
+	Long: `perform an action according to the action definition file
 
 Actions are used to perform functions which are a
 semi-scriptable series of steps. These are general
@@ -125,15 +118,15 @@ $ eris actions do dns register cutemarm 111.111.111.111 -- will populate $1 and 
 
 var actionsEdit = &cobra.Command{
 	Use:   "edit NAME",
-	Short: "Edit an action definition file.",
-	Long:  `Edit an action definition file in the default editor.`,
+	Short: "edit an action definition file",
+	Long:  `edit an action definition file in the default editor`,
 	Run:   EditAction,
 }
 
 var actionsExport = &cobra.Command{
 	Use:   "export NAME",
-	Short: "Export an action definition file to IPFS.",
-	Long: `Export an action definition file to IPFS.
+	Short: "export an action definition file to IPFS",
+	Long: `export an action definition file to IPFS
 
 Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportAction,
@@ -141,15 +134,15 @@ Command will return a machine readable version of the IPFS hash.`,
 
 var actionsRename = &cobra.Command{
 	Use:     "rename OLD_NAME NEW_NAME",
-	Short:   "Rename an action.",
-	Long:    `Rename an action.`,
+	Short:   "rename an action",
+	Long:    `rename an action`,
 	Example: "$ eris actions rename OLD_NAME NEW_NAME",
 	Run:     RenameAction,
 }
 
 var actionsRemove = &cobra.Command{
 	Use:   "remove NAME",
-	Short: "Remove an action definition file.",
+	Short: "remove an action definition file",
 	Long:  `Remove an action definition file.`,
 	Run:   RmAction,
 }

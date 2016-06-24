@@ -8,14 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//TODO better explanations of command
 var Clean = &cobra.Command{
 	Use:   "clean",
-	Short: "Clean up your Eris working environment.",
-	Long: `By default, this command will stop and force remove all Eris containers 
+	Short: "clean up your Eris working environment",
+	Long: `by default, this command will stop and force remove all Eris containers 
 (chains, services, data, etc.) Addtional flags can be used to remove 
 the Eris home directory and Eris images. Useful for rapid development 
-with Docker containers.`,
+with Docker containers`,
 	Run: func(cmd *cobra.Command, args []string) {
 		CleanItUp(cmd, args)
 	},
