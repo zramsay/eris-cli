@@ -166,20 +166,10 @@ func CopyTree(src, dst string) error {
 
 		switch {
 		case mode.IsDir():
-			err := os.Mkdir(target, mode.Perm())
+			err := os.MkdirAll(target, mode.Perm())
 			if err != nil {
 				return err
 			}
-
-			dir, err := os.Open(target)
-			if err != nil {
-				return err
-			}
-			if err := dir.Chmod(mode); err != nil {
-				dir.Close()
-				return err
-			}
-			dir.Close()
 		case mode.IsRegular():
 			if err := CopyFile(path, target); err != nil {
 				return err

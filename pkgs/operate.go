@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
@@ -422,6 +423,11 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithField("=>", do.ABIPath).Debug("Setting do.ABIPath")
 	}
 
+	user, _ := user.Current()
+	if user.HomeDir == do.ABIPath {
+		do.ABIPath = filepath.Join(do.ABIPath, "abi")
+	}
+
 	// import contracts path (if exists)
 	if _, err := os.Stat(do.Path); !os.IsNotExist(err) {
 		if inbound {
@@ -486,6 +492,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	} else {
 		log.Info("Package path does not exist on the host or is inside the pkg path")
 	}
+
 
 	if inbound {
 		// Import ABI path (if exists).
