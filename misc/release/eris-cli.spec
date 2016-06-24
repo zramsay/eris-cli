@@ -31,14 +31,15 @@ git checkout ${ERIS_BRANCH}
 popd
 
 %build
-GOPATH=%{_builddir} GOBIN=%{_builddir} go get github.com/eris-ltd/eris-cli/cmd/eris
+pushd %{gorepo}
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/eris-ltd/eris-cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/eris-ltd/eris-cli/cmd/eris
+popd
 
 %install
 rm -rf ${RPM_BUILD_ROOT}
 mkdir -p ${RPM_BUILD_ROOT}/%{_bindir} ${RPM_BUILD_ROOT}/%{_mandir}/man1
 install %{_builddir}/eris ${RPM_BUILD_ROOT}/%{_bindir}
-# TODO: manual page addition is pending the issue
-# https://github.com/eris-ltd/eris-cli/issues/712.
+%{_builddir}/eris man --dump > ${RPM_BUILD_ROOT}/%{_mandir}/man1/eris.1
 cp %{gorepo}/README.md %{_builddir}/README
 cp %{gorepo}/LICENSE.md %{_builddir}/COPYING
 
@@ -46,6 +47,7 @@ cp %{gorepo}/LICENSE.md %{_builddir}/COPYING
 %defattr(-, root, root, 0755)
 %doc README COPYING
 %{_bindir}/*
+%{_mandir}/man1/*
 
 %clean
 if [ -d ${RPM_BUILD_ROOT} ]; then rm -rf $RPM_BUILD_ROOT; fi
