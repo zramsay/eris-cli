@@ -10,13 +10,13 @@ Aliases:
   {{.NameAndAliases}}{{end}}{{if .HasExample}}
 Examples:
 {{ .Example }}{{end}}{{ if .HasAvailableSubCommands}}
-Available Commands:{{range .Commands}}{{if .IsAvailableCommand}}
+Available commands:{{range .Commands}}{{if .IsAvailableCommand}}
   {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{ if .HasLocalFlags}}
 
 Flags:
 {{.LocalFlags.FlagUsages | trimRightSpace}}{{end}}{{ if .HasInheritedFlags}}
 
-Global Flags:
+Global flags:
 {{.InheritedFlags.FlagUsages | trimRightSpace}}{{end}}{{if .HasHelpSubCommands}}
 
 Additional help topics:{{range .Commands}}{{if .IsHelpCommand}}
