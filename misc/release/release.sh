@@ -126,18 +126,21 @@ token_check() {
 }
 
 cross_compile() {
-  echo "Starting cross compile"
   pushd ${REPO}/cmd/eris
-  GOOS=linux   GOARCH=386    go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_386
-  GOOS=linux   GOARCH=amd64  go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_amd64
-  GOOS=darwin  GOARCH=386    go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_386
-  GOOS=darwin  GOARCH=amd64  go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_amd64
-  GOOS=windows GOARCH=386    go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_386.exe
-  GOOS=windows GOARCH=amd64  go build -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_amd64.exe
-  popd
+  echo "Starting cross compile"
+
+  LDFLAGS="-X github.com/eris-ltd/eris-cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+
+  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_386
+  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_amd64
+  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_386
+  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_amd64
+  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_386.exe
+  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_amd64.exe
   echo "Cross compile completed"
   echo ""
   echo ""
+  popd
 }
 
 prepare_gh() {
@@ -194,12 +197,16 @@ release_deb() {
     ERIS_RELEASE="$@"
   fi
 
+  # reprepro(1) doesn't allow '-' in version numbers (that is '-rc1', etc).
+  # Debian versions are not SemVer compatible.
+  ERIS_DEB_VERSION=${ERIS_VERSION//-/}
+
   docker rm -f builddeb 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-deb -t builddeb ${REPO}/misc/release \
   && docker run \
     -t \
     --name builddeb \
-    -e ERIS_VERSION=${ERIS_VERSION} \
+    -e ERIS_VERSION=${ERIS_DEB_VERSION} \
     -e ERIS_RELEASE=${ERIS_RELEASE} \
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
@@ -210,7 +217,7 @@ release_deb() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     builddeb "$@" \
-  && docker cp builddeb:/root/eris_${ERIS_VERSION}-${ERIS_RELEASE}_amd64.deb ${BUILD_DIR} \
+  && docker cp builddeb:/root/eris_${ERIS_DEB_VERSION}-${ERIS_RELEASE}_amd64.deb ${BUILD_DIR} \
   && docker rm -f builddeb
   echo "Finished releasing Debian packages"
 }
@@ -225,12 +232,16 @@ release_rpm() {
     ERIS_RELEASE="$@"
   fi
 
+  # rpmbuild(1) doesn't allow '-' in version numbers (that is '-rc1', etc).
+  # RPM versions are not SemVer compatible.
+  ERIS_RPM_VERSION=${ERIS_VERSION//-/_}
+
   docker rm -f buildrpm 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-rpm -t buildrpm ${REPO}/misc/release \
   && docker run \
     -t \
     --name buildrpm \
-    -e ERIS_VERSION=${ERIS_VERSION} \
+    -e ERIS_VERSION=${ERIS_RPM_VERSION} \
     -e ERIS_RELEASE=${ERIS_RELEASE} \
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
@@ -241,7 +252,7 @@ release_rpm() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-cli-${ERIS_VERSION}-${ERIS_RELEASE}.x86_64.rpm ${BUILD_DIR} \
+  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-cli-${ERIS_RPM_VERSION}-${ERIS_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
   echo "Finished releasing RPM packages"
 }
