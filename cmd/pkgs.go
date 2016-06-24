@@ -1,8 +1,5 @@
 // +build !arm
 
-// Conditional build for ARM.
-// Related to issue #751
-// TODO: remove file after issue fixed
 package commands
 
 import (
@@ -19,16 +16,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Primary Packages Sub-Command
 var Packages = &cobra.Command{
 	Use:   "pkgs",
-	Short: "Deploy, Test, and Manage Your Smart Contract Packages.",
-	Long: `The pkgs subcommand is used to test and deploy
-smart contract packages for use by your application.`,
+	Short: "deploy, test, and manage your smart contract packages",
+	Long: `the pkgs subcommand is used to test and deploy
+smart contract packages for use by your application`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// build the contracts subcommand
 func buildPackagesCommand() {
 	Packages.AddCommand(packagesDo)
 	Packages.AddCommand(packagesImport)
@@ -38,34 +33,32 @@ func buildPackagesCommand() {
 
 var packagesImport = &cobra.Command{
 	Use:   "import HASH NAME",
-	Short: "Pull a package of smart contracts from IPFS.",
-	Long: `Pull a package of smart contracts from IPFS
+	Short: "pull a package of smart contracts from IPFS",
+	Long: `pull a package of smart contracts from IPFS
 via its hash and save it locally to ~/.eris/apps/NAME.
-This package needs to have been added as directory to ipfs,
-with [eris pkgs export someDir/].`,
+This package needs to have been added as directory to IPFS,
+with [eris pkgs export someDir/]`,
 	Run: PackagesImport,
 }
 
 var packagesExport = &cobra.Command{
 	Use:   "export DIR",
-	Short: "Post a package of smart contracts to IPFS.",
-	Long: `Post a package of smart contracts to IPFS.
-Give a path to a directory, which will be added to ipfs recusively.`,
+	Short: "post a package of smart contracts to IPFS",
+	Long: `post a package of smart contracts to IPFS.
+Give a path to a directory, which will be added to ipfs recusively`,
 	Run: PackagesExport,
 }
 
 var packagesDo = &cobra.Command{
 	Use:   "do",
-	Short: "Deploy or test a package of smart contracts to a chain.",
-	Long: `Deploy or test a package of smart contracts to a chain.
+	Short: "deploy or test a package of smart contracts to a chain",
+	Long: `deploy or test a package of smart contracts to a chain
 
 [eris pkgs do] will perform the required functionality included
-in a package definition file.`,
+in a package definition file`,
 	Run: PackagesDo,
 }
 
-//----------------------------------------------------
-// XXX todo deduplicate flags -> [zr] things get wonky with epm
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	packagesDo.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
@@ -85,8 +78,6 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
 }
-
-//----------------------------------------------------
 
 func PackagesImport(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))

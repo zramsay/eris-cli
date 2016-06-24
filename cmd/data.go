@@ -14,12 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Primary Data Sub-Command
 var Data = &cobra.Command{
 	Use:   "data",
-	Short: "Manage data containers for your application.",
-	Long: `The data subcommand is used to import, and export
-data into containers for use by your application.
+	Short: "manage data containers for your application",
+	Long: `the data subcommand is used to import, and export
+data into containers for use by your application
 
 The [eris data import] and [eris data export] commands should be
 thought of from the point of view of the container.
@@ -41,7 +40,6 @@ containers"`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// build the data subcommand
 func buildDataCommand() {
 	Data.AddCommand(dataImport)
 	Data.AddCommand(dataList)
@@ -55,30 +53,30 @@ func buildDataCommand() {
 
 var dataImport = &cobra.Command{
 	Use:   "import NAME SRC DEST",
-	Short: "Import from a host folder to a named data container's directory",
-	Long: `Import from a host folder to a named data container's directory.
+	Short: "import from a host folder to a named data container's directory",
+	Long: `import from a host folder to a named data container's directory
 Requires src and dest for each host and container, respectively.
 Container path enters at /home/eris/.eris and destination directory
 will be created in container if it does not exist.
 
 Command will also create a new data container if data container
-(NAME) does not exist.`,
+NAME does not exist`,
 	Run: ImportData,
 }
 
 var dataExport = &cobra.Command{
 	Use:   "export NAME SRC DEST",
-	Short: "Export a named data container's directory to a host directory",
-	Long: `Export a named data container's directory to a host directory.
+	Short: "export a named data container's directory to a host directory",
+	Long: `export a named data container's directory to a host directory
 Requires src and dest for each container and host, respectively.
-Container path enters at /home/eris/.eris.`,
+Container path enters at /home/eris/.eris`,
 	Run: ExportData,
 }
 
 var dataList = &cobra.Command{
 	Use:   "ls",
-	Short: "List the data containers eris manages for you",
-	Long: `List data containers.
+	Short: "list the data containers eris manages for you",
+	Long: `list data containers.
 
 The --json flag dumps the container or known files information
 in the JSON format.
@@ -94,9 +92,9 @@ $ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Env}}' -- container environmen
 
 var dataExec = &cobra.Command{
 	Use:   "exec",
-	Short: "Run a command or interactive shell in a data container",
-	Long: `Run a command or interactive shell in a container with
-volumes-from the data container.
+	Short: "run a command or interactive shell in a data container",
+	Long: `run a command or interactive shell in a container with
+volumes-from the data container
 
 Exec can be used to run a single one off command to interact
 with the data. Use it for things like ls.
@@ -119,26 +117,24 @@ $ eris data exec --interactive name -- will start interactive console`,
 
 var dataRename = &cobra.Command{
 	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "Rename a data container",
-	Long:  `Rename a data container`,
+	Short: "rename a data container",
+	Long:  `rename a data container`,
 	Run:   RenameData,
 }
 
 var dataInspect = &cobra.Command{
 	Use:   "inspect NAME [KEY]",
-	Short: "Show machine readable details.",
-	Long:  `Display machine readable details about running containers.`,
+	Short: "show machine readable details",
+	Long:  `display machine readable details about running containers`,
 	Run:   InspectData,
 }
 
 var dataRm = &cobra.Command{
 	Use:   "rm NAME",
-	Short: "Remove a data container",
-	Long:  `Remove a data container`,
+	Short: "remove a data container",
+	Long:  `remove a data container`,
 	Run:   RmData,
 }
-
-//----------------------------------------------------
 
 func addDataFlags() {
 	dataRm.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove data folder from host")
@@ -197,7 +193,6 @@ func ImportData(cmd *cobra.Command, args []string) {
 	IfExit(data.ImportData(do))
 }
 
-//src in container, dest on host
 func ExportData(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]

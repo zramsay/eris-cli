@@ -8,13 +8,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Primary Files Sub-Command
-// Flags to add: ipfsHost
 var Files = &cobra.Command{
 	Use:   "files",
-	Short: "Manage files needed for your application using IPFS.",
-	Long: `The files subcommand is used to import, and export
-files to and from IPFS for use on the host machine.
+	Short: "manage files needed for your application using IPFS",
+	Long: `the files subcommand is used to import, and export
+files to and from IPFS for use on the host machine
 
 These commands are provided in addition to the various
 functionality which is included throughout the tool, such as
@@ -29,7 +27,6 @@ or two to boot and then retry the eris files command which failed.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// build the files subcommand
 func buildFilesCommand() {
 	Files.AddCommand(filesImport)
 	Files.AddCommand(filesExport)
@@ -41,24 +38,24 @@ func buildFilesCommand() {
 }
 
 var filesImport = &cobra.Command{
-	Use:   "get HASH FILE/DIR",
-	Short: "Pull files/objects from IPFS via a hash and save them locally.",
-	Long:  `Pull files/objects from IPFS via a hash and save them locally.`,
+	Use:   "get HASH FILE|DIR",
+	Short: "pull files/objects from IPFS via a hash and save them locally",
+	Long:  `pull files/objects from IPFS via a hash and save them locally`,
 	Run:   FilesGet,
 }
 
 var filesExport = &cobra.Command{
-	Use:   "put FILE/DIR",
-	Short: "Post files or whole directories to IPFS.",
-	Long: `Post files or whole directories to IPFS.
+	Use:   "put FILE|DIR",
+	Short: "post files or whole directories to IPFS",
+	Long: `post files or whole directories to IPFS
 Directories will be added as objects in the MerkleDAG.`,
 	Run: FilesPut,
 }
 
 var filesCache = &cobra.Command{
 	Use:   "cache HASH",
-	Short: "Cache files to IPFS.",
-	Long: `Cache files to IPFS' local daemon.
+	Short: "cache files to IPFS",
+	Long: `cache files to IPFS' local daemon
 
 It caches files locally via IPFS pin, by hash.
 
@@ -68,30 +65,26 @@ NOTE: "put" will "cache" recursively by default.`,
 
 var filesCat = &cobra.Command{
 	Use:   "cat HASH",
-	Short: "Cat the contents of a file from IPFS.",
-	Long:  "Cat the contents of a file from IPFS.",
+	Short: "cat the contents of a file from IPFS",
+	Long:  "cat the contents of a file from IPFS",
 	Run:   FilesCat,
 }
 
 var filesList = &cobra.Command{
 	Use:   "ls HASH",
-	Short: "List links from an IPFS object.",
-	//TODO [zr] test listing up and down through DAG
-	Long: "List an object named by HASH/FILE and display the link it contains.",
-	Run:  FilesList,
+	Short: "list links from an IPFS object",
+	Long:  "List an object named by HASH/FILE and display the link it contains",
+	Run:   FilesList,
 }
 
 var filesCached = &cobra.Command{
 	Use:   "cached",
-	Short: "List files cached locally.",
-	Long:  `Display list of files cached locally.`,
+	Short: "list files cached locally",
+	Long:  `display list of files cached locally`,
 	Run:   FilesManageCached,
 }
 
-//--------------------------------------------------------------
-// cli flags
 func addFilesFlags() {
-
 	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"eris\" for our gateway, or use your own with \"http://yourhost\"")
 
 	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
@@ -101,9 +94,7 @@ func addFilesFlags() {
 func FilesGet(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Hash = args[0]
-	do.Path = args[1] // where it is saved
-	// TODO make above a flag with `-o` (--output)
-	// similar to curl GET -o
+	do.Path = args[1]
 	IfExit(files.GetFiles(do))
 }
 

@@ -1,10 +1,10 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
-	"errors"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
@@ -15,11 +15,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Primary Chains Sub-Command
 var Chains = &cobra.Command{
 	Use:   "chains",
-	Short: "Start, stop, and manage blockchains.",
-	Long: `Start, stop, and manage blockchains.
+	Short: "start, stop, and manage blockchains",
+	Long: `start, stop, and manage blockchains
 
 The chains subcommand is used to work on erisdb smart contract
 blockchain networks. The name is not perfect, as eris is able
@@ -37,7 +36,6 @@ away!`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// Build the chains subcommand
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
@@ -58,15 +56,13 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
-	// Chains.AddCommand(chainsMakeGenesis)
 	addChainsFlags()
 }
 
-// Chains Sub-sub-Commands
 var chainsMake = &cobra.Command{
 	Use:   "make NAME",
-	Short: "Create keys and a genesis block for your chain.",
-	Long: `Create the new required files for your chain.
+	Short: "create keys and a genesis block for your chain",
+	Long: `create the new required files for your chain
 
 Make is an opinionated gateway to the basic types of chains which most eris users
 will make most of the time. Make is a command line wizard in which you will let
@@ -103,8 +99,8 @@ $ eris chains make myChain --tar -- will create the chain and save each of the "
 
 var chainsNew = &cobra.Command{
 	Use:   "new NAME",
-	Short: "Create and start a new blockhain.",
-	Long: `Create and start a new blockchain.
+	Short: "create and start a new blockhain",
+	Long: `create and start a new blockchain
 
 The creation process will both create a blockchain on the current machine
 as well as start running that chain.
@@ -137,8 +133,8 @@ $ eris chains new simplechain --ports 46656:50000 -- redefine the specific port 
 
 var chainsRegister = &cobra.Command{
 	Use:   "register NAME",
-	Short: "Register a blockchain on etcb (a blockchain for registering other blockchains).",
-	Long: `Register a blockchain on etcb.
+	Short: "register a blockchain on etcb (a blockchain for registering other blockchains)",
+	Long: `register a blockchain on etcb
 
 etcb is Eris's blockchain which is a public blockchain that can be used to
 register *other* blockchains. In other words it is an easy way to "share"
@@ -157,8 +153,8 @@ into the blockchain.`,
 
 var chainsInstall = &cobra.Command{
 	Use:   "install NAME",
-	Short: "Install a blockchain from the etcb registry.",
-	Long: `Install a blockchain from the etcb registry.
+	Short: "Install a blockchain from the etcb registry",
+	Long: `install a blockchain from the etcb registry
 
 Install an existing erisdb based blockchain for use locally.
 
@@ -168,8 +164,8 @@ Install an existing erisdb based blockchain for use locally.
 
 var chainsList = &cobra.Command{
 	Use:   "ls",
-	Short: "Lists everything chain related.",
-	Long: `List chains or known chain definition files.
+	Short: "lists everything chain related",
+	Long: `list chains or known chain definition files
 
 The -r flag limits the output to running chains only.
 
@@ -197,8 +193,8 @@ $ eris chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 
 var chainsImport = &cobra.Command{
 	Use:   "import NAME LOCATION",
-	Short: "Import a chain definition file from Github or IPFS.",
-	Long: `Import a chain definition for your platform.
+	Short: "import a chain definition file from Github or IPFS",
+	Long: `import a chain definition for your platform
 
 By default, Eris will import from IPFS.
 
@@ -208,9 +204,9 @@ To list known chains use: [eris chains ls --known].`,
 }
 
 var chainsCheckout = &cobra.Command{
-	Use:   "checkout [NAME]",
-	Short: "Check out a chain.",
-	Long: `Check out a chain.
+	Use:   "checkout NAME",
+	Short: "check out a chain",
+	Long: `check out a chain
 
 Checkout is a convenience feature. For any Eris command which accepts a
 --chain or $chain variable, the checked out chain can replace manually
@@ -224,8 +220,8 @@ be no chain checked out.`,
 
 var chainsPorts = &cobra.Command{
 	Use:   "ports NAME [PORT]...",
-	Short: "Print port mappings.",
-	Long: `Print port mappings.
+	Short: "print port mappings",
+	Long: `print port mappings
 
 The [eris chains ports] command is mostly a developer
 convenience function. It returns a machine readable
@@ -244,8 +240,8 @@ $ eris chains ports myChain -- will display all mappings`,
 
 var chainsHead = &cobra.Command{
 	Use:   "current",
-	Short: "The currently checked out chain.",
-	Long: `Displays the name of the currently checked out chain.
+	Short: "the currently checked out chain",
+	Long: `displays the name of the currently checked out chain
 
 To checkout a new chain use [eris chains checkout NAME].
 
@@ -255,8 +251,8 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 
 var chainsEdit = &cobra.Command{
 	Use:   "edit NAME",
-	Short: "Edit a blockchain.",
-	Long: `Edit a blockchain definition file.
+	Short: "edit a blockchain",
+	Long: `edit a blockchain definition file
 
 Edit will utilize the default editor set for your current shell
 or if none is set, it will use *vim*. Sorry for the bias Emacs
@@ -268,14 +264,14 @@ will default to that if you wise.`,
 
 var chainsStart = &cobra.Command{
 	Use:   "start",
-	Short: "Start a blockchain.",
-	Long: `Start running a blockchain.
+	Short: "start a blockchain",
+	Long: `start running a blockchain
 
 [eris chains start NAME] by default will put the chain into the
 background so its logs will not be viewable from the command line.
 
-To stop the chain use:      [eris chains stop NAME].
-To view a chain's logs use: [eris chains logs NAME].
+To stop the chain use:      [eris chains stop NAME]
+To view a chain's logs use: [eris chains logs NAME]
 
 You can redefine the chain ports accessible over the network with the --ports flag.
 See the [eris chains new] command for examples.
@@ -285,30 +281,30 @@ See the [eris chains new] command for examples.
 
 var chainsLogs = &cobra.Command{
 	Use:   "logs NAME",
-	Short: "Display the logs of a blockchain.",
-	Long:  `Display the logs of a blockchain.`,
+	Short: "display the logs of a blockchain",
+	Long:  `display the logs of a blockchain`,
 	Run:   LogChain,
 }
 
 var chainsExec = &cobra.Command{
 	Use:   "exec NAME",
-	Short: "Run a command or interactive shell",
-	Long: `Run a command or interactive shell in a container
+	Short: "run a command or interactive shell",
+	Long: `run a command or interactive shell in a container
 with volumes-from the data container`,
 	Run: ExecChain,
 }
 
 var chainsStop = &cobra.Command{
 	Use:   "stop NAME",
-	Short: "Stop a running blockchain.",
-	Long:  `Stop a running blockchain.`,
+	Short: "stop a running blockchain",
+	Long:  `stop a running blockchain`,
 	Run:   KillChain,
 }
 
 var chainsInspect = &cobra.Command{
 	Use:   "inspect NAME [KEY]",
-	Short: "Machine readable chain operation details.",
-	Long: `Display machine readable details about running containers.
+	Short: "machine readable chain operation details",
+	Long: `display machine readable details about running containers
 
 Information available to the inspect command is provided by the
 Docker API. For more information about return values,
@@ -321,8 +317,8 @@ $ eris chains inspect 2gather host_config.binds -- will display only that value`
 
 var chainsExport = &cobra.Command{
 	Use:   "export NAME",
-	Short: "Export a chain definition file to IPFS.",
-	Long: `Export a chain definition file to IPFS.
+	Short: "export a chain definition file to IPFS",
+	Long: `export a chain definition file to IPFS
 
 Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportChain,
@@ -330,15 +326,15 @@ Command will return a machine readable version of the IPFS hash.`,
 
 var chainsRename = &cobra.Command{
 	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "Rename a blockchain.",
-	Long:  `Rename a blockchain.`,
+	Short: "rename a blockchain",
+	Long:  `rename a blockchain`,
 	Run:   RenameChain,
 }
 
 var chainsRemove = &cobra.Command{
 	Use:   "rm NAME",
-	Short: "Remove an installed chain.",
-	Long: `Remove an installed chain.
+	Short: "remove an installed chain",
+	Long: `remove an installed chain
 
 Command will remove the chain's container but will not
 remove the chain definition file.`,
@@ -347,8 +343,8 @@ remove the chain definition file.`,
 
 var chainsUpdate = &cobra.Command{
 	Use:   "update NAME",
-	Short: "Update an installed chain.",
-	Long: `Update an installed chain, or install it if it has not been installed.
+	Short: "update an installed chain",
+	Long: `update an installed chain, or install it if it has not been installed
 
 Functionally this command will perform the following sequence:
 
@@ -366,36 +362,21 @@ by the update command.
 
 var chainsRestart = &cobra.Command{
 	Use:   "restart NAME",
-	Short: "Restart chain.",
-	Long:  `Restart chain.`,
+	Short: "restart chain",
+	Long:  `restart chain`,
 	Run:   RestartChain,
 }
 
 var chainsCat = &cobra.Command{
 	Use:     "cat NAME [config|genesis]",
-	Short:   "Display chain information.",
-	Long:    `Display chain information.`,
+	Short:   "display chain information",
+	Long:    `display chain information`,
 	Aliases: []string{"plop"},
 	Example: `$ eris chains cat simplechain -- will display the chain definition file
 $ eris chains cat simplechain config -- will display the config.toml file from inside the container
 $ eris chains cat simplechain genesis -- will display the genesis.json file from the container`,
 	Run: CatChain,
 }
-
-// var chainsMakeGenesis = &cobra.Command{
-// 	Use:   "make-genesis NAME KEY",
-// 	Short: "Generates a genesis file.",
-// 	Long: `Generates a genesis file with chainNAME and a single pubkey.
-
-// Command is equivalent to: [eris chains exec someChain "mintgen known NAME KEY"]
-
-// but does not require a pre-existing chain to execute.
-
-// see https://github.com/eris-ltd/mint-client for more info`,
-// 	Run: MakeGenesisFile,
-// }
-
-//----------------------------------------------------------------------
 
 func addChainsFlags() {
 	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account-types; incompatible with and overrides chain-type")
@@ -408,33 +389,12 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 
-	// [csk]: the flags below are commented out to reduce the complexity of this command. chains new should just use dirs....
-	// buildFlag(chainsNew, do, "config", "chain")
-	// buildFlag(chainsNew, do, "serverconf", "chain")
-	// chainsNew.PersistentFlags().StringVarP(&do.GenesisFile, "genesis", "g", "", "genesis.json file")
-	// chainsNew.PersistentFlags().StringSliceVarP(&do.ConfigOpts, "options", "", nil, "space separated <key>=<value> pairs to set in config.toml")
-	// chainsNew.PersistentFlags().StringVarP(&do.Priv, "priv", "", "", "pass in a priv_validator.json file (dev-only!)")
 	buildFlag(chainsNew, do, "dir", "chain")
 	buildFlag(chainsNew, do, "env", "chain")
 	buildFlag(chainsNew, do, "publish", "chain")
 	buildFlag(chainsNew, do, "ports", "chain")
 	buildFlag(chainsNew, do, "links", "chain")
 	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
-
-	// buildFlag(chainsRegister, do, "links", "chain")
-	// buildFlag(chainsRegister, do, "env", "chain")
-	// chainsRegister.PersistentFlags().StringVarP(&do.Pubkey, "pub", "p", "", "pubkey to use for registering the chain in etcb")
-	// chainsRegister.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
-	// chainsRegister.PersistentFlags().StringVarP(&do.ChainID, "etcb-chain", "", "etcb_testnet", "set the chain id of the etcb chain")
-
-	// buildFlag(chainsInstall, do, "publish", "chain")
-	// buildFlag(chainsInstall, do, "links", "chain")
-	// buildFlag(chainsInstall, do, "env", "chain")
-	// buildFlag(chainsInstall, do, "config", "chain")
-	// buildFlag(chainsInstall, do, "serverconf", "chain")
-	// buildFlag(chainsInstall, do, "dir", "chain")
-	// chainsInstall.PersistentFlags().StringVarP(&do.ChainID, "id", "", "", "id of the chain to fetch")
-	// chainsInstall.PersistentFlags().StringVarP(&do.Gateway, "etcb-host", "", "interblock.io:46657", "set the address of the etcb chain")
 
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "ports", "chain")
@@ -520,22 +480,12 @@ func KillChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.KillChain(do))
 }
 
-// fetch and install a chain
-//
-// the idea here is you will either specify a chainName as the arg and that will
-// double as the chainID, or you want a local reference name for the chain, so you specify
-// the chainID with a flag and give your local reference name as the arg
 func InstallChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.InstallChain(do))
 }
 
-// make the genesis files for a chain
-//
-// MakeChain will assemble the necessary files for a new blockchain. it does not
-// actually make the chain or start it (that happens in new), but it does create
-// the predicate files for more complex chains than is typically used in default
 func MakeChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
@@ -560,9 +510,6 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.MakeChain(do))
 }
 
-// create a new chain
-//
-// genesis is either given or a simple single-validator genesis will be laid for you
 func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
@@ -573,7 +520,6 @@ func NewChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.NewChain(do))
 }
 
-// register a chain in the etcb chain registry
 func RegisterChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
@@ -581,7 +527,6 @@ func RegisterChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.RegisterChain(do))
 }
 
-// import a chain definition file
 func ImportChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
@@ -589,7 +534,6 @@ func ImportChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.ImportChain(do))
 }
 
-// checkout a chain
 func CheckoutChain(cmd *cobra.Command, args []string) {
 	if len(args) >= 1 {
 		do.Name = args[0]
@@ -621,7 +565,6 @@ func PortsChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.PortsChain(do))
 }
 
-// edit a chain definition file
 func EditChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
@@ -700,8 +643,8 @@ func RmChain(cmd *cobra.Command, args []string) {
 }
 
 func MakeGenesisFile(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))       //eq doesn't fly...
-	do.Chain.Name = strings.TrimSpace(args[0]) //trim for bash
+	IfExit(ArgCheck(2, "ge", cmd, args))
+	do.Chain.Name = strings.TrimSpace(args[0])
 	do.Pubkey = strings.TrimSpace(args[1])
 	IfExit(chns.MakeGenesisFile(do))
 

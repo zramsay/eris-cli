@@ -10,8 +10,8 @@ import (
 var Update = &cobra.Command{
 	Use:     "update",
 	Aliases: []string{"upgrade"},
-	Short:   "Update the eris tool.",
-	Long: `Fetch the latest version (master branch by default)
+	Short:   "update the eris tool",
+	Long: `fetch the latest version (master branch by default)
 and re-install eris. Once eris is reinstalled, then the
 eris init function will be called automatically for you
 in order to update your definition files and images.
@@ -30,8 +30,6 @@ func buildUpdateCommand() {
 
 func addUpdateFlags() {
 	Update.Flags().StringVarP(&do.Branch, "branch", "b", "master", "specify a branch to update from")
-	//Update.Flags().StringVarP(&do.Commit, "commit", "", "", "specify a commit to update from")
-	//Update.Flags().StringVarP(&do.Version, "version", "", "", "specify a version to update from")
 }
 
 func UpdateTool(cmd *cobra.Command, args []string) {

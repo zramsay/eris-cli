@@ -16,8 +16,8 @@ import (
 
 var ManPage = &cobra.Command{
 	Use:   "man",
-	Short: "Display a man page.",
-	Long:  `Display the Eris man page.`,
+	Short: "display a man page",
+	Long:  `display the Eris man page`,
 	Run: func(cmd *cobra.Command, args []string) {
 		man := new(bytes.Buffer)
 

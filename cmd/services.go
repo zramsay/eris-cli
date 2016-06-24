@@ -14,14 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//----------------------------------------------------------------------
-// cli definition
-
-// Primary Services Sub-Command
 var Services = &cobra.Command{
 	Use:   "services",
-	Short: "Start, stop, and manage services required for your application",
-	Long: `Start, stop, and manage services required for your application.
+	Short: "start, stop, and manage services required for your application",
+	Long: `start, stop, and manage services required for your application
 
 Eris services are "things that you turn on or off". They are meant to be long
 running microservices on which your application relies. They can be public
@@ -31,7 +27,6 @@ image.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// build the services subcommand
 func buildServicesCommand() {
 	Services.AddCommand(servicesMake)
 	Services.AddCommand(servicesImport)
@@ -51,13 +46,10 @@ func buildServicesCommand() {
 	addServicesFlags()
 }
 
-// Services Sub-sub-Commands
-
-//lists all or specify flag
 var servicesList = &cobra.Command{
 	Use:   "ls",
-	Short: "Lists everything service related.",
-	Long: `List services or known service definition files.
+	Short: "lists everything service related",
+	Long: `list services or known service definition files
 
 The -r flag limits the output to running services only.
 
@@ -86,16 +78,16 @@ $ eris services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
 
 var servicesImport = &cobra.Command{
 	Use:     "import NAME HASH",
-	Short:   "Import a service definition file from IPFS.",
-	Long:    `Import a service for your platform.`,
+	Short:   "import a service definition file from IPFS",
+	Long:    `import a service for your platform`,
 	Example: "$ eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
 	Run:     ImportService,
 }
 
 var servicesMake = &cobra.Command{
 	Use:   "make NAME IMAGE",
-	Short: "Create a new service.",
-	Long: `Create a new service.
+	Short: "create a new service",
+	Long: `create a new service
 
 Command must be given a NAME and a container IMAGE using the standard
 docker format of [repository/organization/image].`,
@@ -106,8 +98,8 @@ docker format of [repository/organization/image].`,
 
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
-	Short: "Edit a service.",
-	Long: `Edit a service definition file which is kept in ~/.eris/services.
+	Short: "edit a service",
+	Long: `edit a service definition file which is kept in ~/.eris/services.
 Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
@@ -121,9 +113,9 @@ definition files.`,
 
 var servicesStart = &cobra.Command{
 	Use:   "start NAME",
-	Short: "Start a service.",
-	Long: `Start a service according to the service definition file which
-eris stores in the ~/.eris/services directory.
+	Short: "start a service",
+	Long: `start a service according to the service definition file which
+eris stores in the ~/.eris/services directory
 
 The [eris services start NAME] command by default will put the
 service into the background so its logs will not be viewable
@@ -144,8 +136,8 @@ $ eris services start ipfs --ports 50000:5001 -- redefine the specific port mapp
 
 var servicesInspect = &cobra.Command{
 	Use:   "inspect NAME [KEY]",
-	Short: "Machine readable service operation details.",
-	Long: `Display machine readable details about running containers.
+	Short: "machine readable service operation details",
+	Long: `display machine readable details about running containers
 
 Information available to the inspect command is provided by the Docker API.
 For more information about return values, see:
@@ -158,8 +150,8 @@ $ eris services inspect ipfs host_config.binds -- will display only that value`,
 
 var servicesPorts = &cobra.Command{
 	Use:   "ports NAME [PORT]...",
-	Short: "Print port mappings",
-	Long: `Print port mappings.
+	Short: "print port mappings",
+	Long: `print port mappings
 
 The [eris services ports] command displays published service ports.`,
 	Example: `$ eris services ports ipfs -- will display all IPFS ports
@@ -169,8 +161,8 @@ $ eris services ports ipfs 4001 5001 -- will display specific IPFS ports`,
 
 var servicesExport = &cobra.Command{
 	Use:   "export NAME",
-	Short: "Export a service definition file to IPFS.",
-	Long: `Export a service definition file to IPFS.
+	Short: "export a service definition file to IPFS",
+	Long: `export a service definition file to IPFS
 
 Command will return a machine readable version of the IPFS hash.`,
 	Run: ExportService,
@@ -178,23 +170,22 @@ Command will return a machine readable version of the IPFS hash.`,
 
 var servicesLogs = &cobra.Command{
 	Use:   "logs NAME",
-	Short: "Display the logs of a running service.",
-	Long:  `Display the logs of a running service.`,
+	Short: "display the logs of a running service",
+	Long:  `display the logs of a running service`,
 	Run:   LogService,
 }
 
 var servicesExec = &cobra.Command{
 	Use:   "exec NAME",
-	Short: "Run a command or interactive shell",
-	Long:  "Run a command or interactive shell in a container with volumes-from the data container",
+	Short: "run a command or interactive shell",
+	Long:  "run a command or interactive shell in a container with volumes-from the data container",
 	Run:   ExecService,
 }
 
-// stop stops a running service
 var servicesStop = &cobra.Command{
 	Use:   "stop NAME",
-	Short: "Stop a running service.",
-	Long:  `Stop a service which is currently running.`,
+	Short: "stop a running service",
+	Long:  `stop a service which is currently running`,
 	Run:   KillService,
 }
 
@@ -208,8 +199,8 @@ var servicesRename = &cobra.Command{
 var servicesUpdate = &cobra.Command{
 	Use:     "update NAME",
 	Aliases: []string{"restart"},
-	Short:   "Update an installed service.",
-	Long: `Update an installed service, or install it if it has not been installed.
+	Short:   "update an installed service",
+	Long: `update an installed service, or install it if it has not been installed
 
 Functionally this command will perform the following sequence of steps:
 
@@ -226,8 +217,8 @@ by the [eris update] command.`,
 
 var servicesRm = &cobra.Command{
 	Use:   "rm NAME",
-	Short: "Remove an installed service.",
-	Long: `Remove an installed service.
+	Short: "remove an installed service",
+	Long: `remove an installed service
 
 Command will remove the service's container but will not remove
 the service definition file.`,
@@ -236,15 +227,12 @@ the service definition file.`,
 
 var servicesCat = &cobra.Command{
 	Use:   "cat NAME",
-	Short: "Display the service definition file.",
-	Long: `Display the service definition file.
+	Short: "display the service definition file",
+	Long: `display the service definition file
 
 Command will cat local service definition file.`,
 	Run: CatService,
 }
-
-//----------------------------------------------------------------------
-// cli flags
 
 func addServicesFlags() {
 	buildFlag(servicesLogs, do, "follow", "service")
@@ -329,7 +317,6 @@ func KillService(cmd *cobra.Command, args []string) {
 	IfExit(srv.KillService(do))
 }
 
-// install
 func ImportService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
@@ -383,7 +370,6 @@ func ExportService(cmd *cobra.Command, args []string) {
 	IfExit(srv.ExportService(do))
 }
 
-// Updates an installed service, or installs it if it has not been installed.
 func UpdateService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
