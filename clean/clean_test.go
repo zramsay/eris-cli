@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	srv "github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -67,7 +67,7 @@ func TestRemoveAllErisContainers(t *testing.T) {
 }
 
 func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)); err != nil {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 

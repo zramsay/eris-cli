@@ -16,7 +16,6 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -405,7 +404,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -426,7 +425,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -447,7 +446,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := tests.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -486,7 +485,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 data_container = false
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -538,7 +537,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -590,7 +589,7 @@ chain = "`+chain+`:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -641,7 +640,7 @@ chain = "blah-blah:blah"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -675,7 +674,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -688,7 +687,7 @@ chain = "$chain:sham"
 
 [service]
 name = "sham"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a sham service definition: %v", err)

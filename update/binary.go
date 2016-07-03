@@ -12,7 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/config"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -120,7 +120,7 @@ func MakeDockerfile(branch string) string {
 	var dockerfile string
 
 	// baseImage is `quay.io/eris/data` // because the user already has it
-	baseImage := path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
+	baseImage := path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA)
 	// todo: clean up Dockerfile as much as possible
 
 	baseDockerfile := fmt.Sprintf(`

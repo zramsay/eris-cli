@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -81,9 +82,9 @@ func dropChainDefaults(dir, from string) error {
 	}
 
 	//move things to where they ought to be
-	config := filepath.Join(dir, "config.toml")
+	confiG := filepath.Join(dir, "config.toml")
 	configDef := filepath.Join(chnDir, "config.toml")
-	if err := os.Rename(config, configDef); err != nil {
+	if err := os.Rename(confiG, configDef); err != nil {
 		return err
 	}
 
@@ -97,13 +98,12 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		//ver.ERIS_IMG_BASE,
-		ver.ERIS_IMG_DATA,
-		ver.ERIS_IMG_KEYS,
-		ver.ERIS_IMG_IPFS,
-		ver.ERIS_IMG_DB,
-		ver.ERIS_IMG_PM,
-		ver.ERIS_IMG_CM,
+		config.GlobalConfig.Config.ERIS_IMG_DATA,
+		config.GlobalConfig.Config.ERIS_IMG_KEYS,
+		config.GlobalConfig.Config.ERIS_IMG_IPFS,
+		config.GlobalConfig.Config.ERIS_IMG_DB,
+		config.GlobalConfig.Config.ERIS_IMG_PM,
+		config.GlobalConfig.Config.ERIS_IMG_CM,
 	}
 
 	// Spacer.
@@ -127,12 +127,12 @@ func pullDefaultImages() error {
 			tag = nameSplit[2]
 		}
 		image = nameSplit[0]
-		img := path.Join(ver.ERIS_REG_DEF, image)
+		img := path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, image)
 
 		r, w := io.Pipe()
 		opts := docker.PullImageOptions{
 			Repository:    img,
-			Registry:      ver.ERIS_REG_DEF,
+			Registry:      config.GlobalConfig.Config.ERIS_REG_DEF,
 			Tag:           tag,
 			OutputStream:  w,
 			RawJSONStream: true,
@@ -151,7 +151,7 @@ func pullDefaultImages() error {
 
 			if err := util.DockerClient.PullImage(opts, auth); err != nil {
 				opts.Repository = image
-				opts.Registry = ver.ERIS_REG_BAK
+				opts.Registry = ver.ERIS_REG_BAK //not in global config...(also, won't even work unless we build & push updated images to dockerhub in addition to quay (which we should do)
 				if err := util.DockerClient.PullImage(opts, auth); err != nil {
 					ch <- util.DockerError(err)
 				}
