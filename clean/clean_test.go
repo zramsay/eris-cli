@@ -1,7 +1,6 @@
 package clean
 
 import (
-	//"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -37,7 +36,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func _TestRemoveAllErisContainers(t *testing.T) {
+func TestRemoveAllErisContainers(t *testing.T) {
 	defer util.RemoveAllErisContainers()
 
 	// Start a bunch of eris containers.
@@ -106,7 +105,7 @@ func TestCleanLatentChainDatas(t *testing.T) {
 func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	if yes { // fail if dirs/files don't exist
 		for _, chn := range chains {
-			// this should be !util.Does...?
+			// this should be !util.DoesDirExist() but that fails ... ?
 			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory does not exist when it should")
 			}
@@ -117,8 +116,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 		}
 	} else { // !yes, fail if dirs/files do exist
 		for _, chn := range chains {
-			// this should be util.Does...??
-			if !util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory exists when it shouldn't")
 			}
 			_, err := loaders.LoadChainDefinition(chn)

@@ -2,7 +2,9 @@ package util
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/common/go/common"
@@ -109,6 +111,30 @@ func removeContainer(containerID string) error {
 }
 
 func cleanLatentChainData() error {
+	// get everything in ~/.eris/chains
+	files, err := ioutil.ReadDir(common.ChainsPath)
+	if err != nil {
+		return err
+	}
+
+	// leave these files/dirs alone
+	dontDelete := map[string]bool{
+		"account-types": true,
+		"chain-types":   true,
+		"default":       true,
+		"default.toml":  true,
+		"HEAD":          true,
+	}
+
+	// remove everything else
+	for _, f := range files {
+		if !dontDelete[f.Name()] {
+			if err := os.RemoveAll(filepath.Join(common.ChainsPath, f.Name())); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -143,11 +169,11 @@ func RemoveErisImages() error {
 	return nil
 }
 
-// TODO add chain stuff
 func canWeRemove(toClean map[string]bool) bool {
 	home := os.Getenv("HOME")
 	var toWarn = map[string]string{
 		"containers": "all",
+		"chn-dirs":   "latent files & dirs from ~/.eris/chains",
 		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", home),
 		"root":       fmt.Sprintf("%s/.eris", home),
 		"images":     "all",
@@ -157,6 +183,9 @@ func canWeRemove(toClean map[string]bool) bool {
 		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
 			log.WithField("containers", toWarn["containers"]).Warn("")
+		}
+		if toClean["chn-dirs"] {
+			log.WithField("chn-dirs", toWarn["chn-dirs"]).Warn("")
 		}
 		if toClean["scratch"] {
 			log.WithField("scratch", toWarn["scratch"]).Warn("")
@@ -170,6 +199,7 @@ func canWeRemove(toClean map[string]bool) bool {
 	} else {
 		log.WithFields(log.Fields{
 			"containers": toWarn["containers"],
+			"chn-dirs":   toWarn["chn-dirs"],
 			"scratch":    toWarn["scratch"],
 			"root":       toWarn["root"],
 			"images":     toWarn["images"],
