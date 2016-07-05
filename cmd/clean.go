@@ -25,18 +25,20 @@ func buildCleanCommand() {
 }
 
 func addCleanFlags() {
+	Clean.Flags().BoolVarP(&do.Yes, "yes", "y", false, "overrides prompts prior to removing things")
 	Clean.Flags().BoolVarP(&do.All, "all", "a", false, "removes everything, stopping short of uninstalling eris")
 	Clean.Flags().BoolVarP(&do.Containers, "containers", "c", true, "remove all eris containers")
+	Clean.Flags().BoolVarP(&do.ChnDirs, "chn-dirs", "", true, "remove latent chain datas in $HOME/.eris/chains")
 	Clean.Flags().BoolVarP(&do.Scratch, "scratch", "s", true, "remove contents of: $HOME/.eris/scratch")
 	Clean.Flags().BoolVarP(&do.RmD, "dir", "", false, "remove the eris home directory: $HOME/.eris")
 	Clean.Flags().BoolVarP(&do.Images, "images", "i", false, "remove all eris docker images")
-	Clean.Flags().BoolVarP(&do.Yes, "yes", "y", false, "overrides prompts prior to removing things")
 }
 
 func CleanItUp(cmd *cobra.Command, args []string) {
 	if do.All {
 		do.Containers = true
 		do.Scratch = true
+		do.ChnDirs = true
 		do.RmD = true
 		do.Images = true
 	}

@@ -76,6 +76,7 @@ type Do struct {
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
+	ChnDirs    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Scratch    bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Images     bool `mapstructure:"," json:"," yaml:"," toml:","`
 	Uninstall  bool `mapstructure:"," json:"," yaml:"," toml:","`

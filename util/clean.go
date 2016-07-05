@@ -37,6 +37,13 @@ func cleanHandler(toClean map[string]bool) error {
 		}
 	}
 
+	if toClean["chn-dirs"] {
+		log.Debug("Removing latent chains data in ChainsPath")
+		if err := cleanLatentChainData(); err != nil {
+			return err
+		}
+	}
+
 	if toClean["scratch"] {
 		log.Debug("Removing contents of DataContainersPath")
 		if err := cleanScratchData(); err != nil {
@@ -77,7 +84,6 @@ func RemoveAllErisContainers() error {
 				return fmt.Errorf("Error removing container: %v", DockerError(err))
 			}
 		}
-
 	}
 
 	return nil
@@ -99,6 +105,10 @@ func removeContainer(containerID string) error {
 		}
 		return err
 	}
+	return nil
+}
+
+func cleanLatentChainData() error {
 	return nil
 }
 
@@ -133,6 +143,7 @@ func RemoveErisImages() error {
 	return nil
 }
 
+// TODO add chain stuff
 func canWeRemove(toClean map[string]bool) bool {
 	home := os.Getenv("HOME")
 	var toWarn = map[string]string{
