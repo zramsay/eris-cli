@@ -131,6 +131,8 @@ func DeployContractBundle(path, chainName, address string) error {
 	doRun.ABIPath = filepath.Join(path, "abi")
 	doRun.ChainName = chainName
 	doRun.DefaultAddr = address
+	doRun.KeysPort = "4767"
+	doRun.ChainPort = "46657"
 
 	if err := pkgs.RunPackage(doRun); err != nil {
 		return err
