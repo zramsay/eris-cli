@@ -136,7 +136,7 @@ func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error 
 	do.Service.Name = pkg.Name + "_tmp_" + do.Name
 	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM)
 	do.Service.AutoData = true
-	do.Service.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
+	do.Service.EntryPoint = fmt.Sprintf("epm --chain chain:%s --sign keys:%s", do.ChainPort, do.KeysPort)
 	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
 	do.Service.User = "eris"
 
@@ -492,7 +492,6 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	} else {
 		log.Info("Package path does not exist on the host or is inside the pkg path")
 	}
-
 
 	if inbound {
 		// Import ABI path (if exists).
