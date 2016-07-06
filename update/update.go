@@ -128,7 +128,7 @@ func GoOrBinary() (string, string, error) {
 			goWarn := fmt.Sprintf(`The marmots have detected a source installation located at: (%s)
 Continuing will update eris to either the latest version, or the branch you've specified.
 Do you wish to continue?`, trimEris)
-			if util.QueryYesOrNo(goWarn) == util.Yes {
+			if common.QueryYesOrNo(goWarn) == common.Yes {
 				return "go", erisLook, nil
 			} else {
 				return "", "", fmt.Errorf("Permission to update denied; exiting.")
@@ -137,7 +137,7 @@ Do you wish to continue?`, trimEris)
 			binWarn := fmt.Sprintf(`The marmots have detected a binary installation located at: (%s)
 Continuing will update eris to either the latest version, or the branch you've specified.
 Do you wish to continue?`, trimEris)
-			if util.QueryYesOrNo(binWarn) == util.Yes {
+			if common.QueryYesOrNo(binWarn) == common.Yes {
 				return "binary", erisLook, nil
 			} else {
 				return "", "", fmt.Errorf("Permission to update denied; exiting.")
