@@ -165,7 +165,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		}).Warn("The marmots are about to remove the following")
 	}
 
-	if QueryYesOrNo("Please confirm") == Yes {
+	if common.QueryYesOrNo("Please confirm") == common.Yes {
 		log.Warn("Authorization given, removing")
 		return true
 	}

@@ -18,7 +18,6 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	//ver "github.com/eris-ltd/eris-cli/version"
 
 	dirs "github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -745,7 +744,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 		if err == docker.ErrNoSuchImage {
 			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image not found locally")
-				if util.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == util.Yes {
+				if dirs.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == dirs.Yes {
 					log.Debug("User assented to pull")
 				} else {
 					log.Debug("User refused to pull")

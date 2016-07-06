@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eris-ltd/common/go/common"
+
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -50,7 +52,7 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 
 func canWeMigrate() bool {
 	log.Warn("Permission to migrate deprecated directories required")
-	if QueryYesOrNo("Would you like to continue?") == Yes {
+	if common.QueryYesOrNo("Would you like to continue?") == common.Yes {
 		log.Debug("Confirmation verified. Proceeding")
 		return true
 	} else {

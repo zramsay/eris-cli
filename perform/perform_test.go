@@ -5,9 +5,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
-	"runtime"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -19,9 +19,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 
