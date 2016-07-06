@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
+	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -366,7 +366,7 @@ image          = "test image"
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
 		// [pv]: not "test image", but erisdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DB)},
+		{`Service.Image`, s.Service.Image, path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DB)},
 		{`Service.Environment`, s.Service.Environment, []string{"CHAIN_ID=" + name}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {

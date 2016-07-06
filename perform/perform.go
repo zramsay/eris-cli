@@ -18,7 +18,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
+	//ver "github.com/eris-ltd/eris-cli/version"
 
 	dirs "github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -1079,7 +1079,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA),
+			Image:           path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1125,7 +1125,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
+		srv.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA)
 	}
 
 	// Manipulate labels locally.
