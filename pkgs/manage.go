@@ -8,10 +8,15 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
+// Imports a package via ipfs hash.
+//
+//  do.Hash  - hash of IPFS object to acquire
+//  do.Name  - location on host to write. note this is opinionated and uses ~/.eris/apps/NAME
+//
 func ImportPackage(do *definitions.Do) error {
 
 	doGet := definitions.NowDo()
@@ -25,6 +30,10 @@ func ImportPackage(do *definitions.Do) error {
 	return nil
 }
 
+// Exports a package to ipfs.
+//
+//  do.Name  - location on host to read and add to ipfs should be a relative or absolute path
+//
 func ExportPackage(do *definitions.Do) error {
 
 	// ensure path is dir
