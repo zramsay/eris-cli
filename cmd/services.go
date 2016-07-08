@@ -240,7 +240,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a volume %v/VOLUME on a host machine to a %v/VOLUME on a container", ErisRoot, ErisContainerRoot))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", ErisRoot))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")

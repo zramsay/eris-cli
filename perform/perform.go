@@ -963,8 +963,8 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 
 	// Mount a volume.
 	if ops.Volume != "" {
-		bind := filepath.Join(dirs.ErisRoot, ops.Volume) + ":" +
-			filepath.Join(dirs.ErisContainerRoot, ops.Volume)
+		bind := filepath.Join(ops.Volume) + ":" +
+			filepath.Join(dirs.ErisContainerRoot, filepath.Base(ops.Volume))
 
 		if opts.HostConfig.Binds == nil {
 			opts.HostConfig.Binds = []string{bind}
