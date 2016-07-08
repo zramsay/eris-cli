@@ -132,6 +132,7 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) e
 	}
 
 	util.Merge(chain.Service, chnTemp.Service)
+	chain.Service.Ports = chnTemp.Service.Ports
 	chain.ChainID = chnTemp.ChainID
 
 	// toml bools don't really marshal well "data_container". It can be
