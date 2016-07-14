@@ -218,8 +218,6 @@ func TestChainsNewConfig(t *testing.T) {
 	do := def.NowDo()
 	do.Name = chain
 	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
-	// deprecated. functionality to be removed in 0.11.4
-	// do.CSV = filepath.Join(common.ChainsPath, "default", "genesis.json")
 	do.Operations.PublishAllPorts = true
 	if err := NewChain(do); err != nil {
 		t.Fatalf("expected to create a new chain, got %v", err)

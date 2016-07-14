@@ -239,7 +239,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 				return err
 			}
 		}
-	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
+	} else if do.GenesisFile == "" && len(do.ConfigOpts) == 0 {
 		// NOTE: this expects you to have ~/.eris/chains/default/ (ie. to have run `eris init`)
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
@@ -274,7 +274,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}()
 
-	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
+	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
 
@@ -287,35 +287,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	// we accept two csvs: one for validators, one for accounts
-	// if there's only one, its for validators and accounts
-	// functionality is deprecated. to remove for 0.11.4
-	var csvFiles []string
-	var csvPaths string
-	if do.CSV != "" {
-		csvFiles = strings.Split(do.CSV, ",")
-		if len(csvFiles) > 1 {
-			csvPath1 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "validators.csv")
-			csvPath2 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "accounts.csv")
-			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
-		} else {
-			csvPaths = fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "genesis.csv")
-		}
-	}
-
 	filesToCopy := []stringPair{
 		{do.Path, ""},
 		{do.GenesisFile, "genesis.json"},
 		{do.ConfigFile, "config.toml"},
 		{do.Priv, "priv_validator.json"},
-	}
-
-	// functionality is deprecated. to remove for 0.11.4
-	if len(csvFiles) == 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
-	} else if len(csvFiles) > 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "validators.csv"})
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
 	}
 
 	log.Info("Copying chain files into the correct location")
@@ -339,13 +315,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID)
 
-	//set maintainer info
+	// Set maintainer info.
 	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
 		log.Debug(err.Error())
 	}
 
-	// write the chain definition file ...
+	// Write the chain definition file.
 	fileName := filepath.Join(ChainsPath, do.Name) + ".toml"
 	if _, err = os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
@@ -361,10 +337,10 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
 	chain.Operations.Ports = do.Operations.Ports
 
-	// cmd should be "new" or "install"
+	// Cmd should be "new" or "install".
 	chain.Service.Command = cmd
 
-	// write the list of <key>:<value> config options as flags
+	// Write the list of <key>:<value> config options as flags.
 	buf := new(bytes.Buffer)
 	for _, cv := range do.ConfigOpts {
 		spl := strings.Split(cv, "=")
@@ -379,10 +355,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),                                          // functionality is deprecated. to remove for 0.11.4
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),                                // for config.toml
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                                  // etcb host
-		fmt.Sprintf("DOCKER_FIX=%s", "                                        "), // https://github.com/docker/docker/issues/14203
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway), // etcb host.
 	}
 	envVars = append(envVars, do.Env...)
 
