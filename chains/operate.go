@@ -156,9 +156,12 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		// there is literally never a reason not to randomize the ports.
 		chain.Operations.PublishAllPorts = true
 
-		// always link the chain to the exec container when doing chains exec
-		// so that there is never any problems with sending info to the service (chain) container
-		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
+		// Link the chain to the exec container when doing chains exec so that there is
+		// never any problems with sending info over network to the chain container.
+		// Unless the variable SkipLink is set to true; in that case, don't link.
+		if !do.Operations.SkipLink {
+			chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
+		}
 
 		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
@@ -377,6 +380,29 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
+	log.Info("Moving priv_validator.json into eris-keys")
+	doKeys := definitions.NowDo()
+	doKeys.Name = do.Name
+	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
+	doKeys.Operations.SkipLink = true
+	if out, err := ExecChain(doKeys); err != nil {
+		if out != nil {
+			log.Error(out)
+		}
+		return fmt.Errorf("Error moving keys: %v", err)
+	}
+
+	doChown := definitions.NowDo()
+	doChown.Name = do.Name
+	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
+	doChown.Operations.SkipLink = true
+	if out, err := ExecChain(doChown); err != nil {
+		if out != nil {
+			log.Error(out)
+		}
+		return fmt.Errorf("Error changing owner: %v", err)
+	}
+
 	log.WithFields(log.Fields{
 		"=>":           chain.Service.Name,
 		"links":        chain.Service.Links,
@@ -384,27 +410,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		"image":        chain.Service.Image,
 	}).Debug("Performing chain container start")
 
-	err = perform.DockerRunService(chain.Service, chain.Operations)
-	// this err is caught in the defer above
-
-	log.Info("Moving priv_validator.json into eris-keys")
-	doKeys := definitions.NowDo()
-	doKeys.Name = do.Name
-	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
-	if out, err := ExecChain(doKeys); err != nil {
-		log.Error(out)
-		return fmt.Errorf("Error moving keys: %v", err)
-	}
-
-	doChown := definitions.NowDo()
-	doChown.Name = do.Name
-	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
-	if out2, err2 := ExecChain(doChown); err != nil {
-		log.Error(out2)
-		return fmt.Errorf("Error changing owner: %v", err2)
-	}
-
-	return
+	return perform.DockerRunService(chain.Service, chain.Operations)
 }
 
 // genesis file either given directly, in dir, or not found (empty)
