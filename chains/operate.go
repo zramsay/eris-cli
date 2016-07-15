@@ -100,7 +100,6 @@ func ThrowAwayChain(do *definitions.Do) error {
 	return nil
 }
 
-//------------------------------------------------------------------------
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -160,6 +159,11 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		// never any problems with sending info over network to the chain container.
 		// Unless the variable SkipLink is set to true; in that case, don't link.
 		if !do.Operations.SkipLink {
+			// Check the chain is running.
+			if !util.IsChain(chain.Name, true) {
+				return nil, fmt.Errorf("chain %v has failed to start. You may want to check the [eris chains logs %[1]s] command output", chain.Name)
+			}
+
 			chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
 		}
 
@@ -231,15 +235,17 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
-	//if given path does not exist, see if its a reference to something in ~/.eris/chains/chainName
 	if do.Path != "" {
-		src, err := os.Stat(do.Path)
-		if err != nil || !src.IsDir() {
+		src, errSaved := os.Stat(do.Path)
+		if errSaved != nil || !src.IsDir() {
 			log.WithField("path", do.Path).Info("Path does not exist or not a directory")
 			log.WithField("path", "$HOME/.eris/chains/"+do.Path).Info("Trying")
 			do.Path, err = util.ChainsPathChecker(do.Path)
 			if err != nil {
-				return err
+				// Output the error of first attempt, not the second, because
+				// this "stat /Users/peter/.eris/chains/Users/peter/.eris/simplechain:
+				// no such file or directory" is ugly.
+				return errSaved
 			}
 		}
 	} else if do.GenesisFile == "" && len(do.ConfigOpts) == 0 {
@@ -265,19 +271,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
 
-	// if something goes wrong, cleanup
-	defer func() {
-		if err != nil {
-			log.Infof("Error on setting up chain: %v", err)
-			log.Info("Cleaning up")
-			if err2 := RemoveChain(do); err2 != nil {
-				// maybe be less dramatic
-				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
-			}
-		}
-	}()
-
-	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container
+	// Copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container.
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
 
@@ -408,9 +402,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		"links":        chain.Service.Links,
 		"volumes from": chain.Service.VolumesFrom,
 		"image":        chain.Service.Image,
+		"ports":        chain.Service.Ports,
 	}).Debug("Performing chain container start")
 
-	return perform.DockerRunService(chain.Service, chain.Operations)
+	if err := perform.DockerRunService(chain.Service, chain.Operations); err != nil {
+		return RemoveChain(do)
+	}
+	return
 }
 
 // genesis file either given directly, in dir, or not found (empty)
