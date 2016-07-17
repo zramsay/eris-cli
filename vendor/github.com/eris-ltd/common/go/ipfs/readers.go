@@ -12,18 +12,25 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	log "github.com/eris-ltd/eris-logger"
 )
 
-func GetFromIPFS(hash, fileName, dirName string, w io.Writer) error {
+func GetFromIPFS(hash, fileName, dirName string) error {
 	url := IPFSBaseGatewayUrl("") + hash
-	w.Write([]byte("GETing file from IPFS. Hash =>\t" + hash + ":" + fileName + "\n"))
-	return DownloadFromUrlToFile(url, fileName, dirName, w)
+	log.WithFields(log.Fields{
+		"file": fileName,
+		"hash": hash,
+	}).Warn("Getting file from IPFS")
+	return DownloadFromUrlToFile(url, fileName, dirName)
 }
 
-func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
+func CatFromIPFS(fileHash string) (string, error) {
 	url := IPFSBaseAPIUrl() + "cat?arg=" + fileHash
-	w.Write([]byte("CATing file from IPFS. Hash =>\t" + fileHash + "\n"))
-	body, err := PostAPICall(url, fileHash, w)
+	log.WithFields(log.Fields{
+		"hash": fileHash,
+	}).Warn("Catting file from IPFS")
+	body, err := PostAPICall(url, fileHash)
 
 	if err != nil {
 		return "", err
@@ -32,10 +39,12 @@ func CatFromIPFS(fileHash string, w io.Writer) (string, error) {
 	return string(body), nil
 }
 
-func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
+func ListFromIPFS(objectHash string) (string, error) {
 	url := IPFSBaseAPIUrl() + "ls?arg=" + objectHash
-	w.Write([]byte("LISTing file from IPFS. objectHash =>\t" + objectHash + "\n"))
-	body, err := PostAPICall(url, objectHash, w)
+	log.WithFields(log.Fields{
+		"hash": objectHash,
+	}).Warn("Listing file from IPFS")
+	body, err := PostAPICall(url, objectHash)
 	r := bytes.NewReader(body)
 
 	type LsLink struct {
@@ -63,10 +72,10 @@ func ListFromIPFS(objectHash string, w io.Writer) (string, error) {
 	return result, nil
 }
 
-func ListPinnedFromIPFS(w io.Writer) (string, error) {
+func ListPinnedFromIPFS() (string, error) {
 	url := IPFSBaseAPIUrl() + "pin/ls"
-	w.Write([]byte("LISTing files pinned locally.\n"))
-	body, err := PostAPICall(url, "", w)
+	log.Warn("Listing files pinned locally")
+	body, err := PostAPICall(url, "")
 	r := bytes.NewReader(body)
 
 	type RefKeyObject struct {
@@ -96,7 +105,7 @@ func ListPinnedFromIPFS(w io.Writer) (string, error) {
 	return result, nil
 }
 
-func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
+func DownloadFromUrlToFile(url, fileName, dirName string) error {
 	tokens := strings.Split(url, "/")
 	if fileName == "" {
 		fileName = tokens[len(tokens)-1]
@@ -105,10 +114,13 @@ func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
 	//use absolute paths?
 	endPath := path.Join(dirName, fileName)
 	if dirName != "" {
-		w.Write([]byte("Downloading " + url + " to " + endPath + "\n"))
+		log.WithFields(log.Fields{
+			"from": url,
+			"to":   endPath,
+		}).Warn("Downloading")
 		checkDir, err := os.Stat(dirName)
 		if err != nil {
-			w.Write([]byte("Directory does not exist, creating it"))
+			log.Warn("Directory does not exist, creating it")
 			err1 := os.MkdirAll(dirName, 0700)
 			if err1 != nil {
 				return fmt.Errorf("error making directory, check your permissions %v\n", err1)
@@ -118,8 +130,10 @@ func DownloadFromUrlToFile(url, fileName, dirName string, w io.Writer) error {
 			return fmt.Errorf("path specified is not a directory, please enter a directory")
 		}
 	} else {
-		//dirNAme = getwd
-		w.Write([]byte("Downloading " + url + " to " + fileName + "\n"))
+		log.WithFields(log.Fields{
+			"from": url,
+			"to":   fileName,
+		}).Warn("Downloading")
 	}
 
 	var outputInDir *os.File

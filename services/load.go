@@ -27,7 +27,7 @@ func EnsureRunning(do *definitions.Do) error {
 	}
 
 	if !util.IsService(srv.Service.Name, true) {
-		e := fmt.Sprintf("The requested service is not running, start it with [eris services start %s]", do.Name)
+		e := fmt.Sprintf("the requested service is not running, start it with [eris services start %s]", do.Name)
 		return errors.New(e)
 	} else {
 		log.WithField("=>", do.Name).Info("Service is running")

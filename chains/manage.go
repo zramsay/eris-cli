@@ -1,7 +1,6 @@
 package chains
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -147,17 +146,7 @@ func ImportChain(do *definitions.Do) error {
 
 	s := strings.Split(do.Path, ":")
 	if s[0] == "ipfs" {
-		var err error
-		if log.GetLevel() > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", os.Stdout)
-		} else {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
-		}
-
-		if err != nil {
-			return err
-		}
-		return nil
+		return ipfs.GetFromIPFS(s[1], fileName, "")
 	}
 
 	if strings.Contains(s[0], "github") {
@@ -491,19 +480,7 @@ func RemoveChain(do *definitions.Do) error {
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
-	var hash string
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
-	} else {
-		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
+	return ipfs.SendToIPFS(fileName, "")
 }
 
 // TODO: remove

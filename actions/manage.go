@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -55,16 +54,7 @@ func ImportAction(do *definitions.Do) error {
 			return err
 		}
 
-		if log.GetLevel() > 0 {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", os.Stdout)
-		} else {
-			err = ipfs.GetFromIPFS(s[1], fileName, "", bytes.NewBuffer([]byte{}))
-		}
-
-		if err != nil {
-			return err
-		}
-		return nil
+		return ipfs.GetFromIPFS(s[1], fileName, "")
 	}
 
 	if strings.Contains(s[0], "github") {
@@ -178,22 +168,10 @@ func RmAction(do *definitions.Do) error {
 }
 
 func exportFile(actionName string) (string, error) {
-	var err error
 	fileName := util.GetFileByNameAndType("actions", actionName)
 	if fileName == "" {
 		return "", fmt.Errorf("no file to export")
 	}
 
-	var hash string
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
-	} else {
-		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
+	return ipfs.SendToIPFS(fileName, "")
 }

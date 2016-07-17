@@ -1,7 +1,6 @@
 package initialize
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -211,20 +210,22 @@ func drops(files []string, typ, dir, from string) error {
 		}
 	}
 
-	buf := new(bytes.Buffer)
 	if from == "toadserver" {
 		for _, file := range files {
 			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
-			log.WithField(file, url).Debug("Getting file from url")
-			log.WithField(file, dir).Debug("Dropping file to")
-			if err := ipfs.DownloadFromUrlToFile(url, file, dir, buf); err != nil {
+			log.WithFields(log.Fields{
+				"=>":   file,
+				"from": url,
+				"to":   dir,
+			}).Debug("Moving file")
+			if err := ipfs.DownloadFromUrlToFile(url, file, dir); err != nil {
 				return err
 			}
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
 			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file, buf); err != nil {
+			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file); err != nil {
 				return err
 			}
 		}

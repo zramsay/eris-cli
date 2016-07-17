@@ -3,15 +3,20 @@ package ipfs
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
+
+	log "github.com/eris-ltd/eris-logger"
 )
 
-func SendToIPFS(fileName, gateway string, w io.Writer) (string, error) {
+func SetLogLevel(level log.Level) {
+	log.SetLevel(level)
+}
+
+func SendToIPFS(fileName, gateway string) (string, error) {
 	url := IPFSBaseGatewayUrl(gateway)
-	w.Write([]byte("POSTing file to IPFS. File =>\t" + fileName + "\n"))
-	head, err := UploadFromFileToUrl(url, fileName, w)
+	log.WithField("file", fileName).Warn("Posting file to IPFS")
+	head, err := UploadFromFileToUrl(url, fileName)
 	if err != nil {
 		return "", err
 	}
@@ -22,15 +27,17 @@ func SendToIPFS(fileName, gateway string, w io.Writer) (string, error) {
 	return hash[0], nil
 }
 
-func PinToIPFS(fileHash string, w io.Writer) (string, error) {
+func PinToIPFS(fileHash string) (string, error) {
 	url := IPFSBaseAPIUrl() + "pin/add?arg=" + fileHash
-
-	w.Write([]byte("PINing file to IPFS. File =>\t" + fileHash + "\n"))
-	body, err := PostAPICall(url, fileHash, w)
+	log.WithField("hash", fileHash).Warn("Pinning file to IPFS")
+	body, err := PostAPICall(url, fileHash)
 	if err != nil {
 		return "", err
 	}
-	w.Write([]byte("Caching =>\t\t\t" + fileHash + ":" + url + "\n"))
+	log.WithFields(log.Fields{
+		"hash": fileHash,
+		"url":  url,
+	}).Warn("Caching")
 	var p struct {
 		Pinned []string
 	}
@@ -45,15 +52,18 @@ func PinToIPFS(fileHash string, w io.Writer) (string, error) {
 	return p.Pinned[0], nil
 }
 
-func RemovePinnedFromIPFS(fileHash string, w io.Writer) (string, error) {
+func RemovePinnedFromIPFS(fileHash string) (string, error) {
 	url := IPFSBaseAPIUrl() + "pin/rm?arg=" + fileHash
 
-	w.Write([]byte("Removing pinned file to IPFS. File =>\t" + fileHash + "\n"))
-	body, err := PostAPICall(url, fileHash, w)
+	log.WithField("hash", fileHash).Warn("Removing pinned file to IPFS")
+	body, err := PostAPICall(url, fileHash)
 	if err != nil {
 		return "", err
 	}
-	w.Write([]byte("Deleting from cache =>\t\t\t" + fileHash + ":" + url + "\n"))
+	log.WithFields(log.Fields{
+		"hash": fileHash,
+		"url":  url,
+	}).Warn("Deleting from cache")
 	var p struct {
 		Pinned []string
 	}
@@ -65,11 +75,14 @@ func RemovePinnedFromIPFS(fileHash string, w io.Writer) (string, error) {
 	return p.Pinned[0], nil
 }
 
-func UploadFromFileToUrl(url, fileName string, w io.Writer) (http.Header, error) {
+func UploadFromFileToUrl(url, fileName string) (http.Header, error) {
 	if url == "" {
 		return http.Header{}, fmt.Errorf("To upload from a file to a url, I need a URL.")
 	}
-	w.Write([]byte("Uploading =>\t\t\t" + fileName + ":" + url + "\n"))
+	log.WithFields(log.Fields{
+		"file": fileName,
+		"url":  url,
+	}).Warn("Uploading")
 
 	input, err := os.Open(fileName)
 	if err != nil {

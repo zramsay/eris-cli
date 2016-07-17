@@ -246,82 +246,34 @@ func ManagePinned(do *definitions.Do) error {
 }
 
 func importFile(hash, fileName string) error {
-	var err error
-
 	log.WithFields(log.Fields{
 		"from hash": hash,
 		"to path":   fileName,
 	}).Debug("Importing a file")
 
-	if log.GetLevel() > 0 {
-		err = ipfs.GetFromIPFS(hash, fileName, "", os.Stdout)
-	} else {
-		err = ipfs.GetFromIPFS(hash, fileName, "", bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return err
-	}
-	return nil
+	return ipfs.GetFromIPFS(hash, fileName, "")
 }
 
 func exportFile(fileName, gateway string) (string, error) {
-	var hash string
-	var err error
-
 	log.WithFields(log.Fields{
 		"file":    fileName,
 		"gateway": gateway,
 	}).Debug("Adding a file")
 
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, gateway, os.Stdout)
-	} else {
-		hash, err = ipfs.SendToIPFS(fileName, gateway, bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
+	return ipfs.SendToIPFS(fileName, gateway)
 }
 
 func pinFile(fileHash string) (string, error) {
-	var hash string
-	var err error
-
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.PinToIPFS(fileHash, os.Stdout)
-	} else {
-		hash, err = ipfs.PinToIPFS(fileHash, bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
+	return ipfs.PinToIPFS(fileHash)
 }
 
 func catFile(fileHash string) (string, error) {
-	var hash string
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.CatFromIPFS(fileHash, os.Stdout)
-	} else {
-		hash, err = ipfs.CatFromIPFS(fileHash, bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
+	return ipfs.CatFromIPFS(fileHash)
 }
 
 func listFile(objectHash string) (string, error) {
-	var hash string
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.ListFromIPFS(objectHash, os.Stdout)
-	} else {
-		hash, err = ipfs.ListFromIPFS(objectHash, bytes.NewBuffer([]byte{}))
-	}
+	hash, err := ipfs.ListFromIPFS(objectHash)
+
 	if err != nil {
 		if fmt.Sprintf("%v", err) != "EOF" {
 			return "", err
@@ -333,17 +285,7 @@ func listFile(objectHash string) (string, error) {
 }
 
 func listPinned() (string, error) {
-	var hash string
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.ListPinnedFromIPFS(os.Stdout)
-	} else {
-		hash, err = ipfs.ListPinnedFromIPFS(bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
+	return ipfs.ListPinnedFromIPFS()
 }
 
 func rmAllPinned() (string, error) {
@@ -365,16 +307,7 @@ func rmAllPinned() (string, error) {
 }
 
 func rmPinnedByHash(hash string) (string, error) {
-	var err error
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.RemovePinnedFromIPFS(hash, os.Stdout)
-	} else {
-		hash, err = ipfs.RemovePinnedFromIPFS(hash, bytes.NewBuffer([]byte{}))
-	}
-	if err != nil {
-		return "", err
-	}
-	return hash, nil
+	return ipfs.RemovePinnedFromIPFS(hash)
 }
 
 //---------------------------------------------------------

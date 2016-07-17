@@ -3,14 +3,13 @@ package ipfs
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 )
 
 //returns []byte to let each command make its own struct for the response
 //but handles the errs in here
-func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
+func PostAPICall(url, fileHash string) ([]byte, error) {
 	request, err := http.NewRequest("POST", url, nil)
 	if err != nil {
 		return []byte(""), err
@@ -49,7 +48,7 @@ func PostAPICall(url, fileHash string, w io.Writer) ([]byte, error) {
 	}
 	//XXX hacky: would need to fix ipfs error msgs
 	if string(body) == "Path Resolve error: context deadline exceeded" && string(body) == "context deadline exceeded" {
-		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
+		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `[eris files cache HASH]`, wait 5-10 seconds, then run `[eris files COMMAND HASH]`")
 	}
 	return body, nil
 }
