@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
@@ -144,7 +145,8 @@ func pullDefaultImages() error {
 
 		log.WithField("image", img).Warnf("Pulling image %d out of %d", i+1, len(images))
 
-		ch := make(chan error, 1)
+		ch := make(chan error)
+		timeout := make(chan error)
 		go func() {
 			defer w.Close()
 			defer close(ch)
@@ -157,8 +159,25 @@ func pullDefaultImages() error {
 				}
 			}
 		}()
-		jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
-		if err, ok := <-ch; ok {
+		go func() {
+			defer w.Close()
+			defer close(timeout)
+
+			select {
+			case <-time.After(5 * time.Minute):
+				timeout <- fmt.Errorf(`
+It looks like marmots are taking too long to download the necessary images...
+Please, try restarting the [eris init] command one more time now or a bit later.
+This is likely a network performance issue with our Docker hosting provider`)
+			}
+		}()
+		go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+		select {
+		case err := <-ch:
+			if err != nil {
+				return err
+			}
+		case err := <-timeout:
 			return err
 		}
 
