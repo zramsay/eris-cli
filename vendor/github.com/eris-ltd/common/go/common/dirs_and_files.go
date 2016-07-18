@@ -120,7 +120,7 @@ var DirsToMigrate = map[string]string{
 //---------------------------------------------
 // user and process
 
-func Usr() string {
+func HomeDir() string {
 	if runtime.GOOS == "windows" {
 		drive := os.Getenv("HOMEDRIVE")
 		path := os.Getenv("HOMEPATH")
@@ -184,7 +184,7 @@ func ResolveErisRoot() string {
 			}
 			eris = filepath.Join(home, ".eris")
 		} else {
-			eris = filepath.Join(Usr(), ".eris")
+			eris = filepath.Join(HomeDir(), ".eris")
 		}
 	}
 	return eris
