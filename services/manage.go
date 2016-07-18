@@ -1,7 +1,6 @@
 package services
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,18 +25,11 @@ func ImportService(do *definitions.Do) error {
 		fileName = fileName + ".toml"
 	}
 
-	var err error
-	if log.GetLevel() > 0 {
-		err = ipfs.GetFromIPFS(do.Hash, fileName, "", os.Stdout)
-	} else {
-		err = ipfs.GetFromIPFS(do.Hash, fileName, "", bytes.NewBuffer([]byte{}))
-	}
-
-	if err != nil {
+	if err := ipfs.GetFromIPFS(do.Hash, fileName, ""); err != nil {
 		return err
 	}
 
-	_, err = loaders.LoadServiceDefinition(do.Name)
+	_, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return fmt.Errorf("error loading service:\n%v", err)
 	}
@@ -281,20 +273,5 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 }
 
 func exportFile(servName string) (string, error) {
-	fileName := FindServiceDefinitionFile(servName)
-
-	var hash string
-	var err error
-
-	if log.GetLevel() > 0 {
-		hash, err = ipfs.SendToIPFS(fileName, "", os.Stdout)
-	} else {
-		hash, err = ipfs.SendToIPFS(fileName, "", bytes.NewBuffer([]byte{}))
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	return hash, nil
+	return ipfs.SendToIPFS(FindServiceDefinitionFile(servName), "")
 }
