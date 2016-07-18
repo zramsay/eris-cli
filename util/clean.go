@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/eris-ltd/common/go/common"
@@ -171,17 +170,11 @@ func RemoveErisImages() error {
 }
 
 func canWeRemove(toClean map[string]bool) bool {
-	var home string
-	if runtime.GOOS == "windows" {
-		home = os.Getenv("USERPROFILE")
-	} else {
-		home = os.Getenv("HOME")
-	}
 	var toWarn = map[string]string{
 		"containers": "all",
 		"chn-dirs":   "latent files & dirs from ~/.eris/chains",
-		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", home),
-		"root":       fmt.Sprintf("%s/.eris", home),
+		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", common.HomeDir()),
+		"root":       fmt.Sprintf("%s/.eris", common.HomeDir()),
 		"images":     "all",
 	}
 
