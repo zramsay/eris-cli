@@ -11,6 +11,7 @@ func Clean(do *definitions.Do) error {
 		"yes":        do.Yes,
 		"all":        do.All,
 		"containers": do.Containers,
+		"chn-dirs":   do.ChnDirs,
 		"scratch":    do.Scratch,
 		"root":       do.RmD,
 		"images":     do.Images,
