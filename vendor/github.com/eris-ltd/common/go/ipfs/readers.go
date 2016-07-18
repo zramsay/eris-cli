@@ -23,7 +23,7 @@ func GetFromIPFS(hash, fileName, dirName string) error {
 		"file": fileName,
 		"hash": hash,
 	}).Warn("Getting file from IPFS")
-	return DownloadFromUrlToFile(url, fileName, dirName)
+	return DownloadFromUrlToFile(url, fileName, dirName, "") // no proxy for IPFS ?
 }
 
 func CatFromIPFS(fileHash string) (string, error) {
@@ -106,8 +106,8 @@ func ListPinnedFromIPFS() (string, error) {
 	return result, nil
 }
 
-func DownloadFromUrlToFile(url, fileName, dirName string) error {
-	tokens := strings.Split(url, "/")
+func DownloadFromUrlToFile(url0, fileName, dirName, proxyURL string) error {
+	tokens := strings.Split(url0, "/")
 	if fileName == "" {
 		fileName = tokens[len(tokens)-1]
 	}
@@ -116,7 +116,7 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 	endPath := path.Join(dirName, fileName)
 	if dirName != "" {
 		log.WithFields(log.Fields{
-			"from": url,
+			"from": url0,
 			"to":   endPath,
 		}).Warn("Downloading")
 		checkDir, err := os.Stat(dirName)
@@ -132,7 +132,7 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 		}
 	} else {
 		log.WithFields(log.Fields{
-			"from": url,
+			"from": url0,
 			"to":   fileName,
 		}).Warn("Downloading")
 	}
