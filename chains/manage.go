@@ -50,6 +50,7 @@ func MakeChain(do *definitions.Do) error {
 	do.Service.User = "eris"
 	do.Service.AutoData = true
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
+	do.Service.DNS = []string{"8.8.8.8", "8.8.4.4"}
 	do.Service.Environment = []string{
 		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
 		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
