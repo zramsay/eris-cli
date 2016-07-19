@@ -21,8 +21,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
-	// log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))

@@ -10,7 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO move to /common
 var DefKeysPathHost = filepath.Join(KeysPath, "data")
+var DefKeysPathContainer = filepath.Join(ErisContainerRoot, "keys", "data")
 
 var Keys = &cobra.Command{
 	Use:   "keys",
@@ -104,11 +106,11 @@ the [eris services exec keys "ls /home/eris/.eris/keys/data"] command.`,
 }
 
 func addKeysFlags() {
-	keysExport.Flags().StringVarP(&do.Destination, "dest", "", DefKeysPathHost, "destination for export on host")
+	//keysExport.Flags().StringVarP(&do.Destination, "dest", "", DefKeysPathHost, "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
 
-	keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from")
+	//keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 
@@ -135,6 +137,8 @@ func ExportKey(cmd *cobra.Command, args []string) {
 		IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
+	do.Source = DefKeysPathContainer
+	do.Destination = DefKeysPathHost
 	IfExit(keys.ExportKey(do))
 }
 
@@ -145,6 +149,8 @@ func ImportKey(cmd *cobra.Command, args []string) {
 		IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
+	do.Source = DefKeysPathHost
+	do.Destination = DefKeysPathContainer
 	IfExit(keys.ImportKey(do))
 }
 

@@ -2,7 +2,7 @@ package keys
 
 import (
 	"io"
-	"os"
+	//"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -14,6 +14,10 @@ import (
 
 	"github.com/eris-ltd/common/go/common"
 )
+
+// TODO move to /common
+var DefKeysPathHost = filepath.Join(common.KeysPath, "data")
+var DefKeysPathContainer = filepath.Join(common.ErisContainerRoot, "keys", "data")
 
 func GenerateKey(do *definitions.Do) error {
 	do.Name = "keys"
@@ -87,11 +91,7 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
-	//src on host
-	//if default given (from flag), join addrs
-	//dest in container
-	do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
-
+	do.Destination = path.Join(DefKeysPathContainer, do.Address)
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
@@ -113,15 +113,7 @@ func ImportKey(do *definitions.Do) error {
 		//for each, import data
 
 	} else {
-		if do.Source == filepath.Join(common.KeysPath, "data") {
-			do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
-		} else { // either relative or absolute path given. get absolute
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			do.Source = common.AbsolutePath(wd, do.Source)
-		}
+		do.Source = filepath.Join(do.Source, do.Address, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}
