@@ -209,7 +209,6 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 //  do.Operations      - must be populated
 //  do.Chain.ChainType - if == "throwaway" then will remove; otherwise no effect
 //  do.Rm              - remove the service container (defaults to true; false useful for debug and testing purposes only)
-//  do.RmD             - remove the data container (defaults to true; false useful for debug and testing purposes only)
 //
 func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 	log.Info("Cleaning up")
@@ -221,7 +220,6 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		doRm.Operations = do.Operations
 		doRm.Name = do.Chain.Name
 		doRm.Rm = true
-		doRm.RmD = true
 		chains.KillChain(doRm)
 
 		latentDir := filepath.Join(common.DataContainersPath, do.Chain.Name)
@@ -250,12 +248,6 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		if err := perform.DockerRemove(nil, doRemove.Operations, false, true, false); err != nil {
 			return err
 		}
-	}
-
-	// removal of data container
-	if !do.RmD {
-		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
 	}
 
 	return nil
@@ -411,9 +403,12 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 	if do.DefaultGas != "" {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --gas " + do.DefaultGas
 	}
-
-	if do.Compiler != "" {
-		do.Service.EntryPoint = do.Service.EntryPoint + " --compiler " + do.Compiler
+	if do.LocalCompiler == false {
+		if do.Compiler != "" {
+			do.Service.EntryPoint = do.Service.EntryPoint + " --compiler " + do.Compiler
+		}
+	} else {
+		do.Service.EntryPoint = do.Service.EntryPoint + " --compiler \"\"" 
 	}
 
 	if do.DefaultAddr != "" {

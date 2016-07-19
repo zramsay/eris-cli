@@ -82,7 +82,6 @@ func TestServicesBooted(t *testing.T) {
 	// turn off dependencies
 	doOff := definitions.NowDo()
 	doOff.Operations.Args = pkg.Dependencies.Services
-	doOff.RmD = true
 	doOff.Rm = true
 	if err := services.KillService(doOff); err != nil {
 		t.Fatalf("error turning off services: %v", err)
@@ -134,7 +133,6 @@ func TestKnownChainBoots(t *testing.T) {
 	}
 
 	doMake.Rm = true
-	doMake.RmD = true
 	if err := chains.KillChain(doMake); err != nil {
 		t.Fatalf("unexpected error removing chain: %v", err)
 	}
@@ -209,7 +207,6 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 
 		doOff := definitions.NowDo()
 		doOff.Operations.Args = pkg.Dependencies.Services
-		doOff.RmD = true
 		doOff.Rm = true
 		if err := services.KillService(doOff); err != nil {
 			t.Fatalf("error turning off services: %v", err)
@@ -930,7 +927,6 @@ func startKeys() error {
 	doKeys := definitions.NowDo()
 	doKeys.Operations.Args = []string{"keys"}
 	doKeys.Rm = true
-	doKeys.RmD = true
 	if err := services.StartService(doKeys); err != nil {
 		return err
 	}
@@ -941,7 +937,6 @@ func killKeys() {
 	do := definitions.NowDo()
 	do.Operations.Args = []string{"keys"}
 	do.Rm = true
-	do.RmD = true
 	services.KillService(do)
 }
 
