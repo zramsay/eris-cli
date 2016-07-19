@@ -91,6 +91,7 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
+	do.Destination = path.Join(DefKeysPathContainer, do.Address)
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
@@ -112,7 +113,6 @@ func ImportKey(do *definitions.Do) error {
 		//for each, import data
 
 	} else {
-		do.Destination = path.Join(DefKeysPathContainer, do.Address)
 		do.Source = filepath.Join(do.Source, do.Address, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
