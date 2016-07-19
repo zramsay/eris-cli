@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -39,7 +40,7 @@ var (
 	// Keys Directories
 	KeysDataPath      = filepath.Join(KeysPath, "data")
 	KeysNamesPath     = filepath.Join(KeysPath, "names")
-	KeysContainerPath = filepath.Join(ErisContainerRoot, "keys", "data")
+	KeysContainerPath = path.Join(ErisContainerRoot, "keys", "data")
 
 	// Scratch Directories (basically eris' cache) (globally coordinated)
 	DataContainersPath   = filepath.Join(ScratchPath, "data")

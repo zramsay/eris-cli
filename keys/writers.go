@@ -15,10 +15,6 @@ import (
 	"github.com/eris-ltd/common/go/common"
 )
 
-// TODO move to /common
-var DefKeysPathHost = filepath.Join(common.KeysPath, "data")
-var DefKeysPathContainer = filepath.Join(common.ErisContainerRoot, "keys", "data")
-
 func GenerateKey(do *definitions.Do) error {
 	do.Name = "keys"
 
@@ -58,7 +54,7 @@ func ExportKey(do *definitions.Do) error {
 		return err
 	}
 
-	// do.Destination = given by flag default or overriden
+	do.Destination = common.KeysPath // not KeysDataPath because we are exporting the directory
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = true
@@ -70,7 +66,6 @@ func ExportKey(do *definitions.Do) error {
 		keyArray := strings.Split(do.Result, ",")
 
 		for _, addr := range keyArray {
-			do.Destination = common.KeysPath
 			do.Source = path.Join(common.ErisContainerRoot, "keys", "data", addr)
 			if err := data.ExportData(do); err != nil {
 				return err
@@ -91,7 +86,7 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
-	do.Destination = path.Join(DefKeysPathContainer, do.Address)
+	do.Destination = path.Join(common.KeysContainerPath, do.Address)
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
@@ -109,9 +104,6 @@ func ImportKey(do *definitions.Do) error {
 				return err
 			}
 		}
-		//list keys
-		//for each, import data
-
 	} else {
 		do.Source = filepath.Join(do.Source, do.Address, do.Address)
 		if err := data.ImportData(do); err != nil {

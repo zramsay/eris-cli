@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/keys"
@@ -9,10 +8,6 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
-
-// TODO move to /common
-var DefKeysPathHost = filepath.Join(KeysPath, "data")
-var DefKeysPathContainer = filepath.Join(ErisContainerRoot, "keys", "data")
 
 var Keys = &cobra.Command{
 	Use:   "keys",
@@ -137,8 +132,8 @@ func ExportKey(cmd *cobra.Command, args []string) {
 		IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
-	do.Source = DefKeysPathContainer
-	do.Destination = DefKeysPathHost
+	//do.Source = KeysContainerPath // placeholders that ought to go
+	//do.Destination = KeysDataPath
 	IfExit(keys.ExportKey(do))
 }
 
@@ -149,8 +144,8 @@ func ImportKey(cmd *cobra.Command, args []string) {
 		IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
-	do.Source = DefKeysPathHost
-	do.Destination = DefKeysPathContainer
+	//do.Source = KeysDataPath // placeholders that ought to go
+	//do.Destination = KeysContainerPath
 	IfExit(keys.ImportKey(do))
 }
 

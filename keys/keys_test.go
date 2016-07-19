@@ -285,7 +285,7 @@ func TestListKeyHost(t *testing.T) {
 
 	doExp := def.NowDo()
 	doExp.Address = addr0
-	doExp.Destination = filepath.Join(KeysPath, "data") //is default
+	//doExp.Destination = filepath.Join(KeysPath, "data") //is default
 
 	if err := ExportKey(doExp); err != nil {
 		t.Fatalf("error exporting key: %v", err)
