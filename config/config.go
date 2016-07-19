@@ -34,7 +34,7 @@ type ErisConfig struct {
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
 	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
-	Verbose bool
+	Verbose        bool
 
 	//image defaults
 	ERIS_REG_DEF string `json:"ERIS_REG_DEF,omitempty" yaml:"ERIS_REG_DEF,omitempty" toml:"ERIS_REG_DEF,omitempty"`
@@ -42,9 +42,9 @@ type ErisConfig struct {
 
 	ERIS_IMG_DATA string `json:"ERIS_IMG_DATA,omitempty" yaml:"ERIS_IMG_DATA,omitempty" toml:"ERIS_IMG_DATA,omitempty"`
 	ERIS_IMG_KEYS string `json:"ERIS_IMG_KEYS,omitempty" yaml:"ERIS_IMG_KEYS,omitempty" toml:"ERIS_IMG_KEYS,omitempty"`
-	ERIS_IMG_DB string `json:"ERIS_IMG_DB,omitempty" yaml:"ERIS_IMG_DB,omitempty" toml:"ERIS_IMG_DB,omitempty"`
-	ERIS_IMG_PM string `json:"ERIS_IMG_PM,omitempty" yaml:"ERIS_IMG_PM,omitempty" toml:"ERIS_IMG_PM,omitempty"`
-	ERIS_IMG_CM string `json:"ERIS_IMG_CM,omitempty" yaml:"ERIS_IMG_CM,omitempty" toml:"ERIS_IMG_CM,omitempty"`
+	ERIS_IMG_DB   string `json:"ERIS_IMG_DB,omitempty" yaml:"ERIS_IMG_DB,omitempty" toml:"ERIS_IMG_DB,omitempty"`
+	ERIS_IMG_PM   string `json:"ERIS_IMG_PM,omitempty" yaml:"ERIS_IMG_PM,omitempty" toml:"ERIS_IMG_PM,omitempty"`
+	ERIS_IMG_CM   string `json:"ERIS_IMG_CM,omitempty" yaml:"ERIS_IMG_CM,omitempty" toml:"ERIS_IMG_CM,omitempty"`
 	ERIS_IMG_IPFS string `json:"ERIS_IMG_IPFS,omitempty" yaml:"ERIS_IMG_IPFS,omitempty" toml:"ERIS_IMG_IPFS,omitempty"`
 }
 
@@ -211,7 +211,7 @@ func ChangeErisDir(erisDir string) {
 
 	// Keys Directories
 	dir.KeysDataPath = filepath.Join(dir.KeysPath, "data")
-	dir.KeyNamesPath = filepath.Join(dir.KeysPath, "names")
+	dir.KeysNamesPath = filepath.Join(dir.KeysPath, "names")
 
 	// Scratch Directories (basically eris' cache) (globally coordinated)
 	dir.DataContainersPath = filepath.Join(dir.ScratchPath, "data")
