@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/keys"
@@ -9,8 +8,6 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
-
-var DefKeysPathHost = filepath.Join(KeysPath, "data")
 
 var Keys = &cobra.Command{
 	Use:   "keys",
@@ -103,11 +100,9 @@ Latter flag is equivalent to:
 }
 
 func addKeysFlags() {
-	keysExport.Flags().StringVarP(&do.Destination, "dest", "", DefKeysPathHost, "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
 
-	keysImport.Flags().StringVarP(&do.Source, "src", "", DefKeysPathHost, "source on host to import from")
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 

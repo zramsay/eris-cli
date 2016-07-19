@@ -2,7 +2,6 @@ package keys
 
 import (
 	"io"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -54,7 +53,7 @@ func ExportKey(do *definitions.Do) error {
 		return err
 	}
 
-	// do.Destination = given by flag default or overriden
+	do.Destination = common.KeysDataPath
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = true
@@ -66,7 +65,6 @@ func ExportKey(do *definitions.Do) error {
 		keyArray := strings.Split(do.Result, ",")
 
 		for _, addr := range keyArray {
-			do.Destination = common.KeysPath
 			do.Source = path.Join(common.ErisContainerRoot, "keys", "data", addr)
 			if err := data.ExportData(do); err != nil {
 				return err
@@ -87,11 +85,7 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
-	//src on host
-	//if default given (from flag), join addrs
-	//dest in container
-	do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
-
+	do.Destination = path.Join(common.KeysContainerPath, do.Address)
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
@@ -109,19 +103,8 @@ func ImportKey(do *definitions.Do) error {
 				return err
 			}
 		}
-		//list keys
-		//for each, import data
-
 	} else {
-		if do.Source == filepath.Join(common.KeysPath, "data") {
-			do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
-		} else { // either relative or absolute path given. get absolute
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			do.Source = common.AbsolutePath(wd, do.Source)
-		}
+		do.Source = filepath.Join(common.KeysDataPath, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -35,8 +36,9 @@ var (
 	ChainTypePath    = filepath.Join(ChainsPath, "chain-types")
 
 	// Keys Directories
-	KeysDataPath = filepath.Join(KeysPath, "data")
-	KeyNamesPath = filepath.Join(KeysPath, "names")
+	KeysDataPath      = filepath.Join(KeysPath, "data")
+	KeysNamesPath     = filepath.Join(KeysPath, "names")
+	KeysContainerPath = path.Join(ErisContainerRoot, "keys", "data")
 
 	// Scratch Directories (basically eris' cache) (globally coordinated)
 	DataContainersPath   = filepath.Join(ScratchPath, "data")
@@ -64,7 +66,7 @@ var MajorDirs = []string{
 	ChainTypePath,
 	KeysPath,
 	KeysDataPath,
-	KeyNamesPath,
+	KeysNamesPath,
 	RemotesPath,
 	ScratchPath,
 	DataContainersPath,
@@ -88,7 +90,7 @@ var ChainsDirs = []string{
 var KeysDirs = []string{
 	KeysPath,
 	KeysDataPath,
-	KeyNamesPath,
+	KeysNamesPath,
 }
 
 // ServicesDirs to be used by specific tooling rather than eris-cli level.
