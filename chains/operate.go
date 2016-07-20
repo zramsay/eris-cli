@@ -39,10 +39,6 @@ func NewChain(do *definitions.Do) error {
 	return setupChain(do, "new") // move away from loaders
 }
 
-func InstallChain(do *definitions.Do) error {
-	return setupChain(do, loaders.ErisChainInstall)
-}
-
 func KillChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {

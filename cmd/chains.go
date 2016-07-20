@@ -127,37 +127,6 @@ $ eris chains new simplechain --ports 40000,50000- -- redefine the first and the
 $ eris chains new simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
-var chainsRegister = &cobra.Command{
-	Use:   "register NAME",
-	Short: "register a blockchain on etcb (a blockchain for registering other blockchains)",
-	Long: `register a blockchain on etcb
-
-etcb is Eris's blockchain which is a public blockchain that can be used to
-register *other* blockchains. In other words it is an easy way to "share"
-your blockchains with others. [eris chains register] is made to work
-seamlessly with [eris chains install] so that other users and/or colleagues
-should be able to use your registered blockchain by simply using the install
-command.
-
-The [eris chains register] command is not the *only* way to
-share your blockchains. You can also export your chain definition file and
-genesis.json to IPFS, and share the hash of the chain definition file and
-genesis.json with any colleagues or users who need to be able to connect
-into the blockchain.`,
-	Run: RegisterChain,
-}
-
-var chainsInstall = &cobra.Command{
-	Use:   "install NAME",
-	Short: "Install a blockchain from the etcb registry",
-	Long: `install a blockchain from the etcb registry
-
-Install an existing erisdb based blockchain for use locally.
-
-(Currently a work in progress.)`,
-	Run: InstallChain,
-}
-
 var chainsList = &cobra.Command{
 	Use:   "ls",
 	Short: "lists everything chain related",
@@ -427,12 +396,6 @@ func KillChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.KillChain(do))
 }
 
-func InstallChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.InstallChain(do))
-}
-
 func MakeChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
@@ -465,13 +428,6 @@ func NewChain(cmd *cobra.Command, args []string) {
 		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
 	}
 	IfExit(chns.NewChain(do))
-}
-
-func RegisterChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Operations.Args = args[1:]
-	IfExit(chns.RegisterChain(do))
 }
 
 func CheckoutChain(cmd *cobra.Command, args []string) {
