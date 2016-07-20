@@ -38,7 +38,7 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	Chains.AddCommand(chainsNew)
+	//Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
@@ -93,6 +93,7 @@ $ eris chains make myChain --tar -- will create the chain and save each of the "
 	Run: MakeChain,
 }
 
+// TODO move helper into `chains start`
 var chainsNew = &cobra.Command{
 	Use:   "new NAME",
 	Short: "create and start a new blockhain",
@@ -194,9 +195,11 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
 }
 
+// TODO update helper with `chains new`
 var chainsStart = &cobra.Command{
-	Use:   "start",
-	Short: "start a blockchain",
+	Use:     "start",
+	Short:   "start a blockchain",
+	Aliases: []string{"new"},
 	Long: `start running a blockchain
 
 [eris chains start NAME] by default will put the chain into the
@@ -307,13 +310,7 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 
-	buildFlag(chainsNew, do, "dir", "chain")
-	buildFlag(chainsNew, do, "env", "chain")
-	buildFlag(chainsNew, do, "publish", "chain")
-	buildFlag(chainsNew, do, "ports", "chain")
-	buildFlag(chainsNew, do, "links", "chain")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
-
+	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
@@ -350,6 +347,17 @@ func addChainsFlags() {
 	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of chain names")
 	chainsList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
 	chainsList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers")
+}
+
+// TODO move checks into start chain
+func NewChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Run = true
+	if do.Name != "default" && do.Path == "" { //not default & no --dir given
+		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
+	}
+	//IfExit(chns.NewChain(do))
 }
 
 func StartChain(cmd *cobra.Command, args []string) {
@@ -420,14 +428,11 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.MakeChain(do))
 }
 
-func NewChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+func ImportChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]
-	do.Run = true
-	if do.Name != "default" && do.Path == "" { //not default & no --dir given
-		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
-	}
-	IfExit(chns.NewChain(do))
+	do.Path = args[1]
+	IfExit(chns.ImportChain(do))
 }
 
 func CheckoutChain(cmd *cobra.Command, args []string) {
@@ -506,12 +511,4 @@ func RmChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.RemoveChain(do))
-}
-
-func MakeGenesisFile(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Chain.Name = strings.TrimSpace(args[0])
-	do.Pubkey = strings.TrimSpace(args[1])
-	IfExit(chns.MakeGenesisFile(do))
-
 }

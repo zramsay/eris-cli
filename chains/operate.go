@@ -23,20 +23,41 @@ import (
 	"github.com/pborman/uuid"
 )
 
-func NewChain(do *definitions.Do) error {
-	dir := filepath.Join(DataContainersPath, do.Name)
-	if util.DoesDirExist(dir) {
-		log.WithField("dir", dir).Debug("Chain data already exists in")
-		log.Debug("Overwriting with new data")
-		if err := os.RemoveAll(dir); err != nil {
-			return err
-		}
+func StartChain(do *definitions.Do) error {
+	ok := true // flip this bool if error loading a chain
+
+	_, err := loaders.LoadChainDefinition(do.Name)
+	if err != nil {
+		ok = false
 	}
 
-	// for now we just let setupChain force do.ChainID = do.Name
-	// and we overwrite using jq in the container
-	log.WithField("=>", do.Name).Debug("Setting up chain")
-	return setupChain(do, "new") // move away from loaders
+	if ok {
+		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
+		return err
+	} else { //if do.Path != "" {
+		// code below copied as-is from NewChain()
+		dir := filepath.Join(DataContainersPath, do.Name)
+		if util.DoesDirExist(dir) {
+			log.WithField("dir", dir).Debug("Chain data already exists in")
+			log.Debug("Overwriting with new data")
+			if err := os.RemoveAll(dir); err != nil {
+				return err
+			}
+		}
+
+		// for now we just let setupChain force do.ChainID = do.Name
+		// and we overwrite using jq in the container
+		log.WithField("=>", do.Name).Debug("Setting up chain")
+		return setupChain(do, loaders.ErisChainNew)
+	}
+	/*} else {
+		// chains make --chain-type=simplechain // name is what ?!?
+		// chain start
+
+		// [zr] not a fan of this third option.
+		// prefer routing users to running `chains make` first
+	}*/
+	return nil
 }
 
 func KillChain(do *definitions.Do) error {
@@ -66,17 +87,13 @@ func KillChain(do *definitions.Do) error {
 	return nil
 }
 
-func StartChain(do *definitions.Do) error {
-	_, err := startChain(do, false)
-
-	return err
-}
-
 func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
 }
 
 // Throw away chains are used for eris contracts
+// [zr] this should either be refactored & better documented or deprecated
+// I favour the latter
 func ThrowAwayChain(do *definitions.Do) error {
 	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
 	do.Path = filepath.Join(ChainsPath, "default")
@@ -85,13 +102,7 @@ func ThrowAwayChain(do *definitions.Do) error {
 		"path": do.Path,
 	}).Debug("Making a throaway chain")
 
-	if err := NewChain(do); err != nil {
-		return err
-	}
-
-	log.WithField("=>", do.Name).Debug("Throwaway chain created")
-	do.Run = true  // turns on edb api
-	StartChain(do) // XXX [csk]: may not need to do this now that New starts....
+	StartChain(do)
 	log.WithField("=>", do.Name).Debug("Throwaway chain started")
 	return nil
 }

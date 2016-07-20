@@ -301,7 +301,8 @@ func bootChain(name string, do *definitions.Do) error {
 	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
 		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
-		if err := chains.NewChain(startChain); err != nil {
+		// [zr] not sure if s/NewChain/StartChain will be as easy as expected...
+		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
 		do.Chain.ChainType = "chain" // setting this for tear down purposes
