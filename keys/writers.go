@@ -105,7 +105,7 @@ func ImportKey(do *definitions.Do) error {
 			}
 		}
 	} else {
-		do.Source = filepath.Join(do.Source, do.Address, do.Address)
+		do.Source = filepath.Join(common.KeysDataPath, do.Address, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}
