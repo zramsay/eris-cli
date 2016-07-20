@@ -31,7 +31,7 @@ themselves. [eris chains ...] commands are built to help you build
 blockchains. It is our opinionated gateway to the wonderful world
 of permissioned smart contract networks.
 
-Your own blockchain/smart contract machine is just an [eris chains new]
+Your own blockchain/smart contract machine is just an [eris chains start]
 away!`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
@@ -70,7 +70,7 @@ When using make with the --known flag the marmots will *not* create keys for you
 and will instead assume that the keys exist somewhere. When using make with the
 wizard (no flags) or when using with the other flags then keys will be made along
 with the genesis.jsons and priv_validator.jsons so that everything is ready to go
-for you to [eris chains new].
+for you to [eris chains start].
 
 Optionally chains make provides packages of outputted priv_validator and genesis.json
 which you can email or send on your slack to your coworkers. These packages can
@@ -78,8 +78,9 @@ be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-the [eris chains new chainName --dir chainName] for that which will import all
-of the files which make creates into containers and start your shiny new chain.
+the [eris chains start chainName --init-dir ~/.eris/chain/chainName] for that 
+which will import all of the files which make creates into containers and 
+start your shiny new chain.
 
 If you have any questions on eris chains make, please see the eris-cm (chain manager)
 documentation here:
@@ -197,9 +198,9 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 
 // TODO update helper with `chains new`
 var chainsStart = &cobra.Command{
-	Use:     "start",
-	Short:   "start a blockchain",
-	Aliases: []string{"new"},
+	Use:   "start",
+	Short: "start a blockchain",
+	//Aliases: []string{"new"},
 	Long: `start running a blockchain
 
 [eris chains start NAME] by default will put the chain into the
@@ -314,6 +315,7 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
+	buildFlag(chainsStart, do, "config", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
@@ -362,6 +364,7 @@ func NewChain(cmd *cobra.Command, args []string) {
 
 func StartChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
+	// [zr]: yes, eventually
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Run = true
@@ -426,13 +429,6 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	}
 
 	IfExit(chns.MakeChain(do))
-}
-
-func ImportChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(chns.ImportChain(do))
 }
 
 func CheckoutChain(cmd *cobra.Command, args []string) {

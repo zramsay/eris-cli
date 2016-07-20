@@ -28,14 +28,17 @@ func StartChain(do *definitions.Do) error {
 
 	_, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
+		log.Warn("chain does not exist..")
 		ok = false
 	}
 
 	if ok {
+		log.Warn("chain exists, starting it")
 		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
 		return err
 	} else { //if do.Path != "" {
 		// code below copied as-is from NewChain()
+		log.Warn("chain does not exist, new-ing it")
 		dir := filepath.Join(DataContainersPath, do.Name)
 		if util.DoesDirExist(dir) {
 			log.WithField("dir", dir).Debug("Chain data already exists in")
@@ -277,6 +280,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		}
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
+
+	// Get the config file
+	if do.ConfigFile == "" {
+		do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml")
+	}
 
 	// Copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container.
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
