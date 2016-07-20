@@ -21,13 +21,14 @@ import (
 )
 
 var (
-	erisDir   = filepath.Join(os.TempDir(), "eris")
-	chainName = "test-chain"
+	erisDir      = filepath.Join(os.TempDir(), "eris")
+	chainName    = "test-chain"
+	chainNameFix = "test-chain-fix"
 )
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
-	// log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
@@ -710,6 +711,7 @@ func create(t *testing.T, chain string) {
 	}
 }
 
+// [zr] only diff btwn this & the above command is do.ConfigFile = ...
 func start(t *testing.T, chain string) {
 	do := def.NowDo()
 	do.Name = chain
