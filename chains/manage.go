@@ -326,59 +326,6 @@ func exportFile(chainName string) (string, error) {
 	return ipfs.SendToIPFS(fileName, "", "")
 }
 
-// TODO: remove
-func RegisterChain(do *definitions.Do) error {
-	// do.Name is mandatory
-	if do.Name == "" {
-		return fmt.Errorf("RegisterChain requires a chainame")
-	}
-	etcbChain := do.ChainID
-	do.ChainID = do.Name
-
-	// NOTE: registration expects you to have the data container
-	if !util.IsData(do.Name) {
-		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
-	}
-
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-
-	// set chainid and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
-	}
-	envVars = append(envVars, do.Env...)
-
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug("Registering chain with")
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
-	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name)
-	chain.Operations.Args = []string{loaders.ErisChainRegister}
-
-	_, err = perform.DockerRunData(chain.Operations, chain.Service)
-
-	return err
-}
-
 func checkKeysRunningOrStart() error {
 	srv, err := loaders.LoadServiceDefinition("keys")
 	if err != nil {
