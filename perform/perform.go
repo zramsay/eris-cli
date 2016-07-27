@@ -983,7 +983,6 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 }
 
 func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
-
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,
 		Config: &docker.Config{
@@ -1014,7 +1013,6 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 			CapAdd:          ops.CapAdd,
 			CapDrop:         ops.CapDrop,
 			RestartPolicy:   docker.NeverRestart(), //default. overide below
-			NetworkMode:     "bridge",
 		},
 	}
 
