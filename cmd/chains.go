@@ -368,13 +368,15 @@ var chainsRestart = &cobra.Command{
 }
 
 var chainsCat = &cobra.Command{
-	Use:     "cat NAME [config|genesis]",
+	Use:     "cat NAME [config|genesis|status|validators]",
 	Short:   "display chain information",
 	Long:    `display chain information`,
 	Aliases: []string{"plop"},
-	Example: `$ eris chains cat simplechain -- will display the chain definition file
-$ eris chains cat simplechain config -- will display the config.toml file from inside the container
-$ eris chains cat simplechain genesis -- will display the genesis.json file from the container`,
+	Example: `$ eris chains cat simplechain -- display the chain definition file
+$ eris chains cat simplechain config -- display the config.toml file from inside the container
+$ eris chains cat simplechain genesis -- display the genesis.json file from the container
+$ eris chains cat simplechain status -- display chain status
+$ eris chains cat simplechain validators -- display chain validators`,
 	Run: CatChain,
 }
 
