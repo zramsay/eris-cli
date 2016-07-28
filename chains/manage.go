@@ -283,11 +283,9 @@ func CatChain(do *definitions.Do) error {
 	case "config":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
-		// [pv]: can't have 0.0.0.0 on OSX or Windows.
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "status"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	case "validators":
-		// [pv]: can't have 0.0.0.0 on OSX or Windows.
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://0.0.0.0:46657", "validators"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	case "toml":
 		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
 		if err != nil {
