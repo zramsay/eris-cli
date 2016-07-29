@@ -8,9 +8,9 @@ import (
 
 var Remotes = &cobra.Command{
 	Use:   "remotes",
-	Short: "Manage and Perform Remote Machines and Services.",
-	Long: `Display and Manage remote machines which are operating
-various services reachable by the Eris platform.
+	Short: "manage and perform remote machines and services",
+	Long: `display and Manage remote machines which are operating
+various services reachable by the Eris platform
 
 Actions, if configured as such, can utilize remote machines.
 To register and manage remote machines for sending of actions
@@ -18,7 +18,6 @@ to those machines, use this command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
-// build the services subcommand
 func buildRemotesCommand() {
 	Remotes.AddCommand(remotesAdd)
 	Remotes.AddCommand(remotesList)
@@ -28,62 +27,55 @@ func buildRemotesCommand() {
 	Remotes.AddCommand(remotesRemove)
 }
 
-// add
 var remotesAdd = &cobra.Command{
-	Use:   "add [name] [remote-definition-file]",
-	Short: "Adds a remote to Eris.",
-	Long:  `Adds a remote to Eris in JSON, TOML, or YAML format.`,
+	Use:   "add NAME DEFINITION",
+	Short: "adds a remote to Eris",
+	Long:  `adds a remote to Eris in JSON, TOML, or YAML format`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Add(args)
 	},
 }
 
-// ls
-// flags to add: --global --project
 var remotesList = &cobra.Command{
 	Use:   "ls",
-	Short: "List all registered remotes.",
-	Long:  `List all registered remotes`,
+	Short: "list all registered remotes",
+	Long:  `list all registered remotes`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.List()
 	},
 }
 
-// do
 var remotesDo = &cobra.Command{
-	Use:   "do [name]",
-	Short: "Perform an action on a remote.",
-	Long:  `Perform an action on a remote according to the action definition file.`,
+	Use:   "do NAME",
+	Short: "perform an action on a remote",
+	Long:  `perform an action on a remote according to the action definition file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Do(args)
 	},
 }
 
-// edit
 var remotesEdit = &cobra.Command{
-	Use:   "edit [name]",
-	Short: "Edit a remote definition file.",
-	Long:  `Edit a remote definition file`,
+	Use:   "edit NAME",
+	Short: "edit a remote definition file",
+	Long:  `edit a remote definition file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Edit(args)
 	},
 }
 
-// rename
 var remotesRename = &cobra.Command{
-	Use:   "rename [old] [new]",
-	Short: "Rename a remote.",
-	Long:  `Rename a remote`,
+	Use:   "rename OLD_NAME NEW_NAME",
+	Short: "rename a remote",
+	Long:  `rename a remote`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Rename(args)
 	},
 }
 
-// remove
 var remotesRemove = &cobra.Command{
-	Use:   "remove [name]",
-	Short: "Remove a remote definition file.",
-	Long:  `Remove a remote definition file`,
+	Use:   "remove NAME",
+	Short: "remove a remote definition file",
+	Long:  `remove a remote definition file`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Remove(args)
 	},

@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
+	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -137,7 +137,6 @@ email = "support@erisindustries.com"
 		// [pv]: "data_container" is not loaded from the default.toml. A bug?
 		{`Service.AutoData`, d.Service.AutoData, false},
 		{`Service.Image`, d.Service.Image, "test image"},
-		{`Service.Ports`, d.Service.Ports, []string{"1234"}},
 
 		{`Dependencies`, d.Dependencies.Services, []string{"keys"}},
 		{`Maintainer`, d.Maintainer.Email, "support@erisindustries.com"},
@@ -242,8 +241,7 @@ ports          = [ "4321" ]
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.AutoData`, d.Service.AutoData, true},
 		{`Service.Image`, d.Service.Image, "test image"},
-		// [pv]: ports are mixed, not overwritten! (util.Merge behaviour)
-		{`Service.Ports`, d.Service.Ports, []string{"1234", "4321"}},
+		{`Service.Ports`, d.Service.Ports, []string{"4321"}},
 
 		{`Dependencies`, d.Dependencies.Chains, []string{"something"}},
 		{`Maintainer`, d.Maintainer.Email, "support@erisindustries.com"},
@@ -366,7 +364,7 @@ image          = "test image"
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
 		// [pv]: not "test image", but erisdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DB)},
+		{`Service.Image`, s.Service.Image, path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DB)},
 		{`Service.Environment`, s.Service.Environment, []string{"CHAIN_ID=" + name}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {

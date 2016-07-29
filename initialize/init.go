@@ -5,11 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func Initialize(do *definitions.Do) error {
@@ -155,7 +155,7 @@ func checkIfCanOverwrite(doYes bool) error {
 		"actions path":  common.ActionsPath,
 		"chains path":   common.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
-	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
+	if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
 		log.Debug("Confirmation verified. Proceeding")
 	} else {
 		log.Warn("The marmots will not proceed without your permission")
@@ -182,7 +182,7 @@ on local host machines. If you already have the images, they'll be updated.
 		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
 		log.Warn()
 
-		if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
+		if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
 			if err := pullDefaultImages(); err != nil {
 				return err
 			}

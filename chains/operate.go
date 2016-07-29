@@ -100,7 +100,6 @@ func ThrowAwayChain(do *definitions.Do) error {
 	return nil
 }
 
-//------------------------------------------------------------------------
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -156,9 +155,17 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		// there is literally never a reason not to randomize the ports.
 		chain.Operations.PublishAllPorts = true
 
-		// always link the chain to the exec container when doing chains exec
-		// so that there is never any problems with sending info to the service (chain) container
-		chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
+		// Link the chain to the exec container when doing chains exec so that there is
+		// never any problems with sending info over network to the chain container.
+		// Unless the variable SkipLink is set to true; in that case, don't link.
+		if !do.Operations.SkipLink {
+			// Check the chain is running.
+			if !util.IsChain(chain.Name, true) {
+				return nil, fmt.Errorf("chain %v has failed to start. You may want to check the [eris chains logs %[1]s] command output", chain.Name)
+			}
+
+			chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
+		}
 
 		buf, err = perform.DockerExecService(chain.Service, chain.Operations)
 	} else {
@@ -228,18 +235,20 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		do.ChainID = do.Name
 	}
 
-	//if given path does not exist, see if its a reference to something in ~/.eris/chains/chainName
 	if do.Path != "" {
-		src, err := os.Stat(do.Path)
-		if err != nil || !src.IsDir() {
+		src, errSaved := os.Stat(do.Path)
+		if errSaved != nil || !src.IsDir() {
 			log.WithField("path", do.Path).Info("Path does not exist or not a directory")
 			log.WithField("path", "$HOME/.eris/chains/"+do.Path).Info("Trying")
 			do.Path, err = util.ChainsPathChecker(do.Path)
 			if err != nil {
-				return err
+				// Output the error of first attempt, not the second, because
+				// this "stat /Users/peter/.eris/chains/Users/peter/.eris/simplechain:
+				// no such file or directory" is ugly.
+				return errSaved
 			}
 		}
-	} else if do.GenesisFile == "" && do.CSV == "" && len(do.ConfigOpts) == 0 {
+	} else if do.GenesisFile == "" && len(do.ConfigOpts) == 0 {
 		// NOTE: this expects you to have ~/.eris/chains/default/ (ie. to have run `eris init`)
 		do.Path, err = util.ChainsPathChecker("default")
 		if err != nil {
@@ -262,19 +271,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
 
-	// if something goes wrong, cleanup
-	defer func() {
-		if err != nil {
-			log.Infof("Error on setting up chain: %v", err)
-			log.Info("Cleaning up")
-			if err2 := RemoveChain(do); err2 != nil {
-				// maybe be less dramatic
-				err = fmt.Errorf("Tragic! Our marmots encountered an error during setupChain for %s.\nThey also failed to cleanup after themselves (remove containers) due to another error.\nFirst error =>\t\t\t%v\nCleanup error =>\t\t%v\n", containerName, err, err2)
-			}
-		}
-	}()
-
-	// copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv, do.CSV into container
+	// Copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container.
 	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
 	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
 
@@ -287,35 +284,11 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return fmt.Errorf("Error making data directory: %v", err)
 	}
 
-	// we accept two csvs: one for validators, one for accounts
-	// if there's only one, its for validators and accounts
-	// functionality is deprecated. to remove for 0.11.4
-	var csvFiles []string
-	var csvPaths string
-	if do.CSV != "" {
-		csvFiles = strings.Split(do.CSV, ",")
-		if len(csvFiles) > 1 {
-			csvPath1 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "validators.csv")
-			csvPath2 := fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "accounts.csv")
-			csvPaths = fmt.Sprintf("%s,%s", csvPath1, csvPath2)
-		} else {
-			csvPaths = fmt.Sprintf("%s/%s/%s/%s", ErisContainerRoot, "chains", do.ChainID, "genesis.csv")
-		}
-	}
-
 	filesToCopy := []stringPair{
 		{do.Path, ""},
 		{do.GenesisFile, "genesis.json"},
 		{do.ConfigFile, "config.toml"},
 		{do.Priv, "priv_validator.json"},
-	}
-
-	// functionality is deprecated. to remove for 0.11.4
-	if len(csvFiles) == 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "genesis.csv"})
-	} else if len(csvFiles) > 1 {
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[0], "validators.csv"})
-		filesToCopy = append(filesToCopy, stringPair{csvFiles[1], "accounts.csv"})
 	}
 
 	log.Info("Copying chain files into the correct location")
@@ -339,13 +312,13 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 
 	chain := loaders.MockChainDefinition(do.Name, do.ChainID)
 
-	//set maintainer info
+	// Set maintainer info.
 	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
 	if err != nil {
 		log.Debug(err.Error())
 	}
 
-	// write the chain definition file ...
+	// Write the chain definition file.
 	fileName := filepath.Join(ChainsPath, do.Name) + ".toml"
 	if _, err = os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
@@ -361,10 +334,10 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
 	chain.Operations.Ports = do.Operations.Ports
 
-	// cmd should be "new" or "install"
+	// Cmd should be "new" or "install".
 	chain.Service.Command = cmd
 
-	// write the list of <key>:<value> config options as flags
+	// Write the list of <key>:<value> config options as flags.
 	buf := new(bytes.Buffer)
 	for _, cv := range do.ConfigOpts {
 		spl := strings.Split(cv, "=")
@@ -379,10 +352,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CSV=%v", csvPaths),                                          // functionality is deprecated. to remove for 0.11.4
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),                                // for config.toml
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                                  // etcb host
-		fmt.Sprintf("DOCKER_FIX=%s", "                                        "), // https://github.com/docker/docker/issues/14203
+		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
+		fmt.Sprintf("NODE_ADDR=%s", do.Gateway), // etcb host.
 	}
 	envVars = append(envVars, do.Env...)
 
@@ -403,33 +374,40 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"=>":           chain.Service.Name,
-		"links":        chain.Service.Links,
-		"volumes from": chain.Service.VolumesFrom,
-		"image":        chain.Service.Image,
-	}).Debug("Performing chain container start")
-
-	err = perform.DockerRunService(chain.Service, chain.Operations)
-	// this err is caught in the defer above
-
 	log.Info("Moving priv_validator.json into eris-keys")
 	doKeys := definitions.NowDo()
 	doKeys.Name = do.Name
 	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
+	doKeys.Operations.SkipLink = true
 	if out, err := ExecChain(doKeys); err != nil {
-		log.Error(out)
+		if out != nil {
+			log.Error(out)
+		}
 		return fmt.Errorf("Error moving keys: %v", err)
 	}
 
 	doChown := definitions.NowDo()
 	doChown.Name = do.Name
 	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
-	if out2, err2 := ExecChain(doChown); err != nil {
-		log.Error(out2)
-		return fmt.Errorf("Error changing owner: %v", err2)
+	doChown.Operations.SkipLink = true
+	if out, err := ExecChain(doChown); err != nil {
+		if out != nil {
+			log.Error(out)
+		}
+		return fmt.Errorf("Error changing owner: %v", err)
 	}
 
+	log.WithFields(log.Fields{
+		"=>":           chain.Service.Name,
+		"links":        chain.Service.Links,
+		"volumes from": chain.Service.VolumesFrom,
+		"image":        chain.Service.Image,
+		"ports":        chain.Service.Ports,
+	}).Debug("Performing chain container start")
+
+	if err := perform.DockerRunService(chain.Service, chain.Operations); err != nil {
+		return RemoveChain(do)
+	}
 	return
 }
 

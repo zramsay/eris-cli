@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	ver "github.com/eris-ltd/eris-cli/version"
+
 	dir "github.com/eris-ltd/common/go/common"
 	"github.com/tcnksm/go-gitconfig"
 
@@ -32,8 +34,18 @@ type ErisConfig struct {
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
 	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
-
 	Verbose bool
+
+	//image defaults
+	ERIS_REG_DEF string `json:"ERIS_REG_DEF,omitempty" yaml:"ERIS_REG_DEF,omitempty" toml:"ERIS_REG_DEF,omitempty"`
+	ERIS_REG_BAK string `json:"ERIS_REG_BAK,omitempty" yaml:"ERIS_REG_BAK,omitempty" toml:"ERIS_REG_BAK,omitempty"`
+
+	ERIS_IMG_DATA string `json:"ERIS_IMG_DATA,omitempty" yaml:"ERIS_IMG_DATA,omitempty" toml:"ERIS_IMG_DATA,omitempty"`
+	ERIS_IMG_KEYS string `json:"ERIS_IMG_KEYS,omitempty" yaml:"ERIS_IMG_KEYS,omitempty" toml:"ERIS_IMG_KEYS,omitempty"`
+	ERIS_IMG_DB string `json:"ERIS_IMG_DB,omitempty" yaml:"ERIS_IMG_DB,omitempty" toml:"ERIS_IMG_DB,omitempty"`
+	ERIS_IMG_PM string `json:"ERIS_IMG_PM,omitempty" yaml:"ERIS_IMG_PM,omitempty" toml:"ERIS_IMG_PM,omitempty"`
+	ERIS_IMG_CM string `json:"ERIS_IMG_CM,omitempty" yaml:"ERIS_IMG_CM,omitempty" toml:"ERIS_IMG_CM,omitempty"`
+	ERIS_IMG_IPFS string `json:"ERIS_IMG_IPFS,omitempty" yaml:"ERIS_IMG_IPFS,omitempty" toml:"ERIS_IMG_IPFS,omitempty"`
 }
 
 func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
@@ -102,6 +114,15 @@ func SetDefaults() (*viper.Viper, error) {
 	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
 	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
 	globalConfig.SetDefault("CrashReport", "bugsnag")
+	// image defaults...
+	globalConfig.SetDefault("ERIS_REG_DEF", ver.ERIS_REG_DEF)
+	globalConfig.SetDefault("ERIS_REG_BAK", ver.ERIS_REG_BAK)
+	globalConfig.SetDefault("ERIS_IMG_DATA", ver.ERIS_IMG_DATA)
+	globalConfig.SetDefault("ERIS_IMG_KEYS", ver.ERIS_IMG_KEYS)
+	globalConfig.SetDefault("ERIS_IMG_DB", ver.ERIS_IMG_DB)
+	globalConfig.SetDefault("ERIS_IMG_PM", ver.ERIS_IMG_PM)
+	globalConfig.SetDefault("ERIS_IMG_CM", ver.ERIS_IMG_CM)
+	globalConfig.SetDefault("ERIS_IMG_IPFS", ver.ERIS_IMG_IPFS)
 	return globalConfig, nil
 }
 
@@ -138,6 +159,23 @@ func GetConfigValue(key string) string {
 		return GlobalConfig.Config.DockerCertPath
 	case "CrashReport":
 		return GlobalConfig.Config.CrashReport
+	//image defaults
+	case "ERIS_REG_DEF":
+		return GlobalConfig.Config.ERIS_REG_DEF
+	case "ERIS_REG_BAK":
+		return GlobalConfig.Config.ERIS_REG_BAK
+	case "ERIS_IMG_DATA":
+		return GlobalConfig.Config.ERIS_IMG_DATA
+	case "ERIS_IMG_KEYS":
+		return GlobalConfig.Config.ERIS_IMG_KEYS
+	case "ERIS_IMG_DB":
+		return GlobalConfig.Config.ERIS_IMG_DB
+	case "ERIS_IMG_PM":
+		return GlobalConfig.Config.ERIS_IMG_PM
+	case "ERIS_IMG_CM":
+		return GlobalConfig.Config.ERIS_IMG_CM
+	case "ERIS_IMG_IPFS":
+		return GlobalConfig.Config.ERIS_IMG_IPFS
 	default:
 		return ""
 	}

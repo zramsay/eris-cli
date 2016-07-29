@@ -1,7 +1,6 @@
 package initialize
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,7 +9,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -81,9 +82,9 @@ func dropChainDefaults(dir, from string) error {
 	}
 
 	//move things to where they ought to be
-	config := filepath.Join(dir, "config.toml")
+	confiG := filepath.Join(dir, "config.toml")
 	configDef := filepath.Join(chnDir, "config.toml")
-	if err := os.Rename(config, configDef); err != nil {
+	if err := os.Rename(confiG, configDef); err != nil {
 		return err
 	}
 
@@ -97,13 +98,12 @@ func dropChainDefaults(dir, from string) error {
 
 func pullDefaultImages() error {
 	images := []string{
-		//ver.ERIS_IMG_BASE,
-		ver.ERIS_IMG_DATA,
-		ver.ERIS_IMG_KEYS,
-		ver.ERIS_IMG_IPFS,
-		ver.ERIS_IMG_DB,
-		ver.ERIS_IMG_PM,
-		ver.ERIS_IMG_CM,
+		config.GlobalConfig.Config.ERIS_IMG_DATA,
+		config.GlobalConfig.Config.ERIS_IMG_KEYS,
+		config.GlobalConfig.Config.ERIS_IMG_IPFS,
+		config.GlobalConfig.Config.ERIS_IMG_DB,
+		config.GlobalConfig.Config.ERIS_IMG_PM,
+		config.GlobalConfig.Config.ERIS_IMG_CM,
 	}
 
 	// Spacer.
@@ -127,12 +127,12 @@ func pullDefaultImages() error {
 			tag = nameSplit[2]
 		}
 		image = nameSplit[0]
-		img := path.Join(ver.ERIS_REG_DEF, image)
+		img := path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, image)
 
 		r, w := io.Pipe()
 		opts := docker.PullImageOptions{
 			Repository:    img,
-			Registry:      ver.ERIS_REG_DEF,
+			Registry:      config.GlobalConfig.Config.ERIS_REG_DEF,
 			Tag:           tag,
 			OutputStream:  w,
 			RawJSONStream: true,
@@ -144,21 +144,39 @@ func pullDefaultImages() error {
 
 		log.WithField("image", img).Warnf("Pulling image %d out of %d", i+1, len(images))
 
-		ch := make(chan error, 1)
+		ch := make(chan error)
+		timeout := make(chan error)
 		go func() {
 			defer w.Close()
 			defer close(ch)
 
 			if err := util.DockerClient.PullImage(opts, auth); err != nil {
 				opts.Repository = image
-				opts.Registry = ver.ERIS_REG_BAK
+				opts.Registry = ver.ERIS_REG_BAK //not in global config...(also, won't even work unless we build & push updated images to dockerhub in addition to quay (which we should do)
 				if err := util.DockerClient.PullImage(opts, auth); err != nil {
 					ch <- util.DockerError(err)
 				}
 			}
 		}()
-		jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
-		if err, ok := <-ch; ok {
+		go func() {
+			defer w.Close()
+			defer close(timeout)
+
+			select {
+			case <-time.After(5 * time.Minute):
+				timeout <- fmt.Errorf(`
+It looks like marmots are taking too long to download the necessary images...
+Please, try restarting the [eris init] command one more time now or a bit later.
+This is likely a network performance issue with our Docker hosting provider`)
+			}
+		}()
+		go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+		select {
+		case err := <-ch:
+			if err != nil {
+				return err
+			}
+		case err := <-timeout:
 			return err
 		}
 
@@ -192,20 +210,22 @@ func drops(files []string, typ, dir, from string) error {
 		}
 	}
 
-	buf := new(bytes.Buffer)
 	if from == "toadserver" {
 		for _, file := range files {
 			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
-			log.WithField(file, url).Debug("Getting file from url")
-			log.WithField(file, dir).Debug("Dropping file to")
-			if err := ipfs.DownloadFromUrlToFile(url, file, dir, buf); err != nil {
+			log.WithFields(log.Fields{
+				"=>":   file,
+				"from": url,
+				"to":   dir,
+			}).Debug("Moving file")
+			if err := ipfs.DownloadFromUrlToFile(url, file, dir); err != nil {
 				return err
 			}
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
 			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file, buf); err != nil {
+			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file); err != nil {
 				return err
 			}
 		}

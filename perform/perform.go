@@ -18,7 +18,6 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
 	dirs "github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -745,7 +744,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 		if err == docker.ErrNoSuchImage {
 			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image not found locally")
-				if util.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == util.Yes {
+				if dirs.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == dirs.Yes {
 					log.Debug("User assented to pull")
 				} else {
 					log.Debug("User refused to pull")
@@ -964,8 +963,8 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 
 	// Mount a volume.
 	if ops.Volume != "" {
-		bind := filepath.Join(dirs.ErisRoot, ops.Volume) + ":" +
-			filepath.Join(dirs.ErisContainerRoot, ops.Volume)
+		bind := filepath.Join(ops.Volume) + ":" +
+			filepath.Join(dirs.ErisContainerRoot, filepath.Base(ops.Volume))
 
 		if opts.HostConfig.Binds == nil {
 			opts.HostConfig.Binds = []string{bind}
@@ -984,7 +983,6 @@ func configureInteractiveContainer(srv *def.Service, ops *def.Operation) docker.
 }
 
 func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.CreateContainerOptions {
-
 	opts := docker.CreateContainerOptions{
 		Name: ops.SrvContainerName,
 		Config: &docker.Config{
@@ -1015,7 +1013,6 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 			CapAdd:          ops.CapAdd,
 			CapDrop:         ops.CapDrop,
 			RestartPolicy:   docker.NeverRestart(), //default. overide below
-			NetworkMode:     "bridge",
 		},
 	}
 
@@ -1079,7 +1076,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA),
+			Image:           path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1125,7 +1122,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_DATA)
+		srv.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA)
 	}
 
 	// Manipulate labels locally.

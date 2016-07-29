@@ -38,7 +38,7 @@ cd data
 
 curl -o Dockerfile https://raw.githubusercontent.com/eris-ltd/common/master/docker/data/Dockerfile
 
-if [[ "$branch" = "master" ]]
+if [[ "$branch" = "master" || "$branch" = "develop" ]]
 then
   docker build -t $testimage:latest .
   docker tag $testimage:latest $testimage:$release_maj

@@ -14,9 +14,9 @@ var DefKeysPathHost = filepath.Join(KeysPath, "data")
 
 var Keys = &cobra.Command{
 	Use:   "keys",
-	Short: "Do specific tasks with keys *for dev only*.",
-	Long: `The keys subcommand is an opiniated wrapper around
-eris-keys and requires a keys container to be running.
+	Short: "do specific tasks with keys",
+	Long: `the keys subcommand is an opiniated wrapper around
+eris-keys and requires a keys container to be running
 
 It is for development only. Advanced functionality is available via
 the [eris services exec keys "eris-keys CMD"] command.
@@ -37,9 +37,8 @@ func buildKeysCommand() {
 
 var keysGen = &cobra.Command{
 	Use:   "gen",
-	Short: "Generates an unsafe key using the keys container.",
-	Long: `Generates a key using the keys container.
-NOTE: this command is not safe for production. For development only.
+	Short: "generates an unsafe key using the keys container",
+	Long: `generates a key using the keys container
 
 Key is saved in keys data container and can be exported to host
 with the [eris keys export] command.
@@ -50,8 +49,8 @@ Command is equivalent to [eris services exec keys "eris-keys gen --no-pass"]`,
 
 var keysPub = &cobra.Command{
 	Use:   "pub ADDR",
-	Short: "Returns a machine readable pubkey given an address.",
-	Long: `Returns a machine readable pubkey given an address.
+	Short: "returns a machine readable pubkey given an address",
+	Long: `returns a machine readable pubkey given an address
 
 Command is equivalent to [eris services exec keys "eris-keys pub --addr ADDR"]`,
 	Run: GetPubKey,
@@ -59,8 +58,8 @@ Command is equivalent to [eris services exec keys "eris-keys pub --addr ADDR"]`,
 
 var keysExport = &cobra.Command{
 	Use:   "export ADDR",
-	Short: "Export a key from container to host.",
-	Long: `Export a key from container to host.
+	Short: "export a key from container to host",
+	Long: `export a key from container to host
 
 Takes a key from /home/eris/.eris/keys/data/ADDR/ADDR in the keys container
 and copies it to $HOME/user/.eris/keys/data/ADDR/ADDR on the host.
@@ -71,8 +70,8 @@ Optionally specify host destination with --dest.`,
 
 var keysImport = &cobra.Command{
 	Use:   "import ADDR",
-	Short: "Import a key to container from host.",
-	Long: `Import a key to container from host.
+	Short: "import a key to container from host",
+	Long: `import a key to container from host
 
 Takes a key from $HOME/user/.eris/keys/data/ADDR/ADDR
 on the host and copies it to /home/eris/.eris/keys/data/ADDR/ADDR
@@ -82,8 +81,8 @@ in the keys container.`,
 
 var keysConvert = &cobra.Command{
 	Use:   "convert ADDR",
-	Short: "Convert and eris-keys key to tendermint key",
-	Long: `Convert and eris-keys key to tendermint key
+	Short: "convert and eris-keys key to Tendermint key",
+	Long: `convert and eris-keys key to Tendermint key
 
 Command is equivalent to [eris services exec keys "mintkey mint ADDR"]
 
@@ -93,8 +92,8 @@ Usually will be piped into $HOME/.eris/chains/newChain/priv_validator.json`,
 
 var keysList = &cobra.Command{
 	Use:   "ls",
-	Short: "List keys on host and in running keys container",
-	Long: `List keys on host and in running keys container
+	Short: "list keys on host and in running keys container",
+	Long: `list keys on host and in running keys container
 
 Specify location with flags --host or ---container.
 
@@ -104,7 +103,6 @@ the [eris services exec keys "ls /home/eris/.eris/keys/data"] command.`,
 	Run: ListKeys,
 }
 
-//the container path is always hardcoded to /home/eris/.eris/keys/data
 func addKeysFlags() {
 	keysExport.Flags().StringVarP(&do.Destination, "dest", "", DefKeysPathHost, "destination for export on host")
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
@@ -158,7 +156,7 @@ func ConvertKey(cmd *cobra.Command, args []string) {
 
 func ListKeys(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
-	if !do.Host && !do.Container { //both flags not set. list all
+	if !do.Host && !do.Container {
 		do.Host = true
 		do.Container = true
 	}

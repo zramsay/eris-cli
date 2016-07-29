@@ -31,14 +31,15 @@ echo
 echo ">>> Building the Eris binary"
 echo
 go get
-go build
+go build -ldflags "-X github.com/eris-ltd/eris-cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 popd
 
 echo
 echo ">>> Building the Debian package (#${ERIS_BRANCH})"
 echo
-mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/DEBIAN
+mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/usr/share/man/man1 deb/DEBIAN
 cp ${GOREPO}/cmd/eris/eris deb/usr/bin
+${GOREPO}/cmd/eris/eris man --dump > deb/usr/share/man/man1/eris.1
 cat > deb/DEBIAN/control <<EOF
 Package: eris
 Version: ${ERIS_VERSION}-${ERIS_RELEASE}
@@ -53,8 +54,6 @@ Description: platform for building, testing, maintaining, and operating
   distributed applications with a blockchain backend. Eris makes it easy
   and simple to wrangle the dragons of smart contract blockchains.
 EOF
-# TODO: manual page addition is pending the issue
-# https://github.com/eris-ltd/eris-cli/issues/712.
 cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
 cat > deb/usr/share/doc/eris/copyright <<EOF
 Files: *

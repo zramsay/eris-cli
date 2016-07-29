@@ -7,13 +7,14 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	srv "github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -66,8 +67,68 @@ func TestRemoveAllErisContainers(t *testing.T) {
 	testRemoveNotErisImage(t)
 }
 
+func TestCleanLatentChainDatas(t *testing.T) {
+	defer util.RemoveAllErisContainers()
+
+	// create a couple chains
+	chain0 := "clean-me-0"
+	chain1 := "clean-me-1"
+	testStartChain(chain0, t)
+	testStartChain(chain1, t)
+
+	// remove them (w/o --dir)
+	doClean := definitions.NowDo()
+	// default settings except for ChnDirs
+	doClean.Yes = true
+	doClean.Containers = true
+	doClean.Scratch = true
+	doClean.ChnDirs = false
+	doClean.RmD = false
+	doClean.Images = false
+
+	if err := Clean(doClean); err != nil {
+		t.Fatalf("error cleaning chains: %v", err)
+	}
+
+	// check that their dirs & .toml exist
+	testCheckChainDirsExist([]string{chain0, chain1}, true, t)
+
+	// run clean with --chn-dir
+	doClean.ChnDirs = true
+	if err := Clean(doClean); err != nil {
+		t.Fatalf("error cleaning chains: %v", err)
+	}
+	// check that they're gone
+	testCheckChainDirsExist([]string{chain0, chain1}, false, t)
+}
+
+func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
+	if yes { // fail if dirs/files don't exist
+		for _, chn := range chains {
+			// this should be !util.DoesDirExist() but that fails ... ?
+			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+				t.Fatalf("chain directory does not exist when it should")
+			}
+			_, err := loaders.LoadChainDefinition(chn) // list.Known only Prints to stdout
+			if err != nil {
+				t.Fatalf("can't load chain defintion file")
+			}
+		}
+	} else { // !yes, fail if dirs/files do exist
+		for _, chn := range chains {
+			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+				t.Fatalf("chain directory exists when it shouldn't")
+			}
+			_, err := loaders.LoadChainDefinition(chn)
+			if err == nil {
+				t.Fatalf("no error loading chain def that shouldn't exist")
+			}
+		}
+	}
+}
+
 func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)); err != nil {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 

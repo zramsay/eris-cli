@@ -5,16 +5,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
-	"runtime"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -371,7 +370,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "always"
@@ -417,7 +416,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "max:99"
@@ -463,7 +462,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 `); err != nil {
@@ -2184,14 +2183,14 @@ func TestBuildSimple(t *testing.T) {
 		image = "test-image-1"
 	)
 
-	dockerfile := `FROM ` + path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)
+	dockerfile := `FROM ` + path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)
 
 	if err := DockerBuild(image, dockerfile); err != nil {
 		t.Fatalf("expected image to be built, got %v", err)
 	}
 
 	if err := DockerRemoveImage(image, true); err != nil {
-		t.Fatalf("expected image to be remove, got %v", err)
+		t.Fatalf("expected image to be removed, got %v", err)
 	}
 }
 

@@ -61,8 +61,7 @@ func UnpackTarball(tarBallPath, installPath string) error {
 	return UntarForDocker(reader, "", installPath)
 }
 
-func GetFromGithub(org, repo, branch, path, directory, fileName string, w io.Writer) error {
+func GetFromGithub(org, repo, branch, path, directory, fileName string) error {
 	url := "https://raw.githubusercontent.com/" + strings.Join([]string{org, repo, branch, path}, "/")
-	w.Write([]byte("Will download from url -> " + url))
-	return ipfs.DownloadFromUrlToFile(url, fileName, directory, w)
+	return ipfs.DownloadFromUrlToFile(url, fileName, directory)
 }

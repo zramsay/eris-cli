@@ -12,8 +12,8 @@ import (
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func checkHash(hash string) (string, error) {
@@ -128,9 +128,11 @@ func DeployContractBundle(path, chainName, address string) error {
 	doRun.Path = path
 	doRun.EPMConfigFile = filepath.Join(path, "epm.yaml")
 	doRun.PackagePath = path
-	doRun.ABIPath = path
+	doRun.ABIPath = filepath.Join(path, "abi")
 	doRun.ChainName = chainName
 	doRun.DefaultAddr = address
+	doRun.KeysPort = "4767"   // [csk] note this is too opinionated. down the road we should be reading from the service definition file to acquire right port
+	doRun.ChainPort = "46657" // [csk] note this is too opinionated. down the road we should be reading from the chain definition file to acquire right port
 
 	if err := pkgs.RunPackage(doRun); err != nil {
 		return err
@@ -147,11 +149,3 @@ func SetTarballPath(bundleInfo map[string]string) string {
 
 	return filepath.Join(common.BundlesPath, groupID, bundleID, version)
 }
-
-// ensure user is valid
-// by querying the accounts chain
-// TODO implement. Blocking on lack of details
-//if !AuthenticateUser(params["user"]) {
-//	w.Write([]byte(fmt.Sprintf("permissioned denied: %v\n", err)))
-//	return
-//}
