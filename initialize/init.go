@@ -5,20 +5,26 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 )
 
 func Initialize(do *definitions.Do) error {
+
 	newDir, err := checkThenInitErisRoot(do.Quiet)
 	if err != nil {
 		return err
 	}
 
 	if !newDir { //new ErisRoot won't have either...can skip
+		if err := overwriteImageConfigs(); err != nil {
+			return err
+		}
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
 			return nil
 		}
@@ -188,6 +194,22 @@ on local host machines. If you already have the images, they'll be updated.
 			}
 			log.Warn("Successfully pulled default images")
 		}
+	}
+	return nil
+}
+
+func overwriteImageConfigs() error {
+	config.GlobalConfig.Config.ERIS_REG_DEF = ver.ERIS_REG_DEF
+	config.GlobalConfig.Config.ERIS_REG_BAK = ver.ERIS_REG_BAK
+	config.GlobalConfig.Config.ERIS_IMG_DATA = ver.ERIS_IMG_DATA
+	config.GlobalConfig.Config.ERIS_IMG_KEYS = ver.ERIS_IMG_KEYS
+	config.GlobalConfig.Config.ERIS_IMG_DB = ver.ERIS_IMG_DB
+	config.GlobalConfig.Config.ERIS_IMG_PM = ver.ERIS_IMG_PM
+	config.GlobalConfig.Config.ERIS_IMG_CM = ver.ERIS_IMG_CM
+	config.GlobalConfig.Config.ERIS_IMG_IPFS = ver.ERIS_IMG_IPFS
+
+	if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
+		return err
 	}
 	return nil
 }
