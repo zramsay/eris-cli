@@ -39,7 +39,6 @@ away!`,
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsNew)
-	Chains.AddCommand(chainsImport)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
@@ -51,7 +50,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	Chains.AddCommand(chainsExport)
 	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
@@ -191,18 +189,6 @@ The -k flag displays the known definition files. `,
 $ eris chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 }
 
-var chainsImport = &cobra.Command{
-	Use:   "import NAME LOCATION",
-	Short: "import a chain definition file from Github or IPFS",
-	Long: `import a chain definition for your platform
-
-By default, Eris will import from IPFS.
-
-To list known chains use: [eris chains ls --known].`,
-	Example: "$ eris chains import 2gather QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
-	Run:     ImportChain,
-}
-
 var chainsCheckout = &cobra.Command{
 	Use:   "checkout NAME",
 	Short: "check out a chain",
@@ -313,15 +299,6 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 $ eris chains inspect 2gather name -- will display the name in machine readable format
 $ eris chains inspect 2gather host_config.binds -- will display only that value`,
 	Run: InspectChain,
-}
-
-var chainsExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "export a chain definition file to IPFS",
-	Long: `export a chain definition file to IPFS
-
-Command will return a machine readable version of the IPFS hash.`,
-	Run: ExportChain,
 }
 
 var chainsRename = &cobra.Command{
@@ -529,13 +506,6 @@ func RegisterChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.RegisterChain(do))
 }
 
-func ImportChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(chns.ImportChain(do))
-}
-
 func CheckoutChain(cmd *cobra.Command, args []string) {
 	if len(args) >= 1 {
 		do.Name = args[0]
@@ -591,13 +561,6 @@ func InspectChain(cmd *cobra.Command, args []string) {
 	}
 
 	IfExit(chns.InspectChain(do))
-}
-
-func ExportChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.ExportChain(do))
 }
 
 func ListChains(cmd *cobra.Command, args []string) {

@@ -8,8 +8,6 @@ import (
 
 	"github.com/eris-ltd/common/go/ipfs"
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -27,66 +25,6 @@ func NewAction(do *definitions.Do) error {
 	if err := WriteActionDefinitionFile(act, path); err != nil {
 		return err
 	}
-	return nil
-}
-
-func ImportAction(do *definitions.Do) error {
-	if do.Name == "" {
-		do.Name = strings.Join(do.Operations.Args, "_")
-	}
-	fileName := filepath.Join(ActionsPath, strings.Join(do.Operations.Args, " "))
-	if filepath.Ext(fileName) == "" {
-		fileName = fileName + ".toml"
-	}
-
-	s := strings.Split(do.Path, ":")
-	if s[0] == "ipfs" {
-
-		var err error
-		ipfsService, err := loaders.LoadServiceDefinition("ipfs")
-		if err != nil {
-			return err
-		}
-
-		ipfsService.Operations.ContainerType = definitions.TypeService
-		err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
-		if err != nil {
-			return err
-		}
-
-		return ipfs.GetFromIPFS(s[1], fileName, "")
-	}
-
-	if strings.Contains(s[0], "github") {
-		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
-		return nil
-	}
-
-	log.Warn("Failed to get that file. Sorry")
-	return nil
-}
-
-func ExportAction(do *definitions.Do) error {
-	_, _, err := LoadActionDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	ipfsService, err := loaders.LoadServiceDefinition("ipfs")
-	if err != nil {
-		return err
-	}
-	err = perform.DockerRunService(ipfsService.Service, ipfsService.Operations)
-	if err != nil {
-		return err
-	}
-
-	hash, err := exportFile(do.Name)
-	if err != nil {
-		return err
-	}
-	do.Result = hash
-	log.Warn(hash)
 	return nil
 }
 

@@ -132,31 +132,6 @@ func MakeChain(do *definitions.Do) error {
 	return nil
 }
 
-// ImportChain pulls a chain definition file from IPFS and saves
-// that file into ChainPath. It returns an error.
-//
-//  do.Name          - name of the chain to be imported (required)
-//  do.Path          - path to export to; currently only supports ipfs (example: ipfs:QmVdjShTMLAD6YTEgQ1wen1ym4p19ZWepCYTf1MNC1f1Ft) (required)
-//
-func ImportChain(do *definitions.Do) error {
-	fileName := filepath.Join(ChainsPath, do.Name)
-	if filepath.Ext(fileName) == "" {
-		fileName = fileName + ".toml"
-	}
-
-	s := strings.Split(do.Path, ":")
-	if s[0] == "ipfs" {
-		return ipfs.GetFromIPFS(s[1], fileName, "")
-	}
-
-	if strings.Contains(s[0], "github") {
-		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
-		return nil
-	}
-
-	return fmt.Errorf("I do not know how to get that file. Sorry.")
-}
-
 // InspectChain is eris' version of docker inspect. It returns
 // an error.
 //
@@ -198,35 +173,6 @@ func LogsChain(do *definitions.Do) error {
 		return err
 	}
 
-	return nil
-}
-
-// ExportChain exports a chain definition file to IPFS for easy
-// collaboration between peers.
-//
-//  do.Name - name of the chain (required)
-//
-func ExportChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	if util.IsChain(chain.Name, false) {
-		doNow := definitions.NowDo()
-		doNow.Name = "ipfs"
-		services.EnsureRunning(doNow)
-
-		hash, err := exportFile(do.Name)
-		if err != nil {
-			return err
-		}
-		log.Warn(hash)
-
-	} else {
-		return fmt.Errorf(`I don't known of that chain.
-Please retry with a known chain.
-To find known chains use: eris chains ls --known`)
-	}
 	return nil
 }
 

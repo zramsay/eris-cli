@@ -38,25 +38,12 @@ other programs installed *on the host*.`,
 // Build the actions subcommand
 func buildActionsCommand() {
 	Actions.AddCommand(actionsNew)
-	Actions.AddCommand(actionsImport)
 	Actions.AddCommand(actionsList)
 	Actions.AddCommand(actionsEdit)
 	Actions.AddCommand(actionsDo)
-	Actions.AddCommand(actionsExport)
 	Actions.AddCommand(actionsRename)
 	Actions.AddCommand(actionsRemove)
 	addActionsFlags()
-}
-
-// Actions Sub-sub-Commands
-var actionsImport = &cobra.Command{
-	Use:   "import NAME LOCATION",
-	Short: "import an action definition file from Github or IPFS",
-	Long: `import an action definition for your platform
-
-By default, Eris will import from IPFS`,
-	Example: "$ eris actions import \"do not use\" QmNUhPtuD9VtntybNqLgTTevUmgqs13eMvo2fkCwLLx5MX",
-	Run:     ImportAction,
 }
 
 var actionsNew = &cobra.Command{
@@ -123,15 +110,6 @@ var actionsEdit = &cobra.Command{
 	Run:   EditAction,
 }
 
-var actionsExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "export an action definition file to IPFS",
-	Long: `export an action definition file to IPFS
-
-Command will return a machine readable version of the IPFS hash.`,
-	Run: ExportAction,
-}
-
 var actionsRename = &cobra.Command{
 	Use:     "rename OLD_NAME NEW_NAME",
 	Short:   "rename an action",
@@ -157,13 +135,6 @@ func addActionsFlags() {
 	buildFlag(actionsList, do, "known", "action")
 	actionsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	actionsList.Flags().StringVarP(&do.Format, "format", "", "", "alternate format for columnized output")
-}
-
-func ImportAction(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.Path = args[1]
-	IfExit(act.ImportAction(do))
 }
 
 func NewAction(cmd *cobra.Command, args []string) {
@@ -192,12 +163,6 @@ func DoAction(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
 	IfExit(act.Do(do))
-}
-
-func ExportAction(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = strings.Join(args, "_")
-	IfExit(act.ExportAction(do))
 }
 
 func RenameAction(cmd *cobra.Command, args []string) {
