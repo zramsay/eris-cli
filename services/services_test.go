@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
