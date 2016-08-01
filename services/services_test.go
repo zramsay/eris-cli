@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -213,81 +212,6 @@ func TestRmService(t *testing.T) {
 	}
 	if util.Exists(def.TypeData, servName) {
 		t.Fatalf("expecting dependent data container not existing")
-	}
-}
-
-func TestExportService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "ipfs"
-
-	const hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-
-	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
-		Code: http.StatusOK,
-		Header: map[string][]string{
-			"Ipfs-Hash": {hash},
-		},
-	})
-	defer ipfs.Close()
-
-	if err := ExportService(do); err != nil {
-		t.Fatalf("expected service to be exported, got %v", err)
-	}
-
-	if expected := "/ipfs/"; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
-	}
-
-	if expected := "POST"; ipfs.Method() != expected {
-		t.Fatalf("used the wrong HTTP method; expected %v, got %v", expected, ipfs.Method())
-	}
-
-	if content := tests.FileContents(FindServiceDefinitionFile(do.Name)); content != ipfs.Body() {
-		t.Fatalf("sent the bad file; expected %v, got %v", content, ipfs.Body())
-	}
-
-	if hash != do.Result {
-		t.Fatalf("hash mismatch; expected %v, got %v", hash, do.Result)
-	}
-}
-
-func TestImportService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "eth"
-	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-
-	content := `name = "ipfs"
-
-[service]
-name = "ipfs"
-image = "` + path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS) + `"`
-
-	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
-		Code: http.StatusOK,
-		Body: content,
-	})
-	defer ipfs.Close()
-
-	if err := ImportService(do); err != nil {
-		t.Fatalf("expected service to be imported, got %v", err)
-	}
-
-	if expected := "/ipfs/" + do.Hash; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
-	}
-
-	if expected := "GET"; ipfs.Method() != expected {
-		t.Fatalf("used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
-	}
-
-	if imported := tests.FileContents(FindServiceDefinitionFile(do.Name)); imported != content {
-		t.Fatalf("returned unexpected content; expected: %v, got %v", content, imported)
 	}
 }
 

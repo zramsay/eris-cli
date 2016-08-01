@@ -19,25 +19,6 @@ import (
 	"github.com/eris-ltd/common/go/ipfs"
 )
 
-func ImportService(do *definitions.Do) error {
-	fileName := filepath.Join(ServicesPath, do.Name)
-	if filepath.Ext(fileName) == "" {
-		fileName = fileName + ".toml"
-	}
-
-	if err := ipfs.GetFromIPFS(do.Hash, fileName, ""); err != nil {
-		return err
-	}
-
-	_, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return fmt.Errorf("error loading service:\n%v", err)
-	}
-
-	do.Result = "success"
-	return nil
-}
-
 func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
@@ -176,26 +157,6 @@ func LogsService(do *definitions.Do) error {
 		return err
 	}
 	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
-}
-
-func ExportService(do *definitions.Do) error {
-	if parseKnown(do.Name) {
-		doNow := definitions.NowDo()
-		doNow.Name = "ipfs"
-		err := EnsureRunning(doNow)
-		if err != nil {
-			return err
-		}
-
-		hash, _ := exportFile(do.Name)
-		do.Result = hash
-		log.WithField("hash", hash).Warn()
-
-	} else {
-		return fmt.Errorf(`I don't know that service. Please retry with a known service.
-To find known services use [eris services ls --known]`)
-	}
-	return nil
 }
 
 func UpdateService(do *definitions.Do) error {

@@ -29,7 +29,6 @@ image.`,
 
 func buildServicesCommand() {
 	Services.AddCommand(servicesMake)
-	Services.AddCommand(servicesImport)
 	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
@@ -38,7 +37,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
-	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
@@ -74,14 +72,6 @@ The -k flag displays the known definition files.`,
 $ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
 $ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}'
 $ eris services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
-}
-
-var servicesImport = &cobra.Command{
-	Use:     "import NAME HASH",
-	Short:   "import a service definition file from IPFS",
-	Long:    `import a service for your platform`,
-	Example: "$ eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
-	Run:     ImportService,
 }
 
 var servicesMake = &cobra.Command{
@@ -157,15 +147,6 @@ The [eris services ports] command displays published service ports.`,
 	Example: `$ eris services ports ipfs -- will display all IPFS ports
 $ eris services ports ipfs 4001 5001 -- will display specific IPFS ports`,
 	Run: PortsService,
-}
-
-var servicesExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "export a service definition file to IPFS",
-	Long: `export a service definition file to IPFS
-
-Command will return a machine readable version of the IPFS hash.`,
-	Run: ExportService,
 }
 
 var servicesLogs = &cobra.Command{
@@ -317,13 +298,6 @@ func KillService(cmd *cobra.Command, args []string) {
 	IfExit(srv.KillService(do))
 }
 
-func ImportService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Hash = args[1]
-	IfExit(srv.ImportService(do))
-}
-
 func MakeService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
@@ -362,12 +336,6 @@ func PortsService(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(srv.PortsService(do))
-}
-
-func ExportService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(srv.ExportService(do))
 }
 
 func UpdateService(cmd *cobra.Command, args []string) {

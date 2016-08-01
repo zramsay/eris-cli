@@ -26,27 +26,7 @@ smart contract packages for use by your application`,
 
 func buildPackagesCommand() {
 	Packages.AddCommand(packagesDo)
-	Packages.AddCommand(packagesImport)
-	Packages.AddCommand(packagesExport)
 	addPackagesFlags()
-}
-
-var packagesImport = &cobra.Command{
-	Use:   "import HASH NAME",
-	Short: "pull a package of smart contracts from IPFS",
-	Long: `pull a package of smart contracts from IPFS
-via its hash and save it locally to ~/.eris/apps/NAME.
-This package needs to have been added as directory to IPFS,
-with [eris pkgs export someDir/]`,
-	Run: PackagesImport,
-}
-
-var packagesExport = &cobra.Command{
-	Use:   "export DIR",
-	Short: "post a package of smart contracts to IPFS",
-	Long: `post a package of smart contracts to IPFS.
-Give a path to a directory, which will be added to ipfs recusively`,
-	Run: PackagesExport,
 }
 
 var packagesDo = &cobra.Command{
@@ -79,19 +59,6 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainPort, "chain-port", "", "46657", "chain rpc port")
 	packagesDo.Flags().StringVarP(&do.KeysPort, "keys-port", "", "4767", "port for keys server")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
-}
-
-func PackagesImport(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Hash = args[0]
-	do.Name = args[1]
-	IfExit(pkgs.ImportPackage(do))
-}
-
-func PackagesExport(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Name = args[0]
-	IfExit(pkgs.ExportPackage(do))
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
