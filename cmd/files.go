@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"errors"
+
 	"github.com/eris-ltd/eris-cli/files"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -39,8 +41,8 @@ func buildFilesCommand() {
 
 var filesImport = &cobra.Command{
 	Use:   "get HASH FILE|DIR",
-	Short: "pull files/objects from IPFS via a hash and save them locally",
-	Long:  `pull files/objects from IPFS via a hash and save them locally`,
+	Short: "pull files/objects from IPFS via a hash and save them locally, requires the [--output] flag",
+	Long:  `pull files/objects from IPFS via a hash and save them locally, requires the [--output] flag`,
 	Run:   FilesGet,
 }
 
@@ -85,6 +87,8 @@ var filesCached = &cobra.Command{
 }
 
 func addFilesFlags() {
+	filesImport.Flags().StringVarP(&do.Path, "output", "o", "", "specify a path/name to output the file/directory. this flag is required")
+
 	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"eris\" for our gateway, or use your own with \"http://yourhost\"")
 
 	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
@@ -92,9 +96,11 @@ func addFilesFlags() {
 }
 
 func FilesGet(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
+	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Hash = args[0]
-	do.Path = args[1]
+	if do.Path == "" {
+		IfExit(errors.New("please specify a path to output your file with the [--output] flag"))
+	}
 	IfExit(files.GetFiles(do))
 }
 
