@@ -34,7 +34,7 @@ var pwd string
 //  do.ChainName - name of the chain to run the pkgs do against
 //
 func RunPackage(do *definitions.Do) error {
-	log.Debug("Welcome! Say the marmots. Running package")
+	log.Warn("Performing action. This can sometimes take a wee while.")
 	var err error
 	pwd, err = os.Getwd()
 	if err != nil {
@@ -77,6 +77,7 @@ func RunPackage(do *definitions.Do) error {
 //
 //  do.ServicesSlice - slice of dependent services to boot before the eris-pm runs
 //  do.ChainName - name of the chain to ensure is booted (if "" then will check the checkedout chain)
+//  do.LocalCompiler - use a local compiler service
 //
 //  pkg.Name - name of the package (defaults to os.Base(pwd))
 //  pkg.Dependencies.Services  - slice of dependent services to boot before the eris-pm runs (appends to do.ServicesSlice)
@@ -86,6 +87,14 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 	var err error
 	var srvs []*definitions.ServiceDefinition
 	do.ServicesSlice = append(do.ServicesSlice, pkg.Dependencies.Services...)
+
+	// add the compilers to the local services if the flag is pushed
+	// [csk] note - when we move to default local compilers we'll remove
+	// the compilers service completely and this will need to get
+	// reworked to utilize DockerRun with a populated service def.
+	if do.LocalCompiler {
+		do.ServicesSlice = append(do.ServicesSlice, "compilers")
+	}
 
 	// assemble the services
 	for _, s := range do.ServicesSlice {
@@ -179,7 +188,7 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	}
 
 	// run service, get result from its buffer
-	log.Warn("Performing action. This can sometimes take a wee while")
+	log.Info("Starting pkgs action container.")
 	log.WithFields(log.Fields{
 		"service": do.Service.Name,
 		"image":   do.Service.Image,
@@ -237,12 +246,23 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		log.Debug("No throwaway chain to destroy")
 	}
 
+	// removal of local compiler; [csk] note we may not want to remove the container for performance reasons
+	if do.LocalCompiler {
+		log.Debug("Turning off and removing local compiler container")
+		doStop := definitions.NowDo()
+		doStop.Operations.Args = []string{"compilers"}
+		doStop.Rm, doStop.Force, doStop.RmD, doStop.Volumes = true, true, true, true
+		if err := services.KillService(doStop); err != nil {
+			return err
+		}
+	}
+
 	// export process
 	if err := getDataContainerSorted(do, false); err != nil {
 		return err // errors marmotified in getDataContainerSorted
 	}
 
-	// removal of service container
+	// removal of data container
 	if !do.Rm {
 		doRemove := definitions.NowDo()
 		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
@@ -252,7 +272,7 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		}
 	}
 
-	// removal of data container
+	// removal of data dir
 	if !do.RmD {
 		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
 		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
@@ -410,6 +430,10 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 
 	if do.DefaultGas != "" {
 		do.Service.EntryPoint = do.Service.EntryPoint + " --gas " + do.DefaultGas
+	}
+
+	if do.LocalCompiler { // gets the IP:port combo and overwrites the do.Compiler field.
+		getLocalCompilerData(do)
 	}
 
 	if do.Compiler != "" {
@@ -651,4 +675,9 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	do.PackagePath = oldPkgPath
 	do.ABIPath = oldAbiPath
 	return nil
+}
+
+// populates the IP:port combo for the compilers.
+func getLocalCompilerData(do *definitions.Do) {
+	do.Compiler = "http://compilers:9099" // [csk] note this is brittle we should only expose one port in the docker file by default for the compilers service we can expose more forcibly
 }

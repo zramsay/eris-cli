@@ -99,6 +99,53 @@ func TestServicesBooted(t *testing.T) {
 	}
 }
 
+func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
+	// write a good pkg.json
+	if err := writeGoodPkgJson(); err != nil {
+		t.Fatalf("unexpected error writing package.json: %v", err)
+	}
+
+	// load a good pkg.json
+	pkg, err := loaders.LoadPackage(goodPkg, "")
+	if err != nil {
+		t.Fatalf("unexpected error loading package: %v", err)
+	}
+
+	do := definitions.NowDo()
+	do.Name = pkg.Name
+	do.LocalCompiler = true
+	pkg.ChainName = "temp"
+
+	defer func() {
+		CleanUp(do, pkg)
+		if err := os.RemoveAll(filepath.Dir(goodPkg)); err != nil {
+			t.Fatalf("error removing good package.json directory: %v", err)
+		}
+	}()
+
+	if err := BootServicesAndChain(do, pkg); err != nil {
+		t.Fatalf("error booting chains and services: %v", err)
+	}
+
+	// check compilers on
+	if !util.Running(definitions.TypeService, "compilers") {
+		t.Fatalf("expected compiler to start")
+	}
+	if !util.Exists(definitions.TypeData, "compilers") {
+		t.Fatalf("expected compilers data container to exist")
+	}
+
+	CleanUp(do, pkg)
+
+	// check compilers off
+	if util.Running(definitions.TypeService, "compilers") {
+		t.Fatalf("expected compilers to stop")
+	}
+	if util.Exists(definitions.TypeData, "compilers") {
+		t.Fatalf("expected compilers data container to not exist")
+	}
+}
+
 func TestKnownChainBoots(t *testing.T) {
 	name := "good"
 	chainName := "simpletestingchain"
@@ -111,7 +158,7 @@ func TestKnownChainBoots(t *testing.T) {
 	doMake := definitions.NowDo()
 	doMake.Name = chainName
 	doMake.ChainType = "simplechain"
-	doMake.Debug = true
+	doMake.Debug = false
 	if err := chains.MakeChain(doMake); err != nil {
 		log.Error(err)
 		t.Fatalf("unexpected error making a chain: %v", err)
@@ -197,6 +244,7 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = pkg.Name
+	do.LocalCompiler = true
 	pkg.ChainName = "temp"
 
 	if err := BootServicesAndChain(do, pkg); err != nil {
@@ -1033,6 +1081,17 @@ func writeEmptyPkgJson() error {
 }
 
 func checkLinks(do *definitions.Do) error {
+	if do.LocalCompiler {
+		notFound := true
+		for _, srv := range do.ServicesSlice {
+			if srv == "compilers" {
+				notFound = false
+			}
+		}
+		if notFound == true {
+			return fmt.Errorf("local compiler not placed into do.ServicesSlice")
+		}
+	}
 	for _, dep := range do.ServicesSlice {
 		match := false
 		for _, link := range do.Service.Links {
