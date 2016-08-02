@@ -224,7 +224,7 @@ func drops(files []string, typ, dir, from string) error {
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
-			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into:")
+			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
 			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file); err != nil {
 				return err
 			}

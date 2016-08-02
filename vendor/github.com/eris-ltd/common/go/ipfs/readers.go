@@ -117,7 +117,7 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 		log.WithFields(log.Fields{
 			"from": url,
 			"to":   endPath,
-		}).Warn("Downloading")
+		}).Info("Downloading")
 		checkDir, err := os.Stat(dirName)
 		if err != nil {
 			log.Warn("Directory does not exist, creating it")

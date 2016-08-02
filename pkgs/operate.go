@@ -493,10 +493,9 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithField("=>", do.ABIPath).Debug("Setting do.ABIPath")
 	}
 
-	// when running eris pkgs do from a home directory there is a problem on the exports. this ensures that the export
-	// runs properly.
-	user, _ := user.Current()
-	if user.HomeDir == do.ABIPath {
+	// If the ABI path specified is a home directory,
+	// append the "abi" subdirectory to it.
+	if user, err := user.Current(); err == nil && user.HomeDir == do.ABIPath {
 		do.ABIPath = filepath.Join(do.ABIPath, "abi")
 	}
 

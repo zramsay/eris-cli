@@ -5,11 +5,13 @@ import (
 	"fmt"
 )
 
+// JSONFormatter is a custom logger implementation.
 type JSONFormatter struct {
 	// TimestampFormat sets the format used for marshaling timestamps.
 	TimestampFormat string
 }
 
+// Format returns a JSON formatted logging entry.
 func (f *JSONFormatter) Format(entry *Entry) ([]byte, error) {
 	data := make(Fields, len(entry.Data)+3)
 	for k, v := range entry.Data {
