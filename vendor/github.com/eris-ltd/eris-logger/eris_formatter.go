@@ -2,14 +2,12 @@ package logger
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
 	"sort"
-
-	"github.com/docker/docker/pkg/term"
 )
 
+// ErisFormatter is a custom logger implementation.
 type ErisFormatter struct {
 	// Set to true to ignore TTY checks for color highlights.
 	Color bool
@@ -46,7 +44,7 @@ func (f ErisFormatter) Format(entry *Entry) (out []byte, err error) {
 
 	// Sort tag names in alphabetical order.
 	var keys []string
-	for key, _ := range entry.Data {
+	for key := range entry.Data {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
@@ -91,16 +89,15 @@ func (f ErisFormatter) Highlight(tag, comment string) (adjustedOffset int, text 
 	commentDecorated := comment
 
 	// Use color formatting if specified and if connected to the terminal.
-	if f.Color && term.IsTerminal(os.Stdout.Fd()) && term.IsTerminal(os.Stderr.Fd()) {
+	if f.Color && IsTerminal() {
 		tagDecorated = fmt.Sprintf("%s%s%s", escTag, tag, escReset)
 		commentDecorated = fmt.Sprintf("%s%s%s", escBold, comment, escReset)
 	}
 
 	if tag == arrowTag {
 		return offset + 2, fmt.Sprintf("%s", commentDecorated)
-	} else {
-		return offset - len(tag) + 1, fmt.Sprintf("%s=%s", tagDecorated, commentDecorated)
 	}
+	return offset - len(tag) + 1, fmt.Sprintf("%s=%s", tagDecorated, commentDecorated)
 }
 
 // tput asks the terminfo database for a particular escape sequence.
