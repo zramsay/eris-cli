@@ -59,6 +59,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainPort, "chain-port", "", "46657", "chain rpc port")
 	packagesDo.Flags().StringVarP(&do.KeysPort, "keys-port", "", "4767", "port for keys server")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
+	packagesDo.Flags().BoolVarP(&do.LocalCompiler, "local-compiler", "z", false, "use a local compiler service; overwrites anything added to compilers flag")
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
@@ -71,7 +72,7 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 	if do.ChainName == "" {
 		IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
-	if do.DefaultAddr == "" {
+	if do.DefaultAddr == "" { // note that this is not strictly necessary since the addr can be set in the epm.yaml.
 		IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
 	IfExit(pkgs.RunPackage(do))

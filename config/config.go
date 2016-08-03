@@ -6,14 +6,16 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	dir "github.com/eris-ltd/common/go/common"
-	"github.com/tcnksm/go-gitconfig"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
+	"github.com/tcnksm/go-gitconfig"
 )
 
 // Properly scope the globalConfig.
@@ -30,7 +32,8 @@ type ErisCli struct {
 
 type ErisConfig struct {
 	IpfsHost       string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
-	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"`
+	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
+	CompilersPort  string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
 	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
@@ -111,10 +114,21 @@ func LoadGlobalConfig() (*viper.Viper, error) {
 
 func SetDefaults() (*viper.Viper, error) {
 	var globalConfig = viper.New()
-	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0")
-	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
+
+	// assorted defaults
+	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
 	globalConfig.SetDefault("CrashReport", "bugsnag")
-	// image defaults...
+
+	// compilers defaults
+	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
+	verSplit := strings.Split(ver.VERSION, "-")
+	verSplit = strings.Split(verSplit[0], ".")
+	maj, _ := strconv.Atoi(verSplit[0])
+	min, _ := strconv.Atoi(verSplit[1])
+	pat, _ := strconv.Atoi(verSplit[2])
+	globalConfig.SetDefault("CompilersPort", fmt.Sprintf("1%01d%02d%01d", maj, min, pat))
+
+	// image defaults
 	globalConfig.SetDefault("ERIS_REG_DEF", ver.ERIS_REG_DEF)
 	globalConfig.SetDefault("ERIS_REG_BAK", ver.ERIS_REG_BAK)
 	globalConfig.SetDefault("ERIS_IMG_DATA", ver.ERIS_IMG_DATA)
@@ -122,7 +136,9 @@ func SetDefaults() (*viper.Viper, error) {
 	globalConfig.SetDefault("ERIS_IMG_DB", ver.ERIS_IMG_DB)
 	globalConfig.SetDefault("ERIS_IMG_PM", ver.ERIS_IMG_PM)
 	globalConfig.SetDefault("ERIS_IMG_CM", ver.ERIS_IMG_CM)
+	globalConfig.SetDefault("ERIS_IMG_COMP", ver.ERIS_IMG_COMP)
 	globalConfig.SetDefault("ERIS_IMG_IPFS", ver.ERIS_IMG_IPFS)
+
 	return globalConfig, nil
 }
 

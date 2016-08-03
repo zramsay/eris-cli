@@ -15,5 +15,6 @@ var (
 	ERIS_IMG_DB   = fmt.Sprintf("eris/erisdb:%s", VERSION)
 	ERIS_IMG_PM   = fmt.Sprintf("eris/epm:%s", VERSION)
 	ERIS_IMG_CM   = fmt.Sprintf("eris/eris-cm:%s", VERSION)
+	ERIS_IMG_COMP = fmt.Sprintf("eris/compilers:%s", VERSION)
 	ERIS_IMG_IPFS = "eris/ipfs"
 )
