@@ -38,7 +38,7 @@ name = "Eris Industries"
 email = "support@erisindustries.com"
 
 [location]
-dockerfile = "https://github.com/eris-ltd/common/blob/master/docker/ipfs/Dockerfile"
+dockerfile = "https://github.com/eris-ltd/eris-cli/blob/master/docker/x86/ipfs/Dockerfile"
 repository = "https://github.com/ipfs/go-ipfs"
 website = "https://ipfs.io/"
 `
