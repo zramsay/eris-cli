@@ -35,10 +35,6 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Using stdout for less fuss with redirecting the log messages
-		// into a file (`eris > out`) or a viewer (`eris|more`).
-		log.SetOutput(os.Stdout)
-
 		log.SetLevel(log.WarnLevel)
 		if do.Verbose {
 			log.SetLevel(log.InfoLevel)
