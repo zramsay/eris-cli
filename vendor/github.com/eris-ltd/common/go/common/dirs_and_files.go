@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -79,7 +78,7 @@ var MajorDirs = []string{
 	PersonalServicesPath,
 }
 
-// These should only be used by specific tooling rather than eris-cli level
+// ChainsDirs to be used by specific tooling rather than eris-cli level.
 var ChainsDirs = []string{
 	ChainsPath,
 	DefaultChainPath,
@@ -87,20 +86,20 @@ var ChainsDirs = []string{
 	ChainTypePath,
 }
 
-// These should only be used by specific tooling rather than eris-cli level
+// KeysDirs to be used by specific tooling rather than eris-cli level.
 var KeysDirs = []string{
 	KeysPath,
 	KeysDataPath,
 	KeyNamesPath,
 }
 
-// These should only be used by specific tooling rather than eris-cli level
+// ServicesDirs to be used by specific tooling rather than eris-cli level.
 var ServicesDirs = []string{
 	ServicesPath,
 	PersonalServicesPath,
 }
 
-// These should only be used by specific tooling rather than eris-cli level
+// ScratchDirs to be used by specific tooling rather than eris-cli level.
 var ScratchDirs = []string{
 	ScratchPath,
 	DataContainersPath,
@@ -110,15 +109,13 @@ var ScratchDirs = []string{
 	SerpScratchPath,
 }
 
-//eris update checks if old dirs exist & migrates them
+// DirsToMigrate is used by the `eris update` command to check
+// if old dirs exist to migrate them.
 var DirsToMigrate = map[string]string{
 	BlockchainsPath: ChainsPath,
 	DappsPath:       AppsPath,
 	LanguagesPath:   LanguagesScratchPath,
 }
-
-//---------------------------------------------
-// user and process
 
 func HomeDir() string {
 	if runtime.GOOS == "windows" {
@@ -132,26 +129,6 @@ func HomeDir() string {
 		return os.Getenv("HOME")
 	}
 }
-
-func Exit(err error) {
-	status := 0
-	if err != nil {
-		fmt.Println(err)
-		status = 1
-	}
-	os.Exit(status)
-}
-
-func IfExit(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-// user and process
-//---------------------------------------------------------------------------
-// filesystem
 
 func AbsolutePath(Datadir string, filename string) string {
 	if filepath.IsAbs(filename) {
@@ -305,10 +282,6 @@ func WriteFile(data, path string) error {
 	writer.Write([]byte(data))
 	return nil
 }
-
-// filesystem
-//-------------------------------------------------------
-// open text editors
 
 func Editor(file string) error {
 	editr := os.Getenv("EDITOR")
