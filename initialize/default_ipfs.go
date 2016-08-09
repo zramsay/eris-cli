@@ -1,12 +1,18 @@
 package initialize
 
 import (
+	"fmt"
+	"os"
 	"path"
 
 	"github.com/eris-ltd/eris-cli/version"
 )
 
 func defServiceIPFS() string {
+	port_to_use := os.Getenv("ERIS_CLI_TESTS_PORT")
+	if port_to_use == "" {
+		port_to_use = "8080"
+	}
 	return `
 # For more information on configurations, see the services specification:
 # https://docs.erisindustries.com/documentation/eris-cli/latest/services_specification/
@@ -27,9 +33,9 @@ This eris service is all but essential as part of the eris tool. The [eris files
 status = "alpha"
 
 [service]
-image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_IPFS) + `"
+image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_IPFS) + fmt.Sprintf(`"
 data_container = true
-ports = ["4001:4001", "5001:5001", "8080:8080"]
+ports = ["4001:4001", "5001:5001", "%s:%s"]
 user = "root"
 exec_host = "ERIS_IPFS_HOST"
 
@@ -41,5 +47,5 @@ email = "support@erisindustries.com"
 dockerfile = "https://github.com/eris-ltd/common/blob/master/docker/ipfs/Dockerfile"
 repository = "https://github.com/ipfs/go-ipfs"
 website = "https://ipfs.io/"
-`
+`, port_to_use, port_to_use)
 }

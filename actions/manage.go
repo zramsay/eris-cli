@@ -111,5 +111,5 @@ func exportFile(actionName string) (string, error) {
 		return "", fmt.Errorf("no file to export")
 	}
 
-	return ipfs.SendToIPFS(fileName, "")
+	return ipfs.SendToIPFS(fileName, "", "")
 }

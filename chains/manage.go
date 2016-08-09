@@ -424,7 +424,7 @@ func RemoveChain(do *definitions.Do) error {
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
-	return ipfs.SendToIPFS(fileName, "")
+	return ipfs.SendToIPFS(fileName, "", "")
 }
 
 // TODO: remove

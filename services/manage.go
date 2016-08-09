@@ -234,5 +234,5 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 }
 
 func exportFile(servName string) (string, error) {
-	return ipfs.SendToIPFS(FindServiceDefinitionFile(servName), "")
+	return ipfs.SendToIPFS(FindServiceDefinitionFile(servName), "", "")
 }

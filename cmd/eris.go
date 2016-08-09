@@ -51,6 +51,7 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		util.DockerConnect(do.Verbose, do.MachineName)
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
+		ipfs.IpfsPort = config.GlobalConfig.Config.IpfsPort
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return

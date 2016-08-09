@@ -22,12 +22,13 @@ var (
 	fileInNewDir = filepath.Join(newDir, "recurse.toml")
 	content      = "test contents"
 	filename     = filepath.Join(erisDir, "test-file.toml")
+	port_to_use  = os.Getenv("ERIS_CLI_TESTS_PORT")
 )
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.DebugLevel)
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
@@ -43,13 +44,14 @@ func TestPutFiles(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = filename
+	do.IpfsPort = port_to_use
 	log.WithField("=>", do.Name).Info("Putting file (from tests)")
 
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
+	ipfs := tests.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
@@ -90,10 +92,11 @@ func TestGetFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Hash = hash
 	do.Path = fileName
+	do.IpfsPort = port_to_use
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
+	ipfs := tests.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
 	ipfs.SetResponse(tests.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,
