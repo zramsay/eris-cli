@@ -25,41 +25,41 @@ job_name="$JOB_NAME-$BUILD_NUMBER"
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
 tests() {
-  go test ./initialize/... && passed Initialize
+  go test -coverpkg ./initialize/... && passed Initialize
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./util/... && passed Util
+  go test -coverpkg ./util/... && passed Util
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./config/... && passed Config
+  go test -coverpkg ./config/... && passed Config
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./loaders/... && passed Loaders
+  go test -coverpkg ./loaders/... && passed Loaders
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./perform/... && passed Perform
+  go test -coverpkg ./perform/... && passed Perform
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./data/... && passed Data
+  go test -coverpkg ./data/... && passed Data
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./files/... && passed Files
+  go test -coverpkg ./files/... && passed Files
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./services/... && passed Services
+  go test -coverpkg ./services/... && passed Services
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./chains/... && passed Chains
+  go test -coverpkg ./chains/... && passed Chains
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./keys/... && passed Keys
+  go test -coverpkg ./keys/... && passed Keys
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./pkgs/... && passed Packages
+  go test -coverpkg ./pkgs/... && passed Packages
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./actions/... && passed Actions
+  go test -coverpkg ./actions/... && passed Actions
   if [ $? -ne 0 ]; then return 1; fi
-  go test ./agent/... && passed Agent
+  go test -coverpkg ./agent/... && passed Agent
   if [ $? -ne 0 ]; then return 1; fi
 
-  # go test ./remotes/... && passed Remotes
+  # go test -coverpkg ./remotes/... && passed Remotes
   # if [ $? -ne 0 ]; then return 1; fi
-  # go test ./apps/... && passed Apps
+  # go test -coverpkg ./apps/... && passed Apps
   # if [ $? -ne 0 ]; then return 1; fi
-  # go test ./update/... && passed Update
+  # go test -coverpkg ./update/... && passed Update
   # if [ $? -ne 0 ]; then return 1; fi
 
-  go test ./clean/... && passed Clean
+  go test -coverpkg ./clean/... && passed Clean
   if [ $? -ne 0 ]; then return 1; fi
 }
 
