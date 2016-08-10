@@ -21,50 +21,41 @@
 # Defaults and variables
 start=`pwd`
 job_name="$JOB_NAME-$BUILD_NUMBER"
+test_exit=0
 
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
 tests() {
-  go test -coverpkg ./initialize/... && passed Initialize
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./util/... && passed Util
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./config/... && passed Config
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./loaders/... && passed Loaders
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./perform/... && passed Perform
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./data/... && passed Data
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./files/... && passed Files
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./services/... && passed Services
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./chains/... && passed Chains
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./keys/... && passed Keys
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./pkgs/... && passed Packages
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./actions/... && passed Actions
-  if [ $? -ne 0 ]; then return 1; fi
-  go test -coverpkg ./agent/... && passed Agent
-  if [ $? -ne 0 ]; then return 1; fi
+  run_test initialize
+  run_test util
+  run_test config
+  run_test loaders
+  run_test perform
+  run_test data
+  run_test files
+  run_test services
+  run_test chains
+  run_test keys
+  run_test pkgs
+  run_test actions
+  run_test agent
 
-  # go test -coverpkg ./remotes/... && passed Remotes
-  # if [ $? -ne 0 ]; then return 1; fi
-  # go test -coverpkg ./apps/... && passed Apps
-  # if [ $? -ne 0 ]; then return 1; fi
-  # go test -coverpkg ./update/... && passed Update
-  # if [ $? -ne 0 ]; then return 1; fi
+  # run_test remotes
+  # run_test apps
+  # run_test update
 
-  go test -coverpkg ./clean/... && passed Clean
-  if [ $? -ne 0 ]; then return 1; fi
+  run_test clean
 }
 
 # ---------------------------------------------------------------------------
-# Utility functions
+# Local test utility functions
+run_test() {
+  go test -cover ./$1/... && passed $1
+  if [ $? -ne 0 ]; then test_exit=1; fi
+}
+
+# ---------------------------------------------------------------------------
+# Globaly utility functions
 checks() {
   if [ "$CLI_REPO" = "" ]
   then
