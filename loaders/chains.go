@@ -20,9 +20,7 @@ import (
 const (
 	ErisChainStart    = "run"
 	ErisChainStartAPI = "api"
-	ErisChainInstall  = "install"
 	ErisChainNew      = "new"
-	ErisChainRegister = "register"
 )
 
 // LoadChainDefinition reads the "default" then chainName definition files
