@@ -24,42 +24,45 @@ import (
 )
 
 func StartChain(do *definitions.Do) error {
-	ok := true // flip this bool if error loading a chain
+	chainExists := true // if can't load chain definition, flip to false
 
 	_, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
-		log.Warn("chain does not exist..")
-		ok = false
+		chainExists = false
 	}
 
-	if ok {
+	if chainExists {
 		log.Warn("chain exists, starting it")
+		if do.Path != "" {
+			return fmt.Errorf("chain already exists, cannot start existing chain with --init-dir")
+		}
 		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
 		return err
-	} else { //if do.Path != "" {
-		// code below copied as-is from NewChain()
+
+	} else if do.Path == "" {
+		log.Warn("--init-dir left empty & chain does not exist")
+		log.Warn("would you like the marmots to make you a simplechain?")
+		// chains make --chain-type=simplechain // name is what ?!?
+		return fmt.Errorf("TODO")
+
+		// route users to running `chains make` first
+		// return setupChain(do, loaders.ErisChainNew)
+
+	} else {
 		log.Warn("chain does not exist, new-ing it")
-		dir := filepath.Join(DataContainersPath, do.Name)
-		if util.DoesDirExist(dir) {
-			log.WithField("dir", dir).Debug("Chain data already exists in")
-			log.Debug("Overwriting with new data")
-			if err := os.RemoveAll(dir); err != nil {
-				return err
-			}
+		if err := cleanChainData(do.Name); err != nil {
+			return err
+		}
+		if !util.DoesDirExist(do.Path) {
+			return fmt.Errorf("path specified on --init-dir (%s) is not a directory", do.Path)
 		}
 
+		// todo: fix this hack
 		// for now we just let setupChain force do.ChainID = do.Name
 		// and we overwrite using jq in the container
 		log.WithField("=>", do.Name).Debug("Setting up chain")
 		return setupChain(do, loaders.ErisChainNew)
 	}
-	/*} else {
-		// chains make --chain-type=simplechain // name is what ?!?
-		// chain start
-
-		// [zr] not a fan of this third option.
-		// prefer routing users to running `chains make` first
-	}*/
 	return nil
 }
 
@@ -526,5 +529,17 @@ func CleanUp(do *definitions.Do) error {
 		perform.DockerRemove(do.Service, do.Operations, true, true, false)
 	}
 
+	return nil
+}
+
+func cleanChainData(name string) error {
+	dir := filepath.Join(DataContainersPath, name)
+	if util.DoesDirExist(dir) {
+		log.WithField("dir", dir).Debug("Chain data already exists in")
+		log.Debug("Overwriting with new data")
+		if err := os.RemoveAll(dir); err != nil {
+			return err
+		}
+	}
 	return nil
 }
