@@ -22,16 +22,20 @@ var (
 	fileInNewDir = filepath.Join(newDir, "recurse.toml")
 	content      = "test contents"
 	filename     = filepath.Join(erisDir, "test-file.toml")
-	port_to_use  = os.Getenv("ERIS_CLI_TESTS_PORT")
+	port_to_use  = "8080"
 )
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
-	log.SetLevel(log.DebugLevel)
+	// log.SetLevel(log.DebugLevel)
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
+
+	if port := os.Getenv("ERIS_CLI_TESTS_PORT"); port != "" {
+		port_to_use = port
+	}
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
 	exitCode := m.Run()
