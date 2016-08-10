@@ -139,7 +139,7 @@ report() {
 }
 
 cleanup() {
-  eris clean --all --yes
+  eris clean --yes --containers --images --scratch
 }
 
 # -------------------------------------------------------------------------

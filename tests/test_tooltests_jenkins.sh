@@ -83,7 +83,7 @@ enviro() {
   echo
   docker version
   echo
-  eris clean --yes --all
+  eris clean --yes --containers --images --scratch
   eris version
   eris init --yes --testing
 }
@@ -116,7 +116,7 @@ report() {
 }
 
 cleanup() {
-  eris clean --all --yes
+  eris clean --yes --containers --images --scratch
 }
 
 # -------------------------------------------------------------------------
