@@ -43,7 +43,7 @@ func GetFiles(do *definitions.Do) error {
 		log.Warn("Directory object getted succesfully.")
 		log.Warn(util.TrimString(buf.String()))
 	} else {
-		if err := importFile(do.Hash, do.Path); err != nil {
+		if err := importFile(do.Hash, do.Path, do.IpfsPort); err != nil {
 			return err
 		}
 	}
@@ -74,7 +74,7 @@ func PutFiles(do *definitions.Do) error {
 		log.Warn("Directory object added succesfully")
 		log.Warn(util.TrimString(buf.String()))
 	} else {
-		hash, err := exportFile(do.Name, do.Gateway)
+		hash, err := exportFile(do.Name, do.Gateway, do.IpfsPort)
 		if err != nil {
 			return err
 		}
@@ -245,22 +245,22 @@ func ManagePinned(do *definitions.Do) error {
 	return nil
 }
 
-func importFile(hash, fileName string) error {
+func importFile(hash, fileName, port string) error {
 	log.WithFields(log.Fields{
 		"from hash": hash,
 		"to path":   fileName,
 	}).Debug("Importing a file")
 
-	return ipfs.GetFromIPFS(hash, fileName, "")
+	return ipfs.GetFromIPFS(hash, fileName, "", port)
 }
 
-func exportFile(fileName, gateway string) (string, error) {
+func exportFile(fileName, gateway, port string) (string, error) {
 	log.WithFields(log.Fields{
 		"file":    fileName,
 		"gateway": gateway,
 	}).Debug("Adding a file")
 
-	return ipfs.SendToIPFS(fileName, gateway)
+	return ipfs.SendToIPFS(fileName, gateway, port)
 }
 
 func pinFile(fileHash string) (string, error) {

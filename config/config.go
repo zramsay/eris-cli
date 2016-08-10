@@ -32,6 +32,7 @@ type ErisCli struct {
 
 type ErisConfig struct {
 	IpfsHost       string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
+	IpfsPort       string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
 	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
 	CompilersPort  string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
@@ -122,6 +123,7 @@ func SetDefaults() (*viper.Viper, error) {
 
 	// assorted defaults
 	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
+	globalConfig.SetDefault("IpfsPort", "8080")           // [csk] TODO: be less opinionated here...
 	globalConfig.SetDefault("CrashReport", "bugsnag")
 
 	// compilers defaults
@@ -171,6 +173,8 @@ func GetConfigValue(key string) string {
 	switch key {
 	case "IpfsHost":
 		return GlobalConfig.Config.IpfsHost
+	case "IpfsPort":
+		return GlobalConfig.Config.IpfsPort
 	case "CompilersHost":
 		return GlobalConfig.Config.CompilersHost
 	case "DockerHost":

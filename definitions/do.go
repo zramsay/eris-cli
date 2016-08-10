@@ -56,6 +56,7 @@ type Do struct {
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
 	KeysPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainPort     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	IpfsPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PackagePath   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
