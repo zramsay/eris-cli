@@ -36,12 +36,24 @@ func StartChain(do *definitions.Do) error {
 		if do.Path != "" {
 			return fmt.Errorf("chain already exists, cannot start existing chain with --init-dir")
 		}
+
+		if !util.IsData(do.Name) {
+			return fmt.Errorf("no data container found, start a chain with [--init-dir]")
+		}
 		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
 		return err
 
 	} else if do.Path == "" {
 		log.Warn("--init-dir left empty & chain does not exist")
+		assumePath := filepath.Join(ChainsPath, do.Name)
+		if util.DoesDirExist(assumePath) {
+			log.Warn("DIRECTORY found!")
+			runThisCommand := fmt.Sprintf("[eris chains start %s --init-dir %s]", do.Name, assumePath)
+			return fmt.Errorf("a directory of chain name was found. re-run this command:\n %s", runThisCommand)
+
+		}
 		log.Warn("would you like the marmots to make you a simplechain?")
+		//if common.QueryYesOrNo(goWarn) == common.Yes
 		// chains make --chain-type=simplechain // name is what ?!?
 		return fmt.Errorf("TODO")
 
