@@ -46,19 +46,27 @@ func StartChain(do *definitions.Do) error {
 	} else if do.Path == "" {
 		log.Warn("--init-dir left empty & chain does not exist")
 		assumePath := filepath.Join(ChainsPath, do.Name)
+		runThisCommand := fmt.Sprintf("[eris chains start %s --init-dir %s]", do.Name, assumePath)
 		if util.DoesDirExist(assumePath) {
-			log.Warn("DIRECTORY found!")
-			runThisCommand := fmt.Sprintf("[eris chains start %s --init-dir %s]", do.Name, assumePath)
-			return fmt.Errorf("a directory of chain name was found. re-run this command:\n %s", runThisCommand)
+			return fmt.Errorf("a directory of chain name was found. re-run this command:\n%s", runThisCommand)
 
 		}
-		log.Warn("would you like the marmots to make you a simplechain?")
-		//if common.QueryYesOrNo(goWarn) == common.Yes
-		// chains make --chain-type=simplechain // name is what ?!?
-		return fmt.Errorf("TODO")
 
-		// route users to running `chains make` first
-		// return setupChain(do, loaders.ErisChainNew)
+		doWeMakeYouAChain := fmt.Sprintf("would you like the marmots to make you a simplechain?\nthis is normally done by running\n%s", runThisCommand)
+
+		if QueryYesOrNo(doWeMakeYouAChain) == Yes {
+			// chains make --chain-type=simplechain // name is what ?!?
+			doMake := definitions.NowDo()
+			doMake.Name = do.Name
+			doMake.ChainType = "simplechain"
+			if err := MakeChain(doMake); err != nil {
+				return err
+			}
+		}
+
+		do.Path = assumePath
+		log.WithField("=>", do.Name).Warn("Setting up chain")
+		return setupChain(do, loaders.ErisChainNew)
 
 	} else {
 		log.Warn("chain does not exist, new-ing it")
