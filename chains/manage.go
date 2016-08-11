@@ -222,6 +222,9 @@ func CurrentChain(do *definitions.Do) error {
 //  do.Type - "toml", "genesis", "status", "validators", or "toml"
 //
 func CatChain(do *definitions.Do) error {
+	if do.Name == "" {
+		return fmt.Errorf("a chain name is required") // [zr] we need more of these checks...ie., pull them out of cmd/whatever.go ... it also forces tests to be moar explicit
+	}
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
 	switch do.Type {
 	case "genesis":

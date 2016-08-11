@@ -52,15 +52,16 @@ func StartChain(do *definitions.Do) error {
 
 		}
 
-		doWeMakeYouAChain := fmt.Sprintf("would you like the marmots to make you a simplechain?\nthis is normally done by running\n%s", runThisCommand)
-
-		if QueryYesOrNo(doWeMakeYouAChain) == Yes {
-			// chains make --chain-type=simplechain // name is what ?!?
-			doMake := definitions.NowDo()
-			doMake.Name = do.Name
-			doMake.ChainType = "simplechain"
-			if err := MakeChain(doMake); err != nil {
-				return err
+		if !do.Yes {
+			doWeMakeYouAChain := fmt.Sprintf("would you like the marmots to make you a simplechain?\nthis is normally done by running\n%s", runThisCommand)
+			if QueryYesOrNo(doWeMakeYouAChain) == Yes {
+				// chains make --chain-type=simplechain // name is what ?!?
+				doMake := definitions.NowDo()
+				doMake.Name = do.Name
+				doMake.ChainType = "simplechain"
+				if err := MakeChain(doMake); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -86,7 +87,7 @@ func StartChain(do *definitions.Do) error {
 	return nil
 }
 
-func KillChain(do *definitions.Do) error {
+func StopChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
@@ -104,11 +105,11 @@ func KillChain(do *definitions.Do) error {
 		log.Info("Chain not currently running. Skipping")
 	}
 
-	if do.Rm {
-		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
-			return err
-		}
-	}
+	//if do.Rm { // [zr] this is the job of RemoveChain(do)
+	//	if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
+	//		return err
+	//	}
+	//}
 
 	return nil
 }
@@ -508,32 +509,15 @@ func copyFiles(dst string, files []stringPair) error {
 
 func CleanUp(do *definitions.Do) error {
 	log.Info("Cleaning up")
-	do.Force = true
 
 	if do.Chain.ChainType == "throwaway" {
 		log.WithField("=>", do.Chain.Name).Debug("Destroying throwaway chain")
 		doRm := definitions.NowDo()
 		doRm.Operations = do.Operations
 		doRm.Name = do.Chain.Name
-		doRm.Rm = true
-		doRm.RmD = true
-		doRm.Volumes = true
-		KillChain(doRm)
 
-		latentDir := filepath.Join(DataContainersPath, do.Chain.Name)
-		latentFile := filepath.Join(ChainsPath, do.Chain.Name+".toml")
-
-		if doRm.Name == "default" {
-			log.WithField("dir", latentDir).Debug("Removing latent dir")
-			os.RemoveAll(latentDir)
-		} else {
-			log.WithFields(log.Fields{
-				"dir":  latentDir,
-				"file": latentFile,
-			}).Debug("Removing latent dir and file")
-			os.RemoveAll(latentDir)
-			os.Remove(latentFile)
-		}
+		doRm.File, doRm.RmD, doRm.RmHF, doRm.Force = true, true, true, true
+		RemoveChain(doRm)
 
 	} else {
 		log.Debug("No throwaway chain to destroy")

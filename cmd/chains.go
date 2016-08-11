@@ -38,7 +38,6 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	//Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
@@ -234,7 +233,7 @@ var chainsStop = &cobra.Command{
 	Use:   "stop NAME",
 	Short: "stop a running blockchain",
 	Long:  `stop a running blockchain`,
-	Run:   KillChain,
+	Run:   StopChain,
 }
 
 var chainsInspect = &cobra.Command{
@@ -401,11 +400,11 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	IfExit(err)
 }
 
-func KillChain(cmd *cobra.Command, args []string) {
+func StopChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.KillChain(do))
+	IfExit(chns.StopChain(do))
 }
 
 func MakeChain(cmd *cobra.Command, args []string) {

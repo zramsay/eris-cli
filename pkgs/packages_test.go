@@ -180,12 +180,6 @@ func TestKnownChainBoots(t *testing.T) {
 	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expected data container to exist")
 	}
-
-	//doMake.Rm = true
-	//doMake.RmD = true
-	//if err := chains.StopChain(doMake); err != nil {
-	//	t.Fatalf("unexpected error removing chain: %v", err)
-	//}
 }
 
 // [zr] deprecate ... ?

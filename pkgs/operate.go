@@ -231,7 +231,7 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		doRm.Name = do.Chain.Name
 		doRm.Rm = true
 		doRm.RmD = true
-		chains.KillChain(doRm)
+		chains.StopChain(doRm)
 
 		latentDir := filepath.Join(common.DataContainersPath, do.Chain.Name)
 		latentFile := filepath.Join(common.ChainsPath, do.Chain.Name+".toml")
@@ -301,7 +301,6 @@ func bootChain(name string, do *definitions.Do) error {
 	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
 		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
-		// [zr] not sure if s/NewChain/StartChain will be as easy as expected...
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
