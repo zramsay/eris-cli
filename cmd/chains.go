@@ -310,6 +310,7 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
+	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")
@@ -414,6 +415,10 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nIf you are using the --known flag the --validators *and* the --accounts flags are both required."))
 	}
+	if !do.Known && (do.ChainMakeActs != "" || do.ChainMakeVals != "") {
+		cmd.Help()
+		IfExit(fmt.Errorf("\nIf you are using the --validators and the --accounts flags, --known is also required."))
+	}
 	if len(do.AccountTypes) > 0 && do.ChainType != "" {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nThe --account-types flag is incompatible with the --chain-type flag. Please use one or the other."))
@@ -422,10 +427,17 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nThe --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these."))
 	}
-	if !do.Known {
+	if do.Known && do.Wizard {
+		cmd.Help()
+		IfExit(fmt.Errorf("\nThe --known and --wizard flags are incompatible with each other. Please use one one of these."))
+	}
+
+	if do.Wizard {
 		config.GlobalConfig.InteractiveWriter = os.Stdout
 		config.GlobalConfig.InteractiveErrorWriter = os.Stderr
 		do.Operations.Terminal = true
+	} else { // no flags given => [zr] check all edge cases!
+		do.ChainType = "simplechain"
 	}
 
 	IfExit(chns.MakeChain(do))

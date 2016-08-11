@@ -18,9 +18,8 @@ import (
 
 // Standard package commands.
 const (
-	ErisChainStart    = "run"
-	ErisChainStartAPI = "api"
-	ErisChainNew      = "new"
+	ErisChainStart = "run"
+	ErisChainNew   = "new"
 )
 
 // LoadChainDefinition reads the "default" then chainName definition files

@@ -77,7 +77,7 @@ func MakeChain(do *definitions.Do) error {
 		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
 	}
 
-	if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
+	if do.Wizard && len(do.AccountTypes) == 0 && do.ChainType == "" {
 		do.Operations.Interactive = true
 		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
 	}
