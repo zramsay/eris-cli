@@ -179,7 +179,6 @@ func _TestKnownChainBoots(t *testing.T) {
 	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expected data container to exist")
 	}
-
 }
 
 func TestLinkingToServicesAndChains(t *testing.T) {
