@@ -43,7 +43,22 @@ func StartChain(do *definitions.Do) error {
 		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
 		return err
 
-	} else if do.Path == "" {
+	} else if do.Path != "" {
+		log.Warn("chain does not exist, new-ing it")
+		if err := cleanChainData(do.Name); err != nil {
+			return err
+		}
+		//if !util.DoesDirExist(do.Path) { // throws even though there's a dir...?
+		//	return fmt.Errorf("path specified on --init-dir (%s) is not a directory", do.Path)
+		//}
+
+		// todo: fix this hack
+		// for now we just let setupChain force do.ChainID = do.Name
+		// and we overwrite using jq in the container
+		log.WithField("=>", do.Name).Debug("Setting up chain")
+		return setupChain(do, loaders.ErisChainNew)
+
+	} else {
 		log.Warn("--init-dir left empty & chain does not exist")
 		assumePath := filepath.Join(ChainsPath, do.Name)
 		runThisCommand := fmt.Sprintf("[eris chains start %s --init-dir %s]", do.Name, assumePath)
@@ -55,7 +70,6 @@ func StartChain(do *definitions.Do) error {
 		if !do.Yes {
 			doWeMakeYouAChain := fmt.Sprintf("would you like the marmots to make you a simplechain?\nthis is normally done by running\n%s", runThisCommand)
 			if QueryYesOrNo(doWeMakeYouAChain) == Yes {
-				// chains make --chain-type=simplechain // name is what ?!?
 				doMake := definitions.NowDo()
 				doMake.Name = do.Name
 				doMake.ChainType = "simplechain"
@@ -67,21 +81,6 @@ func StartChain(do *definitions.Do) error {
 
 		do.Path = assumePath
 		log.WithField("=>", do.Name).Warn("Setting up chain")
-		return setupChain(do, loaders.ErisChainNew)
-
-	} else {
-		log.Warn("chain does not exist, new-ing it")
-		if err := cleanChainData(do.Name); err != nil {
-			return err
-		}
-		if !util.DoesDirExist(do.Path) {
-			return fmt.Errorf("path specified on --init-dir (%s) is not a directory", do.Path)
-		}
-
-		// todo: fix this hack
-		// for now we just let setupChain force do.ChainID = do.Name
-		// and we overwrite using jq in the container
-		log.WithField("=>", do.Name).Debug("Setting up chain")
 		return setupChain(do, loaders.ErisChainNew)
 	}
 	return nil

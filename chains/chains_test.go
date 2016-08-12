@@ -80,12 +80,8 @@ func _TestRestartChain(t *testing.T) {
 	//kill(t, chainName)
 	do := def.NowDo()
 	do.Name = chainName
-	do.Rm = true
-	do.RmD = true
-	do.Volumes = true
-	do.Force = true
 
-	if err := KillChain(do); err != nil {
+	if err := StopChain(do); err != nil {
 		t.Fatalf("expected chain to stop, got %v", err)
 	}
 
@@ -319,7 +315,6 @@ func TestRmChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
-	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
@@ -327,26 +322,10 @@ func TestRmChain(t *testing.T) {
 		t.Fatalf("expected service to be stopped, got %v", err)
 	}
 
-	//do = def.NowDo()
-	//do.Name, do.Rm, do.RmD = chainName, false, false
-	//if err := StopChain(do); err != nil {
-	//	t.Fatalf("expected chain to be stopped, got %v", err)
-	//}
 	kill(t, chainName) // implements RemoveChain
 	if util.Exists(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain not running")
 	}
-	/*
-		do = def.NowDo()
-		do.Name = chainName
-		do.RmD = true
-		if err := RemoveChain(do); err != nil {
-			t.Fatalf("expected chain to be removed, got %v", err)
-		}
-		if util.Exists(def.TypeChain, chainName) {
-			t.Fatalf("expecting chain to be removed")
-		}
-	*/
 }
 
 func TestServiceLinkNoChain(t *testing.T) {
