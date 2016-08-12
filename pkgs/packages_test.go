@@ -1126,7 +1126,7 @@ func create(t *testing.T, chain string) {
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(ChainsPath, chain)
-	if err := chains.NewChain(do); err != nil {
+	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 }
