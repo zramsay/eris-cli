@@ -55,8 +55,7 @@ func dropChainDefaults(dir string) error {
 	// rather than /tmp/eris/.eris
 	// XXX something wonky with ResolveErisRoot()?
 	// TODO: refactor so it uses chainsMake .... somehow
-	chnDir := filepath.Join(dir, "default")
-	if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
+	/*if err := writeDefaultFile(chnDir, "genesis.json", DefChainGen); err != nil {
 		return fmt.Errorf("Cannot add default genesis.json: %s.\n", err)
 	}
 	if err := writeDefaultFile(chnDir, "priv_validator.json", DefChainKeys); err != nil {
@@ -64,7 +63,7 @@ func dropChainDefaults(dir string) error {
 	}
 	if err := writeDefaultFile(chnDir, "genesis.csv", DefChainCSV); err != nil {
 		return fmt.Errorf("Cannot add default genesis.csv: %s.\n", err)
-	}
+	}*/
 
 	//insert version into default chain service definition
 	versionDefault := filepath.Join(dir, "default.toml")
@@ -78,11 +77,6 @@ func dropChainDefaults(dir string) error {
 	}
 
 	//move things to where they ought to be
-	config := filepath.Join(dir, "config.toml")
-	configDef := filepath.Join(chnDir, "config.toml")
-	if err := os.Rename(config, configDef); err != nil {
-		return err
-	}
 
 	server := filepath.Join(dir, "server_conf.toml")
 	serverDef := filepath.Join(chnDir, "server_conf.toml")

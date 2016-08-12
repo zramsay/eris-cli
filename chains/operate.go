@@ -20,7 +20,7 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
-	"github.com/pborman/uuid"
+	//"github.com/pborman/uuid"
 )
 
 func StartChain(do *definitions.Do) error {
@@ -116,22 +116,6 @@ func StopChain(do *definitions.Do) error {
 
 func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
-}
-
-// Throw away chains are used for eris contracts
-// [zr] this should either be refactored & better documented or deprecated
-// I favour the latter
-func ThrowAwayChain(do *definitions.Do) error {
-	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
-	do.Path = filepath.Join(ChainsPath, "default")
-	log.WithFields(log.Fields{
-		"=>":   do.Name,
-		"path": do.Path,
-	}).Debug("Making a throaway chain")
-
-	StartChain(do)
-	log.WithField("=>", do.Name).Debug("Throwaway chain started")
-	return nil
 }
 
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {

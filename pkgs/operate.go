@@ -84,6 +84,8 @@ func RunPackage(do *definitions.Do) error {
 //  pkg.ChainName - chain name from the pkg overwrites do.ChainName if do.ChainName blank
 //
 func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
+	// check that chain is running?
+
 	var err error
 	var srvs []*definitions.ServiceDefinition
 	do.ServicesSlice = append(do.ServicesSlice, pkg.Dependencies.Services...)
@@ -125,19 +127,14 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 			log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
 			err = bootChain(head, do)
 		} else { // if no chain is checked out and no --chain given, default to a throwaway
-			log.Warn("No chain was given, booting a throwaway chain")
-			err = bootThrowAwayChain(pkg.Name, do)
+			log.Warn("No chain was given, please start a chain.")
+			err = fmt.Errorf("no more throwaway chains")
 		}
-	case "temp", "temporary", "throw", "throwaway":
-		log.Info("No chain was given, booting a throwaway chain")
-		err = bootThrowAwayChain(pkg.Name, do)
 	default:
 		log.WithField("=>", pkg.ChainName).Info("No chain flag used. Booting chain from package file")
 		err = bootChain(do.ChainName, do)
 	}
 
-	// populate pkg.ChainName from do.Chain.Name that was added during the bootChain/bootThrowAwayChain func
-	pkg.ChainName = do.Chain.Name
 	if err != nil {
 		return err
 	}
@@ -323,31 +320,6 @@ func bootChain(name string, do *definitions.Do) error {
 
 	// let the chain boot properly
 	time.Sleep(5 * time.Second)
-	return nil
-}
-
-// if a throwaway chain is noted; booth that chain
-//
-//  do.Name - temp name for throwaway chain reference
-//
-func bootThrowAwayChain(name string, do *definitions.Do) error {
-	do.Chain.ChainType = "throwaway"
-
-	tmp := do.Name
-	do.Name = name
-	err := chains.ThrowAwayChain(do)
-	if err != nil {
-		do.Name = tmp
-		return err
-	}
-
-	do.Chain.Name = do.Name // setting this for tear down purposes
-	log.WithField("=>", do.Name).Debug("Throwaway chain booted")
-
-	// let the chain boot properly
-	time.Sleep(5 * time.Second)
-
-	do.Name = tmp
 	return nil
 }
 
