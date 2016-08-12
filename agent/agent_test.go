@@ -221,7 +221,6 @@ func testSetupChain(t *testing.T, chainName string) {
 	}
 
 	doCh.Path = filepath.Join(common.ChainsPath, chainName)
-	// TODO test properly!
 	if err := chains.StartChain(doCh); err != nil {
 		t.Fatalf("error new-ing chain: %v\n", err)
 	}

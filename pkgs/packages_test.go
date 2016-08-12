@@ -1068,7 +1068,6 @@ func checkLinks(do *definitions.Do) error {
 }
 
 func create(t *testing.T, chain string) {
-
 	doMake := definitions.NowDo()
 	doMake.Name = chain
 	doMake.ChainType = "simplechain"
@@ -1077,7 +1076,7 @@ func create(t *testing.T, chain string) {
 	}
 
 	do := definitions.NowDo()
-	do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml")
+	do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml") // TODO remove
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(ChainsPath, chain)

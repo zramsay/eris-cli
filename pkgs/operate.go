@@ -293,8 +293,8 @@ func bootChain(name string, do *definitions.Do) error {
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
-		do.Chain.ChainType = "chain" // setting this for tear down purposes
-	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains)
+		do.Chain.ChainType = "chain" // setting this for tear down purposes [zr] should no longer be needed
+	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains) [zr] this should go too
 	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
 		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)

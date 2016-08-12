@@ -35,8 +35,11 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 		return nil, err
 	}
 
-	//definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
-	definition, err := config.LoadViper(filepath.Join(common.ChainsPath, chainName), chainName)
+	//definition, err := config.LoadViper(filepath.Join(common.ChainsPath), chainName)
+	// XXX this need to append config.toml to do.Path somehow
+	// i.e., currently only works for --chain-type=simplechain
+	pathToConfig := filepath.Join(common.ChainsPath, chainName)
+	definition, err := config.LoadViper(pathToConfig, "config")
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +150,7 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) e
 	return nil
 }
 
+// TODO remove
 func setChainDefaults(chain *definitions.Chain) error {
 	cfg, err := config.LoadViper(filepath.Join(common.ChainsPath), "default")
 	if err != nil {

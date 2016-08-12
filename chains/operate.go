@@ -20,69 +20,90 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
-	//"github.com/pborman/uuid"
 )
 
-func StartChain(do *definitions.Do) error {
-	chainExists := true // if can't load chain definition, flip to false
+func whatChainStuffExists(chainName string) (bool, bool, bool, bool) {
+	var chainDirExists bool
+	var chainConfigExists bool
+	var chainDataExists bool
+	var chainContainerExists bool
 
-	_, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		chainExists = false
+	// does the chain directory exist?
+	if util.DoesDirExist(filepath.Join(ChainsPath, chainName)) {
+		chainDirExists = true
+	} else {
+		chainDirExists = false
+		log.Debug("no chain dir exists")
 	}
 
-	if chainExists {
-		log.Warn("chain exists, starting it")
-		if do.Path != "" {
-			return fmt.Errorf("chain already exists, cannot start existing chain with --init-dir")
-		}
-
-		if !util.IsData(do.Name) {
-			return fmt.Errorf("no data container found, start a chain with [--init-dir]")
-		}
-		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
-		return err
-
-	} else if do.Path == "" {
-		log.Warn("--init-dir left empty & chain does not exist")
-		assumePath := filepath.Join(ChainsPath, do.Name)
-		runThisCommand := fmt.Sprintf("[eris chains start %s --init-dir %s]", do.Name, assumePath)
-		if util.DoesDirExist(assumePath) {
-			return fmt.Errorf("a directory of chain name was found. re-run this command:\n%s", runThisCommand)
-
-		}
-
-		if !do.Yes {
-			doWeMakeYouAChain := fmt.Sprintf("would you like the marmots to make you a simplechain?\nthis is normally done by running\n%s", runThisCommand)
-			if QueryYesOrNo(doWeMakeYouAChain) == Yes {
-				// chains make --chain-type=simplechain // name is what ?!?
-				doMake := definitions.NowDo()
-				doMake.Name = do.Name
-				doMake.ChainType = "simplechain"
-				if err := MakeChain(doMake); err != nil {
-					return err
-				}
-			}
-		}
-
-		do.Path = assumePath
-		log.WithField("=>", do.Name).Warn("Setting up chain")
-		return setupChain(do, loaders.ErisChainNew)
-
+	// does the config file exist?
+	_, err := loaders.LoadChainDefinition(chainName) // TODO rename the func in loaders
+	if err == nil {
+		chainConfigExists = true
 	} else {
-		log.Warn("chain does not exist, new-ing it")
+		chainConfigExists = false
+		log.Debug("no config file exists")
+		log.Warn(fmt.Sprintf("error: %v", err))
+	}
+
+	// does the chain data container exist?
+	if util.IsData(chainName) {
+		chainDataExists = true
+	} else {
+		chainDataExists = false
+		log.Debug("no data container exists")
+	}
+
+	// does the chain container exist?
+	if util.IsChain(chainName, false) { // false checks if exists
+		chainContainerExists = true
+	} else {
+		chainContainerExists = false
+		log.Debug("no chain container exists")
+	}
+
+	return chainDirExists, chainConfigExists, chainDataExists, chainContainerExists
+}
+
+func StartChain(do *definitions.Do) error {
+	chainDirExists, chainConfigExists, chainDataExists, chainContainerExists := whatChainStuffExists(do.Name)
+
+	if do.Path != "" { // [eris chains start whatever --init-dir ~/.eris/chains/whatever]
+		if !chainDirExists || !chainConfigExists { // do.Path given but neither dir or config exist
+			return fmt.Errorf("no dir or chain config")
+		}
+		if chainDataExists || chainContainerExists { // these ought not be existing if --init-dir given
+			return fmt.Errorf("data container or chain  container exists")
+		}
+
+		// clean leftover data in ~/.eris/scratch/data
 		if err := cleanChainData(do.Name); err != nil {
 			return err
-		}
-		if !util.DoesDirExist(do.Path) {
-			return fmt.Errorf("path specified on --init-dir (%s) is not a directory", do.Path)
 		}
 
 		// todo: fix this hack
 		// for now we just let setupChain force do.ChainID = do.Name
 		// and we overwrite using jq in the container
+		log.Warn("chain does not exist, new-ing it")
 		log.WithField("=>", do.Name).Debug("Setting up chain")
 		return setupChain(do, loaders.ErisChainNew)
+		// TODO get rid of loaders.ErisChainNew [zr] to discuss with [ben]
+
+	} else { // [eris chains start whatever] (without init-dir)
+		if !chainDirExists || !chainConfigExists { // Config need to be in dir, but anyway
+			return fmt.Errorf("")
+		}
+
+		if !chainDataExists {
+			return fmt.Errorf("no data container found, start a chain with [--init-dir]")
+		}
+		if !chainContainerExists {
+			// since normally the edb process container would exist
+			// we can alert users and have them (y) to start one.
+		}
+		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
+		return err
+
 	}
 	return nil
 }

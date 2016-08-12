@@ -408,8 +408,10 @@ func StopChain(cmd *cobra.Command, args []string) {
 }
 
 func MakeChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(1, "eq", cmd, args))
+
 	do.Name = args[0]
+
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
 		IfExit(fmt.Errorf("\nIf you are using the --known flag the --validators *and* the --accounts flags are both required."))
@@ -437,7 +439,8 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		config.Global.InteractiveWriter = os.Stdout
 		config.Global.InteractiveErrorWriter = os.Stderr
 		do.Operations.Terminal = true
-	} else { // no flags given => [zr] check all edge cases!
+	} else if len(do.AccountTypes) == 0 && do.ChainType == "" && do.ChainMakeActs == "" && do.ChainMakeVals == "" {
+		// no flags given assume simplechain => [zr] check all edge cases!
 		do.ChainType = "simplechain"
 	}
 

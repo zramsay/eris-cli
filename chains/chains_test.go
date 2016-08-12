@@ -23,13 +23,11 @@ import (
 var (
 	erisDir   = filepath.Join(os.TempDir(), "eris")
 	chainName = "test-chain"
-
-//	chainNameFix = "test-chain-fix"
 )
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
-	//log.SetLevel(log.InfoLevel)
+	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
@@ -80,12 +78,8 @@ func _TestRestartChain(t *testing.T) {
 	//kill(t, chainName)
 	do := def.NowDo()
 	do.Name = chainName
-	do.Rm = true
-	do.RmD = true
-	do.Volumes = true
-	do.Force = true
 
-	if err := KillChain(do); err != nil {
+	if err := StopChain(do); err != nil {
 		t.Fatalf("expected chain to stop, got %v", err)
 	}
 
@@ -319,7 +313,6 @@ func TestRmChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
-	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
@@ -327,26 +320,10 @@ func TestRmChain(t *testing.T) {
 		t.Fatalf("expected service to be stopped, got %v", err)
 	}
 
-	//do = def.NowDo()
-	//do.Name, do.Rm, do.RmD = chainName, false, false
-	//if err := StopChain(do); err != nil {
-	//	t.Fatalf("expected chain to be stopped, got %v", err)
-	//}
 	kill(t, chainName) // implements RemoveChain
 	if util.Exists(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain not running")
 	}
-	/*
-		do = def.NowDo()
-		do.Name = chainName
-		do.RmD = true
-		if err := RemoveChain(do); err != nil {
-			t.Fatalf("expected chain to be removed, got %v", err)
-		}
-		if util.Exists(def.TypeChain, chainName) {
-			t.Fatalf("expecting chain to be removed")
-		}
-	*/
 }
 
 func TestServiceLinkNoChain(t *testing.T) {
@@ -710,11 +687,11 @@ func create(t *testing.T, chain string) {
 	}
 
 	do := def.NowDo()
-	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
 	do.Name = chain
-	do.Path = filepath.Join(common.ChainsPath, chain)
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(common.ChainsPath, chain)
+	// TODO remove; blocking on cm
+	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
 	if err := StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
@@ -725,7 +702,6 @@ func start(t *testing.T, chain string) {
 	do := def.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Yes = true
 	//do.Path = filepath.Join(common.ChainsPath, do.Name)
 	if err := StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chain, err)
