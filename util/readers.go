@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/docker/docker/pkg/archive"
 	ipfs "github.com/eris-ltd/common/go/ipfs"
-	"github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive"
 )
 
 // used only for docker cp
