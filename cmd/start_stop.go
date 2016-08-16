@@ -15,12 +15,10 @@ var Start = &cobra.Command{
 	Long: `start up your Eris dev environment for the day
 
 The startup command starts the services for which you have started
-in the past. The startup command also requires a '--chain' 
-flag that specifies the chain you would like to start with the
-services.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		StartEris(cmd, args)
-	},
+in the past. The startup command also gives you the option to 
+specify a '--chain' flag that specifies the chain you would 
+like to start with the services.`,
+	Run: StartEris,
 }
 
 var Stop = &cobra.Command{	
@@ -33,6 +31,7 @@ are currently running and shuts them down for the day. In effect,
 this command wraps:
 [eris services stop $(eris services ls -q)] and
 [eris chains stop $(eris chains ls -q)]`,
+	Run: StopEris,
 }
 
 func buildStartCommand() {
@@ -40,6 +39,7 @@ func buildStartCommand() {
 }
 
 func addStartFlags() {
+	Start.PersistentFlags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain to start")
 }
 
 func buildStopCommand() {
