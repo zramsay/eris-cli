@@ -79,7 +79,7 @@ func KillService(do *definitions.Do) (err error) {
 		}
 		services = append(services, s...)
 	}
-
+	
 	// if force flag given, this will override any timeout flag
 	if do.Force {
 		do.Timeout = 0
