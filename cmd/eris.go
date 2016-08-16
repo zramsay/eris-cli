@@ -144,6 +144,8 @@ func AddCommands() {
 	ErisCmd.AddCommand(Update)
 	buildVerSionCommand()
 	ErisCmd.AddCommand(VerSion)
+	buildStartCommand()
+	ErisCmd.AddCommand(Start)
 
 	if runtime.GOOS != "windows" {
 		buildManCommand()
