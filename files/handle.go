@@ -314,9 +314,9 @@ func rmPinnedByHash(hash string) (string, error) {
 // helpers
 
 func EnsureIPFSrunning() error {
-	doNow := definitions.NowDo()
-	doNow.Name = "ipfs"
-	if err := services.EnsureRunning(doNow); err != nil {
+	do := definitions.NowDo()
+	do.Name = "ipfs"
+	if err := services.EnsureRunning(do); err != nil {
 		return fmt.Errorf("Failed to ensure IPFS is running: %v", err)
 	}
 	log.Info("IPFS is running")
@@ -327,7 +327,7 @@ func checkGatewayFlag(do *definitions.Do) error {
 	if do.Gateway != "" {
 		_, err := url.Parse(do.Gateway)
 		if err != nil {
-			return fmt.Errorf("Invalid gateway URL provided %v\n", err)
+			return fmt.Errorf("Invalid gateway URL provided: %v", err)
 		}
 		log.WithField("gateway", do.Gateway).Debug("Posting to")
 	} else {

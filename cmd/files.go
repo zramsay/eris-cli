@@ -40,7 +40,7 @@ func buildFilesCommand() {
 }
 
 var filesImport = &cobra.Command{
-	Use:   "get HASH FILE|DIR",
+	Use:   "get HASH",
 	Short: "pull files/objects from IPFS via a hash and save them locally, requires the [--output] flag",
 	Long:  `pull files/objects from IPFS via a hash and save them locally, requires the [--output] flag`,
 	Run:   FilesGet,
