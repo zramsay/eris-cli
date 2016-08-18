@@ -155,6 +155,10 @@ func RemoveErisImages() error {
 	}
 
 	for _, i := range images {
+		if len(i.RepoTags) == 0 {
+			continue
+		}
+
 		if !strings.Contains(i.RepoTags[0], "eris/") {
 			continue
 		}

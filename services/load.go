@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -15,20 +14,20 @@ var (
 	ErrServiceNotRunning = errors.New("The requested service is not running, start it with `eris services start [serviceName]`")
 )
 
-//checks that a service is running. if not, tells user to start it
+// Checks that a service is running and starts it if it isn't.
 func EnsureRunning(do *definitions.Do) error {
 	if os.Getenv("ERIS_SKIP_ENSURE") != "" {
 		return nil
 	}
 
-	srv, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
+	if _, err := loaders.LoadServiceDefinition(do.Name); err != nil {
 		return err
 	}
 
-	if !util.IsService(srv.Service.Name, true) {
-		e := fmt.Sprintf("the requested service is not running, start it with [eris services start %s]", do.Name)
-		return errors.New(e)
+	if !util.IsService(do.Name, true) {
+		log.WithField("=>", do.Name).Warn("Starting service")
+		do.Operations.Args = []string{do.Name}
+		StartService(do)
 	} else {
 		log.WithField("=>", do.Name).Info("Service is running")
 	}

@@ -317,7 +317,8 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Operations.Args = []string{"do_not_use"}
+	do.Operations.Args = []string{"do_not_use"} // [csk] we should make a fake service def instead of using this file
+
 	if err := StartService(do); err != nil {
 		t.Fatalf("expected service to start, got %v", err)
 	}

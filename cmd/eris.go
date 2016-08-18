@@ -35,10 +35,6 @@ Made with <3 by Eris Industries.
 Complete documentation is available at https://docs.erisindustries.com
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Using stdout for less fuss with redirecting the log messages
-		// into a file (`eris > out`) or a viewer (`eris|more`).
-		log.SetOutput(os.Stdout)
-
 		log.SetLevel(log.WarnLevel)
 		if do.Verbose {
 			log.SetLevel(log.InfoLevel)
@@ -55,6 +51,7 @@ Complete documentation is available at https://docs.erisindustries.com
 
 		util.DockerConnect(do.Verbose, do.MachineName)
 		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
+		ipfs.IpfsPort = config.GlobalConfig.Config.IpfsPort
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return

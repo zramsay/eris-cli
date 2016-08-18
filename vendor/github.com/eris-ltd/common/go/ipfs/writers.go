@@ -13,8 +13,8 @@ func SetLogLevel(level log.Level) {
 	log.SetLevel(level)
 }
 
-func SendToIPFS(fileName, gateway string) (string, error) {
-	url := IPFSBaseGatewayUrl(gateway)
+func SendToIPFS(fileName, gateway, port string) (string, error) {
+	url := IPFSBaseGatewayUrl(gateway, port)
 	log.WithField("file", fileName).Warn("Posting file to IPFS")
 	head, err := UploadFromFileToUrl(url, fileName)
 	if err != nil {
