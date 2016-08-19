@@ -38,7 +38,8 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 		return nil, err
 	}
 
-	definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
+	//definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
+	definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath, chainName), chainName)
 	if err != nil {
 		return nil, err
 	}

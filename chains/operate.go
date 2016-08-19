@@ -36,7 +36,7 @@ func NewChain(do *definitions.Do) error {
 	// for now we just let setupChain force do.ChainID = do.Name
 	// and we overwrite using jq in the container
 	log.WithField("=>", do.Name).Debug("Setting up chain")
-	return setupChain(do, loaders.ErisChainNew)
+	return setupChain(do, "new") // move away from loaders
 }
 
 func InstallChain(do *definitions.Do) error {
@@ -319,7 +319,8 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	// Write the chain definition file.
-	fileName := filepath.Join(ChainsPath, do.Name) + ".toml"
+	// write in chains/chainName dir!
+	fileName := filepath.Join(ChainsPath, do.Name, do.Name) + ".toml"
 	if _, err = os.Stat(fileName); err != nil {
 		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
 			return fmt.Errorf("error writing chain definition to file: %v", err)
@@ -335,6 +336,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	chain.Operations.Ports = do.Operations.Ports
 
 	// Cmd should be "new" or "install".
+	// [zr] install is basically deprecated. Can remove L20-26 in loaders/chains.go
 	chain.Service.Command = cmd
 
 	// Write the list of <key>:<value> config options as flags.
