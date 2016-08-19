@@ -43,7 +43,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPorts)
-	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsInspect)
@@ -225,19 +224,6 @@ To checkout a new chain use [eris chains checkout NAME].
 
 To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
-}
-
-var chainsEdit = &cobra.Command{
-	Use:   "edit NAME",
-	Short: "edit a blockchain",
-	Long: `edit a blockchain definition file
-
-Edit will utilize the default editor set for your current shell
-or if none is set, it will use *vim*. Sorry for the bias Emacs
-users, but we had to pick one and more marmots are known vim
-users. Emacs users can set their EDITOR variable and eris
-will default to that if you wise.`,
-	Run: EditChain,
 }
 
 var chainsStart = &cobra.Command{
@@ -526,18 +512,6 @@ func PortsChain(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(chns.PortsChain(do))
-}
-
-func EditChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	var configVals []string
-	if len(args) > 1 {
-		configVals = args[1:]
-	}
-	do.Name = args[0]
-	do.Operations.Args = configVals
-	IfExit(chns.EditChain(do))
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {

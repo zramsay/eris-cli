@@ -273,20 +273,6 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-// EditChain is an easy way to edit a chain definition file
-// it uses eris-ltd/common/go/common/dirs_and_files.go 's editor
-// function to determine the editor for the current shell and
-// to utilize that (or VIM by default) (sorry emacs folks).
-//
-//  do.Name - name of the chain to edit its chain definition files (required)
-//
-func EditChain(do *definitions.Do) error {
-	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
-	log.WithField("file", chainDefFile).Info("Editing chain definition")
-	do.Result = "success"
-	return Editor(chainDefFile)
-}
-
 // XXX: What's going on here? => [csk]: magic
 func RenameChain(do *definitions.Do) error {
 	if do.Name == do.NewName {
