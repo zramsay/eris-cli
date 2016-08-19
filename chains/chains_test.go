@@ -290,64 +290,6 @@ func TestInspectChain(t *testing.T) {
 	}
 }
 
-// deprecate this command
-func _TestRenameChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
-
-	const (
-		chain   = "hichain"
-		rename1 = "niahctset"
-	)
-	create(t, chain)
-
-	if !util.Running(def.TypeChain, chain) {
-		t.Fatalf("expecting chain running")
-	}
-	if !util.Exists(def.TypeData, chain) {
-		t.Fatalf("expecting data container exists")
-	}
-
-	do := def.NowDo()
-	do.Name = chain
-	do.NewName = rename1
-	if err := RenameChain(do); err != nil {
-		t.Fatalf("expected chain to be renamed #1, got %v", err)
-	}
-
-	if util.Running(def.TypeChain, chain) {
-		t.Fatalf("expecting old chain running")
-	}
-	if util.Exists(def.TypeData, chain) {
-		t.Fatalf("expecting old data container exists")
-	}
-	if !util.Running(def.TypeChain, rename1) {
-		t.Fatalf("expecting renamed chain running")
-	}
-	if !util.Exists(def.TypeData, rename1) {
-		t.Fatalf("expecting renamed data container exists")
-	}
-
-	do = def.NowDo()
-	do.Name = rename1
-	do.NewName = chainName
-	if err := RenameChain(do); err != nil {
-		t.Fatalf("expected chain to be renamed #2, got %v", err)
-	}
-
-	if util.Running(def.TypeChain, rename1) {
-		t.Fatalf("expecting renamed chain not running")
-	}
-	if util.Exists(def.TypeData, rename1) {
-		t.Fatalf("expecting renamed data container doesn't exist")
-	}
-	if !util.Running(def.TypeChain, chainName) {
-		t.Fatalf("expecting renamed again chain running")
-	}
-	if !util.Exists(def.TypeData, chainName) {
-		t.Fatalf("expecting renamed again data container exists")
-	}
-}
-
 func TestRmChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 

@@ -49,7 +49,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	Chains.AddCommand(chainsRename)
+	//Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
@@ -279,10 +279,11 @@ $ eris chains inspect 2gather host_config.binds -- will display only that value`
 	Run: InspectChain,
 }
 
+// not currently used
 var chainsRename = &cobra.Command{
 	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "rename a blockchain",
-	Long:  `rename a blockchain`,
+	Short: "rename a chain",
+	Long:  `rename a chain`,
 	Run:   RenameChain,
 }
 
@@ -540,6 +541,7 @@ func ListChains(cmd *cobra.Command, args []string) {
 	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
 }
 
+// not currently used
 func RenameChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Name = args[0]

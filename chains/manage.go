@@ -273,79 +273,10 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-// XXX: What's going on here? => [csk]: magic
+// command no longer exposed
+// [todo] re-implement with state dump + restore
+// if ever desired by users
 func RenameChain(do *definitions.Do) error {
-	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
-	}
-
-	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-	transformOnly := newNameBase == do.Name
-
-	if util.IsKnownChain(do.Name) {
-		log.WithFields(log.Fields{
-			"from": do.Name,
-			"to":   do.NewName,
-		}).Info("Renaming chain")
-
-		log.WithField("=>", do.Name).Debug("Loading chain definition file")
-		chainDef, err := loaders.LoadChainDefinition(do.Name)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.Debug("Renaming chain container")
-			err = perform.DockerRename(chainDef.Operations, do.NewName)
-			if err != nil {
-				return err
-			}
-		}
-
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-
-		if filepath.Base(oldFile) == do.NewName {
-			log.Info("Those are the same file. Not renaming")
-			return nil
-		}
-
-		log.Debug("Renaming chain definition file")
-		var newFile string
-		if filepath.Ext(do.NewName) == "" {
-			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
-		} else {
-			newFile = filepath.Join(ChainsPath, do.NewName)
-		}
-
-		chainDef.Name = newNameBase
-		// Generally we won't want to use Service.Name
-		// as it will be confused with the Name.
-		chainDef.Service.Name = ""
-		// Service.Image should be taken from the default.toml.
-		chainDef.Service.Image = ""
-		err = WriteChainDefinitionFile(chainDef, newFile)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Info("Renaming chain data container")
-			err = data.RenameData(do)
-			if err != nil {
-				return err
-			}
-		}
-
-		os.Remove(oldFile)
-	} else {
-		return fmt.Errorf("I cannot find that chain. Please check the chain name you sent me.")
-	}
 	return nil
 }
 
