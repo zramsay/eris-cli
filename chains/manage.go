@@ -384,17 +384,6 @@ func RemoveChain(do *definitions.Do) error {
 		log.Info("Chain container does not exist")
 	}
 
-	if do.File {
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-		log.WithField("file", oldFile).Warn("Removing file")
-		if err := os.Remove(oldFile); err != nil {
-			return err
-		}
-	}
-
 	if do.RmHF {
 		dirPath := filepath.Join(ChainsPath, do.Name) // the dir
 

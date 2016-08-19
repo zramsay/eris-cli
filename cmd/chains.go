@@ -369,7 +369,6 @@ func addChainsFlags() {
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "docker image")
 
 	buildFlag(chainsRemove, do, "force", "chain")
-	buildFlag(chainsRemove, do, "file", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
 	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in ~/.eris/chains")
