@@ -106,7 +106,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	if yes { // fail if dirs/files don't exist
 		for _, chn := range chains {
 			// this should be !util.DoesDirExist() but that fails ... ?
-			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+			if !util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory does not exist when it should")
 			}
 			_, err := loaders.LoadChainDefinition(chn) // list.Known only Prints to stdout
@@ -212,8 +212,16 @@ func testStartService(serviceName string, t *testing.T) {
 }
 
 func testStartChain(chainName string, t *testing.T) {
+	doMake := definitions.NowDo()
+	doMake.Name = chainName
+	doMake.ChainType = "simplechain"
+	if err := chains.MakeChain(doMake); err != nil {
+		t.Fatalf("expected a chain to be made, got %v", err)
+	}
+
 	do := definitions.NowDo()
 	do.Name = chainName
+	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
 	do.Operations.PublishAllPorts = true
 	if err := chains.NewChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chainName, err)
