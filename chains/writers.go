@@ -30,7 +30,7 @@ func WriteChainDefinitionFile(chainDef *def.Chain, fileName string) error {
 	writer, err := os.Create(fileName)
 	defer writer.Close()
 	if err != nil {
-		return fmt.Errorf("wtf: %v", err)
+		return err
 	}
 
 	switch filepath.Ext(fileName) {
