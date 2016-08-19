@@ -233,7 +233,7 @@ func CatChain(do *definitions.Do) error {
 	case "validators":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
+		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, do.Name+".toml"))
 		if err != nil {
 			return err
 		}

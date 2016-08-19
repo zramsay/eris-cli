@@ -45,6 +45,7 @@ func TestStartChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+
 	if !util.Running(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain running")
 	}
@@ -65,6 +66,7 @@ func TestRestartChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+
 	if !util.Running(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain running")
 	}
@@ -72,7 +74,18 @@ func TestRestartChain(t *testing.T) {
 		t.Fatalf("expecting data container exists")
 	}
 
-	kill(t, chainName)
+	//kill(t, chainName)
+	do := def.NowDo()
+	do.Name = chainName
+	do.Rm = true
+	do.RmD = true
+	do.Volumes = true
+	do.Force = true
+
+	if err := KillChain(do); err != nil {
+		t.Fatalf("expected chain to stop, got %v", err)
+	}
+
 	if util.Running(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain doesn't run")
 	}
@@ -101,6 +114,7 @@ func TestExecChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -119,6 +133,7 @@ func TestExecChainBadCommandLine(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -135,6 +150,7 @@ func TestCatChainLocalConfig(t *testing.T) {
 	config.GlobalConfig.Writer = buf
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -143,7 +159,7 @@ func TestCatChainLocalConfig(t *testing.T) {
 		t.Fatalf("expected getting a local config to succeed, got %v", err)
 	}
 
-	if buf.String() != tests.FileContents(filepath.Join(erisDir, "chains", chainName+".toml")) {
+	if buf.String() != tests.FileContents(filepath.Join(erisDir, "chains", chainName, chainName+".toml")) {
 		t.Fatalf("expected the local config file to match, got %v", buf.String())
 	}
 }
@@ -157,6 +173,7 @@ func TestCatChainContainerConfig(t *testing.T) {
 	const chain = "test-cat-cont-config"
 
 	create(t, chain)
+	defer kill(t, chain)
 
 	do := def.NowDo()
 	do.Name = chain
@@ -176,15 +193,12 @@ func TestCatChainContainerGenesis(t *testing.T) {
 	buf := new(bytes.Buffer)
 	config.GlobalConfig.Writer = buf
 
-	do := def.NowDo()
-	do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
-	do.Name = chainName
-	do.Operations.PublishAllPorts = true
-	if err := NewChain(do); err != nil {
-		t.Fatalf("expected a new chain to be created, got %v", err)
-	}
+	create(t, chainName)
+	defer kill(t, chainName)
 
+	do := def.NowDo()
 	do.Type = "genesis"
+	do.Name = chainName
 	if err := CatChain(do); err != nil {
 		t.Fatalf("expected getting a local config to succeed, got %v", err)
 	}
@@ -199,6 +213,7 @@ func TestChainsNewDirGenesis(t *testing.T) {
 
 	const chain = "test-dir-gen"
 	create(t, chain)
+	defer kill(t, chain)
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, chain) {
@@ -211,6 +226,7 @@ func TestChainsNewConfig(t *testing.T) {
 
 	const chain = "test-config-new"
 	create(t, chain)
+	defer kill(t, chain)
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, "defaulttester.com") {
@@ -226,6 +242,7 @@ func TestChainsNewKeysImported(t *testing.T) {
 
 	const chain = "test-config-keys"
 	create(t, chain)
+	defer kill(t, chain)
 
 	if !util.Running(def.TypeChain, chain) {
 		t.Fatalf("expecting chain running")
@@ -249,6 +266,7 @@ func TestLogsChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -263,6 +281,7 @@ func TestUpdateChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -281,6 +300,7 @@ func TestInspectChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Name = chainName
@@ -294,6 +314,7 @@ func TestRmChain(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	do := def.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
@@ -367,6 +388,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)
+	defer kill(t, chainName)
 
 	if err := tests.FakeServiceDefinition("fake", `
 [service]
@@ -399,6 +421,7 @@ func TestServiceLink(t *testing.T) {
 
 	const chain = "test-chain-link"
 	create(t, chain)
+	defer kill(t, chain)
 
 	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
@@ -445,7 +468,9 @@ func TestServiceLinkWithDataContainer(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	const chain = "test-chain-data-container"
+
 	create(t, chain)
+	defer kill(t, chain)
 
 	if err := tests.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
@@ -492,7 +517,9 @@ func TestServiceLinkLiteral(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	const chain = "test-chain-literal"
+
 	create(t, chain)
+	defer kill(t, chain)
 
 	if err := tests.FakeServiceDefinition("fake", `
 chain = "`+chain+`:fake"
@@ -538,7 +565,9 @@ func TestServiceLinkBadLiteral(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	const chain = "test-chain-bad-literal"
+
 	create(t, chain)
+	defer kill(t, chain)
 
 	if err := tests.FakeServiceDefinition("fake", `
 chain = "blah-blah:blah"
@@ -603,6 +632,7 @@ data_container = true
 	}
 
 	create(t, chain) // [zr] why was the NewChain here?
+	defer kill(t, chain)
 
 	if !util.Exists(def.TypeChain, chain) {
 		t.Fatalf("expecting test chain container exists")
@@ -641,6 +671,7 @@ func TestServiceLinkKeys(t *testing.T) {
 
 	const chain = "chain-test-keys"
 	create(t, chain)
+	defer kill(t, chain)
 
 	if !util.Exists(def.TypeChain, chain) {
 		t.Fatalf("expecting test chain running")
@@ -698,8 +729,8 @@ func kill(t *testing.T, chain string) {
 	}
 
 	do = def.NowDo()
-	do.Name, do.Rm, do.RmD = chain, true, true
-	if err := KillChain(do); err != nil {
+	do.Name, do.RmHF, do.RmD, do.Force = chain, true, true, true
+	if err := RemoveChain(do); err != nil {
 		t.Fatalf("killing chain failed: %v", err)
 	}
 }
