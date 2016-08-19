@@ -174,15 +174,7 @@ The -q flag is equivalent to the '{{.ShortName}}' format.
 
 The -f flag specifies an alternate format for the list, using the syntax
 of Go text templates. See the more detailed description in the help
-output for the [eris ls] command. The struct passed to the Go template
-for the -k flag is this
-
-  type Definition struct {
-    Name       string       // chain name
-    Definition string       // definition file name
-  }
-
-The -k flag displays the known definition files. `,
+output for the [eris ls] command.`,
 
 	Run: ListChains,
 	Example: `$ eris chains ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
@@ -407,7 +399,6 @@ func addChainsFlags() {
 	buildFlag(chainsStop, do, "timeout", "chain")
 	buildFlag(chainsStop, do, "volumes", "chain")
 
-	buildFlag(chainsList, do, "known", "chain")
 	chainsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	chainsList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
 	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of chain names")
@@ -573,11 +564,7 @@ func ListChains(cmd *cobra.Command, args []string) {
 	if do.JSON {
 		do.Format = "json"
 	}
-	if do.Known {
-		IfExit(list.Known("chains", do.Format))
-	} else {
-		IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
-	}
+	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
 }
 
 func RenameChain(cmd *cobra.Command, args []string) {
