@@ -60,7 +60,10 @@ func ImportData(do *definitions.Do) error {
 		doCheck.Operations.Args = []string{"test", "-d", do.Destination}
 		_, err := ExecData(doCheck)
 		if err != nil {
-			if err := runData(containerName, []string{"mkdir", "-p", do.Destination}); err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"destination": do.Destination,
+			}).Info("Directory missing")
+			if err := runData(containerName, []string{"/bin/mkdir", "-p", do.Destination}); err != nil {
 				return err
 			}
 			return ImportData(do)
