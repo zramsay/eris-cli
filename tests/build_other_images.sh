@@ -36,7 +36,7 @@ cd $repo/tests
 mkdir data
 cd data
 
-curl -o Dockerfile https://raw.githubusercontent.com/eris-ltd/common/master/docker/data/Dockerfile
+cp $repo/docker/x86/data/Dockerfile .
 
 if [[ "$branch" = "master" || "$branch" = "develop" ]]
 then
