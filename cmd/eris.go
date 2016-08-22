@@ -140,8 +140,6 @@ func AddCommands() {
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()
 	ErisCmd.AddCommand(Init)
-	buildUpdateCommand()
-	ErisCmd.AddCommand(Update)
 	buildVerSionCommand()
 	ErisCmd.AddCommand(VerSion)
 
