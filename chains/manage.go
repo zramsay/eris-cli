@@ -273,13 +273,6 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-// command no longer exposed
-// [todo] re-implement with state dump + restore
-// if ever desired by users
-func RenameChain(do *definitions.Do) error {
-	return nil
-}
-
 func UpdateChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {

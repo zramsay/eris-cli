@@ -11,7 +11,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	//ini "github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
@@ -32,7 +31,6 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
-	//mockChainDefinitionFile(chainName)
 
 	exitCode := m.Run()
 

@@ -49,7 +49,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	//Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
@@ -277,14 +276,6 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 $ eris chains inspect 2gather name -- will display the name in machine readable format
 $ eris chains inspect 2gather host_config.binds -- will display only that value`,
 	Run: InspectChain,
-}
-
-// not currently used
-var chainsRename = &cobra.Command{
-	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "rename a chain",
-	Long:  `rename a chain`,
-	Run:   RenameChain,
 }
 
 var chainsRemove = &cobra.Command{
@@ -539,14 +530,6 @@ func ListChains(cmd *cobra.Command, args []string) {
 		do.Format = "json"
 	}
 	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
-}
-
-// not currently used
-func RenameChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.NewName = args[1]
-	IfExit(chns.RenameChain(do))
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {

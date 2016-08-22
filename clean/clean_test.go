@@ -105,7 +105,6 @@ func TestCleanLatentChainDatas(t *testing.T) {
 func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	if yes { // fail if dirs/files don't exist
 		for _, chn := range chains {
-			// this should be !util.DoesDirExist() but that fails ... ?
 			if !util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory does not exist when it should")
 			}
