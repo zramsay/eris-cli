@@ -189,10 +189,7 @@ Functionally this command will perform the following sequence of steps:
 2. Remove the container which ran the service.
 3. Pull the image the container uses from a hub.
 4. Rebuild the container from the updated image.
-5. Restart the service (if it was previously running).
-
-NOTE: If the service uses data containers, those will not be affected
-by the [eris update] command.`,
+5. Restart the service (if it was previously running).`,
 	Run: UpdateService,
 }
 
