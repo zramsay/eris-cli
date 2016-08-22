@@ -233,7 +233,7 @@ func CatChain(do *definitions.Do) error {
 	case "validators":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
+		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, do.Name+".toml"))
 		if err != nil {
 			return err
 		}
@@ -273,96 +273,6 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-// EditChain is an easy way to edit a chain definition file
-// it uses eris-ltd/common/go/common/dirs_and_files.go 's editor
-// function to determine the editor for the current shell and
-// to utilize that (or VIM by default) (sorry emacs folks).
-//
-//  do.Name - name of the chain to edit its chain definition files (required)
-//
-func EditChain(do *definitions.Do) error {
-	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
-	log.WithField("file", chainDefFile).Info("Editing chain definition")
-	do.Result = "success"
-	return Editor(chainDefFile)
-}
-
-// XXX: What's going on here? => [csk]: magic
-func RenameChain(do *definitions.Do) error {
-	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
-	}
-
-	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-	transformOnly := newNameBase == do.Name
-
-	if util.IsKnownChain(do.Name) {
-		log.WithFields(log.Fields{
-			"from": do.Name,
-			"to":   do.NewName,
-		}).Info("Renaming chain")
-
-		log.WithField("=>", do.Name).Debug("Loading chain definition file")
-		chainDef, err := loaders.LoadChainDefinition(do.Name)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.Debug("Renaming chain container")
-			err = perform.DockerRename(chainDef.Operations, do.NewName)
-			if err != nil {
-				return err
-			}
-		}
-
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-
-		if filepath.Base(oldFile) == do.NewName {
-			log.Info("Those are the same file. Not renaming")
-			return nil
-		}
-
-		log.Debug("Renaming chain definition file")
-		var newFile string
-		if filepath.Ext(do.NewName) == "" {
-			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
-		} else {
-			newFile = filepath.Join(ChainsPath, do.NewName)
-		}
-
-		chainDef.Name = newNameBase
-		// Generally we won't want to use Service.Name
-		// as it will be confused with the Name.
-		chainDef.Service.Name = ""
-		// Service.Image should be taken from the default.toml.
-		chainDef.Service.Image = ""
-		err = WriteChainDefinitionFile(chainDef, newFile)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Info("Renaming chain data container")
-			err = data.RenameData(do)
-			if err != nil {
-				return err
-			}
-		}
-
-		os.Remove(oldFile)
-	} else {
-		return fmt.Errorf("I cannot find that chain. Please check the chain name you sent me.")
-	}
-	return nil
-}
-
 func UpdateChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -396,17 +306,6 @@ func RemoveChain(do *definitions.Do) error {
 		}
 	} else {
 		log.Info("Chain container does not exist")
-	}
-
-	if do.File {
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-		log.WithField("file", oldFile).Warn("Removing file")
-		if err := os.Remove(oldFile); err != nil {
-			return err
-		}
 	}
 
 	if do.RmHF {

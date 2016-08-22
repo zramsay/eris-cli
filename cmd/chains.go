@@ -43,14 +43,12 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsHead)
 	Chains.AddCommand(chainsPorts)
-	Chains.AddCommand(chainsEdit)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsInspect)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	Chains.AddCommand(chainsRename)
 	Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
@@ -174,15 +172,7 @@ The -q flag is equivalent to the '{{.ShortName}}' format.
 
 The -f flag specifies an alternate format for the list, using the syntax
 of Go text templates. See the more detailed description in the help
-output for the [eris ls] command. The struct passed to the Go template
-for the -k flag is this
-
-  type Definition struct {
-    Name       string       // chain name
-    Definition string       // definition file name
-  }
-
-The -k flag displays the known definition files. `,
+output for the [eris ls] command.`,
 
 	Run: ListChains,
 	Example: `$ eris chains ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
@@ -233,19 +223,6 @@ To checkout a new chain use [eris chains checkout NAME].
 
 To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
-}
-
-var chainsEdit = &cobra.Command{
-	Use:   "edit NAME",
-	Short: "edit a blockchain",
-	Long: `edit a blockchain definition file
-
-Edit will utilize the default editor set for your current shell
-or if none is set, it will use *vim*. Sorry for the bias Emacs
-users, but we had to pick one and more marmots are known vim
-users. Emacs users can set their EDITOR variable and eris
-will default to that if you wise.`,
-	Run: EditChain,
 }
 
 var chainsStart = &cobra.Command{
@@ -299,13 +276,6 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 $ eris chains inspect 2gather name -- will display the name in machine readable format
 $ eris chains inspect 2gather host_config.binds -- will display only that value`,
 	Run: InspectChain,
-}
-
-var chainsRename = &cobra.Command{
-	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "rename a blockchain",
-	Long:  `rename a blockchain`,
-	Run:   RenameChain,
 }
 
 var chainsRemove = &cobra.Command{
@@ -391,7 +361,6 @@ func addChainsFlags() {
 	chainsExec.Flags().StringVarP(&do.Image, "image", "", "", "docker image")
 
 	buildFlag(chainsRemove, do, "force", "chain")
-	buildFlag(chainsRemove, do, "file", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
 	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in ~/.eris/chains")
@@ -407,7 +376,6 @@ func addChainsFlags() {
 	buildFlag(chainsStop, do, "timeout", "chain")
 	buildFlag(chainsStop, do, "volumes", "chain")
 
-	buildFlag(chainsList, do, "known", "chain")
 	chainsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	chainsList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
 	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of chain names")
@@ -537,18 +505,6 @@ func PortsChain(cmd *cobra.Command, args []string) {
 	IfExit(chns.PortsChain(do))
 }
 
-func EditChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	var configVals []string
-	if len(args) > 1 {
-		configVals = args[1:]
-	}
-	do.Name = args[0]
-	do.Operations.Args = configVals
-	IfExit(chns.EditChain(do))
-}
-
 func InspectChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
@@ -573,18 +529,7 @@ func ListChains(cmd *cobra.Command, args []string) {
 	if do.JSON {
 		do.Format = "json"
 	}
-	if do.Known {
-		IfExit(list.Known("chains", do.Format))
-	} else {
-		IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
-	}
-}
-
-func RenameChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
-	do.Name = args[0]
-	do.NewName = args[1]
-	IfExit(chns.RenameChain(do))
+	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
 }
 
 func UpdateChain(cmd *cobra.Command, args []string) {

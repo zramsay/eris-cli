@@ -55,7 +55,7 @@ ports          = [ "1234" ]
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(common.ChainsPath, name, definition); err != nil {
+	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -113,7 +113,7 @@ email = "support@erisindustries.com"
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", defaultDefinition); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(common.ChainsPath, name, ``); err != nil {
+	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -155,7 +155,7 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(common.ChainsPath, name, ``); err != nil {
+	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -218,7 +218,7 @@ ports          = [ "4321" ]
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", defaultDefinition); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(common.ChainsPath, name, definition); err != nil {
+	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -292,7 +292,7 @@ func TestLoadChainDefinitionMissingDefinition(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(common.ChainsPath, name+".toml"))
+	os.Remove(filepath.Join(common.ChainsPath, name, name+".toml"))
 
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
@@ -342,7 +342,7 @@ image          = "test image"
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(common.ChainsPath, name, definition); err != nil {
+	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -378,7 +378,7 @@ func TestChainsAsAServiceMissing(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(common.ChainsPath, name+".toml"))
+	os.Remove(filepath.Join(common.ChainsPath, name, name+".toml"))
 
 	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")

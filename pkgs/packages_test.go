@@ -27,6 +27,8 @@ var goodPkg string = filepath.Join(AppsPath, "good", "package.json")
 var badPkg string = filepath.Join(AppsPath, "bad", "package.json")
 var emptyPkg string = filepath.Join(AppsPath, "empty", "package.json")
 
+var chainName = "pkg-test-chain"
+
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -42,6 +44,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestServicesBooted(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	create(t, chainName)
+	defer kill(t, chainName)
+
 	// write a good pkg.json
 	if err := writeGoodPkgJson(); err != nil {
 		t.Fatalf("unexpected error writing package.json: %v", err)
@@ -61,7 +68,7 @@ func TestServicesBooted(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = pkg.Name
-	pkg.ChainName = "temp"
+	pkg.ChainName = chainName
 
 	if err := BootServicesAndChain(do, pkg); err != nil {
 		CleanUp(do, pkg)
@@ -100,7 +107,12 @@ func TestServicesBooted(t *testing.T) {
 }
 
 func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	create(t, chainName)
+	defer kill(t, chainName)
 	// write a good pkg.json
+
 	if err := writeGoodPkgJson(); err != nil {
 		t.Fatalf("unexpected error writing package.json: %v", err)
 	}
@@ -114,7 +126,7 @@ func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = pkg.Name
 	do.LocalCompiler = true
-	pkg.ChainName = "temp"
+	pkg.ChainName = chainName
 
 	defer func() {
 		CleanUp(do, pkg)
@@ -147,23 +159,12 @@ func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
 }
 
 func TestKnownChainBoots(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	create(t, chainName)
+	defer kill(t, chainName)
+
 	name := "good"
-	chainName := "simpletestingchain"
-
-	if err := startKeys(); err != nil {
-		t.Fatalf("unexpected error starting keys: %v", err)
-	}
-	defer killKeys()
-
-	doMake := definitions.NowDo()
-	doMake.Name = chainName
-	doMake.ChainType = "simplechain"
-	doMake.Debug = false
-	if err := chains.MakeChain(doMake); err != nil {
-		log.Error(err)
-		t.Fatalf("unexpected error making a chain: %v", err)
-	}
-
 	pkg := loaders.DefaultPackage(name, chainName)
 	doBoot := definitions.NowDo()
 	defer CleanUp(doBoot, pkg)
@@ -180,14 +181,15 @@ func TestKnownChainBoots(t *testing.T) {
 		t.Fatalf("expected data container to exist")
 	}
 
-	doMake.Rm = true
-	doMake.RmD = true
-	if err := chains.KillChain(doMake); err != nil {
-		t.Fatalf("unexpected error removing chain: %v", err)
-	}
+	//doMake.Rm = true
+	//doMake.RmD = true
+	//if err := chains.StopChain(doMake); err != nil {
+	//	t.Fatalf("unexpected error removing chain: %v", err)
+	//}
 }
 
-func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
+// [zr] deprecate ... ?
+func _TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 	defer killKeys()
 
 	name := "good"
@@ -223,7 +225,7 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 
 	CleanUp(doBoot, pkg)
 	if util.Running(definitions.TypeService, thisChain) {
-		t.Fatalf("expected chain stopped ")
+		t.Fatalf("expected chain stopped")
 	}
 	if util.Exists(definitions.TypeData, thisChain) {
 		t.Fatalf("expected data container does not exist")
@@ -231,6 +233,11 @@ func TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
 }
 
 func TestLinkingToServicesAndChains(t *testing.T) {
+	defer tests.RemoveAllContainers()
+
+	create(t, chainName)
+	defer kill(t, chainName)
+
 	// write a good pkg.json
 	if err := writeGoodPkgJson(); err != nil {
 		t.Fatalf("unexpected error writing package.json: %v", err)
@@ -245,7 +252,7 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = pkg.Name
 	do.LocalCompiler = true
-	pkg.ChainName = "temp"
+	pkg.ChainName = chainName
 
 	if err := BootServicesAndChain(do, pkg); err != nil {
 		CleanUp(do, pkg)
@@ -298,10 +305,14 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 }
 
 func TestBadPathsGiven(t *testing.T) {
-	chainName := "simpletestingChain"
+	defer tests.RemoveAllContainers()
+
+	create(t, chainName)
+	defer kill(t, chainName)
+
 	name := "homiedontplay"
 	pkg := loaders.DefaultPackage(name, chainName)
-	pkg.ChainName = "temp"
+	pkg.ChainName = chainName
 	do := definitions.NowDo()
 
 	defer func() {
@@ -1105,6 +1116,39 @@ func checkLinks(do *definitions.Do) error {
 	}
 
 	return nil
+}
+
+func create(t *testing.T, chain string) {
+
+	doMake := definitions.NowDo()
+	doMake.Name = chain
+	doMake.ChainType = "simplechain"
+	if err := chains.MakeChain(doMake); err != nil {
+		t.Fatalf("expected a chain to be made, got %v", err)
+	}
+
+	do := definitions.NowDo()
+	do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml")
+	do.Name = chain
+	do.Operations.PublishAllPorts = true
+	do.Path = filepath.Join(ChainsPath, chain)
+	if err := chains.NewChain(do); err != nil {
+		t.Fatalf("expected a new chain to be created, got %v", err)
+	}
+}
+
+func kill(t *testing.T, chain string) {
+	do := definitions.NowDo()
+	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
+	if err := services.KillService(do); err != nil {
+		t.Fatalf("killing keys service failed: %v", err)
+	}
+
+	do = definitions.NowDo()
+	do.Name, do.File, do.RmD, do.RmHF, do.Force = chain, true, true, true, true
+	if err := chains.RemoveChain(do); err != nil {
+		t.Fatalf("killing chain failed: %v", err)
+	}
 }
 
 func exec(t *testing.T, name string, args []string) string {
