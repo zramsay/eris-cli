@@ -8,7 +8,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	// "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -75,7 +75,7 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name
-	chain.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_DB)
+	chain.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DB)
 	chain.Service.AutoData = true
 	chain.Service.Command = ErisChainStart
 
