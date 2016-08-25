@@ -135,7 +135,7 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./services/... && passed Services
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./chains/... && passed Chains
+    go test -timeout=900s ./chains/... && passed Chains
     if [ $? -ne 0 ]; then return 1; fi
     go test ./keys/... && passed Keys
     if [ $? -ne 0 ]; then return 1; fi
