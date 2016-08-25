@@ -16,7 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	// "github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -45,7 +45,7 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	do.Service.Name = do.Name
-	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
+	do.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_CM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}

@@ -18,7 +18,7 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	// "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -155,7 +155,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 //
 func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error {
 	do.Service.Name = pkg.Name + "_tmp_" + do.Name
-	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM)
+	do.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_PM)
 	do.Service.AutoData = true
 	do.Service.EntryPoint = fmt.Sprintf("epm --chain chain:%s --sign keys:%s", do.ChainPort, do.KeysPort)
 	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
