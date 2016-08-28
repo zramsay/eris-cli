@@ -56,10 +56,8 @@ Directory structure initialized:
 ¦   +-- apps/
 ¦   +-- bundles/
 ¦   +-- chains/
-¦       +-- account-types
-¦       +-- chain-types
-¦       +-- default/config.toml
-¦       +-- default.toml
+¦       +-- account-types/
+¦       +-- chain-types/
 ¦   +-- keys/
 ¦       +-- data/
 ¦       +-- names/
@@ -94,10 +92,8 @@ line to the %s definition file.
 
 func InitDefaults(do *definitions.Do, newDir bool) error {
 	var srvPath string
-	var chnPath string
 
 	srvPath = common.ServicesPath
-	chnPath = common.ChainsPath
 
 	// Default or custom service definition files list.
 	services := ver.SERVICE_DEFINITIONS
@@ -106,10 +102,6 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 	}
 
 	if err := dropServiceDefaults(srvPath, services); err != nil {
-		return err
-	}
-
-	if err := dropChainDefaults(chnPath); err != nil {
 		return err
 	}
 

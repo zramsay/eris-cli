@@ -141,10 +141,8 @@ Created by `eris init` in $HOME directory:
 │   ├── apps/
 │   ├── bundles/
 │   ├── chains/
-│       ├── account-types
-│       ├── chain-types
-│       ├── default/config.toml
-│       ├── default.toml
+│       ├── account-types/
+│       ├── chain-types/
 │   ├── keys/
 │       ├── data/
 │       ├── names/

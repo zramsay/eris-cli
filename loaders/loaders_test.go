@@ -16,6 +16,8 @@ import (
 	log "github.com/eris-ltd/eris-logger"
 )
 
+// TODO major refactor given new config file from ecm
+
 type ab struct {
 	name string
 	a, b interface{}
@@ -257,7 +259,7 @@ func TestLoadChainDefinitionMissingDefault(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(common.ChainsPath, "default.toml"))
+	//os.Remove(filepath.Join(common.ChainsPath, "default.toml"))
 
 	if err := tests.FakeDefinitionFile(common.ChainsPath, name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")

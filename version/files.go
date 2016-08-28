@@ -22,10 +22,4 @@ var (
 		"watchtower",
 		"do_not_use",
 	}
-
-	CHAIN_DEFINITIONS = []string{
-		"default",
-		"config",
-		"server_conf",
-	}
 )
