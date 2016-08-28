@@ -4,7 +4,7 @@ language: go
 
 env:
   global:
-    - ECM_BRANCH=develop
+    - ECM_BRANCH=deprecate-chains-new-651
     - EPM_BRANCH=develop
     - TEST_ON_MACOSX=true
   matrix:

@@ -185,7 +185,7 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 //  ops.DataContainerName - dependent data container name
 //  ops.ContainerType     - container type
 //  ops.Labels            - container creation time labels
-//                          (use LoadServiceDefinition or LoadChainDefinition)
+//                          (use LoadServiceDefinition or LoadChainConfigFile)
 // Container parameters:
 //
 //  ops.PublishAllPorts   - if true, publish exposed ports to random ports

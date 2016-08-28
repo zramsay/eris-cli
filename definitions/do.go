@@ -1,49 +1,47 @@
 package definitions
 
 type Do struct {
-	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Quiet         bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	JSON          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	RmImage       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	RmHF          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Services      bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Tool          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Verbose       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Debug         bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Yes           bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Tarball       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	ZipFile       bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Output        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Overwrite     bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	LocalCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Save          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Password      bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Wizard        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
-	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
-	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
-	Address       string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Pubkey        string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Type          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
-	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	AddDir        bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Force         bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	File          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Pull          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Quiet         bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	JSON          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	All           bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Follow        bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Logrotate     bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Run           bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Rm            bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	RmImage       bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	RmD           bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	RmHF          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Services      bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Tool          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Verbose       bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Debug         bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Yes           bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Tarball       bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	ZipFile       bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Output        bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	OutputTable   bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Overwrite     bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Dump          bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	LocalCompiler bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Wizard        bool   `mapstructure:"," json:"," yaml:"," toml:","`
+	Lines         int    `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
+	Timeout       uint   `mapstructure:"," json:"," yaml:"," toml:","`
+	N             uint   `mapstructure:"," json:"," yaml:"," toml:","`
+	Address       string `mapstructure:"," json:"," yaml:"," toml:","`
+	Pubkey        string `mapstructure:"," json:"," yaml:"," toml:","`
+	Type          string `mapstructure:"," json:"," yaml:"," toml:","`
+	Task          string `mapstructure:"," json:"," yaml:"," toml:","`
+	Tail          string `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainName     string `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainType     string `mapstructure:"," json:"," yaml:"," toml:","`
+	GenesisFile   string `mapstructure:"," json:"," yaml:"," toml:","`
+	ConfigFile    string `mapstructure:"," json:"," yaml:"," toml:","`
+	ServerConf    string `mapstructure:"," json:"," yaml:"," toml:","`
+	//ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -71,12 +69,6 @@ type Do struct {
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
-
-	// update
-	Branch string `mapstructure:"," json:"," yaml:"," toml:","`
-	// XXX below requested by @kootpv. to implement once command is stable
-	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
-	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`

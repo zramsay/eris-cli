@@ -139,7 +139,7 @@ func MakeChain(do *definitions.Do) error {
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
 func InspectChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainConfigFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func InspectChain(do *definitions.Do) error {
 //  do.Tail    - number of lines to display (can be "all") (optional)
 //
 func LogsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainConfigFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func CatChain(do *definitions.Do) error {
 	case "validators":
 		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, do.Name+".toml"))
+		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, "config.toml")) // will only for simplechains
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ func CatChain(do *definitions.Do) error {
 //  do.Name - name of the chain to display port mappings for (required)
 //
 func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainConfigFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -277,7 +277,7 @@ func PortsChain(do *definitions.Do) error {
 }
 
 func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainConfigFile(do.Name)
 	if err != nil {
 		return err
 	}
@@ -298,7 +298,7 @@ func UpdateChain(do *definitions.Do) error {
 }
 
 func RemoveChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainConfigFile(do.Name)
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,7 @@ type Chain struct {
 	// name of the chain
 	Name string `json:"name" yaml:"name" toml:"name"`
 	// chain_id of the chain
-	ChainID string `mapstructure:"chain_id" json:"chain_id" yaml:"chain_id" toml:"chain_id"`
+	ChainID string `mapstructure:"assert_chain_id" json:"assert_chain_id" yaml:"assert_chain_id" toml:"assert_chain_id"`
 	// type of the chain
 	ChainType string `mapstructure:"chain_type" json:"chain_type" yaml:"chain_type" toml:"chain_type"`
 

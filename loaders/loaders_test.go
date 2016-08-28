@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestLoadChainDefinitionEmptyDefault(t *testing.T) {
+func _TestLoadChainConfigFileEmptyDefault(t *testing.T) {
 	const (
 		name = "test"
 
@@ -61,7 +61,7 @@ ports          = [ "1234" ]
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainConfigFile(name)
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -88,7 +88,7 @@ ports          = [ "1234" ]
 	}
 }
 
-func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
+func _TestLoadChainConfigFileEmptyDefinition(t *testing.T) {
 	const (
 		name = "test"
 
@@ -119,7 +119,7 @@ email = "support@erisindustries.com"
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainConfigFile(name)
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -149,7 +149,7 @@ email = "support@erisindustries.com"
 	}
 }
 
-func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
+func _TestLoadChainConfigFileEmptyDefaultAndDefinition(t *testing.T) {
 	const (
 		name = "test"
 	)
@@ -161,7 +161,7 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainConfigFile(name)
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -185,7 +185,7 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 	}
 }
 
-func TestLoadChainDefinitionOverwrite(t *testing.T) {
+func _TestLoadChainConfigFileOverwrite(t *testing.T) {
 	const (
 		name = "test"
 
@@ -224,7 +224,7 @@ ports          = [ "4321" ]
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainConfigFile(name)
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -254,7 +254,7 @@ ports          = [ "4321" ]
 	}
 }
 
-func TestLoadChainDefinitionMissingDefault(t *testing.T) {
+func TestLoadChainConfigFileMissingDefault(t *testing.T) {
 	const (
 		name = "test"
 	)
@@ -265,12 +265,12 @@ func TestLoadChainDefinitionMissingDefault(t *testing.T) {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	if _, err := LoadChainDefinition(name); err == nil {
+	if _, err := LoadChainConfigFile(name); err == nil {
 		t.Fatalf("expected load to fail")
 	}
 }
 
-func TestLoadChainDefinitionBadFormatDefault(t *testing.T) {
+func TestLoadChainConfigFileBadFormatDefault(t *testing.T) {
 	const (
 		name = "test"
 
@@ -284,12 +284,12 @@ func TestLoadChainDefinitionBadFormatDefault(t *testing.T) {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	if _, err := LoadChainDefinition(name); err == nil {
+	if _, err := LoadChainConfigFile(name); err == nil {
 		t.Fatalf("expected load to fail")
 	}
 }
 
-func TestLoadChainDefinitionMissingDefinition(t *testing.T) {
+func TestLoadChainConfigFileMissingDefinition(t *testing.T) {
 	const (
 		name = "test"
 	)
@@ -300,12 +300,12 @@ func TestLoadChainDefinitionMissingDefinition(t *testing.T) {
 		t.Fatalf("cannot place a default definition file")
 	}
 
-	if _, err := LoadChainDefinition(name); err == nil {
+	if _, err := LoadChainConfigFile(name); err == nil {
 		t.Fatalf("expected load to fail")
 	}
 }
 
-func TestLoadChainDefinitionBadFormatDefinition(t *testing.T) {
+func TestLoadChainConfigFileBadFormatDefinition(t *testing.T) {
 	const (
 		name = "test"
 
@@ -319,12 +319,12 @@ func TestLoadChainDefinitionBadFormatDefinition(t *testing.T) {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	if _, err := LoadChainDefinition(name); err == nil {
+	if _, err := LoadChainConfigFile(name); err == nil {
 		t.Fatalf("expected load to fail")
 	}
 }
 
-func TestChainsAsAServiceSimple(t *testing.T) {
+func _TestChainsAsAServiceSimple(t *testing.T) {
 	const (
 		name = "test"
 

@@ -2,6 +2,7 @@ package loaders
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 
@@ -22,30 +23,61 @@ const (
 	ErisChainNew   = "new"
 )
 
-// LoadChainDefinition reads the "default" then chainName definition files
+// LoadChainConfigFile reads the "default" then chainName definition files
 // from the common.ChainsPath directory and returns a chain structure set
-// accordingly. LoadChainDefinition also returns missing files or definition
+// accordingly. LoadChainConfigFile also returns missing files or definition
 // reading errors, if any.
-func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
+
+// TODO refactor to find the config.toml given from the "CONFIG_PATH"
+// in whichever subdirectory
+func LoadChainConfigFile(chainName string) (*definitions.Chain, error) {
 	chain := definitions.BlankChain()
 	chain.Name = chainName
 	chain.Operations.ContainerType = definitions.TypeChain
 	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
-	if err := setChainDefaults(chain); err != nil {
-		return nil, err
-	}
+	//if err := setChainDefaults(chain); err != nil {
+	//	return nil, err
+	//}
 
 	//definition, err := config.LoadViper(filepath.Join(common.ChainsPath), chainName)
 	// XXX this need to append config.toml to do.Path somehow
 	// i.e., currently only works for --chain-type=simplechain
-	pathToConfig := filepath.Join(common.ChainsPath, chainName)
-	definition, err := config.LoadViper(pathToConfig, "config")
+	// pathToConfig can be read in as a string from  ~/.eris/chains/NAME/CONFIG_PATH
+	// like checkout out chains does it
+
+	whereIsTheConfigFile := filepath.Join(common.ChainsPath, chainName, "CONFIG_PATH")
+	definition := viper.New()
+	var err error
+	pathToConfig, err := ioutil.ReadFile(whereIsTheConfigFile)
 	if err != nil {
 		return nil, err
 	}
 
+	definition, err = config.LoadViper(string(pathToConfig), "config")
+	if err != nil {
+		return nil, err
+		// try in chain dir
+		definition, err = config.LoadViper(string(pathToConfig), "config")
+		if err != nil {
+			return nil, err
+		}
+	} else {
+
+		log.Warn("MARMOTpathConfig")
+		log.Warn(string(pathToConfig))
+
+		definition, err = config.LoadViper(string(pathToConfig), "config")
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Overwrite chain.ChainID and chain.Service according from
 	// the definition.
+
+	// TODO remove this overwrite... ?
+	// chain.ChainID = chainName
+
 	if err = MarshalChainDefinition(definition, chain); err != nil {
 		return nil, err
 	}
@@ -56,11 +88,12 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 
 	checkChainNames(chain)
 	log.WithFields(log.Fields{
-		"container number": 1,
-		"environment":      chain.Service.Environment,
-		"entrypoint":       chain.Service.EntryPoint,
-		"cmd":              chain.Service.Command,
-	}).Debug("Chain definition loaded")
+		"chain name":  chain.Name,
+		"chain ID":    chain.ChainID,
+		"environment": chain.Service.Environment,
+		"entrypoint":  chain.Service.EntryPoint,
+		"cmd":         chain.Service.Command,
+	}).Warn("Chain definition loaded") // use warn temporarily.
 	return chain, nil
 }
 
@@ -68,12 +101,13 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 // and set the CHAIN_ID environment variable. ChainsAsAService
 // can return config load errors.
 func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainDefinition(chainName)
+	chain, err := LoadChainConfigFile(chainName)
 	if err != nil {
 		return nil, err
 	}
 
-	setChainDefaults(chain)
+	//setChainDefaults(chain) => now gotten from config.toml
+	// TODO read these in from chain def (or don't overwrite...?)
 	chain.Service.Name = chain.Name
 	chain.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
 	chain.Service.AutoData = true
@@ -107,6 +141,8 @@ func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name,
 
 // MockChainDefinition creates a chain definition with necessary fields
 // already filled in.
+// XXX [zr] LoadChainConfigFile should do this, no?
+// remove this function....
 func MockChainDefinition(chainName, chainID string) *definitions.Chain {
 	chn := definitions.BlankChain()
 	chn.Name = chainName
@@ -127,12 +163,12 @@ func MockChainDefinition(chainName, chainID string) *definitions.Chain {
 func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) error {
 	log.Debug("Marshalling chain")
 	chnTemp := definitions.BlankChain()
-	err := definition.Unmarshal(chnTemp)
-	if err != nil {
+
+	if err := definition.Unmarshal(chnTemp); err != nil {
 		return fmt.Errorf("The marmots coult not read the chain definition: %v", err)
 	}
 
-	util.Merge(chain.Service, chnTemp.Service)
+	util.Merge(chain.Service, chnTemp.Service) // [zr] we shouldn't need anymore ...?
 	if len(chnTemp.Service.Ports) != 0 {
 		chain.Service.Ports = chnTemp.Service.Ports
 	}
@@ -147,20 +183,6 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) e
 		}
 	}
 
-	return nil
-}
-
-// TODO remove
-func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViper(filepath.Join(common.ChainsPath), "default")
-	if err != nil {
-		return err
-	}
-	if err := cfg.Unmarshal(chain); err != nil {
-		return err
-	}
-
-	log.WithField("image", chain.Service.Image).Debug("Chain defaults set")
 	return nil
 }
 
