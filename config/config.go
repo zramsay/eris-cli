@@ -39,6 +39,7 @@ type Settings struct {
 	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
 	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
+	ImagesPullTimeout string `json:"ImagesPullTimeout,omitempty" yaml:"ImagesPullTimeout,omitempty" toml:"ImagesPullTimeout,omitempty"`
 	Verbose        bool
 
 	// Image defaults.
@@ -131,6 +132,7 @@ func SetDefaults() (*viper.Viper, error) {
 	config.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
 	config.SetDefault("IpfsPort", "8080")           // [csk] TODO: be less opinionated here...
 	config.SetDefault("CrashReport", "bugsnag")
+	config.SetDefault("ImagesPullTimeout", "15m")
 
 	// Compiler defaults.
 	config.SetDefault("CompilersHost", "https://compilers.eris.industries")
