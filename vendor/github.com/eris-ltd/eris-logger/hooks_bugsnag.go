@@ -84,9 +84,11 @@ func (b Bugsnag) Fire(e *Entry) error {
 }
 
 // SendReport method connects to the Bugsnag server and
-// sends out collected debugging an stack trace info.
-func (b Bugsnag) SendReport(message interface{}) error {
-	debug.PrintStack()
+// sends out collected debugging and optional stack trace info.
+func (b Bugsnag) SendReport(message interface{}, stack bool) error {
+	if stack == true {
+		debug.PrintStack()
+	}
 
 	// Sending out a panic along with some useful bits of information.
 	return bugsnag.Notify(

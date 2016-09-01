@@ -84,7 +84,7 @@ Complete documentation is available at https://docs.erisindustries.com
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
-		log.AddHook(CrashReportHook(dockerVersion))
+		log.AddHook(util.CrashReportHook(dockerVersion))
 
 		// Compare `docker-machine` versions but don't fail if not installed.
 		dmVersion, err := util.DockerMachineVersion()
@@ -102,7 +102,7 @@ func Execute() {
 	// Handle panics within Execute().
 	defer func() {
 		if err := recover(); err != nil {
-			SendReport(err)
+			util.SendPanic(err)
 		}
 	}()
 

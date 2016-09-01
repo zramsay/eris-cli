@@ -123,9 +123,9 @@ func pullDefaultImages() error {
 	// fail over to docker hub is quay is down/firewalled
 	auth := docker.AuthConfiguration{}
 
-	timeoutDuration, err := time.ParseDuration(config.GlobalConfig.Config.ImagesPullTimeout)
+	timeoutDuration, err := time.ParseDuration(config.Global.ImagesPullTimeout)
 	if err != nil {
-		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.GlobalConfig.Config.ImagesPullTimeout)
+		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.Global.ImagesPullTimeout)
 	}
 
 	for i, image := range images {
@@ -176,6 +176,7 @@ func pullDefaultImages() error {
 
 			select {
 			case <-time.After(timeoutDuration):
+				util.SendReport(fmt.Errorf("`eris init` timed out (%v)", timeoutDuration))
 				timeout <- fmt.Errorf(`
 It looks like marmots are taking too long to download the necessary images...
 Please, try restarting the [eris init] command one more time now or a bit later.

@@ -1,4 +1,4 @@
-package commands
+package util
 
 import (
 	"github.com/eris-ltd/eris-cli/config"
@@ -12,7 +12,7 @@ var crashReport CrashReport
 // CrashReport interface represents operations for sending out panics
 // remotely and hooking to a logging library to collect debug messages.
 type CrashReport interface {
-	SendReport(interface{}) error
+	SendReport(interface{}, bool) error
 	Hook() log.Hook
 }
 
@@ -30,9 +30,15 @@ func CrashReportHook(dockerVersion string) log.Hook {
 	return crashReport.Hook()
 }
 
-// SendReport executes the actual transmission.
+// SendPanic sends a panic message to Bugsnag.
+func SendPanic(message interface{}) error {
+	return crashReport.SendReport(message, true)
+}
+
+// SendReport sends a message to Bugsnag (without
+// a stack trace).
 func SendReport(message interface{}) error {
-	return crashReport.SendReport(message)
+	return crashReport.SendReport(message, false)
 }
 
 // ConfigureCrashReport collects variables from various places
