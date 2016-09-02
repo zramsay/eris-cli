@@ -49,7 +49,7 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	Chains.AddCommand(chainsUpdate)
+	//Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
 	addChainsFlags()
