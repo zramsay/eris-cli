@@ -10,6 +10,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 
+	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -111,10 +112,14 @@ func TestMigrationMoveFile(t *testing.T) {
 }
 
 func testsInit() error {
-	var err error
+	common.ChangeErisRoot(erisDir)
+
 	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
-	ifExit(err)
+	var err error
+	config.Global, err = config.New(os.Stdout, os.Stderr)
+	if err != nil {
+		ifExit(err)
+	}
 
 	if err := os.Mkdir(erisDir, 0777); err != nil {
 		if runtime.GOOS != "windows" {
@@ -122,7 +127,6 @@ func testsInit() error {
 			ifExit(err)
 		}
 	}
-	config.ChangeErisDir(erisDir)
 
 	return nil
 }

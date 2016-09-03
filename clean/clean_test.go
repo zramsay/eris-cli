@@ -127,7 +127,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 }
 
 func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)); err != nil {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 

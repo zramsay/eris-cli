@@ -31,17 +31,14 @@ const (
 	Quick
 )
 
-func TestsInit(steps int, services ...string) (err error) {
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
+func TestsInit(steps int) (err error) {
+	common.ChangeErisRoot(ErisDir)
+	common.InitErisDir()
+
+	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
-
-	// common is initialized on import so we have to manually override
-	// these variables to ensure that the tests run correctly.
-	config.ChangeErisDir(ErisDir)
-	common.InitErisDir()
 
 	// Don't connect to Docker daemon and don't pull default definitions.
 	if steps == Quick {

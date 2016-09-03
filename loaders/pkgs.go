@@ -62,7 +62,7 @@ func LoadPackage(path, chainName string) (*definitions.Package, error) {
 
 // read the config file into viper
 func loadPackage(path string) (*viper.Viper, error) {
-	return config.LoadViperConfig(path, "package")
+	return config.LoadViper(path, "package")
 }
 
 // DefaultPackage creates a package definition structure

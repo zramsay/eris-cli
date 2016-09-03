@@ -14,6 +14,8 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
+	"github.com/eris-ltd/common/go/common"
+
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -125,7 +127,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 	start(t, servName, true)
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	do := def.NowDo()
 	do.Name = servName
@@ -221,7 +223,7 @@ func TestMakeService(t *testing.T) {
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Operations.Args = []string{path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)}
+	do.Operations.Args = []string{path.Join(ver.DefaultRegistry, ver.ImageKeys)}
 	if err := MakeService(do); err != nil {
 		t.Fatalf("expected a new service to be created, got %v", err)
 	}
@@ -308,7 +310,7 @@ func TestCatService(t *testing.T) {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if out := tests.FileContents(filepath.Join(config.GlobalConfig.ErisDir, "services", "ipfs.toml")); out != do.Result {
+	if out := tests.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != do.Result {
 		t.Fatalf("expected local config to be returned %v, got %v", out, do.Result)
 	}
 }

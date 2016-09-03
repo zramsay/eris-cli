@@ -174,17 +174,13 @@ func toadServerUp() bool {
 }
 
 func testsInit() error {
+	common.ChangeErisRoot(erisDir)
+	
 	var err error
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
+	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
 		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
-
-	// common is initialized on import so
-	// we have to manually override these
-	// variables to ensure that the tests
-	// run correctly.
-	config.ChangeErisDir(erisDir)
 
 	util.DockerConnect(false, "eris")
 

@@ -20,7 +20,7 @@ type CrashReport interface {
 // the 'CrashReport' value in the `eris.toml` configuration file) and returns
 // a hook for the Eris logging library.
 func CrashReportHook(dockerVersion string) log.Hook {
-	switch config.GlobalConfig.Config.CrashReport {
+	switch config.Global.CrashReport {
 	case "bugsnag":
 		crashReport = log.NewBugsnagReporter(ConfigureCrashReport(dockerVersion))
 	default:

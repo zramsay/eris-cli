@@ -50,8 +50,8 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
-		ipfs.IpfsPort = config.GlobalConfig.Config.IpfsPort
+		ipfs.IpfsHost = config.Global.IpfsHost
+		ipfs.IpfsPort = config.Global.IpfsPort
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return
@@ -66,6 +66,10 @@ Complete documentation is available at https://docs.erisindustries.com
 			do.Quiet = true
 			if err := initialize.Initialize(do); err != nil {
 				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+			}
+
+			if err := config.Save(&config.Global.Settings); err != nil {
+				log.Error(err)
 			}
 
 			log.Warn()
@@ -91,15 +95,7 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 	},
 
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if !util.DoesDirExist(ErisRoot) {
-			return
-		}
-
-		if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
-			log.Error(err)
-		}
-	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
@@ -164,33 +160,35 @@ func AddGlobalFlags() {
 }
 
 func InitializeConfig() {
-	var err error
-	var out io.Writer
-	var erw io.Writer
+	var (
+		err error
+		stdout io.Writer
+		stderr io.Writer
+	)
 
 	do = definitions.NowDo()
 
 	if os.Getenv("ERIS_CLI_WRITER") != "" {
-		out, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
+		stdout, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
 		if err != nil {
-			fmt.Printf("Could not open: %s\n", err)
+			log.Errorf("Could not open: %v", err)
 			return
 		}
 	} else {
-		out = os.Stdout
+		stdout = os.Stdout
 	}
 
 	if os.Getenv("ERIS_CLI_ERROR_WRITER") != "" {
-		erw, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
+		stderr, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
 		if err != nil {
-			fmt.Printf("Could not open: %s\n", err)
+			log.Errorf("Could not open: %v", err)
 			return
 		}
 	} else {
-		erw = os.Stderr
+		stderr = os.Stderr
 	}
 
-	config.GlobalConfig, err = config.SetGlobalObject(out, erw)
+	config.Global, err = config.New(stdout, stderr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

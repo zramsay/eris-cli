@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -14,6 +13,8 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
+
+	"github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -169,18 +170,18 @@ func TestExecDataBufferNotOverwritten(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+	config.Global.Writer, config.Global.ErrorWriter = buf, buf
 
 	ops.Args = strings.Fields("true")
 	if _, err := DockerExecData(ops, nil); err != nil {
 		t.Fatalf("expected data successfully run, got %v", err)
 	}
 
-	if config.GlobalConfig.Writer != buf {
+	if config.Global.Writer != buf {
 		t.Fatalf("expected global writer unchaged after exec")
 	}
 
-	if config.GlobalConfig.ErrorWriter != buf {
+	if config.Global.ErrorWriter != buf {
 		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
@@ -347,13 +348,13 @@ func TestExecServiceBufferNotOverwritten(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+	config.Global.Writer, config.Global.ErrorWriter = buf, buf
 
-	if config.GlobalConfig.Writer != buf {
+	if config.Global.Writer != buf {
 		t.Fatalf("expected global writer unchaged after exec")
 	}
 
-	if config.GlobalConfig.ErrorWriter != buf {
+	if config.Global.ErrorWriter != buf {
 		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
@@ -370,7 +371,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "always"
@@ -416,7 +417,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "max:99"
@@ -462,7 +463,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 `); err != nil {
@@ -518,7 +519,7 @@ func TestExecServiceVolume(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Operations.Volume = filepath.Join(config.GlobalConfig.ErisDir)
+	srv.Operations.Volume = common.ErisRoot
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
@@ -555,8 +556,8 @@ func TestExecServiceMount(t *testing.T) {
 
 	srv.Operations.Args = strings.Fields("uptime")
 	srv.Service.Volumes = []string{
-		config.GlobalConfig.ErisDir + ":" + "/tmp",
-		config.GlobalConfig.ErisDir + ":" + "/custom",
+		common.ErisRoot + ":" + "/tmp",
+		common.ErisRoot + ":" + "/custom",
 	}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
@@ -610,7 +611,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Service.Volumes = []string{config.GlobalConfig.ErisDir + ":"}
+	srv.Service.Volumes = []string{common.ErisRoot + ":"}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected service container creation to fail")
 	}
@@ -1681,7 +1682,7 @@ func TestLogsSimple(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1700,9 +1701,9 @@ func TestLogsNilConfig(t *testing.T) {
 
 	defer tests.RemoveAllContainers()
 
-	savedConfig := config.GlobalConfig
-	config.GlobalConfig = nil
-	defer func() { config.GlobalConfig = savedConfig }()
+	savedConfig := config.Global
+	config.Global = nil
+	defer func() { config.Global = savedConfig }()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1752,7 +1753,7 @@ func TestLogsFollow(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, true, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1785,7 +1786,7 @@ func TestLogsTail(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1822,7 +1823,7 @@ func TestLogsTail0(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1891,7 +1892,7 @@ func TestInspectSimple(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "all"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -1949,7 +1950,7 @@ func TestInspectField(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "Config.WorkingDir"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -1981,7 +1982,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "Config.WorkingDir"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -2183,7 +2184,7 @@ func TestBuildSimple(t *testing.T) {
 		image = "test-image-1"
 	)
 
-	dockerfile := `FROM ` + path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)
+	dockerfile := `FROM ` + path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)
 
 	if err := DockerBuild(image, dockerfile); err != nil {
 		t.Fatalf("expected image to be built, got %v", err)

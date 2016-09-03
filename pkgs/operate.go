@@ -155,7 +155,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 //
 func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error {
 	do.Service.Name = pkg.Name + "_tmp_" + do.Name
-	do.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_PM)
+	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImagePM)
 	do.Service.AutoData = true
 	do.Service.EntryPoint = fmt.Sprintf("epm --chain chain:%s --sign keys:%s", do.ChainPort, do.KeysPort)
 	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
@@ -206,7 +206,7 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	}
 
 	// copy output to global writer. [csk note] this is a bit weird cause no output until the whole thing has finished...
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	log.Info("Finished performing action")
 	return nil

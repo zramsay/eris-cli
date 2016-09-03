@@ -33,7 +33,7 @@ This eris service is all but essential as part of the eris tool. The [eris files
 status = "alpha"
 
 [service]
-image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_IPFS) + fmt.Sprintf(`"
+image = "` + path.Join(version.DefaultRegistry, version.ImageIPFS) + fmt.Sprintf(`"
 data_container = true
 ports = ["4001:4001", "5001:5001", "%s:%s"]
 user = "root"

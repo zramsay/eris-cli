@@ -7,14 +7,14 @@ import (
 const ARCH = "arm"
 
 var (
-	ERIS_REG_DEF = "quay.io"
-	ERIS_REG_BAK = "" //dockerhub
+	DefaultRegistry = "quay.io"
+	BackupRegistry  = ""
 
-	ERIS_IMG_DATA = fmt.Sprintf("eris/data:%s-%s", ARCH, VERSION)
-	ERIS_IMG_KEYS = fmt.Sprintf("eris/keys:%s-%s", ARCH, VERSION)
-	ERIS_IMG_DB   = fmt.Sprintf("eris/erisdb:%s-%s", ARCH, VERSION)
-	ERIS_IMG_PM   = fmt.Sprintf("eris/epm:%s-%s", ARCH, VERSION)
-	ERIS_IMG_CM   = fmt.Sprintf("eris/eris-cm:%s-%s", ARCH, VERSION)
-	ERIS_IMG_COMP = fmt.Sprintf("eris/compilers:%s-%s", ARCH, VERSION)
-	ERIS_IMG_IPFS = fmt.Sprintf("eris/ipfs:%s", ARCH)
+	ImageData      = fmt.Sprintf("eris/data:%s-%s", ARCH, VERSION)
+	ImageKeys      = fmt.Sprintf("eris/keys:%s-%s", ARCH, VERSION)
+	ImageDB        = fmt.Sprintf("eris/erisdb:%s-%s", ARCH, VERSION)
+	ImagePM        = fmt.Sprintf("eris/epm:%s-%s", ARCH, VERSION)
+	ImageCM        = fmt.Sprintf("eris/eris-cm:%s-%s", ARCH, VERSION)
+	ImageCompilers = fmt.Sprintf("eris/compilers:%s-%s", ARCH, VERSION)
+	ImageIPFS      = fmt.Sprintf("eris/ipfs:%s", ARCH)
 )

@@ -414,8 +414,8 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	}
 	do.Operations.Terminal = true
 	do.Operations.Args = args
-	config.GlobalConfig.InteractiveWriter = os.Stdout
-	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	config.Global.InteractiveWriter = os.Stdout
+	config.Global.InteractiveErrorWriter = os.Stderr
 	_, err := chns.ExecChain(do)
 	IfExit(err)
 }
@@ -449,8 +449,8 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		IfExit(fmt.Errorf("\nThe --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these."))
 	}
 	if !do.Known {
-		config.GlobalConfig.InteractiveWriter = os.Stdout
-		config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+		config.Global.InteractiveWriter = os.Stdout
+		config.Global.InteractiveErrorWriter = os.Stderr
 		do.Operations.Terminal = true
 	}
 

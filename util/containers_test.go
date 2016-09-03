@@ -304,7 +304,7 @@ func create(t, name string) error {
 	labels[def.LabelShortName] = name
 	labels[def.LabelType] = t
 
-	keysImage := path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_KEYS)
+	keysImage := path.Join(version.DefaultRegistry, version.ImageKeys)
 	opts := docker.CreateContainerOptions{
 		Name: ContainerName(t, name),
 		Config: &docker.Config{

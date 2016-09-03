@@ -27,7 +27,7 @@ func GenerateKey(do *definitions.Do) error {
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	return nil
 }
@@ -43,7 +43,7 @@ func GetPubKey(do *definitions.Do) error {
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	return nil
 }
@@ -141,7 +141,7 @@ func ConvertKey(do *definitions.Do) error {
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	return nil
 }

@@ -134,7 +134,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return config.LoadViperConfig(filepath.Join(common.ServicesPath), servName)
+	return config.LoadViper(filepath.Join(common.ServicesPath), servName)
 }
 
 func checkImage(srv *definitions.Service) error {
