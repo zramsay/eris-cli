@@ -25,7 +25,7 @@ Testing the tool itself is performed from the `tests/test_tool.sh` script. This 
 
 ## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (Apps and Contract Suites)
 
-TODO (will fill in as we collaboratively build [toadserver](https://github.com/eris-ltd/toadserver)). Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the eris/eris container.
+Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the eris/eris container.
 
 ## Goal 3: Test the Tool Against a Multitue of docker-engine APIs
 

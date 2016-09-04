@@ -39,7 +39,6 @@ The `eris` tool is centered around a very few concepts:
 * `chains` -- develop permissioned chains
 * `pkgs` -- our smart contract tool chain
 * `keys` -- wrapping of our key management tooling
-* `actions` -- step by step processes
 * `files` -- working the IPFS "permanent web"
 * `data` -- take the pain out of data persistence on docker
 
@@ -110,30 +109,9 @@ To see the various ways in which `eris` can help you manage your various key pai
 eris keys
 ```
 
-## Actions
-
-Actions are step by step processes which need to take a few variables but otherwise should be scriptable. Actions are used for repetitive, or repeatable, tasks.
-
-The environment in which actions run is similar in nature to a modern continuous development environment. Actions are run on the **host** and **not** from within a container. They have full access to containers either via the `eris` cli or via docker's cli.
-
-Examples of things actions are made to support:
-
-* setting up an application
-* configuring a range of services
-* register a domain entry via mindy
-* drop a preformulated transaction into the btc network using a specific key
-
-Actions work from a base of **action definition files**. These files are held on the host in the following location: `~/.eris/actions`. Action definition files tell `eris` what steps to take, what services to make available, what chain to run, and what steps to take. The specification for action definition files is located [here](https://docs.erisindustries.com/documentation/eris-cli/latest/actions_specification/).
-
-To see the various ways in which `eris` can interact with actions, please type:
-
-```
-eris actions
-```
-
 ## Files
 
-Eris has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host or for use by actions.
+Eris has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host.
 
 To see the various ways in which `eris` can help you with distributed file sharing, please type:
 
@@ -160,7 +138,6 @@ Created by `eris init` in $HOME directory:
 ```
 ├── .eris/
 │   ├── eris.toml
-│   ├── actions/
 │   ├── apps/
 │   ├── bundles/
 │   ├── chains/
@@ -185,8 +162,7 @@ Created by `eris init` in $HOME directory:
 │       ├── keys.toml
 ```
 
-With some additional default actions, chain, and services files dropped in from:
-- [eris-actions](https://github.com/eris-ltd/eris-actions)
+With some additional default chain, and services files dropped in from:
 - [eris-chains](https://github.com/eris-ltd/eris-chains)
 - [eris-services](https://github.com/eris-ltd/eris-services)
 

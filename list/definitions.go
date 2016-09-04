@@ -24,8 +24,7 @@ type Definition struct {
 	Definition string
 }
 
-// Known list definition files for a given type t ("services",
-// or "actions") from the Eris root directory in one of the 2 formats,
+// Known list definition files for a given type t ("services") from the Eris root directory in one of the 2 formats,
 // specified by the format parameter. Default is `ls(1)` multicolumn format,
 // `json` dumps the JSON document onto the console. A custom format can
 // be specified using the `text/template` Go package syntax, e.g.:
