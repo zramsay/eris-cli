@@ -97,25 +97,25 @@ cd $start
 # ----------------------------------------------------------------------------
 # Get EPM
 
-echo
-if [ -d "$epm_dir" ]; then
-  echo "eris-pm present on host; not cloning"
-  cd $epm_dir
-else
-  echo -e "Cloning eris-pm to:\t\t$epm_dir:$epm_branch"
-  git clone $epm_repo $epm_dir &>/dev/null
-  cd $epm_dir 1>/dev/null
-  git checkout origin/$epm_branch &>/dev/null
-fi
-echo
+#echo
+#if [ -d "$epm_dir" ]; then
+#  echo "eris-pm present on host; not cloning"
+#  cd $epm_dir
+#else
+#  echo -e "Cloning eris-pm to:\t\t$epm_dir:$epm_branch"
+#  git clone $epm_repo $epm_dir &>/dev/null
+#  cd $epm_dir 1>/dev/null
+#  git checkout origin/$epm_branch &>/dev/null
+#fi
+#echo
 
 # ----------------------------------------------------------------------------
 # Run EPM tests
 
-tests/test.sh
-test_exit=$?
-check_and_exit
-cd $start
+#tests/test.sh
+#test_exit=$?
+#check_and_exit
+#cd $start
 
 # ----------------------------------------------------------------------------
 # Get Mindy
