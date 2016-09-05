@@ -12,6 +12,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -97,12 +98,12 @@ func testDrops(dir, kind string) error {
 	case "services":
 		//pull from toadserver
 		if toadUp {
-			if err := dropServiceDefaults(dirToad, "toadserver"); err != nil {
+			if err := dropServiceDefaults(dirToad, "toadserver", ver.SERVICE_DEFINITIONS); err != nil {
 				ifExit(err)
 			}
 		}
 		//pull from rawgit
-		if err := dropServiceDefaults(dirGit, "rawgit"); err != nil {
+		if err := dropServiceDefaults(dirGit, "rawgit", ver.SERVICE_DEFINITIONS); err != nil {
 			ifExit(err)
 		}
 	case "actions":

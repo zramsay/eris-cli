@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "compilers", "keys", "ipfs"))
 
 	exitCode := m.Run()
 	killKeys()
