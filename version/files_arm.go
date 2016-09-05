@@ -2,19 +2,19 @@ package version
 
 var (
 	SERVICE_DEFINITIONS = []string{
-	//"ipfs.toml",
-	//"keys.toml",
+		"ipfs",
+		"keys",
 	}
 
 	ACTION_DEFINITIONS = []string{
-		"chain_info.toml",
-		"dns_register.toml",
-		"keys_list.toml",
+		"chain_info",
+		"dns_register",
+		"keys_list",
 	}
 
 	CHAIN_DEFINITIONS = []string{
-		"default.toml",
-		"config.toml",
-		"server_conf.toml",
+		"default",
+		"config",
+		"server_conf",
 	}
 )

@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "do_not_use", "keys", "ipfs"))
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")

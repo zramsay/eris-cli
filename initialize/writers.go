@@ -27,16 +27,23 @@ import (
 
 // XXX all files in this sequence must be added to both
 // the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
-func dropServiceDefaults(dir, from string) error {
-	if err := drops(ver.SERVICE_DEFINITIONS, "services", dir, from); err != nil {
-		return err
+func dropServiceDefaults(dir, from string, services []string) error {
+	for _, service := range services {
+		var err error
+
+		switch service {
+		case "keys":
+			err = writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys)
+		case "ipfs":
+			err = writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS)
+		default:
+			err = drops([]string{service}, "services", dir, from)
+		}
+		if err != nil {
+			return fmt.Errorf("Cannot add default %s: %v", service, err)
+		}
 	}
-	if err := writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys); err != nil {
-		return fmt.Errorf("Cannot add default keys.toml: %s.\n", err)
-	}
-	if err := writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS); err != nil {
-		return fmt.Errorf("Cannot add default ipfs.toml: %s.\n", err)
-	}
+
 	return nil
 }
 
@@ -218,14 +225,14 @@ func drops(files []string, typ, dir, from string) error {
 				"from": url,
 				"to":   dir,
 			}).Debug("Moving file")
-			if err := ipfs.DownloadFromUrlToFile(url, file, dir); err != nil {
+			if err := ipfs.DownloadFromUrlToFile(url, file+".toml", dir); err != nil {
 				return err
 			}
 		}
 	} else if from == "rawgit" {
 		for _, file := range files {
 			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file, dir, file); err != nil {
+			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
 				return err
 			}
 		}

@@ -31,7 +31,7 @@ const (
 	Quick
 )
 
-func TestsInit(steps int) (err error) {
+func TestsInit(steps int, services ...string) (err error) {
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
 	if err != nil {
@@ -62,6 +62,7 @@ func TestsInit(steps int) (err error) {
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
 	do.Source = "rawgit" //use "rawgit" if ts down
+	do.ServicesSlice = services
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
 	}

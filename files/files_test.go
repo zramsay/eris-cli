@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 		port_to_use = port
 	}
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "ipfs"))
 	exitCode := m.Run()
 	tests.IfExit(tests.TestsTearDown())
 	os.Exit(exitCode)

@@ -15,7 +15,6 @@ import (
 )
 
 func Initialize(do *definitions.Do) error {
-
 	newDir, err := checkThenInitErisRoot(do.Quiet)
 	if err != nil {
 		return err
@@ -105,7 +104,13 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 
 	tsErrorFix := "toadserver may be down: re-run with `--source=rawgit`"
 
-	if err := dropServiceDefaults(srvPath, do.Source); err != nil {
+	// Default or custom service definition files list.
+	services := ver.SERVICE_DEFINITIONS
+	if len(do.ServicesSlice) != 0 {
+		services = do.ServicesSlice
+	}
+
+	if err := dropServiceDefaults(srvPath, do.Source, services); err != nil {
 		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
 	}
 
