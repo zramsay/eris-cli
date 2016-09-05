@@ -96,7 +96,7 @@ cd $start
 
 # ----------------------------------------------------------------------------
 # Get EPM
-
+## TODO unsilence EPM tests!!!!!!
 #echo
 #if [ -d "$epm_dir" ]; then
 #  echo "eris-pm present on host; not cloning"
