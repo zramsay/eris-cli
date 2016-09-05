@@ -157,7 +157,7 @@ func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
 	}
 }
 
-func TestKnownChainBoots(t *testing.T) {
+func _TestKnownChainBoots(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	create(t, chainName)

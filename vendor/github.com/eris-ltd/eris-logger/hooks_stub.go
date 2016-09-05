@@ -27,10 +27,12 @@ func (s Stub) Hook() Hook {
 	return s
 }
 
-// SendReport prints a stack trace to the console
+// SendReport optionally prints a stack trace to the console
 // to make sure stub actually is used as an implementation.
-func (s Stub) SendReport(message interface{}) error {
-	debug.PrintStack()
+func (s Stub) SendReport(message interface{}, stack bool) error {
+	if stack == true {
+		debug.PrintStack()
+	}
 
 	return nil
 }
