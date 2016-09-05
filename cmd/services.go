@@ -283,8 +283,8 @@ func ExecService(cmd *cobra.Command, args []string) {
 	}
 	do.Operations.Terminal = true
 	do.Operations.Args = args
-	config.GlobalConfig.InteractiveWriter = os.Stdout
-	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	config.Global.InteractiveWriter = os.Stdout
+	config.Global.InteractiveErrorWriter = os.Stderr
 	_, err := srv.ExecService(do)
 	IfExit(err)
 }

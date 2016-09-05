@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	ver "github.com/eris-ltd/eris-cli/version"
@@ -18,19 +17,21 @@ import (
 	gitconfig "github.com/tcnksm/go-gitconfig"
 )
 
-// Properly scope the globalConfig.
-var GlobalConfig *ErisCli
+// Global carries CLI settings global across packages.
+var Global *Config
 
-type ErisCli struct {
+// Config describes CLI global settings.
+type Config struct {
 	Writer                 io.Writer
 	ErrorWriter            io.Writer
 	InteractiveWriter      io.Writer
 	InteractiveErrorWriter io.Writer
-	Config                 *ErisConfig
-	ErisDir                string
+	Settings
 }
 
-type ErisConfig struct {
+// Settings describes settings loadable from "eris.toml"
+// configuration file.
+type Settings struct {
 	IpfsHost       string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
 	IpfsPort       string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
 	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
@@ -40,41 +41,45 @@ type ErisConfig struct {
 	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 	Verbose        bool
 
-	//image defaults
-	ERIS_REG_DEF string `json:"ERIS_REG_DEF,omitempty" yaml:"ERIS_REG_DEF,omitempty" toml:"ERIS_REG_DEF,omitempty"`
-	ERIS_REG_BAK string `json:"ERIS_REG_BAK,omitempty" yaml:"ERIS_REG_BAK,omitempty" toml:"ERIS_REG_BAK,omitempty"`
+	// Image defaults.
+	DefaultRegistry string `json:"DefaultRegistry,omitempty" yaml:"DefaultRegistry,omitempty" toml:"DefaultRegistry,omitempty"`
+	BackupRegistry  string `json:"BackupRegistry,omitempty" yaml:"BackupRegistry,omitempty" toml:"BackupRegistry,omitempty"`
 
-	ERIS_IMG_DATA string `json:"ERIS_IMG_DATA,omitempty" yaml:"ERIS_IMG_DATA,omitempty" toml:"ERIS_IMG_DATA,omitempty"`
-	ERIS_IMG_KEYS string `json:"ERIS_IMG_KEYS,omitempty" yaml:"ERIS_IMG_KEYS,omitempty" toml:"ERIS_IMG_KEYS,omitempty"`
-	ERIS_IMG_DB   string `json:"ERIS_IMG_DB,omitempty" yaml:"ERIS_IMG_DB,omitempty" toml:"ERIS_IMG_DB,omitempty"`
-	ERIS_IMG_PM   string `json:"ERIS_IMG_PM,omitempty" yaml:"ERIS_IMG_PM,omitempty" toml:"ERIS_IMG_PM,omitempty"`
-	ERIS_IMG_CM   string `json:"ERIS_IMG_CM,omitempty" yaml:"ERIS_IMG_CM,omitempty" toml:"ERIS_IMG_CM,omitempty"`
-	ERIS_IMG_IPFS string `json:"ERIS_IMG_IPFS,omitempty" yaml:"ERIS_IMG_IPFS,omitempty" toml:"ERIS_IMG_IPFS,omitempty"`
+	ImageData string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
+	ImageKeys string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
+	ImageDB   string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
+	ImagePM   string `json:"ImagePM,omitempty" yaml:"ImagePM,omitempty" toml:"ImagePM,omitempty"`
+	ImageCM   string `json:"ImageCM,omitempty" yaml:"ImageCM,omitempty" toml:"ImageCM,omitempty"`
+	ImageIPFS string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
 }
 
-func SetGlobalObject(writer, errorWriter io.Writer) (*ErisCli, error) {
-	e := ErisCli{
+// New initializes the global config with default settings
+// or settings loaded from the "eris.toml" default location.
+// New also initialize default writer and errorWriter streams.
+// Viper or unmarshalling errors are returned on error.
+func New(writer, errorWriter io.Writer) (*Config, error) {
+	config := &Config{
 		Writer:                 writer,
 		ErrorWriter:            errorWriter,
 		InteractiveWriter:      ioutil.Discard,
 		InteractiveErrorWriter: ioutil.Discard,
 	}
 
-	config, err := LoadGlobalConfig()
+	v, err := Load()
 	if err != nil {
-		return &e, err
+		return config, err
 	}
 
-	e.Config = &ErisConfig{}
-
-	err = marshallGlobalConfig(config, e.Config)
-	if err != nil {
-		return &e, err
+	if err := v.Unmarshal(&config.Settings); err != nil {
+		return config, err
 	}
-	return &e, nil
+
+	return config, nil
 }
 
-func LoadViperConfig(configPath, configName string) (*viper.Viper, error) {
+// LoadViper reads the configuration file pointed to by
+// the configPath path and configName filename. 
+func LoadViper(configPath, configName string) (*viper.Viper, error) {
 	var errKnown string
 	switch configPath {
 	case dir.ChainsPath, dir.ServicesPath, dir.ActionsPath:
@@ -103,53 +108,50 @@ List available definitions with the [eris %s ls --known] command`, filepath.Base
 	return conf, nil
 }
 
-func LoadGlobalConfig() (*viper.Viper, error) {
-	globalConfig, err := SetDefaults()
+// Load reads the Viper configuration file from the default location.
+func Load() (*viper.Viper, error) {
+	config, err := SetDefaults()
 	if err != nil {
-		return globalConfig, err
+		return config, err
 	}
 
-	globalConfig.AddConfigPath(dir.ErisRoot)
-	globalConfig.SetConfigName("eris")
-	if err := globalConfig.ReadInConfig(); err != nil {
+	config.AddConfigPath(dir.ErisRoot)
+	config.SetConfigName("eris")
+	if err := config.ReadInConfig(); err != nil {
 		// do nothing as this is not essential.
 	}
 
-	return globalConfig, nil
+	return config, nil
 }
 
+// SetDefaults initializes the Viper struct with default settings.
 func SetDefaults() (*viper.Viper, error) {
-	var globalConfig = viper.New()
+	var config = viper.New()
 
-	// assorted defaults
-	globalConfig.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
-	globalConfig.SetDefault("IpfsPort", "8080")           // [csk] TODO: be less opinionated here...
-	globalConfig.SetDefault("CrashReport", "bugsnag")
+	config.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
+	config.SetDefault("IpfsPort", "8080")           // [csk] TODO: be less opinionated here...
+	config.SetDefault("CrashReport", "bugsnag")
 
-	// compilers defaults
-	globalConfig.SetDefault("CompilersHost", "https://compilers.eris.industries")
-	verSplit := strings.Split(ver.VERSION, "-")
-	verSplit = strings.Split(verSplit[0], ".")
-	maj, _ := strconv.Atoi(verSplit[0])
-	min, _ := strconv.Atoi(verSplit[1])
-	pat, _ := strconv.Atoi(verSplit[2])
-	globalConfig.SetDefault("CompilersPort", fmt.Sprintf("1%01d%02d%01d", maj, min, pat))
+	// Compiler defaults.
+	config.SetDefault("CompilersHost", "https://compilers.eris.industries")
+	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(ver.VERSION, "-")[0], ".", "", -1))
 
-	// image defaults
-	globalConfig.SetDefault("ERIS_REG_DEF", ver.ERIS_REG_DEF)
-	globalConfig.SetDefault("ERIS_REG_BAK", ver.ERIS_REG_BAK)
-	globalConfig.SetDefault("ERIS_IMG_DATA", ver.ERIS_IMG_DATA)
-	globalConfig.SetDefault("ERIS_IMG_KEYS", ver.ERIS_IMG_KEYS)
-	globalConfig.SetDefault("ERIS_IMG_DB", ver.ERIS_IMG_DB)
-	globalConfig.SetDefault("ERIS_IMG_PM", ver.ERIS_IMG_PM)
-	globalConfig.SetDefault("ERIS_IMG_CM", ver.ERIS_IMG_CM)
-	globalConfig.SetDefault("ERIS_IMG_COMP", ver.ERIS_IMG_COMP)
-	globalConfig.SetDefault("ERIS_IMG_IPFS", ver.ERIS_IMG_IPFS)
+	// Image defaults.
+	config.SetDefault("DefaultRegistry", ver.DefaultRegistry)
+	config.SetDefault("BackupRegistry", ver.BackupRegistry)
+	config.SetDefault("ImageData", ver.ImageData)
+	config.SetDefault("ImageKeys", ver.ImageKeys)
+	config.SetDefault("ImageDB", ver.ImageDB)
+	config.SetDefault("ImagePM", ver.ImagePM)
+	config.SetDefault("ImageCM", ver.ImageCM)
+	config.SetDefault("ImageIPFS", ver.ImageIPFS)
 
-	return globalConfig, nil
+	return config, nil
 }
 
-func SaveGlobalConfig(config *ErisConfig) error {
+// Save writes the "eris.toml" configuration file at the default
+// location populated by settings.
+func Save(settings *Settings) error {
 	writer, err := os.Create(filepath.Join(dir.ErisRoot, "eris.toml"))
 	defer writer.Close()
 	if err != nil {
@@ -158,102 +160,13 @@ func SaveGlobalConfig(config *ErisConfig) error {
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""
-	if err := enc.Encode(config); err != nil {
+	if err := enc.Encode(settings); err != nil {
 		return err
 	}
 	return nil
 }
 
-// config values will be coerced into strings...
-func GetConfigValue(key string) string {
-	if GlobalConfig == nil || GlobalConfig.Config == nil {
-		return ""
-	}
-
-	switch key {
-	case "IpfsHost":
-		return GlobalConfig.Config.IpfsHost
-	case "IpfsPort":
-		return GlobalConfig.Config.IpfsPort
-	case "CompilersHost":
-		return GlobalConfig.Config.CompilersHost
-	case "DockerHost":
-		return GlobalConfig.Config.DockerHost
-	case "DockerCertPath":
-		return GlobalConfig.Config.DockerCertPath
-	case "CrashReport":
-		return GlobalConfig.Config.CrashReport
-	//image defaults
-	case "ERIS_REG_DEF":
-		return GlobalConfig.Config.ERIS_REG_DEF
-	case "ERIS_REG_BAK":
-		return GlobalConfig.Config.ERIS_REG_BAK
-	case "ERIS_IMG_DATA":
-		return GlobalConfig.Config.ERIS_IMG_DATA
-	case "ERIS_IMG_KEYS":
-		return GlobalConfig.Config.ERIS_IMG_KEYS
-	case "ERIS_IMG_DB":
-		return GlobalConfig.Config.ERIS_IMG_DB
-	case "ERIS_IMG_PM":
-		return GlobalConfig.Config.ERIS_IMG_PM
-	case "ERIS_IMG_CM":
-		return GlobalConfig.Config.ERIS_IMG_CM
-	case "ERIS_IMG_IPFS":
-		return GlobalConfig.Config.ERIS_IMG_IPFS
-	default:
-		return ""
-	}
-}
-
-// TODO: [by csk] refactor this and DRY it up as this function really should be in common (without the globalConfig object of course)
-func ChangeErisDir(erisDir string) {
-	if os.Getenv("TESTING") == "true" {
-		return
-	}
-
-	// Do nothing if not initialized.
-	if GlobalConfig == nil {
-		return
-	}
-
-	GlobalConfig.ErisDir = erisDir
-	dir.ErisRoot = erisDir
-
-	// Major directories.
-	dir.ActionsPath = filepath.Join(dir.ErisRoot, "actions")
-	dir.AppsPath = filepath.Join(dir.ErisRoot, "apps")     // previously "dapps"
-	dir.ChainsPath = filepath.Join(dir.ErisRoot, "chains") // previously "blockchains"
-	dir.KeysPath = filepath.Join(dir.ErisRoot, "keys")
-	dir.RemotesPath = filepath.Join(dir.ErisRoot, "remotes")
-	dir.ScratchPath = filepath.Join(dir.ErisRoot, "scratch")
-	dir.ServicesPath = filepath.Join(dir.ErisRoot, "services")
-
-	// Chains Directories
-	dir.DefaultChainPath = filepath.Join(dir.ChainsPath, "default")
-	dir.AccountsTypePath = filepath.Join(dir.ChainsPath, "account-types")
-	dir.ChainTypePath = filepath.Join(dir.ChainsPath, "chain-types")
-
-	// Keys Directories
-	dir.KeysDataPath = filepath.Join(dir.KeysPath, "data")
-	dir.KeyNamesPath = filepath.Join(dir.KeysPath, "names")
-
-	// Scratch Directories (basically eris' cache) (globally coordinated)
-	dir.DataContainersPath = filepath.Join(dir.ScratchPath, "data")
-	dir.LanguagesScratchPath = filepath.Join(dir.ScratchPath, "languages") // previously "~/.eris/languages"
-
-	// Services Directories
-	dir.PersonalServicesPath = filepath.Join(dir.ServicesPath, "global")
-}
-
-func marshallGlobalConfig(globalConfig *viper.Viper, config *ErisConfig) error {
-	err := globalConfig.Unmarshal(config)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
+// GitConfigUser returns Git global settings of the current user.
 func GitConfigUser() (uName string, email string, err error) {
 	uName, err = gitconfig.Username()
 	if err != nil {

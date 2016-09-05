@@ -21,7 +21,7 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	if !newDir { //new ErisRoot won't have either...can skip
-		if err := overwriteImageConfigs(); err != nil {
+		if err := overwriteErisToml(); err != nil {
 			return err
 		}
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
@@ -203,17 +203,17 @@ on local host machines. If you already have the images, they'll be updated.
 	return nil
 }
 
-func overwriteImageConfigs() error {
-	config.GlobalConfig.Config.ERIS_REG_DEF = ver.ERIS_REG_DEF
-	config.GlobalConfig.Config.ERIS_REG_BAK = ver.ERIS_REG_BAK
-	config.GlobalConfig.Config.ERIS_IMG_DATA = ver.ERIS_IMG_DATA
-	config.GlobalConfig.Config.ERIS_IMG_KEYS = ver.ERIS_IMG_KEYS
-	config.GlobalConfig.Config.ERIS_IMG_DB = ver.ERIS_IMG_DB
-	config.GlobalConfig.Config.ERIS_IMG_PM = ver.ERIS_IMG_PM
-	config.GlobalConfig.Config.ERIS_IMG_CM = ver.ERIS_IMG_CM
-	config.GlobalConfig.Config.ERIS_IMG_IPFS = ver.ERIS_IMG_IPFS
+func overwriteErisToml() error {
+	config.Global.DefaultRegistry = ver.DefaultRegistry
+	config.Global.BackupRegistry = ver.BackupRegistry
+	config.Global.ImageData = ver.ImageData
+	config.Global.ImageKeys = ver.ImageKeys
+	config.Global.ImageDB = ver.ImageDB
+	config.Global.ImagePM = ver.ImagePM
+	config.Global.ImageCM = ver.ImageCM
+	config.Global.ImageIPFS = ver.ImageIPFS
 
-	if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
+	if err := config.Save(&config.Global.Settings); err != nil {
 		return err
 	}
 	return nil

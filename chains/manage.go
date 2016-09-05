@@ -45,7 +45,7 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	do.Service.Name = do.Name
-	do.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_CM)
+	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageCM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
@@ -117,7 +117,7 @@ func MakeChain(do *definitions.Do) error {
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
@@ -237,7 +237,7 @@ func CatChain(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		config.GlobalConfig.Writer.Write(cat)
+		config.Global.Writer.Write(cat)
 		return nil
 	default:
 		return fmt.Errorf("unknown cat subcommand %q", do.Type)
@@ -248,7 +248,7 @@ func CatChain(do *definitions.Do) error {
 	buf, err := ExecChain(do)
 
 	if buf != nil {
-		io.Copy(config.GlobalConfig.Writer, buf)
+		io.Copy(config.Global.Writer, buf)
 	}
 
 	return err

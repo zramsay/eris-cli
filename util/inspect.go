@@ -208,7 +208,7 @@ func writeTemplate(container interface{}, toParse string) error {
 		return err
 	}
 
-	if err = tmpl.Execute(config.GlobalConfig.Writer, container); err != nil {
+	if err = tmpl.Execute(config.Global.Writer, container); err != nil {
 		return err
 	}
 

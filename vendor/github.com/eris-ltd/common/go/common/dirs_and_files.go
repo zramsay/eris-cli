@@ -130,6 +130,41 @@ func HomeDir() string {
 	}
 }
 
+// ChangeErisRoot points the root of the Eris settings hierarchy
+// to the erisDir location.
+func ChangeErisRoot(erisDir string) {
+	if os.Getenv("TESTING") == "true" {
+		return
+	}
+
+	ErisRoot = erisDir
+
+	// Major directories.
+	ActionsPath = filepath.Join(ErisRoot, "actions")
+	AppsPath = filepath.Join(ErisRoot, "apps")     // previously "dapps"
+	ChainsPath = filepath.Join(ErisRoot, "chains") // previously "blockchains"
+	KeysPath = filepath.Join(ErisRoot, "keys")
+	RemotesPath = filepath.Join(ErisRoot, "remotes")
+	ScratchPath = filepath.Join(ErisRoot, "scratch")
+	ServicesPath = filepath.Join(ErisRoot, "services")
+
+	// Chains Directories
+	DefaultChainPath = filepath.Join(ChainsPath, "default")
+	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
+	ChainTypePath = filepath.Join(ChainsPath, "chain-types")
+
+	// Keys Directories
+	KeysDataPath = filepath.Join(KeysPath, "data")
+	KeyNamesPath = filepath.Join(KeysPath, "names")
+
+	// Scratch Directories (basically eris' cache) (globally coordinated)
+	DataContainersPath = filepath.Join(ScratchPath, "data")
+	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.eris/languages"
+
+	// Services Directories
+	PersonalServicesPath = filepath.Join(ServicesPath, "global")
+}
+
 func AbsolutePath(Datadir string, filename string) string {
 	if filepath.IsAbs(filename) {
 		return filename

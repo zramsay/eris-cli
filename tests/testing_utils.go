@@ -32,16 +32,13 @@ const (
 )
 
 func TestsInit(steps int, services ...string) (err error) {
-	// TODO: make a reader/pipe so we can see what is written from tests.
-	config.GlobalConfig, err = config.SetGlobalObject(os.Stdout, os.Stderr)
+	common.ChangeErisRoot(ErisDir)
+	common.InitErisDir()
+
+	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
 	}
-
-	// common is initialized on import so we have to manually override
-	// these variables to ensure that the tests run correctly.
-	config.ChangeErisDir(ErisDir)
-	common.InitErisDir()
 
 	// Don't connect to Docker daemon and don't pull default definitions.
 	if steps == Quick {
@@ -61,7 +58,7 @@ func TestsInit(steps int, services ...string) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	do.Source = "rawgit" //use "rawgit" if ts down
+	do.Source = "rawgit"
 	do.ServicesSlice = services
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))

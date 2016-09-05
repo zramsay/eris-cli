@@ -364,7 +364,7 @@ image          = "test image"
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
 		// [pv]: not "test image", but erisdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DB)},
+		{`Service.Image`, s.Service.Image, path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)},
 		{`Service.Environment`, s.Service.Environment, []string{"CHAIN_ID=" + name}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {

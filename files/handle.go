@@ -96,7 +96,7 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 
 	ip := new(bytes.Buffer)
-	config.GlobalConfig.Writer = ip
+	config.Global.Writer = ip
 
 	do.Operations.Interactive = false
 	do.Operations.PublishAllPorts = true
@@ -121,7 +121,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	hash := do.Hash
 
 	ip := new(bytes.Buffer)
-	config.GlobalConfig.Writer = ip
+	config.Global.Writer = ip
 
 	do.Name = "ipfs"
 	do.Operations.Interactive = false

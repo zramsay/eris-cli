@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -181,55 +180,6 @@ func TestKnownChainBoots(t *testing.T) {
 		t.Fatalf("expected data container to exist")
 	}
 
-	//doMake.Rm = true
-	//doMake.RmD = true
-	//if err := chains.StopChain(doMake); err != nil {
-	//	t.Fatalf("unexpected error removing chain: %v", err)
-	//}
-}
-
-// [zr] deprecate ... ?
-func _TestThrowawayChainBootsAndIsRemoved(t *testing.T) {
-	defer killKeys()
-
-	name := "good"
-	chainName := "temp"
-
-	pkg := loaders.DefaultPackage(name, chainName)
-	doBoot := definitions.NowDo()
-
-	if err := BootServicesAndChain(doBoot, pkg); err != nil {
-		CleanUp(doBoot, pkg)
-		t.Fatalf("error booting chans and services: %v", err)
-	}
-
-	running := util.ErisContainersByType(definitions.TypeChain, true)
-	var thisChain string
-	matcher := regexp.MustCompile(fmt.Sprintf("%s.*", name))
-	for _, chn := range running {
-		if matcher.MatchString(chn.ShortName) {
-			thisChain = chn.ShortName
-		}
-	}
-
-	if thisChain == "" {
-		t.Fatalf("could not find a matching chain running")
-	}
-
-	if !util.Running(definitions.TypeChain, thisChain) {
-		t.Fatalf("expecting chain container to run")
-	}
-	if !util.Exists(definitions.TypeData, thisChain) {
-		t.Fatalf("expected chain data container to exist")
-	}
-
-	CleanUp(doBoot, pkg)
-	if util.Running(definitions.TypeService, thisChain) {
-		t.Fatalf("expected chain stopped")
-	}
-	if util.Exists(definitions.TypeData, thisChain) {
-		t.Fatalf("expected data container does not exist")
-	}
 }
 
 func TestLinkingToServicesAndChains(t *testing.T) {
@@ -283,8 +233,8 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("wrong service name, expected %s got %s", pkg.Name+"_tmp_"+do.Name, do.Service.Name)
 	}
 
-	if do.Service.Image != path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM) {
-		t.Fatalf("wrong service image, expected %s got %s", path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_PM), do.Service.Image)
+	if do.Service.Image != path.Join(version.DefaultRegistry, version.ImagePM) {
+		t.Fatalf("wrong service image, expected %s got %s", path.Join(version.DefaultRegistry, version.ImagePM), do.Service.Image)
 	}
 
 	if !do.Service.AutoData {

@@ -39,7 +39,7 @@ func LoadChainDefinition(chainName string) (*definitions.Chain, error) {
 	}
 
 	//definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), chainName)
-	definition, err := config.LoadViperConfig(filepath.Join(common.ChainsPath, chainName), chainName)
+	definition, err := config.LoadViper(filepath.Join(common.ChainsPath, chainName), chainName)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 
 	setChainDefaults(chain)
 	chain.Service.Name = chain.Name
-	chain.Service.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DB)
+	chain.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
 	chain.Service.AutoData = true
 	chain.Service.Command = ErisChainStart
 
@@ -151,7 +151,7 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.Chain) e
 }
 
 func setChainDefaults(chain *definitions.Chain) error {
-	cfg, err := config.LoadViperConfig(filepath.Join(common.ChainsPath), "default")
+	cfg, err := config.LoadViper(filepath.Join(common.ChainsPath), "default")
 	if err != nil {
 		return err
 	}

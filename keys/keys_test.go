@@ -57,7 +57,7 @@ func TestGetPubKey(t *testing.T) {
 	doPub.Address = testsGenAKey()
 
 	pub := new(bytes.Buffer)
-	config.GlobalConfig.Writer = pub
+	config.Global.Writer = pub
 	if err := GetPubKey(doPub); err != nil {
 		t.Fatalf("error getting pubkey: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestGetPubKey(t *testing.T) {
 	pubkey := util.TrimString(pub.String())
 
 	key := new(bytes.Buffer)
-	config.GlobalConfig.Writer = key
+	config.Global.Writer = key
 	doKey := def.NowDo()
 	doKey.Address = doPub.Address
 	if err := ConvertKey(doKey); err != nil {
@@ -331,7 +331,7 @@ func testListKeys(typ string) []string {
 //returns an addr for tests
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
-	config.GlobalConfig.Writer = addr
+	config.Global.Writer = addr
 	doGen := def.NowDo()
 	tests.IfExit(GenerateKey(doGen))
 

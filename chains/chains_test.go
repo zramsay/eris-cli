@@ -145,7 +145,7 @@ func TestCatChainLocalConfig(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -166,7 +166,7 @@ func TestCatChainContainerConfig(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	const chain = "test-cat-cont-config"
 
@@ -189,7 +189,7 @@ func TestCatChainContainerGenesis(t *testing.T) {
 	defer tests.RemoveAllContainers()
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -348,7 +348,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -369,7 +369,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -391,7 +391,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := tests.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -426,7 +426,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = false
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -475,7 +475,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -524,7 +524,7 @@ chain = "`+chain+`:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -572,7 +572,7 @@ chain = "blah-blah:blah"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_IPFS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -606,7 +606,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -619,7 +619,7 @@ chain = "$chain:sham"
 
 [service]
 name = "sham"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a sham service definition: %v", err)

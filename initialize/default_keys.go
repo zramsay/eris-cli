@@ -27,7 +27,7 @@ This service is usually linked to a chain and/or an application. Its functionali
 status = "unfit for production"
 
 [service]
-image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_KEYS) + `"
+image = "` + path.Join(version.DefaultRegistry, version.ImageKeys) + `"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 #restart = "always"
