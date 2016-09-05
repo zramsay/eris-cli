@@ -154,7 +154,7 @@ func ChangeErisRoot(erisDir string) {
 
 	// Keys Directories
 	KeysDataPath = filepath.Join(KeysPath, "data")
-	KeyNamesPath = filepath.Join(KeysPath, "names")
+	KeysNamesPath = filepath.Join(KeysPath, "names")
 
 	// Scratch Directories (basically eris' cache) (globally coordinated)
 	DataContainersPath = filepath.Join(ScratchPath, "data")
