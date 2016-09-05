@@ -31,7 +31,7 @@ const (
 	Quick
 )
 
-func TestsInit(steps int) (err error) {
+func TestsInit(steps int, services ...string) (err error) {
 	common.ChangeErisRoot(ErisDir)
 	common.InitErisDir()
 
@@ -58,7 +58,7 @@ func TestsInit(steps int) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	do.Source = "rawgit" //use "rawgit" if ts down
+	do.Source = "rawgit"
 	do.ServicesSlice = services
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
