@@ -98,8 +98,7 @@ var keysList = &cobra.Command{
 Specify location with flags --host or ---container.
 
 Latter flag is equivalent to:
-the [eris actions do keys list] command, which itself wraps
-the [eris services exec keys "ls /home/eris/.eris/keys/data"] command.`,
+[eris services exec keys "ls /home/eris/.eris/keys/data"]`,
 	Run: ListKeys,
 }
 

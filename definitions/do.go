@@ -2,7 +2,6 @@ package definitions
 
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -102,7 +101,6 @@ type Do struct {
 	Links []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// Objects
-	Action            *Action
 	Chain             *Chain
 	Operations        *Operation
 	Service           *Service
@@ -114,7 +112,6 @@ type Do struct {
 
 func NowDo() *Do {
 	return &Do{
-		Action:            BlankAction(),
 		Chain:             BlankChain(),
 		Operations:        BlankOperation(),
 		Service:           BlankService(),

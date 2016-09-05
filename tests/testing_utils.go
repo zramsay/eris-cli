@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
@@ -58,7 +57,6 @@ func TestsInit(steps int, services ...string) (err error) {
 	do.Pull = false //don't pull imgs
 	do.Yes = true   //over-ride command-line prompts
 	do.Quiet = true
-	do.Source = "rawgit"
 	do.ServicesSlice = services
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
@@ -66,15 +64,6 @@ func TestsInit(steps int, services ...string) (err error) {
 
 	log.Info("Test init completed. Starting main test sequence now")
 	return nil
-}
-
-func TestActionDefinitionFile(name string) bool {
-	name = strings.Replace(name, " ", "_", -1)
-
-	if util.GetFileByNameAndType("actions", name) == "" {
-		return false
-	}
-	return true
 }
 
 func TestExistAndRun(name, t string, toExist, toRun bool) error {

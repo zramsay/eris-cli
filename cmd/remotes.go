@@ -10,11 +10,7 @@ var Remotes = &cobra.Command{
 	Use:   "remotes",
 	Short: "manage and perform remote machines and services",
 	Long: `display and Manage remote machines which are operating
-various services reachable by the Eris platform
-
-Actions, if configured as such, can utilize remote machines.
-To register and manage remote machines for sending of actions
-to those machines, use this command.`,
+various services reachable by the Eris platform`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 

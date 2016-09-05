@@ -141,8 +141,6 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./pkgs/... && passed Packages
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./actions/... && passed Actions
-    if [ $? -ne 0 ]; then return 1; fi
     # go test ./remotes/... && passed Remotes
     # if [ $? -ne 0 ]; then return 1; fi
     # go test ./apps/... && passed Apps

@@ -79,11 +79,11 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 }
 
 // LoadViper reads the configuration file pointed to by
-// the configPath path and configName filename. 
+// the configPath path and configName filename.
 func LoadViper(configPath, configName string) (*viper.Viper, error) {
 	var errKnown string
 	switch configPath {
-	case dir.ChainsPath, dir.ServicesPath, dir.ActionsPath:
+	case dir.ChainsPath, dir.ServicesPath:
 		errKnown = fmt.Sprintf(`
 
 List available definitions with the [eris %s ls --known] command`, filepath.Base(configPath))

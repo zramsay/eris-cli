@@ -20,14 +20,13 @@ import (
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/common/go/ipfs"
 	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
 // XXX all files in this sequence must be added to both
 // the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
-func dropServiceDefaults(dir, from string, services []string) error {
+func dropServiceDefaults(dir string, services []string) error {
 	for _, service := range services {
 		var err error
 
@@ -37,7 +36,7 @@ func dropServiceDefaults(dir, from string, services []string) error {
 		case "ipfs":
 			err = writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS)
 		default:
-			err = drops([]string{service}, "services", dir, from)
+			err = drops([]string{service}, "services", dir)
 		}
 		if err != nil {
 			return fmt.Errorf("Cannot add default %s: %v", service, err)
@@ -47,18 +46,8 @@ func dropServiceDefaults(dir, from string, services []string) error {
 	return nil
 }
 
-func dropActionDefaults(dir, from string) error {
-	if err := drops(ver.ACTION_DEFINITIONS, "actions", dir, from); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(common.ActionsPath, "do_not_use.toml", defAct); err != nil {
-		return fmt.Errorf("Cannot add default do_not_use: %s.\n", err)
-	}
-	return nil
-}
-
-func dropChainDefaults(dir, from string) error {
-	if err := drops(ver.CHAIN_DEFINITIONS, "chains", dir, from); err != nil {
+func dropChainDefaults(dir string) error {
+	if err := drops(ver.CHAIN_DEFINITIONS, "chains", dir); err != nil {
 		return err
 	}
 
@@ -199,22 +188,18 @@ This is likely a network performance issue with our Docker hosting provider`)
 	return nil
 }
 
-func drops(files []string, typ, dir, from string) error {
-	//to get from rawgit
+func drops(files []string, typ, dir string) error {
+	//to get from github
 	var repo string
 	if typ == "services" {
 		repo = "eris-services"
-	} else if typ == "actions" {
-		repo = "eris-actions"
 	} else if typ == "chains" {
 		repo = "eris-chains"
 	}
 	// on different arch
 	archPrefix := ""
 	if runtime.GOARCH == "arm" {
-		if repo != "eris-actions" {
-			archPrefix = "arm/"
-		}
+		archPrefix = "arm/"
 	}
 
 	if !util.DoesDirExist(dir) {
@@ -223,24 +208,10 @@ func drops(files []string, typ, dir, from string) error {
 		}
 	}
 
-	if from == "toadserver" {
-		for _, file := range files {
-			url := fmt.Sprintf("%s:11113/getfile/%s", ipfs.SexyUrl(), file)
-			log.WithFields(log.Fields{
-				"=>":   file,
-				"from": url,
-				"to":   dir,
-			}).Debug("Moving file")
-			if err := ipfs.DownloadFromUrlToFile(url, file+".toml", dir); err != nil {
-				return err
-			}
-		}
-	} else if from == "rawgit" {
-		for _, file := range files {
-			log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
-			if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
-				return err
-			}
+	for _, file := range files {
+		log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
+		if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
+			return err
 		}
 	}
 	return nil

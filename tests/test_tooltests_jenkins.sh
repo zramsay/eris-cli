@@ -37,7 +37,6 @@ tests() {
   run_test chains
   run_test keys
   run_test pkgs
-  run_test actions
   run_test agent
 
   # run_test remotes

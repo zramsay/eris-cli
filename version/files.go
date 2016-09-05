@@ -2,9 +2,6 @@
 
 package version
 
-// DEPRECATION warning: to be replaced by pulling from toadserver
-// && [eris services ls] which'll query the toadserver for available
-// service definition files which can then be imported.
 var (
 	SERVICE_DEFINITIONS = []string{
 		"bigchaindb",
@@ -20,17 +17,10 @@ var (
 		"mindy",
 		"openbazaar",
 		"rethinkdb",
-		"toadserver",
 		"tinydns",
 		"tor",
 		"watchtower",
 		"do_not_use",
-	}
-
-	ACTION_DEFINITIONS = []string{
-		"chain_info",
-		"dns_register",
-		"keys_list",
 	}
 
 	CHAIN_DEFINITIONS = []string{
