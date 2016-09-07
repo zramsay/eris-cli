@@ -42,13 +42,14 @@ func PinToIPFS(fileHash string) (string, error) {
 		Pinned []string
 	}
 
-	if err = json.Unmarshal(body, &p); err != nil {
+	if err = json.Unmarshal(body, &p); err != nil || len(p.Pinned) == 0 {
 		//XXX hacky
 		if fmt.Sprintf("%v", err) == "invalid character 'p' looking for beginning of value" {
 			return "", fmt.Errorf("The file has already been pinned recusively (probably from ipfs add or eris files put). It is only possible to cache a file you don't already have. see issue #133 for more information")
 		}
 		return "", fmt.Errorf("unexpected error unmarshalling json: %v", err)
 	}
+
 	return p.Pinned[0], nil
 }
 
