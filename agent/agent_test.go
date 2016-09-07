@@ -214,7 +214,6 @@ func testSetupChain(t *testing.T, chainName string) {
 	doCh := definitions.NowDo()
 	doCh.Name = chainName
 	doCh.ChainType = "simplechain"
-	//doCh.AccountTypes = []string{"Full:1"}
 
 	if err := chains.MakeChain(doCh); err != nil {
 		t.Fatalf("error making chain: %v\n", err)

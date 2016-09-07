@@ -1076,7 +1076,6 @@ func create(t *testing.T, chain string) {
 	}
 
 	do := definitions.NowDo()
-	do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml") // TODO remove
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(ChainsPath, chain)

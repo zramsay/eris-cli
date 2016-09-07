@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -38,9 +37,10 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
+	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
-	Chains.AddCommand(chainsHead)
+	Chains.AddCommand(chainsCurrent)
 	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
@@ -91,41 +91,6 @@ $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Partic
 $ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
 $ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
 	Run: MakeChain,
-}
-
-// TODO move helper into `chains start`
-var chainsNew = &cobra.Command{
-	Use:   "new NAME",
-	Short: "create and start a new blockhain",
-	Long: `create and start a new blockchain
-
-The creation process will both create a blockchain on the current machine
-as well as start running that chain.
-
-If you need to update a chain after creation, you can update any of the
-appropriate settings in the chains definition file for the named chain
-(which will be located at ~/.eris/chains/NAME.toml) and then
-utilize [eris chains update NAME -p] to update the blockchain appropriately
-(using the -p flag will force eris not to pull the most recent docker image
-for eris:db).
-
-Will use a default genesis.json from ~/.eris/chains/default/genesis.json
-unless a --genesis or --dir flag is passed.
-
-Will use a default config.toml from ~/.eris/chains/default/config.toml
-unless the --options or --dir flag is passed.
-
-Will use a default eris:db server config from ~/.eris/chains/default/server_conf.toml
-unless the --serverconf or --dir flag is passed.
-
-If you would like to create a genesis.json then please utilize [eris chains make]
-
-You can redefine the chain ports accessible over the network with the --ports flag.
-`,
-	Run: NewChain,
-	Example: `$ eris chains new simplechain --ports 4000 -- map the first port from the definition file to the host port 40000
-$ eris chains new simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
-$ eris chains new simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var chainsList = &cobra.Command{
@@ -184,7 +149,7 @@ $ eris chains ports myChain -- will display all mappings`,
 	Run: PortsChain,
 }
 
-var chainsHead = &cobra.Command{
+var chainsCurrent = &cobra.Command{
 	Use:   "current",
 	Short: "the currently checked out chain",
 	Long: `displays the name of the currently checked out chain
@@ -195,23 +160,47 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
 }
 
-// TODO update helper with `chains new`
-var chainsStart = &cobra.Command{
-	Use:   "start",
-	Short: "start a blockchain",
-	//Aliases: []string{"new"},
-	Long: `start running a blockchain
+var chainsNew = &cobra.Command{
+	Use:   "new NAME",
+	Short: "initialize a new chain",
+	Long: `initialize a new chain
 
-[eris chains start NAME] by default will put the chain into the
-background so its logs will not be viewable from the command line.
+This command has been replaced by [eris chains start --init-dir].
+
+Please update any scripts that rely on [chains new].`,
+	Deprecated: "it has been replaced by [eris chains start NAME --init-dir]",
+	Run:        StartChain,
+}
+
+var chainsStart = &cobra.Command{
+	Use:   "start NAME",
+	Short: "start an existing chain or initialize a new one",
+	Long: `start an existing chain or initialize a new one"
+
+[eris chains start NAME] by default will put an existing chain into
+the background. Its logs will not be viewable from the command line.
+
+To initialize (create) a new chain, the [eris chains make NAME] command
+must first be run. This will (by default) create a simple chain with
+relevant files in $HOME/.eris/chains/NAME. The path to this directory is
+then passed into the [--init-dir] flag like so:
+
+[eris chains start NAME --init-dir ~/.eris/chains/NAME]
+
+Note that it is also possible to use only the name of the relevant
+directory like so (e.g., for complex chains):
+
+[eris chains start NAME --init-dir name_full_000]
 
 To stop the chain use:      [eris chains stop NAME]
 To view a chain's logs use: [eris chains logs NAME]
 
 You can redefine the chain ports accessible over the network with the --ports flag.
-See the [eris chains new] command for examples.
 `,
 	Run: StartChain,
+	Example: `$ eris chains start simplechain --ports 4000 -- map the first port from the config file to the host port 40000
+$ eris chains start simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
+$ eris chains start simplechain --ports 46656:50000 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var chainsLogs = &cobra.Command{
@@ -311,11 +300,17 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 
+	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	buildFlag(chainsNew, do, "publish", "chain")
+	buildFlag(chainsNew, do, "ports", "chain")
+	buildFlag(chainsNew, do, "env", "chain")
+	buildFlag(chainsNew, do, "links", "chain")
+	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
+
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
-	buildFlag(chainsStart, do, "config", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
@@ -351,23 +346,11 @@ func addChainsFlags() {
 	chainsList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers")
 }
 
-// TODO move checks into start chain
-func NewChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	do.Run = true
-	if do.Name != "default" && do.Path == "" { //not default & no --dir given
-		IfExit(errors.New("cannot omit the --dir flag unless chainName == default"))
-	}
-	//IfExit(chns.NewChain(do))
-}
-
 func StartChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
 	// [zr]: yes, eventually
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	do.Run = true
 	IfExit(chns.StartChain(do))
 }
 
@@ -414,23 +397,23 @@ func MakeChain(cmd *cobra.Command, args []string) {
 
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
-		IfExit(fmt.Errorf("\nIf you are using the --known flag the --validators *and* the --accounts flags are both required."))
+		IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required"))
 	}
 	if !do.Known && (do.ChainMakeActs != "" || do.ChainMakeVals != "") {
 		cmd.Help()
-		IfExit(fmt.Errorf("\nIf you are using the --validators and the --accounts flags, --known is also required."))
+		IfExit(fmt.Errorf("If you are using the --validators and the --accounts flags, --known is also required"))
 	}
 	if len(do.AccountTypes) > 0 && do.ChainType != "" {
 		cmd.Help()
-		IfExit(fmt.Errorf("\nThe --account-types flag is incompatible with the --chain-type flag. Please use one or the other."))
+		IfExit(fmt.Errorf("The --account-types flag is incompatible with the --chain-type flag. Please use one or the other"))
 	}
 	if (len(do.AccountTypes) > 0 || do.ChainType != "") && do.Known {
 		cmd.Help()
-		IfExit(fmt.Errorf("\nThe --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these."))
+		IfExit(fmt.Errorf("The --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these"))
 	}
 	if do.Known && do.Wizard {
 		cmd.Help()
-		IfExit(fmt.Errorf("\nThe --known and --wizard flags are incompatible with each other. Please use one one of these."))
+		IfExit(fmt.Errorf("The --known and --wizard flags are incompatible with each other. Please use one one of these"))
 	}
 
 	// if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {

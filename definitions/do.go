@@ -10,7 +10,6 @@ type Do struct {
 	All           bool   `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool   `mapstructure:"," json:"," yaml:"," toml:","`
 	Logrotate     bool   `mapstructure:"," json:"," yaml:"," toml:","`
-	Run           bool   `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool   `mapstructure:"," json:"," yaml:"," toml:","`
 	RmImage       bool   `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -96,7 +95,7 @@ type Do struct {
 	Links []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// Objects
-	Chain             *Chain
+	ChainDefinition   *ChainDefinition
 	Operations        *Operation
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
@@ -107,7 +106,7 @@ type Do struct {
 
 func NowDo() *Do {
 	return &Do{
-		Chain:             BlankChain(),
+		ChainDefinition:   BlankChainDefinition(),
 		Operations:        BlankOperation(),
 		Service:           BlankService(),
 		ServiceDefinition: BlankServiceDefinition(),

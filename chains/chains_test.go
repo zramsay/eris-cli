@@ -11,7 +11,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	//"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/tests"
 	"github.com/eris-ltd/eris-cli/util"
@@ -680,9 +679,7 @@ func create(t *testing.T, chain string) {
 	do := def.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(common.ChainsPath, chain)
-	// TODO remove; blocking on cm
-	//do.ConfigFile = filepath.Join(common.ChainsPath, "default", "config.toml")
+	do.Path = filepath.Join(common.ChainsPath, chain) // --init-dir
 	if err := StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
@@ -692,7 +689,6 @@ func start(t *testing.T, chain string) {
 	do := def.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	//do.Path = filepath.Join(common.ChainsPath, do.Name)
 	if err := StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chain, err)
 	}

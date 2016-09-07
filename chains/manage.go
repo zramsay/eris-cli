@@ -219,7 +219,7 @@ func CurrentChain(do *definitions.Do) error {
 // errors otherwise.
 //
 //  do.Name - chain name
-//  do.Type - "toml", "genesis", "status", "validators", or "toml"
+//  do.Type - "toml", "genesis", "status", "validators"
 //
 func CatChain(do *definitions.Do) error {
 	if do.Name == "" {
@@ -229,14 +229,14 @@ func CatChain(do *definitions.Do) error {
 	switch do.Type {
 	case "genesis":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
-	case "config":
+	case "config": // TODO fix (this breaks)
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	case "status":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"} // TODO refactor when  erisdb-client
 	case "validators":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
+		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"} // is implemented
 	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, "config.toml")) // will only for simplechains
+		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, "config.toml")) // will only work for simplechains
 		if err != nil {
 			return err
 		}
