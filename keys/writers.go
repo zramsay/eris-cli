@@ -2,7 +2,6 @@ package keys
 
 import (
 	"io"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -54,7 +53,6 @@ func ExportKey(do *definitions.Do) error {
 		return err
 	}
 
-	// do.Destination = given by flag default or overriden
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = true
@@ -67,13 +65,14 @@ func ExportKey(do *definitions.Do) error {
 
 		for _, addr := range keyArray {
 			do.Destination = common.KeysPath
-			do.Source = path.Join(common.ErisContainerRoot, "keys", "data", addr)
+			do.Source = path.Join(common.KeysContainerPath, addr)
 			if err := data.ExportData(do); err != nil {
 				return err
 			}
 		}
 	} else {
-		do.Source = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
+		do.Destination = common.KeysDataPath
+		do.Source = path.Join(common.KeysContainerPath, do.Address)
 		if err := data.ExportData(do); err != nil {
 			return err
 		}
@@ -87,11 +86,6 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
-	//src on host
-	//if default given (from flag), join addrs
-	//dest in container
-	do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
-
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
@@ -103,25 +97,15 @@ func ImportKey(do *definitions.Do) error {
 		keyArray := strings.Split(do.Result, ",")
 
 		for _, addr := range keyArray {
-			do.Source = filepath.Join(common.KeysPath, "data", addr)
-			do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", addr)
+			do.Source = filepath.Join(common.KeysDataPath, addr)
+			do.Destination = path.Join(common.KeysContainerPath, addr)
 			if err := data.ImportData(do); err != nil {
 				return err
 			}
 		}
-		//list keys
-		//for each, import data
-
 	} else {
-		if do.Source == filepath.Join(common.KeysPath, "data") {
-			do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
-		} else { // either relative or absolute path given. get absolute
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			do.Source = common.AbsolutePath(wd, do.Source)
-		}
+		do.Source = filepath.Join(common.KeysDataPath, do.Address)
+		do.Destination = path.Join(common.KeysContainerPath, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}
