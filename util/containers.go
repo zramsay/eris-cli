@@ -95,6 +95,11 @@ func initializeCache() {
 			continue
 		}
 
+		// Container doesn't have a name.
+		if len(c.Names) == 0 {
+			continue
+		}
+
 		// Cache names.
 		containerCache.c[key{
 			ShortName: c.Labels[def.LabelShortName],
@@ -153,13 +158,17 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 	}
 
 	for _, c := range containers {
-		name := strings.TrimLeft(c.Names[0], "/")
+		// Container doesn't have a name.
+		if len(c.Names) == 0 {
+			continue
+		}
 
 		// A container belongs to Eris if it has the "ERIS" label.
 		if _, ok := c.Labels[def.LabelEris]; !ok {
 			continue
 		}
 
+                name := strings.TrimLeft(c.Names[0], "/")
 		details := ContainerDetails(name)
 
 		// Cache names.
@@ -200,7 +209,10 @@ func ErisContainersByType(t string, running bool) []*Details {
 	}
 
 	for _, c := range containers {
-		name := strings.TrimLeft(c.Names[0], "/")
+		// Container doesn't have a name.
+		if len(c.Names) == 0 {
+			continue
+		}
 
 		// A container belongs to Eris if it has the "ERIS" label.
 		if _, ok := c.Labels[def.LabelEris]; !ok {
@@ -211,6 +223,7 @@ func ErisContainersByType(t string, running bool) []*Details {
 			continue
 		}
 
+                name := strings.TrimLeft(c.Names[0], "/")
 		details := ContainerDetails(name)
 
 		// Cache names.
