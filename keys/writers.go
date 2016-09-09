@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"bytes"
 	"io"
 	"path"
 	"path/filepath"
@@ -10,8 +11,10 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func GenerateKey(do *definitions.Do) error {
@@ -20,10 +23,25 @@ func GenerateKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
+	// TODO implement
+	// if do.Password {}
 
 	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "gen", "--no-pass"})
 	if err != nil {
 		return err
+	}
+
+	if do.Save {
+		addr := new(bytes.Buffer)
+		addr.ReadFrom(buf)
+
+		doExport := definitions.NowDo()
+		doExport.Address = util.TrimString(addr.String())
+
+		log.WithField("=>", doExport.Address).Warn("Saving key to host")
+		if err := ExportKey(doExport); err != nil {
+			return err
+		}
 	}
 
 	io.Copy(config.Global.Writer, buf)
@@ -110,22 +128,6 @@ func ImportKey(do *definitions.Do) error {
 			return err
 		}
 	}
-
-	return nil
-}
-
-func ConvertKey(do *definitions.Do) error {
-	do.Name = "keys"
-	if err := srv.EnsureRunning(do); err != nil {
-		return err
-	}
-
-	buf, err := srv.ExecHandler(do.Name, []string{"mintkey", "mint", do.Address})
-	if err != nil {
-		return err
-	}
-
-	io.Copy(config.Global.Writer, buf)
 
 	return nil
 }
