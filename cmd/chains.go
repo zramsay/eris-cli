@@ -280,11 +280,12 @@ var chainsCat = &cobra.Command{
 	Short:   "display chain information",
 	Long:    `display chain information`,
 	Aliases: []string{"plop"},
-	Example: `$ eris chains cat simplechain -- display the chain definition file
-$ eris chains cat simplechain config -- display the config.toml file from inside the container
-$ eris chains cat simplechain genesis -- display the genesis.json file from the container
-$ eris chains cat simplechain status -- display chain status
-$ eris chains cat simplechain validators -- display chain validators`,
+	Example: `$ eris chains cat simplechain config -- display the config.toml file from inside the container
+$ eris chains cat simplechain genesis -- display the genesis.json file from the container`,
+	// [zr] these don't work (mintinfo not found in container)
+	// TODO re-implement when eris-client is merged into edb
+	// $ eris chains cat simplechain status -- display chain status
+	// $ eris chains cat simplechain validators -- display chain validators`,
 	Run: CatChain,
 }
 
@@ -445,12 +446,9 @@ func CurrentChain(cmd *cobra.Command, args []string) {
 
 func CatChain(cmd *cobra.Command, args []string) {
 	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
-	do.Type = "toml"
-	if len(args) > 1 {
-		do.Type = args[1]
-	}
+	do.Type = args[1]
 	IfExit(chns.CatChain(do))
 }
 

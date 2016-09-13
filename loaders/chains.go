@@ -25,12 +25,12 @@ const (
 )
 
 // [zr] update this...
-// LoadChainConfigFile reads the "default" then chainName definition files
+// LoadChainDefinition reads the "default" then chainName definition files
 // from the common.ChainsPath directory and returns a chain structure set
-// accordingly. LoadChainConfigFile also returns missing files or definition
+// accordingly. LoadChainDefinition also returns missing files or definition
 // reading errors, if any.
 
-func LoadChainConfigFile(chainName string) (*definitions.ChainDefinition, error) {
+func LoadChainDefinition(chainName string) (*definitions.ChainDefinition, error) {
 	chain := definitions.BlankChainDefinition()
 	chain.Name = chainName
 	chain.Operations.ContainerType = definitions.TypeChain
@@ -76,7 +76,7 @@ func LoadChainConfigFile(chainName string) (*definitions.ChainDefinition, error)
 // and set the CHAIN_ID environment variable. ChainsAsAService
 // can return config load errors.
 func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainConfigFile(chainName)
+	chain, err := LoadChainDefinition(chainName)
 	if err != nil {
 		return nil, err
 	}

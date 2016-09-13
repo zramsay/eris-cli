@@ -93,19 +93,19 @@ func checkChainConfigIsValid(t *testing.T) bool {
 // ----------------------------------------------------------
 // ----------------------------------------------------------
 // ---------------- OLD TESTS -------------------------------
-func TestLoadChainConfigFileEmptyDefault(t *testing.T) {
+func TestLoadChainDefinitionEmptyDefault(t *testing.T) {
 }
-func TestLoadChainConfigFileEmptyDefinition(t *testing.T) {
+func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 }
-func TestLoadChainConfigFileEmptyDefaultAndDefinition(t *testing.T) {
+func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 }
-func TestLoadChainConfigFileOverwrite(t *testing.T) {
+func TestLoadChainDefinitionOverwrite(t *testing.T) {
 }
-func TestLoadChainConfigFileMissingDefault(t *testing.T) {
+func TestLoadChainDefinitionMissingDefault(t *testing.T) {
 }
-func TestLoadChainConfigFileBadFormatDefault(t *testing.T) {
+func TestLoadChainDefinitionBadFormatDefault(t *testing.T) {
 }
-func TestLoadChainConfigFileBadFormatDefinition(t *testing.T) {
+func TestLoadChainDefinitionBadFormatDefinition(t *testing.T) {
 }
 
 // ----------------------------------------------------------
@@ -142,7 +142,7 @@ func _TestHarvestWhatWeCanFromThisExample(t *testing.T) {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainConfigFile(name)
+	d, err := LoadChainDefinition(name)
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}

@@ -64,7 +64,7 @@ func StartChain(do *definitions.Do) error {
 }
 
 func StopChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 }
 
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		log.Error("Cannot start a chain I cannot find")
 		do.Result = "no file"
@@ -195,7 +195,7 @@ func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) er
 		do.Name = name // undo side effects
 
 		for _, chainName := range chain.Dependencies.Chains {
-			chn, err := loaders.LoadChainConfigFile(chainName)
+			chn, err := loaders.LoadChainDefinition(chainName)
 			if err != nil {
 				return err
 			}
@@ -220,7 +220,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	containerName := util.ChainContainerName(do.Name)
 
 	// writes a pointer (similar to checked out chain) for do.Path in the chain main dir
-	// this can then be read by loaders.LoadChainConfigFile(), in order to get the
+	// this can then be read by loaders.LoadChainDefinition(), in order to get the
 	// path to the config.toml that was written in each directory
 	// this allows cli to keep track of a given config.toml (locally)
 	fileName := filepath.Join(ChainsPath, do.Name, "CONFIG_PATH")
@@ -265,7 +265,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		return err
 	}
 
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func whatChainStuffExists(chainName string) (bool, bool, bool, bool) {
 	}
 
 	// does the config file exist?
-	_, err := loaders.LoadChainConfigFile(chainName)
+	_, err := loaders.LoadChainDefinition(chainName)
 	if err == nil {
 		chainConfigExists = true
 	} else {
@@ -423,16 +423,4 @@ func whatChainStuffExists(chainName string) (bool, bool, bool, bool) {
 	}
 
 	return chainDirExists, chainConfigExists, chainDataExists, chainContainerExists
-}
-
-func cleanChainData(name string) error {
-	dir := filepath.Join(DataContainersPath, name)
-	if util.DoesDirExist(dir) {
-		log.WithField("dir", dir).Debug("Chain data already exists in")
-		log.Debug("Overwriting with new data")
-		if err := os.RemoveAll(dir); err != nil {
-			return err
-		}
-	}
-	return nil
 }

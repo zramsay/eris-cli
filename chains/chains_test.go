@@ -132,27 +132,6 @@ func TestExecChainBadCommandLine(t *testing.T) {
 	}
 }
 
-func TestCatChainLocalConfig(t *testing.T) {
-	defer tests.RemoveAllContainers()
-
-	buf := new(bytes.Buffer)
-	config.Global.Writer = buf
-
-	create(t, chainName)
-	defer kill(t, chainName)
-
-	do := def.NowDo()
-	do.Name = chainName
-	do.Type = "toml"
-	if err := CatChain(do); err != nil {
-		t.Fatalf("expected getting a local config to succeed, got %v", err)
-	}
-
-	if buf.String() != tests.FileContents(filepath.Join(erisDir, "chains", chainName, "config.toml")) { // only works for [simplechain]s
-		t.Fatalf("expected the local config file to match, got %v", buf.String())
-	}
-}
-
 func TestCatChainContainerConfig(t *testing.T) {
 	defer tests.RemoveAllContainers()
 

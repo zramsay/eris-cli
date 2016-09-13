@@ -3,7 +3,6 @@ package chains
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	// "github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -139,7 +137,7 @@ func MakeChain(do *definitions.Do) error {
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
 func InspectChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -163,7 +161,7 @@ func InspectChain(do *definitions.Do) error {
 //  do.Tail    - number of lines to display (can be "all") (optional)
 //
 func LogsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -219,7 +217,7 @@ func CurrentChain(do *definitions.Do) error {
 // errors otherwise.
 //
 //  do.Name - chain name
-//  do.Type - "toml", "genesis", "status", "validators"
+//  do.Type - "genesis", "config"
 //
 func CatChain(do *definitions.Do) error {
 	if do.Name == "" {
@@ -229,19 +227,13 @@ func CatChain(do *definitions.Do) error {
 	switch do.Type {
 	case "genesis":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
-	case "config": // TODO fix (this breaks)
+	case "config":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	case "status":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"} // TODO refactor when  erisdb-client
-	case "validators":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"} // is implemented
-	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, "config.toml")) // will only work for simplechains
-		if err != nil {
-			return err
-		}
-		config.Global.Writer.Write(cat)
-		return nil
+	// [zr] TODO re-implement with eris-client ... mintinfo was remove from container
+	// case "status":
+	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
+	// case "validators":
+	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown cat subcommand %q", do.Type)
 	}
@@ -263,7 +255,7 @@ func CatChain(do *definitions.Do) error {
 //  do.Name - name of the chain to display port mappings for (required)
 //
 func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -277,7 +269,7 @@ func PortsChain(do *definitions.Do) error {
 }
 
 func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
@@ -298,7 +290,7 @@ func UpdateChain(do *definitions.Do) error {
 }
 
 func RemoveChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainConfigFile(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
