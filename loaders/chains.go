@@ -58,7 +58,11 @@ func LoadChainConfigFile(chainName string) (*definitions.ChainDefinition, error)
 		addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
 	}
 
-	checkChainNames(chain)
+	// check chain names
+	chain.Service.Name = chain.Name
+	chain.Operations.SrvContainerName = util.ChainContainerName(chain.Name)
+	chain.Operations.DataContainerName = util.DataContainerName(chain.Name)
+
 	log.WithFields(log.Fields{
 		"chain name":  chain.Name,
 		"environment": chain.Service.Environment,
@@ -134,10 +138,4 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.ChainDef
 	}
 
 	return nil
-}
-
-func checkChainNames(chain *definitions.ChainDefinition) {
-	chain.Service.Name = chain.Name
-	chain.Operations.SrvContainerName = util.ChainContainerName(chain.Name)
-	chain.Operations.DataContainerName = util.DataContainerName(chain.Name)
 }

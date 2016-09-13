@@ -290,9 +290,12 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	configOpts := buf.String()
 
-	// set chainid and other vars
+	// set chain name and other vars
 	envVars := []string{
 		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
+		// [zr] replacement for CHAIN_ID is CHAIN_NAME
+		// TODO remove CHAIN_ID once the fix in edb is merged
+		fmt.Sprintf("CHAIN_NAME=%s", chain.Name),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
 	}
