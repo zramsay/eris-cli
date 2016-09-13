@@ -60,7 +60,6 @@ func StartChain(do *definitions.Do) error {
 		return err
 
 	}
-	return nil
 }
 
 func StopChain(do *definitions.Do) error {
@@ -371,7 +370,6 @@ func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
 			return "", fmt.Errorf("directory given on [--init-dir] could not be determined")
 		}
 	}
-	return "", nil
 }
 
 // similar check to checking the error when calling

@@ -84,10 +84,9 @@ start your shiny new chain.
 If you have any questions on eris chains make, please see the eris-cm (chain manager)
 documentation here:
 https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/`,
-	Example: `$ eris chains make myChain -- will use the chain-making wizard and make your chain named myChain (interactive)
-$ eris chains make myChain --chain-type=simplechain --  will use the chain type definition files to make your chain named myChain (non-interactive)
+	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
+$ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive) -- use the [--chain-type] flag to specify chain types
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
-$ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 --chain-type=simplechain -- account types trump chain types, this command will use the flags to make the chain (non-interactive)
 $ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
 $ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
 	Run: MakeChain,
@@ -417,14 +416,12 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		IfExit(fmt.Errorf("The --known and --wizard flags are incompatible with each other. Please use one one of these"))
 	}
 
-	// if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
-	// [zr] this line had fixed #865 (see #920) ... but likely no longer needed
 	if do.Wizard {
 		config.Global.InteractiveWriter = os.Stdout
 		config.Global.InteractiveErrorWriter = os.Stderr
 		do.Operations.Terminal = true
 	} else if len(do.AccountTypes) == 0 && do.ChainType == "" && do.ChainMakeActs == "" && do.ChainMakeVals == "" {
-		// no flags given assume simplechain => [zr] check all edge cases!
+		// no flags given assume simplechain
 		do.ChainType = "simplechain"
 	}
 

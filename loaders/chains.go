@@ -24,12 +24,9 @@ const (
 	ErisChainNew   = "new"
 )
 
-// [zr] update this...
-// LoadChainDefinition reads the "default" then chainName definition files
-// from the common.ChainsPath directory and returns a chain structure set
-// accordingly. LoadChainDefinition also returns missing files or definition
-// reading errors, if any.
-
+// LoadChainDefinition finds the path to the chains config.toml by reading
+// from CONFIG_PATH (written in func setupChain()), and returns a chain
+// structure set accordingly, along with any errors
 func LoadChainDefinition(chainName string) (*definitions.ChainDefinition, error) {
 	chain := definitions.BlankChainDefinition()
 	chain.Name = chainName
@@ -49,7 +46,6 @@ func LoadChainDefinition(chainName string) (*definitions.ChainDefinition, error)
 		return nil, err
 	}
 
-	// remove ?
 	if err = MarshalChainDefinition(definition, chain); err != nil {
 		return nil, err
 	}
@@ -88,7 +84,7 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 
 	s := &definitions.ServiceDefinition{
 		Name:         chain.Name,
-		ServiceID:    chain.Chain.ChainID, //  hmm
+		ServiceID:    chain.Name, // [zr] this is probably ok for now...if ServiceID is even necessary
 		Dependencies: &definitions.Dependencies{Services: []string{"keys"}},
 		Service:      chain.Service,
 		Operations:   chain.Operations,
@@ -101,7 +97,8 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 	ServiceFinalizeLoad(s)
 
 	s.Operations.SrvContainerName = util.ChainContainerName(chainName)
-	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName) // TODO fix
+	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName) // TODO remove when edb merges the following env var
+	s.Service.Environment = append(s.Service.Environment, "CHAIN_NAME="+chainName)
 	return s, nil
 }
 
