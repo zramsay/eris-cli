@@ -24,7 +24,6 @@ See https://docs.erisindustries.com/documentation/eris-keys/ for more info.`,
 
 func buildKeysCommand() {
 	Keys.AddCommand(keysGen)
-	Keys.AddCommand(keysPub)
 	Keys.AddCommand(keysExport)
 	Keys.AddCommand(keysImport)
 	Keys.AddCommand(keysList)
@@ -39,13 +38,6 @@ var keysGen = &cobra.Command{
 Key is created in keys data container and can be exported to host
 by using the [--save] flag or by running [eris keys export ADDR].`,
 	Run: GenerateKey,
-}
-
-var keysPub = &cobra.Command{
-	Use:   "pub ADDR",
-	Short: "returns a machine readable pubkey given an address",
-	Long:  `returns a machine readable pubkey given an address`,
-	Run:   GetPubKey,
 }
 
 var keysExport = &cobra.Command{
@@ -104,12 +96,6 @@ func GenerateKey(cmd *cobra.Command, args []string) {
 	// if do.Password {}
 
 	IfExit(keys.GenerateKey(do))
-}
-
-func GetPubKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Address = strings.TrimSpace(args[0])
-	IfExit(keys.GetPubKey(do))
 }
 
 func ExportKey(cmd *cobra.Command, args []string) {

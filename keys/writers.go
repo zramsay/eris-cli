@@ -49,22 +49,6 @@ func GenerateKey(do *definitions.Do) error {
 	return nil
 }
 
-func GetPubKey(do *definitions.Do) error {
-	do.Name = "keys"
-	if err := srv.EnsureRunning(do); err != nil {
-		return err
-	}
-
-	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "pub", "--addr", do.Address})
-	if err != nil {
-		return err
-	}
-
-	io.Copy(config.Global.Writer, buf)
-
-	return nil
-}
-
 func ExportKey(do *definitions.Do) error {
 	do.Name = "keys"
 	if err := srv.EnsureRunning(do); err != nil {
