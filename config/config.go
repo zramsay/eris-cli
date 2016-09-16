@@ -95,7 +95,6 @@ List available definitions with the [eris %s ls --known] command`, filepath.Base
 	// Don't use os.Stat() for checking file existence because there might
 	// be a selection of supported definition files, e.g.: keys.toml,
 	// keys.json, keys.yaml, etc.
-
 	if matches, _ := filepath.Glob(filepath.Join(configPath, configName+".*")); len(matches) == 0 {
 		return nil, fmt.Errorf("Unable to find the %q definition: %v%s", configName, os.ErrNotExist, errKnown)
 	}

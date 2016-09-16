@@ -21,7 +21,7 @@ var servDir = filepath.Join(erisDir, "services")
 var chnDir = filepath.Join(erisDir, "chains")
 var chnDefDir = filepath.Join(chnDir, "default")
 
-// TODO [zr] remove toadserver references/tests
+// TODO refactor tests
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)

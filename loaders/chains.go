@@ -120,7 +120,6 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.ChainDef
 	}
 
 	util.Merge(chain.Service, chnTemp.Service)
-
 	if len(chnTemp.Service.Ports) != 0 {
 		chain.Service.Ports = chnTemp.Service.Ports
 	}

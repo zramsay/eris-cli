@@ -20,7 +20,7 @@ environment:
     secure: Lo717dojMJUNytpQPZWwyw==
   AWS_SECURITY_GROUP:
     secure: Jie7WuAzjiHVp7tX8MfaSQ==
-  ECM_BRANCH: develop # should be 'deprecate-chains-new-651' but stack tests are skipped
+  ECM_BRANCH: develop
   EPM_BRANCH: develop
 
 build_script:

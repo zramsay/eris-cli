@@ -44,7 +44,7 @@ func StartChain(do *definitions.Do) error {
 		// [zr] TODO get rid of loaders.ErisChainNew => to discuss with [ben]
 
 	} else { // [eris chains start whatever] (without init-dir)
-		if !chainDirExists || !chainConfigExists { // checking for config existence could be cleaner & has awkward deplication
+		if !chainDirExists || !chainConfigExists {
 			log.Info("Neither the assumed chain directory or config file exists locally, checking for existence of chain data container")
 		}
 
@@ -56,7 +56,7 @@ func StartChain(do *definitions.Do) error {
 			log.Info("Chain process container does not exist, creating it")
 		}
 
-		_, err := startChain(do, false) // [zr] why are we ignoring the buffer?
+		_, err := startChain(do, false)
 		return err
 
 	}
@@ -244,9 +244,7 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
 
-	// containerDst should not be do.ChainID but rather do.Name
 	containerDst := path.Join(ErisContainerRoot, "chains", do.Name)
-
 	hostSrc := do.Path
 
 	// copy from host to container
@@ -356,8 +354,7 @@ func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
 		} else {
 			return pathGiven, nil
 		}
-	} else { // figure out actual path
-
+	} else {
 		chainDirPathSimple := filepath.Join(ChainsPath, pathGiven)               // if simplechain, pathGiven == chainName
 		chainDirPathNotSimple := filepath.Join(ChainsPath, chainName, pathGiven) // ignored if simplechain
 
@@ -372,8 +369,6 @@ func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
 	}
 }
 
-// similar check to checking the error when calling
-// loaders.LoadChainConfig()
 func doesConfigExist(dirPath string) bool {
 	var configExists bool
 	pathToConfig := filepath.Join(dirPath, "config.toml")

@@ -221,7 +221,7 @@ func CurrentChain(do *definitions.Do) error {
 //
 func CatChain(do *definitions.Do) error {
 	if do.Name == "" {
-		return fmt.Errorf("a chain name is required") // [zr] we need more of these checks...ie., pull them out of cmd/whatever.go ... it also forces tests to be moar explicit
+		return fmt.Errorf("a chain name is required")
 	}
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
 	switch do.Type {
@@ -229,7 +229,7 @@ func CatChain(do *definitions.Do) error {
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// [zr] TODO re-implement with eris-client ... mintinfo was remove from container
+	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
 	// case "status":
 	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	// case "validators":

@@ -76,7 +76,7 @@ func TestRestartChain(t *testing.T) {
 	if util.Running(def.TypeChain, chainName) {
 		t.Fatalf("expecting chain doesn't run")
 	}
-	if !util.Exists(def.TypeData, chainName) { // [zr] data container _should_ exist!
+	if !util.Exists(def.TypeData, chainName) {
 		t.Fatalf("expecting data container exists")
 	}
 

@@ -4,8 +4,8 @@ language: go
 
 env:
   global:
-    - ECM_BRANCH=deprecate-chains-new-651
-    - EPM_BRANCH=deprecate-chains-new-651
+    - ECM_BRANCH=develop
+    - EPM_BRANCH=develop
     - TEST_ON_MACOSX=true
   matrix:
     - SKIP_STACK=true

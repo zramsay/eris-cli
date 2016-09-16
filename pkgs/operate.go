@@ -82,10 +82,7 @@ func RunPackage(do *definitions.Do) error {
 //  pkg.Dependencies.Services  - slice of dependent services to boot before the eris-pm runs (appends to do.ServicesSlice)
 //  pkg.ChainName - chain name from the pkg overwrites do.ChainName if do.ChainName blank
 //
-
-// XXX this function needs a refactor.
 func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
-	// check that chain is running?
 
 	var err error
 	var srvs []*definitions.ServiceDefinition
