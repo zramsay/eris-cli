@@ -88,7 +88,7 @@ func TestDeployContract(t *testing.T) {
 	defer kill(t, "keys", true)
 
 	testSetupChain(t, chainName) // has test for IsChainRunning
-	defer testKillChain(t, chainName)
+	defer testStopChain(t, chainName)
 
 	doKey := definitions.NowDo()
 	doKey.Container = true
@@ -214,14 +214,13 @@ func testSetupChain(t *testing.T, chainName string) {
 	doCh := definitions.NowDo()
 	doCh.Name = chainName
 	doCh.ChainType = "simplechain"
-	doCh.AccountTypes = []string{"Full:1"}
 
 	if err := chains.MakeChain(doCh); err != nil {
 		t.Fatalf("error making chain: %v\n", err)
 	}
 
 	doCh.Path = filepath.Join(common.ChainsPath, chainName)
-	if err := chains.NewChain(doCh); err != nil {
+	if err := chains.StartChain(doCh); err != nil {
 		t.Fatalf("error new-ing chain: %v\n", err)
 	}
 
@@ -230,12 +229,12 @@ func testSetupChain(t *testing.T, chainName string) {
 	}
 }
 
-func testKillChain(t *testing.T, chainName string) {
+func testStopChain(t *testing.T, chainName string) {
 	doCh := definitions.NowDo()
 	doCh.Name = chainName
 	doCh.Rm = true
 	doCh.Force = true
-	if err := chains.KillChain(doCh); err != nil {
+	if err := chains.StopChain(doCh); err != nil {
 		t.Fatalf("error killing chain: %v", err)
 	}
 }

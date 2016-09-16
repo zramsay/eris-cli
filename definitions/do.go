@@ -10,7 +10,6 @@ type Do struct {
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmImage       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -28,8 +27,8 @@ type Do struct {
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	LocalCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Save          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Password      bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
+	Wizard        bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","`
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	Address       string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -40,9 +39,6 @@ type Do struct {
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -71,12 +67,6 @@ type Do struct {
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	// update
-	Branch string `mapstructure:"," json:"," yaml:"," toml:","`
-	// XXX below requested by @kootpv. to implement once command is stable
-	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
-	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
-
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
 	ChnDirs    bool `mapstructure:"," json:"," yaml:"," toml:","`
@@ -103,7 +93,7 @@ type Do struct {
 	Links []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// Objects
-	Chain             *Chain
+	ChainDefinition   *ChainDefinition
 	Operations        *Operation
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
@@ -114,7 +104,7 @@ type Do struct {
 
 func NowDo() *Do {
 	return &Do{
-		Chain:             BlankChain(),
+		ChainDefinition:   BlankChainDefinition(),
 		Operations:        BlankOperation(),
 		Service:           BlankService(),
 		ServiceDefinition: BlankServiceDefinition(),

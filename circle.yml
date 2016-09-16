@@ -5,7 +5,6 @@ machine:
     REPO: ${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     ECM_BRANCH: develop
     EPM_BRANCH: develop
-    MINDY_BRANCH: master
     DOCKER_VERSION: 1.9.1
     DOCKER_MACHINE_VERSION: 0.7.0
   post:

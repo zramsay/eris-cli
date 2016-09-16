@@ -32,15 +32,15 @@ type Config struct {
 // Settings describes settings loadable from "eris.toml"
 // configuration file.
 type Settings struct {
-	IpfsHost       string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
-	IpfsPort       string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
-	CompilersHost  string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
-	CompilersPort  string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
-	DockerHost     string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
-	DockerCertPath string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
-	CrashReport    string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
+	IpfsHost          string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
+	IpfsPort          string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
+	CompilersHost     string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
+	CompilersPort     string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
+	DockerHost        string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
+	DockerCertPath    string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
+	CrashReport       string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 	ImagesPullTimeout string `json:"ImagesPullTimeout,omitempty" yaml:"ImagesPullTimeout,omitempty" toml:"ImagesPullTimeout,omitempty"`
-	Verbose        bool
+	Verbose           bool
 
 	// Image defaults.
 	DefaultRegistry string `json:"DefaultRegistry,omitempty" yaml:"DefaultRegistry,omitempty" toml:"DefaultRegistry,omitempty"`
@@ -83,7 +83,7 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 func LoadViper(configPath, configName string) (*viper.Viper, error) {
 	var errKnown string
 	switch configPath {
-	case dir.ChainsPath, dir.ServicesPath:
+	case dir.ServicesPath:
 		errKnown = fmt.Sprintf(`
 
 List available definitions with the [eris %s ls --known] command`, filepath.Base(configPath))

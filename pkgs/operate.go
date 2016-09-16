@@ -18,7 +18,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	// "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -84,6 +83,7 @@ func RunPackage(do *definitions.Do) error {
 //  pkg.ChainName - chain name from the pkg overwrites do.ChainName if do.ChainName blank
 //
 func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
+
 	var err error
 	var srvs []*definitions.ServiceDefinition
 	do.ServicesSlice = append(do.ServicesSlice, pkg.Dependencies.Services...)
@@ -125,19 +125,14 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 			log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
 			err = bootChain(head, do)
 		} else { // if no chain is checked out and no --chain given, default to a throwaway
-			log.Warn("No chain was given, booting a throwaway chain")
-			err = bootThrowAwayChain(pkg.Name, do)
+			log.Warn("No chain was given, please start a chain")
+			err = fmt.Errorf("no more throwaway chains")
 		}
-	case "temp", "temporary", "throw", "throwaway":
-		log.Info("No chain was given, booting a throwaway chain")
-		err = bootThrowAwayChain(pkg.Name, do)
 	default:
 		log.WithField("=>", pkg.ChainName).Info("No chain flag used. Booting chain from package file")
 		err = bootChain(do.ChainName, do)
 	}
 
-	// populate pkg.ChainName from do.Chain.Name that was added during the bootChain/bootThrowAwayChain func
-	pkg.ChainName = do.Chain.Name
 	if err != nil {
 		return err
 	}
@@ -212,39 +207,15 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	return nil
 }
 
-// controls the eris pkgs tear down function after an eris pkgs do. destroys throwaway chains.
+// controls the eris pkgs tear down function after an eris pkgs do.
 // runs export process to pull everything out of data containers.
 //
 //  do.Operations      - must be populated
-//  do.Chain.ChainType - if == "throwaway" then will remove; otherwise no effect
 //  do.Rm              - remove the service container (defaults to true; false useful for debug and testing purposes only)
 //  do.RmD             - remove the data container (defaults to true; false useful for debug and testing purposes only)
 //
 func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 	log.Info("Cleaning up")
-
-	// destroy throwaway chain
-	if do.Chain.ChainType == "throwaway" {
-		log.WithField("=>", do.Chain.Name).Debug("Destroying throwaway chain")
-		doRm := definitions.NowDo()
-		doRm.Operations = do.Operations
-		doRm.Name = do.Chain.Name
-		doRm.Rm = true
-		doRm.RmD = true
-		chains.KillChain(doRm)
-
-		latentDir := filepath.Join(common.DataContainersPath, do.Chain.Name)
-		latentFile := filepath.Join(common.ChainsPath, do.Chain.Name+".toml")
-		log.WithFields(log.Fields{
-			"dir":  latentDir,
-			"file": latentFile,
-		}).Debug("Removing latent dir and file")
-
-		os.RemoveAll(latentDir)
-		os.Remove(latentFile)
-	} else {
-		log.Debug("No throwaway chain to destroy")
-	}
 
 	// removal of local compiler; [csk] note we may not want to remove the container for performance reasons
 	if do.LocalCompiler {
@@ -284,7 +255,7 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 // boots chain as an eris chain or an eris service depending on the name. assumes a do.Operations struct has
 // been properly populated.
 func bootChain(name string, do *definitions.Do) error {
-	do.Chain.ChainType = "service" // setting this for tear down purposes
+	do.ChainDefinition.ChainType = "service" // setting this for tear down purposes
 	startChain := definitions.NowDo()
 	startChain.Name = name
 	startChain.Operations = do.Operations
@@ -296,15 +267,15 @@ func bootChain(name string, do *definitions.Do) error {
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
-		do.Chain.ChainType = "chain" // setting this for tear down purposes
-	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains)
+		do.ChainDefinition.ChainType = "chain" // setting this for tear down purposes [zr] should no longer be needed
+	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains) [zr] this should go too
 	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
 		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
-		if err := chains.NewChain(startChain); err != nil {
+		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
-		do.Chain.ChainType = "chain" // setting this for tear down purposes
+		do.ChainDefinition.ChainType = "chain" // setting this for tear down purposes
 	// known service; make sure service is running
 	case util.IsService(name, false):
 		log.WithField("name", name).Info("Chain exists as a service")
@@ -314,40 +285,15 @@ func bootChain(name string, do *definitions.Do) error {
 		if err := services.StartService(startService); err != nil {
 			return err
 		}
-		do.Chain.ChainType = "service" // setting this for tear down purposes
+		do.ChainDefinition.ChainType = "service" // setting this for tear down purposes
 	default:
 		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command")
 	}
 
-	do.Chain.Name = name // setting this for tear down purposes
+	do.ChainDefinition.Name = name // setting this for tear down purposes
 
 	// let the chain boot properly
 	time.Sleep(5 * time.Second)
-	return nil
-}
-
-// if a throwaway chain is noted; booth that chain
-//
-//  do.Name - temp name for throwaway chain reference
-//
-func bootThrowAwayChain(name string, do *definitions.Do) error {
-	do.Chain.ChainType = "throwaway"
-
-	tmp := do.Name
-	do.Name = name
-	err := chains.ThrowAwayChain(do)
-	if err != nil {
-		do.Name = tmp
-		return err
-	}
-
-	do.Chain.Name = do.Name // setting this for tear down purposes
-	log.WithField("=>", do.Name).Debug("Throwaway chain booted")
-
-	// let the chain boot properly
-	time.Sleep(5 * time.Second)
-
-	do.Name = tmp
 	return nil
 }
 
@@ -355,7 +301,7 @@ func bootThrowAwayChain(name string, do *definitions.Do) error {
 func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
-	if do.Chain.ChainType == "service" {
+	if do.ChainDefinition.ChainType == "service" {
 		newLink = util.ServiceContainerName(pkg.ChainName) + ":" + "chain"
 	} else {
 		newLink = util.ChainContainerName(pkg.ChainName) + ":" + "chain"

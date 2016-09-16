@@ -50,11 +50,7 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 		cmd.Flags().BoolVarP(&do.File, "file", "", false, fmt.Sprintf("remove %s definition file as well as %s container", typ, typ))
 	case "services":
 		cmd.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	case "config":
-		cmd.PersistentFlags().StringVarP(&do.ConfigFile, "config", "c", "", "main config file (config.toml) for the chain")
-	case "serverconf":
-		cmd.PersistentFlags().StringVarP(&do.ServerConf, "serverconf", "", "", "pass in a server_conf.toml file")
-	case "dir":
-		cmd.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
+	case "init-dir":
+		cmd.PersistentFlags().StringVarP(&do.Path, "init-dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	}
 }

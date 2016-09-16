@@ -21,6 +21,8 @@ var servDir = filepath.Join(erisDir, "services")
 var chnDir = filepath.Join(erisDir, "chains")
 var chnDefDir = filepath.Join(chnDir, "default")
 
+// TODO refactor tests
+
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -60,12 +62,6 @@ func TestDropServiceDefaults(t *testing.T) {
 	}
 }
 
-func TestDropChainDefaults(t *testing.T) {
-	if err := testDrops(chnDir, "chains"); err != nil {
-		ifExit(fmt.Errorf("errors dropping chains: %v\n", err))
-	}
-}
-
 func testDrops(dir, kind string) error {
 	var dirGit = filepath.Join(dir, "git")
 
@@ -76,10 +72,6 @@ func testDrops(dir, kind string) error {
 	switch kind {
 	case "services":
 		if err := dropServiceDefaults(dirGit, ver.SERVICE_DEFINITIONS); err != nil {
-			ifExit(err)
-		}
-	case "chains":
-		if err := dropChainDefaults(dirGit); err != nil {
 			ifExit(err)
 		}
 	}

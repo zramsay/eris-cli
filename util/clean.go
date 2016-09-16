@@ -121,8 +121,6 @@ func cleanLatentChainData() error {
 	dontDelete := map[string]bool{
 		"account-types": true,
 		"chain-types":   true,
-		"default":       true,
-		"default.toml":  true,
 		"HEAD":          true,
 	}
 

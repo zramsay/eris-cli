@@ -2,7 +2,6 @@ package chains
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -20,30 +18,51 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
-	"github.com/pborman/uuid"
 )
 
-func NewChain(do *definitions.Do) error {
-	dir := filepath.Join(DataContainersPath, do.Name)
-	if util.DoesDirExist(dir) {
-		log.WithField("dir", dir).Debug("Chain data already exists in")
-		log.Debug("Overwriting with new data")
-		if err := os.RemoveAll(dir); err != nil {
+func StartChain(do *definitions.Do) error {
+	chainDirExists, chainConfigExists, chainDataExists, chainContainerExists := whatChainStuffExists(do.Name)
+
+	if do.Path != "" { // [eris chains start whatever --init-dir ~/.eris/chains/whatever]
+		var err error
+
+		do.Path, err = chainsPathSimplifier(do.Name, do.Path)
+		if err != nil {
 			return err
 		}
+
+		if !chainDirExists {
+			return fmt.Errorf("The chain directory provided does not exist, re-run with an existing directory")
+		}
+
+		if chainDataExists || chainContainerExists { // these ought not be existing if --init-dir given
+			return fmt.Errorf("Data container or chain container exists, re-run without [--init-dir]")
+		}
+
+		log.WithField("=>", do.Name).Debug("Chain does not exist, initializing it")
+		return setupChain(do, loaders.ErisChainNew)
+		// [zr] TODO get rid of loaders.ErisChainNew => to discuss with [ben]
+
+	} else { // [eris chains start whatever] (without init-dir)
+		if !chainDirExists || !chainConfigExists {
+			log.Info("Neither the assumed chain directory or config file exists locally, checking for existence of chain data container")
+		}
+
+		if !chainDataExists {
+			return fmt.Errorf("No data container found, please start a chain with [--init-dir]")
+		}
+
+		if !chainContainerExists {
+			log.Info("Chain process container does not exist, creating it")
+		}
+
+		_, err := startChain(do, false)
+		return err
+
 	}
-
-	// for now we just let setupChain force do.ChainID = do.Name
-	// and we overwrite using jq in the container
-	log.WithField("=>", do.Name).Debug("Setting up chain")
-	return setupChain(do, "new") // move away from loaders
 }
 
-func InstallChain(do *definitions.Do) error {
-	return setupChain(do, loaders.ErisChainInstall)
-}
-
-func KillChain(do *definitions.Do) error {
+func StopChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
@@ -61,43 +80,11 @@ func KillChain(do *definitions.Do) error {
 		log.Info("Chain not currently running. Skipping")
 	}
 
-	if do.Rm {
-		if err := perform.DockerRemove(chain.Service, chain.Operations, do.RmD, do.Volumes, do.Force); err != nil {
-			return err
-		}
-	}
-
 	return nil
-}
-
-func StartChain(do *definitions.Do) error {
-	_, err := startChain(do, false)
-
-	return err
 }
 
 func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
-}
-
-// Throw away chains are used for eris contracts
-func ThrowAwayChain(do *definitions.Do) error {
-	do.Name = do.Name + "_" + strings.Split(uuid.New(), "-")[0]
-	do.Path = filepath.Join(ChainsPath, "default")
-	log.WithFields(log.Fields{
-		"=>":   do.Name,
-		"path": do.Path,
-	}).Debug("Making a throaway chain")
-
-	if err := NewChain(do); err != nil {
-		return err
-	}
-
-	log.WithField("=>", do.Name).Debug("Throwaway chain created")
-	do.Run = true  // turns on edb api
-	StartChain(do) // XXX [csk]: may not need to do this now that New starts....
-	log.WithField("=>", do.Name).Debug("Throwaway chain started")
-	return nil
 }
 
 func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
@@ -121,11 +108,8 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 
 	chain.Service.Command = loaders.ErisChainStart
 	util.Merge(chain.Operations, do.Operations)
-	chain.Service.Environment = append(chain.Service.Environment, "CHAIN_ID="+chain.ChainID)
+
 	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
-	if do.Run {
-		chain.Service.Environment = append(chain.Service.Environment, "ERISDB_API=true")
-	}
 	chain.Service.Links = append(chain.Service.Links, do.Links...)
 
 	log.WithField("=>", chain.Service.Name).Info("Starting a chain")
@@ -181,7 +165,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 
 // boot chain dependencies
 // TODO: this currently only supports simple services (with no further dependencies)
-func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
+func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) error {
 	if do.Logrotate {
 		chain.Dependencies.Services = append(chain.Dependencies.Services, "logrotate")
 	}
@@ -223,7 +207,9 @@ func bootDependencies(chain *definitions.Chain, do *definitions.Do) error {
 }
 
 // the main function for setting up a chain container
-// handles both "new" and "fetch" - most of the differentiating logic is in the container
+// handles both "new" and "fetch" - most of the differentiating logic is in the container <= [zr] huh?
+// should only be ever called on [eris chains start someChain --init-dir ~/.eris/chains/someChain/someChain_full_000]
+// or without the last dir for a simplechain.
 func setupChain(do *definitions.Do, cmd string) (err error) {
 	// do.Name is mandatory
 	if do.Name == "" {
@@ -231,28 +217,15 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 
 	containerName := util.ChainContainerName(do.Name)
-	if do.ChainID == "" {
-		do.ChainID = do.Name
-	}
 
-	if do.Path != "" {
-		src, errSaved := os.Stat(do.Path)
-		if errSaved != nil || !src.IsDir() {
-			log.WithField("path", do.Path).Info("Path does not exist or not a directory")
-			log.WithField("path", "$HOME/.eris/chains/"+do.Path).Info("Trying")
-			do.Path, err = util.ChainsPathChecker(do.Path)
-			if err != nil {
-				// Output the error of first attempt, not the second, because
-				// this "stat /Users/peter/.eris/chains/Users/peter/.eris/simplechain:
-				// no such file or directory" is ugly.
-				return errSaved
-			}
-		}
-	} else if do.GenesisFile == "" && len(do.ConfigOpts) == 0 {
-		// NOTE: this expects you to have ~/.eris/chains/default/ (ie. to have run `eris init`)
-		do.Path, err = util.ChainsPathChecker("default")
-		if err != nil {
-			return err
+	// writes a pointer (similar to checked out chain) for do.Path in the chain main dir
+	// this can then be read by loaders.LoadChainDefinition(), in order to get the
+	// path to the config.toml that was written in each directory
+	// this allows cli to keep track of a given config.toml (locally)
+	fileName := filepath.Join(ChainsPath, do.Name, "CONFIG_PATH")
+	if _, err = os.Stat(fileName); err != nil {
+		if err := ioutil.WriteFile(fileName, []byte(do.Path), 0666); err != nil {
+			return fmt.Errorf("error writing CONFIG_PATH file: %v", err)
 		}
 	}
 
@@ -264,79 +237,43 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Error creating data container =>\t%v", err)
 		}
-		ops.Args = []string{"mkdir", "-p", path.Join(ErisContainerRoot, "chains", do.ChainID)}
+		ops.Args = []string{"mkdir", "-p", path.Join(ErisContainerRoot, "chains", do.Name)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
 
-	// Copy do.Path, do.GenesisFile, do.ConfigFile, do.Priv into container.
-	containerDst := path.Join(ErisContainerRoot, "chains", do.ChainID) // path in container
-	dst := filepath.Join(DataContainersPath, do.Name, containerDst)    // path on host
-
-	log.WithFields(log.Fields{
-		"container path": containerDst,
-		"local path":     dst,
-	}).Debug()
-
-	if err = os.MkdirAll(dst, 0700); err != nil {
-		return fmt.Errorf("Error making data directory: %v", err)
-	}
-
-	filesToCopy := []stringPair{
-		{do.Path, ""},
-		{do.GenesisFile, "genesis.json"},
-		{do.ConfigFile, "config.toml"},
-		{do.Priv, "priv_validator.json"},
-	}
-
-	log.Info("Copying chain files into the correct location")
-	if err := copyFiles(dst, filesToCopy); err != nil {
-		return err
-	}
+	containerDst := path.Join(ErisContainerRoot, "chains", do.Name)
+	hostSrc := do.Path
 
 	// copy from host to container
 	log.WithFields(log.Fields{
-		"from": dst,
-		"to":   containerDst,
+		"from local path":   hostSrc,
+		"to container path": containerDst,
 	}).Debug("Copying files into data container")
+
 	importDo := definitions.NowDo()
 	importDo.Name = do.Name
 	importDo.Operations = do.Operations
 	importDo.Destination = containerDst
-	importDo.Source = dst
+	importDo.Source = hostSrc
 	if err = data.ImportData(importDo); err != nil {
 		return err
 	}
 
-	chain := loaders.MockChainDefinition(do.Name, do.ChainID)
-
-	// Set maintainer info.
-	chain.Maintainer.Name, chain.Maintainer.Email, err = config.GitConfigUser()
-	if err != nil {
-		log.Debug(err.Error())
-	}
-
-	// Write the chain definition file.
-	// write in chains/chainName dir!
-	fileName := filepath.Join(ChainsPath, do.Name, do.Name) + ".toml"
-	if _, err = os.Stat(fileName); err != nil {
-		if err = WriteChainDefinitionFile(chain, fileName); err != nil {
-			return fmt.Errorf("error writing chain definition to file: %v", err)
-		}
-	}
-
-	chain, err = loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		return err
 	}
+
 	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
 	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
 	chain.Operations.Ports = do.Operations.Ports
 
 	// Cmd should be "new" or "install".
-	// [zr] install is basically deprecated. Can remove L20-26 in loaders/chains.go
+	// [zr] these should be deprecated...?
+	// to discuss with Ben
 	chain.Service.Command = cmd
 
 	// Write the list of <key>:<value> config options as flags.
@@ -350,19 +287,16 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	configOpts := buf.String()
 
-	// set chainid and other vars
+	// set chain name and other vars
 	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),
+		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
+		// [zr] replacement for CHAIN_ID is CHAIN_NAME
+		// TODO remove CHAIN_ID once the fix in edb is merged
+		fmt.Sprintf("CHAIN_NAME=%s", chain.Name),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway), // etcb host.
 	}
 	envVars = append(envVars, do.Env...)
-
-	if do.Run {
-		// run erisdb instead of tendermint
-		envVars = append(envVars, "ERISDB_API=true")
-	}
 
 	log.WithFields(log.Fields{
 		"environment": envVars,
@@ -413,103 +347,73 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	return
 }
 
-// genesis file either given directly, in dir, or not found (empty)
-func resolveGenesisFile(genesis, dir string) string {
-	if genesis == "" {
-		genesis = filepath.Join(dir, "genesis.json")
-		if _, err := os.Stat(genesis); err != nil {
-			return ""
-		}
-	}
-	return genesis
-}
-
-// "chain_id" should be in the genesis.json
-// or else is set to name
-func getChainIDFromGenesis(genesis, name string) (string, error) {
-	var hasChainID = struct {
-		ChainID string `json:"chain_id"`
-	}{}
-
-	b, err := ioutil.ReadFile(genesis)
-	if err != nil {
-		return "", fmt.Errorf("Error reading genesis file: %v", err)
-	}
-
-	if err = json.Unmarshal(b, &hasChainID); err != nil {
-		return "", fmt.Errorf("Error reading chain id from genesis file: %v", err)
-	}
-
-	chainID := hasChainID.ChainID
-	if chainID == "" {
-		chainID = name
-	}
-	return chainID, nil
-}
-
-type stringPair struct {
-	key   string
-	value string
-}
-
-func copyFiles(dst string, files []stringPair) error {
-	for _, f := range files {
-		if f.key != "" {
-			log.WithFields(log.Fields{
-				"from": f.key,
-				"to":   filepath.Join(dst, f.value),
-			}).Debug("Copying files")
-			if err := Copy(f.key, filepath.Join(dst, f.value)); err != nil {
-				log.Debugf("Error copying files: %v", err)
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func CleanUp(do *definitions.Do) error {
-	log.Info("Cleaning up")
-	do.Force = true
-
-	if do.Chain.ChainType == "throwaway" {
-		log.WithField("=>", do.Chain.Name).Debug("Destroying throwaway chain")
-		doRm := definitions.NowDo()
-		doRm.Operations = do.Operations
-		doRm.Name = do.Chain.Name
-		doRm.Rm = true
-		doRm.RmD = true
-		doRm.Volumes = true
-		KillChain(doRm)
-
-		latentDir := filepath.Join(DataContainersPath, do.Chain.Name)
-		latentFile := filepath.Join(ChainsPath, do.Chain.Name+".toml")
-
-		if doRm.Name == "default" {
-			log.WithField("dir", latentDir).Debug("Removing latent dir")
-			os.RemoveAll(latentDir)
+func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
+	if util.DoesDirExist(pathGiven) { // full path given, check that config.toml exists though
+		if !doesConfigExist(pathGiven) {
+			return "", fmt.Errorf("config.toml does not exists in %s", pathGiven)
 		} else {
-			log.WithFields(log.Fields{
-				"dir":  latentDir,
-				"file": latentFile,
-			}).Debug("Removing latent dir and file")
-			os.RemoveAll(latentDir)
-			os.Remove(latentFile)
+			return pathGiven, nil
 		}
-
 	} else {
-		log.Debug("No throwaway chain to destroy")
+		chainDirPathSimple := filepath.Join(ChainsPath, pathGiven)               // if simplechain, pathGiven == chainName
+		chainDirPathNotSimple := filepath.Join(ChainsPath, chainName, pathGiven) // ignored if simplechain
+
+		if util.DoesDirExist(chainDirPathSimple) && doesConfigExist(chainDirPathSimple) {
+			return chainDirPathSimple, nil
+		} else if util.DoesDirExist(chainDirPathNotSimple) && doesConfigExist(chainDirPathNotSimple) {
+			return chainDirPathNotSimple, nil
+		} else {
+			log.WithField("=>", pathGiven).Info("Directory or config.toml does not exist")
+			return "", fmt.Errorf("directory given on [--init-dir] could not be determined")
+		}
+	}
+}
+
+func doesConfigExist(dirPath string) bool {
+	var configExists bool
+	pathToConfig := filepath.Join(dirPath, "config.toml")
+	if _, err := os.Stat(pathToConfig); os.IsNotExist(err) {
+		configExists = false
+	} else {
+		configExists = true
+	}
+	return configExists
+}
+
+func whatChainStuffExists(chainName string) (bool, bool, bool, bool) {
+	var chainDirExists bool
+	var chainConfigExists bool
+	var chainDataExists bool
+	var chainContainerExists bool
+
+	// does the chain directory exist?
+	if util.DoesDirExist(filepath.Join(ChainsPath, chainName)) {
+		chainDirExists = true
+	} else {
+		chainDirExists = false
 	}
 
-	if do.RmD {
-		log.WithField("dir", filepath.Join(DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(filepath.Join(DataContainersPath, do.Service.Name))
+	// does the config file exist?
+	_, err := loaders.LoadChainDefinition(chainName)
+	if err == nil {
+		chainConfigExists = true
+	} else {
+		chainConfigExists = false
 	}
 
-	if do.Rm {
-		log.WithField("=>", do.Operations.SrvContainerName).Debug("Removing tmp service container")
-		perform.DockerRemove(do.Service, do.Operations, true, true, false)
+	// does the chain data container exist?
+	if util.IsData(chainName) {
+		chainDataExists = true
+	} else {
+		chainDataExists = false
 	}
 
-	return nil
+	// does the chain container exist?
+	if util.IsChain(chainName, false) { // false checks if exists
+		chainContainerExists = true
+	} else {
+		chainContainerExists = false
+	}
+
+	return chainDirExists, chainConfigExists, chainDataExists, chainContainerExists
 }

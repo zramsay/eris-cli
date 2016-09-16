@@ -3,7 +3,6 @@ package chains
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	// "github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -77,7 +75,7 @@ func MakeChain(do *definitions.Do) error {
 		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
 	}
 
-	if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
+	if do.Wizard && len(do.AccountTypes) == 0 && do.ChainType == "" {
 		do.Operations.Interactive = true
 		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
 	}
@@ -219,26 +217,23 @@ func CurrentChain(do *definitions.Do) error {
 // errors otherwise.
 //
 //  do.Name - chain name
-//  do.Type - "toml", "genesis", "status", "validators", or "toml"
+//  do.Type - "genesis", "config"
 //
 func CatChain(do *definitions.Do) error {
+	if do.Name == "" {
+		return fmt.Errorf("a chain name is required")
+	}
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
 	switch do.Type {
 	case "genesis":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	case "status":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
-	case "validators":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
-	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name, do.Name+".toml"))
-		if err != nil {
-			return err
-		}
-		config.Global.Writer.Write(cat)
-		return nil
+	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
+	// case "status":
+	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
+	// case "validators":
+	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown cat subcommand %q", do.Type)
 	}
@@ -324,59 +319,6 @@ func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
 	return ipfs.SendToIPFS(fileName, "", "")
-}
-
-// TODO: remove
-func RegisterChain(do *definitions.Do) error {
-	// do.Name is mandatory
-	if do.Name == "" {
-		return fmt.Errorf("RegisterChain requires a chainame")
-	}
-	etcbChain := do.ChainID
-	do.ChainID = do.Name
-
-	// NOTE: registration expects you to have the data container
-	if !util.IsData(do.Name) {
-		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
-	}
-
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-
-	// set chainid and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
-	}
-	envVars = append(envVars, do.Env...)
-
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug("Registering chain with")
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
-	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name)
-	chain.Operations.Args = []string{loaders.ErisChainRegister}
-
-	_, err = perform.DockerRunData(chain.Operations, chain.Service)
-
-	return err
 }
 
 func checkKeysRunningOrStart() error {

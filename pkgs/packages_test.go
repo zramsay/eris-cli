@@ -179,7 +179,6 @@ func _TestKnownChainBoots(t *testing.T) {
 	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expected data container to exist")
 	}
-
 }
 
 func TestLinkingToServicesAndChains(t *testing.T) {
@@ -1069,7 +1068,6 @@ func checkLinks(do *definitions.Do) error {
 }
 
 func create(t *testing.T, chain string) {
-
 	doMake := definitions.NowDo()
 	doMake.Name = chain
 	doMake.ChainType = "simplechain"
@@ -1078,11 +1076,10 @@ func create(t *testing.T, chain string) {
 	}
 
 	do := definitions.NowDo()
-	do.ConfigFile = filepath.Join(ChainsPath, "default", "config.toml")
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(ChainsPath, chain)
-	if err := chains.NewChain(do); err != nil {
+	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}
 }

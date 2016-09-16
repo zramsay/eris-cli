@@ -12,16 +12,6 @@ import (
 	. "github.com/eris-ltd/common/go/common"
 )
 
-func ChainsPathChecker(name string) (string, error) {
-	pathS := filepath.Join(ChainsPath, name)
-	src, err := os.Stat(pathS)
-	if err != nil || !src.IsDir() {
-		log.WithField("=>", pathS).Info("Path does not exist or not a diretory")
-		return "", err
-	}
-	return pathS, nil
-}
-
 func GetFileByNameAndType(typ, name string) string {
 	log.WithFields(log.Fields{
 		"file": name,

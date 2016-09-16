@@ -151,6 +151,7 @@ func RemoveAllContainers() error {
 		"yes":        true,
 		"containers": true,
 		"scratch":    true,
+		"chains":     true,
 		"all":        false,
 		"rmd":        false,
 		"images":     false,
