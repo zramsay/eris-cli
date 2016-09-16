@@ -27,6 +27,8 @@ type Do struct {
 	Overwrite     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	LocalCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Save          bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Password      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`

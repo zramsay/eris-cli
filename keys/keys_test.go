@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -46,36 +45,6 @@ func TestGenerateKey(t *testing.T) {
 
 	if address != output[0] {
 		t.Fatalf("Expected (%s), got (%s)", address, output[0])
-	}
-}
-
-func TestGetPubKey(t *testing.T) {
-	testStartKeys(t)
-	defer testKillService(t, "keys", true)
-
-	doPub := def.NowDo()
-	doPub.Address = testsGenAKey()
-
-	pub := new(bytes.Buffer)
-	config.Global.Writer = pub
-	if err := GetPubKey(doPub); err != nil {
-		t.Fatalf("error getting pubkey: %v", err)
-	}
-
-	pubkey := util.TrimString(pub.String())
-
-	key := new(bytes.Buffer)
-	config.Global.Writer = key
-	doKey := def.NowDo()
-	doKey.Address = doPub.Address
-	if err := ConvertKey(doKey); err != nil {
-		t.Fatalf("error converting key: %v", err)
-	}
-
-	converted := regexp.MustCompile(`"pub_key":\[1,"([^"]+)"\]`).FindStringSubmatch(key.String())[1]
-
-	if converted != pubkey {
-		t.Fatalf("Expected (%s), got (%s)", pubkey, converted)
 	}
 }
 
@@ -241,10 +210,6 @@ func TestImportKeySingle(t *testing.T) {
 	if keyOnHost != keyInCont {
 		t.Fatalf("Expected (%s), got (%s)", keyOnHost, keyInCont)
 	}
-}
-
-func TestConvertKey(t *testing.T) {
-	// tested in TestGetPubKey
 }
 
 func TestListKeyContainer(t *testing.T) {

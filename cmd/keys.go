@@ -24,33 +24,20 @@ See https://docs.erisindustries.com/documentation/eris-keys/ for more info.`,
 
 func buildKeysCommand() {
 	Keys.AddCommand(keysGen)
-	Keys.AddCommand(keysPub)
 	Keys.AddCommand(keysExport)
 	Keys.AddCommand(keysImport)
-	Keys.AddCommand(keysConvert)
 	Keys.AddCommand(keysList)
 	addKeysFlags()
 }
 
 var keysGen = &cobra.Command{
 	Use:   "gen",
-	Short: "generates an unsafe key using the keys container",
-	Long: `generates a key using the keys container
+	Short: "generates an unsafe key in the keys container",
+	Long: `generates an unsafe key in the keys container
 
-Key is saved in keys data container and can be exported to host
-with the [eris keys export] command.
-
-Command is equivalent to [eris services exec keys "eris-keys gen --no-pass"]`,
+Key is created in keys data container and can be exported to host
+by using the [--save] flag or by running [eris keys export ADDR].`,
 	Run: GenerateKey,
-}
-
-var keysPub = &cobra.Command{
-	Use:   "pub ADDR",
-	Short: "returns a machine readable pubkey given an address",
-	Long: `returns a machine readable pubkey given an address
-
-Command is equivalent to [eris services exec keys "eris-keys pub --addr ADDR"]`,
-	Run: GetPubKey,
 }
 
 var keysExport = &cobra.Command{
@@ -59,9 +46,7 @@ var keysExport = &cobra.Command{
 	Long: `export a key from container to host
 
 Takes a key from /home/eris/.eris/keys/data/ADDR/ADDR in the keys container
-and copies it to $HOME/user/.eris/keys/data/ADDR/ADDR on the host.
-
-Optionally specify host destination with --dest.`,
+and copies it to $HOME/user/.eris/keys/data/ADDR/ADDR on the host.`,
 	Run: ExportKey,
 }
 
@@ -74,17 +59,6 @@ Takes a key from $HOME/user/.eris/keys/data/ADDR/ADDR
 on the host and copies it to /home/eris/.eris/keys/data/ADDR/ADDR
 in the keys container.`,
 	Run: ImportKey,
-}
-
-var keysConvert = &cobra.Command{
-	Use:   "convert ADDR",
-	Short: "convert and eris-keys key to Tendermint key",
-	Long: `convert and eris-keys key to Tendermint key
-
-Command is equivalent to [eris services exec keys "mintkey mint ADDR"]
-
-Usually will be piped into $HOME/.eris/chains/newChain/priv_validator.json`,
-	Run: ConvertKey,
 }
 
 var keysList = &cobra.Command{
@@ -100,6 +74,10 @@ Latter flag is equivalent to:
 }
 
 func addKeysFlags() {
+	// [zr] eventually we'll want to flip (both?) these bools. definitely the latter, probably the former
+	keysGen.Flags().BoolVarP(&do.Save, "save", "", false, "export the key to host following creation")
+	//keysGen.Flags().BoolVarP(&do.Password, "passwd", "", false, "require a password prompt to generate the key")
+
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
 
@@ -113,13 +91,11 @@ func addKeysFlags() {
 
 func GenerateKey(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(0, "eq", cmd, args))
-	IfExit(keys.GenerateKey(do))
-}
 
-func GetPubKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Address = strings.TrimSpace(args[0])
-	IfExit(keys.GetPubKey(do))
+	// TODO implement once we move to using keys client exclusively
+	// if do.Password {}
+
+	IfExit(keys.GenerateKey(do))
 }
 
 func ExportKey(cmd *cobra.Command, args []string) {
@@ -140,12 +116,6 @@ func ImportKey(cmd *cobra.Command, args []string) {
 		do.Address = strings.TrimSpace(args[0])
 	}
 	IfExit(keys.ImportKey(do))
-}
-
-func ConvertKey(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
-	do.Address = strings.TrimSpace(args[0])
-	IfExit(keys.ConvertKey(do))
 }
 
 func ListKeys(cmd *cobra.Command, args []string) {
