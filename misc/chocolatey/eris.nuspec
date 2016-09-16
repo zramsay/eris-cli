@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
+    <id>eris</id>
+    <title>Eris</title>
+    <version>0.11.4</version>
+    <authors>The marmots</authors>
+    <owners>support@erisindustries.com</owners>
+    <summary>Platform for building, testing, maintaining, and operating applications with a blockchain backend</summary>
+    <description>Blockchain application platform CLI
+    </description>
+    <projectUrl>https://erisindustries.com</projectUrl>
+    <packageSourceUrl>https://github.com/eris-ltd/eris-cli</packageSourceUrl>
+    <projectSourceUrl>https://github.com/eris-ltd/eris-cli</projectSourceUrl>
+    <docsUrl>https://docs.erisindustries.com/</docsUrl>
+    <mailingListUrl>https://support.erisindustries.com/helpdesk</mailingListUrl>
+    <bugTrackerUrl>https://github.com/eris-ltd/eris-cli/issues</bugTrackerUrl>
+    <tags>eris docker blockchains</tags>
+    <copyright>2016 (c) Eris Industries</copyright>
+    <licenseUrl>https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+      <dependency id="docker" />
+      <dependency id="docker-machine" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\*" target="tools" />
+  </files>
+</package>
