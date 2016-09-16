@@ -16,7 +16,8 @@ then
 else
   repo=$GOPATH/src/github.com/$user_name/$base_name
 fi
-release_min=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
+# Extract CLI version and remove the trailing "-rcN" suffix.
+release_min=$(perl -ne '/VERSION = "(\d+\.\d+\.\d+).*"$/ and print $1' version/version.go)
 start=`pwd`
 
 # -------------------------------------------------------------------
@@ -36,6 +37,7 @@ cd $HOME
 git clone git@github.com:$user_name/$docs_site.git
 cd $repo
 
+mkdir -p $HOME/$docs_site/documentation
 rsync -av docs/$base_name $HOME/$docs_site/documentation/
 
 # ------------------------------------------------------------------
