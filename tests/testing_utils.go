@@ -36,7 +36,7 @@ func TestsInit(steps int, services ...string) (err error) {
 
 	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
-		IfExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
+		IfExit(fmt.Errorf("Could not set global config"))
 	}
 
 	// Don't connect to Docker daemon and don't pull default definitions.
@@ -59,7 +59,7 @@ func TestsInit(steps int, services ...string) (err error) {
 	do.Quiet = true
 	do.ServicesSlice = services
 	if err := ini.Initialize(do); err != nil {
-		IfExit(fmt.Errorf("TRAGIC. Could not initialize the eris dir: %s.\n", err))
+		IfExit(fmt.Errorf("Could not initialize Eris root: %v", err))
 	}
 
 	log.Info("Test init completed. Starting main test sequence now")
