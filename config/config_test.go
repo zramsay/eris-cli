@@ -517,13 +517,6 @@ func TestLoadViperNonExistent2(t *testing.T) {
 	}
 }
 
-func TestGitConfigUser(t *testing.T) {
-	_, _, err := GitConfigUser()
-	if err != nil {
-		t.Fatalf("expected success, got %v", err)
-	}
-}
-
 func TestSave(t *testing.T) {
 	os.MkdirAll(configErisDir, 0755)
 	defer removeErisDir()

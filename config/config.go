@@ -30,7 +30,7 @@ type Config struct {
 }
 
 // Settings describes settings loadable from "eris.toml"
-// configuration file.
+// definition file.
 type Settings struct {
 	IpfsHost          string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
 	IpfsPort          string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
@@ -54,7 +54,7 @@ type Settings struct {
 	ImageIPFS string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
 }
 
-// New initializes the global config with default settings
+// New initializes the global configuration with default settings
 // or settings loaded from the "eris.toml" default location.
 // New also initialize default writer and errorWriter streams.
 // Viper or unmarshalling errors are returned on error.
@@ -78,15 +78,15 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 	return config, nil
 }
 
-// LoadViper reads the configuration file pointed to by
-// the configPath path and configName filename.
-func LoadViper(configPath, configName string) (*viper.Viper, error) {
+// LoadViper reads the definition file pointed to by
+// the definitionPath path and definitionName filename.
+func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	var errKnown string
-	switch configPath {
+	switch definitionPath {
 	case dir.ServicesPath:
 		errKnown = fmt.Sprintf(`
 
-List available definitions with the [eris %s ls --known] command`, filepath.Base(configPath))
+List available definitions with the [eris %s ls --known] command`, filepath.Base(definitionPath))
 	}
 
 	// Don't use ReadInConfig() for checking file existence because
@@ -95,21 +95,21 @@ List available definitions with the [eris %s ls --known] command`, filepath.Base
 	// Don't use os.Stat() for checking file existence because there might
 	// be a selection of supported definition files, e.g.: keys.toml,
 	// keys.json, keys.yaml, etc.
-	if matches, _ := filepath.Glob(filepath.Join(configPath, configName+".*")); len(matches) == 0 {
-		return nil, fmt.Errorf("Unable to find the %q definition: %v%s", configName, os.ErrNotExist, errKnown)
+	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
+		return nil, fmt.Errorf("Unable to find the %q definition: %v%s", definitionName, os.ErrNotExist, errKnown)
 	}
 
 	conf := viper.New()
-	conf.AddConfigPath(configPath)
-	conf.SetConfigName(configName)
+	conf.AddConfigPath(definitionPath)
+	conf.SetConfigName(definitionName)
 	if err := conf.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("Unable to load the %q definition: %v%s", configName, err, errKnown)
+		return nil, fmt.Errorf("Unable to load the %q definition: %v%s", definitionName, err, errKnown)
 	}
 
 	return conf, nil
 }
 
-// Load reads the Viper configuration file from the default location.
+// Load reads the Viper definition file from the default location.
 func Load() (*viper.Viper, error) {
 	config, err := SetDefaults()
 	if err != nil {
@@ -119,7 +119,7 @@ func Load() (*viper.Viper, error) {
 	config.AddConfigPath(dir.ErisRoot)
 	config.SetConfigName("eris")
 	if err := config.ReadInConfig(); err != nil {
-		// do nothing as this is not essential.
+		// Do nothing as this is not essential.
 	}
 
 	return config, nil
@@ -151,9 +151,13 @@ func SetDefaults() (*viper.Viper, error) {
 	return config, nil
 }
 
-// Save writes the "eris.toml" configuration file at the default
+// Save writes the "eris.toml" definition file at the default
 // location populated by settings.
 func Save(settings *Settings) error {
+	if settings == nil {
+		return fmt.Errorf("cannot save uninitialized settings")
+	}
+
 	writer, err := os.Create(filepath.Join(dir.ErisRoot, "eris.toml"))
 	defer writer.Close()
 	if err != nil {

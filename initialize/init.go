@@ -20,10 +20,11 @@ func Initialize(do *definitions.Do) error {
 		return err
 	}
 
-	if !newDir { //new ErisRoot won't have either...can skip
-		if err := overwriteErisToml(); err != nil {
-			return err
-		}
+	if err := overwriteErisToml(); err != nil {
+		return err
+	}
+
+	if !newDir {
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
 			return nil
 		}
@@ -194,6 +195,11 @@ func overwriteErisToml() error {
 	config.Global.ImagePM = ver.ImagePM
 	config.Global.ImageCM = ver.ImageCM
 	config.Global.ImageIPFS = ver.ImageIPFS
+
+	// Ensure the directory the file being saved to exists.
+	if err := os.MkdirAll(common.ErisRoot, 0755); err != nil {
+		return err
+	}
 
 	if err := config.Save(&config.Global.Settings); err != nil {
 		return err
