@@ -33,7 +33,7 @@ var pwd string
 //  do.ChainName - name of the chain to run the pkgs do against
 //
 func RunPackage(do *definitions.Do) error {
-	log.Warn("Performing action. This can sometimes take a wee while.")
+	log.Warn("Performing action. This can sometimes take a wee while")
 	var err error
 	pwd, err = os.Getwd()
 	if err != nil {
@@ -183,7 +183,7 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	}
 
 	// run service, get result from its buffer
-	log.Info("Starting pkgs action container.")
+	log.Info("Starting pkgs action container")
 	log.WithFields(log.Fields{
 		"service": do.Service.Name,
 		"image":   do.Service.Image,
@@ -582,7 +582,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": doData.Source,
 			"dest":   doData.Destination,
-		}).Debug("Importing eris-pm config file")
+		}).Debug("Importing PM config file")
 		if err := data.ImportData(doData); err != nil {
 			return err
 		}
@@ -599,7 +599,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 		log.WithFields(log.Fields{
 			"source": epmFiles,
 			"dest":   dirToMoveTo,
-		}).Debug("Moving eris-pm artifacts")
+		}).Debug("Moving PM artifacts")
 		for _, epmFile := range epmFiles {
 			var err error
 			epmFile, err = filepath.Abs(epmFile)
@@ -612,7 +612,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			}
 		}
 	} else {
-		log.Info("EPM files do not exist on the host or are inside the pkg path")
+		log.Info("PM files do not exist on the host or are inside the pkg path")
 	}
 
 	// put things back the way they were in the do struct

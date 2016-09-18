@@ -13,7 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	srv "github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -29,10 +29,13 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "keys", "ipfs"))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"keys", "ipfs", "data", "db", "cm"},
+		Services: []string{"keys", "ipfs"},
+	}))
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
@@ -53,7 +56,7 @@ func TestRemoveAllErisContainers(t *testing.T) {
 	notEris0 := testCreateNotEris("not_eris0", t)
 	notEris1 := testCreateNotEris("not_eris1", t)
 
-	tests.IfExit(util.RemoveAllErisContainers())
+	testutil.IfExit(util.RemoveAllErisContainers())
 
 	// Check that both not_eris still exist and no Eris containers exist.
 	testCheckSimple(notEris0, t)
@@ -206,8 +209,8 @@ func testStartService(serviceName string, t *testing.T) {
 		t.Fatalf("error starting service: %v", err)
 	}
 
-	tests.IfExit(tests.TestExistAndRun(serviceName, "service", true, true))
-	tests.IfExit(tests.TestNumbersExistAndRun(serviceName, true, true))
+	testutil.IfExit(testutil.ExistAndRun(serviceName, "service", true, true))
+	testutil.IfExit(testutil.NumbersExistAndRun(serviceName, true, true))
 }
 
 func testStartChain(chainName string, t *testing.T) {
@@ -247,7 +250,7 @@ func testCreateDataContainer(dataName string, t *testing.T) {
 		t.Fatalf("error importing data: %v", err)
 	}
 
-	if err := tests.TestExistAndRun(dataName, "data", true, false); err != nil {
+	if err := testutil.ExistAndRun(dataName, "data", true, false); err != nil {
 		t.Fatalf("error creating data cont: %v", err)
 	}
 

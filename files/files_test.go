@@ -11,7 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -37,26 +37,28 @@ func TestMain(m *testing.M) {
 		port_to_use = port
 	}
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "ipfs"))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Services: []string{"ipfs"},
+		Images:   []string{"ipfs"},
+	}))
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
 func TestPutFiles(t *testing.T) {
-	tests.FakeDefinitionFile(erisDir, "test-file", content)
+	testutil.FakeDefinitionFile(erisDir, "test-file", content)
 
 	do := definitions.NowDo()
 	do.Name = filename
 	do.IpfsPort = port_to_use
-	log.WithField("=>", do.Name).Info("Putting file (from tests)")
 
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
-	ipfs.SetResponse(tests.ServerResponse{
+	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
+	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
 			"Ipfs-Hash": {hash},
@@ -100,8 +102,8 @@ func TestGetFiles(t *testing.T) {
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
-	ipfs.SetResponse(tests.ServerResponse{
+	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
+	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,
 	})
@@ -132,7 +134,7 @@ func TestGetFiles(t *testing.T) {
 		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
 	}
 
-	if returned := tests.FileContents(fileName); content != returned {
+	if returned := testutil.FileContents(fileName); content != returned {
 		t.Fatalf("Returned unexpected content; expected %q, got %q", content, returned)
 	}
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -33,17 +33,20 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "compilers", "keys", "ipfs"))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "db", "pm", "cm", "keys", "quay.io/eris/compilers"},
+		Services: []string{"keys", "ipfs", "compilers"},
+	}))
 
 	exitCode := m.Run()
 	killKeys()
 	log.Info("Tearing tests down")
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
 func TestServicesBooted(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -106,7 +109,7 @@ func TestServicesBooted(t *testing.T) {
 }
 
 func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -158,7 +161,7 @@ func TestCompilersBootedOnLocalCompilersFlag(t *testing.T) {
 }
 
 func _TestKnownChainBoots(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -182,7 +185,7 @@ func _TestKnownChainBoots(t *testing.T) {
 }
 
 func TestLinkingToServicesAndChains(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -254,7 +257,7 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 }
 
 func TestBadPathsGiven(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)

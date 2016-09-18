@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	ver "github.com/eris-ltd/eris-cli/version"
 	"github.com/eris-ltd/common/go/common"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -111,7 +111,7 @@ func TestNewDefaultConfig(t *testing.T) {
 		"cert path":      cli.DockerCertPath,
 		"crash report":   cli.CrashReport,
 		"verbose":        cli.Verbose,
-		"image keys":  cli.ImageKeys,
+		"image keys":     cli.ImageKeys,
 	}).Info("Checking defaults")
 }
 
@@ -562,8 +562,8 @@ func TestSaveNotExistentDir(t *testing.T) {
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
-		ImageKeys:  "crypto",
-		ImageDB:    "erisdb",
+		ImageKeys:      "crypto",
+		ImageDB:        "erisdb",
 	}
 	if err := Save(settings); err == nil {
 		t.Fatal("expected failure, got nil")

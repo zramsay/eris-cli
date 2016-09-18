@@ -14,7 +14,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -44,19 +44,18 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "keys"))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "pm", "keys"},
+		Services: []string{"keys"},
+	}))
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
-func TestListChains(t *testing.T) {
-
-}
-
 // Ensure url format satisfies required schema
-//TODO parse each kinds of payload (chains, dowload, install)
+// TODO parse each kinds of payload (chains, dowload, install)
 func TestParsePayload(t *testing.T) {
 	toTest := map[string]string{
 		"groupId":   bundleInfo["groupId"],  // needed to buildpath
@@ -83,7 +82,7 @@ func TestParsePayload(t *testing.T) {
 
 // the test that matters!
 func TestDeployContract(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 	start(t, "keys", false)
 	defer kill(t, "keys", true)
 

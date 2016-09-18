@@ -1,4 +1,4 @@
-package tests
+package testutil
 
 import (
 	"errors"
@@ -18,20 +18,39 @@ import (
 )
 
 var (
-	ErisDir = filepath.Join(os.TempDir(), "eris")
+	TmpErisRoot = filepath.Join(os.TempDir(), "eris")
 
 	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
+	ErrUnsupportedType        = errors.New("expected a Pull struct as a parameter")
 )
 
-const (
-	ConnectAndPull = iota
-	DontPull
-	Quick
-)
+// Pull type is used as an argument to Init function:
+// which definitions and services to pull.
+type Pull struct {
+	Images   []string
+	Services []string
+}
 
-func TestsInit(steps int, services ...string) (err error) {
-	common.ChangeErisRoot(ErisDir)
+// Init initializes environment to run Docker related package tests.
+// It accepts either none or Pull struct as arguments.
+//
+//  Init()
+//    - connect to Docker
+//
+//  Init(Pull{Services: []string{...}})
+//    - connect to Docker and pull selected service definition files
+//
+//  Init(Pull{Services: []string{...}, Images: []string{...}})
+//    - connect to Docker and pull select images and service
+//      definition files.
+//
+//  Init(Pull{})
+//    - connect to Docker and pull all service definition files
+//      (unspecified Services means all services, not none).
+//
+func Init(args ...interface{}) (err error) {
+	common.ChangeErisRoot(TmpErisRoot)
 	common.InitErisDir()
 
 	config.Global, err = config.New(os.Stdout, os.Stderr)
@@ -39,34 +58,41 @@ func TestsInit(steps int, services ...string) (err error) {
 		IfExit(fmt.Errorf("Could not set global config"))
 	}
 
-	// Don't connect to Docker daemon and don't pull default definitions.
-	if steps == Quick {
-		return nil
-	}
-
 	util.DockerConnect(false, "eris")
 
-	// Don't pull default definition files.
-	if steps == DontPull {
+	// Just connect.
+	if len(args) == 0 {
 		return nil
 	}
 
-	// This dumps the ipfs and keys services defs into the temp dir which
-	// has been set as the erisRoot.
 	do := def.NowDo()
-	do.Pull = false //don't pull imgs
-	do.Yes = true   //over-ride command-line prompts
+	do.Yes = true
 	do.Quiet = true
-	do.ServicesSlice = services
+
+	pull, ok := args[0].(Pull)
+	if !ok {
+		return ErrUnsupportedType
+	}
+
+	do.ServicesSlice = pull.Services
+	do.ImagesSlice = pull.Images
+
+	if len(pull.Images) != 0 {
+		do.Pull = true
+	}
+
+	os.Setenv("ERIS_PULL_APPROVE", "true")
+
 	if err := ini.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("Could not initialize Eris root: %v", err))
 	}
 
 	log.Info("Test init completed. Starting main test sequence now")
+
 	return nil
 }
 
-func TestExistAndRun(name, t string, toExist, toRun bool) error {
+func ExistAndRun(name, t string, toExist, toRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":       name,
 		"running":  toRun,
@@ -96,7 +122,7 @@ func TestExistAndRun(name, t string, toExist, toRun bool) error {
 	return nil
 }
 
-func TestNumbersExistAndRun(servName string, containerExist, containerRun bool) error {
+func NumbersExistAndRun(servName string, containerExist, containerRun bool) error {
 	log.WithFields(log.Fields{
 		"=>":        servName,
 		"existing#": containerExist,
@@ -219,50 +245,26 @@ func FileContents(filename string) string {
 	return string(content)
 }
 
-// each package will need its own custom stuff if need be
-// do it through a custom pre-process ifExit in each package that
-// calls tests.IfExit()
-func TestsTearDown() error {
+// TearDown removes all Eris containers and temporary Eris root
+// directory on exit.
+func TearDown() error {
 	// Move out of ErisDir before deleting it.
-	parentPath := filepath.Join(ErisDir, "..")
+	parentPath := filepath.Join(TmpErisRoot, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(ErisDir); err != nil {
+	if err := os.RemoveAll(TmpErisRoot); err != nil {
 		return err
 	}
 	return nil
 }
 
+// IfExit exits with an exit code 1 if err is not nil.
 func IfExit(err error) {
 	if err != nil {
 		log.Error(err)
-		if err := TestsTearDown(); err != nil {
+		if err := TearDown(); err != nil {
 			log.Error(err)
 		}
 		os.Exit(1)
-	}
-}
-
-//------- helpers --------
-func checkIPFSnotRunning() {
-	//os.Setenv("ERIS_IPFS_HOST", "http://0.0.0.0") //conflicts with docker-machine
-	do := def.NowDo()
-	do.Known = false
-	do.Existing = false
-	do.Running = true
-	do.Quiet = true
-	log.Debug("Finding the running services")
-	if util.IsService("ipfs", true) {
-		IfExit(fmt.Errorf("IPFS service is running.\nPlease stop it with.\neris services stop -rx ipfs\n"))
-	}
-	// make sure ipfs container does not exist
-	do = def.NowDo()
-	do.Known = false
-	do.Existing = true
-	do.Running = false
-	do.Quiet = true
-	log.Debug("Finding the existing services")
-	if util.IsService("ipfs", false) {
-		IfExit(fmt.Errorf("IPFS service exists.\nPlease remove it with\neris services rm ipfs\n"))
 	}
 }

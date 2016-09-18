@@ -89,14 +89,6 @@ setup() {
   fi
   echo "Docker connection established"
 
-  echo "Initializing eris (this may take a few moments)"
-  eris init --yes --pull-images=true --testing=true &>/dev/null
-  if [ $? -ne 0 ]
-  then
-    flame_out
-  fi
-  echo "Eris initialized."
-
   echo
   echo "Docker API Information"
   echo
