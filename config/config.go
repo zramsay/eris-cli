@@ -46,12 +46,13 @@ type Settings struct {
 	DefaultRegistry string `json:"DefaultRegistry,omitempty" yaml:"DefaultRegistry,omitempty" toml:"DefaultRegistry,omitempty"`
 	BackupRegistry  string `json:"BackupRegistry,omitempty" yaml:"BackupRegistry,omitempty" toml:"BackupRegistry,omitempty"`
 
-	ImageData string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
-	ImageKeys string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
-	ImageDB   string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
-	ImagePM   string `json:"ImagePM,omitempty" yaml:"ImagePM,omitempty" toml:"ImagePM,omitempty"`
-	ImageCM   string `json:"ImageCM,omitempty" yaml:"ImageCM,omitempty" toml:"ImageCM,omitempty"`
-	ImageIPFS string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
+	ImageData      string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
+	ImageKeys      string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
+	ImageDB        string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
+	ImagePM        string `json:"ImagePM,omitempty" yaml:"ImagePM,omitempty" toml:"ImagePM,omitempty"`
+	ImageCM        string `json:"ImageCM,omitempty" yaml:"ImageCM,omitempty" toml:"ImageCM,omitempty"`
+	ImageIPFS      string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
+	ImageCompilers string `json:"ImageCompilers,omitempty" yaml:"ImageCompilers,omitempty" toml:"ImageCompilers,omitempty"`
 }
 
 // New initializes the global configuration with default settings
@@ -147,6 +148,7 @@ func SetDefaults() (*viper.Viper, error) {
 	config.SetDefault("ImagePM", ver.ImagePM)
 	config.SetDefault("ImageCM", ver.ImageCM)
 	config.SetDefault("ImageIPFS", ver.ImageIPFS)
+	config.SetDefault("ImageCompilers", ver.ImageCompilers)
 
 	return config, nil
 }

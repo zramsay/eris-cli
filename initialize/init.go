@@ -36,13 +36,13 @@ func Initialize(do *definitions.Do) error {
 
 	}
 
-	if do.Pull { //true by default; if imgs already exist, will check for latest anyways
-		if err := GetTheImages(do.Yes); err != nil {
+	if do.Pull {
+		if err := GetTheImages(do); err != nil {
 			return err
 		}
 	}
 
-	//drops: service definition defaults
+	// Service definition defaults.
 	log.Warn("Initializing default service definition files")
 	if err := InitDefaults(do, newDir); err != nil {
 		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
@@ -96,13 +96,7 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 
 	srvPath = common.ServicesPath
 
-	// Default or custom service definition files list.
-	services := ver.SERVICE_DEFINITIONS
-	if len(do.ServicesSlice) != 0 {
-		services = do.ServicesSlice
-	}
-
-	if err := dropServiceDefaults(srvPath, services); err != nil {
+	if err := dropServiceDefaults(srvPath, do.ServicesSlice); err != nil {
 		return err
 	}
 
@@ -159,9 +153,9 @@ func checkIfCanOverwrite(doYes bool) error {
 	return nil
 }
 
-func GetTheImages(doYes bool) error {
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" || doYes {
-		if err := pullDefaultImages(); err != nil {
+func GetTheImages(do *definitions.Do) error {
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" || do.Yes {
+		if err := pullDefaultImages(do.ImagesSlice); err != nil {
 			return err
 		}
 		log.Warn("Successfully pulled default images")
@@ -177,7 +171,7 @@ on local host machines. If you already have the images, they'll be updated.
 		log.Warn()
 
 		if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
-			if err := pullDefaultImages(); err != nil {
+			if err := pullDefaultImages(do.ImagesSlice); err != nil {
 				return err
 			}
 			log.Warn("Successfully pulled default images")

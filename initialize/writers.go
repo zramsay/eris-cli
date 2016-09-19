@@ -2,31 +2,28 @@ package initialize
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/term"
 
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
-	docker "github.com/fsouza/go-dockerclient"
 )
 
 // XXX all files in this sequence must be added to both
 // the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
 func dropServiceDefaults(dir string, services []string) error {
+	if len(services) == 0 {
+		services = ver.SERVICE_DEFINITIONS
+	}
+
 	for _, service := range services {
 		var err error
 
@@ -46,98 +43,61 @@ func dropServiceDefaults(dir string, services []string) error {
 	return nil
 }
 
-func pullDefaultImages() error {
-	images := []string{
-		config.Global.ImageData,
-		config.Global.ImageKeys,
-		config.Global.ImageIPFS,
-		config.Global.ImageDB,
-		config.Global.ImagePM,
-		config.Global.ImageCM,
+func pullDefaultImages(images []string) error {
+	// Default images.
+	if len(images) == 0 {
+		images = []string{
+			"data",
+			"keys",
+			"ipfs",
+			"erisdb",
+			"epm",
+			"eris-cm",
+		}
+	}
+
+	// Rewrite with versioned image names (full names
+	// without a registry prefix).
+	versionedImageNames := map[string]string{
+		"data":      config.Global.ImageData,
+		"keys":      config.Global.ImageKeys,
+		"ipfs":      config.Global.ImageIPFS,
+		"erisdb":    config.Global.ImageDB,
+		"eris-cm":   config.Global.ImageCM,
+		"epm":       config.Global.ImagePM,
+		"compilers": config.Global.ImageCompilers,
+
+		// Aliases.
+		"db": config.Global.ImageDB,
+		"cm": config.Global.ImageCM,
+		"pm": config.Global.ImagePM,
+	}
+
+	for i, image := range images {
+		images[i] = versionedImageNames[image]
+
+		// Attach default registry prefix.
+		if !strings.HasPrefix(images[i], config.Global.DefaultRegistry) {
+			images[i] = path.Join(config.Global.DefaultRegistry, images[i])
+		}
 	}
 
 	// Spacer.
 	log.Warn()
 
-	log.Warn("Pulling default Docker images from quay.io")
-
-	// XXX can't use perform.PullImage b/c import cycle :(
-	// it's essentially re-implemented here w/ a bit more opinion
-	// fail over to docker hub is quay is down/firewalled
-	auth := docker.AuthConfiguration{}
-
-	timeoutDuration, err := time.ParseDuration(config.Global.ImagesPullTimeout)
-	if err != nil {
-		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.Global.ImagesPullTimeout)
-	}
-
+	log.Warn("Pulling default Docker images from "+config.Global.DefaultRegistry)
 	for i, image := range images {
-		var tag string = "latest"
+		log.WithField("image", image).Warnf("Pulling image %d out of %d", i+1, len(images))
 
-		nameSplit := strings.Split(image, ":")
-		if len(nameSplit) == 2 {
-			tag = nameSplit[1]
-		}
-		if len(nameSplit) == 3 {
-			tag = nameSplit[2]
-		}
-		image = nameSplit[0]
-		img := path.Join(config.Global.DefaultRegistry, image)
-
-		r, w := io.Pipe()
-		opts := docker.PullImageOptions{
-			Repository:    img,
-			Registry:      config.Global.DefaultRegistry,
-			Tag:           tag,
-			OutputStream:  w,
-			RawJSONStream: true,
-		}
-
-		if os.Getenv("ERIS_PULL_APPROVE") == "true" {
-			opts.OutputStream = ioutil.Discard
-		}
-
-		log.WithField("image", img).Warnf("Pulling image %d out of %d", i+1, len(images))
-
-		ch := make(chan error)
-		timeout := make(chan error)
-		go func() {
-			defer w.Close()
-			defer close(ch)
-
-			if err := util.DockerClient.PullImage(opts, auth); err != nil {
-				opts.Repository = image
-				opts.Registry = ver.BackupRegistry //not in global config...(also, won't even work unless we build & push updated images to dockerhub in addition to quay (which we should do)
-				if err := util.DockerClient.PullImage(opts, auth); err != nil {
-					ch <- util.DockerError(err)
-				}
-			}
-		}()
-		go func() {
-			defer w.Close()
-			defer close(timeout)
-
-			select {
-			case <-time.After(timeoutDuration):
-				util.SendReport(fmt.Errorf("`eris init` timed out (%v)", timeoutDuration))
-				timeout <- fmt.Errorf(`
+		if err := util.PullImage(image, os.Stdout); err != nil {
+			if err == util.ErrImagePullTimeout {
+				return fmt.Errorf(`
 It looks like marmots are taking too long to download the necessary images...
 Please, try restarting the [eris init] command one more time now or a bit later.
 This is likely a network performance issue with our Docker hosting provider`)
 			}
-		}()
-		go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
-		select {
-		case err := <-ch:
-			if err != nil {
-				return err
-			}
-		case err := <-timeout:
 			return err
 		}
-
-		// Spacer.
-		log.Warn()
 	}
 	return nil
 }
@@ -171,7 +131,7 @@ func drops(files []string, typ, dir string) error {
 	return nil
 }
 
-//TODO eventually eliminate this
+// TODO eventually eliminate this.
 func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err := os.MkdirAll(savePath, 0777); err != nil {
 		return err

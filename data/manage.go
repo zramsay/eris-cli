@@ -10,8 +10,8 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	. "github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func RenameData(do *definitions.Do) error {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -28,11 +28,11 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.DontPull))
+	testutil.IfExit(testutil.Init())
 
 	exitCode := m.Run()
 
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 
 	os.Exit(exitCode)
 }
@@ -57,7 +57,7 @@ ports          = [ "1234" ]
 	mockConfigPathFile(t, name)
 	defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -108,7 +108,7 @@ ports          = [ "1234" ]
 	//mockConfigPathFile(t, name)
 	//defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -145,10 +145,10 @@ email = "support@erisindustries.com"
 	mockConfigPathFile(t, name)
 	defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", defaultDefinition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", defaultDefinition); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -189,10 +189,10 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 	mockConfigPathFile(t, name)
 	defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -239,7 +239,7 @@ ports          = [ "4321" ]
 	mockConfigPathFile(t, name)
 	defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -292,10 +292,10 @@ image          = "test image"
 	mockConfigPathFile(t, name)
 	defer removeConfigPathFile(t, name)
 
-	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
-	if err := tests.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
+	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -336,7 +336,7 @@ func _TestChainsAsAServiceMissing(t *testing.T) {
 
 	os.Remove(filepath.Join(common.ChainsPath, name, name+".toml"))
 
-	if err := tests.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
 
@@ -380,7 +380,7 @@ chain_id   = "test id"
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -415,7 +415,7 @@ chain_id   = "test id"
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -503,7 +503,7 @@ name       = [ "keys"]
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ErisRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -530,7 +530,7 @@ repository = "https://example.com"
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -572,7 +572,7 @@ image = "test image"
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -606,7 +606,7 @@ func TestLoadServiceDefinitionEmpty(t *testing.T) {
 		name = "test"
 	)
 
-	if err := tests.FakeDefinitionFile(common.ServicesPath, name, ``); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ServicesPath, name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
@@ -637,7 +637,7 @@ image = [ "keys" ]
 `
 	)
 
-	if err := tests.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
+	if err := testutil.FakeDefinitionFile(common.ServicesPath, name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 

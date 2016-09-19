@@ -1,9 +1,11 @@
 package util
 
 import (
+	"os"
 	"path"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -11,7 +13,16 @@ import (
 )
 
 func init() {
+	var err error
+	config.Global, err = config.New(os.Stdout, os.Stderr)
+	if err != nil {
+		os.Exit(1)
+	}
+
 	DockerConnect(false, "eris")
+
+	// Pull the necessary image.
+	PullImage(path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys), os.Stdout)
 }
 
 func TestUniqueName(t *testing.T) {

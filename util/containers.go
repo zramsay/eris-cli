@@ -2,14 +2,26 @@ package util
 
 import (
 	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/term"
+	ver "github.com/eris-ltd/eris-cli/version"
 	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pborman/uuid"
+)
+
+var (
+	ErrImagePullTimeout = errors.New("image pull timed out")
 )
 
 // Details stores useful container information like its type, short name,
@@ -168,7 +180,7 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 			continue
 		}
 
-                name := strings.TrimLeft(c.Names[0], "/")
+		name := strings.TrimLeft(c.Names[0], "/")
 		details := ContainerDetails(name)
 
 		// Cache names.
@@ -223,7 +235,7 @@ func ErisContainersByType(t string, running bool) []*Details {
 			continue
 		}
 
-                name := strings.TrimLeft(c.Names[0], "/")
+		name := strings.TrimLeft(c.Names[0], "/")
 		details := ContainerDetails(name)
 
 		// Cache names.
@@ -336,4 +348,78 @@ func SetLabel(labels map[string]string, name, value string) map[string]string {
 	labels[name] = value
 
 	return labels
+}
+
+// PullImage pulls an image with or without echo
+// to the writer.
+func PullImage(image string, writer io.Writer) error {
+	var tag string = "latest"
+
+	nameSplit := strings.Split(image, ":")
+	if len(nameSplit) == 2 {
+		tag = nameSplit[1]
+	}
+	if len(nameSplit) == 3 {
+		tag = nameSplit[2]
+	}
+	image = nameSplit[0]
+
+	auth := docker.AuthConfiguration{}
+
+	r, w := io.Pipe()
+	opts := docker.PullImageOptions{
+		Repository:    image,
+		Registry:      config.Global.DefaultRegistry,
+		Tag:           tag,
+		OutputStream:  w,
+		RawJSONStream: true,
+	}
+
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+		opts.OutputStream = ioutil.Discard
+	}
+
+	timeoutDuration, err := time.ParseDuration(config.Global.ImagesPullTimeout)
+	if err != nil {
+		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.Global.ImagesPullTimeout)
+	}
+
+	ch := make(chan error)
+	timeout := make(chan error)
+	go func() {
+		defer w.Close()
+		defer close(ch)
+
+		if err := DockerClient.PullImage(opts, auth); err != nil {
+			opts.Repository = image
+			opts.Registry = ver.BackupRegistry
+			if err := DockerClient.PullImage(opts, auth); err != nil {
+				ch <- DockerError(err)
+			}
+		}
+	}()
+	go func() {
+		defer w.Close()
+		defer close(timeout)
+
+		select {
+		case <-time.After(timeoutDuration):
+			SendReport(fmt.Errorf("image pull timed out (%v)", timeoutDuration))
+			timeout <- ErrImagePullTimeout
+		}
+	}()
+	go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
+	select {
+	case err := <-ch:
+		if err != nil {
+			return err
+		}
+	case err := <-timeout:
+		return err
+	}
+
+	// Spacer.
+	log.Warn()
+
+	return nil
 }

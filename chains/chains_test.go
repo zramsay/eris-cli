@@ -12,7 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -29,17 +29,19 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images: []string{"data", "cm", "db", "keys", "ipfs"},
+	}))
 
 	exitCode := m.Run()
 
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 
 	os.Exit(exitCode)
 }
 
 func TestStartChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 
@@ -60,7 +62,7 @@ func TestStartChain(t *testing.T) {
 }
 
 func TestRestartChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	// make a chain
 	create(t, chainName)
@@ -100,7 +102,7 @@ func TestRestartChain(t *testing.T) {
 }
 
 func TestExecChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -119,7 +121,7 @@ func TestExecChain(t *testing.T) {
 }
 
 func TestExecChainBadCommandLine(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -133,7 +135,7 @@ func TestExecChainBadCommandLine(t *testing.T) {
 }
 
 func TestCatChainContainerConfig(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	buf := new(bytes.Buffer)
 	config.Global.Writer = buf
@@ -156,7 +158,7 @@ func TestCatChainContainerConfig(t *testing.T) {
 }
 
 func TestCatChainContainerGenesis(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	buf := new(bytes.Buffer)
 	config.Global.Writer = buf
@@ -177,7 +179,7 @@ func TestCatChainContainerGenesis(t *testing.T) {
 }
 
 func TestChainsNewDirGenesis(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-dir-gen"
 	create(t, chain)
@@ -190,7 +192,7 @@ func TestChainsNewDirGenesis(t *testing.T) {
 }
 
 func TestChainsNewConfig(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-config-new"
 	create(t, chain)
@@ -206,7 +208,7 @@ func TestChainsNewConfig(t *testing.T) {
 // into eris-keys (available in eris form) so it can be used by the rest
 // of the platform
 func TestChainsNewKeysImported(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-config-keys"
 	create(t, chain)
@@ -231,7 +233,7 @@ func TestChainsNewKeysImported(t *testing.T) {
 }
 
 func TestLogsChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -246,7 +248,7 @@ func TestLogsChain(t *testing.T) {
 }
 
 func _TestUpdateChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -265,7 +267,7 @@ func _TestUpdateChain(t *testing.T) {
 }
 
 func TestInspectChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
@@ -279,7 +281,7 @@ func TestInspectChain(t *testing.T) {
 }
 
 func TestRmChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 
@@ -296,9 +298,9 @@ func TestRmChain(t *testing.T) {
 }
 
 func TestServiceLinkNoChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -317,9 +319,9 @@ data_container = true
 }
 
 func TestServiceLinkBadChain(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -338,12 +340,12 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 }
 
 func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
 image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
@@ -370,13 +372,13 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 }
 
 func TestServiceLink(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-chain-link"
 	create(t, chain)
 	defer kill(t, chain)
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -411,21 +413,21 @@ data_container = false
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
-	links := tests.Links("fake", def.TypeService)
+	links := testutil.Links("fake", def.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkWithDataContainer(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-chain-data-container"
 
 	create(t, chain)
 	defer kill(t, chain)
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -460,21 +462,21 @@ data_container = true
 		t.Fatalf("expecting fake data container exists")
 	}
 
-	links := tests.Links("fake", def.TypeService)
+	links := testutil.Links("fake", def.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkLiteral(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-chain-literal"
 
 	create(t, chain)
 	defer kill(t, chain)
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "`+chain+`:fake"
 
 [service]
@@ -508,21 +510,21 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 		t.Fatalf("expecting fake data container exists")
 	}
 
-	links := tests.Links("fake", def.TypeService)
+	links := testutil.Links("fake", def.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkBadLiteral(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-chain-bad-literal"
 
 	create(t, chain)
 	defer kill(t, chain)
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "blah-blah:blah"
 
 [service]
@@ -545,18 +547,18 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	links := tests.Links("fake", def.TypeService)
+	links := testutil.Links("fake", def.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/blah") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
 }
 
 func TestServiceLinkChainedService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "test-chained-service"
 
-	if err := tests.FakeServiceDefinition("fake", `
+	if err := testutil.FakeServiceDefinition("fake", `
 chain = "$chain:fake"
 
 [service]
@@ -569,7 +571,7 @@ services = [ "sham" ]
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if err := tests.FakeServiceDefinition("sham", `
+	if err := testutil.FakeServiceDefinition("sham", `
 chain = "$chain:sham"
 
 [service]
@@ -612,7 +614,7 @@ data_container = true
 	}
 
 	// [pv]: second service doesn't reference the chain.
-	links := tests.Links("fake", def.TypeService)
+	links := testutil.Links("fake", def.TypeService)
 
 	if len(links) != 2 || !strings.Contains(strings.Join(links, " "), "/fake") || !strings.Contains(strings.Join(links, " "), "/sham") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
@@ -620,7 +622,7 @@ data_container = true
 }
 
 func TestServiceLinkKeys(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	const chain = "chain-test-keys"
 	create(t, chain)
@@ -641,7 +643,7 @@ func TestServiceLinkKeys(t *testing.T) {
 		t.Fatalf("expecting keys service running")
 	}
 
-	links := tests.Links("keys", def.TypeService)
+	links := testutil.Links("keys", def.TypeService)
 	if len(links) != 0 {
 		t.Fatalf("expected service links be empty, got %v", links)
 	}

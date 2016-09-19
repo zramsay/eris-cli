@@ -10,7 +10,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
 
@@ -26,19 +26,21 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull, "do_not_use", "keys", "ipfs"))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "db", "keys", "ipfs"},
+		Services: []string{"do_not_use", "keys", "ipfs"},
+	}))
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
-	log.Info("Tearing tests down")
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
 func TestStartKillService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -59,7 +61,7 @@ func TestStartKillService(t *testing.T) {
 }
 
 func TestInspectService1(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -73,7 +75,7 @@ func TestInspectService1(t *testing.T) {
 }
 
 func TestInspectService2(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -87,7 +89,7 @@ func TestInspectService2(t *testing.T) {
 }
 
 func TestLogsService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -102,7 +104,7 @@ func TestLogsService(t *testing.T) {
 }
 
 func TestExecService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, true)
 
@@ -122,7 +124,7 @@ func TestExecService(t *testing.T) {
 }
 
 func TestExecServiceBadCommandLine(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, true)
 
@@ -140,7 +142,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 }
 
 func TestUpdateService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -159,7 +161,7 @@ func TestUpdateService(t *testing.T) {
 }
 
 func TestKillService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -189,7 +191,7 @@ func TestKillService(t *testing.T) {
 }
 
 func TestRmService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -218,7 +220,7 @@ func TestRmService(t *testing.T) {
 }
 
 func TestMakeService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	do := def.NowDo()
 	servName := "keys"
@@ -252,7 +254,7 @@ func TestMakeService(t *testing.T) {
 }
 
 func TestRenameService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, "keys", false)
 	if !util.Running(def.TypeService, "keys") {
@@ -310,13 +312,13 @@ func TestCatService(t *testing.T) {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if out := tests.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != do.Result {
+	if out := testutil.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != do.Result {
 		t.Fatalf("expected local config to be returned %v, got %v", out, do.Result)
 	}
 }
 
 func TestStartKillServiceWithDependencies(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	do := def.NowDo()
 	do.Operations.Args = []string{"do_not_use"} // [csk] we should make a fake service def instead of using this file
