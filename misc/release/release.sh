@@ -121,7 +121,7 @@ token_check() {
   if ! type "github-release" 2>/dev/null
   then
     echo "You have to install github-release tool first"
-    ecoh "Try 'go get github.com/aktau/github-release'"
+    echo "Try 'go get github.com/aktau/github-release'"
     exit 1
   fi
 
