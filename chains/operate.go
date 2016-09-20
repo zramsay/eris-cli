@@ -23,7 +23,8 @@ import (
 func StartChain(do *definitions.Do) error {
 	chainDirExists, chainConfigExists, chainDataExists, chainContainerExists := whatChainStuffExists(do.Name)
 
-	if do.Path != "" { // [eris chains start whatever --init-dir ~/.eris/chains/whatever]
+	if do.Path != "" {
+		// [eris chains start whatever --init-dir ~/.eris/chains/whatever]
 		var err error
 
 		do.Path, err = chainsPathSimplifier(do.Name, do.Path)
@@ -35,15 +36,16 @@ func StartChain(do *definitions.Do) error {
 			return fmt.Errorf("The chain directory provided does not exist, re-run with an existing directory")
 		}
 
-		if chainDataExists || chainContainerExists { // these ought not be existing if --init-dir given
-			return fmt.Errorf("Data container or chain container exists, re-run without [--init-dir]")
+		if chainDataExists {
+			return fmt.Errorf("Data container exists, re-run without [--init-dir]")
 		}
 
-		log.WithField("=>", do.Name).Debug("Chain does not exist, initializing it")
+		log.WithField("=>", do.Name).Debug("Data container does not exist, initializing it")
 		return setupChain(do, loaders.ErisChainNew)
 		// [zr] TODO get rid of loaders.ErisChainNew => to discuss with [ben]
 
-	} else { // [eris chains start whatever] (without init-dir)
+	} else {
+		// [eris chains start whatever] (without --init-dir)
 		if !chainDirExists || !chainConfigExists {
 			log.Info("Neither the assumed chain directory or config file exists locally, checking for existence of chain data container")
 		}
@@ -69,7 +71,8 @@ func StopChain(do *definitions.Do) error {
 	}
 
 	if do.Force {
-		do.Timeout = 0 //overrides 10 sec default
+		// Overrides the default.
+		do.Timeout = 0
 	}
 
 	if util.IsChain(chain.Name, true) {
@@ -364,7 +367,7 @@ func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
 			return chainDirPathNotSimple, nil
 		} else {
 			log.WithField("=>", pathGiven).Info("Directory or config.toml does not exist")
-			return "", fmt.Errorf("directory given on [--init-dir] could not be determined")
+			return "", fmt.Errorf("Directory given on [--init-dir] could not be determined")
 		}
 	}
 }
