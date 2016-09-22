@@ -308,6 +308,11 @@ func FindContainer(name string, running bool) bool {
 	}
 
 	for _, c := range containers {
+		// Container doesn't have a name.
+		if len(c.Names) == 0 {
+			continue
+		}
+
 		if name == strings.TrimLeft(c.Names[0], "/") {
 			return true
 		}
