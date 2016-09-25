@@ -46,29 +46,24 @@ func RunPackage(do *definitions.Do) error {
 	}).Debug()
 	pkg, err := loaders.LoadPackage(do.Path, do.ChainName)
 	if err != nil {
-		do.Result = "could not load package"
 		return err
 	}
 
 	if err := BootServicesAndChain(do, pkg); err != nil {
-		do.Result = "could not boot chain or services"
 		CleanUp(do, pkg)
-		return err
+		return fmt.Errorf("Could not boot chain or services: %v", err)
 	}
 
 	if err := DefinePkgActionService(do, pkg); err != nil {
-		do.Result = "could not define pkg action service"
 		CleanUp(do, pkg)
-		return err
+		return fmt.Errorf("Could not define pkg action service: %v", err)
 	}
 
 	if err := PerformAppActionService(do, pkg); err != nil {
-		do.Result = "could not perform pkg action service"
 		CleanUp(do, pkg)
-		return err
+		return fmt.Errorf("Could not perform pkg action service: %v", err)
 	}
 
-	do.Result = "success"
 	return CleanUp(do, pkg)
 }
 
@@ -196,11 +191,13 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
 		log.Error(buf)
-		do.Result = "could not perform pkg action"
-		return err
+		return fmt.Errorf("Could not perform pkg action: %v", err)
 	}
 
-	// copy output to global writer. [csk note] this is a bit weird cause no output until the whole thing has finished...
+	// Copy output to global writer.
+	// [csk]: this is a bit weird cause no output until the whole thing has finished...
+	// [pv]: for constant updates config.Global.InteractiveWriter need to be
+	// used instead.
 	io.Copy(config.Global.Writer, buf)
 
 	log.Info("Finished performing action")

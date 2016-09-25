@@ -438,7 +438,9 @@ func CheckoutChain(cmd *cobra.Command, args []string) {
 }
 
 func CurrentChain(cmd *cobra.Command, args []string) {
-	IfExit(chns.CurrentChain(do))
+	out, err := chns.CurrentChain(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func CatChain(cmd *cobra.Command, args []string) {

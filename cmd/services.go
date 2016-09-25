@@ -367,5 +367,7 @@ func RmService(cmd *cobra.Command, args []string) {
 func CatService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(srv.CatService(do))
+	out, err := srv.CatService(do)
+	IfExit(err)
+	fmt.Fprint(config.Global.Writer, out)
 }

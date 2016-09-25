@@ -102,7 +102,6 @@ func ImportData(do *definitions.Do) error {
 
 		return ImportData(do)
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -129,9 +128,8 @@ func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("The marmots cannot find that data container.\nPlease check the name of the data container with [eris data ls].")
+		return nil, fmt.Errorf("Can't find that data container. Please check with [eris data ls]")
 	}
-	do.Result = "success"
 	return buf, nil
 }
 
@@ -157,7 +155,7 @@ func ExportData(do *definitions.Do) error {
 		exists := perform.ContainerExists(srv.Operations.SrvContainerName)
 
 		if !exists {
-			return fmt.Errorf("There is no data container for that service.")
+			return fmt.Errorf("There is no data container for that service")
 		}
 
 		reader, writer := io.Pipe()
@@ -196,17 +194,15 @@ func ExportData(do *definitions.Do) error {
 		// the temp contents there
 		if _, err := os.Stat(do.Destination); os.IsNotExist(err) {
 			if e2 := os.MkdirAll(do.Destination, 0755); e2 != nil {
-				return fmt.Errorf("Error:\tThe marmots could neither find, nor had access to make the directory: (%s)\n", do.Destination)
+				return fmt.Errorf("The marmots could neither find, nor had access to make the directory %s", do.Destination)
 			}
 		}
 		if err := MoveOutOfDirAndRmDir(exportPath, do.Destination); err != nil {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return fmt.Errorf("I cannot find that data container. Please check with [eris data ls]")
 	}
-
-	do.Result = "success"
 	return nil
 }
 

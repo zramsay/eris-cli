@@ -308,12 +308,15 @@ func TestRenameService(t *testing.T) {
 func TestCatService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
-	if err := CatService(do); err != nil {
+	buf := new(bytes.Buffer)
+	config.Global.Writer = buf
+	out, err := CatService(do)
+	if err != nil {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if out := testutil.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != do.Result {
-		t.Fatalf("expected local config to be returned %v, got %v", out, do.Result)
+	if cmp := testutil.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != cmp {
+		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
 	}
 }
 

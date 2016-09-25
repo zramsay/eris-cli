@@ -29,9 +29,8 @@ func RenameData(do *definitions.Do) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me")
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -47,9 +46,8 @@ func InspectData(do *definitions.Do) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me.")
+		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me")
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -84,7 +82,5 @@ func RmData(do *definitions.Do) (err error) {
 			}
 		}
 	}
-
-	do.Result = "success"
 	return err
 }

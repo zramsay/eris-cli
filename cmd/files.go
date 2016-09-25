@@ -2,11 +2,12 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/files"
 
 	. "github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/spf13/cobra"
 )
 
@@ -107,33 +108,37 @@ func FilesGet(cmd *cobra.Command, args []string) {
 func FilesPut(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(files.PutFiles(do))
-	log.Warn(do.Result)
+	out, err := files.PutFiles(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesPin(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(files.PinFiles(do))
-	log.Warn(do.Result)
+	out, err := files.PinFiles(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesCat(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(files.CatFiles(do))
-	log.Warn(do.Result)
-
+	out, err := files.CatFiles(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesList(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(files.ListFiles(do))
-	log.Warn(do.Result)
+	out, err := files.ListFiles(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesManageCached(cmd *cobra.Command, args []string) {
-	IfExit(files.ManagePinned(do))
-	log.Warn(do.Result)
+	out, err := files.ManagePinned(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
