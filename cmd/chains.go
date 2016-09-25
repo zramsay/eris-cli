@@ -47,10 +47,10 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsInspect)
+	Chains.AddCommand(chainsIP)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
 	Chains.AddCommand(chainsCat)
-	//Chains.AddCommand(chainsUpdate)
 	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
 	addChainsFlags()
@@ -236,6 +236,13 @@ see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 $ eris chains inspect 2gather Name -- will display the name in machine readable format
 $ eris chains inspect 2gather HostConfig.Binds -- will display only that value`,
 	Run: InspectChain,
+}
+var chainsIP = &cobra.Command{
+	Use:   "ip NAME",
+	Short: "display chain IP",
+	Long:  `display chain IP`,
+
+	Run: IPChain,
 }
 
 var chainsRemove = &cobra.Command{
@@ -469,6 +476,14 @@ func InspectChain(cmd *cobra.Command, args []string) {
 		do.Operations.Args = []string{args[1]}
 	}
 
+	IfExit(chns.InspectChain(do))
+}
+
+func IPChain(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+
+	do.Name = args[0]
+	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
 	IfExit(chns.InspectChain(do))
 }
 

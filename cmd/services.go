@@ -35,6 +35,7 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesIP)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
@@ -137,6 +138,14 @@ https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
 $ eris services inspect ipfs name -- will display the name in machine readable format
 $ eris services inspect ipfs host_config.binds -- will display only that value`,
 	Run: InspectService,
+}
+
+var servicesIP = &cobra.Command{
+	Use:   "ip NAME",
+	Short: "display service IP",
+	Long:  `display service IP`,
+
+	Run: IPService,
 }
 
 var servicesPorts = &cobra.Command{
@@ -326,6 +335,13 @@ func InspectService(cmd *cobra.Command, args []string) {
 		do.Operations.Args = []string{args[1]}
 	}
 
+	IfExit(srv.InspectService(do))
+}
+
+func IPService(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
 	IfExit(srv.InspectService(do))
 }
 
