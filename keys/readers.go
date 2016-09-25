@@ -49,7 +49,7 @@ func ListKeys(do *definitions.Do) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = strings.Fields(strings.TrimSpace(keysOut.String()))
+		result = strings.Fields(keysOut.String())
 		if !do.Quiet {
 			if len(result) == 0 || result[0] == "" {
 				log.Warn("No keys found in container")

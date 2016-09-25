@@ -121,7 +121,7 @@ func TestImportKeyAll(t *testing.T) {
 	}
 
 	// check that they in container
-	output = testListKeys("container")
+	output := testListKeys("container")
 
 	i := 0
 	for _, out := range output {

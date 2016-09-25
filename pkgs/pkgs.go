@@ -25,9 +25,11 @@ import (
 
 var pwd string
 
-// entrypoint for eris pkgs do. first loads and populates the pkg struct. Then boots the dependent
-// services and chains. Then builds the appropriate pkg service to be ran in docker and properly
-// connected to all other containers. Then runs the service and finally operates a cleanup.
+// RunPackage runs a package pointed to by the do.Path directory. It first loads
+// and populates the pkg struct. Then boots the dependent services and chains.
+// Then builds the appropriate pkg service to be ran in docker and properly
+// connected to all other containers. Then runs the service and finally operates
+// a cleanup.
 //
 //  do.Path      - root directory of the pkg
 //  do.ChainName - name of the chain to run the pkgs do against
@@ -67,15 +69,20 @@ func RunPackage(do *definitions.Do) error {
 	return CleanUp(do, pkg)
 }
 
-// ensures that dependent services are started and that the appropriate chain is booted
+// BootServicesAndChain ensures that dependent services are started and that
+// the appropriate chain is booted.
 //
-//  do.ServicesSlice - slice of dependent services to boot before the eris-pm runs
-//  do.ChainName - name of the chain to ensure is booted (if "" then will check the checkedout chain)
+//  do.ServicesSlice - slice of dependent services to boot
+//                     before the eris-pm runs
+//  do.ChainName     - name of the chain to ensure is booted
+//                     (if "" then will check the checkedout chain)
 //  do.LocalCompiler - use a local compiler service
 //
-//  pkg.Name - name of the package (defaults to os.Base(pwd))
-//  pkg.Dependencies.Services  - slice of dependent services to boot before the eris-pm runs (appends to do.ServicesSlice)
-//  pkg.ChainName - chain name from the pkg overwrites do.ChainName if do.ChainName blank
+//  pkg.Name                   - name of the package (defaults to current dir)
+//  pkg.Dependencies.Services  - slice of dependent services to boot before
+//                               the Eris PM runs (appends to do.ServicesSlice)
+//  pkg.ChainName              - chain name from the pkg overwrites do.ChainName
+//                               if do.ChainName blank
 //
 func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 
@@ -135,7 +142,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 	return nil
 }
 
-// Builds a service that will run.
+// DefinePkgActionService Builds a service that will run.
 //
 //  do.Name      - name. [csk] unused?
 //  do.Path      - pkg root path
@@ -166,7 +173,8 @@ func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error 
 	return nil
 }
 
-// controls the operation of eris-pm. meaning it runs the service container.
+// PerformAppActionService controls the operation of Eris PM, meaning
+// it runs the service container.
 //
 //  do.Service    - properly populated
 //  do.Operations - properly populated
@@ -204,12 +212,14 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	return nil
 }
 
-// controls the eris pkgs tear down function after an eris pkgs do.
-// runs export process to pull everything out of data containers.
+// CleanUp controls the eris pkgs tear down function after an eris pkgs do.
+// It runs export process to pull everything out of data containers.
 //
 //  do.Operations      - must be populated
-//  do.Rm              - remove the service container (defaults to true; false useful for debug and testing purposes only)
-//  do.RmD             - remove the data container (defaults to true; false useful for debug and testing purposes only)
+//  do.Rm              - remove the service container (defaults to true;
+//                       false is useful for debug and testing purposes only)
+//  do.RmD             - remove the data container (defaults to true;
+//                       false useful for debug and testing purposes only)
 //
 func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 	log.Info("Cleaning up")
@@ -249,10 +259,12 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 	return nil
 }
 
-// boots chain as an eris chain or an eris service depending on the name. assumes a do.Operations struct has
-// been properly populated.
+// bootChain boots chain as an Eris chain or an eris service depending on the name.
+// Assumes a do.Operations struct has been properly populated.
 func bootChain(name string, do *definitions.Do) error {
-	do.ChainDefinition.ChainType = "service" // setting this for tear down purposes
+	// Setting this for tear-down purposes.
+	do.ChainDefinition.ChainType = "service"
+
 	startChain := definitions.NowDo()
 	startChain.Name = name
 	startChain.Operations = do.Operations
@@ -264,7 +276,10 @@ func bootChain(name string, do *definitions.Do) error {
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
-		do.ChainDefinition.ChainType = "chain" // setting this for tear down purposes [zr] should no longer be needed
+		// Setting this for tear-down purposes.
+		// [zr]: should no longer be needed.
+		do.ChainDefinition.ChainType = "chain"
+
 	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains) [zr] this should go too
 	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
@@ -287,14 +302,16 @@ func bootChain(name string, do *definitions.Do) error {
 		return fmt.Errorf("The marmots could not find that chain name. Please review and rerun the command")
 	}
 
-	do.ChainDefinition.Name = name // setting this for tear down purposes
+	// Setting this for tear-down purposes.
+	do.ChainDefinition.Name = name
 
 	// let the chain boot properly
 	time.Sleep(5 * time.Second)
 	return nil
 }
 
-// ensures chain properly connected to eris-pm services container. assumes a do and pkg struct properly populated
+// linkAppToChain ensures chain properly connected to Eris PM services
+// container. It assumes a do and pkg struct properly populated.
 func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
@@ -313,8 +330,8 @@ func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	}
 }
 
-// creates the command to be sent to eris-pm by the Service struct. we're using entrypoint and adding
-// flags to the entrypoint to properly populate how eris-pm runs
+// prepareEpmAction creates the command to be sent to eris-pm by the Service
+// struct. Entrypoint and flags are used to properly populate how Eris PM runs.
 //
 //  do.Verbose       - run eris-pm in verbose mode.
 //  do.Debug         - run eris-pm in debug mode.
@@ -396,15 +413,17 @@ func prepareEpmAction(do *definitions.Do, app *definitions.Package) {
 	}
 }
 
-// deals with imports to and exports from eris-pm's data container. this function prob needs optimization [csk]
-// function should be given a do struct which is read for operation (namely, has passed pkg loaders and has
-// both do.Service && do.Operations properly populated).
+// getDataContainerSorted deals with imports to and exports from Eris PM's
+// data container.
 //
 //  do.Path          - path on host to where the epm.yaml is and where the epm.json will be written to. eris-pm will run from here.
 //  do.PackagePath   - path on host to where the root of the package is. eris-pm assumes that contracts are available here or in here/contracts.
 //  do.ABIPath       - path on host to where the ABI folder is and will be saved to.
 //  do.EPMConfigFile - path on host to where the epm.yaml is located.
 //
+// [csk]: this function needs optimization; it should be given a do struct
+// which is read for operation (namely, has passed pkg loaders and has
+// both do.Service && do.Operations properly populated).
 func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	if inbound {
 		log.WithField("dir", "inbound").Info("Getting data container situated")
@@ -620,7 +639,11 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	return nil
 }
 
-// populates the IP:port combo for the compilers.
+// getLocalCompilerData populates the IP:port combo for the compilers.
 func getLocalCompilerData(do *definitions.Do) {
-	do.Compiler = "http://compilers:9099" // [csk] note this is brittle we should only expose one port in the docker file by default for the compilers service we can expose more forcibly
+	// [csk]: note this is brittle we should only expose one port in the
+	// docker file by default for the compilers service we can expose more
+	// forcibly
+
+	do.Compiler = "http://compilers:9099"
 }
