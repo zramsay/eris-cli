@@ -1,11 +1,9 @@
 package commands
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -127,7 +125,6 @@ func ListKeys(cmd *cobra.Command, args []string) {
 		do.Host = true
 		do.Container = true
 	}
-	out, err := keys.ListKeys(do)
+	_, err := keys.ListKeys(do)
 	IfExit(err)
-	fmt.Fprintln(config.Global.Writer, out)
 }
