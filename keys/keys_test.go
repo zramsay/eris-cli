@@ -65,7 +65,7 @@ func TestExportKeySingle(t *testing.T) {
 		t.Fatalf("error exec-ing: %v", err)
 	}
 
-	keyInCont := util.TrimString(catOut.String())
+	keyInCont := strings.TrimSpace(catOut.String())
 
 	doExp := def.NowDo()
 	doExp.Address = address
@@ -82,7 +82,7 @@ func TestExportKeySingle(t *testing.T) {
 		t.Fatalf("error reading file: %v", err)
 	}
 
-	keyOnHost := util.TrimString(string(key))
+	keyOnHost := strings.TrimSpace(string(key))
 	if keyInCont != keyOnHost {
 		t.Fatalf("Expected (%s), got (%s)", keyInCont, keyOnHost)
 	}
@@ -125,7 +125,7 @@ func TestImportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[util.TrimString(out)] == true {
+		if addrs[strings.TrimSpace(out)] == true {
 			i++
 		}
 	}
@@ -155,7 +155,7 @@ func TestExportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[util.TrimString(out)] == true {
+		if addrs[strings.TrimSpace(out)] == true {
 			i++
 		}
 	}
@@ -184,7 +184,7 @@ func TestImportKeySingle(t *testing.T) {
 		t.Fatalf("error reading file: %v", err)
 	}
 	//key b4 import
-	keyOnHost := util.TrimString(string(key))
+	keyOnHost := strings.TrimSpace(string(key))
 
 	//rm key that was generated before import
 	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
@@ -208,7 +208,7 @@ func TestImportKeySingle(t *testing.T) {
 		t.Fatalf("error exec-ing: %v", err)
 	}
 
-	keyInCont := util.TrimString(catOut.String())
+	keyInCont := strings.TrimSpace(catOut.String())
 
 	if keyOnHost != keyInCont {
 		t.Fatalf("Expected (%s), got (%s)", keyOnHost, keyInCont)
@@ -227,7 +227,7 @@ func TestListKeyContainer(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[util.TrimString(out)] == true {
+		if addrs[strings.TrimSpace(out)] == true {
 			i++
 		}
 	}
@@ -259,7 +259,7 @@ func TestListKeyHost(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[util.TrimString(out)] == true {
+		if addrs[strings.TrimSpace(out)] == true {
 			i++
 		}
 	}
@@ -280,14 +280,14 @@ func testListKeys(typ string) []string {
 		do.Host = true
 	}
 
-	if err := ListKeys(do); err != nil {
+	result, err := ListKeys(do)
+	if err != nil {
 		testutil.IfExit(err)
 	}
 
-	return strings.Split(do.Result, ",")
+	return result
 }
 
-//returns an addr for tests
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
 	config.Global.Writer = addr
@@ -295,7 +295,7 @@ func testsGenAKey() string {
 	testutil.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
-	return util.TrimString(string(addrBytes))
+	return strings.TrimSpace(string(addrBytes))
 }
 
 func testStartKeys(t *testing.T) {

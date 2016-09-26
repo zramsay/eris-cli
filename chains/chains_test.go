@@ -223,7 +223,7 @@ func TestChainsNewKeysImported(t *testing.T) {
 		t.Fatalf("expecting to list keys, got %v", err)
 	}
 
-	keysOutString := strings.Split(util.TrimString(keysOut.String()), "\n")[0]
+	keysOutString := strings.Fields(strings.TrimSpace(keysOut.String()))[0]
 
 	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", keysOutString, keysOutString)}
 

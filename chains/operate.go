@@ -94,13 +94,11 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
 		log.Error("Cannot start a chain I cannot find")
-		do.Result = "no file"
 		return nil, nil
 	}
 
 	if chain.Name == "" {
 		log.Error("Cannot start a chain without a name")
-		do.Result = "no name"
 		return nil, nil
 	}
 
@@ -159,7 +157,6 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		err = perform.DockerRunService(chain.Service, chain.Operations)
 	}
 	if err != nil {
-		do.Result = "error"
 		return buf, err
 	}
 

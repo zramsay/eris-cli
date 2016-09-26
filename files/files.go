@@ -13,7 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
@@ -41,7 +40,7 @@ func GetFiles(do *definitions.Do) error {
 			return err
 		}
 		log.Warn("Directory object getted succesfully.")
-		log.Warn(util.TrimString(buf.String()))
+		log.Warn(strings.TrimSpace(buf.String()))
 	} else {
 		if err := importFile(do.Hash, do.Path, do.IpfsPort); err != nil {
 			return err
@@ -50,37 +49,37 @@ func GetFiles(do *definitions.Do) error {
 	return nil
 }
 
-func PutFiles(do *definitions.Do) error {
+func PutFiles(do *definitions.Do) (string, error) {
 	if err := EnsureIPFSrunning(); err != nil {
-		return err
+		return "", err
 	}
 
 	if err := checkGatewayFlag(do); err != nil {
-		return err
+		return "", err
 	}
 
-	//check if do.Name is dir or file ...
+	// Check if do.Name is dir or file.
 	f, err := os.Stat(do.Name)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if f.IsDir() {
 		log.WithField("dir", do.Name).Warn("Adding contents of a directory")
 		buf, err := exportDirectory(do)
 		if err != nil {
-			return err
+			return "", err
 		}
 		log.Warn("Directory object added succesfully")
-		log.Warn(util.TrimString(buf.String()))
+		log.Warn(strings.TrimSpace(buf.String()))
 	} else {
 		hash, err := exportFile(do.Name, do.Gateway, do.IpfsPort)
 		if err != nil {
-			return err
+			return "", err
 		}
-		do.Result = hash
+		return hash, nil
 	}
-	return nil
+	return "", nil
 }
 
 func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
@@ -105,7 +104,7 @@ func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	if err := services.InspectService(do); err != nil {
 		return nil, err
 	}
-	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
+	api := fmt.Sprintf("/ip4/%s/tcp/5001", strings.TrimSpace(ip.String()))
 
 	argumentsAdd := []string{"ipfs", "add", "-r", do.Destination, "--api", api}
 
@@ -131,7 +130,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	if err := services.InspectService(do); err != nil {
 		return nil, err
 	}
-	api := fmt.Sprintf("/ip4/%s/tcp/5001", util.TrimString(ip.String()))
+	api := fmt.Sprintf("/ip4/%s/tcp/5001", strings.TrimSpace(ip.String()))
 
 	argumentsGet := []string{"ipfs", "get", hash, "--api", api}
 
@@ -162,9 +161,9 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	return buf, nil
 
 }
-func PinFiles(do *definitions.Do) error {
+func PinFiles(do *definitions.Do) (string, error) {
 	if err := EnsureIPFSrunning(); err != nil {
-		return err
+		return "", err
 	}
 	log.WithFields(log.Fields{
 		"file": do.Name,
@@ -172,15 +171,14 @@ func PinFiles(do *definitions.Do) error {
 	}).Debug("Pinning a file")
 	hash, err := pinFile(do.Name)
 	if err != nil {
-		return err
+		return "", err
 	}
-	do.Result = hash
-	return nil
+	return hash, nil
 }
 
-func CatFiles(do *definitions.Do) error {
+func CatFiles(do *definitions.Do) (string, error) {
 	if err := EnsureIPFSrunning(); err != nil {
-		return err
+		return "", err
 	}
 
 	log.WithFields(log.Fields{
@@ -189,15 +187,14 @@ func CatFiles(do *definitions.Do) error {
 	}).Debug("Dumping the contents of a file")
 	hash, err := catFile(do.Name)
 	if err != nil {
-		return err
+		return "", err
 	}
-	do.Result = hash
-	return nil
+	return hash, nil
 }
 
-func ListFiles(do *definitions.Do) error {
+func ListFiles(do *definitions.Do) (string, error) {
 	if err := EnsureIPFSrunning(); err != nil {
-		return err
+		return "", err
 	}
 
 	log.WithFields(log.Fields{
@@ -206,43 +203,40 @@ func ListFiles(do *definitions.Do) error {
 	}).Debug("Listing an object")
 	hash, err := listFile(do.Name)
 	if err != nil {
-		return err
+		return "", err
 	}
-	do.Result = hash
-	return nil
+	return hash, nil
 }
 
-func ManagePinned(do *definitions.Do) error {
+func ManagePinned(do *definitions.Do) (string, error) {
 	if err := EnsureIPFSrunning(); err != nil {
-		return err
+		return "", err
 	}
 	if do.Rm && do.Hash != "" {
-		return fmt.Errorf("Either remove a file by hash or all of them\n")
+		return "", fmt.Errorf("Either remove a file by hash or all of them")
 	}
 
 	if do.Rm {
 		log.Info("Removing all cached files")
 		hashes, err := rmAllPinned()
 		if err != nil {
-			return err
+			return "", err
 		}
-		do.Result = hashes
+		return hashes, nil
 	} else if do.Hash != "" {
 		log.WithField("hash", do.Hash).Info("Removing from cache")
 		hashes, err := rmPinnedByHash(do.Hash)
 		if err != nil {
-			return err
+			return "", err
 		}
-		do.Result = hashes
-	} else {
-		log.Debug("Listing files pinned locally")
-		hash, err := listPinned()
-		if err != nil {
-			return err
-		}
-		do.Result = hash
+		return hashes, nil
 	}
-	return nil
+	log.Debug("Listing files pinned locally")
+	hash, err := listPinned()
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
 }
 
 func importFile(hash, fileName, port string) error {
@@ -345,7 +339,7 @@ func isHashAnObject(ipfsHash string) (bool, error) {
 	if err != nil {
 		return dirBool, err
 	}
-	if util.TrimString(result) != "" { //not a dir
+	if strings.TrimSpace(result) != "" { //not a dir
 		return true, nil
 	}
 

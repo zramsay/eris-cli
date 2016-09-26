@@ -214,7 +214,3 @@ func canWeRemove(toClean map[string]bool) bool {
 	log.Warn("Authorization not given, exiting")
 	return false
 }
-
-func TrimString(strang string) string {
-	return strings.TrimSpace(strings.Trim(strang, "\n"))
-}

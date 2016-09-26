@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	log "github.com/eris-ltd/eris-logger"
@@ -215,4 +216,18 @@ func MoveFile(src, dst string) error {
 	}
 
 	return os.Remove(src)
+}
+
+// Tilde converts the leading home directory in the path to the `~` symbol.
+// Doesn't modify the path on Windows.
+func Tilde(path string) string {
+	if runtime.GOOS == "windows" {
+		return path
+	}
+
+	home := HomeDir()
+	if strings.HasPrefix(path, home) {
+		return strings.Replace(path, home, "~", 1)
+	}
+	return path
 }

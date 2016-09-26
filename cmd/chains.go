@@ -3,12 +3,14 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	chns "github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
@@ -56,12 +58,12 @@ func buildChainsCommand() {
 
 var chainsMake = &cobra.Command{
 	Use:   "make NAME",
-	Short: "create keys and a genesis block for your chain",
-	Long: `create the new required files for your chain
+	Short: "create necessary files for your chain",
+	Long: `create necessary files for your chain
 
-Make is an opinionated gateway to the basic types of chains which most eris users
-will make most of the time. Make is a command line wizard in which you will let
-the marmots know how you would like your genesis created.
+Make is an opinionated gateway to the basic types of chains which most Eris users
+will make most of the time. Make is also a command line wizard in which 
+you will let the marmots know how you would like your genesis created.
 
 Make can also be used with a variety of flags for fast chain making.
 
@@ -77,15 +79,15 @@ be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-the [eris chains start chainName --init-dir ~/.eris/chain/chainName] for that 
+the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `] for that 
 which will import all of the files which make creates into containers and 
 start your shiny new chain.
 
-If you have any questions on eris chains make, please see the eris-cm (chain manager)
+If you have any questions on eris chains make, please see the Eris CM (chain manager)
 documentation here:
 https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/`,
 	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
-$ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive) -- use the [--chain-type] flag to specify chain types
+$ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive); use the [--chain-type] flag to specify chain types
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
 $ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
 $ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
@@ -109,7 +111,7 @@ of Go text templates. See the more detailed description in the help
 output for the [eris ls] command.`,
 
 	Run: ListChains,
-	Example: `$ eris chains ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
+	Example: `$ eris chains ls -f '{{.ShortName}} {{.Info.Config.Image}} {{ports .Info}}'
 $ eris chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 }
 
@@ -166,7 +168,7 @@ var chainsNew = &cobra.Command{
 
 This command has been replaced by [eris chains start --init-dir].
 
-Please update any scripts that rely on [chains new].`,
+Please update any scripts that rely on [eris chains new].`,
 	Deprecated: "it has been replaced by [eris chains start NAME --init-dir]",
 	Run:        StartChain,
 }
@@ -174,28 +176,26 @@ Please update any scripts that rely on [chains new].`,
 var chainsStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start an existing chain or initialize a new one",
-	Long: `start an existing chain or initialize a new one"
+	Long: `start an existing chain or initialize a new one
 
 [eris chains start NAME] by default will put an existing chain into
 the background. Its logs will not be viewable from the command line.
 
 To initialize (create) a new chain, the [eris chains make NAME] command
 must first be run. This will (by default) create a simple chain with
-relevant files in $HOME/.eris/chains/NAME. The path to this directory is
-then passed into the [--init-dir] flag like so:
+relevant files in ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `. The path to this directory is then passed into the [--init-dir] flag like so:
 
-[eris chains start NAME --init-dir ~/.eris/chains/NAME]
+  [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `]
 
 Note that it is also possible to use only the name of the relevant
 directory like so (e.g., for complex chains):
 
-[eris chains start NAME --init-dir name_full_000]
+  [eris chains start NAME --init-dir name_full_000]
 
-To stop the chain use:      [eris chains stop NAME]
-To view a chain's logs use: [eris chains logs NAME]
+To stop the chain use: [eris chains stop NAME]. To view a chain's logs use: 
+[eris chains logs NAME].
 
-You can redefine the chain ports accessible over the network with the --ports flag.
-`,
+You can redefine the chain ports accessible over the network with the --ports flag.`,
 	Run: StartChain,
 	Example: `$ eris chains start simplechain --ports 4000 -- map the first port from the config file to the host port 40000
 $ eris chains start simplechain --ports 40000,50000- -- redefine the first and the second port mapping and autoincrement the rest
@@ -232,9 +232,9 @@ var chainsInspect = &cobra.Command{
 Information available to the inspect command is provided by the
 Docker API. For more information about return values,
 see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `$ eris chains inspect 2gather -- will display the entire information about 2gather containers
-$ eris chains inspect 2gather name -- will display the name in machine readable format
-$ eris chains inspect 2gather host_config.binds -- will display only that value`,
+	Example: `$ eris chains inspect simplechain -- will display the entire information about simplechain containers
+$ eris chains inspect 2gather Name -- will display the name in machine readable format
+$ eris chains inspect 2gather HostConfig.Binds -- will display only that value`,
 	Run: InspectChain,
 }
 
@@ -289,10 +289,10 @@ $ eris chains cat simplechain genesis -- display the genesis.json file from the 
 }
 
 func addChainsFlags() {
-	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in ~/.eris/chains/account-types; incompatible with and overrides chain-type")
-	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in ~/.eris/chains/chain-types")
-	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in ~/.eris/chains, make tarballs; incompatible with and overrides zip")
-	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in ~/.eris/chains, make zip files")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in "+util.Tilde(filepath.Join(ChainsPath, "account-types"))+"; incompatible with and overrides chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in "+util.Tilde(filepath.Join(ChainsPath, "chain-types")))
+	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make tarballs; incompatible with and overrides zip")
+	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make zip files")
 	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
@@ -326,7 +326,7 @@ func addChainsFlags() {
 	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
-	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in ~/.eris/chains")
+	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in "+util.Tilde(ChainsPath))
 
 	buildFlag(chainsUpdate, do, "pull", "chain")
 	buildFlag(chainsUpdate, do, "timeout", "chain")
@@ -438,7 +438,9 @@ func CheckoutChain(cmd *cobra.Command, args []string) {
 }
 
 func CurrentChain(cmd *cobra.Command, args []string) {
-	IfExit(chns.CurrentChain(do))
+	out, err := chns.CurrentChain(do)
+	IfExit(err)
+	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func CatChain(cmd *cobra.Command, args []string) {

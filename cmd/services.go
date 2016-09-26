@@ -9,6 +9,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
@@ -89,7 +90,7 @@ docker format of [repository/organization/image].`,
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "edit a service",
-	Long: `edit a service definition file which is kept in ~/.eris/services.
+	Long: `edit a service definition file which is kept in ` + util.Tilde(ServicesPath) + `.
 Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
@@ -105,7 +106,7 @@ var servicesStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start a service",
 	Long: `start a service according to the service definition file which
-eris stores in the ~/.eris/services directory
+eris stores in the ` + util.Tilde(ServicesPath) + `directory
 
 The [eris services start NAME] command by default will put the
 service into the background so its logs will not be viewable
@@ -218,7 +219,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", ErisRoot))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(ErisRoot)))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
@@ -367,5 +368,7 @@ func RmService(cmd *cobra.Command, args []string) {
 func CatService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(srv.CatService(do))
+	out, err := srv.CatService(do)
+	IfExit(err)
+	fmt.Fprint(config.Global.Writer, out)
 }

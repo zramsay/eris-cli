@@ -184,13 +184,11 @@ func LogsChain(do *definitions.Do) error {
 //
 func CheckoutChain(do *definitions.Do) error {
 	if do.Name == "" {
-		do.Result = "nil"
 		return util.NullHead()
 	}
 
 	curHead, _ := util.GetHead()
 	if do.Name == curHead {
-		do.Result = "no change"
 		return nil
 	}
 
@@ -200,17 +198,14 @@ func CheckoutChain(do *definitions.Do) error {
 // CurrentChain displays the currently in scope (or checked out) chain. It
 // returns an error (which should never be triggered)
 //
-func CurrentChain(do *definitions.Do) error {
+func CurrentChain(do *definitions.Do) (string, error) {
 	head, _ := util.GetHead()
 
 	if head == "" {
-		head = "There is no chain checked out."
+		head = "There is no chain checked out"
 	}
 
-	log.Warn(head)
-	do.Result = head
-
-	return nil
+	return head, nil
 }
 
 // CatChain displays chain information. It returns nil on success, or input/output

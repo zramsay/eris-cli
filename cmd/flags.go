@@ -43,7 +43,7 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "links":
 		cmd.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 	case "follow":
-		cmd.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like tail -f")
+		cmd.Flags().BoolVarP(&do.Follow, "follow", "f", false, "follow logs, like [tail -f]")
 	case "tail":
 		cmd.Flags().StringVarP(&do.Tail, "tail", "t", "150", "number of lines to show from end of logs")
 	case "file":

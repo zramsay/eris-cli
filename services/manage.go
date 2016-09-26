@@ -42,14 +42,12 @@ func MakeService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Result = "success"
 	return nil
 }
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	log.WithField("=>", servDefFile).Info("Editing service")
-	do.Result = "success"
 	return Editor(servDefFile)
 }
 
@@ -121,7 +119,6 @@ func RenameService(do *definitions.Do) error {
 	} else {
 		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -170,7 +167,6 @@ func UpdateService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -203,25 +199,22 @@ func RmService(do *definitions.Do) error {
 			}
 		}
 	}
-	do.Result = "success"
 	return nil
 }
 
-func CatService(do *definitions.Do) error {
+func CatService(do *definitions.Do) (string, error) {
 	configs := util.GetGlobalLevelConfigFilesByType("services", true)
 	for _, c := range configs {
 		cName := strings.Split(filepath.Base(c), ".")[0]
 		if cName == do.Name {
 			cat, err := ioutil.ReadFile(c)
 			if err != nil {
-				return err
+				return "", err
 			}
-			do.Result = string(cat)
-			log.Warn(string(cat))
-			return nil
+			return string(cat), nil
 		}
 	}
-	return fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
+	return "", fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {

@@ -66,27 +66,26 @@ func TestPutFiles(t *testing.T) {
 	})
 	defer ipfs.Close()
 
-	if err := PutFiles(do); err != nil {
+	out, err := PutFiles(do)
+	if err != nil {
 		t.Fatalf("err putting files: %v\n", err)
 	}
 
 	if expected := "/ipfs/"; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path())
+		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
 	}
 
 	if expected := "POST"; ipfs.Method() != expected {
-		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
+		t.Fatalf("Used the wrong HTTP method; expected %v, got %v", expected, ipfs.Method())
 	}
 
 	if ipfs.Body() != content {
-		t.Fatalf("Put the bad file; expected %q, got %q\n", content, ipfs.Body())
+		t.Fatalf("Put the bad file; expected %q, got %q", content, ipfs.Body())
 	}
 
-	if hash != do.Result {
-		t.Fatalf("Hash mismatch; expected %q, got %q\n", hash, do.Result)
+	if hash != out {
+		t.Fatalf("Hash mismatch; expected %q, got %q", hash, out)
 	}
-
-	log.WithField("result", do.Result).Debug("Finished putting a file")
 }
 
 func TestGetFiles(t *testing.T) {
