@@ -6,16 +6,16 @@ import (
 	"strings"
 	"text/template"
 
+	// commands "github.com/eris-ltd/eris-pm/cmd"
+	// "github.com/eris-ltd/eris-pm/version"
 	"github.com/eris-ltd/common/go/docs"
-	commands "github.com/eris-ltd/eris-cli/cmd"
-	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/spf13/cobra"
 )
 
 // Repository maintainers should customize the next two lines.
-var Description = "Command Line Interface"                                   // should match the docs site name
-var RenderDir = fmt.Sprintf("./docs/documentation/cli/%s/", version.VERSION) // should be the "shortversion..."
+var Description = "DESCRIPTION!!!"                                            // should match the docs site name
+var RenderDir = fmt.Sprintf("./docs/documentation/REPO/%s/", version.VERSION) // should be the "shortversion..."
 
 // The below variables should be updated only if necessary.
 var Specs = []*docs.Entry{}
@@ -78,10 +78,9 @@ func RenderFiles(cmdRaw *cobra.Command, tmpl *template.Template) error {
 
 func main() {
 	// Repository maintainers should populate the top level command object.
-	cli := commands.ErisCmd
-	commands.InitializeConfig()
-	commands.AddGlobalFlags()
-	commands.AddCommands()
+	// pm := commands.EPMCmd
+	// commands.InitEPM()
+	// commands.AddGlobalFlags()
 
 	// Make the proper directory.
 	var err error
@@ -109,7 +108,7 @@ func main() {
 	}
 
 	// Render the templates.
-	if err = RenderFiles(cli, tmpl); err != nil {
+	// if err = RenderFiles(pm, tmpl); err != nil {
 		panic(err)
 	}
 }
