@@ -25,14 +25,13 @@ const dmVerMin = version.DM_VER_MIN
 // Defining the root command
 var ErisCmd = &cobra.Command{
 	Use:   "eris COMMAND [FLAG ...]",
-	Short: "The Blockchain Application Platform",
+	Short: "The Ecosystem Application Platform",
 	Long: `Eris is a platform for building, testing, maintaining, and operating
-distributed applications with a blockchain backend. Eris makes it easy
-and simple to wrangle the dragons of smart contract blockchains.
+applications built to run on an ecosystem level.
 
 Made with <3 by Eris Industries.
 
-Complete documentation is available at https://docs.erisindustries.com
+Complete documentation is available at https://monax.io/docs/documentation
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		log.SetLevel(log.WarnLevel)
