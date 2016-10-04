@@ -20,7 +20,7 @@ var Keys = &cobra.Command{
 It is for development only. Advanced functionality is available via
 the [eris services exec keys "eris-keys CMD"] command.
 
-See https://docs.erisindustries.com/documentation/eris-keys/ for more info.`,
+See https://monax.io/docs/documentation/keys/ for more info.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 

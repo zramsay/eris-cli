@@ -7,25 +7,20 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 * test the tool itself
 * test minimum viable stack connection and sequencing
 * test the tool against a multitude of docker-engine APIs
-  * docker 1.8.0 (implemented)
-  * docker 1.8.1 (implemented)
-  * docker 1.8.2 (implemented)
-  * docker 1.8.3 (implemented)
-  * docker 1.9.0 (implemented)
 * test the tool from a multitude of host environments
-  * debian (not implemented. is this necessary?)
-  * rhel (not implemented. is this necessary?)
-  * ubuntu (running the tests in docker provides natively)
-  * OSX (not implemented. is this necessary?)
-  * windows (not implemented. is this necessary?)
+  * Debian (not implemented)
+  * RHEL/Centos (not implemented)
+  * Ubuntu (running the tests in Docker provides natively)
+  * macOS
+  * Windows
 
 ## Goal 1: Test The Tool Itself
 
-Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container (but I also use it for quick testing of the package level tests locally -- see below).
+Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container (but I also use it for quick testing of the package level tests locally — see below).
 
 ## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (Apps and Contract Suites)
 
-Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the eris/eris container.
+Testing the stack connection is performed from the `tests/test_stack.sh` script. This script should only concern itself with the mechanisms for testing the stack. It will also use the fixtures folder for the necessary components of the stack. This script should be run typically from inside the `quay.io/eris/eris` container.
 
 ## Goal 3: Test the Tool Against a Multitue of docker-engine APIs
 
@@ -43,9 +38,9 @@ Hosts should have docker built and available locally in a relatively "clean" OS 
 
 The set of things which connect into the host (which docker calls a "machine"), including things like the ssh keys, the ssl certs, etc., should be cleanly defined and to the greatest extent possible portable.
 
-What I have done is I have packaged these machine connection definitions into a docker container we keep in a private repository. Billings (our build robot) has access to the correct repository and manages the acquisition of these machine connections (which we would not expose). There is a further layer of protection here in that the machine definitions rely generally on an API keyset to the hosting provider (in our case Digital Ocean) which we are able to place into an Environment Variable into Circle (or another place should that become a challenge) but that is unneccessary usually as we generally just want to be able to power on or off a set of docker "backends" to talk to (more on that later).
+What I have done is I have packaged these machine connection definitions into a docker container we keep in a private repository. Billings (our build robot) has access to the correct repository and manages the acquisition of these machine connections (which we would not expose). There is a further layer of protection here in that the machine definitions rely generally on an API keyset to the hosting provider (in our case Digital Ocean) which we are able to place into an environment variable into Circle CI (or another place should that become a challenge) but that is unneccessary usually as we generally just want to be able to power on or off a set of docker "backends" to talk to (more on that later).
 
-Machines should be given a naming convention. The eris naming convention will be as follows:
+Machines should be given a naming convention. The Eris naming convention will be as follows:
 
 ```
 machine=eris-test-$swarm-$ver
@@ -53,19 +48,19 @@ machine=eris-test-$swarm-$ver
 
 This convention makes it much easier to pass machine on or off instructions around the testing suite as necessary.
 
-When the test suite boots up (meaning the full `tests/test.sh` is ran), the suite will get the machine connections container, make sure that is accessible to the main portion of the test, which focuses on running the eris tool (step 3) tests against the definitive backends list (step 2) for that eris <-> host connection. On circle we do this via running the eris tests from within a container and then mounting docker's unix socket (we don't need it other than to start the eris/eris container).
+When the test suite boots up (meaning the full `tests/test.sh` is ran), the suite will get the machine connections container, make sure that is accessible to the main portion of the test, which focuses on running the eris tool (step 3) tests against the definitive backends list (step 2) for that Eris <-> host connection. On Circle CI we do this via running the Eris CLI tests from within a container and then mounting Docker's Unix socket (we don't need it other than to start the `quay.io/eris/eris` container).
 
-This takes of ubuntu host environment running the (step 3) tests against the (step 2) backends from within the eris/eris container. But we still will have to figure out how to broaden this -- probably with additional docker files like we have to do to build eris with docker 1.7 client.
+This takes of Ubuntu host environment running the (step 3) tests against the (step 2) backends from within the `quay.io/eris/eris` container. But we still will have to figure out how to broaden this — probably with additional docker files like we have to do to build eris with docker 1.7 client.
 
 This connection should be local to the machine, as we test the tool <-> docker server in the next step.
 
-The test suite will turn on and off docker-machines as needed.
+The test suite will turn on and off Docker machines as needed.
 
 ## Step 2: Define The APIs (or, Engines)
 
 On the machines run engines. For our purposes, the engine we're talking about is the docker-engine API. As different people will have different API structures, we need to test against a range of API backends. This array of backends is kept definitively in the `tests/test.sh`.
 
-Before running the tool's tests (step 3) against a specific API backend, the test suite will `docker-machine start` that machine. This is generally done over SSH connection using the SSH keys kept in the test_machines image which the tool suite will make sure is available locally when it performs `docker run erisindustres/test_machines`. The eris cli docker container has docker-machine built into it so that it can work with the machine definitions.
+Before running the tool's tests (step 3) against a specific API backend, the test suite will `docker-machine start` that machine. This is generally done over SSH connection using the SSH keys kept in the test_machines image which the tool suite will make sure is available locally when it performs `docker run quay.io/eris/test_machines`. The Eris CLI Docker container has `docker-machine` built into it so that it can work with the machine definitions.
 
 Finally, the test suite will not exit itself when the tool tests (step 3) exit as it assumes it will be looping through an array.
 
@@ -107,7 +102,7 @@ docker run --rm --entrypoint "/home/eris/test_tool.sh" -e MACHINE_NAME="eris-tes
 
 * Get the metrics on the array of hosts and api versions into a consumable form.
 * Route logs to papertrail using Ethan's paradigm for integration tests.
-* Only display the machine backend results for circle. Pipe these into slack so we can see them.
+* Only display the machine backend results for Circle CI. Pipe these into slack so we can see them.
 * Figure out the deployment paths for build artifacts.
 * moar package level testing
 * finalize the app level testing

@@ -12,8 +12,8 @@ var quiet bool
 
 var VerSion = &cobra.Command{
 	Use:   "version",
-	Short: "display Eris's platform version",
-	Long:  `display the current installed version of Eris`,
+	Short: "display Eris version",
+	Long:  `display current installed version of Eris`,
 	Run:   DisplayVersion,
 }
 

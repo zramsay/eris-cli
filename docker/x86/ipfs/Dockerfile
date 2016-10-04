@@ -1,5 +1,5 @@
 FROM quay.io/eris/base
-MAINTAINER Eris Industries <support@erisindustries.com>
+MAINTAINER Monax Industries <support@monax.io>
 
 # configure install
 ENV NAME         ipfs

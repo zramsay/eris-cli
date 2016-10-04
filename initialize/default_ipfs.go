@@ -15,7 +15,7 @@ func defServiceIPFS() string {
 	}
 	return `
 # For more information on configurations, see the services specification:
-# https://docs.erisindustries.com/documentation/eris-cli/latest/services_specification/
+# https://monax.io/docs/documentation/cli/latest/services_specification/
 
 # These fields marshal roughly into the [docker run] command, see:
 # https://docs.docker.com/engine/reference/run/
@@ -40,8 +40,8 @@ user = "root"
 exec_host = "ERIS_IPFS_HOST"
 
 [maintainer]
-name = "Eris Industries"
-email = "support@erisindustries.com"
+name = "Monax Industries"
+email = "support@monax.io"
 
 [location]
 dockerfile = "https://github.com/eris-ltd/eris-cli/blob/master/docker/x86/ipfs/Dockerfile"

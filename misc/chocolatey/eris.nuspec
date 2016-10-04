@@ -7,18 +7,18 @@
     <title>Eris</title>
     <version>0.11.4</version>
     <authors>The marmots</authors>
-    <owners>support@erisindustries.com</owners>
-    <summary>Platform for building, testing, maintaining, and operating applications with a blockchain backend</summary>
-    <description>Blockchain application platform CLI
+    <owners>support@monax.io</owners>
+    <summary>Ecosystem application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level</summary>
+    <description>Ecosystem application platform CLI
     </description>
-    <projectUrl>https://erisindustries.com</projectUrl>
+    <projectUrl>https://monax.io</projectUrl>
     <packageSourceUrl>https://github.com/eris-ltd/eris-cli</packageSourceUrl>
     <projectSourceUrl>https://github.com/eris-ltd/eris-cli</projectSourceUrl>
-    <docsUrl>https://docs.erisindustries.com/</docsUrl>
-    <mailingListUrl>https://support.erisindustries.com/helpdesk</mailingListUrl>
+    <docsUrl>https://monax.io/docs/documentation/</docsUrl>
+    <mailingListUrl>https://support.monax.io/helpdesk</mailingListUrl>
     <bugTrackerUrl>https://github.com/eris-ltd/eris-cli/issues</bugTrackerUrl>
-    <tags>eris docker blockchains</tags>
-    <copyright>2016 (c) Eris Industries</copyright>
+    <tags>eris monax admin docker blockchains</tags>
+    <copyright>2016 (c) Monax Industries</copyright>
     <licenseUrl>https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>

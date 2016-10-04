@@ -1,6 +1,6 @@
 # Introduction
 
-We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about docker and eris later.
+We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about Docker and Eris later.
 
 # Copy Over Your Previous `idi` Application
 
@@ -343,7 +343,7 @@ chains = ["simplechain"]
 
 [maintainer]
 name = "Casey Kuhlman"
-email = "casey@erisindustries.com"
+email = "casey@monax.io"
 
 [location]
 dockerfile = ""

@@ -1,6 +1,6 @@
 FROM centos:6
 
-MAINTAINER Eris Industries <support@erisindustries.com>
+MAINTAINER Monax Industries <support@monax.io>
 
 COPY s3tools.repo /etc/yum.repos.d
 
