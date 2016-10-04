@@ -153,15 +153,9 @@ Created by `eris init` in $HOME directory:
 │       ├── sol/
 │   ├── services/
 │       ├── global/
-│       ├── btcd.toml
 │       ├── ipfs.toml
 │       ├── keys.toml
 ```
-
-With some additional default chain, and services files dropped in from:
-- [eris-chains](https://github.com/eris-ltd/eris-chains)
-- [eris-services](https://github.com/eris-ltd/eris-services)
-
 
 # Contributions
 
