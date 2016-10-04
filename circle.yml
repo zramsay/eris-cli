@@ -8,7 +8,7 @@ machine:
     DOCKER_VERSION: 1.9.1
     DOCKER_MACHINE_VERSION: 0.7.0
   post:
-    - git config --global user.email "billings@erisindustries.com"
+    - git config --global user.email "billings@monax.io"
     - git config --global user.name "Billings the Bot"
     - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
     - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}

@@ -137,8 +137,8 @@ ports          = [ "1234" ]
 services = [ "keys" ]
 
 [maintainer]
-name = "Eris Industries"
-email = "support@erisindustries.com"
+name = "Monax Industries"
+email = "support@monax.io"
 `
 	)
 
@@ -168,12 +168,7 @@ email = "support@erisindustries.com"
 		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
-		// [pv]: "data_container" is not loaded from the default.toml. A bug?
-		// {`Service.AutoData`, d.Service.AutoData, false},
 		{`Service.Image`, d.Service.Image, "test image"},
-
-		// {`Dependencies`, d.Dependencies.Services, []string{"keys"}},
-		// {`Maintainer`, d.Maintainer.Email, "support@erisindustries.com"},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
@@ -261,10 +256,6 @@ ports          = [ "4321" ]
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.AutoData`, d.Service.AutoData, true},
 		{`Service.Image`, d.Service.Image, "test image"},
-		//{`Service.Ports`, d.Service.Ports, []string{"4321"}},
-
-		//{`Dependencies`, d.Dependencies.Chains, []string{"something"}},
-		//{`Maintainer`, d.Maintainer.Email, "support@erisindustries.com"},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)

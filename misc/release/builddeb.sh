@@ -46,18 +46,16 @@ Version: ${ERIS_VERSION}-${ERIS_RELEASE}
 Section: devel
 Architecture: amd64
 Priority: standard
-Homepage: https://docs.erisindustries.com
-Maintainer: Eris Industries <support@erisindustries.com>
+Homepage: https://monax.io/docs/documentation/
+Maintainer: Monax Industries <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
-Description: platform for building, testing, maintaining, and operating
-  distributed applications with a blockchain backend. Eris makes it easy
-  and simple to wrangle the dragons of smart contract blockchains.
+Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications. 
 EOF
 cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
 cat > deb/usr/share/doc/eris/copyright <<EOF
 Files: *
-Copyright: $(date +%Y) Eris Industries, Ltd. <support@erisindustries.com>
+Copyright: $(date +%Y) Monax Industries  <support@monax.io>
 License: GPL-3
 EOF
 dpkg-deb --build deb
@@ -98,7 +96,7 @@ DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial"
 for distro in ${DISTROS}
 do
   cat >> eris/conf/distributions <<EOF
-Origin: Eris Industries <support@erisindustries.com>
+Origin: Monax Industries <support@monax.io>
 Codename: ${distro}
 Components: main
 Architectures: i386 amd64

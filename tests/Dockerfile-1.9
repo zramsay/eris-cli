@@ -2,7 +2,7 @@
 # please do not use this dockerfile for anything other
 # than sandboxed testing of the cli
 FROM ubuntu:14.04
-MAINTAINER Eris Industries <support@erisindustries.com>
+MAINTAINER Monax Industries <support@monax.io>
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBIAN_PRIORITY critical

@@ -26,10 +26,9 @@ const dmVerMin = version.DM_VER_MIN
 var ErisCmd = &cobra.Command{
 	Use:   "eris COMMAND [FLAG ...]",
 	Short: "The Ecosystem Application Platform",
-	Long: `Eris is a platform for building, testing, maintaining, and operating
-applications built to run on an ecosystem level.
+	Long: `Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
-Made with <3 by Eris Industries.
+Made with <3 by Monax Industries.
 
 Complete documentation is available at https://monax.io/docs/documentation
 ` + "\nVersion:\n  " + VERSION,
@@ -80,16 +79,16 @@ Complete documentation is available at https://monax.io/docs/documentation
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
-			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
+			IfExit(fmt.Errorf("Eris requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
 		log.AddHook(util.CrashReportHook(dockerVersion))
 
 		// Compare `docker-machine` versions but don't fail if not installed.
 		dmVersion, err := util.DockerMachineVersion()
 		if err != nil {
-			log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Eris, we strongly recommend it be installed for maximum blockchain awesomeness")
 		} else if !util.CompareVersions(dmVersion, dmVerMin) {
-			IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+			IfExit(fmt.Errorf("Eris requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 

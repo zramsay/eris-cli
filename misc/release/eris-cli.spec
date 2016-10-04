@@ -3,22 +3,20 @@
 %{define} release %{getenv:ERIS_RELEASE}
 %{define} gorepo %{_builddir}/src/github.com/eris-ltd/eris-cli
 
-Summary: Eris is a platform for building, testing, maintaining, and operating distributed applications with a blockchain backend. Eris makes it easy and simple to wrangle the dragons of smart contract blockchains.
+Summary: Eris is an application platform for building, testing, maintaining, and
+operating applications built to run on an ecosystem level.
+
 Name: eris-cli
 License: GPL-3
 Version: %{version}
 Release: %{release}
 Group: Applications/Productivity
-URL: https://docs.erisindustries.com
+URL: https://monax.io/docs/documentation
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
 
 %description
-Eris is a platform for building, testing,
-maintaining, and operating distributed
-applications with a blockchain backend.
-
-Eris makes it easy and simple to wrangle
-the dragons of smart contract blockchains.
+Eris is an application platform for building, testing, maintaining, and operating
+applications built to run on an ecosystem level. It makes it easy and simple to wrangle the dragons of smart contract blockchains.
 
 %prep
 rm -fr %{_builddir}/*

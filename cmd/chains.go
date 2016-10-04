@@ -85,7 +85,7 @@ start your shiny new chain.
 
 If you have any questions on eris chains make, please see the Eris CM (chain manager)
 documentation here:
-https://docs.erisindustries.com/documentation/eris-cm/latest/eris-cm/`,
+https://monax.io/docs/documentation/cm/`,
 	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
 $ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive); use the [--chain-type] flag to specify chain types
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)

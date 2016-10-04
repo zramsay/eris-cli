@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
@@ -24,7 +23,7 @@ var (
 	// incoming post request args
 	// auth added in SetBundlePath
 	bundleInfo = map[string]string{
-		"groupId":  "com.erisindustries",
+		"groupId":  "io.monax",
 		"bundleId": "marmoty-contracts",
 		"version":  "2.1.2", //don't use ints since path joining
 	}
@@ -93,10 +92,11 @@ func TestDeployContract(t *testing.T) {
 	doKey.Container = true
 	doKey.Host = false
 	//there should only be one key
-	if err := keys.ListKeys(doKey); err != nil {
+	keys, err := keys.ListKeys(doKey)
+	if err != nil {
 		t.Fatalf("err listing keys: %v\n", err)
 	}
-	address := strings.Split(doKey.Result, ",")[0]
+	address := keys[0]
 
 	// testGetTarballFromIPFS(t) (replaced by using a tar'd bundle directly!)
 	// defer kill(t, "ipfs", true)

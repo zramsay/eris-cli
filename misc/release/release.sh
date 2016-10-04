@@ -21,7 +21,7 @@
 #
 #  5. GPG release signing key name in KEY_NAME variable:
 #
-#    KEY_NAME="Eris Industries <support@erisindustries.com>"
+#    KEY_NAME="Monax Industries <support@monax.io>"
 #
 #  6. GPG release signing key password in KEY_PASSWORD variable:
 #
@@ -71,7 +71,7 @@ export AWS_S3_RPM_REPO=eris-rpm
 export AWS_S3_RPM_PACKAGES=eris-rpm-files
 export AWS_S3_DEB_REPO=eris-deb
 export AWS_S3_DEB_PACKAGES=eris-deb-files
-export KEY_NAME="Eris Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@erisindustries.com>"
+export KEY_NAME="Monax Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@monax.io>"
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {

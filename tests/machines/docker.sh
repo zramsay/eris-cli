@@ -17,7 +17,7 @@
 # LICENSE
 
 # The MIT License (MIT)
-# Copyright (c) 2016-Present Eris Industries, Ltd.
+# Copyright (c) 2016-Present Monax Industries, Ltd.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
