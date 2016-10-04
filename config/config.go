@@ -136,7 +136,7 @@ func SetDefaults() (*viper.Viper, error) {
 	config.SetDefault("ImagesPullTimeout", "15m")
 
 	// Compiler defaults.
-	config.SetDefault("CompilersHost", "https://compilers.eris.industries")
+	config.SetDefault("CompilersHost", "https://compilers.monax.io")
 	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(ver.VERSION, "-")[0], ".", "", -1))
 
 	// Image defaults.
