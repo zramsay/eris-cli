@@ -21,7 +21,7 @@ import (
 	log "github.com/eris-ltd/eris-logger"
 )
 
-// MakeChain runs the `eris-cm make` command in a docker container.
+// MakeChain runs the `eris-cm make` command in a Docker container.
 // It returns an error. Note that if do.Known, do.AccountTypes
 // or do.ChainType are not set the command will run via interactive
 // shell.
@@ -94,33 +94,43 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import account-types into container: %v", err)
 	}
 
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import chain-types into container: %v", err)
 	}
 
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	doData.Source = chnPath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import chain directory into container: %v", err)
 	}
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
+		// Log to both screen and logs for further analysis in Bugsnag.
+		log.Debug("Dumping [eris-cm] output")
+		log.Error(buf.String())
+
+		// After all the imports are in place, [eris-cm] should not fail,
+		// so it is worth investigating why it still failed.
+		util.SendReport("`eris chains make` failed")
+
 		return err
 	}
 
+	// TODO(pv): remove this line after `eris-cm` command line handling is fixed.
+	// This line exists to capture `eris-cm` errors which return exit code 0.
 	io.Copy(config.Global.Writer, buf)
 
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
 	if err := data.ExportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
 	}
 
 	if !do.RmD {
@@ -130,7 +140,7 @@ func MakeChain(do *definitions.Do) error {
 	return nil
 }
 
-// InspectChain is eris' version of docker inspect. It returns
+// InspectChain is Eris' version of [docker inspect]. It returns
 // an error.
 //
 //  do.Name            - name of the chain to inspect (required)

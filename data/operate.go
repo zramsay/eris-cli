@@ -110,9 +110,12 @@ func runData(name string, args []string) error {
 	doRun.Operations.DataContainerName = name
 	doRun.Operations.ContainerType = "data"
 	doRun.Operations.Args = args
-	_, err := perform.DockerRunData(doRun.Operations, nil)
+	out, err := perform.DockerRunData(doRun.Operations, nil)
 	if err != nil {
-		return fmt.Errorf("Error running args: %v\n%v\n", args, err)
+		log.Debug("Dumping failed data container logs")
+		log.Debug(out)
+
+		return fmt.Errorf("Error running args %q: %v", args, err)
 	}
 	return nil
 }
