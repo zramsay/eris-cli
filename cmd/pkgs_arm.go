@@ -115,5 +115,5 @@ func formCompilers() string {
 	maj, _ := strconv.Atoi(verSplit[0])
 	min, _ := strconv.Atoi(verSplit[1])
 	pat, _ := strconv.Atoi(verSplit[2])
-	return fmt.Sprintf("https://compilers.eris.industries:1%01d%02d%01d", maj, min, pat)
+	return fmt.Sprintf("https://compilers.monax.io:1%01d%02d%01d", maj, min, pat)
 }
