@@ -247,25 +247,6 @@ func TestLogsChain(t *testing.T) {
 	}
 }
 
-func _TestUpdateChain(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	create(t, chainName)
-	defer kill(t, chainName)
-
-	do := def.NowDo()
-	do.Name = chainName
-	do.Pull = false
-	do.Operations.PublishAllPorts = true
-	if err := UpdateChain(do); err != nil {
-		t.Fatalf("expected chain to update, got %v", err)
-	}
-
-	if !util.Running(def.TypeChain, chainName) {
-		t.Fatalf("expecting chain running")
-	}
-}
-
 func TestInspectChain(t *testing.T) {
 	defer testutil.RemoveAllContainers()
 
