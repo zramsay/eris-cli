@@ -31,9 +31,12 @@ image = "` + path.Join(version.DefaultRegistry, version.ImageKeys) + `"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 
+[maintainer]
+name = "Monax Industries"
+email = "support@monax.io"
+
 [location]
-dockerfile = "https://github.com/eris-ltd/eris-keys/blob/master/Dockerfile"
 repository = "https://github.com/eris-ltd/eris-keys"
-website = "https://monax.io/docs/documentation/keys/"
+website = "https://monax.io/docs/documentation/keys"
 `
 }

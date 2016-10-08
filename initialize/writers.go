@@ -32,6 +32,8 @@ func dropServiceDefaults(dir string, services []string) error {
 			err = writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys)
 		case "ipfs":
 			err = writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS)
+		case "compilers":
+			err = writeDefaultFile(common.ServicesPath, "compilers.toml", defServiceCompilers)
 		default:
 			err = drops([]string{service}, "services", dir)
 		}
@@ -85,7 +87,7 @@ func pullDefaultImages(images []string) error {
 	// Spacer.
 	log.Warn()
 
-	log.Warn("Pulling default Docker images from "+config.Global.DefaultRegistry)
+	log.Warn("Pulling default Docker images from " + config.Global.DefaultRegistry)
 	for i, image := range images {
 		log.WithField("image", image).Warnf("Pulling image %d out of %d", i+1, len(images))
 
