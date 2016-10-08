@@ -250,35 +250,18 @@ var chainsRemove = &cobra.Command{
 	Short: "remove an installed chain",
 	Long: `remove an installed chain
 
-Command will remove the chain's container but will not
-remove the chain definition file.`,
+Command will remove the chain's container but not its 
+local directory or data container unless specified.`,
 	Run: RmChain,
-}
-
-var chainsUpdate = &cobra.Command{
-	Use:   "update NAME",
-	Short: "update an installed chain",
-	Long: `update an installed chain, or install it if it has not been installed
-
-Functionally this command will perform the following sequence:
-
-1. Stop the chain (if it is running).
-2. Remove the container which ran the chain.
-3. Pull the image the container uses from a hub.
-4. Rebuild the container from the updated image.
-5. Restart the chain (if it was previously running).
-
-NOTE: If the chain uses data containers those will not be affected
-by the update command.
-`,
-	Run: UpdateChain,
 }
 
 var chainsRestart = &cobra.Command{
 	Use:   "restart NAME",
-	Short: "restart chain",
-	Long:  `restart chain`,
-	Run:   RestartChain,
+	Short: "restart a chain",
+	Long: `restart a chain
+
+Command will gracefully stop then start a chain.`,
+	Run: RestartChain,
 }
 
 var chainsCat = &cobra.Command{
@@ -335,11 +318,6 @@ func addChainsFlags() {
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
 	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in "+util.Tilde(ChainsPath))
 
-	buildFlag(chainsUpdate, do, "pull", "chain")
-	buildFlag(chainsUpdate, do, "timeout", "chain")
-	buildFlag(chainsUpdate, do, "env", "chain")
-	buildFlag(chainsUpdate, do, "links", "chain")
-
 	buildFlag(chainsStop, do, "rm", "chain")
 	buildFlag(chainsStop, do, "data", "chain")
 	buildFlag(chainsStop, do, "force", "chain")
@@ -354,15 +332,12 @@ func addChainsFlags() {
 }
 
 func StartChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	// [zr]: yes, eventually
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.LogsChain(do))
@@ -391,7 +366,6 @@ func ExecChain(cmd *cobra.Command, args []string) {
 }
 
 func StopChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	IfExit(chns.StopChain(do))
@@ -451,7 +425,6 @@ func CurrentChain(cmd *cobra.Command, args []string) {
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Type = args[1]
@@ -466,7 +439,6 @@ func PortsChain(cmd *cobra.Command, args []string) {
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
 	IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
@@ -500,18 +472,11 @@ func ListChains(cmd *cobra.Command, args []string) {
 	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
 }
 
-func UpdateChain(cmd *cobra.Command, args []string) {
-	// [csk]: if no args should we just start the checkedout chain?
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(chns.UpdateChain(do))
-}
-
 func RestartChain(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	do.Pull = false
-	IfExit(chns.UpdateChain(do))
+	IfExit(chns.StopChain(do))
+	IfExit(chns.StartChain(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {

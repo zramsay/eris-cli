@@ -273,27 +273,6 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	// set the right env vars and command
-	if util.IsChain(chain.Name, true) {
-		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
-		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
-		chain.Service.Links = append(chain.Service.Links, do.Links...)
-		chain.Service.Command = loaders.ErisChainStart
-	}
-
-	err = perform.DockerRebuild(chain.Service, chain.Operations, do.Pull, do.Timeout)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
