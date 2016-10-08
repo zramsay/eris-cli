@@ -317,13 +317,10 @@ func addChainsFlags() {
 	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
-	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "", false, "remove the chain directory in "+util.Tilde(ChainsPath))
+	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "r", false, "remove the chain directory in "+util.Tilde(ChainsPath))
 
-	buildFlag(chainsStop, do, "rm", "chain")
-	buildFlag(chainsStop, do, "data", "chain")
 	buildFlag(chainsStop, do, "force", "chain")
 	buildFlag(chainsStop, do, "timeout", "chain")
-	buildFlag(chainsStop, do, "volumes", "chain")
 
 	chainsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
 	chainsList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
