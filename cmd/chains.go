@@ -280,12 +280,12 @@ $ eris chains cat simplechain genesis -- display the genesis.json file from the 
 }
 
 func addChainsFlags() {
-	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "what number of account types should we use? find these in "+util.Tilde(filepath.Join(ChainsPath, "account-types"))+"; incompatible with and overrides chain-type")
-	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "which chain type definition should we use? find these in "+util.Tilde(filepath.Join(ChainsPath, "chain-types")))
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "specify the kind and number of account types. find these in "+util.Tilde(filepath.Join(ChainsPath, "account-types"))+"; incompatible with chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "specify the type of chain to use. find these in "+util.Tilde(filepath.Join(ChainsPath, "chain-types"))+"; incompatible with account-types")
 	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make tarballs; incompatible with and overrides zip")
 	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make zip files")
 	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
-	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags")
+	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
