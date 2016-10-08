@@ -265,7 +265,8 @@ Command will gracefully stop then start a chain.`,
 }
 
 var chainsCat = &cobra.Command{
-	Use:     "cat NAME [config|genesis|status|validators]",
+	Use: "cat NAME [config|genesis]",
+	//Use:     "cat NAME [config|genesis|status|validators]",
 	Short:   "display chain information",
 	Long:    `display chain information`,
 	Aliases: []string{"plop"},
