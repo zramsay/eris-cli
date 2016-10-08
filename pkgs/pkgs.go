@@ -131,7 +131,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 			err = fmt.Errorf("no more throwaway chains")
 		}
 	default:
-		log.WithField("=>", pkg.ChainName).Info("No chain flag used. Booting chain from package file")
+		log.WithField("=>", do.ChainName).Info("No chain flag used. Booting chain from package file")
 		err = bootChain(do.ChainName, do)
 	}
 
@@ -194,6 +194,7 @@ func PerformAppActionService(do *definitions.Do, pkg *definitions.Package) error
 	log.WithFields(log.Fields{
 		"workdir":    do.Service.WorkDir,
 		"entrypoint": do.Service.EntryPoint,
+		"links":      do.Service.Links,
 	}).Debug()
 	do.Operations.ContainerType = definitions.TypeService
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
@@ -316,9 +317,9 @@ func linkAppToChain(do *definitions.Do, pkg *definitions.Package) {
 	var newLink string
 
 	if do.ChainDefinition.ChainType == "service" {
-		newLink = util.ServiceContainerName(pkg.ChainName) + ":" + "chain"
+		newLink = util.ServiceContainerName(do.ChainName) + ":" + "chain"
 	} else {
-		newLink = util.ChainContainerName(pkg.ChainName) + ":" + "chain"
+		newLink = util.ChainContainerName(do.ChainName) + ":" + "chain"
 	}
 	newLink2 := util.ServiceContainerName("keys") + ":" + "keys"
 	do.Service.Links = append(do.Service.Links, newLink)
