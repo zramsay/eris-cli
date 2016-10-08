@@ -30,7 +30,7 @@ func EPMApp() *AppType {
 	app := BlankAppType()
 	app.Name = "epm"
 	app.BaseImage = path.Join(version.DefaultRegistry, version.ImagePM)
-	app.EntryPoint = "epm --chain chain:46657 --sign keys:4767"
+	app.EntryPoint = "epm --chain tcp://chain:46657 --sign http://keys:4767"
 	app.DeployCmd = ""
 	app.TestCmd = ""
 	app.ChainTypes = []string{"mint"}
