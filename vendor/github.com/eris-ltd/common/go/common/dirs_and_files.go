@@ -31,7 +31,6 @@ var (
 
 	// Chains Directories
 	HEAD             = filepath.Join(ChainsPath, "HEAD")
-	DefaultChainPath = filepath.Join(ChainsPath, "default")
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
 	ChainTypePath    = filepath.Join(ChainsPath, "chain-types")
 
@@ -47,9 +46,6 @@ var (
 	SolcScratchPath      = filepath.Join(LanguagesScratchPath, "sol")
 	SerpScratchPath      = filepath.Join(LanguagesScratchPath, "ser")
 
-	// Services Directories
-	PersonalServicesPath = filepath.Join(ServicesPath, "global")
-
 	// Deprecated Directories (remove on 0.12 release)
 	BlockchainsPath = filepath.Join(ErisRoot, "blockchains")
 	DappsPath       = filepath.Join(ErisRoot, "dapps")
@@ -61,7 +57,6 @@ var MajorDirs = []string{
 	AppsPath,
 	BundlesPath,
 	ChainsPath,
-	DefaultChainPath,
 	AccountsTypePath,
 	ChainTypePath,
 	KeysPath,
@@ -75,13 +70,11 @@ var MajorDirs = []string{
 	SolcScratchPath,
 	SerpScratchPath,
 	ServicesPath,
-	PersonalServicesPath,
 }
 
 // ChainsDirs to be used by specific tooling rather than eris-cli level.
 var ChainsDirs = []string{
 	ChainsPath,
-	DefaultChainPath,
 	AccountsTypePath,
 	ChainTypePath,
 }
@@ -96,7 +89,6 @@ var KeysDirs = []string{
 // ServicesDirs to be used by specific tooling rather than eris-cli level.
 var ServicesDirs = []string{
 	ServicesPath,
-	PersonalServicesPath,
 }
 
 // ScratchDirs to be used by specific tooling rather than eris-cli level.
@@ -148,7 +140,6 @@ func ChangeErisRoot(erisDir string) {
 	ServicesPath = filepath.Join(ErisRoot, "services")
 
 	// Chains Directories
-	DefaultChainPath = filepath.Join(ChainsPath, "default")
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
 	ChainTypePath = filepath.Join(ChainsPath, "chain-types")
 
@@ -159,9 +150,6 @@ func ChangeErisRoot(erisDir string) {
 	// Scratch Directories (basically eris' cache) (globally coordinated)
 	DataContainersPath = filepath.Join(ScratchPath, "data")
 	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.eris/languages"
-
-	// Services Directories
-	PersonalServicesPath = filepath.Join(ServicesPath, "global")
 }
 
 func AbsolutePath(Datadir string, filename string) string {
