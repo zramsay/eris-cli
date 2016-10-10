@@ -52,9 +52,10 @@ func pullDefaultImages(images []string) error {
 			"data",
 			"keys",
 			"ipfs",
-			"erisdb",
-			"epm",
-			"eris-cm",
+			"db",
+			"cm",
+			"pm",
+			"compilers",
 		}
 	}
 
@@ -64,15 +65,10 @@ func pullDefaultImages(images []string) error {
 		"data":      config.Global.ImageData,
 		"keys":      config.Global.ImageKeys,
 		"ipfs":      config.Global.ImageIPFS,
-		"erisdb":    config.Global.ImageDB,
-		"eris-cm":   config.Global.ImageCM,
-		"epm":       config.Global.ImagePM,
+		"db":        config.Global.ImageDB,
+		"cm":        config.Global.ImageCM,
+		"pm":        config.Global.ImagePM,
 		"compilers": config.Global.ImageCompilers,
-
-		// Aliases.
-		"db": config.Global.ImageDB,
-		"cm": config.Global.ImageCM,
-		"pm": config.Global.ImagePM,
 	}
 
 	for i, image := range images {

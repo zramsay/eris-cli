@@ -229,23 +229,29 @@ func CatChain(do *definitions.Do) error {
 		return fmt.Errorf("a chain name is required")
 	}
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
+
+	doCat := definitions.NowDo()
+	doCat.Name = do.Name
+	doCat.Operations.SkipLink = true
+
 	switch do.Type {
 	case "genesis":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
 	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
 	// case "status":
-	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
+	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	// case "validators":
-	//	do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
+	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown cat subcommand %q", do.Type)
 	}
-	do.Operations.PublishAllPorts = true
+	// edb docker image is (now) properly formulated with entrypoint && cmd
+	// so the entrypoint must be overwritten.
 	log.WithField("args", do.Operations.Args).Debug("Executing command")
 
-	buf, err := ExecChain(do)
+	buf, err := ExecChain(doCat)
 
 	if buf != nil {
 		io.Copy(config.Global.Writer, buf)

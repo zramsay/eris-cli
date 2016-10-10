@@ -243,13 +243,7 @@ The output of that command should look something like this:
 ```irc
 REPOSITORY            TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
 idiservice            latest              cbe1ec579e9b        3 minutes ago       666.5 MB
-quay.io/eris/erisdb   0.11.0              f771905fcd3b        2 days ago          995.2 MB
-quay.io/eris/ipfs     latest              6e8658f9aa86        2 days ago          785.9 MB
-quay.io/eris/data     latest              11a6ba126b53        2 days ago          726.9 MB
-quay.io/eris/base     latest              53137e76ae59        2 days ago          726.9 MB
-quay.io/eris/epm      0.11.0              d7ba8273bad3        4 days ago          739.4 MB
 node                  4-onbuild           9e1063b1a9cd        11 days ago         642.6 MB
-quay.io/eris/keys     latest              7db20d196c40        11 days ago         756.7 MB
 ```
 
 Note in the above, the `REPOSITORY` field and the `TAG` field. When we build docker images, they will generally default to a `latest` in the tag field. This is what can be analogized to our "master" branch. Docker generally thinks more in terms of "channels" than in fixed versions for many of the images produced within the docker ecosystem. In other words, generally docker image maintainers treat their images like Chrome "channels" rather than Git "branches".
