@@ -17,13 +17,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Standard package commands.
-// TODO remove (consult w/ ben)
-const (
-	ErisChainStart = "run"
-	ErisChainNew   = "new"
-)
-
 // LoadChainDefinition finds the path to the chains config.toml by reading
 // from CONFIG_PATH (written in func setupChain()), and returns a chain
 // structure set accordingly, along with any errors
@@ -80,7 +73,6 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 	chain.Service.Name = chain.Name
 	chain.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
 	chain.Service.AutoData = true
-	chain.Service.Command = ErisChainStart
 
 	s := &definitions.ServiceDefinition{
 		Name:         chain.Name,

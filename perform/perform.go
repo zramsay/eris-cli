@@ -1054,7 +1054,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 
 			opts.Config.ExposedPorts[docker.Port(exposed)] = struct{}{}
 
-			opts.HostConfig.PortBindings[docker.Port(exposed)] = []docker.PortBinding{docker.PortBinding{
+			opts.HostConfig.PortBindings[docker.Port(exposed)] = []docker.PortBinding{{
 				HostPort: published,
 				HostIP:   ip,
 			}}

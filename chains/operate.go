@@ -7,12 +7,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -41,8 +41,7 @@ func StartChain(do *definitions.Do) error {
 		}
 
 		log.WithField("=>", do.Name).Debug("Data container does not exist, initializing it")
-		return setupChain(do, loaders.ErisChainNew)
-		// [zr] TODO get rid of loaders.ErisChainNew => to discuss with [ben]
+		return setupChain(do)
 
 	} else {
 		// [eris chains start whatever] (without --init-dir)
@@ -107,7 +106,6 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		return nil, err
 	}
 
-	chain.Service.Command = loaders.ErisChainStart
 	util.Merge(chain.Operations, do.Operations)
 
 	chain.Service.Environment = append(chain.Service.Environment, do.Env...)
@@ -134,8 +132,8 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		// This override is necessary because erisdb uses an entryPoint and
 		// the perform package will respect the images entryPoint if it
 		// exists.
-		chain.Service.EntryPoint = ""
-		chain.Service.Command = ""
+		chain.Service.EntryPoint = do.Service.EntryPoint
+		chain.Service.Command = do.Service.Command
 
 		// there is literally never a reason not to randomize the ports.
 		chain.Operations.PublishAllPorts = true
@@ -210,13 +208,15 @@ func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) er
 // handles both "new" and "fetch" - most of the differentiating logic is in the container <= [zr] huh?
 // should only be ever called on [eris chains start someChain --init-dir ~/.eris/chains/someChain/someChain_full_000]
 // or without the last dir for a simplechain.
-func setupChain(do *definitions.Do, cmd string) (err error) {
+func setupChain(do *definitions.Do) (err error) {
 	// do.Name is mandatory
 	if do.Name == "" {
 		return fmt.Errorf("setupChain requires a chainame")
 	}
 
 	containerName := util.ChainContainerName(do.Name)
+	containerDst := path.Join(ErisContainerRoot, "chains", do.Name)
+	hostSrc := do.Path
 
 	// writes a pointer (similar to checked out chain) for do.Path in the chain main dir
 	// this can then be read by loaders.LoadChainDefinition(), in order to get the
@@ -227,6 +227,41 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 		if err := ioutil.WriteFile(fileName, []byte(do.Path), 0666); err != nil {
 			return fmt.Errorf("error writing CONFIG_PATH file: %v", err)
 		}
+	}
+
+	chain, err := loaders.LoadChainDefinition(do.Name)
+	if err != nil {
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error loading chain config: %v", err)
+	}
+	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
+
+	chain.Service.Name = do.Name
+	util.Merge(chain.Operations, do.Operations)
+
+	// set chain name and other vars
+	envVars := []string{
+		// TODO remove CHAIN_ID once the fix in edb is merged
+		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
+		// [zr] replacement for CHAIN_ID is CHAIN_NAME
+		fmt.Sprintf("CHAIN_NAME=%s", chain.Name),
+		fmt.Sprintf("ERIS_DB_WORKDIR=%s", containerDst),
+		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
+	}
+	envVars = append(envVars, do.Env...)
+
+	chain.Service.Environment = append(chain.Service.Environment, envVars...)
+	chain.Service.Links = append(chain.Service.Links, do.Links...)
+	log.WithFields(log.Fields{
+		"environment": chain.Service.Environment,
+		"links":       chain.Service.Links,
+	}).Debug()
+
+	if err := bootDependencies(chain, do); err != nil {
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error booting dependencies: %v", err)
 	}
 
 	// ensure/create data container
@@ -244,9 +279,6 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	}
 	log.WithField("=>", do.Name).Debug("Chain data container built")
 
-	containerDst := path.Join(ErisContainerRoot, "chains", do.Name)
-	hostSrc := do.Path
-
 	// copy from host to container
 	log.WithFields(log.Fields{
 		"from local path":   hostSrc,
@@ -259,90 +291,51 @@ func setupChain(do *definitions.Do, cmd string) (err error) {
 	importDo.Destination = containerDst
 	importDo.Source = hostSrc
 	if err = data.ImportData(importDo); err != nil {
-		return err
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error importing data: %v", err)
 	}
 
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-	chain.Operations.PublishAllPorts = do.Operations.PublishAllPorts // TODO: remove this and marshall into struct from cli directly
-	chain.Operations.Ports = do.Operations.Ports
-
-	// Cmd should be "new" or "install".
-	// [zr] these should be deprecated...?
-	// to discuss with Ben
-	chain.Service.Command = cmd
-
-	// Write the list of <key>:<value> config options as flags.
-	buf := new(bytes.Buffer)
-	for _, cv := range do.ConfigOpts {
-		spl := strings.Split(cv, "=")
-		if len(spl) != 2 {
-			return fmt.Errorf("Config options should be <key>=<value> pairs. Got %s", cv)
-		}
-		buf.WriteString(fmt.Sprintf(" --%s=%s", spl[0], spl[1]))
-	}
-	configOpts := buf.String()
-
-	// set chain name and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
-		// [zr] replacement for CHAIN_ID is CHAIN_NAME
-		// TODO remove CHAIN_ID once the fix in edb is merged
-		fmt.Sprintf("CHAIN_NAME=%s", chain.Name),
-		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
-		fmt.Sprintf("CONFIG_OPTS=%s", configOpts),
-	}
-	envVars = append(envVars, do.Env...)
-
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug()
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-	chain.Operations.DataContainerName = util.DataContainerName(do.Name)
-
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
+	// mintkey has been removed from the erisdb image. this functionality
+	// needs to be wholesale refactored. For now we'll just run the keys
+	// service (where mintkey is....)
 	log.Info("Moving priv_validator.json into eris-keys")
+	importKey := definitions.NowDo()
+	importKey.Name = "keys"
+	importKey.Destination = containerDst
+	importKey.Source = filepath.Join(hostSrc, "priv_validator.json")
+	if err = data.ImportData(importKey); err != nil {
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error importing priv_validator to signer: %v", err)
+	}
 	doKeys := definitions.NowDo()
-	doKeys.Name = do.Name
+	doKeys.Name = "keys"
 	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", ErisContainerRoot, do.Name)}
 	doKeys.Operations.SkipLink = true
-	if out, err := ExecChain(doKeys); err != nil {
-		if out != nil {
-			log.Error(out)
-		}
-		return fmt.Errorf("Error moving keys: %v", err)
-	}
-
-	doChown := definitions.NowDo()
-	doChown.Name = do.Name
-	doChown.Operations.Args = []string{"chown", "--recursive", "eris", ErisContainerRoot}
-	doChown.Operations.SkipLink = true
-	if out, err := ExecChain(doChown); err != nil {
-		if out != nil {
-			log.Error(out)
-		}
-		return fmt.Errorf("Error changing owner: %v", err)
+	doKeys.Service.VolumesFrom = []string{util.DataContainerName(do.Name)}
+	if out, err := services.ExecService(doKeys); err != nil {
+		log.Error(err)
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error transliterating priv_validator to eris-key: %v", out) // out is the buffer from the container; error is from docker
 	}
 
 	log.WithFields(log.Fields{
-		"=>":           chain.Service.Name,
-		"links":        chain.Service.Links,
-		"volumes from": chain.Service.VolumesFrom,
-		"image":        chain.Service.Image,
-		"ports":        chain.Service.Ports,
+		"=>":              chain.Service.Name,
+		"links":           chain.Service.Links,
+		"volumes from":    chain.Service.VolumesFrom,
+		"image":           chain.Service.Image,
+		"ports":           chain.Service.Ports,
+		"environment":     chain.Service.Environment,
+		"chain container": chain.Operations.SrvContainerName,
+		"ports published": chain.Operations.PublishAllPorts,
 	}).Debug("Performing chain container start")
 
 	if err := perform.DockerRunService(chain.Service, chain.Operations); err != nil {
-		return RemoveChain(do)
+		do.RmD = true
+		RemoveChain(do)
+		return fmt.Errorf("Error starting chain: %v", err)
 	}
 	return
 }

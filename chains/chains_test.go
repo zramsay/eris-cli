@@ -223,12 +223,19 @@ func TestChainsNewKeysImported(t *testing.T) {
 		t.Fatalf("expecting to list keys, got %v", err)
 	}
 
-	keysOutString := strings.Fields(strings.TrimSpace(keysOut.String()))[0]
+	keysOutString0 := strings.Fields(strings.TrimSpace(keysOut.String()))[0]
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", keysOutString, keysOutString)}
+	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", keysOutString0, keysOutString0)}
 
-	if out := exec(t, chain, args); !strings.Contains(out, keysOutString) {
-		t.Fatalf("expected to find keys in container, got %v", out)
+	keysOut1, err := services.ExecHandler("keys", args)
+	if err != nil {
+		t.Fatalf("expecting to cat keys, got %v", err)
+	}
+
+	keysOutString1 := strings.Fields(strings.TrimSpace(keysOut1.String()))[0]
+
+	if !strings.Contains(keysOutString1, keysOutString0) { // keysOutString0 is the substring (addr only)
+		t.Fatalf("keys do not match, key0: %v, key1: %v", keysOutString0, keysOutString1)
 	}
 }
 
