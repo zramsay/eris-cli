@@ -124,7 +124,7 @@ editor is used by default.
 `
 
 const manEpilogue = `.Sh WWW
-http://erisindustries.com
+http://monax.io
 .Sh SEE ALSO
 .Xr docker 1 ,
 .Xr docker-machine 1 ,
@@ -136,7 +136,7 @@ http://erisindustries.com
 .Sh AUTHORS
 Team of marmots.
 .Sh COPYRIGHT
-Copyright \[co] 2014-{{date "2006"}} by Eris Industries, Ltd.
+Copyright \[co] 2014-{{date "2006"}} by Monax Industries, Ltd.
 .Pp
 The software is distributed under the terms of the
 .Em GNU General Public License Version 3 .

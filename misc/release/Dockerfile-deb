@@ -1,6 +1,6 @@
 FROM ubuntu:15.04
 
-MAINTAINER Eris Industries <support@erisindustries.com>
+MAINTAINER Monax Industries <support@monax.io>
 
 RUN apt-get update \
    && apt-get install -y sudo \

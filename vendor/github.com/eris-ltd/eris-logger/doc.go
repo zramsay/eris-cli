@@ -1,5 +1,5 @@
 /*
-Package eris-logger is a logrus fork for Eris Industries, Ltd.
+Package logger is a logrus fork for Eris Industries, Ltd.
 
   package main
 

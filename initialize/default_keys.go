@@ -9,7 +9,7 @@ import (
 func defServiceKeys() string {
 	return `
 # For more information on configurations, see the services specification:
-# https://docs.erisindustries.com/documentation/eris-cli/latest/services_specification/
+# https://monax.io/docs/documentation/cli/latest/services_specification/
 
 # These fields marshal roughly into the [docker run] command, see:
 # https://docs.docker.com/engine/reference/run/
@@ -27,15 +27,16 @@ This service is usually linked to a chain and/or an application. Its functionali
 status = "unfit for production"
 
 [service]
-image = "` + path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_KEYS) + `"
+image = "` + path.Join(version.DefaultRegistry, version.ImageKeys) + `"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
-#restart = "always"
+
+[maintainer]
+name = "Monax Industries"
+email = "support@monax.io"
 
 [location]
-dockerfile = "https://github.com/eris-ltd/eris-keys/blob/master/Dockerfile"
-#see also http://github.com/eris-ltd/common/blob/master/docker/keys/build.sh"
 repository = "https://github.com/eris-ltd/eris-keys"
-website = "https://docs.erisindustries.com/documentation/ekeys/"
+website = "https://monax.io/docs/documentation/keys"
 `
 }

@@ -76,8 +76,7 @@ func ChangeHead(name string) error {
 	var s string
 	// handle empty head
 	s = name + "\n" + bsp
-	err = ioutil.WriteFile(common.HEAD, []byte(s), 0666)
-	if err != nil {
+	if err := ioutil.WriteFile(common.HEAD, []byte(s), 0666); err != nil {
 		return err
 	}
 

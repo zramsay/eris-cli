@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -12,8 +11,10 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
+
+	"github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -23,12 +24,15 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "keys", "ipfs"},
+		Services: []string{"keys", "ipfs"},
+	}))
 
-	tests.RemoveAllContainers()
+	testutil.RemoveAllContainers()
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
@@ -37,7 +41,7 @@ func TestCreateDataSimple(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -63,7 +67,7 @@ func TestRunDataSimple(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -85,7 +89,7 @@ func TestRunDataBadCommandLine(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -101,7 +105,7 @@ func TestRunDataBadCommandLine(t *testing.T) {
 		t.Fatalf("expected command line error, got nil")
 	}
 
-	tests.RemoveAllContainers()
+	testutil.RemoveAllContainers()
 }
 
 func TestExecDataSimple(t *testing.T) {
@@ -109,7 +113,7 @@ func TestExecDataSimple(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -135,7 +139,7 @@ func TestExecDataBadCommandLine(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -157,7 +161,7 @@ func TestExecDataBufferNotOverwritten(t *testing.T) {
 		name = "testdata"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -169,18 +173,18 @@ func TestExecDataBufferNotOverwritten(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+	config.Global.Writer, config.Global.ErrorWriter = buf, buf
 
 	ops.Args = strings.Fields("true")
 	if _, err := DockerExecData(ops, nil); err != nil {
 		t.Fatalf("expected data successfully run, got %v", err)
 	}
 
-	if config.GlobalConfig.Writer != buf {
+	if config.Global.Writer != buf {
 		t.Fatalf("expected global writer unchaged after exec")
 	}
 
-	if config.GlobalConfig.ErrorWriter != buf {
+	if config.Global.ErrorWriter != buf {
 		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
@@ -190,7 +194,7 @@ func TestRunServiceSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -218,7 +222,7 @@ func TestRunServiceNoDataContainer(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -247,7 +251,7 @@ func TestRunServiceAlreadyRunning(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeData, name) {
 		t.Fatalf("expecting data container doesn't exist")
@@ -286,7 +290,7 @@ func TestRunServiceNonExistentImage(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -304,7 +308,7 @@ func TestExecServiceSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -334,7 +338,7 @@ func TestExecServiceBufferNotOverwritten(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -347,13 +351,13 @@ func TestExecServiceBufferNotOverwritten(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = buf, buf
+	config.Global.Writer, config.Global.ErrorWriter = buf, buf
 
-	if config.GlobalConfig.Writer != buf {
+	if config.Global.Writer != buf {
 		t.Fatalf("expected global writer unchaged after exec")
 	}
 
-	if config.GlobalConfig.ErrorWriter != buf {
+	if config.Global.ErrorWriter != buf {
 		t.Fatalf("expected global error writer unchanged after exec")
 	}
 }
@@ -363,14 +367,14 @@ func TestExecServiceAlwaysRestart(t *testing.T) {
 		name = "restart-keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition(name, `
+	if err := testutil.FakeServiceDefinition(name, `
 name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "always"
@@ -409,14 +413,14 @@ func TestExecServiceMaxAttemptsRestart(t *testing.T) {
 		name = "restart-keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition(name, `
+	if err := testutil.FakeServiceDefinition(name, `
 name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "max:99"
@@ -455,14 +459,14 @@ func TestExecServiceNeverRestart(t *testing.T) {
 		name = "restart-keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	if err := tests.FakeServiceDefinition(name, `
+	if err := testutil.FakeServiceDefinition(name, `
 name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)+`"
+image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 `); err != nil {
@@ -506,7 +510,7 @@ func TestExecServiceVolume(t *testing.T) {
 		return
 	}
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -518,7 +522,7 @@ func TestExecServiceVolume(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Operations.Volume = filepath.Join(config.GlobalConfig.ErisDir)
+	srv.Operations.Volume = common.ErisRoot
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
@@ -542,7 +546,7 @@ func TestExecServiceMount(t *testing.T) {
 		return
 	}
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -555,8 +559,8 @@ func TestExecServiceMount(t *testing.T) {
 
 	srv.Operations.Args = strings.Fields("uptime")
 	srv.Service.Volumes = []string{
-		config.GlobalConfig.ErisDir + ":" + "/tmp",
-		config.GlobalConfig.ErisDir + ":" + "/custom",
+		common.ErisRoot + ":" + "/tmp",
+		common.ErisRoot + ":" + "/custom",
 	}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
@@ -575,7 +579,7 @@ func TestExecServiceBadMount1(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -598,7 +602,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -610,7 +614,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Service.Volumes = []string{config.GlobalConfig.ErisDir + ":"}
+	srv.Service.Volumes = []string{common.ErisRoot + ":"}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected service container creation to fail")
 	}
@@ -621,7 +625,7 @@ func TestExecServiceLogOutput(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -648,7 +652,7 @@ func TestExecServiceLogOutputLongRunning(t *testing.T) {
 		name = "keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -675,7 +679,7 @@ func TestExecServiceLogOutputInteractive(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -702,7 +706,7 @@ func TestExecServiceTwice(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -737,7 +741,7 @@ func TestExecServiceTwiceWithoutData(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -772,7 +776,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -802,7 +806,7 @@ func TestExecServiceNonInteractive(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -832,7 +836,7 @@ func TestExecServiceAfterRunService(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -859,7 +863,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -894,7 +898,7 @@ func TestExecServiceAfterRunServiceWithPublishedPorts2(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -929,7 +933,7 @@ func TestContainerExistsSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -959,7 +963,7 @@ func TestContainerExistsBadName(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -981,7 +985,7 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1000,7 +1004,7 @@ func TestContainerExistsAfterRemove(t *testing.T) {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
-	tests.RemoveContainer(name, def.TypeService)
+	testutil.RemoveContainer(name, def.TypeService)
 
 	if exists := ContainerExists(srv.Operations.SrvContainerName); exists == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
@@ -1012,7 +1016,7 @@ func TestContainerRunningSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1042,7 +1046,7 @@ func TestContainerRunningBadName(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1072,7 +1076,7 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1091,7 +1095,7 @@ func TestContainerRunningAfterRemove(t *testing.T) {
 		t.Fatalf("expecting service container exists, got false")
 	}
 
-	tests.RemoveContainer(name, def.TypeService)
+	testutil.RemoveContainer(name, def.TypeService)
 
 	if running := ContainerRunning(srv.Operations.SrvContainerName); running == true {
 		t.Fatalf("expecting service container not existing after remove, got true")
@@ -1103,7 +1107,7 @@ func TestRemoveWithoutData(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1153,7 +1157,7 @@ func TestRemoveWithData(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1198,7 +1202,7 @@ func TestRemoveNonExistent(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -1216,7 +1220,7 @@ func TestRemoveServiceWithoutStopping(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1241,7 +1245,7 @@ func TestStopSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1278,7 +1282,7 @@ func TestStopDataContainer(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1305,7 +1309,7 @@ func TestRebuildSimple(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1339,7 +1343,7 @@ func TestRebuildBadName(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1363,7 +1367,7 @@ func TestRebuildNotCreated(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1386,7 +1390,7 @@ func TestRebuildTimeout0(t *testing.T) {
 		timeout = 0
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1420,7 +1424,7 @@ func TestRebuildNotRunning(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1458,9 +1462,9 @@ func TestRebuildPullDisallow(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	tests.RemoveImage(name)
+	testutil.RemoveImage(name)
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
@@ -1496,9 +1500,9 @@ func TestRebuildPull(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	tests.RemoveImage(name)
+	testutil.RemoveImage(name)
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
@@ -1534,7 +1538,7 @@ func TestRebuildPullRepeat(t *testing.T) {
 		timeout = 5
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
@@ -1569,11 +1573,11 @@ func TestPullSimple(t *testing.T) {
 		name = "keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	tests.RemoveImage(name)
+	testutil.RemoveImage(name)
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1606,7 +1610,7 @@ func TestPullRepeat(t *testing.T) {
 		name = "keys"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
@@ -1641,7 +1645,7 @@ func TestPullBadName(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -1661,7 +1665,7 @@ func TestLogsSimple(t *testing.T) {
 		tail = "100"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1681,7 +1685,7 @@ func TestLogsSimple(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1698,11 +1702,11 @@ func TestLogsNilConfig(t *testing.T) {
 		tail = "1"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
-	savedConfig := config.GlobalConfig
-	config.GlobalConfig = nil
-	defer func() { config.GlobalConfig = savedConfig }()
+	savedConfig := config.Global
+	config.Global = nil
+	defer func() { config.Global = savedConfig }()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1732,7 +1736,7 @@ func TestLogsFollow(t *testing.T) {
 		tail = "1"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1752,7 +1756,7 @@ func TestLogsFollow(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, true, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1765,7 +1769,7 @@ func TestLogsTail(t *testing.T) {
 		tail = "100"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1785,7 +1789,7 @@ func TestLogsTail(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1802,7 +1806,7 @@ func TestLogsTail0(t *testing.T) {
 		tail = "0"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1822,7 +1826,7 @@ func TestLogsTail0(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
@@ -1839,7 +1843,7 @@ func TestLogsBadName(t *testing.T) {
 		tail = "1"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -1857,7 +1861,7 @@ func TestLogsBadServiceName(t *testing.T) {
 		name = "ipfs"
 		tail = "1"
 	)
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -1875,7 +1879,7 @@ func TestInspectSimple(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1891,7 +1895,7 @@ func TestInspectSimple(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "all"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -1907,7 +1911,7 @@ func TestInspectLine(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1933,7 +1937,7 @@ func TestInspectField(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1949,7 +1953,7 @@ func TestInspectField(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "Config.WorkingDir"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -1965,7 +1969,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -1981,7 +1985,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	if err := DockerInspect(srv.Service, srv.Operations, "Config.WorkingDir"); err != nil {
 		t.Fatalf("expected inspect to succeed, got %v", err)
@@ -1997,7 +2001,7 @@ func TestInspectBadName(t *testing.T) {
 		name = "ipfs"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -2020,7 +2024,7 @@ func TestRenameSimple(t *testing.T) {
 		newName = "newname"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -2050,7 +2054,7 @@ func TestRenameService(t *testing.T) {
 		newName = "newname"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -2088,7 +2092,7 @@ func TestRenameEmptyName(t *testing.T) {
 		newName = ""
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -2118,7 +2122,7 @@ func TestRenameServiceStopped(t *testing.T) {
 		newName = "newname"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	if util.Exists(def.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -2165,7 +2169,7 @@ func TestRenameBadName(t *testing.T) {
 		newName = "newname"
 	)
 
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	srv, err := loaders.LoadServiceDefinition(name)
 	if err != nil {
@@ -2183,7 +2187,7 @@ func TestBuildSimple(t *testing.T) {
 		image = "test-image-1"
 	)
 
-	dockerfile := `FROM ` + path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)
+	dockerfile := `FROM ` + path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)
 
 	if err := DockerBuild(image, dockerfile); err != nil {
 		t.Fatalf("expected image to be built, got %v", err)

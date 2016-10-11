@@ -1,8 +1,8 @@
 package keys
 
 import (
+	"bytes"
 	"io"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -13,6 +13,7 @@ import (
 	srv "github.com/eris-ltd/eris-cli/services"
 
 	"github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 func GenerateKey(do *definitions.Do) error {
@@ -21,29 +22,28 @@ func GenerateKey(do *definitions.Do) error {
 	if err := srv.EnsureRunning(do); err != nil {
 		return err
 	}
+	// TODO implement
+	// if do.Password {}
 
 	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "gen", "--no-pass"})
 	if err != nil {
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	if do.Save {
+		addr := new(bytes.Buffer)
+		addr.ReadFrom(buf)
 
-	return nil
-}
+		doExport := definitions.NowDo()
+		doExport.Address = strings.TrimSpace(addr.String())
 
-func GetPubKey(do *definitions.Do) error {
-	do.Name = "keys"
-	if err := srv.EnsureRunning(do); err != nil {
-		return err
+		log.WithField("=>", doExport.Address).Warn("Saving key to host")
+		if err := ExportKey(doExport); err != nil {
+			return err
+		}
 	}
 
-	buf, err := srv.ExecHandler(do.Name, []string{"eris-keys", "pub", "--addr", do.Address})
-	if err != nil {
-		return err
-	}
-
-	io.Copy(config.GlobalConfig.Writer, buf)
+	io.Copy(config.Global.Writer, buf)
 
 	return nil
 }
@@ -54,31 +54,14 @@ func ExportKey(do *definitions.Do) error {
 		return err
 	}
 
-	// do.Destination = given by flag default or overriden
 	if do.All && do.Address == "" {
-		doLs := definitions.NowDo()
-		doLs.Container = true
-		doLs.Host = false
-		doLs.Quiet = true
-		if err := ListKeys(doLs); err != nil {
-			return err
-		}
-		keyArray := strings.Split(do.Result, ",")
-
-		for _, addr := range keyArray {
-			do.Destination = common.KeysPath
-			do.Source = path.Join(common.ErisContainerRoot, "keys", "data", addr)
-			if err := data.ExportData(do); err != nil {
-				return err
-			}
-		}
+		do.Destination = common.KeysPath
+		do.Source = path.Join(common.KeysContainerPath)
 	} else {
-		do.Source = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
-		if err := data.ExportData(do); err != nil {
-			return err
-		}
+		do.Destination = common.KeysDataPath
+		do.Source = path.Join(common.KeysContainerPath, do.Address)
 	}
-	return nil
+	return data.ExportData(do)
 }
 
 func ImportKey(do *definitions.Do) error {
@@ -87,61 +70,30 @@ func ImportKey(do *definitions.Do) error {
 		return err
 	}
 
-	//src on host
-	//if default given (from flag), join addrs
-	//dest in container
-	do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", do.Address)
-
 	if do.All && do.Address == "" {
 		doLs := definitions.NowDo()
 		doLs.Container = false
 		doLs.Host = true
 		doLs.Quiet = true
-		if err := ListKeys(doLs); err != nil {
+		result, err := ListKeys(doLs)
+		if err != nil {
 			return err
 		}
-		keyArray := strings.Split(do.Result, ",")
 
-		for _, addr := range keyArray {
-			do.Source = filepath.Join(common.KeysPath, "data", addr)
-			do.Destination = path.Join(common.ErisContainerRoot, "keys", "data", addr)
+		for _, addr := range result {
+			do.Source = filepath.Join(common.KeysDataPath, addr)
+			do.Destination = path.Join(common.KeysContainerPath, addr)
 			if err := data.ImportData(do); err != nil {
 				return err
 			}
 		}
-		//list keys
-		//for each, import data
-
 	} else {
-		if do.Source == filepath.Join(common.KeysPath, "data") {
-			do.Source = filepath.Join(common.KeysPath, "data", do.Address, do.Address)
-		} else { // either relative or absolute path given. get absolute
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			do.Source = common.AbsolutePath(wd, do.Source)
-		}
+		do.Source = filepath.Join(common.KeysDataPath, do.Address)
+		do.Destination = path.Join(common.KeysContainerPath, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}
 	}
-
-	return nil
-}
-
-func ConvertKey(do *definitions.Do) error {
-	do.Name = "keys"
-	if err := srv.EnsureRunning(do); err != nil {
-		return err
-	}
-
-	buf, err := srv.ExecHandler(do.Name, []string{"mintkey", "mint", do.Address})
-	if err != nil {
-		return err
-	}
-
-	io.Copy(config.GlobalConfig.Writer, buf)
 
 	return nil
 }

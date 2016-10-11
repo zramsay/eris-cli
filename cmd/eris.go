@@ -25,20 +25,14 @@ const dmVerMin = version.DM_VER_MIN
 // Defining the root command
 var ErisCmd = &cobra.Command{
 	Use:   "eris COMMAND [FLAG ...]",
-	Short: "The Blockchain Application Platform",
-	Long: `Eris is a platform for building, testing, maintaining, and operating
-distributed applications with a blockchain backend. Eris makes it easy
-and simple to wrangle the dragons of smart contract blockchains.
+	Short: "The Ecosystem Application Platform",
+	Long: `Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
-Made with <3 by Eris Industries.
+Made with <3 by Monax Industries.
 
-Complete documentation is available at https://docs.erisindustries.com
+Complete documentation is available at https://monax.io/docs/documentation
 ` + "\nVersion:\n  " + VERSION,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Using stdout for less fuss with redirecting the log messages
-		// into a file (`eris > out`) or a viewer (`eris|more`).
-		log.SetOutput(os.Stdout)
-
 		log.SetLevel(log.WarnLevel)
 		if do.Verbose {
 			log.SetLevel(log.InfoLevel)
@@ -54,7 +48,8 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-		ipfs.IpfsHost = config.GlobalConfig.Config.IpfsHost
+		ipfs.IpfsHost = config.Global.IpfsHost
+		ipfs.IpfsPort = config.Global.IpfsPort
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return
@@ -65,10 +60,13 @@ Complete documentation is available at https://docs.erisindustries.com
 			do := definitions.NowDo()
 			do.Yes = true
 			do.Pull = false
-			do.Source = "rawgit"
 			do.Quiet = true
 			if err := initialize.Initialize(do); err != nil {
 				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+			}
+
+			if err := config.Save(&config.Global.Settings); err != nil {
+				log.Error(err)
 			}
 
 			log.Warn()
@@ -81,42 +79,34 @@ Complete documentation is available at https://docs.erisindustries.com
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
-			IfExit(fmt.Errorf("Eris requires docker version >= %v\nThe marmots have detected docker version: %v\n%s", dVerMin, dockerVersion, marmot))
+			IfExit(fmt.Errorf("Eris requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
-		log.AddHook(CrashReportHook(dockerVersion))
+		log.AddHook(util.CrashReportHook(dockerVersion))
 
 		// Compare `docker-machine` versions but don't fail if not installed.
 		dmVersion, err := util.DockerMachineVersion()
 		if err != nil {
-			log.Info("The marmots could not find docker-machine installed. While it is not required to use the Eris platform, we strongly recommend it be installed for maximum blockchain awesomeness.")
+			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Eris, we strongly recommend it be installed for maximum blockchain awesomeness")
 		} else if !util.CompareVersions(dmVersion, dmVerMin) {
-			IfExit(fmt.Errorf("Eris requires docker-machine version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+			IfExit(fmt.Errorf("Eris requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if !util.DoesDirExist(ErisRoot) {
-			return
-		}
-
-		if err := config.SaveGlobalConfig(config.GlobalConfig.Config); err != nil {
-			log.Error(err)
-		}
-	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
 	// Handle panics within Execute().
 	defer func() {
 		if err := recover(); err != nil {
-			SendReport(err)
+			util.SendPanic(err)
 		}
 	}()
 
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
-	ErisCmd.Execute()
+	IfExit(ErisCmd.Execute())
 }
 
 // Define the commands
@@ -129,8 +119,6 @@ func AddCommands() {
 	ErisCmd.AddCommand(Packages)
 	buildKeysCommand()
 	ErisCmd.AddCommand(Keys)
-	buildActionsCommand()
-	ErisCmd.AddCommand(Actions)
 	buildFilesCommand()
 	ErisCmd.AddCommand(Files)
 	buildDataCommand()
@@ -143,8 +131,6 @@ func AddCommands() {
 	ErisCmd.AddCommand(Clean)
 	buildInitCommand()
 	ErisCmd.AddCommand(Init)
-	buildUpdateCommand()
-	ErisCmd.AddCommand(Update)
 	buildVerSionCommand()
 	ErisCmd.AddCommand(VerSion)
 
@@ -169,33 +155,35 @@ func AddGlobalFlags() {
 }
 
 func InitializeConfig() {
-	var err error
-	var out io.Writer
-	var erw io.Writer
+	var (
+		err    error
+		stdout io.Writer
+		stderr io.Writer
+	)
 
 	do = definitions.NowDo()
 
 	if os.Getenv("ERIS_CLI_WRITER") != "" {
-		out, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
+		stdout, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
 		if err != nil {
-			fmt.Printf("Could not open: %s\n", err)
+			log.Errorf("Could not open: %v", err)
 			return
 		}
 	} else {
-		out = os.Stdout
+		stdout = os.Stdout
 	}
 
 	if os.Getenv("ERIS_CLI_ERROR_WRITER") != "" {
-		erw, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
+		stderr, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
 		if err != nil {
-			fmt.Printf("Could not open: %s\n", err)
+			log.Errorf("Could not open: %v", err)
 			return
 		}
 	} else {
-		erw = os.Stderr
+		stderr = os.Stderr
 	}
 
-	config.GlobalConfig, err = config.SetGlobalObject(out, erw)
+	config.Global, err = config.New(stdout, stderr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

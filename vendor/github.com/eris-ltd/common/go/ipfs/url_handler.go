@@ -6,14 +6,18 @@ import (
 )
 
 var IpfsHost string = "http://0.0.0.0"
+var IpfsPort string = "8080"
 
-func IPFSBaseGatewayUrl(gateway string) string {
+func IPFSBaseGatewayUrl(gateway, port string) string {
+	if port == "" {
+		port = IpfsPort
+	}
 	if gateway == "eris" {
-		return fmt.Sprintf("%s%s", SexyUrl(), ":8080/ipfs/")
+		return fmt.Sprintf("%s:%s%s", SexyUrl(), port, "/ipfs/")
 	} else if gateway != "" {
-		return fmt.Sprintf("%s%s", gateway, ":8080/ipfs/")
+		return fmt.Sprintf("%s:%s%s", gateway, port, "/ipfs/")
 	} else {
-		return fmt.Sprintf("%s%s", IPFSUrl(), ":8080/ipfs/")
+		return fmt.Sprintf("%s:%s%s", IPFSUrl(), port, "/ipfs/")
 	}
 }
 
@@ -23,8 +27,7 @@ func IPFSBaseAPIUrl() string {
 
 func SexyUrl() string {
 	//TODO load balancer (when one isn't enough)
-	// also hosts toadserver (for init) at port 11113
-	return "http://ipfs.erisbootstrap.sexy"
+	return "http://ipfs.monax.io"
 }
 
 func IPFSUrl() string {

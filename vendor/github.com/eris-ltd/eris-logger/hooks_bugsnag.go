@@ -9,7 +9,7 @@ import (
 	bugsnag "github.com/bugsnag/bugsnag-go"
 )
 
-// Default API Key. Can be overridden with the ERIS_BUGSNAG_TOKEN
+// APIKey can be overridden with the ERIS_BUGSNAG_TOKEN
 // environment variable.
 var APIKey = "1b9565bb7a4f8fd6dc446f2efd238fa3"
 
@@ -52,10 +52,12 @@ func NewBugsnagReporter(config map[string]string) Bugsnag {
 	}
 }
 
+// Hook is an implementation of the logger Hook method.
 func (b Bugsnag) Hook() Hook {
 	return b
 }
 
+// Levels is an implementation of the logger Levels method.
 func (b Bugsnag) Levels() []Level {
 	// Collecting messages on all levels.
 	return []Level{
@@ -68,6 +70,7 @@ func (b Bugsnag) Levels() []Level {
 	}
 }
 
+// Fire is an implementation of the logger Fire method.
 func (b Bugsnag) Fire(e *Entry) error {
 	out, err := b.remoteLogger.Formatter.Format(e)
 	if err != nil {
@@ -80,8 +83,12 @@ func (b Bugsnag) Fire(e *Entry) error {
 	return nil
 }
 
-func (b Bugsnag) SendReport(message interface{}) error {
-	debug.PrintStack()
+// SendReport method connects to the Bugsnag server and
+// sends out collected debugging and optional stack trace info.
+func (b Bugsnag) SendReport(message interface{}, stack bool) error {
+	if stack == true {
+		debug.PrintStack()
+	}
 
 	// Sending out a panic along with some useful bits of information.
 	return bugsnag.Notify(
@@ -98,5 +105,4 @@ func (b Bugsnag) SendReport(message interface{}) error {
 			},
 		},
 	)
-	return nil
 }

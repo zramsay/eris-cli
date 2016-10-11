@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -20,14 +20,16 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images: []string{"data"},
+	}))
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
-//TODO add some export/import test robustness
+// TODO add some export/import test robustness
 func TestImportDataRawNoPriorExist(t *testing.T) {
 	testCreateDataByImport(t, dataName)
 	defer testKillDataCont(t, dataName)
@@ -47,7 +49,7 @@ func TestExportData(t *testing.T) {
 	}
 
 	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
-		log.Errorf("Tragic! Exported file does not exist: %s", err)
+		log.Errorf("Exported file does not exist: %s", err)
 		t.Fail()
 	}
 
@@ -155,12 +157,12 @@ func TestRmData(t *testing.T) {
 func testCreateDataByImport(t *testing.T, name string) {
 	newDataDir := filepath.Join(common.DataContainersPath, name)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
-		t.Fatalf("err mkdir: %v\n", err)
+		t.Fatalf("err mkdir: %v", err)
 	}
 
 	f, err := os.Create(filepath.Join(newDataDir, "test"))
 	if err != nil {
-		t.Fatalf("err creating file: %v\n", err)
+		t.Fatalf("err creating file: %v", err)
 	}
 	defer f.Close()
 
@@ -168,9 +170,8 @@ func testCreateDataByImport(t *testing.T, name string) {
 	do.Name = name
 	do.Source = filepath.Join(common.DataContainersPath, do.Name)
 	do.Destination = common.ErisContainerRoot
-	log.WithField("=>", do.Name).Info("Importing data (from tests)")
 	if err := ImportData(do); err != nil {
-		t.Fatalf("error importing data: %v\n", err)
+		t.Fatalf("error importing data: %v", err)
 	}
 
 	testExist(t, name, true)
@@ -183,14 +184,14 @@ func testKillDataCont(t *testing.T, name string) {
 	do := definitions.NowDo()
 	do.Name = name
 	if err := RmData(do); err != nil {
-		t.Fatalf("error rm data: %v\n", err)
+		t.Fatalf("error rm data: %v", err)
 	}
 
 	testExist(t, name, false)
 }
 
 func testExist(t *testing.T, name string, toExist bool) {
-	if err := tests.TestExistAndRun(name, "data", toExist, false); err != nil {
+	if err := testutil.ExistAndRun(name, "data", toExist, false); err != nil {
 		t.Fail()
 	}
 }

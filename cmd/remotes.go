@@ -9,12 +9,8 @@ import (
 var Remotes = &cobra.Command{
 	Use:   "remotes",
 	Short: "manage and perform remote machines and services",
-	Long: `display and Manage remote machines which are operating
-various services reachable by the Eris platform
-
-Actions, if configured as such, can utilize remote machines.
-To register and manage remote machines for sending of actions
-to those machines, use this command.`,
+	Long: `display and manage remote machines which are operating
+various services reachable by Eris`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -30,7 +26,7 @@ func buildRemotesCommand() {
 var remotesAdd = &cobra.Command{
 	Use:   "add NAME DEFINITION",
 	Short: "adds a remote to Eris",
-	Long:  `adds a remote to Eris in JSON, TOML, or YAML format`,
+	Long:  `adds a remote to Eris`,
 	Run: func(cmd *cobra.Command, args []string) {
 		rem.Add(args)
 	},

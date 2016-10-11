@@ -16,8 +16,8 @@ import (
 	log "github.com/eris-ltd/eris-logger"
 )
 
-func GetFromIPFS(hash, fileName, dirName string) error {
-	url := IPFSBaseGatewayUrl("") + hash
+func GetFromIPFS(hash, fileName, dirName, port string) error {
+	url := IPFSBaseGatewayUrl("", port) + hash // [csk] why isn't this using a gateway argument like the Put?
 	log.WithFields(log.Fields{
 		"file": fileName,
 		"hash": hash,
@@ -117,7 +117,7 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 		log.WithFields(log.Fields{
 			"from": url,
 			"to":   endPath,
-		}).Warn("Downloading")
+		}).Info("Downloading")
 		checkDir, err := os.Stat(dirName)
 		if err != nil {
 			log.Warn("Directory does not exist, creating it")

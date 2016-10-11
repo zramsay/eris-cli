@@ -11,7 +11,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -22,6 +22,7 @@ var (
 	fileInNewDir = filepath.Join(newDir, "recurse.toml")
 	content      = "test contents"
 	filename     = filepath.Join(erisDir, "test-file.toml")
+	port_to_use  = "8080"
 )
 
 func TestMain(m *testing.M) {
@@ -32,25 +33,32 @@ func TestMain(m *testing.M) {
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	if port := os.Getenv("ERIS_CLI_TESTS_PORT"); port != "" {
+		port_to_use = port
+	}
+
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Services: []string{"ipfs"},
+		Images:   []string{"ipfs"},
+	}))
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
 func TestPutFiles(t *testing.T) {
-	tests.FakeDefinitionFile(erisDir, "test-file", content)
+	testutil.FakeDefinitionFile(erisDir, "test-file", content)
 
 	do := definitions.NowDo()
 	do.Name = filename
-	log.WithField("=>", do.Name).Info("Putting file (from tests)")
+	do.IpfsPort = port_to_use
 
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
+	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
+	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,
 		Header: map[string][]string{
 			"Ipfs-Hash": {hash},
@@ -58,27 +66,26 @@ func TestPutFiles(t *testing.T) {
 	})
 	defer ipfs.Close()
 
-	if err := PutFiles(do); err != nil {
+	out, err := PutFiles(do)
+	if err != nil {
 		t.Fatalf("err putting files: %v\n", err)
 	}
 
 	if expected := "/ipfs/"; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v\n", expected, ipfs.Path())
+		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
 	}
 
 	if expected := "POST"; ipfs.Method() != expected {
-		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
+		t.Fatalf("Used the wrong HTTP method; expected %v, got %v", expected, ipfs.Method())
 	}
 
 	if ipfs.Body() != content {
-		t.Fatalf("Put the bad file; expected %q, got %q\n", content, ipfs.Body())
+		t.Fatalf("Put the bad file; expected %q, got %q", content, ipfs.Body())
 	}
 
-	if hash != do.Result {
-		t.Fatalf("Hash mismatch; expected %q, got %q\n", hash, do.Result)
+	if hash != out {
+		t.Fatalf("Hash mismatch; expected %q, got %q", hash, out)
 	}
-
-	log.WithField("result", do.Result).Debug("Finished putting a file")
 }
 
 func TestGetFiles(t *testing.T) {
@@ -90,11 +97,12 @@ func TestGetFiles(t *testing.T) {
 	do := definitions.NowDo()
 	do.Hash = hash
 	do.Path = fileName
+	do.IpfsPort = port_to_use
 
 	// Fake IPFS server.
 	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
+	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
+	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,
 		Body: content,
 	})
@@ -125,7 +133,7 @@ func TestGetFiles(t *testing.T) {
 		t.Fatalf("Used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
 	}
 
-	if returned := tests.FileContents(fileName); content != returned {
+	if returned := testutil.FileContents(fileName); content != returned {
 		t.Fatalf("Returned unexpected content; expected %q, got %q", content, returned)
 	}
 }

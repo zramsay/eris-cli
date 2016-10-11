@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,9 +10,11 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	def "github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 	ver "github.com/eris-ltd/eris-cli/version"
+
+	"github.com/eris-ltd/common/go/common"
 
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -25,19 +26,21 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "db", "keys", "ipfs"},
+		Services: []string{"do_not_use", "keys", "ipfs"},
+	}))
 
 	// Prevent CLI from starting IPFS.
 	os.Setenv("ERIS_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
-	log.Info("Tearing tests down")
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
 func TestStartKillService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -58,7 +61,7 @@ func TestStartKillService(t *testing.T) {
 }
 
 func TestInspectService1(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -72,7 +75,7 @@ func TestInspectService1(t *testing.T) {
 }
 
 func TestInspectService2(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -86,7 +89,7 @@ func TestInspectService2(t *testing.T) {
 }
 
 func TestLogsService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -101,7 +104,7 @@ func TestLogsService(t *testing.T) {
 }
 
 func TestExecService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, true)
 
@@ -121,12 +124,12 @@ func TestExecService(t *testing.T) {
 }
 
 func TestExecServiceBadCommandLine(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, true)
 
 	buf := new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
+	config.Global.Writer = buf
 
 	do := def.NowDo()
 	do.Name = servName
@@ -139,7 +142,7 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 }
 
 func TestUpdateService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 
@@ -158,7 +161,7 @@ func TestUpdateService(t *testing.T) {
 }
 
 func TestKillService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -188,7 +191,7 @@ func TestKillService(t *testing.T) {
 }
 
 func TestRmService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, servName, false)
 	if !util.Running(def.TypeService, servName) {
@@ -216,88 +219,13 @@ func TestRmService(t *testing.T) {
 	}
 }
 
-func TestExportService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "ipfs"
-
-	const hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-
-	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
-		Code: http.StatusOK,
-		Header: map[string][]string{
-			"Ipfs-Hash": {hash},
-		},
-	})
-	defer ipfs.Close()
-
-	if err := ExportService(do); err != nil {
-		t.Fatalf("expected service to be exported, got %v", err)
-	}
-
-	if expected := "/ipfs/"; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
-	}
-
-	if expected := "POST"; ipfs.Method() != expected {
-		t.Fatalf("used the wrong HTTP method; expected %v, got %v", expected, ipfs.Method())
-	}
-
-	if content := tests.FileContents(FindServiceDefinitionFile(do.Name)); content != ipfs.Body() {
-		t.Fatalf("sent the bad file; expected %v, got %v", content, ipfs.Body())
-	}
-
-	if hash != do.Result {
-		t.Fatalf("hash mismatch; expected %v, got %v", hash, do.Result)
-	}
-}
-
-func TestImportService(t *testing.T) {
-	do := def.NowDo()
-	do.Name = "eth"
-	do.Hash = "QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2"
-
-	content := `name = "ipfs"
-
-[service]
-name = "ipfs"
-image = "` + path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_IPFS) + `"`
-
-	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
-	ipfs := tests.NewServer("127.0.0.1:8080")
-	ipfs.SetResponse(tests.ServerResponse{
-		Code: http.StatusOK,
-		Body: content,
-	})
-	defer ipfs.Close()
-
-	if err := ImportService(do); err != nil {
-		t.Fatalf("expected service to be imported, got %v", err)
-	}
-
-	if expected := "/ipfs/" + do.Hash; ipfs.Path() != expected {
-		t.Fatalf("called the wrong endpoint; expected %v, got %v", expected, ipfs.Path())
-	}
-
-	if expected := "GET"; ipfs.Method() != expected {
-		t.Fatalf("used the wrong HTTP method; expected %v, got %v\n", expected, ipfs.Method())
-	}
-
-	if imported := tests.FileContents(FindServiceDefinitionFile(do.Name)); imported != content {
-		t.Fatalf("returned unexpected content; expected: %v, got %v", content, imported)
-	}
-}
-
 func TestMakeService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	do := def.NowDo()
 	servName := "keys"
 	do.Name = servName
-	do.Operations.Args = []string{path.Join(ver.ERIS_REG_DEF, ver.ERIS_IMG_KEYS)}
+	do.Operations.Args = []string{path.Join(ver.DefaultRegistry, ver.ImageKeys)}
 	if err := MakeService(do); err != nil {
 		t.Fatalf("expected a new service to be created, got %v", err)
 	}
@@ -326,7 +254,7 @@ func TestMakeService(t *testing.T) {
 }
 
 func TestRenameService(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	start(t, "keys", false)
 	if !util.Running(def.TypeService, "keys") {
@@ -380,20 +308,24 @@ func TestRenameService(t *testing.T) {
 func TestCatService(t *testing.T) {
 	do := def.NowDo()
 	do.Name = servName
-	if err := CatService(do); err != nil {
+	buf := new(bytes.Buffer)
+	config.Global.Writer = buf
+	out, err := CatService(do)
+	if err != nil {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if out := tests.FileContents(filepath.Join(config.GlobalConfig.ErisDir, "services", "ipfs.toml")); out != do.Result {
-		t.Fatalf("expected local config to be returned %v, got %v", out, do.Result)
+	if cmp := testutil.FileContents(filepath.Join(common.ErisRoot, "services", "ipfs.toml")); out != cmp {
+		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
 	}
 }
 
 func TestStartKillServiceWithDependencies(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 
 	do := def.NowDo()
-	do.Operations.Args = []string{"do_not_use"}
+	do.Operations.Args = []string{"do_not_use"} // [csk] we should make a fake service def instead of using this file
+
 	if err := StartService(do); err != nil {
 		t.Fatalf("expected service to start, got %v", err)
 	}

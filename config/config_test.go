@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/eris-ltd/common/go/common"
 	ver "github.com/eris-ltd/eris-cli/version"
 
 	log "github.com/eris-ltd/eris-logger"
@@ -33,8 +34,8 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestSetGlobalObject1(t *testing.T) {
-	cli, err := SetGlobalObject(os.Stdout, os.Stderr)
+func TestNew1(t *testing.T) {
+	cli, err := New(os.Stdout, os.Stderr)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
@@ -48,8 +49,8 @@ func TestSetGlobalObject1(t *testing.T) {
 	}
 }
 
-func TestSetGlobalObject2(t *testing.T) {
-	cli, err := SetGlobalObject(os.Stderr, os.Stdout)
+func TestNew2(t *testing.T) {
+	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
@@ -63,8 +64,8 @@ func TestSetGlobalObject2(t *testing.T) {
 	}
 }
 
-func TestSetGlobalObjectNil(t *testing.T) {
-	cli, err := SetGlobalObject(nil, nil)
+func TestNewNil(t *testing.T) {
+	cli, err := New(nil, nil)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
@@ -78,10 +79,10 @@ func TestSetGlobalObjectNil(t *testing.T) {
 	}
 }
 
-func TestSetGlobalObjectDefaultConfig(t *testing.T) {
-	ChangeErisDir(configErisDir)
+func TestNewDefaultConfig(t *testing.T) {
+	common.ChangeErisRoot(configErisDir)
 
-	cli, err := SetGlobalObject(os.Stderr, os.Stdout)
+	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
@@ -91,84 +92,80 @@ func TestSetGlobalObjectDefaultConfig(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("IpfsHost"), cli.Config.IpfsHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("IpfsHost"), cli.IpfsHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), cli.Config.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if def, returned := defaults.Get("ERIS_IMG_KEYS"), cli.Config.ERIS_IMG_KEYS; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageKeys"), cli.ImageKeys; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
 	log.WithFields(log.Fields{
-		"ipfshost":       cli.Config.IpfsHost,
-		"compilers host": cli.Config.CompilersHost,
-		"host":           cli.Config.DockerHost,
-		"cert path":      cli.Config.DockerCertPath,
-		"crash report":   cli.Config.CrashReport,
-		"verbose":        cli.Config.Verbose,
-		"eris_img_keys":  cli.Config.ERIS_IMG_KEYS,
+		"ipfshost":       cli.IpfsHost,
+		"compilers host": cli.CompilersHost,
+		"host":           cli.DockerHost,
+		"cert path":      cli.DockerCertPath,
+		"crash report":   cli.CrashReport,
+		"verbose":        cli.Verbose,
+		"image keys":     cli.ImageKeys,
 	}).Info("Checking defaults")
 }
 
-func TestSetGlobalObjectCustomConfig(t *testing.T) {
-	placeErisConfig(`
+func TestNewCustomConfig(t *testing.T) {
+	placeSettings(`
 IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ERIS_IMG_KEYS = "crypto"
-ERIS_IMG_DB = "erisdb"
+ImageKeys = "crypto"
+ImageDB = "erisdb"
 `)
 	defer removeErisDir()
 
-	// [pv]: this is a bit awkward way to reinitialize the config:
-	// SetGlobalConfig, then ChangeErisDir, then again SetGlobalConfig.
-	GlobalConfig = &ErisCli{}
-	ChangeErisDir(configErisDir)
-	cli, err := SetGlobalObject(os.Stderr, os.Stdout)
+	common.ChangeErisRoot(configErisDir)
+	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
 
-	if custom, returned := "foo", cli.Config.IpfsHost; custom != returned {
+	if custom, returned := "foo", cli.IpfsHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "bar", cli.Config.CompilersHost; custom != returned {
+	if custom, returned := "bar", cli.CompilersHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "baz", cli.Config.DockerHost; custom != returned {
+	if custom, returned := "baz", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "qux", cli.Config.DockerCertPath; custom != returned {
+	if custom, returned := "qux", cli.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "quux", cli.Config.CrashReport; custom != returned {
+	if custom, returned := "quux", cli.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := true, cli.Config.Verbose; custom != returned {
+	if custom, returned := true, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := "crypto", cli.Config.ERIS_IMG_KEYS; custom != returned {
+	if custom, returned := "crypto", cli.ImageKeys; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "erisdb", cli.Config.ERIS_IMG_DB; custom != returned {
+	if custom, returned := "erisdb", cli.ImageDB; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
 }
 
-func TestSetGlobalObjectCustomEmptyConfig(t *testing.T) {
-	placeErisConfig(``)
+func TestNewCustomEmptyConfig(t *testing.T) {
+	placeSettings(``)
 	defer removeErisDir()
 
-	GlobalConfig = &ErisCli{}
-	ChangeErisDir(configErisDir)
-	cli, err := SetGlobalObject(os.Stderr, os.Stdout)
+	common.ChangeErisRoot(configErisDir)
+	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
@@ -179,65 +176,64 @@ func TestSetGlobalObjectCustomEmptyConfig(t *testing.T) {
 	}
 
 	log.WithFields(log.Fields{
-		"ipfshost":       cli.Config.IpfsHost,
-		"compilers host": cli.Config.CompilersHost,
-		"host":           cli.Config.DockerHost,
-		"cert path":      cli.Config.DockerCertPath,
-		"crash report":   cli.Config.CrashReport,
-		"verbose":        cli.Config.Verbose,
-		"eris_img_keys":  cli.Config.ERIS_IMG_KEYS,
-		"eris_img_db":    cli.Config.ERIS_IMG_DB,
+		"ipfs host":      cli.IpfsHost,
+		"compilers host": cli.CompilersHost,
+		"host":           cli.DockerHost,
+		"cert path":      cli.DockerCertPath,
+		"crash report":   cli.CrashReport,
+		"verbose":        cli.Verbose,
+		"keys image":     cli.ImageKeys,
+		"db image":       cli.ImageDB,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
-	if def, returned := defaults.Get("IpfsHost"), cli.Config.IpfsHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("IpfsHost"), cli.IpfsHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %v, got %v", returned, def)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), cli.Config.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if custom, returned := "", cli.Config.DockerHost; custom != returned {
+	if custom, returned := "", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "", cli.Config.DockerCertPath; custom != returned {
+	if custom, returned := "", cli.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "bugsnag", cli.Config.CrashReport; custom != returned {
+	if custom, returned := "bugsnag", cli.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := false, cli.Config.Verbose; custom != returned {
+	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := ver.ERIS_IMG_KEYS, cli.Config.ERIS_IMG_KEYS; custom != returned {
+	if custom, returned := ver.ImageKeys, cli.ImageKeys; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := ver.ERIS_IMG_DB, cli.Config.ERIS_IMG_DB; custom != returned {
+	if custom, returned := ver.ImageDB, cli.ImageDB; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
 }
 
-func TestSetGlobalObjectCustomBadConfig(t *testing.T) {
-	placeErisConfig(`*`)
+func TestNewCustomBadConfig(t *testing.T) {
+	placeSettings(`*`)
 	defer removeErisDir()
 
-	GlobalConfig = &ErisCli{}
-	ChangeErisDir(configErisDir)
-	cli, err := SetGlobalObject(os.Stderr, os.Stdout)
+	common.ChangeErisRoot(configErisDir)
+	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
 
 	log.WithFields(log.Fields{
-		"ipfshost":       cli.Config.IpfsHost,
-		"compilers host": cli.Config.CompilersHost,
-		"host":           cli.Config.DockerHost,
-		"cert path":      cli.Config.DockerCertPath,
-		"crash report":   cli.Config.CrashReport,
-		"verbose":        cli.Config.Verbose,
-		"eris_img_keys":  cli.Config.ERIS_IMG_KEYS,
-		"eris_img_db":    cli.Config.ERIS_IMG_DB,
+		"ipfshost":       cli.IpfsHost,
+		"compilers host": cli.CompilersHost,
+		"host":           cli.DockerHost,
+		"cert path":      cli.DockerCertPath,
+		"crash report":   cli.CrashReport,
+		"verbose":        cli.Verbose,
+		"keys image":     cli.ImageKeys,
+		"db image":       cli.ImageDB,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
@@ -246,30 +242,30 @@ func TestSetGlobalObjectCustomBadConfig(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("IpfsHost"), cli.Config.IpfsHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("IpfsHost"), cli.IpfsHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), cli.Config.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if custom, returned := "", cli.Config.DockerHost; custom != returned {
+	if custom, returned := "", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "", cli.Config.DockerCertPath; custom != returned {
+	if custom, returned := "", cli.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "bugsnag", cli.Config.CrashReport; custom != returned {
+	if custom, returned := "bugsnag", cli.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := false, cli.Config.Verbose; custom != returned {
+	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_KEYS"), cli.Config.ERIS_IMG_KEYS; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageKeys"), cli.ImageKeys; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_DB"), cli.Config.ERIS_IMG_DB; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageDB"), cli.ImageDB; reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 }
@@ -288,25 +284,25 @@ func TestSetDefaults(t *testing.T) {
 		t.Fatalf("expected CompilersHost values set")
 	}
 
-	if _, ok := defaults.Get("ERIS_IMG_KEYS").(string); !ok {
-		t.Fatalf("expected ERIS_IMG_KEYS value set")
+	if _, ok := defaults.Get("ImageKeys").(string); !ok {
+		t.Fatalf("expected ImageKeys value set")
 	}
 }
 
-func TestLoadGlobalConfig(t *testing.T) {
-	placeErisConfig(`
+func TestLoad(t *testing.T) {
+	placeSettings(`
 IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ERIS_IMG_KEYS = "crypto"
-ERIS_IMG_DB = "erisdb"
+ImageKeys = "crypto"
+ImageDB = "erisdb"
 `)
 	defer removeErisDir()
 
-	config, err := LoadGlobalConfig()
+	config, err := Load()
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -329,19 +325,19 @@ ERIS_IMG_DB = "erisdb"
 	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "crypto", config.Get("ERIS_IMG_KEYS"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "crypto", config.Get("ImageKeys"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "erisdb", config.Get("ERIS_IMG_DB"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "erisdb", config.Get("ImageDB"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
 
-func TestLoadGlobalConfigEmpty(t *testing.T) {
-	placeErisConfig(``)
+func TestLoadEmpty(t *testing.T) {
+	placeSettings(``)
 	defer removeErisDir()
 
-	config, err := LoadGlobalConfig()
+	config, err := Load()
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -369,20 +365,20 @@ func TestLoadGlobalConfigEmpty(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_KEYS"), config.Get("ERIS_IMG_KEYS"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageKeys"), config.Get("ImageKeys"); reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_DB"), config.Get("ERIS_IMG_DB"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageDB"), config.Get("ImageDB"); reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 }
 
-func TestLoadGlobalConfigBad(t *testing.T) {
-	placeErisConfig(`*`)
+func TestLoadBad(t *testing.T) {
+	placeSettings(`*`)
 	defer removeErisDir()
 
 	// With bad config, load defaults.
-	config, err := LoadGlobalConfig()
+	config, err := Load()
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -410,28 +406,28 @@ func TestLoadGlobalConfigBad(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_KEYS"), config.Get("ERIS_IMG_KEYS"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageKeys"), config.Get("ImageKeys"); reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
-	if def, returned := defaults.Get("ERIS_IMG_DB"), config.Get("ERIS_IMG_DB"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("ImageDB"), config.Get("ImageDB"); reflect.DeepEqual(returned, def) != true {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 }
 
-func TestLoadViperConfig(t *testing.T) {
-	placeErisConfig(`
+func TestLoadViper(t *testing.T) {
+	placeSettings(`
 IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ERIS_IMG_KEYS = "crypto"
-ERIS_IMG_DB = "erisdb"
+ImageKeys = "crypto"
+ImageDB = "erisdb"
 `)
 	defer removeErisDir()
 
-	config, err := LoadViperConfig(configErisDir, "eris")
+	config, err := LoadViper(configErisDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -454,19 +450,19 @@ ERIS_IMG_DB = "erisdb"
 	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "crypto", config.Get("ERIS_IMG_KEYS"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "crypto", config.Get("ImageKeys"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "erisdb", config.Get("ERIS_IMG_DB"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "erisdb", config.Get("ImageDB"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
 
-func TestLoadViperConfigEmpty(t *testing.T) {
-	placeErisConfig(``)
+func TestLoadViperEmpty(t *testing.T) {
+	placeSettings(``)
 	defer removeErisDir()
 
-	config, err := LoadViperConfig(configErisDir, "eris")
+	config, err := LoadViper(configErisDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -489,110 +485,50 @@ func TestLoadViperConfigEmpty(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if returned := config.Get("ERIS_IMG_KEYS"); returned != nil {
+	if returned := config.Get("ImageKeys"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if returned := config.Get("ERIS_IMG_DB"); returned != nil {
+	if returned := config.Get("ImageDB"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
 }
 
-func TestLoadViperConfigBad(t *testing.T) {
-	placeErisConfig(`*`)
+func TestLoadViperBad(t *testing.T) {
+	placeSettings(`*`)
 	defer removeErisDir()
 
-	_, err := LoadViperConfig(configErisDir, "eris")
+	_, err := LoadViper(configErisDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
-func TestLoadViperConfigNonExistent1(t *testing.T) {
-	_, err := LoadViperConfig(configErisDir, "eris")
+func TestLoadViperNonExistent1(t *testing.T) {
+	_, err := LoadViper(configErisDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
-func TestLoadViperConfigNonExistent2(t *testing.T) {
-	_, err := LoadViperConfig(configErisDir, "12345")
+func TestLoadViperNonExistent2(t *testing.T) {
+	_, err := LoadViper(configErisDir, "12345")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
-func TestGetConfigValueUninitialized1(t *testing.T) {
-	GlobalConfig = nil
-
-	if returned := GetConfigValue("IpfsHost"); returned != "" {
-		t.Fatalf("expected empty value, got %v", returned)
-	}
-}
-
-func TestGetConfigValueUninitialized2(t *testing.T) {
-	GlobalConfig = &ErisCli{}
-	GlobalConfig.Config = nil
-
-	if returned := GetConfigValue("IpfsHost"); returned != "" {
-		t.Fatalf("expected empty value, got %v", returned)
-	}
-}
-
-func TestGetConfigValue(t *testing.T) {
-	var err error
-	GlobalConfig, err = SetGlobalObject(os.Stdout, os.Stderr)
-	if err != nil {
-		t.Fatalf("expected success, got %v", err)
-	}
-
-	if returned := GetConfigValue("IpfsHost"); returned == "" {
-		t.Fatal("expected value returned, got empty string")
-	}
-	if returned := GetConfigValue("CompilersHost"); returned == "" {
-		t.Fatal("expected value returned, got empty string")
-	}
-	if returned := GetConfigValue("DockerHost"); returned != "" {
-		t.Fatalf("expected empty string returned, got %v", returned)
-	}
-	if returned := GetConfigValue("DockerCertPath"); returned != "" {
-		t.Fatalf("expected empty string returned, got %v", returned)
-	}
-	if returned := GetConfigValue("ERIS_IMG_KEYS"); returned == "" {
-		t.Fatal("expected value returned, got empty string")
-	}
-}
-
-func TestGetConfigValueBad(t *testing.T) {
-	var err error
-	GlobalConfig, err = SetGlobalObject(os.Stdout, os.Stderr)
-	if err != nil {
-		t.Fatalf("expected success, got %v", err)
-	}
-
-	if returned := GetConfigValue("bad value"); returned != "" {
-		t.Fatalf("expected empty string returned, got %v", returned)
-	}
-}
-
-func TestGitConfigUser(t *testing.T) {
-	_, _, err := GitConfigUser()
-	if err != nil {
-		t.Fatalf("expected success, got %v", err)
-	}
-}
-
-func TestSaveGlobalConfig(t *testing.T) {
+func TestSave(t *testing.T) {
 	os.MkdirAll(configErisDir, 0755)
 	defer removeErisDir()
 
-	config := &ErisConfig{
+	settings := &Settings{
 		IpfsHost:       "foo",
 		CompilersHost:  "bar",
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
 	}
-	if err := SaveGlobalConfig(config); err != nil {
+	if err := Save(settings); err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
 
@@ -613,64 +549,34 @@ Verbose = true
 	}
 }
 
-func TestSaveGlobalConfigNotExistentDir(t *testing.T) {
-	GlobalConfig = &ErisCli{}
-	ChangeErisDir("/non/existent/dir")
-	_, err := SetGlobalObject(os.Stderr, os.Stdout)
+func TestSaveNotExistentDir(t *testing.T) {
+	common.ChangeErisRoot("/non/existent/dir")
+	_, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
 	}
 
-	config := &ErisConfig{
+	settings := &Settings{
 		IpfsHost:       "foo",
 		CompilersHost:  "bar",
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
-		ERIS_IMG_KEYS:  "crypto",
-		ERIS_IMG_DB:    "erisdb",
+		ImageKeys:      "crypto",
+		ImageDB:        "erisdb",
 	}
-	if err := SaveGlobalConfig(config); err == nil {
+	if err := Save(settings); err == nil {
 		t.Fatal("expected failure, got nil")
 	}
 }
 
-func TestSaveGlobalConfigNil(t *testing.T) {
-	if err := SaveGlobalConfig(nil); err == nil {
+func TestSaveNil(t *testing.T) {
+	if err := Save(nil); err == nil {
 		t.Fatal("expected failure, got nil")
 	}
 }
 
-func TestChangeErisDirNonInitialized(t *testing.T) {
-	GlobalConfig = nil
-	ChangeErisDir(configErisDir)
-
-	if GlobalConfig != nil {
-		t.Fatal("didn't expect global config to become initialized")
-	}
-}
-
-func TestChangeErisDir(t *testing.T) {
-	GlobalConfig = &ErisCli{}
-	ChangeErisDir(configErisDir)
-
-	if GlobalConfig.ErisDir != configErisDir {
-		t.Fatalf("expected config directory to change, got %v", GlobalConfig.ErisDir)
-	}
-}
-
-func TestChangeErisDirCI(t *testing.T) {
-	GlobalConfig = &ErisCli{}
-
-	os.Setenv("TESTING", "true")
-	ChangeErisDir(configErisDir)
-
-	if GlobalConfig.ErisDir != "" {
-		t.Fatalf("expected config directory not changed in CI, got %v", GlobalConfig.ErisDir)
-	}
-}
-
-func placeErisConfig(definition string) {
+func placeSettings(definition string) {
 	os.MkdirAll(configErisDir, 0755)
 	fakeDefinitionFile(configErisDir, "eris", definition)
 }

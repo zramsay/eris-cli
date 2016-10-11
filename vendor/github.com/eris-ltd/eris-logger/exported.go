@@ -9,6 +9,7 @@ var (
 	std = New()
 )
 
+// StandardLogger returns a default logger instance.
 func StandardLogger() *Logger {
 	return std
 }

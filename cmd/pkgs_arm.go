@@ -3,10 +3,12 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/pkgs"
+	"github.com/eris-ltd/eris-cli/util"
 	_ "github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
@@ -33,7 +35,7 @@ var packagesImport = &cobra.Command{
 	Use:   "import HASH NAME",
 	Short: "pull a package of smart contracts from IPFS",
 	Long: `pull a package of smart contracts from IPFS
-via its hash and save it locally to ~/.eris/apps/NAME.
+via its hash and save it locally to ` + util.Tilde(filepath.Join(AppsPath, "NAME")) + `.
 This package needs to have been added as directory to IPFS,
 with [eris pkgs export someDir/]`,
 	Run: PackagesImport,
@@ -113,5 +115,5 @@ func formCompilers() string {
 	maj, _ := strconv.Atoi(verSplit[0])
 	min, _ := strconv.Atoi(verSplit[1])
 	pat, _ := strconv.Atoi(verSplit[2])
-	return fmt.Sprintf("https://compilers.eris.industries:1%01d%02d%01d", maj, min, pat)
+	return fmt.Sprintf("https://compilers.monax.io:1%01d%02d%01d", maj, min, pat)
 }

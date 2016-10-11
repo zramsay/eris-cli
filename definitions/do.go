@@ -2,7 +2,6 @@ package definitions
 
 type Do struct {
 	AddDir        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Actions       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Force         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	File          bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Pull          bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -11,7 +10,6 @@ type Do struct {
 	All           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Follow        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Logrotate     bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Run           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Rm            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmImage       bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RmD           bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -27,7 +25,10 @@ type Do struct {
 	OutputTable   bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Overwrite     bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump          bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","` // XXX: for tail and logs
+	LocalCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Save          bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Wizard        bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Lines         int      `mapstructure:"," json:"," yaml:"," toml:","`
 	Timeout       uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	N             uint     `mapstructure:"," json:"," yaml:"," toml:","`
 	Address       string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -38,9 +39,6 @@ type Do struct {
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ConfigFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ServerConf    string   `mapstructure:"," json:"," yaml:"," toml:","`
-	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Gateway       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName   string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -55,6 +53,7 @@ type Do struct {
 	EPMConfigFile string   `mapstructure:"," json:"," yaml:"," toml:","`
 	KeysPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainPort     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	IpfsPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PackagePath   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas    string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -65,14 +64,9 @@ type Do struct {
 	ChainMakeActs string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeVals string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
+	ImagesSlice   []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
-
-	// update
-	Branch string `mapstructure:"," json:"," yaml:"," toml:","`
-	// XXX below requested by @kootpv. to implement once command is stable
-	// Commit  string `mapstructure:"," json:"," yaml:"," toml:","`
-	// Version string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
@@ -100,8 +94,7 @@ type Do struct {
 	Links []string `mapstructure:"," json:"," yaml:"," toml:","`
 
 	// Objects
-	Action            *Action
-	Chain             *Chain
+	ChainDefinition   *ChainDefinition
 	Operations        *Operation
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
@@ -112,8 +105,7 @@ type Do struct {
 
 func NowDo() *Do {
 	return &Do{
-		Action:            BlankAction(),
-		Chain:             BlankChain(),
+		ChainDefinition:   BlankChainDefinition(),
 		Operations:        BlankOperation(),
 		Service:           BlankService(),
 		ServiceDefinition: BlankServiceDefinition(),

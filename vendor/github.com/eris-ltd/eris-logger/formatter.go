@@ -2,6 +2,7 @@ package logger
 
 import "time"
 
+// DefaultTimestampFormat is a timestamp format used for the standard logger.
 const DefaultTimestampFormat = time.RFC3339
 
 // The Formatter interface is used to implement a custom Formatter. It takes an

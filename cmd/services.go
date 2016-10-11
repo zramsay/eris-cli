@@ -9,6 +9,7 @@ import (
 	def "github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
@@ -29,16 +30,15 @@ image.`,
 
 func buildServicesCommand() {
 	Services.AddCommand(servicesMake)
-	Services.AddCommand(servicesImport)
 	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesInspect)
+	Services.AddCommand(servicesIP)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
-	Services.AddCommand(servicesExport)
 	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
@@ -76,14 +76,6 @@ $ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.
 $ eris services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
 }
 
-var servicesImport = &cobra.Command{
-	Use:     "import NAME HASH",
-	Short:   "import a service definition file from IPFS",
-	Long:    `import a service for your platform`,
-	Example: "$ eris services import eth QmQ1LZYPNG4wSb9dojRicWCmM4gFLTPKFUhFnMTR3GKuA2",
-	Run:     ImportService,
-}
-
 var servicesMake = &cobra.Command{
 	Use:   "make NAME IMAGE",
 	Short: "create a new service",
@@ -99,7 +91,7 @@ docker format of [repository/organization/image].`,
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "edit a service",
-	Long: `edit a service definition file which is kept in ~/.eris/services.
+	Long: `edit a service definition file which is kept in ` + util.Tilde(ServicesPath) + `.
 Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
@@ -115,7 +107,7 @@ var servicesStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start a service",
 	Long: `start a service according to the service definition file which
-eris stores in the ~/.eris/services directory
+eris stores in the ` + util.Tilde(ServicesPath) + `directory
 
 The [eris services start NAME] command by default will put the
 service into the background so its logs will not be viewable
@@ -148,6 +140,14 @@ $ eris services inspect ipfs host_config.binds -- will display only that value`,
 	Run: InspectService,
 }
 
+var servicesIP = &cobra.Command{
+	Use:   "ip NAME",
+	Short: "display service IP",
+	Long:  `display service IP`,
+
+	Run: IPService,
+}
+
 var servicesPorts = &cobra.Command{
 	Use:   "ports NAME [PORT]...",
 	Short: "print port mappings",
@@ -157,15 +157,6 @@ The [eris services ports] command displays published service ports.`,
 	Example: `$ eris services ports ipfs -- will display all IPFS ports
 $ eris services ports ipfs 4001 5001 -- will display specific IPFS ports`,
 	Run: PortsService,
-}
-
-var servicesExport = &cobra.Command{
-	Use:   "export NAME",
-	Short: "export a service definition file to IPFS",
-	Long: `export a service definition file to IPFS
-
-Command will return a machine readable version of the IPFS hash.`,
-	Run: ExportService,
 }
 
 var servicesLogs = &cobra.Command{
@@ -208,10 +199,7 @@ Functionally this command will perform the following sequence of steps:
 2. Remove the container which ran the service.
 3. Pull the image the container uses from a hub.
 4. Rebuild the container from the updated image.
-5. Restart the service (if it was previously running).
-
-NOTE: If the service uses data containers, those will not be affected
-by the [eris update] command.`,
+5. Restart the service (if it was previously running).`,
 	Run: UpdateService,
 }
 
@@ -240,7 +228,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", ErisRoot))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(ErisRoot)))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
@@ -305,8 +293,8 @@ func ExecService(cmd *cobra.Command, args []string) {
 	}
 	do.Operations.Terminal = true
 	do.Operations.Args = args
-	config.GlobalConfig.InteractiveWriter = os.Stdout
-	config.GlobalConfig.InteractiveErrorWriter = os.Stderr
+	config.Global.InteractiveWriter = os.Stdout
+	config.Global.InteractiveErrorWriter = os.Stderr
 	_, err := srv.ExecService(do)
 	IfExit(err)
 }
@@ -315,13 +303,6 @@ func KillService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
 	IfExit(srv.KillService(do))
-}
-
-func ImportService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Hash = args[1]
-	IfExit(srv.ImportService(do))
 }
 
 func MakeService(cmd *cobra.Command, args []string) {
@@ -357,17 +338,18 @@ func InspectService(cmd *cobra.Command, args []string) {
 	IfExit(srv.InspectService(do))
 }
 
+func IPService(cmd *cobra.Command, args []string) {
+	IfExit(ArgCheck(1, "ge", cmd, args))
+	do.Name = args[0]
+	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
+	IfExit(srv.InspectService(do))
+}
+
 func PortsService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	IfExit(srv.PortsService(do))
-}
-
-func ExportService(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	IfExit(srv.ExportService(do))
 }
 
 func UpdateService(cmd *cobra.Command, args []string) {
@@ -402,5 +384,7 @@ func RmService(cmd *cobra.Command, args []string) {
 func CatService(cmd *cobra.Command, args []string) {
 	IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(srv.CatService(do))
+	out, err := srv.CatService(do)
+	IfExit(err)
+	fmt.Fprint(config.Global.Writer, out)
 }

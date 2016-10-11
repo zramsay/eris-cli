@@ -13,7 +13,7 @@ import (
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	srv "github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -29,10 +29,13 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"keys", "ipfs", "data", "db", "cm"},
+		Services: []string{"keys", "ipfs"},
+	}))
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
@@ -53,7 +56,7 @@ func TestRemoveAllErisContainers(t *testing.T) {
 	notEris0 := testCreateNotEris("not_eris0", t)
 	notEris1 := testCreateNotEris("not_eris1", t)
 
-	tests.IfExit(util.RemoveAllErisContainers())
+	testutil.IfExit(util.RemoveAllErisContainers())
 
 	// Check that both not_eris still exist and no Eris containers exist.
 	testCheckSimple(notEris0, t)
@@ -105,8 +108,7 @@ func TestCleanLatentChainDatas(t *testing.T) {
 func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	if yes { // fail if dirs/files don't exist
 		for _, chn := range chains {
-			// this should be !util.DoesDirExist() but that fails ... ?
-			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+			if !util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory does not exist when it should")
 			}
 			_, err := loaders.LoadChainDefinition(chn) // list.Known only Prints to stdout
@@ -128,7 +130,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 }
 
 func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_KEYS)); err != nil {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 
@@ -207,15 +209,23 @@ func testStartService(serviceName string, t *testing.T) {
 		t.Fatalf("error starting service: %v", err)
 	}
 
-	tests.IfExit(tests.TestExistAndRun(serviceName, "service", true, true))
-	tests.IfExit(tests.TestNumbersExistAndRun(serviceName, true, true))
+	testutil.IfExit(testutil.ExistAndRun(serviceName, "service", true, true))
+	testutil.IfExit(testutil.NumbersExistAndRun(serviceName, true, true))
 }
 
 func testStartChain(chainName string, t *testing.T) {
+	doMake := definitions.NowDo()
+	doMake.Name = chainName
+	doMake.ChainType = "simplechain"
+	if err := chains.MakeChain(doMake); err != nil {
+		t.Fatalf("expected a chain to be made, got %v", err)
+	}
+
 	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.PublishAllPorts = true
-	if err := chains.NewChain(do); err != nil {
+	do.Path = filepath.Join(common.ChainsPath, chainName)
+	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chainName, err)
 	}
 }
@@ -240,7 +250,7 @@ func testCreateDataContainer(dataName string, t *testing.T) {
 		t.Fatalf("error importing data: %v", err)
 	}
 
-	if err := tests.TestExistAndRun(dataName, "data", true, false); err != nil {
+	if err := testutil.ExistAndRun(dataName, "data", true, false); err != nil {
 		t.Fatalf("error creating data cont: %v", err)
 	}
 

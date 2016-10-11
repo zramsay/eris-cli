@@ -19,25 +19,6 @@ import (
 	"github.com/eris-ltd/common/go/ipfs"
 )
 
-func ImportService(do *definitions.Do) error {
-	fileName := filepath.Join(ServicesPath, do.Name)
-	if filepath.Ext(fileName) == "" {
-		fileName = fileName + ".toml"
-	}
-
-	if err := ipfs.GetFromIPFS(do.Hash, fileName, ""); err != nil {
-		return err
-	}
-
-	_, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return fmt.Errorf("error loading service:\n%v", err)
-	}
-
-	do.Result = "success"
-	return nil
-}
-
 func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
@@ -61,14 +42,12 @@ func MakeService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Result = "success"
 	return nil
 }
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	log.WithField("=>", servDefFile).Info("Editing service")
-	do.Result = "success"
 	return Editor(servDefFile)
 }
 
@@ -140,7 +119,6 @@ func RenameService(do *definitions.Do) error {
 	} else {
 		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -178,26 +156,6 @@ func LogsService(do *definitions.Do) error {
 	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
-func ExportService(do *definitions.Do) error {
-	if parseKnown(do.Name) {
-		doNow := definitions.NowDo()
-		doNow.Name = "ipfs"
-		err := EnsureRunning(doNow)
-		if err != nil {
-			return err
-		}
-
-		hash, _ := exportFile(do.Name)
-		do.Result = hash
-		log.WithField("hash", hash).Warn()
-
-	} else {
-		return fmt.Errorf(`I don't know that service. Please retry with a known service.
-To find known services use [eris services ls --known]`)
-	}
-	return nil
-}
-
 func UpdateService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
@@ -209,7 +167,6 @@ func UpdateService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Result = "success"
 	return nil
 }
 
@@ -242,25 +199,22 @@ func RmService(do *definitions.Do) error {
 			}
 		}
 	}
-	do.Result = "success"
 	return nil
 }
 
-func CatService(do *definitions.Do) error {
+func CatService(do *definitions.Do) (string, error) {
 	configs := util.GetGlobalLevelConfigFilesByType("services", true)
 	for _, c := range configs {
 		cName := strings.Split(filepath.Base(c), ".")[0]
 		if cName == do.Name {
 			cat, err := ioutil.ReadFile(c)
 			if err != nil {
-				return err
+				return "", err
 			}
-			do.Result = string(cat)
-			log.Warn(string(cat))
-			return nil
+			return string(cat), nil
 		}
 	}
-	return fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
+	return "", fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
@@ -273,5 +227,5 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 }
 
 func exportFile(servName string) (string, error) {
-	return ipfs.SendToIPFS(FindServiceDefinitionFile(servName), "")
+	return ipfs.SendToIPFS(FindServiceDefinitionFile(servName), "", "")
 }

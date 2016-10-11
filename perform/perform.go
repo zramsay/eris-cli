@@ -113,7 +113,7 @@ func DockerRunData(ops *def.Operation, service *def.Service) (result []byte, err
 	}
 
 	// Return the logs as a byte slice, if possible.
-	reader, ok := config.GlobalConfig.Writer.(*bytes.Buffer)
+	reader, ok := config.Global.Writer.(*bytes.Buffer)
 	if ok {
 		return reader.Bytes(), nil
 	}
@@ -155,14 +155,14 @@ func DockerExecData(ops *def.Operation, service *def.Service) (buf *bytes.Buffer
 	}()
 
 	// Save writer values for later and restore on exit.
-	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	stdout, stderr := config.Global.Writer, config.Global.ErrorWriter
 	defer func() {
-		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+		config.Global.Writer, config.Global.ErrorWriter = stdout, stderr
 	}()
 
 	buf = new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-	config.GlobalConfig.ErrorWriter = buf
+	config.Global.Writer = buf
+	config.Global.ErrorWriter = buf
 
 	// Start the container.
 	log.WithField("=>", opts.Name).Info("Executing interactive data container")
@@ -303,14 +303,14 @@ func DockerExecService(srv *def.Service, ops *def.Operation) (buf *bytes.Buffer,
 	}()
 
 	// Save writer values for later and restore on exit.
-	stdout, stderr := config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter
+	stdout, stderr := config.Global.Writer, config.Global.ErrorWriter
 	defer func() {
-		config.GlobalConfig.Writer, config.GlobalConfig.ErrorWriter = stdout, stderr
+		config.Global.Writer, config.Global.ErrorWriter = stdout, stderr
 	}()
 
 	buf = new(bytes.Buffer)
-	config.GlobalConfig.Writer = buf
-	config.GlobalConfig.ErrorWriter = buf
+	config.Global.Writer = buf
+	config.Global.ErrorWriter = buf
 
 	// Start the container.
 	log.WithFields(log.Fields{
@@ -425,11 +425,11 @@ func DockerPull(srv *def.Service, ops *def.Operation) error {
 	}
 
 	if log.GetLevel() > 0 {
-		if err := pullImage(srv.Image, os.Stdout); err != nil {
+		if err := util.PullImage(srv.Image, os.Stdout); err != nil {
 			return err
 		}
 	} else {
-		if err := pullImage(srv.Image, ioutil.Discard); err != nil {
+		if err := util.PullImage(srv.Image, ioutil.Discard); err != nil {
 			return err
 		}
 	}
@@ -830,8 +830,8 @@ func startInteractiveContainer(opts docker.CreateContainerOptions, terminal bool
 func attachContainer(id string, terminal bool, attached chan struct{}) (docker.CloseWaiter, error) {
 	opts := docker.AttachToContainerOptions{
 		Container:    id,
-		OutputStream: io.MultiWriter(config.GlobalConfig.Writer, config.GlobalConfig.InteractiveWriter),
-		ErrorStream:  io.MultiWriter(config.GlobalConfig.ErrorWriter, config.GlobalConfig.InteractiveErrorWriter),
+		OutputStream: io.MultiWriter(config.Global.Writer, config.Global.InteractiveWriter),
+		ErrorStream:  io.MultiWriter(config.Global.ErrorWriter, config.Global.InteractiveErrorWriter),
 		Logs:         false,
 		Stream:       true,
 		Stdout:       true,
@@ -872,9 +872,9 @@ func logsContainer(id string, follow bool, tail string) error {
 	var writer io.Writer
 	var eWriter io.Writer
 
-	if config.GlobalConfig != nil {
-		writer = config.GlobalConfig.Writer
-		eWriter = config.GlobalConfig.ErrorWriter
+	if config.Global != nil {
+		writer = config.Global.Writer
+		eWriter = config.Global.ErrorWriter
 	} else {
 		writer = os.Stdout
 		eWriter = os.Stderr
@@ -1054,7 +1054,7 @@ func configureServiceContainer(srv *def.Service, ops *def.Operation) docker.Crea
 
 			opts.Config.ExposedPorts[docker.Port(exposed)] = struct{}{}
 
-			opts.HostConfig.PortBindings[docker.Port(exposed)] = []docker.PortBinding{docker.PortBinding{
+			opts.HostConfig.PortBindings[docker.Port(exposed)] = []docker.PortBinding{{
 				HostPort: published,
 				HostIP:   ip,
 			}}
@@ -1076,7 +1076,7 @@ func configureVolumesFromContainer(ops *def.Operation, service *def.Service) doc
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA),
+			Image:           path.Join(config.Global.DefaultRegistry, config.Global.ImageData),
 			User:            "root",
 			WorkingDir:      dirs.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1122,7 +1122,7 @@ func configureDataContainer(srv *def.Service, ops *def.Operation, mainContOpts *
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = path.Join(config.GlobalConfig.Config.ERIS_REG_DEF, config.GlobalConfig.Config.ERIS_IMG_DATA)
+		srv.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageData)
 	}
 
 	// Manipulate labels locally.

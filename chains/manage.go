@@ -3,7 +3,6 @@ package chains
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,14 +15,13 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
 
 	. "github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/common/go/ipfs"
 	log "github.com/eris-ltd/eris-logger"
 )
 
-// MakeChain runs the `eris-cm make` command in a docker container.
+// MakeChain runs the `eris-cm make` command in a Docker container.
 // It returns an error. Note that if do.Known, do.AccountTypes
 // or do.ChainType are not set the command will run via interactive
 // shell.
@@ -45,7 +43,7 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	do.Service.Name = do.Name
-	do.Service.Image = path.Join(version.ERIS_REG_DEF, version.ERIS_IMG_CM)
+	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageCM)
 	do.Service.User = "eris"
 	do.Service.AutoData = true
 	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
@@ -77,7 +75,7 @@ func MakeChain(do *definitions.Do) error {
 		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
 	}
 
-	if !do.Known && len(do.AccountTypes) == 0 && do.ChainType == "" {
+	if do.Wizard && len(do.AccountTypes) == 0 && do.ChainType == "" {
 		do.Operations.Interactive = true
 		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
 	}
@@ -96,33 +94,43 @@ func MakeChain(do *definitions.Do) error {
 	doData.Source = AccountsTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "account-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import account-types into container: %v", err)
 	}
 
 	doData.Source = ChainTypePath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import chain-types into container: %v", err)
 	}
 
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	doData.Source = chnPath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
 	if err := data.ImportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot import chain directory into container: %v", err)
 	}
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
+		// Log to both screen and logs for further analysis in Bugsnag.
+		log.Debug("Dumping [eris-cm] output")
+		log.Error(buf.String())
+
+		// After all the imports are in place, [eris-cm] should not fail,
+		// so it is worth investigating why it still failed.
+		util.SendReport("`eris chains make` failed")
+
 		return err
 	}
 
-	io.Copy(config.GlobalConfig.Writer, buf)
+	// TODO(pv): remove this line after `eris-cm` command line handling is fixed.
+	// This line exists to capture `eris-cm` errors which return exit code 0.
+	io.Copy(config.Global.Writer, buf)
 
 	doData.Source = path.Join(ErisContainerRoot, "chains")
 	doData.Destination = ErisRoot
 	if err := data.ExportData(doData); err != nil {
-		return err
+		return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
 	}
 
 	if !do.RmD {
@@ -132,32 +140,7 @@ func MakeChain(do *definitions.Do) error {
 	return nil
 }
 
-// ImportChain pulls a chain definition file from IPFS and saves
-// that file into ChainPath. It returns an error.
-//
-//  do.Name          - name of the chain to be imported (required)
-//  do.Path          - path to export to; currently only supports ipfs (example: ipfs:QmVdjShTMLAD6YTEgQ1wen1ym4p19ZWepCYTf1MNC1f1Ft) (required)
-//
-func ImportChain(do *definitions.Do) error {
-	fileName := filepath.Join(ChainsPath, do.Name)
-	if filepath.Ext(fileName) == "" {
-		fileName = fileName + ".toml"
-	}
-
-	s := strings.Split(do.Path, ":")
-	if s[0] == "ipfs" {
-		return ipfs.GetFromIPFS(s[1], fileName, "")
-	}
-
-	if strings.Contains(s[0], "github") {
-		log.Warn("https://twitter.com/ryaneshea/status/595957712040628224")
-		return nil
-	}
-
-	return fmt.Errorf("I do not know how to get that file. Sorry.")
-}
-
-// InspectChain is eris' version of docker inspect. It returns
+// InspectChain is Eris' version of [docker inspect]. It returns
 // an error.
 //
 //  do.Name            - name of the chain to inspect (required)
@@ -201,35 +184,6 @@ func LogsChain(do *definitions.Do) error {
 	return nil
 }
 
-// ExportChain exports a chain definition file to IPFS for easy
-// collaboration between peers.
-//
-//  do.Name - name of the chain (required)
-//
-func ExportChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	if util.IsChain(chain.Name, false) {
-		doNow := definitions.NowDo()
-		doNow.Name = "ipfs"
-		services.EnsureRunning(doNow)
-
-		hash, err := exportFile(do.Name)
-		if err != nil {
-			return err
-		}
-		log.Warn(hash)
-
-	} else {
-		return fmt.Errorf(`I don't known of that chain.
-Please retry with a known chain.
-To find known chains use: eris chains ls --known`)
-	}
-	return nil
-}
-
 // CheckoutChain writes to the ChainPath/HEAD file the name
 // of the chain to be "checked out". It returns an error. This
 // operates similar to git branches and is predominantly a
@@ -240,13 +194,11 @@ To find known chains use: eris chains ls --known`)
 //
 func CheckoutChain(do *definitions.Do) error {
 	if do.Name == "" {
-		do.Result = "nil"
 		return util.NullHead()
 	}
 
 	curHead, _ := util.GetHead()
 	if do.Name == curHead {
-		do.Result = "no change"
 		return nil
 	}
 
@@ -256,53 +208,53 @@ func CheckoutChain(do *definitions.Do) error {
 // CurrentChain displays the currently in scope (or checked out) chain. It
 // returns an error (which should never be triggered)
 //
-func CurrentChain(do *definitions.Do) error {
+func CurrentChain(do *definitions.Do) (string, error) {
 	head, _ := util.GetHead()
 
 	if head == "" {
-		head = "There is no chain checked out."
+		head = "There is no chain checked out"
 	}
 
-	log.Warn(head)
-	do.Result = head
-
-	return nil
+	return head, nil
 }
 
 // CatChain displays chain information. It returns nil on success, or input/output
 // errors otherwise.
 //
 //  do.Name - chain name
-//  do.Type - "toml", "genesis", "status", "validators", or "toml"
+//  do.Type - "genesis", "config"
 //
 func CatChain(do *definitions.Do) error {
+	if do.Name == "" {
+		return fmt.Errorf("a chain name is required")
+	}
 	rootDir := path.Join(ErisContainerRoot, "chains", do.Name)
+
+	doCat := definitions.NowDo()
+	doCat.Name = do.Name
+	doCat.Operations.SkipLink = true
+
 	switch do.Type {
 	case "genesis":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
+		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
-		do.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	case "status":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
-	case "validators":
-		do.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
-	case "toml":
-		cat, err := ioutil.ReadFile(filepath.Join(ChainsPath, do.Name+".toml"))
-		if err != nil {
-			return err
-		}
-		config.GlobalConfig.Writer.Write(cat)
-		return nil
+		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
+	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
+	// case "status":
+	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
+	// case "validators":
+	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
 	default:
 		return fmt.Errorf("unknown cat subcommand %q", do.Type)
 	}
-	do.Operations.PublishAllPorts = true
+	// edb docker image is (now) properly formulated with entrypoint && cmd
+	// so the entrypoint must be overwritten.
 	log.WithField("args", do.Operations.Args).Debug("Executing command")
 
-	buf, err := ExecChain(do)
+	buf, err := ExecChain(doCat)
 
 	if buf != nil {
-		io.Copy(config.GlobalConfig.Writer, buf)
+		io.Copy(config.Global.Writer, buf)
 	}
 
 	return err
@@ -327,117 +279,6 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
-// EditChain is an easy way to edit a chain definition file
-// it uses eris-ltd/common/go/common/dirs_and_files.go 's editor
-// function to determine the editor for the current shell and
-// to utilize that (or VIM by default) (sorry emacs folks).
-//
-//  do.Name - name of the chain to edit its chain definition files (required)
-//
-func EditChain(do *definitions.Do) error {
-	chainDefFile := util.GetFileByNameAndType("chains", do.Name)
-	log.WithField("file", chainDefFile).Info("Editing chain definition")
-	do.Result = "success"
-	return Editor(chainDefFile)
-}
-
-// XXX: What's going on here? => [csk]: magic
-func RenameChain(do *definitions.Do) error {
-	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
-	}
-
-	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-	transformOnly := newNameBase == do.Name
-
-	if util.IsKnownChain(do.Name) {
-		log.WithFields(log.Fields{
-			"from": do.Name,
-			"to":   do.NewName,
-		}).Info("Renaming chain")
-
-		log.WithField("=>", do.Name).Debug("Loading chain definition file")
-		chainDef, err := loaders.LoadChainDefinition(do.Name)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.Debug("Renaming chain container")
-			err = perform.DockerRename(chainDef.Operations, do.NewName)
-			if err != nil {
-				return err
-			}
-		}
-
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-
-		if filepath.Base(oldFile) == do.NewName {
-			log.Info("Those are the same file. Not renaming")
-			return nil
-		}
-
-		log.Debug("Renaming chain definition file")
-		var newFile string
-		if filepath.Ext(do.NewName) == "" {
-			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
-		} else {
-			newFile = filepath.Join(ChainsPath, do.NewName)
-		}
-
-		chainDef.Name = newNameBase
-		// Generally we won't want to use Service.Name
-		// as it will be confused with the Name.
-		chainDef.Service.Name = ""
-		// Service.Image should be taken from the default.toml.
-		chainDef.Service.Image = ""
-		err = WriteChainDefinitionFile(chainDef, newFile)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Info("Renaming chain data container")
-			err = data.RenameData(do)
-			if err != nil {
-				return err
-			}
-		}
-
-		os.Remove(oldFile)
-	} else {
-		return fmt.Errorf("I cannot find that chain. Please check the chain name you sent me.")
-	}
-	return nil
-}
-
-func UpdateChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	// set the right env vars and command
-	if util.IsChain(chain.Name, true) {
-		chain.Service.Environment = []string{fmt.Sprintf("CHAIN_ID=%s", do.Name)}
-		chain.Service.Environment = append(chain.Service.Environment, do.Env...)
-		chain.Service.Links = append(chain.Service.Links, do.Links...)
-		chain.Service.Command = loaders.ErisChainStart
-	}
-
-	err = perform.DockerRebuild(chain.Service, chain.Operations, do.Pull, do.Timeout)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -450,17 +291,6 @@ func RemoveChain(do *definitions.Do) error {
 		}
 	} else {
 		log.Info("Chain container does not exist")
-	}
-
-	if do.File {
-		oldFile := util.GetFileByNameAndType("chains", do.Name)
-		if err != nil {
-			return err
-		}
-		log.WithField("file", oldFile).Warn("Removing file")
-		if err := os.Remove(oldFile); err != nil {
-			return err
-		}
 	}
 
 	if do.RmHF {
@@ -478,60 +308,7 @@ func RemoveChain(do *definitions.Do) error {
 func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
-	return ipfs.SendToIPFS(fileName, "")
-}
-
-// TODO: remove
-func RegisterChain(do *definitions.Do) error {
-	// do.Name is mandatory
-	if do.Name == "" {
-		return fmt.Errorf("RegisterChain requires a chainame")
-	}
-	etcbChain := do.ChainID
-	do.ChainID = do.Name
-
-	// NOTE: registration expects you to have the data container
-	if !util.IsData(do.Name) {
-		return fmt.Errorf("Registration requires you to have a data container for the chain. Could not find data for %s", do.Name)
-	}
-
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
-
-	// set chainid and other vars
-	envVars := []string{
-		fmt.Sprintf("CHAIN_ID=%s", do.ChainID),                 // of the etcb chain
-		fmt.Sprintf("PUBKEY=%s", do.Pubkey),                    // pubkey to register chain with
-		fmt.Sprintf("ETCB_CHAIN_ID=%s", etcbChain),             // chain id of the etcb chain
-		fmt.Sprintf("NODE_ADDR=%s", do.Gateway),                // etcb node to send the register tx to
-		fmt.Sprintf("NEW_P2P_SEEDS=%s", do.Operations.Args[0]), // seeds to register for the chain // TODO: deal with multi seed (needs support in tendermint)
-	}
-	envVars = append(envVars, do.Env...)
-
-	log.WithFields(log.Fields{
-		"environment": envVars,
-		"links":       do.Links,
-	}).Debug("Registering chain with")
-	chain.Service.Environment = append(chain.Service.Environment, envVars...)
-	chain.Service.Links = append(chain.Service.Links, do.Links...)
-
-	if err := bootDependencies(chain, do); err != nil {
-		return err
-	}
-
-	log.WithFields(log.Fields{
-		"=>":    chain.Service.Name,
-		"image": chain.Service.Image,
-	}).Debug("Performing chain container start")
-	chain.Operations = loaders.LoadDataDefinition(chain.Service.Name)
-	chain.Operations.Args = []string{loaders.ErisChainRegister}
-
-	_, err = perform.DockerRunData(chain.Operations, chain.Service)
-
-	return err
+	return ipfs.SendToIPFS(fileName, "", "")
 }
 
 func checkKeysRunningOrStart() error {

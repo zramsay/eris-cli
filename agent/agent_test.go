@@ -7,14 +7,13 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/tests"
+	"github.com/eris-ltd/eris-cli/testutil"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -24,7 +23,7 @@ var (
 	// incoming post request args
 	// auth added in SetBundlePath
 	bundleInfo = map[string]string{
-		"groupId":  "com.erisindustries",
+		"groupId":  "io.monax",
 		"bundleId": "marmoty-contracts",
 		"version":  "2.1.2", //don't use ints since path joining
 	}
@@ -44,19 +43,18 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
-	tests.IfExit(tests.TestsInit(tests.ConnectAndPull))
+	testutil.IfExit(testutil.Init(testutil.Pull{
+		Images:   []string{"data", "pm", "keys"},
+		Services: []string{"keys"},
+	}))
 
 	exitCode := m.Run()
-	tests.IfExit(tests.TestsTearDown())
+	testutil.IfExit(testutil.TearDown())
 	os.Exit(exitCode)
 }
 
-func TestListChains(t *testing.T) {
-
-}
-
 // Ensure url format satisfies required schema
-//TODO parse each kinds of payload (chains, dowload, install)
+// TODO parse each kinds of payload (chains, dowload, install)
 func TestParsePayload(t *testing.T) {
 	toTest := map[string]string{
 		"groupId":   bundleInfo["groupId"],  // needed to buildpath
@@ -83,21 +81,22 @@ func TestParsePayload(t *testing.T) {
 
 // the test that matters!
 func TestDeployContract(t *testing.T) {
-	defer tests.RemoveAllContainers()
+	defer testutil.RemoveAllContainers()
 	start(t, "keys", false)
 	defer kill(t, "keys", true)
 
 	testSetupChain(t, chainName) // has test for IsChainRunning
-	defer testKillChain(t, chainName)
+	defer testStopChain(t, chainName)
 
 	doKey := definitions.NowDo()
 	doKey.Container = true
 	doKey.Host = false
 	//there should only be one key
-	if err := keys.ListKeys(doKey); err != nil {
+	keys, err := keys.ListKeys(doKey)
+	if err != nil {
 		t.Fatalf("err listing keys: %v\n", err)
 	}
-	address := strings.Split(doKey.Result, ",")[0]
+	address := keys[0]
 
 	// testGetTarballFromIPFS(t) (replaced by using a tar'd bundle directly!)
 	// defer kill(t, "ipfs", true)
@@ -214,14 +213,13 @@ func testSetupChain(t *testing.T, chainName string) {
 	doCh := definitions.NowDo()
 	doCh.Name = chainName
 	doCh.ChainType = "simplechain"
-	doCh.AccountTypes = []string{"Full:1"}
 
 	if err := chains.MakeChain(doCh); err != nil {
 		t.Fatalf("error making chain: %v\n", err)
 	}
 
 	doCh.Path = filepath.Join(common.ChainsPath, chainName)
-	if err := chains.NewChain(doCh); err != nil {
+	if err := chains.StartChain(doCh); err != nil {
 		t.Fatalf("error new-ing chain: %v\n", err)
 	}
 
@@ -230,12 +228,12 @@ func testSetupChain(t *testing.T, chainName string) {
 	}
 }
 
-func testKillChain(t *testing.T, chainName string) {
+func testStopChain(t *testing.T, chainName string) {
 	doCh := definitions.NowDo()
 	doCh.Name = chainName
 	doCh.Rm = true
 	doCh.Force = true
-	if err := chains.KillChain(doCh); err != nil {
+	if err := chains.StopChain(doCh); err != nil {
 		t.Fatalf("error killing chain: %v", err)
 	}
 }

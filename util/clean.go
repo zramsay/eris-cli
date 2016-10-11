@@ -39,15 +39,15 @@ func cleanHandler(toClean map[string]bool) error {
 		}
 	}
 
-	if toClean["chn-dirs"] {
-		log.Debug("Removing latent chains data in ChainsPath")
+	if toClean["chains"] {
+		log.Debug("Removing latent chains data directories")
 		if err := cleanLatentChainData(); err != nil {
 			return err
 		}
 	}
 
 	if toClean["scratch"] {
-		log.Debug("Removing contents of DataContainersPath")
+		log.Debug("Removing containers' scratch data")
 		if err := cleanScratchData(); err != nil {
 			return err
 		}
@@ -121,8 +121,6 @@ func cleanLatentChainData() error {
 	dontDelete := map[string]bool{
 		"account-types": true,
 		"chain-types":   true,
-		"default":       true,
-		"default.toml":  true,
 		"HEAD":          true,
 	}
 
@@ -155,6 +153,10 @@ func RemoveErisImages() error {
 	}
 
 	for _, i := range images {
+		if len(i.RepoTags) == 0 {
+			continue
+		}
+
 		if !strings.Contains(i.RepoTags[0], "eris/") {
 			continue
 		}
@@ -172,7 +174,7 @@ func RemoveErisImages() error {
 func canWeRemove(toClean map[string]bool) bool {
 	var toWarn = map[string]string{
 		"containers": "all",
-		"chn-dirs":   "latent files & dirs from ~/.eris/chains",
+		"chains":     fmt.Sprintf("%s/.eris/chains", common.HomeDir()),
 		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", common.HomeDir()),
 		"root":       fmt.Sprintf("%s/.eris", common.HomeDir()),
 		"images":     "all",
@@ -181,24 +183,24 @@ func canWeRemove(toClean map[string]bool) bool {
 	if toClean["all"] != true {
 		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
-			log.WithField("containers", toWarn["containers"]).Warn("")
+			log.WithField("containers", toWarn["containers"]).Warn()
 		}
-		if toClean["chn-dirs"] {
-			log.WithField("chn-dirs", toWarn["chn-dirs"]).Warn("")
+		if toClean["chains"] {
+			log.WithField("chains", toWarn["chains"]).Warn()
 		}
 		if toClean["scratch"] {
-			log.WithField("scratch", toWarn["scratch"]).Warn("")
+			log.WithField("scratch", toWarn["scratch"]).Warn()
 		}
 		if toClean["root"] {
-			log.WithField("root", toWarn["root"]).Warn("")
+			log.WithField("root", toWarn["root"]).Warn()
 		}
 		if toClean["images"] {
-			log.WithField("images", toWarn["images"]).Warn("")
+			log.WithField("images", toWarn["images"]).Warn()
 		}
 	} else {
 		log.WithFields(log.Fields{
 			"containers": toWarn["containers"],
-			"chn-dirs":   toWarn["chn-dirs"],
+			"chains":     toWarn["chains"],
 			"scratch":    toWarn["scratch"],
 			"root":       toWarn["root"],
 			"images":     toWarn["images"],
@@ -211,8 +213,4 @@ func canWeRemove(toClean map[string]bool) bool {
 	}
 	log.Warn("Authorization not given, exiting")
 	return false
-}
-
-func TrimString(strang string) string {
-	return strings.TrimSpace(strings.Trim(strang, "\n"))
 }

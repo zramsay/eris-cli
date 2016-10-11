@@ -5,8 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
+	ver "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -18,7 +20,11 @@ func Initialize(do *definitions.Do) error {
 		return err
 	}
 
-	if !newDir { //new ErisRoot won't have either...can skip
+	if err := overwriteErisToml(); err != nil {
+		return err
+	}
+
+	if !newDir {
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
 			return nil
 		}
@@ -30,14 +36,14 @@ func Initialize(do *definitions.Do) error {
 
 	}
 
-	if do.Pull { //true by default; if imgs already exist, will check for latest anyways
-		if err := GetTheImages(do.Yes); err != nil {
+	if do.Pull {
+		if err := GetTheImages(do); err != nil {
 			return err
 		}
 	}
 
-	//drops: services, actions, & chain defaults from toadserver
-	log.Warn("Initializing default service, action, and chain files")
+	// Service definition defaults.
+	log.Warn("Initializing default service definition files")
 	if err := InitDefaults(do, newDir); err != nil {
 		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
 	}
@@ -48,14 +54,11 @@ Directory structure initialized:
 
 +-- .eris/
 ¦   +-- eris.toml
-¦   +-- actions/
 ¦   +-- apps/
 ¦   +-- bundles/
 ¦   +-- chains/
-¦       +-- account-types
-¦       +-- chain-types
-¦       +-- default/config.toml
-¦       +-- default.toml
+¦       +-- account-types/
+¦       +-- chain-types/
 ¦   +-- keys/
 ¦       +-- data/
 ¦       +-- names/
@@ -90,25 +93,11 @@ line to the %s definition file.
 
 func InitDefaults(do *definitions.Do, newDir bool) error {
 	var srvPath string
-	var actPath string
-	var chnPath string
 
 	srvPath = common.ServicesPath
-	actPath = common.ActionsPath
-	chnPath = common.ChainsPath
 
-	tsErrorFix := "toadserver may be down: re-run with `--source=rawgit`"
-
-	if err := dropServiceDefaults(srvPath, do.Source); err != nil {
-		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
-	}
-
-	if err := dropActionDefaults(actPath, do.Source); err != nil {
-		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
-	}
-
-	if err := dropChainDefaults(chnPath, do.Source); err != nil {
-		return fmt.Errorf("%v\n%s\n", err, tsErrorFix)
+	if err := dropServiceDefaults(srvPath, do.ServicesSlice); err != nil {
+		return err
 	}
 
 	log.WithField("root", common.ErisRoot).Warn("Initialized Eris root directory")
@@ -152,7 +141,6 @@ func checkIfCanOverwrite(doYes bool) error {
 	log.WithField("path", common.ErisRoot).Warn("Eris root directory")
 	log.WithFields(log.Fields{
 		"services path": common.ServicesPath,
-		"actions path":  common.ActionsPath,
 		"chains path":   common.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
 	if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
@@ -160,14 +148,14 @@ func checkIfCanOverwrite(doYes bool) error {
 	} else {
 		log.Warn("The marmots will not proceed without your permission")
 		log.Warn("Please backup your files and try again")
-		return fmt.Errorf("Error: no permission given to overwrite services and actions")
+		return fmt.Errorf("Error: no permission given to overwrite services")
 	}
 	return nil
 }
 
-func GetTheImages(doYes bool) error {
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" || doYes {
-		if err := pullDefaultImages(); err != nil {
+func GetTheImages(do *definitions.Do) error {
+	if os.Getenv("ERIS_PULL_APPROVE") == "true" || do.Yes {
+		if err := pullDefaultImages(do.ImagesSlice); err != nil {
 			return err
 		}
 		log.Warn("Successfully pulled default images")
@@ -183,11 +171,32 @@ on local host machines. If you already have the images, they'll be updated.
 		log.Warn()
 
 		if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
-			if err := pullDefaultImages(); err != nil {
+			if err := pullDefaultImages(do.ImagesSlice); err != nil {
 				return err
 			}
 			log.Warn("Successfully pulled default images")
 		}
+	}
+	return nil
+}
+
+func overwriteErisToml() error {
+	config.Global.DefaultRegistry = ver.DefaultRegistry
+	config.Global.BackupRegistry = ver.BackupRegistry
+	config.Global.ImageData = ver.ImageData
+	config.Global.ImageKeys = ver.ImageKeys
+	config.Global.ImageDB = ver.ImageDB
+	config.Global.ImagePM = ver.ImagePM
+	config.Global.ImageCM = ver.ImageCM
+	config.Global.ImageIPFS = ver.ImageIPFS
+
+	// Ensure the directory the file being saved to exists.
+	if err := os.MkdirAll(common.ErisRoot, 0755); err != nil {
+		return err
+	}
+
+	if err := config.Save(&config.Global.Settings); err != nil {
+		return err
 	}
 	return nil
 }
