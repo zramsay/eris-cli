@@ -32,3 +32,7 @@ func BlankServiceDefinition() *ServiceDefinition {
 		Operations: BlankOperation(),
 	}
 }
+
+func BlankDependencies() *Dependencies {
+	return &Dependencies{}
+}

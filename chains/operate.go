@@ -167,6 +167,7 @@ func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) er
 	if do.Logrotate {
 		chain.Dependencies.Services = append(chain.Dependencies.Services, "logrotate")
 	}
+
 	if chain.Dependencies != nil {
 		name := do.Name
 		log.WithFields(log.Fields{
