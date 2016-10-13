@@ -88,7 +88,7 @@ documentation here:
 https://monax.io/docs/documentation/cm/`,
 	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
 $ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive); use the [--chain-type] flag to specify chain types
-$ eris chains make myChain --account-types=Root:1,Developer:0,Validator:0,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
+$ eris chains make myChain --account-types=Root:1,Developer:0,Validator:1,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
 $ eris chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
 $ eris chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
 	Run: MakeChain,
