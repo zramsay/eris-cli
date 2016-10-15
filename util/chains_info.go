@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/eris-ltd/common/go/common"
@@ -11,19 +12,6 @@ import (
 
 // Maximum entries in the HEAD file
 var MaxHead = 100
-
-// check if given chain is known
-func IsKnownChain(name string) bool {
-	known := GetGlobalLevelConfigFilesByType("chains", false)
-	if len(known) != 0 {
-		for _, srv := range known {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
-}
 
 // Change the head to null (no head)
 func NullHead() error {
@@ -35,7 +23,11 @@ func NullHead() error {
 func GetHead() (string, error) {
 	// TODO: only read the one line!
 	f, err := ioutil.ReadFile(common.HEAD)
-	if err != nil {
+	if os.IsNotExist(err) {
+		if _, err := os.Create(common.HEAD); err != nil {
+			return "", err
+		}
+	} else {
 		return "", err
 	}
 
@@ -52,7 +44,7 @@ func GetHead() (string, error) {
 // Add a new entry (name) to the top of the HEAD file
 // Expects the chain type and head (id) to be full (already resolved)
 func ChangeHead(name string) error {
-	if !IsKnownChain(name) && name != "" {
+	if !IsChain(name, false) && name != "" {
 		log.Debug("Chain name not known. Not saving")
 		return nil
 	}
@@ -61,7 +53,11 @@ func ChangeHead(name string) error {
 	// read in the entire head file and clip
 	// if we have reached the max length
 	b, err := ioutil.ReadFile(common.HEAD)
-	if err != nil {
+	if os.IsNotExist(err) {
+		if _, err := os.Create(common.HEAD); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 	bspl := strings.Split(string(b), "\n")

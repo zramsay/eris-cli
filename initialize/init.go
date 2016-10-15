@@ -107,20 +107,20 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 
 func checkThenInitErisRoot(force bool) (bool, error) {
 	var newDir bool
-	if force { //for testing only
+	if force {
 		log.Info("Force initializing Eris root directory")
 		if err := common.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Error:\tcould not initialize the eris root directory.\n%s\n", err)
+			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
 		}
 		return true, nil
 	}
 	if !util.DoesDirExist(common.ErisRoot) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := common.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
 		}
 		newDir = true
-	} else { // ErisRoot exists, prompt for overwrite
+	} else {
 		newDir = false
 	}
 	return newDir, nil
