@@ -2,8 +2,8 @@ package chains
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -261,14 +261,32 @@ func setupChain(do *definitions.Do) (err error) {
 	// path to the config.toml that was written in each directory
 	// this allows cli to keep track of a given config.toml (locally)
 
-	// TODO update!
+	fileName := filepath.Join(ChainsPath, "CONFIG_PATHS.csv")
+	csvFile, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatal("err opening file", err)
+	}
+	defer csvFile.Close()
 
-	fileName := filepath.Join(ChainsPath, do.Name, "CONFIG_PATH")
-	if _, err = os.Stat(fileName); err != nil {
-		if err := ioutil.WriteFile(fileName, []byte(do.Path), 0666); err != nil {
-			return fmt.Errorf("error writing CONFIG_PATH file: %v", err)
+	reader := csv.NewReader(csvFile)
+	reader.TrimLeadingSpace = true
+
+	rawCSVdata, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+	//log.WithField("rawCSVdata", rawCSVdata).Debug("Data read.")
+	for _, chain := range rawCSVdata {
+		if chain[0] == do.Name {
+			return fmt.Errorf("chain name already exists with path: %s", chain[1])
 		}
 	}
+
+	writer := csv.NewWriter(csvFile)
+	if err := writer.Write([]string{do.Name, do.Path}); err != nil {
+		log.Fatal("err writing csv", err)
+	}
+	writer.Flush()
 
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {

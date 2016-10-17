@@ -1,15 +1,15 @@
 package loaders
 
 import (
+	"encoding/csv"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
-	// "github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
@@ -26,15 +26,44 @@ func LoadChainDefinition(chainName string) (*definitions.ChainDefinition, error)
 	chain.Operations.ContainerType = definitions.TypeChain
 	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
 
-	whereIsTheConfigFile := filepath.Join(common.ChainsPath, chainName, "CONFIG_PATH")
+	theConfigFile := filepath.Join(common.ChainsPath, "CONFIG_PATHS.csv")
 	var err error
-	pathToConfig, err := ioutil.ReadFile(whereIsTheConfigFile)
+
+	csvfile, err := os.Open(theConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	defer csvfile.Close()
+
+	reader := csv.NewReader(csvfile)
+	reader.TrimLeadingSpace = true
+
+	rawCSVdata, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
 	}
 
+	log.WithField("rawCSVdata", rawCSVdata).Debug("Data read")
+
+	var pathToConfig string
+	var chainFound bool
+	for _, chain := range rawCSVdata {
+		if chain[0] == chainName {
+			pathToConfig = chain[1]
+			chainFound = true
+		}
+	}
+
+	if !chainFound {
+		return nil, fmt.Errorf("chain: %s not found in CONFIG_PATHS.csv")
+	}
+	if pathToConfig == "" {
+		return nil, fmt.Errorf("path to the chain config file is empty")
+	}
+	log.WithField("=>", pathToConfig).Warn("Path to config")
+
 	definition := viper.New()
-	definition, err = config.LoadViper(string(pathToConfig), "config")
+	definition, err = config.LoadViper(pathToConfig, "config")
 	if err != nil {
 		return nil, err
 	}

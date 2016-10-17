@@ -17,7 +17,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 
 	. "github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/common/go/ipfs"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -279,6 +278,7 @@ func PortsChain(do *definitions.Do) error {
 	return nil
 }
 
+// TODO remove pointer line in CONFIG_PATHS.csv
 func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -303,12 +303,6 @@ func RemoveChain(do *definitions.Do) error {
 	}
 
 	return nil
-}
-
-func exportFile(chainName string) (string, error) {
-	fileName := util.GetFileByNameAndType("chains", chainName)
-
-	return ipfs.SendToIPFS(fileName, "", "")
 }
 
 func checkKeysRunningOrStart() error {
