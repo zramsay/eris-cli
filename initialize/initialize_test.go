@@ -21,8 +21,6 @@ var servDir = filepath.Join(erisDir, "services")
 var chnDir = filepath.Join(erisDir, "chains")
 var chnDefDir = filepath.Join(chnDir, "default")
 
-// TODO refactor tests
-
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
 	// log.SetLevel(log.InfoLevel)
@@ -41,19 +39,21 @@ func TestInitErisRootDir(t *testing.T) {
 		ifExit(err)
 	}
 
-	for _, dir := range common.MajorDirs {
+	for _, dir := range []string{
+		common.AppsPath,
+		common.BundlesPath,
+		common.ChainsPath,
+		common.KeysPath,
+		common.RemotesPath,
+		common.ScratchPath,
+		common.ServicesPath,
+		common.KeysDataPath,
+		common.KeysNamesPath,
+	} {
 		if !util.DoesDirExist(dir) {
 			ifExit(fmt.Errorf("Could not find the %s subdirectory", dir))
 		}
 	}
-}
-
-func TestMigration(t *testing.T) {
-	//already has its own test
-}
-
-func TestPullImages(t *testing.T) {
-	//already tested by virtue of being needed for tool level tests
 }
 
 func TestDropServiceDefaults(t *testing.T) {

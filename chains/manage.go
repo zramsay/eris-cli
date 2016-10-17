@@ -106,8 +106,10 @@ func MakeChain(do *definitions.Do) error {
 	chnPath := filepath.Join(ChainsPath, do.Name)
 	doData.Source = chnPath
 	doData.Destination = path.Join(ErisContainerRoot, "chains", do.Name)
-	if err := data.ImportData(doData); err != nil {
-		return fmt.Errorf("Cannot import chain directory into container: %v", err)
+	if util.DoesDirExist(doData.Source) {
+		if err := data.ImportData(doData); err != nil {
+			return fmt.Errorf("Cannot import chain directory into container: %v", err)
+		}
 	}
 
 	buf, err := perform.DockerExecService(do.Service, do.Operations)

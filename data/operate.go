@@ -37,6 +37,11 @@ func ImportData(do *definitions.Do) error {
 	}
 	do.Source = AbsolutePath(wd, do.Source)
 
+	// Check the source path exists.
+	if _, err := os.Stat(do.Source); err != nil {
+		return err
+	}
+
 	log.WithFields(log.Fields{
 		"from": do.Source,
 		"to":   do.Destination,

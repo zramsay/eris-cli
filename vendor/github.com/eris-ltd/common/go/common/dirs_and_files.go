@@ -45,69 +45,11 @@ var (
 	LllcScratchPath      = filepath.Join(LanguagesScratchPath, "lllc")
 	SolcScratchPath      = filepath.Join(LanguagesScratchPath, "sol")
 	SerpScratchPath      = filepath.Join(LanguagesScratchPath, "ser")
-
-	// Deprecated Directories (remove on 0.12 release)
-	BlockchainsPath = filepath.Join(ErisRoot, "blockchains")
-	DappsPath       = filepath.Join(ErisRoot, "dapps")
-	LanguagesPath   = filepath.Join(ErisRoot, "languages")
 )
 
-var MajorDirs = []string{
-	ErisRoot,
-	AppsPath,
-	BundlesPath,
-	ChainsPath,
-	AccountsTypePath,
-	ChainTypePath,
-	KeysPath,
-	KeysDataPath,
-	KeysNamesPath,
-	RemotesPath,
-	ScratchPath,
-	DataContainersPath,
-	LanguagesScratchPath,
-	LllcScratchPath,
-	SolcScratchPath,
-	SerpScratchPath,
-	ServicesPath,
-}
-
-// ChainsDirs to be used by specific tooling rather than eris-cli level.
-var ChainsDirs = []string{
-	ChainsPath,
-	AccountsTypePath,
-	ChainTypePath,
-}
-
-// KeysDirs to be used by specific tooling rather than eris-cli level.
-var KeysDirs = []string{
-	KeysPath,
-	KeysDataPath,
-	KeysNamesPath,
-}
-
-// ServicesDirs to be used by specific tooling rather than eris-cli level.
-var ServicesDirs = []string{
-	ServicesPath,
-}
-
-// ScratchDirs to be used by specific tooling rather than eris-cli level.
-var ScratchDirs = []string{
-	ScratchPath,
-	DataContainersPath,
-	LanguagesScratchPath,
-	LllcScratchPath,
-	SolcScratchPath,
-	SerpScratchPath,
-}
-
-// DirsToMigrate is used by the `eris update` command to check
+// DirsToMigrate is used by the `eris init` command to check
 // if old dirs exist to migrate them.
-var DirsToMigrate = map[string]string{
-	BlockchainsPath: ChainsPath,
-	DappsPath:       AppsPath,
-	LanguagesPath:   LanguagesScratchPath,
-}
+var DirsToMigrate = map[string]string{}
 
 func HomeDir() string {
 	if runtime.GOOS == "windows" {
@@ -142,6 +84,7 @@ func ChangeErisRoot(erisDir string) {
 	// Chains Directories
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
 	ChainTypePath = filepath.Join(ChainsPath, "chain-types")
+	HEAD = filepath.Join(ChainsPath, "HEAD")
 
 	// Keys Directories
 	KeysDataPath = filepath.Join(KeysPath, "data")
@@ -189,16 +132,31 @@ func ResolveErisRoot() string {
 	return eris
 }
 
-// Create the default eris tree
+// InitErisDir creates an Eris directory hierarchy under ErisRoot dir.
 func InitErisDir() (err error) {
-	for _, d := range MajorDirs {
+	for _, d := range []string{
+		ErisRoot,
+		AppsPath,
+		BundlesPath,
+		ChainsPath,
+		AccountsTypePath,
+		ChainTypePath,
+		KeysPath,
+		KeysDataPath,
+		KeysNamesPath,
+		RemotesPath,
+		ScratchPath,
+		DataContainersPath,
+		LanguagesScratchPath,
+		LllcScratchPath,
+		SolcScratchPath,
+		SerpScratchPath,
+		ServicesPath,
+	} {
 		err := InitDataDir(d)
 		if err != nil {
 			return err
 		}
-	}
-	if _, err = os.Stat(HEAD); err != nil {
-		_, err = os.Create(HEAD)
 	}
 	return
 }
