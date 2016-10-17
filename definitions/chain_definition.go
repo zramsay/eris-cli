@@ -20,11 +20,12 @@ type ChainDefinition struct {
 
 func BlankChainDefinition() *ChainDefinition {
 	return &ChainDefinition{
-		Service:    BlankService(),
-		Chain:      BlankChain(),
-		Maintainer: BlankMaintainer(),
-		Location:   BlankLocation(),
-		Machine:    BlankMachine(),
-		Operations: BlankOperation(),
+		Service:      BlankService(),
+		Chain:        BlankChain(),
+		Dependencies: BlankDependencies(),
+		Maintainer:   BlankMaintainer(),
+		Location:     BlankLocation(),
+		Machine:      BlankMachine(),
+		Operations:   BlankOperation(),
 	}
 }
