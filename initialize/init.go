@@ -114,7 +114,7 @@ func checkThenInitErisRoot(force bool) (bool, error) {
 		}
 		return true, nil
 	}
-	if !util.DoesDirExist(common.ErisRoot) {
+	if !util.DoesDirExist(common.ErisRoot) || !util.DoesDirExist(common.ServicesPath) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := common.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
