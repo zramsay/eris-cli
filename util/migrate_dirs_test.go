@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/log"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 var erisDir string = filepath.Join(os.TempDir(), "eris")

@@ -13,18 +13,18 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
 )
 
-var goodPkg string = filepath.Join(AppsPath, "good", "package.json")
-var badPkg string = filepath.Join(AppsPath, "bad", "package.json")
-var emptyPkg string = filepath.Join(AppsPath, "empty", "package.json")
+var goodPkg string = filepath.Join(common.AppsPath, "good", "package.json")
+var badPkg string = filepath.Join(common.AppsPath, "bad", "package.json")
+var emptyPkg string = filepath.Join(common.AppsPath, "empty", "package.json")
 
 var chainName = "pkg-test-chain"
 
@@ -243,8 +243,8 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("unexpectedly data containers are not turned on")
 	}
 
-	if do.Service.WorkDir != path.Join(ErisContainerRoot, "apps", filepath.Base(do.Path)) {
-		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(ErisContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
+	if do.Service.WorkDir != path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path)) {
+		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
 	}
 
 	if do.Service.User != "eris" {
@@ -286,7 +286,7 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
+	dir := filepath.Join(common.AppsPath, dirName)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -326,8 +326,8 @@ func TestImportEPMYamlNotInContractDir(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -390,7 +390,7 @@ func TestImportEPMYamlNotInContractDir(t *testing.T) {
 
 func TestImportMainDirRel(t *testing.T) {
 	pwd, _ := os.Getwd()
-	os.Chdir(AppsPath)
+	os.Chdir(common.AppsPath)
 
 	dirName := "testerSteven"
 	chainName := "simpletestingChain"
@@ -439,7 +439,7 @@ func TestImportMainDirAsFile(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
+	dir := filepath.Join(common.AppsPath, dirName)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -477,15 +477,15 @@ func TestImportMainDirAsFile(t *testing.T) {
 
 func TestImportContractDirRel(t *testing.T) {
 	pwd, _ := os.Getwd()
-	os.Chdir(AppsPath)
+	os.Chdir(common.AppsPath)
 
 	dirName := "testerSteven"
 	dirName2 := "testerRichard"
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -544,8 +544,8 @@ func TestImportContractDirAbs(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -602,8 +602,8 @@ func TestImportContractDirAsFile(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -652,15 +652,15 @@ func TestImportContractDirAsFile(t *testing.T) {
 
 func TestImportABIDirRel(t *testing.T) {
 	pwd, _ := os.Getwd()
-	os.Chdir(AppsPath)
+	os.Chdir(common.AppsPath)
 
 	dirName := "testerSteven"
 	dirName2 := "testerRichard"
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -719,8 +719,8 @@ func TestImportABIDirAbs(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -777,8 +777,8 @@ func TestImportABIDirAsFile(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -830,7 +830,7 @@ func TestExportEPMOutputsInMainDir(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
+	dir := filepath.Join(common.AppsPath, dirName)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -884,8 +884,8 @@ func TestExportEPMOutputsNotInMainDir(t *testing.T) {
 	chainName := "simpletestingChain"
 	name := "homiedontplay"
 	contents := "marmots"
-	dir := filepath.Join(AppsPath, dirName)
-	dir2 := filepath.Join(AppsPath, dirName2)
+	dir := filepath.Join(common.AppsPath, dirName)
+	dir2 := filepath.Join(common.AppsPath, dirName2)
 
 	pkg := loaders.DefaultPackage(name, chainName)
 	pkg.ChainName = "temp"
@@ -1081,7 +1081,7 @@ func create(t *testing.T, chain string) {
 	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(ChainsPath, chain)
+	do.Path = filepath.Join(common.ChainsPath, chain)
 	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}

@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 var erisDir = filepath.Join(os.TempDir(), "eris")
@@ -71,7 +71,7 @@ func testDrops(dir, kind string) error {
 
 	switch kind {
 	case "services":
-		if err := dropServiceDefaults(dirGit, ver.SERVICE_DEFINITIONS); err != nil {
+		if err := dropServiceDefaults(dirGit, version.SERVICE_DEFINITIONS); err != nil {
 			ifExit(err)
 		}
 	}

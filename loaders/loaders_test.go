@@ -10,12 +10,12 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 type ab struct {
@@ -68,13 +68,13 @@ ports          = [ "1234" ]
 
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
-		{`ContainerType`, d.Operations.ContainerType, def.TypeChain},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeChain},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeChain},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.AutoData`, d.Service.AutoData, true},
@@ -159,13 +159,13 @@ email = "support@monax.io"
 
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
-		{`ContainerType`, d.Operations.ContainerType, def.TypeChain},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeChain},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeChain},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.Image`, d.Service.Image, "test image"},
@@ -198,13 +198,13 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
-		{`ContainerType`, d.Operations.ContainerType, def.TypeChain},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeChain},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeChain},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
 	} {
@@ -245,13 +245,13 @@ ports          = [ "4321" ]
 
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
-		{`ContainerType`, d.Operations.ContainerType, def.TypeChain},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeChain},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeChain},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.AutoData`, d.Service.AutoData, true},
@@ -300,13 +300,13 @@ image          = "test image"
 
 	for _, entry := range []ab{
 		{`Name`, s.Name, name},
-		{`ContainerType`, s.Operations.ContainerType, def.TypeChain},
+		{`ContainerType`, s.Operations.ContainerType, definitions.TypeChain},
 		{`SrvContainerName`, s.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, s.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, s.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, s.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, s.Operations.Labels[def.LabelType], def.TypeChain},
+		{`Labels["ERIS"]`, s.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, s.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, s.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
@@ -344,13 +344,13 @@ func TestLoadDataDefinition(t *testing.T) {
 	d := LoadDataDefinition(name)
 
 	for _, entry := range []ab{
-		{`ContainerType`, d.ContainerType, def.TypeData},
+		{`ContainerType`, d.ContainerType, definitions.TypeData},
 		{`SrvContainerName`, d.SrvContainerName, util.DataContainerName(name)},
 		{`DataContainerName`, d.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Labels[def.LabelType], def.TypeData},
+		{`Labels["ERIS"]`, d.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Labels[definitions.LabelType], definitions.TypeData},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
@@ -533,13 +533,13 @@ repository = "https://example.com"
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
 
-		{`ContainerType`, d.Operations.ContainerType, def.TypeService},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeService},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeService},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
 		{`Service.Name`, d.Service.Name, name},
 		{`Service.AutoData`, d.Service.AutoData, true},
@@ -575,13 +575,13 @@ image = "test image"
 	for _, entry := range []ab{
 		{`Name`, d.Name, "test image"},
 
-		{`ContainerType`, d.Operations.ContainerType, def.TypeService},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeService},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName("test image")},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName("test image")},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeService},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
 		{`Service.Name`, d.Service.Name, "test image"},
 		{`Service.Image`, d.Service.Image, "test image"},
@@ -647,13 +647,13 @@ func TestMockServiceDefinition(t *testing.T) {
 	for _, entry := range []ab{
 		{`Name`, d.Name, name},
 
-		{`ContainerType`, d.Operations.ContainerType, def.TypeService},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeService},
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[def.LabelEris], "true"},
-		{`Labels["NAME"]`, d.Operations.Labels[def.LabelShortName], name},
-		{`Labels["TYPE"]`, d.Operations.Labels[def.LabelType], def.TypeService},
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
 		{`Service.Name`, d.Service.Name, name},
 		// [pv]: Mock is allowed to return an empty image while load isn't?
@@ -670,7 +670,7 @@ func TestServiceFinalizeLoadBlankNames(t *testing.T) {
 		name = "test"
 	)
 
-	d := def.BlankServiceDefinition()
+	d := definitions.BlankServiceDefinition()
 	d.Service.Image = name
 
 	ServiceFinalizeLoad(d)
@@ -694,7 +694,7 @@ func TestServiceFinalizeLoadBlankName(t *testing.T) {
 		name = "test"
 	)
 
-	d := def.BlankServiceDefinition()
+	d := definitions.BlankServiceDefinition()
 	d.Service.Name = name
 
 	ServiceFinalizeLoad(d)
@@ -718,7 +718,7 @@ func TestServiceFinalizeLoadBlankServiceName(t *testing.T) {
 		name = "test"
 	)
 
-	d := def.BlankServiceDefinition()
+	d := definitions.BlankServiceDefinition()
 	d.Name = name
 
 	ServiceFinalizeLoad(d)
@@ -742,7 +742,7 @@ func TestServiceFinalizeLoadBlankAllTheThings(t *testing.T) {
 		recover()
 	}()
 
-	d := def.BlankServiceDefinition()
+	d := definitions.BlankServiceDefinition()
 
 	ServiceFinalizeLoad(d)
 

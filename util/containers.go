@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	ver "github.com/eris-ltd/eris-cli/version"
-	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pborman/uuid"
 )
@@ -103,7 +103,7 @@ func initializeCache() {
 
 	for _, c := range containers {
 		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[def.LabelEris]; !ok {
+		if _, ok := c.Labels[definitions.LabelEris]; !ok {
 			continue
 		}
 
@@ -114,8 +114,8 @@ func initializeCache() {
 
 		// Cache names.
 		containerCache.c[key{
-			ShortName: c.Labels[def.LabelShortName],
-			Type:      c.Labels[def.LabelType],
+			ShortName: c.Labels[definitions.LabelShortName],
+			Type:      c.Labels[definitions.LabelType],
 		}] = strings.TrimLeft(c.Names[0], "/")
 	}
 
@@ -135,8 +135,8 @@ func ContainerDetails(name string) *Details {
 
 	return &Details{
 		FullName:  name,
-		Type:      labels[def.LabelType],
-		ShortName: labels[def.LabelShortName],
+		Type:      labels[definitions.LabelType],
+		ShortName: labels[definitions.LabelShortName],
 		Labels:    labels,
 		Info:      info,
 	}
@@ -144,17 +144,17 @@ func ContainerDetails(name string) *Details {
 
 // ServiceContainerName returns a full container name for a given short service name.
 func ServiceContainerName(name string) string {
-	return ContainerName(def.TypeService, name)
+	return ContainerName(definitions.TypeService, name)
 }
 
 // ChainContainerName returns a full container name for a given short service name.
 func ChainContainerName(name string) string {
-	return ContainerName(def.TypeChain, name)
+	return ContainerName(definitions.TypeChain, name)
 }
 
 // DataContainerName returns a full container name for a given short data name.
 func DataContainerName(name string) string {
-	return ContainerName(def.TypeData, name)
+	return ContainerName(definitions.TypeData, name)
 }
 
 // ErisContainers returns a list of full container names matching the filter
@@ -176,7 +176,7 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 		}
 
 		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[def.LabelEris]; !ok {
+		if _, ok := c.Labels[definitions.LabelEris]; !ok {
 			continue
 		}
 
@@ -185,8 +185,8 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 
 		// Cache names.
 		containerCache.c[key{
-			ShortName: details.Labels[def.LabelShortName],
-			Type:      details.Labels[def.LabelType],
+			ShortName: details.Labels[definitions.LabelShortName],
+			Type:      details.Labels[definitions.LabelType],
 		}] = name
 
 		// Apply filter.
@@ -227,11 +227,11 @@ func ErisContainersByType(t string, running bool) []*Details {
 		}
 
 		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[def.LabelEris]; !ok {
+		if _, ok := c.Labels[definitions.LabelEris]; !ok {
 			continue
 		}
 
-		if c.Labels[def.LabelType] != t {
+		if c.Labels[definitions.LabelType] != t {
 			continue
 		}
 
@@ -240,8 +240,8 @@ func ErisContainersByType(t string, running bool) []*Details {
 
 		// Cache names.
 		containerCache.c[key{
-			ShortName: details.Labels[def.LabelShortName],
-			Type:      details.Labels[def.LabelType],
+			ShortName: details.Labels[definitions.LabelShortName],
+			Type:      details.Labels[definitions.LabelType],
 		}] = name
 
 		erisContainers = append(erisContainers, details)
@@ -253,19 +253,19 @@ func ErisContainersByType(t string, running bool) []*Details {
 // IsService returns true if the service container specified by its short name
 // runs (running=true) or exists.
 func IsService(name string, running bool) bool {
-	return State(def.TypeService, name, running)
+	return State(definitions.TypeService, name, running)
 }
 
 // IsChain returns true if the chain container specified by its short name
 // runs (running=true) or exists.
 func IsChain(name string, running bool) bool {
-	return State(def.TypeChain, name, running)
+	return State(definitions.TypeChain, name, running)
 }
 
 // IsChain returns true if the data container specified by its short name
 // exists.
 func IsData(name string) bool {
-	return State(def.TypeData, name, false)
+	return State(definitions.TypeData, name, false)
 }
 
 // State returns true if the container of type t is running (running=true)
@@ -277,10 +277,10 @@ func State(t, name string, running bool) bool {
 	}
 
 	for _, c := range containers {
-		if name != c.Labels[def.LabelShortName] {
+		if name != c.Labels[definitions.LabelShortName] {
 			continue
 		}
-		if t != c.Labels[def.LabelType] {
+		if t != c.Labels[definitions.LabelType] {
 			continue
 		}
 		return true
@@ -327,18 +327,18 @@ func FindContainer(name string, running bool) bool {
 //  ops.SrvContainerName  - container name
 //  ops.ContainerType     - container type
 //
-func Labels(name string, ops *def.Operation) map[string]string {
+func Labels(name string, ops *definitions.Operation) map[string]string {
 	labels := ops.Labels
 	if labels == nil {
 		labels = make(map[string]string)
 	}
 
-	labels[def.LabelEris] = "true"
-	labels[def.LabelShortName] = name
-	labels[def.LabelType] = ops.ContainerType
+	labels[definitions.LabelEris] = "true"
+	labels[definitions.LabelShortName] = name
+	labels[definitions.LabelType] = ops.ContainerType
 
 	if user, _, err := config.GitConfigUser(); err == nil {
-		labels[def.LabelUser] = user
+		labels[definitions.LabelUser] = user
 	}
 
 	return labels
@@ -397,7 +397,7 @@ func PullImage(image string, writer io.Writer) error {
 
 		if err := DockerClient.PullImage(opts, auth); err != nil {
 			opts.Repository = image
-			opts.Registry = ver.BackupRegistry
+			opts.Registry = version.BackupRegistry
 			if err := DockerClient.PullImage(opts, auth); err != nil {
 				ch <- DockerError(err)
 			}

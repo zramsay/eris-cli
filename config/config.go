@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/version"
 
-	dir "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
@@ -84,7 +84,7 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	var errKnown string
 	switch definitionPath {
-	case dir.ServicesPath:
+	case common.ServicesPath:
 		errKnown = fmt.Sprintf(`
 
 List available definitions with the [eris %s ls --known] command`, filepath.Base(definitionPath))
@@ -117,7 +117,7 @@ func Load() (*viper.Viper, error) {
 		return config, err
 	}
 
-	config.AddConfigPath(dir.ErisRoot)
+	config.AddConfigPath(common.ErisRoot)
 	config.SetConfigName("eris")
 	if err := config.ReadInConfig(); err != nil {
 		// Do nothing as this is not essential.
@@ -137,18 +137,18 @@ func SetDefaults() (*viper.Viper, error) {
 
 	// Compiler defaults.
 	config.SetDefault("CompilersHost", "https://compilers.monax.io")
-	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(ver.VERSION, "-")[0], ".", "", -1))
+	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(version.VERSION, "-")[0], ".", "", -1))
 
 	// Image defaults.
-	config.SetDefault("DefaultRegistry", ver.DefaultRegistry)
-	config.SetDefault("BackupRegistry", ver.BackupRegistry)
-	config.SetDefault("ImageData", ver.ImageData)
-	config.SetDefault("ImageKeys", ver.ImageKeys)
-	config.SetDefault("ImageDB", ver.ImageDB)
-	config.SetDefault("ImagePM", ver.ImagePM)
-	config.SetDefault("ImageCM", ver.ImageCM)
-	config.SetDefault("ImageIPFS", ver.ImageIPFS)
-	config.SetDefault("ImageCompilers", ver.ImageCompilers)
+	config.SetDefault("DefaultRegistry", version.DefaultRegistry)
+	config.SetDefault("BackupRegistry", version.BackupRegistry)
+	config.SetDefault("ImageData", version.ImageData)
+	config.SetDefault("ImageKeys", version.ImageKeys)
+	config.SetDefault("ImageDB", version.ImageDB)
+	config.SetDefault("ImagePM", version.ImagePM)
+	config.SetDefault("ImageCM", version.ImageCM)
+	config.SetDefault("ImageIPFS", version.ImageIPFS)
+	config.SetDefault("ImageCompilers", version.ImageCompilers)
 
 	return config, nil
 }
@@ -160,7 +160,7 @@ func Save(settings *Settings) error {
 		return fmt.Errorf("cannot save uninitialized settings")
 	}
 
-	writer, err := os.Create(filepath.Join(dir.ErisRoot, "eris.toml"))
+	writer, err := os.Create(filepath.Join(common.ErisRoot, "eris.toml"))
 	defer writer.Close()
 	if err != nil {
 		return err

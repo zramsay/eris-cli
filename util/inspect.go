@@ -8,9 +8,10 @@ import (
 	"unicode"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/log"
 
-	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
+
 	"github.com/oleiade/reflections"
 	"github.com/serenize/snaker"
 )

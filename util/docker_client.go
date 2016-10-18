@@ -13,12 +13,12 @@ import (
 	"strconv"
 	"strings"
 
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
+
 	docker "github.com/fsouza/go-dockerclient"
-
-	. "github.com/eris-ltd/common/go/common"
 )
 
 // Docker Client initialization
@@ -38,12 +38,12 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		u, _ := url.Parse(endpoint)
 		_, err := net.Dial(u.Scheme, u.Path)
 		if err != nil {
-			IfExit(fmt.Errorf("%v\n", mustInstallError()))
+			common.IfExit(fmt.Errorf("%v\n", mustInstallError()))
 		}
 		log.WithField("=>", endpoint).Debug("Connecting to Docker")
 		DockerClient, err = docker.NewClient(endpoint)
 		if err != nil {
-			IfExit(DockerError(mustInstallError()))
+			common.IfExit(DockerError(mustInstallError()))
 		}
 	} else {
 		log.WithFields(log.Fields{
@@ -62,7 +62,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				log.Debugf("Error: %v", err)
 				log.Debug("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
-					IfExit(DockerError(e2))
+					common.IfExit(DockerError(e2))
 				}
 				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
 			}
@@ -74,7 +74,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug()
 
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
+			common.IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
 		}
 		log.Debug("Successfully connected to Docker daemon")
 
@@ -101,7 +101,7 @@ func CheckDockerClient() error {
 		if _, _, err := getMachineDeets("default"); err == nil {
 			fmt.Println("A Docker Machine VM exists, which Eris can use")
 			fmt.Println("However, our marmots recommend that you have a VM dedicated to Eris dev-ing")
-			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
+			if common.QueryYesOrNo("Would you like the marmots to create a machine for you?") == common.Yes {
 				log.Debug("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
@@ -120,7 +120,7 @@ func CheckDockerClient() error {
 		} else {
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
 			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
-			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
+			if common.QueryYesOrNo("Would you like the marmots to create a machine for you?") == common.Yes {
 				log.Warn("The marmots will create an Eris machine")
 				if err := setupErisMachine(driver); err != nil {
 					return err
@@ -216,11 +216,11 @@ func DockerAPIVersion() (string, error) {
 // IsMinimalDockerClientVersion returns true if the connected Docker client
 // version is at least equal to the mimimal required for Eris.
 func IsMinimalDockerClientVersion() bool {
-	version, err := DockerClientVersion()
+	v, err := DockerClientVersion()
 	if err != nil {
 		return false
 	}
-	return CompareVersions(version, ver.DOCKER_VER_MIN)
+	return CompareVersions(v, version.DOCKER_VER_MIN)
 }
 
 func DockerMachineVersion() (string, error) {
@@ -395,11 +395,11 @@ func prepWin() error {
 func setIPFSHostViaDockerHost(dockerHost string) {
 	u, err := url.Parse(dockerHost)
 	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
+		common.IfExit(fmt.Errorf("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
 	}
 	dIP, _, err := net.SplitHostPort(u.Host)
 	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
+		common.IfExit(fmt.Errorf("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
 
 	}
 	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)

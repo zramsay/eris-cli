@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/common/go/common"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 
-	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -79,7 +79,7 @@ func RemoveAllErisContainers() error {
 	for _, container := range contns {
 		// [pv]: Make sure legacy data containers are removed as well.
 		// The prefix bit is to be removed in 0.12.
-		if container.Labels[def.LabelEris] == "true" ||
+		if container.Labels[definitions.LabelEris] == "true" ||
 			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "eris_") {
 
 			if err := removeContainer(container.ID); err != nil {

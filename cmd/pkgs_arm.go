@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	_ "github.com/eris-ltd/eris-cli/version"
 
-	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
 )
@@ -82,32 +82,32 @@ func addPackagesFlags() {
 }
 
 func PackagesImport(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "eq", cmd, args))
+	common.IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Hash = args[0]
 	do.Name = args[1]
-	IfExit(pkgs.ImportPackage(do))
+	common.IfExit(pkgs.ImportPackage(do))
 }
 
 func PackagesExport(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	common.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	IfExit(pkgs.ExportPackage(do))
+	common.IfExit(pkgs.ExportPackage(do))
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args))
+	common.IfExit(ArgCheck(0, "eq", cmd, args))
 	if do.Path == "" {
 		var err error
 		do.Path, err = os.Getwd()
-		IfExit(err)
+		common.IfExit(err)
 	}
 	if do.ChainName == "" {
-		IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
+		common.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
 	if do.DefaultAddr == "" {
-		IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
+		common.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
-	IfExit(pkgs.RunPackage(do))
+	common.IfExit(pkgs.RunPackage(do))
 }
 
 func formCompilers() string {

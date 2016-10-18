@@ -6,13 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	chns "github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
 	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
 
@@ -62,7 +62,7 @@ var chainsMake = &cobra.Command{
 	Long: `create necessary files for your chain
 
 Make is an opinionated gateway to the basic types of chains which most Eris users
-will make most of the time. Make is also a command line wizard in which 
+will make most of the time. Make is also a command line wizard in which
 you will let the marmots know how you would like your genesis created.
 
 Make can also be used with a variety of flags for fast chain making.
@@ -79,8 +79,8 @@ be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `] for that 
-which will import all of the files which make creates into containers and 
+the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(common.ChainsPath, "NAME")) + `] for that
+which will import all of the files which make creates into containers and
 start your shiny new chain.
 
 If you have any questions on eris chains make, please see the Eris CM (chain manager)
@@ -183,16 +183,16 @@ the background. Its logs will not be viewable from the command line.
 
 To initialize (create) a new chain, the [eris chains make NAME] command
 must first be run. This will (by default) create a simple chain with
-relevant files in ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `. The path to this directory is then passed into the [--init-dir] flag like so:
+relevant files in ` + util.Tilde(filepath.Join(common.ChainsPath, "NAME")) + `. The path to this directory is then passed into the [--init-dir] flag like so:
 
-  [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(ChainsPath, "NAME")) + `]
+  [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(common.ChainsPath, "NAME")) + `]
 
 Note that it is also possible to use only the name of the relevant
 directory like so (e.g., for complex chains):
 
   [eris chains start NAME --init-dir name_full_000]
 
-To stop the chain use: [eris chains stop NAME]. To view a chain's logs use: 
+To stop the chain use: [eris chains stop NAME]. To view a chain's logs use:
 [eris chains logs NAME].
 
 You can redefine the chain ports accessible over the network with the --ports flag.`,
@@ -250,7 +250,7 @@ var chainsRemove = &cobra.Command{
 	Short: "remove an installed chain",
 	Long: `remove an installed chain
 
-Command will remove the chain's container but not its 
+Command will remove the chain's container but not its
 local directory or data container unless specified.`,
 	Run: RmChain,
 }
@@ -280,10 +280,10 @@ $ eris chains cat simplechain genesis -- display the genesis.json file from the 
 }
 
 func addChainsFlags() {
-	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "specify the kind and number of account types. find these in "+util.Tilde(filepath.Join(ChainsPath, "account-types"))+"; incompatible with chain-type")
-	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "specify the type of chain to use. find these in "+util.Tilde(filepath.Join(ChainsPath, "chain-types"))+"; incompatible with account-types")
-	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make tarballs; incompatible with and overrides zip")
-	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in "+util.Tilde(ChainsPath)+", make zip files")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "specify the kind and number of account types. find these in "+util.Tilde(filepath.Join(common.ChainsPath, "account-types"))+"; incompatible with chain-type")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "specify the type of chain to use. find these in "+util.Tilde(filepath.Join(common.ChainsPath, "chain-types"))+"; incompatible with account-types")
+	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in "+util.Tilde(common.ChainsPath)+", make tarballs; incompatible with and overrides zip")
+	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in "+util.Tilde(common.ChainsPath)+", make zip files")
 	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should eris-cm provide an output of its job")
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
@@ -317,7 +317,7 @@ func addChainsFlags() {
 	buildFlag(chainsRemove, do, "force", "chain")
 	buildFlag(chainsRemove, do, "data", "chain")
 	buildFlag(chainsRemove, do, "rm-volumes", "chain")
-	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "r", false, "remove the chain directory in "+util.Tilde(ChainsPath))
+	chainsRemove.Flags().BoolVarP(&do.RmHF, "dir", "r", false, "remove the chain directory in "+util.Tilde(common.ChainsPath))
 
 	buildFlag(chainsStop, do, "force", "chain")
 	buildFlag(chainsStop, do, "timeout", "chain")
@@ -330,26 +330,26 @@ func addChainsFlags() {
 }
 
 func StartChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.StartChain(do))
+	common.IfExit(chains.StartChain(do))
 }
 
 func LogChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.LogsChain(do))
+	common.IfExit(chains.LogsChain(do))
 }
 
 func ExecChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	// if interactive, we ignore args. if not, run args as command
 	args = args[1:]
 	if !do.Operations.Interactive {
 		if len(args) == 0 {
-			Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			common.Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
 	}
 	if len(args) == 1 {
@@ -359,40 +359,40 @@ func ExecChain(cmd *cobra.Command, args []string) {
 	do.Operations.Args = args
 	config.Global.InteractiveWriter = os.Stdout
 	config.Global.InteractiveErrorWriter = os.Stderr
-	_, err := chns.ExecChain(do)
-	IfExit(err)
+	_, err := chains.ExecChain(do)
+	common.IfExit(err)
 }
 
 func StopChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.StopChain(do))
+	common.IfExit(chains.StopChain(do))
 }
 
 func MakeChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	common.IfExit(ArgCheck(1, "eq", cmd, args))
 
 	do.Name = args[0]
 
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
-		IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required"))
+		common.IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required"))
 	}
 	if !do.Known && (do.ChainMakeActs != "" || do.ChainMakeVals != "") {
 		cmd.Help()
-		IfExit(fmt.Errorf("If you are using the --validators and the --accounts flags, --known is also required"))
+		common.IfExit(fmt.Errorf("If you are using the --validators and the --accounts flags, --known is also required"))
 	}
 	if len(do.AccountTypes) > 0 && do.ChainType != "" {
 		cmd.Help()
-		IfExit(fmt.Errorf("The --account-types flag is incompatible with the --chain-type flag. Please use one or the other"))
+		common.IfExit(fmt.Errorf("The --account-types flag is incompatible with the --chain-type flag. Please use one or the other"))
 	}
 	if (len(do.AccountTypes) > 0 || do.ChainType != "") && do.Known {
 		cmd.Help()
-		IfExit(fmt.Errorf("The --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these"))
+		common.IfExit(fmt.Errorf("The --account-types and --chain-type flags are incompatible with the --known flag. Please use only one of these"))
 	}
 	if do.Known && do.Wizard {
 		cmd.Help()
-		IfExit(fmt.Errorf("The --known and --wizard flags are incompatible with each other. Please use one one of these"))
+		common.IfExit(fmt.Errorf("The --known and --wizard flags are incompatible with each other. Please use one one of these"))
 	}
 
 	if do.Wizard {
@@ -404,7 +404,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 		do.ChainType = "simplechain"
 	}
 
-	IfExit(chns.MakeChain(do))
+	common.IfExit(chains.MakeChain(do))
 }
 
 func CheckoutChain(cmd *cobra.Command, args []string) {
@@ -413,31 +413,31 @@ func CheckoutChain(cmd *cobra.Command, args []string) {
 	} else {
 		do.Name = ""
 	}
-	IfExit(chns.CheckoutChain(do))
+	common.IfExit(chains.CheckoutChain(do))
 }
 
 func CurrentChain(cmd *cobra.Command, args []string) {
-	out, err := chns.CurrentChain(do)
-	IfExit(err)
+	out, err := chains.CurrentChain(do)
+	common.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func CatChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(2, "ge", cmd, args))
+	common.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Type = args[1]
-	IfExit(chns.CatChain(do))
+	common.IfExit(chains.CatChain(do))
 }
 
 func PortsChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
-	IfExit(chns.PortsChain(do))
+	common.IfExit(chains.PortsChain(do))
 }
 
 func InspectChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	if len(args) == 1 {
@@ -446,15 +446,15 @@ func InspectChain(cmd *cobra.Command, args []string) {
 		do.Operations.Args = []string{args[1]}
 	}
 
-	IfExit(chns.InspectChain(do))
+	common.IfExit(chains.InspectChain(do))
 }
 
 func IPChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
-	IfExit(chns.InspectChain(do))
+	common.IfExit(chains.InspectChain(do))
 }
 
 func ListChains(cmd *cobra.Command, args []string) {
@@ -467,18 +467,18 @@ func ListChains(cmd *cobra.Command, args []string) {
 	if do.JSON {
 		do.Format = "json"
 	}
-	IfExit(list.Containers(def.TypeChain, do.Format, do.Running))
+	common.IfExit(list.Containers(definitions.TypeChain, do.Format, do.Running))
 }
 
 func RestartChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.StopChain(do))
-	IfExit(chns.StartChain(do))
+	common.IfExit(chains.StopChain(do))
+	common.IfExit(chains.StartChain(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "ge", cmd, args))
+	common.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	IfExit(chns.RemoveChain(do))
+	common.IfExit(chains.RemoveChain(do))
 }

@@ -6,8 +6,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/log"
+
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 // Maximum entries in the HEAD file

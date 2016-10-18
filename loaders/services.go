@@ -7,11 +7,10 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 
 	"github.com/spf13/viper"
 )
@@ -97,7 +96,7 @@ func ServiceFinalizeLoad(srv *definitions.ServiceDefinition) {
 	}
 
 	srv.Operations.SrvContainerName = util.ServiceContainerName(srv.Name)
-	srv.Operations.DataContainerName = util.ContainerName(def.TypeData, srv.Name)
+	srv.Operations.DataContainerName = util.ContainerName(definitions.TypeData, srv.Name)
 }
 
 // ConnectToAService operates in two ways

@@ -10,13 +10,13 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 var (
@@ -45,18 +45,18 @@ func TestStartChain(t *testing.T) {
 
 	create(t, chainName)
 
-	if !util.Running(def.TypeChain, chainName) {
+	if !util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain running")
 	}
-	if !util.Exists(def.TypeData, chainName) {
+	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting dependent data container exists")
 	}
 
 	kill(t, chainName)
-	if util.Running(def.TypeChain, chainName) {
+	if util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain doesn't run")
 	}
-	if util.Exists(def.TypeData, chainName) {
+	if util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting data container doesn't exist")
 	}
 }
@@ -66,37 +66,37 @@ func TestRestartChain(t *testing.T) {
 
 	// make a chain
 	create(t, chainName)
-	if !util.Running(def.TypeChain, chainName) {
+	if !util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain running")
 	}
-	if !util.Exists(def.TypeData, chainName) {
+	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting data container exists")
 	}
 
 	// stop it
 	stop(t, chainName)
-	if util.Running(def.TypeChain, chainName) {
+	if util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain doesn't run")
 	}
-	if !util.Exists(def.TypeData, chainName) {
+	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting data container exists")
 	}
 
 	// start it back up again
 	start(t, chainName)
-	if !util.Running(def.TypeChain, chainName) {
+	if !util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain running")
 	}
-	if !util.Exists(def.TypeData, chainName) {
+	if !util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting data container exists")
 	}
 
 	// kill it
 	kill(t, chainName)
-	if util.Running(def.TypeChain, chainName) {
+	if util.Running(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain doesn't run")
 	}
-	if util.Exists(def.TypeData, chainName) {
+	if util.Exists(definitions.TypeData, chainName) {
 		t.Fatalf("expecting data container doesn't exist")
 	}
 }
@@ -107,7 +107,7 @@ func TestExecChain(t *testing.T) {
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.Args = []string{"ls", common.ErisContainerRoot}
 	buf, err := ExecChain(do)
@@ -126,7 +126,7 @@ func TestExecChainBadCommandLine(t *testing.T) {
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.Args = strings.Fields("bad command line")
 	if _, err := ExecChain(do); err == nil {
@@ -145,7 +145,7 @@ func TestCatChainContainerConfig(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chain
 	do.Type = "config"
 	if err := CatChain(do); err != nil {
@@ -166,7 +166,7 @@ func TestCatChainContainerGenesis(t *testing.T) {
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chainName
 	do.Type = "genesis"
 	if err := CatChain(do); err != nil {
@@ -214,7 +214,7 @@ func TestChainsNewKeysImported(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	if !util.Running(def.TypeChain, chain) {
+	if !util.Running(definitions.TypeChain, chain) {
 		t.Fatalf("expecting chain running")
 	}
 
@@ -245,7 +245,7 @@ func TestLogsChain(t *testing.T) {
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chainName
 	do.Follow = false
 	do.Tail = "all"
@@ -260,7 +260,7 @@ func TestInspectChain(t *testing.T) {
 	create(t, chainName)
 	defer kill(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.Args = []string{"name"}
 	if err := InspectChain(do); err != nil {
@@ -273,14 +273,14 @@ func TestRmChain(t *testing.T) {
 
 	create(t, chainName)
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	if err := services.KillService(do); err != nil {
 		t.Fatalf("expected service to be stopped, got %v", err)
 	}
 
 	kill(t, chainName) // implements RemoveChain
-	if util.Exists(def.TypeChain, chainName) {
+	if util.Exists(definitions.TypeChain, chainName) {
 		t.Fatalf("expecting chain not running")
 	}
 }
@@ -299,7 +299,7 @@ data_container = true
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	if err := services.StartService(do); err == nil {
 		t.Fatalf("expect start service to fail, got nil")
@@ -319,7 +319,7 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = "non-existent-chain"
 	if err := services.StartService(do); err == nil {
@@ -341,7 +341,7 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = "non-existent-chain"
 
@@ -351,10 +351,10 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 		t.Fatalf("expect service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "fake") {
+	if !util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 }
@@ -377,31 +377,31 @@ data_container = false
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if !util.Exists(def.TypeChain, chain) {
+	if !util.Exists(definitions.TypeChain, chain) {
 		t.Fatalf("expecting fake chain container")
 	}
-	if util.Running(def.TypeService, "fake") {
+	if util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "fake") {
+	if !util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service not running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
-	links := testutil.Links("fake", def.TypeService)
+	links := testutil.Links("fake", definitions.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
@@ -426,31 +426,31 @@ data_container = true
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if !util.Exists(def.TypeChain, chain) {
+	if !util.Exists(definitions.TypeChain, chain) {
 		t.Fatalf("expecting test chain container")
 	}
-	if util.Running(def.TypeService, "fake") {
+	if util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service not running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "fake") {
+	if !util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service running")
 	}
-	if !util.Exists(def.TypeData, "fake") {
+	if !util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container exists")
 	}
 
-	links := testutil.Links("fake", def.TypeService)
+	links := testutil.Links("fake", definitions.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
@@ -474,31 +474,31 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if !util.Exists(def.TypeChain, chain) {
+	if !util.Exists(definitions.TypeChain, chain) {
 		t.Fatalf("expecting fake chain container")
 	}
-	if util.Running(def.TypeService, "fake") {
+	if util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service not running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "fake") {
+	if !util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container exists")
 	}
 
-	links := testutil.Links("fake", def.TypeService)
+	links := testutil.Links("fake", definitions.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/fake") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
@@ -522,11 +522,11 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
 
-	if !util.Running(def.TypeChain, chain) {
+	if !util.Running(definitions.TypeChain, chain) {
 		t.Fatalf("expecting test chain container")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = chain
 	// [pv]: probably a bug. Bad literal chain link in a definition
@@ -535,7 +535,7 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	links := testutil.Links("fake", def.TypeService)
+	links := testutil.Links("fake", definitions.TypeService)
 	if len(links) != 1 || !strings.Contains(links[0], "/blah") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
 	}
@@ -570,39 +570,39 @@ data_container = true
 		t.Fatalf("can't create a sham service definition: %v", err)
 	}
 
-	if util.Running(def.TypeChain, chain) {
+	if util.Running(definitions.TypeChain, chain) {
 		t.Fatalf("expecting test chain container doesn't run")
 	}
 
 	create(t, chain) // [zr] why was the NewChain here?
 	defer kill(t, chain)
 
-	if !util.Exists(def.TypeChain, chain) {
+	if !util.Exists(definitions.TypeChain, chain) {
 		t.Fatalf("expecting test chain container exists")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "fake") {
+	if !util.Running(definitions.TypeService, "fake") {
 		t.Fatalf("expecting fake service running")
 	}
-	if util.Exists(def.TypeData, "fake") {
+	if util.Exists(definitions.TypeData, "fake") {
 		t.Fatalf("expecting fake data container doesn't exist")
 	}
-	if !util.Running(def.TypeService, "sham") {
+	if !util.Running(definitions.TypeService, "sham") {
 		t.Fatalf("expecting sham service running")
 	}
-	if !util.Exists(def.TypeData, "sham") {
+	if !util.Exists(definitions.TypeData, "sham") {
 		t.Fatalf("expecting sham data container exist")
 	}
 
 	// [pv]: second service doesn't reference the chain.
-	links := testutil.Links("fake", def.TypeService)
+	links := testutil.Links("fake", definitions.TypeService)
 
 	if len(links) != 2 || !strings.Contains(strings.Join(links, " "), "/fake") || !strings.Contains(strings.Join(links, " "), "/sham") {
 		t.Fatalf("expected service be linked to a test chain, got %v", links)
@@ -616,36 +616,36 @@ func TestServiceLinkKeys(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	if !util.Exists(def.TypeChain, chain) {
+	if !util.Exists(definitions.TypeChain, chain) {
 		t.Fatalf("expecting test chain running")
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{"keys"}
 	do.ChainName = chain
 	if err := services.StartService(do); err != nil {
 		t.Fatalf("expecting service to start, got %v", err)
 	}
 
-	if !util.Running(def.TypeService, "keys") {
+	if !util.Running(definitions.TypeService, "keys") {
 		t.Fatalf("expecting keys service running")
 	}
 
-	links := testutil.Links("keys", def.TypeService)
+	links := testutil.Links("keys", definitions.TypeService)
 	if len(links) != 0 {
 		t.Fatalf("expected service links be empty, got %v", links)
 	}
 }
 
 func create(t *testing.T, chain string) {
-	doMake := def.NowDo()
+	doMake := definitions.NowDo()
 	doMake.Name = chain
 	doMake.ChainType = "simplechain"
 	if err := MakeChain(doMake); err != nil {
 		t.Fatalf("expected a chain to be made, got %v", err)
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	do.Path = filepath.Join(common.ChainsPath, chain) // --init-dir
@@ -655,7 +655,7 @@ func create(t *testing.T, chain string) {
 }
 
 func start(t *testing.T, chain string) {
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
 	if err := StartChain(do); err != nil {
@@ -664,7 +664,7 @@ func start(t *testing.T, chain string) {
 }
 
 func stop(t *testing.T, chain string) {
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chain
 	do.Force = true
 	if err := StopChain(do); err != nil {
@@ -673,13 +673,13 @@ func stop(t *testing.T, chain string) {
 }
 
 func kill(t *testing.T, chain string) {
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args, do.Rm, do.RmD = []string{"keys"}, true, true
 	if err := services.KillService(do); err != nil {
 		t.Fatalf("killing keys service failed: %v", err)
 	}
 
-	do = def.NowDo()
+	do = definitions.NowDo()
 	do.Name, do.RmHF, do.RmD, do.Force = chain, true, true, true
 	if err := RemoveChain(do); err != nil {
 		t.Fatalf("killing chain failed: %v", err)
@@ -687,7 +687,7 @@ func kill(t *testing.T, chain string) {
 }
 
 func exec(t *testing.T, chain string, args []string) string {
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.Args = args
 	buf, err := ExecChain(do)

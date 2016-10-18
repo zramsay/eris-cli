@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
 	"github.com/rs/cors"
 )
 
@@ -24,7 +24,7 @@ func StartAgent(do *definitions.Do) error {
 Available endpoints are:
 /chains (GET)
 
-/download (POST) 
+/download (POST)
   => /download?groupId=<abc>&bundleId=<def>&version=<1.0.2>&hash=<ipfs>
 
 /install (POST)
@@ -42,11 +42,6 @@ Available endpoints are:
 
 	return nil
 }
-
-/*func StopAgent(do *definitions.Do) error {
-	fmt.Println("Gracefully shutting down agent")
-	return nil
-}*/
 
 type agentError struct {
 	Error   error
