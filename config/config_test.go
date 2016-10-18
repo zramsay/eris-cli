@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/common/go/common"
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
 )
 
 var (
@@ -207,10 +207,10 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := ver.ImageKeys, cli.ImageKeys; custom != returned {
+	if custom, returned := version.ImageKeys, cli.ImageKeys; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := ver.ImageDB, cli.ImageDB; custom != returned {
+	if custom, returned := version.ImageDB, cli.ImageDB; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
 }

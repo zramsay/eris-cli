@@ -8,12 +8,13 @@ import (
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
-	ini "github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -65,7 +66,7 @@ func Init(args ...interface{}) (err error) {
 		return nil
 	}
 
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Yes = true
 	do.Quiet = true
 
@@ -83,7 +84,7 @@ func Init(args ...interface{}) (err error) {
 
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
-	if err := ini.Initialize(do); err != nil {
+	if err := initialize.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("Could not initialize Eris root: %v", err))
 	}
 
@@ -130,10 +131,10 @@ func NumbersExistAndRun(servName string, containerExist, containerRun bool) erro
 	}).Info("Checking number of containers for")
 
 	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.Exists(def.TypeService, servName)
+	exist := util.Exists(definitions.TypeService, servName)
 
 	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.Running(def.TypeService, servName)
+	run := util.Running(definitions.TypeService, servName)
 
 	if exist != containerExist {
 		log.WithFields(log.Fields{

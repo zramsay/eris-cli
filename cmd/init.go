@@ -3,11 +3,12 @@ package commands
 import (
 	"os"
 
-	ini "github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/initialize"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +34,7 @@ func addInitFlags() {
 }
 
 func Router(cmd *cobra.Command, args []string) {
-	err := ini.Initialize(do)
+	err := initialize.Initialize(do)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)

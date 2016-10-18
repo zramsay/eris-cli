@@ -11,10 +11,10 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	def "github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/log"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -62,7 +62,7 @@ var (
 		// for the given short name of a service or a chain.
 		"dependent": func(name string) string {
 			for _, container := range erisContainers {
-				if container.ShortName == name && container.Type == def.TypeData {
+				if container.ShortName == name && container.Type == definitions.TypeData {
 					return container.Info.ID
 				}
 			}
@@ -93,7 +93,7 @@ func Containers(t, format string, running bool) error {
 
 	// Collect container information.
 	util.ErisContainers(func(name string, details *util.Details) bool {
-		if running == true && details.Info.State.Running == false && details.Type != def.TypeData {
+		if running == true && details.Info.State.Running == false && details.Type != definitions.TypeData {
 			return false
 		}
 		erisContainers = append(erisContainers, details)
@@ -122,36 +122,36 @@ func Containers(t, format string, running bool) error {
 		Header       string
 		Template     string
 	}{
-		def.TypeService: {
+		definitions.TypeService: {
 			Standard: {{t, false, standardTmplHeader, standardTmpl}},
 			Extended: {{t, false, extendedTmplHeader, extendedTmpl}},
 			Custom:   {{t, false, "", format}},
 		},
-		def.TypeChain: {
+		definitions.TypeChain: {
 			Standard: {{t, false, standardTmplHeader, standardTmpl}},
 			Extended: {{t, false, extendedTmplHeader, extendedTmpl}},
 			Custom:   {{t, false, "", format}},
 		},
-		def.TypeData: {
+		definitions.TypeData: {
 			Standard: {{t, false, dataTmplHeader, dataTmpl}},
 			Extended: {{t, false, dataTmplHeader, dataTmpl}},
 			Custom:   {{t, false, "", format}},
 		},
 		"all": {
 			Standard: {
-				{def.TypeService, false, standardTmplHeader, standardTmpl},
-				{def.TypeChain, false, standardTmplHeader, standardTmpl},
-				{def.TypeData, true, dataTmplHeader, dataTmpl},
+				{definitions.TypeService, false, standardTmplHeader, standardTmpl},
+				{definitions.TypeChain, false, standardTmplHeader, standardTmpl},
+				{definitions.TypeData, true, dataTmplHeader, dataTmpl},
 			},
 			Extended: {
-				{def.TypeService, false, extendedTmplHeader, extendedTmpl},
-				{def.TypeChain, false, extendedTmplHeader, extendedTmpl},
-				{def.TypeData, true, dataTmplHeader, dataTmpl},
+				{definitions.TypeService, false, extendedTmplHeader, extendedTmpl},
+				{definitions.TypeChain, false, extendedTmplHeader, extendedTmpl},
+				{definitions.TypeData, true, dataTmplHeader, dataTmpl},
 			},
 			Custom: {
-				{def.TypeService, false, "", format},
-				{def.TypeChain, false, "", format},
-				{def.TypeData, false, "", format},
+				{definitions.TypeService, false, "", format},
+				{definitions.TypeChain, false, "", format},
+				{definitions.TypeData, false, "", format},
 			},
 		},
 	}
@@ -180,7 +180,7 @@ func Containers(t, format string, running bool) error {
 
 func isOrphanDataContainers() bool {
 	for _, container := range erisContainers {
-		if container.Type == def.TypeData {
+		if container.Type == definitions.TypeData {
 			if isMasterContainer(container.ShortName) {
 				continue
 			}
@@ -192,11 +192,11 @@ func isOrphanDataContainers() bool {
 
 func isMasterContainer(name string) bool {
 	// Found chain.
-	if _, err := util.Lookup(def.TypeChain, name); err == nil {
+	if _, err := util.Lookup(definitions.TypeChain, name); err == nil {
 		return true
 	}
 	// Found service.
-	if _, err := util.Lookup(def.TypeService, name); err == nil {
+	if _, err := util.Lookup(definitions.TypeService, name); err == nil {
 		return true
 	}
 	return false

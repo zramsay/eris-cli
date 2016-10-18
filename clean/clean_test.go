@@ -11,13 +11,13 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
-	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -205,7 +205,7 @@ func testStartService(serviceName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Operations.Args = []string{serviceName}
 	do.Operations.PublishAllPorts = true
-	if err := srv.StartService(do); err != nil {
+	if err := services.StartService(do); err != nil {
 		t.Fatalf("error starting service: %v", err)
 	}
 

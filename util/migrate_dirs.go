@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/log"
 
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
 )
 
 //XXX this command absolutely needs a good test!!
