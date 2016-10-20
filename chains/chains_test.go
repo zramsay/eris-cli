@@ -301,8 +301,12 @@ data_container = true
 
 	do := definitions.NowDo()
 	do.Operations.Args = []string{"fake"}
-	if err := services.StartService(do); err == nil {
-		t.Fatalf("expect start service to fail, got nil")
+	// [pv]: chain specification is ignored if do.ChainName is not set.
+	if err := services.StartService(do); err != nil {
+		t.Fatalf("expect service to start, got %v", err)
+	}
+	if !util.Running(definitions.TypeService, "fake") {
+		t.Fatalf("expecting fake service running")
 	}
 }
 
@@ -345,17 +349,8 @@ image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
 	do.Operations.Args = []string{"fake"}
 	do.ChainName = "non-existent-chain"
 
-	// [pv]: is this a bug? the service which doesn't have a
-	// "chain" in its definition file doesn't care about linking at all.
-	if err := services.StartService(do); err != nil {
-		t.Fatalf("expect service to start, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, "fake") {
-		t.Fatalf("expecting fake service running")
-	}
-	if util.Exists(definitions.TypeData, "fake") {
-		t.Fatalf("expecting fake data container doesn't exist")
+	if err := services.StartService(do); err == nil {
+		t.Fatalf("expect service start to fail")
 	}
 }
 

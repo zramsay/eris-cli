@@ -303,6 +303,7 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
+	chainsStart.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "force reinitialize the chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")

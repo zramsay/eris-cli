@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,55 +12,43 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-cli/log"
 )
 
 func StartChain(do *definitions.Do) error {
-	chainDirExists, chainConfigExists, chainDataExists, chainContainerExists := whatChainStuffExists(do.Name)
-
-	if do.Path != "" {
-		// [eris chains start whatever --init-dir ~/.eris/chains/whatever]
-		var err error
-
-		do.Path, err = chainsPathSimplifier(do.Name, do.Path)
-		if err != nil {
-			return err
-		}
-
-		if !chainDirExists {
-			return fmt.Errorf("The chain directory provided does not exist, re-run with an existing directory")
-		}
-
-		if chainDataExists {
-			return fmt.Errorf("Data container exists, re-run without [--init-dir]")
-		}
-
-		log.WithField("=>", do.Name).Debug("Data container does not exist, initializing it")
-		return setupChain(do)
-
-	} else {
-		// [eris chains start whatever] (without --init-dir)
-		if !chainDirExists || !chainConfigExists {
-			log.Info("Neither the assumed chain directory or config file exists locally, checking for existence of chain data container")
-		}
-
-		if !chainDataExists {
-			return fmt.Errorf("No data container found, please start a chain with [--init-dir]")
-		}
-
-		if !chainContainerExists {
-			log.Info("Chain process container does not exist, creating it")
-		}
-
+	// Start an already set up chain.
+	if util.IsChain(do.Name, false) && util.IsData(do.Name) && !do.Force {
 		_, err := startChain(do, false)
 		return err
-
 	}
+
+	// Default [--init-dir] value is chain's root.
+	if do.Path == "" {
+		do.Path = filepath.Join(common.ChainsPath, do.Name)
+	}
+
+	// Resolve chain's path.
+	var err error
+	do.Path, err = resolveChainsPath(do.Name, do.Path)
+	if err != nil {
+		return err
+	}
+
+	if do.Force {
+		// Chain is reinitialized upon request.
+		log.WithField("=>", do.Name).Debug("Initializing the chain: [--force] flag given")
+	} else {
+		// Chain is broken (either chain or data chain container doesn't exist),
+		// initialize the chain.
+		log.WithField("=>", do.Name).Debug("Initializing the chain: chain or data container doesn't exist")
+	}
+
+	return setupChain(do)
 }
 
 func StopChain(do *definitions.Do) error {
@@ -385,18 +372,7 @@ func setupChain(do *definitions.Do) (err error) {
 	containerDst := path.Join(common.ErisContainerRoot, "chains", do.Name)
 	hostSrc := do.Path
 
-	// writes a pointer (similar to checked out chain) for do.Path in the chain main dir
-	// this can then be read by loaders.LoadChainDefinition(), in order to get the
-	// path to the config.toml that was written in each directory
-	// this allows cli to keep track of a given config.toml (locally)
-	fileName := filepath.Join(common.ChainsPath, do.Name, "CONFIG_PATH")
-	if _, err = os.Stat(fileName); err != nil {
-		if err := ioutil.WriteFile(fileName, []byte(do.Path), 0666); err != nil {
-			return fmt.Errorf("error writing CONFIG_PATH file: %v", err)
-		}
-	}
-
-	chain, err := loaders.LoadChainDefinition(do.Name)
+	chain, err := loaders.LoadChainDefinition(do.Name, filepath.Join(do.Path, "config"))
 	if err != nil {
 		do.RmD = true
 		RemoveChain(do)
@@ -507,75 +483,28 @@ func setupChain(do *definitions.Do) (err error) {
 	return
 }
 
-func chainsPathSimplifier(chainName, pathGiven string) (string, error) {
-	if util.DoesDirExist(pathGiven) { // full path given, check that config.toml exists though
-		if !doesConfigExist(pathGiven) {
-			return "", fmt.Errorf("config.toml does not exists in %s", pathGiven)
-		} else {
-			return pathGiven, nil
-		}
-	} else {
-		chainDirPathSimple := filepath.Join(common.ChainsPath, pathGiven)               // if simplechain, pathGiven == chainName
-		chainDirPathNotSimple := filepath.Join(common.ChainsPath, chainName, pathGiven) // ignored if simplechain
-
-		if util.DoesDirExist(chainDirPathSimple) && doesConfigExist(chainDirPathSimple) {
-			return chainDirPathSimple, nil
-		} else if util.DoesDirExist(chainDirPathNotSimple) && doesConfigExist(chainDirPathNotSimple) {
-			return chainDirPathNotSimple, nil
-		} else {
-			log.WithField("=>", pathGiven).Info("Directory or config.toml does not exist")
-			return "", fmt.Errorf("Directory given on [--init-dir] could not be determined")
+func resolveChainsPath(chainName, pathGiven string) (string, error) {
+	for _, path := range []string{
+		// Absolute path.
+		pathGiven,
+		// Relative of chains root path.
+		filepath.Join(common.ChainsPath, pathGiven),
+		// Relative of chain's dir path.
+		filepath.Join(common.ChainsPath, chainName, pathGiven),
+	} {
+		if util.DoesFileExist(filepath.Join(path, "config.toml")) {
+			return path, nil
 		}
 	}
-}
 
-func doesConfigExist(dirPath string) bool {
-	var configExists bool
-	pathToConfig := filepath.Join(dirPath, "config.toml")
-	if _, err := os.Stat(pathToConfig); os.IsNotExist(err) {
-		configExists = false
-	} else {
-		configExists = true
-	}
-	return configExists
-}
-
-func whatChainStuffExists(chainName string) (bool, bool, bool, bool) {
-	var chainDirExists bool
-	var chainConfigExists bool
-	var chainDataExists bool
-	var chainContainerExists bool
-
-	// does the chain directory exist?
-	if util.DoesDirExist(filepath.Join(common.ChainsPath, chainName)) {
-		chainDirExists = true
-	} else {
-		chainDirExists = false
+	// No "config.toml" in a dir.
+	if util.DoesDirExist(pathGiven) {
+		log.WithField("=>", pathGiven).Info("Failed to find config.toml in [--init-dir]")
+		return "", fmt.Errorf("Missing config.toml in %v. Try [eris chains make] first", pathGiven)
 	}
 
-	// does the config file exist?
-	_, err := loaders.LoadChainDefinition(chainName)
-	if err == nil {
-		chainConfigExists = true
-	} else {
-		chainConfigExists = false
-	}
-
-	// does the chain data container exist?
-	if util.IsData(chainName) {
-		chainDataExists = true
-	} else {
-		chainDataExists = false
-	}
-
-	// does the chain container exist?
-	if util.IsChain(chainName, false) { // false checks if exists
-		chainContainerExists = true
-	} else {
-		chainContainerExists = false
-	}
-
-	return chainDirExists, chainConfigExists, chainDataExists, chainContainerExists
+	log.WithField("=>", pathGiven).Info("Failed to find [--init-dir]")
+	return "", fmt.Errorf("Directory given on [--init-dir] could not be determined")
 }
 
 func exportFile(chainName string) (string, error) {

@@ -58,9 +58,11 @@ func StartService(do *definitions.Do) (err error) {
 		// Spacer.
 		log.Debug()
 	}
-	services, err = BuildChainGroup(do.ChainName, services)
-	if err != nil {
-		return err
+	if do.ChainName != "" {
+		services, err = BuildChainGroup(do.ChainName, services)
+		if err != nil {
+			return err
+		}
 	}
 	log.Debug("Checking services after build chain")
 	for _, s := range services {
@@ -206,6 +208,9 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 // Service defs which don't specify a chain or $chain won't connect to a chain.
 // NOTE: chains have to be started before services that depend on them.
 func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) (servicesAndChains []*definitions.ServiceDefinition, err error) {
+	if !util.IsChain(chainName, true) {
+		return nil, fmt.Errorf("Dependent chain %v is not running", chainName)
+	}
 	var chains = make(map[string]*definitions.ServiceDefinition)
 	for _, srv := range services {
 		if srv.Chain != "" {

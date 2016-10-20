@@ -231,3 +231,25 @@ func Tilde(path string) string {
 	}
 	return path
 }
+
+// DoesDirExist returns true if the directory exists and readable,
+// otherwise false.
+func DoesDirExist(dir string) bool {
+	f, err := os.Stat(dir)
+	if err != nil {
+		return false
+	}
+	if !f.IsDir() {
+		return false
+	}
+	return true
+}
+
+// DoesFileExist returns true if the file exists and readable,
+// otherwise false.
+func DoesFileExist(file string) bool {
+	if _, err := os.Stat(file); err != nil {
+		return false
+	}
+	return true
+}

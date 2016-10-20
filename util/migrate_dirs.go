@@ -141,14 +141,3 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 	}
 	return nil
 }
-
-func DoesDirExist(dir string) bool {
-	f, err := os.Stat(dir)
-	if err != nil {
-		return false
-	}
-	if !f.IsDir() {
-		return false
-	}
-	return true
-}
