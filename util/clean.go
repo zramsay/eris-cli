@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 
@@ -55,7 +55,7 @@ func cleanHandler(toClean map[string]bool) error {
 
 	if toClean["root"] {
 		log.Debug("Removing Eris root directory")
-		if err := os.RemoveAll(common.ErisRoot); err != nil {
+		if err := os.RemoveAll(config.ErisRoot); err != nil {
 			return err
 		}
 	}
@@ -112,7 +112,7 @@ func removeContainer(containerID string) error {
 
 func cleanLatentChainData() error {
 	// get everything in ~/.eris/chains
-	files, err := ioutil.ReadDir(common.ChainsPath)
+	files, err := ioutil.ReadDir(config.ChainsPath)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func cleanLatentChainData() error {
 	// remove everything else
 	for _, f := range files {
 		if !dontDelete[f.Name()] {
-			if err := os.RemoveAll(filepath.Join(common.ChainsPath, f.Name())); err != nil {
+			if err := os.RemoveAll(filepath.Join(config.ChainsPath, f.Name())); err != nil {
 				return err
 			}
 		}
@@ -137,10 +137,10 @@ func cleanLatentChainData() error {
 }
 
 func cleanScratchData() error {
-	if err := os.RemoveAll(common.DataContainersPath); err != nil {
+	if err := os.RemoveAll(config.DataContainersPath); err != nil {
 		return err
 	}
-	if err := os.Mkdir(common.DataContainersPath, 0777); err != nil {
+	if err := os.Mkdir(config.DataContainersPath, 0777); err != nil {
 		return err
 	}
 	return nil
@@ -174,9 +174,9 @@ func RemoveErisImages() error {
 func canWeRemove(toClean map[string]bool) bool {
 	var toWarn = map[string]string{
 		"containers": "all",
-		"chains":     fmt.Sprintf("%s/.eris/chains", common.HomeDir()),
-		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", common.HomeDir()),
-		"root":       fmt.Sprintf("%s/.eris", common.HomeDir()),
+		"chains":     fmt.Sprintf("%s/.eris/chains", config.HomeDir()),
+		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", config.HomeDir()),
+		"root":       fmt.Sprintf("%s/.eris", config.HomeDir()),
 		"images":     "all",
 	}
 
@@ -207,7 +207,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		}).Warn("The marmots are about to remove the following")
 	}
 
-	if common.QueryYesOrNo("Please confirm") == common.Yes {
+	if QueryYesOrNo("Please confirm") == Yes {
 		log.Warn("Authorization given, removing")
 		return true
 	}

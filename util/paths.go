@@ -8,9 +8,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/log"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func GetFileByNameAndType(typ, name string) string {
@@ -37,9 +36,9 @@ func GetGlobalLevelConfigFilesByType(typ string, withExt bool) []string {
 	var path string
 	switch typ {
 	case "services":
-		path = common.ServicesPath
+		path = config.ServicesPath
 	case "chains":
-		path = common.ChainsPath
+		path = config.ChainsPath
 	}
 
 	files := []string{}
@@ -86,7 +85,7 @@ func MoveOutOfDirAndRmDir(src, dst string) error {
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
-		common.Copy(f, t)
+		config.Copy(f, t)
 	}
 
 	log.WithField("=>", src).Info("Removing directory")
@@ -225,7 +224,7 @@ func Tilde(path string) string {
 		return path
 	}
 
-	home := common.HomeDir()
+	home := config.HomeDir()
 	if strings.HasPrefix(path, home) {
 		return strings.Replace(path, home, "~", 1)
 	}

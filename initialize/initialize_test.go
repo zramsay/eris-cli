@@ -12,8 +12,6 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var erisDir = filepath.Join(os.TempDir(), "eris")
@@ -40,15 +38,15 @@ func TestInitErisRootDir(t *testing.T) {
 	}
 
 	for _, dir := range []string{
-		common.AppsPath,
-		common.BundlesPath,
-		common.ChainsPath,
-		common.KeysPath,
-		common.RemotesPath,
-		common.ScratchPath,
-		common.ServicesPath,
-		common.KeysDataPath,
-		common.KeysNamesPath,
+		config.AppsPath,
+		config.BundlesPath,
+		config.ChainsPath,
+		config.KeysPath,
+		config.RemotesPath,
+		config.ScratchPath,
+		config.ServicesPath,
+		config.KeysDataPath,
+		config.KeysNamesPath,
 	} {
 		if !util.DoesDirExist(dir) {
 			ifExit(fmt.Errorf("Could not find the %s subdirectory", dir))
@@ -89,7 +87,7 @@ func readDirs(dirGit string) {
 }
 
 func testsInit() error {
-	common.ChangeErisRoot(erisDir)
+	config.ChangeErisRoot(erisDir)
 
 	var err error
 	config.Global, err = config.New(os.Stdout, os.Stderr)

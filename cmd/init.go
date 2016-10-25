@@ -3,11 +3,10 @@ package commands
 import (
 	"os"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/initialize"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
 )
@@ -16,7 +15,7 @@ import (
 var Init = &cobra.Command{
 	Use:   "init",
 	Short: "initialize your work space for smart contract glory",
-	Long: `create the Eris root ` + util.Tilde(common.ErisRoot) + ` directory with services subdirectories
+	Long: `create the Eris root ` + util.Tilde(config.ErisRoot) + ` directory with services subdirectories
 and clone github.com/eris-ltd/eris-services into them.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Router(cmd, args)

@@ -10,8 +10,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/common/go/common"
-
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
 	gitconfig "github.com/tcnksm/go-gitconfig"
@@ -84,7 +82,7 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	var errKnown string
 	switch definitionPath {
-	case common.ServicesPath:
+	case ServicesPath:
 		errKnown = fmt.Sprintf(`
 
 List available definitions with the [eris %s ls --known] command`, filepath.Base(definitionPath))
@@ -117,7 +115,7 @@ func Load() (*viper.Viper, error) {
 		return config, err
 	}
 
-	config.AddConfigPath(common.ErisRoot)
+	config.AddConfigPath(ErisRoot)
 	config.SetConfigName("eris")
 	if err := config.ReadInConfig(); err != nil {
 		// Do nothing as this is not essential.
@@ -160,7 +158,7 @@ func Save(settings *Settings) error {
 		return fmt.Errorf("cannot save uninitialized settings")
 	}
 
-	writer, err := os.Create(filepath.Join(common.ErisRoot, "eris.toml"))
+	writer, err := os.Create(filepath.Join(ErisRoot, "eris.toml"))
 	defer writer.Close()
 	if err != nil {
 		return err

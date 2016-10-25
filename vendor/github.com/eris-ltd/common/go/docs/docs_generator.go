@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
+	"strconv"
 	"text/template"
 )
 
@@ -58,9 +58,6 @@ func GenerateCommandsTemplate() (*template.Template, error) {
 	}
 
 	handle_file := func(s1, s2 string) string {
-		if s2 == "" {
-			return strings.Replace((s1 + ".md"), " ", "_", -1)
-		}
 		return strings.Replace((s1 + " " + s2 + ".md"), " ", "_", -1)
 	}
 
@@ -90,20 +87,21 @@ func GenerateCommandsTemplate() (*template.Template, error) {
 {{ if $flags.HasFlags }}## Options
 
 ` + "```bash\n  {{ $flags.FlagUsages | chomp }}\n```" + `{{ end }}
-{{ $globalFlags := .Command.InheritedFlags }}
-{{ if $globalFlags.HasFlags }}## Options inherited from parent commands
+{{ $global_flags := .Command.InheritedFlags }}
+{{ if $global_flags.HasFlags }}## Options inherited from parent commands
 
-` + "```bash\n  {{ $globalFlags.FlagUsages | chomp }}\n```" + `{{ end }}
+` + "```bash\n  {{ $global_flags.FlagUsages | chomp }}\n```" + `{{ end }}
 
 {{ if .Command.HasSubCommands }}# Subcommands
 {{ range .Command.Commands }}
-* [{{ $name }} {{ .Name }}]({{ $.Entry.BaseURL }}{{ handle_file $name .Name | handle_link }}) - {{ .Short }}
-{{- end }}
+{{ if ne .Deprecated "" }}
+* [{{ $name }} {{ .Name }}]({{ .BaseURL }}{{ handle_file $name .Name | handle_link }}) - {{ .Short }}
+{{ end }}
+{{ end }}
 {{ end }}
 
 {{ if .Command.HasParent }}{{ $parent := .Command.Parent }}## See Also
-
-* [{{ $parent.CommandPath }}]({{ .Entry.BaseURL }}{{ handle_file $parent.CommandPath "" | handle_link }}) - {{ $parent.Short }}
+* [{{ $parent.CommandPath }}]({{ .BaseURL }}{{ handle_file $parent.CommandPath "" | handle_link }}) - {{ $parent.Short }}
 {{ end }}
 
 {{ if ne .Command.Example "" }}# Quick Tips
@@ -126,11 +124,11 @@ func GenerateCommandsTemplate() (*template.Template, error) {
 	return template.New("docGenerator").Funcs(funcMap).Parse(templateText)
 }
 
-func GenerateEntries(dir, renderDir, description string) ([]*Entry, error) {
+func GenerateEntries(dir, render_dir, description string) ([]*Entry, error) {
 	var entries []*Entry
 
-	if _, err := os.Stat(renderDir); os.IsNotExist(err) {
-		err = os.MkdirAll(renderDir, 0755)
+	if _, err := os.Stat(render_dir); os.IsNotExist(err) {
+		err = os.MkdirAll(render_dir, 0755)
 		if err != nil {
 			panic(err)
 		}
@@ -139,18 +137,18 @@ func GenerateEntries(dir, renderDir, description string) ([]*Entry, error) {
 	files := CollectEntries(dir)
 
 	for _, file := range files {
-		thisEntry, err := GenerateEntry(file, dir, renderDir, description)
+		this_entry, err := GenerateEntry(file, dir, render_dir, description)
 		if err != nil {
 			return nil, err
 		} else {
-			entries = append(entries, thisEntry)
+			entries = append(entries, this_entry)
 		}
 	}
 
 	return entries, nil
 }
 
-func CollectEntries(dir string) []string {
+func CollectEntries(dir string) ([]string) {
 	var newFiles []string
 
 	files, err := filepath.Glob(dir + "/*")
@@ -159,13 +157,13 @@ func CollectEntries(dir string) []string {
 	}
 
 	for _, file := range files {
-		fileInfo, err := os.Stat(file)
+		f_info, err := os.Stat(file)
 
 		if err != nil {
 			panic(err)
 		}
 
-		if fileInfo.IsDir() {
+		if f_info.IsDir() {
 			newFiles = append(newFiles, CollectEntries(file)...)
 		} else {
 			if filepath.Ext(file) == ".md" {
@@ -177,29 +175,29 @@ func CollectEntries(dir string) []string {
 	return newFiles
 }
 
-func GenerateEntry(file, dir, renderDir, description string) (*Entry, error) {
+func GenerateEntry(file, dir, render_dir, description string) (*Entry, error) {
 	var err error
 
-	thisEntry := &Entry{
-		FileName:    GenerateFileNameFromGlob(renderDir, file),
-		Title:       GenerateTitleFromFileName(filepath.Base(file)),
+	this_entry := &Entry{
+		FileName: GenerateFileNameFromGlob(render_dir, file),
+		Title: GenerateTitleFromFileName(filepath.Base(file)),
 		Description: description,
 	}
 
-	thisEntry.URL = GenerateURLFromFileName(thisEntry.FileName)
+	this_entry.URL = GenerateURLFromFileName(this_entry.FileName)
 
 	txt, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get template from docs generator.
-	thisEntry.Template, err = GenerateEntriesTemplate(txt)
+	// Get template from docs generator
+	this_entry.Template, err = GenerateEntriesTemplate(txt)
 	if err != nil {
 		return nil, err
 	}
 
-	return thisEntry, nil
+	return this_entry, nil
 }
 
 func GenerateEntriesTemplate(txt []byte) (*template.Template, error) {
@@ -256,7 +254,7 @@ func GenerateEntriesTemplate(txt []byte) (*template.Template, error) {
 			panic(err)
 		}
 
-		return ("```bash\n" + string(lines) + "```")
+		return ("```bash\n" +  string(lines) + "```")
 	}
 
 	insert_file := func(file string) string {
@@ -285,14 +283,14 @@ func GenerateEntriesTemplate(txt []byte) (*template.Template, error) {
 	}
 
 	funcMap := template.FuncMap{
-		"title":             strings.Title,
-		"replace":           strings.Replace,
-		"chomp":             strings.TrimSpace,
-		"handle_file":       handle_file,
-		"handle_link":       handle_link,
+		"title":       strings.Title,
+		"replace":     strings.Replace,
+		"chomp":       strings.TrimSpace,
+		"handle_file": handle_file,
+		"handle_link": handle_link,
 		"insert_definition": insert_definition,
 		"insert_bash_lines": insert_bash_lines,
-		"insert_file":       insert_file,
+		"insert_file": insert_file,
 	}
 
 	var templateText = `{{- $name := .Title -}}` + FrontMatter + `
@@ -319,14 +317,14 @@ func GenerateEntriesTemplate(txt []byte) (*template.Template, error) {
 	return template.New("entryGenerator").Funcs(funcMap).Parse(templateText)
 }
 
-func RenderEntry(thisEntry *Entry) error {
-	outFile, err := os.Create(thisEntry.FileName)
+func RenderEntry(this_entry *Entry) error {
+	out_file, err := os.Create(this_entry.FileName)
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer out_file.Close()
 
-	err = thisEntry.Template.Execute(outFile, thisEntry)
+	err = this_entry.Template.Execute(out_file, this_entry)
 	if err != nil {
 		return err
 	}

@@ -2,8 +2,7 @@ package commands
 
 import (
 	"github.com/eris-ltd/eris-cli/agent"
-
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/spf13/cobra"
 )
@@ -42,6 +41,6 @@ var agentStart = &cobra.Command{
 }
 
 func StartAgent(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(0, "eq", cmd, args))
-	common.IfExit(agent.StartAgent(do))
+	util.IfExit(ArgCheck(0, "eq", cmd, args))
+	util.IfExit(agent.StartAgent(do))
 }

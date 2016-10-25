@@ -19,8 +19,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var pwd string
@@ -155,7 +153,7 @@ func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error 
 	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImagePM)
 	do.Service.AutoData = true
 	do.Service.EntryPoint = fmt.Sprintf("eris-pm --chain tcp://chain:%s --sign http://keys:%s", do.ChainPort, do.KeysPort)
-	do.Service.WorkDir = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+	do.Service.WorkDir = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path))
 	do.Service.User = "eris"
 
 	srv := definitions.BlankServiceDefinition()
@@ -253,8 +251,8 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 
 	// removal of data dir
 	if !do.RmD {
-		log.WithField("dir", filepath.Join(common.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(filepath.Join(common.DataContainersPath, do.Service.Name))
+		log.WithField("dir", filepath.Join(config.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
+		os.RemoveAll(filepath.Join(config.DataContainersPath, do.Service.Name))
 	}
 
 	return nil
@@ -282,9 +280,9 @@ func bootChain(name string, do *definitions.Do) error {
 		do.ChainDefinition.ChainType = "chain"
 
 	// known chain directory; new the chain with the right directory (note this will use only chain root so is only good for single node chains) [zr] this should go too
-	case util.DoesDirExist(filepath.Join(common.ChainsPath, startChain.Name)):
+	case util.DoesDirExist(filepath.Join(config.ChainsPath, startChain.Name)):
 		log.WithField("name", startChain.Name).Info("Trying new chain")
-		startChain.Path = filepath.Join(common.ChainsPath, startChain.Name)
+		startChain.Path = filepath.Join(config.ChainsPath, startChain.Name)
 		if err := chains.StartChain(startChain); err != nil {
 			return err
 		}
@@ -490,9 +488,9 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 	if _, err := os.Stat(do.Path); !os.IsNotExist(err) {
 		if inbound {
 			doData.Source = do.Path
-			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+			doData.Destination = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path))
 		} else {
-			doData.Source = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+			doData.Source = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path))
 			doData.Destination = filepath.Dir(do.Path) // on exports we always need the parent of the directory
 		}
 
@@ -520,7 +518,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 			"packagePath": do.PackagePath,
 		}).Debug("Package path exists and is not in pkg path. Proceeding with Import/Export sequence")
 		if inbound {
-			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
+			doData.Destination = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path), "contracts")
 			doData.Source = do.PackagePath
 
 			log.WithFields(log.Fields{
@@ -558,7 +556,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 				"path":     do.Path,
 				"abi path": do.ABIPath,
 			}).Debug("ABI path exists and is not in pkg path. Proceeding with Import/Export sequence")
-			doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
+			doData.Destination = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path), "abi")
 			doData.Source = do.ABIPath
 
 			log.WithFields(log.Fields{
@@ -594,7 +592,7 @@ func getDataContainerSorted(do *definitions.Do, inbound bool) error {
 
 	// Import epm.yaml (if it is in a weird place).
 	if inbound && !strings.Contains(do.EPMConfigFile, do.Path) { // note <- is the default, if we change the default we'll have to change this.
-		doData.Destination = path.Join(common.ErisContainerRoot, "apps", filepath.Base(do.Path))
+		doData.Destination = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path))
 		doData.Source = do.EPMConfigFile
 		log.WithFields(log.Fields{
 			"source": doData.Source,

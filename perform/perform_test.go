@@ -14,8 +14,6 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func TestMain(m *testing.M) {
@@ -521,7 +519,7 @@ func TestExecServiceVolume(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Operations.Volume = common.ErisRoot
+	srv.Operations.Volume = config.ErisRoot
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
@@ -558,8 +556,8 @@ func TestExecServiceMount(t *testing.T) {
 
 	srv.Operations.Args = strings.Fields("uptime")
 	srv.Service.Volumes = []string{
-		common.ErisRoot + ":" + "/tmp",
-		common.ErisRoot + ":" + "/custom",
+		config.ErisRoot + ":" + "/tmp",
+		config.ErisRoot + ":" + "/custom",
 	}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
@@ -613,7 +611,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Service.Volumes = []string{common.ErisRoot + ":"}
+	srv.Service.Volumes = []string{config.ErisRoot + ":"}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected service container creation to fail")
 	}

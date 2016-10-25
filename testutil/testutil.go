@@ -13,8 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/common/go/common"
-
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -51,8 +49,8 @@ type Pull struct {
 //      (unspecified Services means all services, not none).
 //
 func Init(args ...interface{}) (err error) {
-	common.ChangeErisRoot(TmpErisRoot)
-	common.InitErisDir()
+	config.ChangeErisRoot(TmpErisRoot)
+	config.InitErisDir()
 
 	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
@@ -198,7 +196,7 @@ func Links(name, t string) []string {
 
 // Write a fake service definition file in a tmpDir Eris home directory.
 func FakeServiceDefinition(name, definition string) error {
-	return FakeDefinitionFile(common.ServicesPath, name, definition)
+	return FakeDefinitionFile(config.ServicesPath, name, definition)
 }
 
 // Write a fake definition file in a tmpDir Eris home directory.

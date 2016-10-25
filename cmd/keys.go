@@ -4,10 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
 )
@@ -49,7 +48,7 @@ var keysExport = &cobra.Command{
 	Long: `export a key from container to host
 
 Takes a key from /home/eris/.eris/keys/data/ADDR/ADDR in the keys container
-and copies it to ` + util.Tilde(filepath.Join(common.KeysDataPath, "ADDR", "ADDR")) + ` on the host.`,
+and copies it to ` + util.Tilde(filepath.Join(config.KeysDataPath, "ADDR", "ADDR")) + ` on the host.`,
 	Run: ExportKey,
 }
 
@@ -58,7 +57,7 @@ var keysImport = &cobra.Command{
 	Short: "import a key to container from host",
 	Long: `import a key to container from host
 
-Takes a key from ` + util.Tilde(filepath.Join(common.KeysDataPath, "ADDR", "ADDR")) + `
+Takes a key from ` + util.Tilde(filepath.Join(config.KeysDataPath, "ADDR", "ADDR")) + `
 on the host and copies it to /home/eris/.eris/keys/data/ADDR/ADDR
 in the keys container.`,
 	Run: ImportKey,
@@ -86,46 +85,46 @@ func addKeysFlags() {
 	keysImport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to import")
 	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 
-	keysList.Flags().BoolVarP(&do.Host, "host", "", false, "list keys on host in "+util.Tilde(common.KeysDataPath))
+	keysList.Flags().BoolVarP(&do.Host, "host", "", false, "list keys on host in "+util.Tilde(config.KeysDataPath))
 	keysList.Flags().BoolVarP(&do.Container, "container", "", false, "list keys in container in /home/eris/.eris/keys/data")
 
 }
 
 func GenerateKey(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(0, "eq", cmd, args))
+	util.IfExit(ArgCheck(0, "eq", cmd, args))
 
 	// TODO implement once we move to using keys client exclusively
 	// if do.Password {}
 
-	common.IfExit(keys.GenerateKey(do))
+	util.IfExit(keys.GenerateKey(do))
 }
 
 func ExportKey(cmd *cobra.Command, args []string) {
 	if do.All {
-		common.IfExit(ArgCheck(0, "eq", cmd, args))
+		util.IfExit(ArgCheck(0, "eq", cmd, args))
 	} else {
-		common.IfExit(ArgCheck(1, "eq", cmd, args))
+		util.IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
-	common.IfExit(keys.ExportKey(do))
+	util.IfExit(keys.ExportKey(do))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
 	if do.All {
-		common.IfExit(ArgCheck(0, "eq", cmd, args))
+		util.IfExit(ArgCheck(0, "eq", cmd, args))
 	} else {
-		common.IfExit(ArgCheck(1, "eq", cmd, args))
+		util.IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
 	}
-	common.IfExit(keys.ImportKey(do))
+	util.IfExit(keys.ImportKey(do))
 }
 
 func ListKeys(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(0, "eq", cmd, args))
+	util.IfExit(ArgCheck(0, "eq", cmd, args))
 	if !do.Host && !do.Container {
 		do.Host = true
 		do.Container = true
 	}
 	_, err := keys.ListKeys(do)
-	common.IfExit(err)
+	util.IfExit(err)
 }

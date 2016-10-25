@@ -16,8 +16,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func StartChain(do *definitions.Do) error {
@@ -29,7 +27,7 @@ func StartChain(do *definitions.Do) error {
 
 	// Default [--init-dir] value is chain's root.
 	if do.Path == "" {
-		do.Path = filepath.Join(common.ChainsPath, do.Name)
+		do.Path = filepath.Join(config.ChainsPath, do.Name)
 	}
 
 	// Resolve chain's path.
@@ -165,7 +163,7 @@ func CatChain(do *definitions.Do) error {
 	if do.Name == "" {
 		return fmt.Errorf("a chain name is required")
 	}
-	rootDir := path.Join(common.ErisContainerRoot, "chains", do.Name)
+	rootDir := path.Join(config.ErisContainerRoot, "chains", do.Name)
 
 	doCat := definitions.NowDo()
 	doCat.Name = do.Name
@@ -231,7 +229,7 @@ func RemoveChain(do *definitions.Do) error {
 	}
 
 	if do.RmHF {
-		dirPath := filepath.Join(common.ChainsPath, do.Name) // the dir
+		dirPath := filepath.Join(config.ChainsPath, do.Name) // the dir
 
 		log.WithField("directory", dirPath).Warn("Removing directory")
 		if err := os.RemoveAll(dirPath); err != nil {
@@ -367,7 +365,7 @@ func setupChain(do *definitions.Do) (err error) {
 	}
 
 	containerName := util.ChainContainerName(do.Name)
-	containerDst := path.Join(common.ErisContainerRoot, "chains", do.Name)
+	containerDst := path.Join(config.ErisContainerRoot, "chains", do.Name)
 	hostSrc := do.Path
 
 	chain, err := loaders.LoadChainDefinition(do.Name, filepath.Join(do.Path, "config"))
@@ -413,7 +411,7 @@ func setupChain(do *definitions.Do) (err error) {
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Could not create data container: %v", err)
 		}
-		ops.Args = []string{"mkdir", "-p", path.Join(common.ErisContainerRoot, "chains", do.Name)}
+		ops.Args = []string{"mkdir", "-p", path.Join(config.ErisContainerRoot, "chains", do.Name)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
@@ -453,7 +451,7 @@ func setupChain(do *definitions.Do) (err error) {
 
 	doKeys := definitions.NowDo()
 	doKeys.Name = "keys"
-	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", common.ErisContainerRoot, do.Name)}
+	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}
 	doKeys.Operations.SkipLink = true
 	doKeys.Service.VolumesFrom = []string{util.DataContainerName(do.Name)}
 	doKeys.Service.User = "eris"
@@ -488,9 +486,9 @@ func resolveChainsPath(chainName, pathGiven string) (string, error) {
 		// Absolute path.
 		pathGiven,
 		// Relative of chains root path.
-		filepath.Join(common.ChainsPath, pathGiven),
+		filepath.Join(config.ChainsPath, pathGiven),
 		// Relative of chain's dir path.
-		filepath.Join(common.ChainsPath, chainName, pathGiven),
+		filepath.Join(config.ChainsPath, chainName, pathGiven),
 	} {
 		if util.DoesFileExist(filepath.Join(path, "config.toml")) {
 			return path, nil

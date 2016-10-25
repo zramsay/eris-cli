@@ -7,11 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
-	_ "github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +33,7 @@ var packagesImport = &cobra.Command{
 	Use:   "import HASH NAME",
 	Short: "pull a package of smart contracts from IPFS",
 	Long: `pull a package of smart contracts from IPFS
-via its hash and save it locally to ` + util.Tilde(filepath.Join(AppsPath, "NAME")) + `.
+via its hash and save it locally to ` + util.Tilde(filepath.Join(config.AppsPath, "NAME")) + `.
 This package needs to have been added as directory to IPFS,
 with [eris pkgs export someDir/]`,
 	Run: PackagesImport,
@@ -82,32 +80,32 @@ func addPackagesFlags() {
 }
 
 func PackagesImport(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(2, "eq", cmd, args))
+	util.IfExit(ArgCheck(2, "eq", cmd, args))
 	do.Hash = args[0]
 	do.Name = args[1]
-	common.IfExit(pkgs.ImportPackage(do))
+	util.IfExit(pkgs.ImportPackage(do))
 }
 
 func PackagesExport(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
-	common.IfExit(pkgs.ExportPackage(do))
+	util.IfExit(pkgs.ExportPackage(do))
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(0, "eq", cmd, args))
+	util.IfExit(ArgCheck(0, "eq", cmd, args))
 	if do.Path == "" {
 		var err error
 		do.Path, err = os.Getwd()
-		common.IfExit(err)
+		util.IfExit(err)
 	}
 	if do.ChainName == "" {
-		common.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
+		util.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
 	if do.DefaultAddr == "" {
-		common.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
+		util.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
-	common.IfExit(pkgs.RunPackage(do))
+	util.IfExit(pkgs.RunPackage(do))
 }
 
 func formCompilers() string {

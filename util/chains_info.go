@@ -6,9 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/log"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 // Maximum entries in the HEAD file
@@ -23,9 +22,9 @@ func NullHead() error {
 // Returns chain name
 func GetHead() (string, error) {
 	// TODO: only read the one line!
-	f, err := ioutil.ReadFile(common.HEAD)
+	f, err := ioutil.ReadFile(config.HEAD)
 	if os.IsNotExist(err) {
-		if _, err := os.Create(common.HEAD); err != nil {
+		if _, err := os.Create(config.HEAD); err != nil {
 			return "", err
 		}
 	} else {
@@ -53,9 +52,9 @@ func ChangeHead(name string) error {
 	log.Debug("Chain name known (or blank). Saving to head file")
 	// read in the entire head file and clip
 	// if we have reached the max length
-	b, err := ioutil.ReadFile(common.HEAD)
+	b, err := ioutil.ReadFile(config.HEAD)
 	if os.IsNotExist(err) {
-		if _, err := os.Create(common.HEAD); err != nil {
+		if _, err := os.Create(config.HEAD); err != nil {
 			return err
 		}
 	} else if err != nil {
@@ -73,7 +72,7 @@ func ChangeHead(name string) error {
 	var s string
 	// handle empty head
 	s = name + "\n" + bsp
-	if err := ioutil.WriteFile(common.HEAD, []byte(s), 0666); err != nil {
+	if err := ioutil.WriteFile(config.HEAD, []byte(s), 0666); err != nil {
 		return err
 	}
 
