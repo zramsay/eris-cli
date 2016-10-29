@@ -890,8 +890,6 @@ func logsContainer(id string, follow bool, tail string) error {
 		Since:        0,
 		Timestamps:   false,
 		Tail:         tail,
-
-		RawTerminal: true, // Usually true when the container contains a TTY.
 	}
 
 	if err := util.DockerClient.Logs(opts); err != nil {
