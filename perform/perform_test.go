@@ -77,7 +77,7 @@ func TestRunDataSimple(t *testing.T) {
 		t.Fatalf("expected data container created, got %v", err)
 	}
 
-	ops.Args = strings.Fields("uptime")
+	ops.Args = strings.Fields("bash -c true")
 	if _, err := DockerRunData(ops, nil); err != nil {
 		t.Fatalf("expected data successfully run, got %v", err)
 	}
