@@ -2,7 +2,6 @@ package loaders
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,14 +53,11 @@ ports          = [ "1234" ]
 `
 	)
 
-	mockConfigPathFile(t, name)
-	defer removeConfigPathFile(t, name)
-
 	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainDefinition(name, filepath.Join(common.ChainsPath, name, "config"))
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -87,72 +83,47 @@ ports          = [ "1234" ]
 	}
 }
 
-func TestLoadChainDefinitionWithoutCONFIGPATH(t *testing.T) {
-
+func TestLoadChainDefinitionWithoutPath(t *testing.T) {
 	const (
 		name = "test"
-
-		definition = `
-name = "` + name + `"
-chain_id = "` + name + `"
-description = "test chain"
-
-[service]
-name           = "random name"
-image          = "test image"
-data_container = true
-ports          = [ "1234" ]
-`
 	)
 
-	//mockConfigPathFile(t, name)
-	//defer removeConfigPathFile(t, name)
-
-	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), "config", definition); err != nil {
-		t.Fatalf("cannot place a definition file")
+	d, err := LoadChainDefinition(name)
+	if err != nil {
+		t.Fatalf("expected chain definition to load, got %v", err)
 	}
 
-	_, err := LoadChainDefinition(name)
-	if err == nil {
-		t.Fatalf("expected chain definition to not load, got %v", err)
+	for _, entry := range []ab{
+		{`Name`, d.Name, name},
+		{`ContainerType`, d.Operations.ContainerType, definitions.TypeChain},
+		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
+		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
+
+		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
+		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
+
+		{`Service.Name`, d.Service.Name, name},
+	} {
+		if !reflect.DeepEqual(entry.a, entry.b) {
+			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
+		}
 	}
+
 }
 
 func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 	const (
 		name = "test"
 
-		defaultDefinition = `
-name = "` + name + `"
-chain_id = "` + name + `"
-description = "test chain"
-
-[service]
-name           = "random name"
-image          = "test image"
-data_container = true
-ports          = [ "1234" ]
-
-[dependencies]
-services = [ "keys" ]
-
-[maintainer]
-name = "Monax Industries"
-email = "support@monax.io"
-`
+		defaultDefinition = ``
 	)
 
-	mockConfigPathFile(t, name)
-	defer removeConfigPathFile(t, name)
-
-	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", defaultDefinition); err != nil {
-		t.Fatalf("cannot place a default definition file")
-	}
 	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, ``); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainDefinition(name, filepath.Join(common.ChainsPath, name, name))
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -168,7 +139,6 @@ email = "support@monax.io"
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, d.Service.Name, name},
-		{`Service.Image`, d.Service.Image, "test image"},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
@@ -180,9 +150,6 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 	const (
 		name = "test"
 	)
-
-	mockConfigPathFile(t, name)
-	defer removeConfigPathFile(t, name)
 
 	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
@@ -231,14 +198,11 @@ ports          = [ "4321" ]
 `
 	)
 
-	mockConfigPathFile(t, name)
-	defer removeConfigPathFile(t, name)
-
 	if err := testutil.FakeDefinitionFile(filepath.Join(common.ChainsPath, name), name, definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadChainDefinition(name)
+	d, err := LoadChainDefinition(name, filepath.Join(common.ChainsPath, name, name))
 	if err != nil {
 		t.Fatalf("expected to load chain definition, got %v", err)
 	}
@@ -280,9 +244,6 @@ image          = "test image"
 `
 	)
 
-	mockConfigPathFile(t, name)
-	defer removeConfigPathFile(t, name)
-
 	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
 		t.Fatalf("cannot place a default definition file")
 	}
@@ -317,22 +278,6 @@ image          = "test image"
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
 		}
-	}
-}
-
-func _TestChainsAsAServiceMissing(t *testing.T) {
-	const (
-		name = "test"
-	)
-
-	os.Remove(filepath.Join(common.ChainsPath, name, name+".toml"))
-
-	if err := testutil.FakeDefinitionFile(common.ChainsPath, "default", ``); err != nil {
-		t.Fatalf("cannot place a default definition file")
-	}
-
-	if _, err := ChainsAsAService(name); err == nil {
-		t.Fatalf("expected chains as a service to fail")
 	}
 }
 
@@ -747,26 +692,4 @@ func TestServiceFinalizeLoadBlankAllTheThings(t *testing.T) {
 	ServiceFinalizeLoad(d)
 
 	t.Fatalf("expected finalize to panic")
-}
-
-func mockConfigPathFile(t *testing.T, name string) {
-	// this occures in [func setupChain] in chains/operate.go
-	// here we mock it for LoadChainDefinition to work
-	configPath := filepath.Join(common.ChainsPath, name)
-	fileName := filepath.Join(common.ChainsPath, name, "CONFIG_PATH")
-
-	if err := os.MkdirAll(configPath, 0777); err != nil {
-		t.Fatalf("error making chain directory: %v", err)
-	}
-
-	if err := ioutil.WriteFile(fileName, []byte(configPath), 0666); err != nil {
-		t.Fatalf("error writing CONFIG_PATH file: %v", err)
-	}
-}
-
-func removeConfigPathFile(t *testing.T, name string) {
-	fileName := filepath.Join(common.ChainsPath, name, "CONFIG_PATH")
-	if err := os.Remove(fileName); err != nil {
-		t.Fatalf("error making chain directory: %v", err)
-	}
 }

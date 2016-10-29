@@ -121,7 +121,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
 				t.Fatalf("chain directory exists when it shouldn't")
 			}
-			_, err := loaders.LoadChainDefinition(chn)
+			_, err := loaders.LoadChainDefinition(chn, filepath.Join(common.ChainsPath, chn, "config.toml"))
 			if err == nil {
 				t.Fatalf("no error loading chain def that shouldn't exist")
 			}
