@@ -3,6 +3,7 @@ package chains
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"strings"
@@ -63,22 +64,19 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	if do.Known {
-		log.Debug("Using MintGen rather than eris:cm")
+		log.Debug("Using [mintgen]")
 		do.Service.EntryPoint = "mintgen"
-		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s > %s", do.Name, do.ChainMakeVals, do.ChainMakeActs, path.Join(common.ErisContainerRoot, "chains", do.Name, "genesis.json"))
+		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s", do.Name, do.ChainMakeVals, do.ChainMakeActs)
+		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
+		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "chains", do.Name)
 	} else {
-		log.Debug("Using eris:cm rather than MintGen")
+		log.Debug("Using [eris-cm]")
 		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
 	}
 
 	if do.Wizard && len(do.AccountTypes) == 0 && do.ChainType == "" {
 		do.Operations.Interactive = true
 		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
-	}
-
-	if do.Known {
-		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
-		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "chains", do.Name)
 	}
 
 	doData := definitions.NowDo()
@@ -111,8 +109,10 @@ func MakeChain(do *definitions.Do) error {
 	buf, err := perform.DockerExecService(do.Service, do.Operations)
 	if err != nil {
 		// Log to both screen and logs for further analysis in Bugsnag.
-		log.Debug("Dumping [eris-cm] output")
-		log.Error(buf.String())
+		if buf != nil {
+			log.Debug("Dumping output")
+			log.Error(buf.String())
+		}
 
 		// After all the imports are in place, [eris-cm] should not fail,
 		// so it is worth investigating why it still failed.
@@ -121,14 +121,24 @@ func MakeChain(do *definitions.Do) error {
 		return err
 	}
 
-	// TODO(pv): remove this line after `eris-cm` command line handling is fixed.
-	// This line exists to capture `eris-cm` errors which return exit code 0.
+	if do.Known {
+		if err := ioutil.WriteFile(filepath.Join(common.ErisRoot, "chains", do.Name, "genesis.json"), buf.Bytes(), 0644); err != nil {
+			return err
+		}
+	}
+
+	// TODO(pv): remove writing to Global.Writer after the [eris-cm]
+	// command line handling is fixed. This is necessary now to
+	// capture [eris-cm] errors which return exit code 0.
 	io.Copy(config.Global.Writer, buf)
 
-	doData.Source = path.Join(common.ErisContainerRoot, "chains")
-	doData.Destination = common.ErisRoot
-	if err := data.ExportData(doData); err != nil {
-		return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
+	// Nothing to export to host when running with [--known].
+	if !do.Known {
+		doData.Source = path.Join(common.ErisContainerRoot, "chains")
+		doData.Destination = common.ErisRoot
+		if err := data.ExportData(doData); err != nil {
+			return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
+		}
 	}
 
 	if !do.RmD {
