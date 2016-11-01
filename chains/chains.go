@@ -358,14 +358,12 @@ func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) er
 	return nil
 }
 
-// the main function for setting up a chain container
-// handles both "new" and "fetch" - most of the differentiating logic is in the container <= [zr] huh?
-// should only be ever called on [eris chains start someChain --init-dir ~/.eris/chains/someChain/someChain_full_000]
-// or without the last dir for a simplechain.
+// setupChain is invoked on [eris chains start CHAIN_NAME] command and
+// creates chain and (if they're missing) keys containers.
 func setupChain(do *definitions.Do) (err error) {
-	// do.Name is mandatory
+	// do.Name is mandatory.
 	if do.Name == "" {
-		return fmt.Errorf("setupChain requires a chainame")
+		return fmt.Errorf("Setting up chain without a chain name. Aborting")
 	}
 
 	containerName := util.ChainContainerName(do.Name)
@@ -376,14 +374,14 @@ func setupChain(do *definitions.Do) (err error) {
 	if err != nil {
 		do.RmD = true
 		RemoveChain(do)
-		return fmt.Errorf("Error loading chain config: %v", err)
+		return fmt.Errorf("Failed to load chain config: %v", err)
 	}
 	log.WithField("image", chain.Service.Image).Debug("Chain loaded")
 
 	chain.Service.Name = do.Name
 	util.Merge(chain.Operations, do.Operations)
 
-	// set chain name and other vars
+	// Set chain name and other vars.
 	envVars := []string{
 		// TODO remove CHAIN_ID once the fix in edb is merged
 		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
@@ -407,13 +405,13 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Error booting dependencies: %v", err)
 	}
 
-	// ensure/create data container
+	// Ensure/create data container.
 	if util.IsData(do.Name) {
 		log.WithField("=>", do.Name).Debug("Chain data container already exists")
 	} else {
 		ops := loaders.LoadDataDefinition(do.Name)
 		if err := perform.DockerCreateData(ops); err != nil {
-			return fmt.Errorf("Error creating data container =>\t%v", err)
+			return fmt.Errorf("Could not create data container: %v", err)
 		}
 		ops.Args = []string{"mkdir", "-p", path.Join(common.ErisContainerRoot, "chains", do.Name)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
@@ -424,8 +422,8 @@ func setupChain(do *definitions.Do) (err error) {
 
 	// copy from host to container
 	log.WithFields(log.Fields{
-		"from local path":   hostSrc,
-		"to container path": containerDst,
+		"from": hostSrc,
+		"to":   containerDst,
 	}).Debug("Copying files into data container")
 
 	importDo := definitions.NowDo()
@@ -436,7 +434,7 @@ func setupChain(do *definitions.Do) (err error) {
 	if err = data.ImportData(importDo); err != nil {
 		do.RmD = true
 		RemoveChain(do)
-		return fmt.Errorf("Error importing data: %v", err)
+		return fmt.Errorf("Could not import data: %v", err)
 	}
 
 	// mintkey has been removed from the erisdb image. this functionality
@@ -450,18 +448,20 @@ func setupChain(do *definitions.Do) (err error) {
 	if err = data.ImportData(importKey); err != nil {
 		do.RmD = true
 		RemoveChain(do)
-		return fmt.Errorf("Error importing priv_validator to signer: %v", err)
+		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
 	}
+
 	doKeys := definitions.NowDo()
 	doKeys.Name = "keys"
 	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", common.ErisContainerRoot, do.Name)}
 	doKeys.Operations.SkipLink = true
 	doKeys.Service.VolumesFrom = []string{util.DataContainerName(do.Name)}
+	doKeys.Service.User = "eris"
 	if out, err := services.ExecService(doKeys); err != nil {
 		log.Error(err)
 		do.RmD = true
 		RemoveChain(do)
-		return fmt.Errorf("Error transliterating priv_validator to eris-key: %v", out) // out is the buffer from the container; error is from docker
+		return fmt.Errorf("Failed to transliterate [priv_validator.json] to eris-key: %v", out)
 	}
 
 	log.WithFields(log.Fields{
@@ -511,20 +511,4 @@ func exportFile(chainName string) (string, error) {
 	fileName := util.GetFileByNameAndType("chains", chainName)
 
 	return util.SendToIPFS(fileName, "", "")
-}
-
-func checkKeysRunningOrStart() error {
-	srv, err := loaders.LoadServiceDefinition("keys")
-	if err != nil {
-		return err
-	}
-
-	if !util.IsService(srv.Service.Name, true) {
-		do := definitions.NowDo()
-		do.Operations.Args = []string{"keys"}
-		if err := services.StartService(do); err != nil {
-			return err
-		}
-	}
-	return nil
 }

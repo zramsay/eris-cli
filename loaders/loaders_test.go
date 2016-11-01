@@ -50,6 +50,9 @@ name           = "random name"
 image          = "test image"
 data_container = true
 ports          = [ "1234" ]
+
+[dependencies]
+services       = [ "keys" ]
 `
 	)
 
@@ -76,6 +79,8 @@ ports          = [ "1234" ]
 		{`Service.AutoData`, d.Service.AutoData, true},
 		{`Service.Image`, d.Service.Image, "test image"},
 		{`Service.Ports`, d.Service.Ports, []string{"1234"}},
+
+		{`Dependencies`, d.Dependencies.Services, []string{"keys"}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
