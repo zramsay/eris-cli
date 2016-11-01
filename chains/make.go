@@ -12,6 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/common/go/common"
@@ -34,7 +35,9 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
-	if err := checkKeysRunningOrStart(); err != nil {
+	doKeys := definitions.NowDo()
+	doKeys.Name = "keys"
+	if err := services.EnsureRunning(doKeys); err != nil {
 		return err
 	}
 

@@ -131,6 +131,9 @@ func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	}
 
 	util.Merge(service.Operations, do.Operations)
+	if do.Service.User != "" {
+		service.Service.User = do.Service.User
+	}
 
 	// Get the main service container name, check if it's running.
 	main := util.ServiceContainerName(do.Name)
@@ -264,7 +267,7 @@ func EnsureRunning(do *definitions.Do) error {
 	}
 
 	if !util.IsService(do.Name, true) {
-		log.WithField("=>", do.Name).Warn("Starting service")
+		log.WithField("=>", do.Name).Info("Starting service")
 		do.Operations.Args = []string{do.Name}
 		StartService(do)
 	} else {

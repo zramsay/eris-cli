@@ -99,15 +99,9 @@ func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name,
 // in the chain structure. Returns config read errors.
 func MarshalChainDefinition(definition *viper.Viper, chain *definitions.ChainDefinition) error {
 	log.Debug("Marshalling chain")
-	chnTemp := definitions.BlankChainDefinition()
 
-	if err := definition.Unmarshal(chnTemp); err != nil {
+	if err := definition.Unmarshal(chain); err != nil {
 		return fmt.Errorf("The marmots coult not read the chain definition: %v", err)
-	}
-
-	util.Merge(chain.Service, chnTemp.Service)
-	if len(chnTemp.Service.Ports) != 0 {
-		chain.Service.Ports = chnTemp.Service.Ports
 	}
 
 	// toml bools don't really marshal well "data_container". It can be
