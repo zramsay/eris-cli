@@ -15,8 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func GetFiles(do *definitions.Do) error {
@@ -85,7 +83,7 @@ func PutFiles(do *definitions.Do) (string, error) {
 func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	// path to dir on host
 	do.Source = do.Name
-	do.Destination = filepath.Join(common.ErisContainerRoot, "scratch", "data", do.Source)
+	do.Destination = filepath.Join(config.ErisContainerRoot, "scratch", "data", do.Source)
 	do.Name = "ipfs"
 
 	do.Operations.Args = nil
@@ -140,7 +138,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 
 	do.Destination = do.Path
-	do.Source = path.Join(common.ErisContainerRoot, hash)
+	do.Source = path.Join(config.ErisContainerRoot, hash)
 	do.Operations.Args = nil
 	do.Operations.PublishAllPorts = false
 	if err := data.ExportData(do); err != nil {

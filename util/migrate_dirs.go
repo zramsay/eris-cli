@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/log"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 //XXX this command absolutely needs a good test!!
@@ -52,7 +50,7 @@ func dirCheckMaker(dirsToMigrate map[string]string) (map[string]string, bool) {
 
 func canWeMigrate() bool {
 	log.Warn("Permission to migrate deprecated directories required")
-	if common.QueryYesOrNo("Would you like to continue?") == common.Yes {
+	if QueryYesOrNo("Would you like to continue?") == Yes {
 		log.Debug("Confirmation verified. Proceeding")
 		return true
 	} else {

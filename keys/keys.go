@@ -13,14 +13,12 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func ListKeys(do *definitions.Do) ([]string, error) {
 	var result []string
 	if do.Host {
-		keysPath := filepath.Join(common.KeysPath, "data")
+		keysPath := filepath.Join(config.KeysPath, "data")
 		addrs, err := ioutil.ReadDir(keysPath)
 		if err != nil {
 			return nil, err
@@ -112,11 +110,11 @@ func ExportKey(do *definitions.Do) error {
 	}
 
 	if do.All && do.Address == "" {
-		do.Destination = common.KeysPath
-		do.Source = path.Join(common.KeysContainerPath)
+		do.Destination = config.KeysPath
+		do.Source = path.Join(config.KeysContainerPath)
 	} else {
-		do.Destination = common.KeysDataPath
-		do.Source = path.Join(common.KeysContainerPath, do.Address)
+		do.Destination = config.KeysDataPath
+		do.Source = path.Join(config.KeysContainerPath, do.Address)
 	}
 	return data.ExportData(do)
 }
@@ -138,15 +136,15 @@ func ImportKey(do *definitions.Do) error {
 		}
 
 		for _, addr := range result {
-			do.Source = filepath.Join(common.KeysDataPath, addr)
-			do.Destination = path.Join(common.KeysContainerPath, addr)
+			do.Source = filepath.Join(config.KeysDataPath, addr)
+			do.Destination = path.Join(config.KeysContainerPath, addr)
 			if err := data.ImportData(do); err != nil {
 				return err
 			}
 		}
 	} else {
-		do.Source = filepath.Join(common.KeysDataPath, do.Address)
-		do.Destination = path.Join(common.KeysContainerPath, do.Address)
+		do.Source = filepath.Join(config.KeysDataPath, do.Address)
+		do.Destination = path.Join(config.KeysContainerPath, do.Address)
 		if err := data.ImportData(do); err != nil {
 			return err
 		}

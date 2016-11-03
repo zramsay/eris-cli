@@ -10,13 +10,12 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/chains"
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/keys"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var (
@@ -111,8 +110,8 @@ func TestDeployContract(t *testing.T) {
 }
 
 func testMakeABundle(t *testing.T) {
-	// write two files to common.AppsPath/idi
-	idiPath := filepath.Join(common.AppsPath, "idi")
+	// write two files to config.AppsPath/idi
+	idiPath := filepath.Join(config.AppsPath, "idi")
 	if err := os.MkdirAll(idiPath, 0777); err != nil {
 
 	}
@@ -190,7 +189,7 @@ jobs:
 
 	tarballName := "addMeToIPFSeventually.tar.gz"
 	// os.Exec the tar function on them
-	if err := os.Chdir(common.AppsPath); err != nil {
+	if err := os.Chdir(config.AppsPath); err != nil {
 		t.Fatalf("%v", err)
 	}
 	targs := []string{"-cvzf", tarballName, "-C", idiPath, "."}
@@ -201,7 +200,7 @@ jobs:
 	}
 	log.Warn(string(stdOut))
 
-	from := filepath.Join(common.AppsPath, tarballName)
+	from := filepath.Join(config.AppsPath, tarballName)
 	to := installPath
 
 	if err := UnpackTarball(from, to); err != nil {
@@ -218,7 +217,7 @@ func testSetupChain(t *testing.T, chainName string) {
 		t.Fatalf("error making chain: %v\n", err)
 	}
 
-	doCh.Path = filepath.Join(common.ChainsPath, chainName)
+	doCh.Path = filepath.Join(config.ChainsPath, chainName)
 	if err := chains.StartChain(doCh); err != nil {
 		t.Fatalf("error new-ing chain: %v\n", err)
 	}

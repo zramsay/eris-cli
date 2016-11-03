@@ -5,11 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/testutil"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var dataName string = "dataTest1"
@@ -41,14 +40,14 @@ func TestExportData(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Source = common.ErisContainerRoot
-	do.Destination = filepath.Join(common.DataContainersPath, do.Name)
+	do.Source = config.ErisContainerRoot
+	do.Destination = filepath.Join(config.DataContainersPath, do.Name)
 	if err := ExportData(do); err != nil {
 		log.Error(err)
 		t.FailNow()
 	}
 
-	if _, err := os.Stat(filepath.Join(common.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(config.DataContainersPath, dataName, "test")); os.IsNotExist(err) {
 		log.Errorf("Exported file does not exist: %s", err)
 		t.Fail()
 	}
@@ -155,7 +154,7 @@ func TestRmData(t *testing.T) {
 //creates a new data container w/ dir to be used by a test
 //maybe give create opts? => paths, files, file contents, etc
 func testCreateDataByImport(t *testing.T, name string) {
-	newDataDir := filepath.Join(common.DataContainersPath, name)
+	newDataDir := filepath.Join(config.DataContainersPath, name)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
 		t.Fatalf("err mkdir: %v", err)
 	}
@@ -168,8 +167,8 @@ func testCreateDataByImport(t *testing.T, name string) {
 
 	do := definitions.NowDo()
 	do.Name = name
-	do.Source = filepath.Join(common.DataContainersPath, do.Name)
-	do.Destination = common.ErisContainerRoot
+	do.Source = filepath.Join(config.DataContainersPath, do.Name)
+	do.Destination = config.ErisContainerRoot
 	if err := ImportData(do); err != nil {
 		t.Fatalf("error importing data: %v", err)
 	}

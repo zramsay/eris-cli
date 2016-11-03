@@ -10,13 +10,11 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/common/go/common"
-
 	"github.com/spf13/viper"
 )
 
 // LoadServiceDefinition reads a service definition specified by a service
-// name from the common.ServicesPath directory and returns the corresponding
+// name from the config.ServicesPath directory and returns the corresponding
 // service definition file.
 // LoadServiceDefinition can return missing file or definition file bad format
 // errors.
@@ -133,7 +131,7 @@ func connectToAService(srv *definitions.Service, ops *definitions.Operation, typ
 }
 
 func loadServiceDefinition(servName string) (*viper.Viper, error) {
-	return config.LoadViper(filepath.Join(common.ServicesPath), servName)
+	return config.LoadViper(filepath.Join(config.ServicesPath), servName)
 }
 
 func checkImage(srv *definitions.Service) error {

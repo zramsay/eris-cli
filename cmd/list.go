@@ -2,8 +2,7 @@ package commands
 
 import (
 	"github.com/eris-ltd/eris-cli/list"
-
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/spf13/cobra"
 )
@@ -75,5 +74,5 @@ func ListAll() {
 		do.Format = "json"
 	}
 
-	common.IfExit(list.Containers("all", do.Format, do.Running))
+	util.IfExit(list.Containers("all", do.Format, do.Running))
 }

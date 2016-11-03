@@ -13,7 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +53,7 @@ Complete documentation is available at https://monax.io/docs/documentation
 			return
 		}
 
-		if !util.DoesDirExist(common.ErisRoot) && cmd.Use != "init" {
+		if !util.DoesDirExist(config.ErisRoot) && cmd.Use != "init" {
 			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 			do := definitions.NowDo()
 			do.Yes = true
@@ -74,11 +73,11 @@ Complete documentation is available at https://monax.io/docs/documentation
 		// Compare Docker client API versions.
 		dockerVersion, err := util.DockerClientVersion()
 		if err != nil {
-			common.IfExit(fmt.Errorf("There was an error connecting to your Docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs: %v", util.DockerError(err)))
+			util.IfExit(fmt.Errorf("There was an error connecting to your Docker daemon.\nCome back after you have resolved the issue and the marmots will be happy to service your blockchain management needs: %v", util.DockerError(err)))
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
-			common.IfExit(fmt.Errorf("Eris requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
+			util.IfExit(fmt.Errorf("Eris requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
 		log.AddHook(util.CrashReportHook(dockerVersion))
 
@@ -87,7 +86,7 @@ Complete documentation is available at https://monax.io/docs/documentation
 		if err != nil {
 			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Eris, we strongly recommend it be installed for maximum blockchain awesomeness")
 		} else if !util.CompareVersions(dmVersion, dmVerMin) {
-			common.IfExit(fmt.Errorf("Eris requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+			util.IfExit(fmt.Errorf("Eris requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 
@@ -105,7 +104,7 @@ func Execute() {
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
-	common.IfExit(ErisCmd.Execute())
+	util.IfExit(ErisCmd.Execute())
 }
 
 // Define the commands

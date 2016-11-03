@@ -15,8 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 // MakeChain runs the `eris-cm make` command in a Docker container.
@@ -72,7 +70,7 @@ func MakeChain(do *definitions.Do) error {
 		do.Service.EntryPoint = "mintgen"
 		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s", do.Name, do.ChainMakeVals, do.ChainMakeActs)
 		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
-		do.Service.WorkDir = path.Join(common.ErisContainerRoot, "chains", do.Name)
+		do.Service.WorkDir = path.Join(config.ErisContainerRoot, "chains", do.Name)
 	} else {
 		log.Debug("Using [eris-cm]")
 		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
@@ -89,21 +87,21 @@ func MakeChain(do *definitions.Do) error {
 	doData.Operations.DataContainerName = util.DataContainerName(do.Name)
 	doData.Operations.ContainerType = "service"
 
-	doData.Source = common.AccountsTypePath
-	doData.Destination = path.Join(common.ErisContainerRoot, "chains", "account-types")
+	doData.Source = config.AccountsTypePath
+	doData.Destination = path.Join(config.ErisContainerRoot, "chains", "account-types")
 	if err := data.ImportData(doData); err != nil {
 		return fmt.Errorf("Cannot import account-types into container: %v", err)
 	}
 
-	doData.Source = common.ChainTypePath
-	doData.Destination = path.Join(common.ErisContainerRoot, "chains", "chain-types")
+	doData.Source = config.ChainTypePath
+	doData.Destination = path.Join(config.ErisContainerRoot, "chains", "chain-types")
 	if err := data.ImportData(doData); err != nil {
 		return fmt.Errorf("Cannot import chain-types into container: %v", err)
 	}
 
-	chnPath := filepath.Join(common.ChainsPath, do.Name)
+	chnPath := filepath.Join(config.ChainsPath, do.Name)
 	doData.Source = chnPath
-	doData.Destination = path.Join(common.ErisContainerRoot, "chains", do.Name)
+	doData.Destination = path.Join(config.ErisContainerRoot, "chains", do.Name)
 	if util.DoesDirExist(doData.Source) {
 		if err := data.ImportData(doData); err != nil {
 			return fmt.Errorf("Cannot import chain directory into container: %v", err)
@@ -126,7 +124,7 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	if do.Known {
-		if err := ioutil.WriteFile(filepath.Join(common.ErisRoot, "chains", do.Name, "genesis.json"), buf.Bytes(), 0644); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(config.ErisRoot, "chains", do.Name, "genesis.json"), buf.Bytes(), 0644); err != nil {
 			return err
 		}
 	}
@@ -138,8 +136,8 @@ func MakeChain(do *definitions.Do) error {
 
 	// Nothing to export to host when running with [--known].
 	if !do.Known {
-		doData.Source = path.Join(common.ErisContainerRoot, "chains")
-		doData.Destination = common.ErisRoot
+		doData.Source = path.Join(config.ErisContainerRoot, "chains")
+		doData.Destination = config.ErisRoot
 		if err := data.ExportData(doData); err != nil {
 			return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
 		}

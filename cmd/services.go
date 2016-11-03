@@ -11,8 +11,6 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/common/go/common"
-
 	"github.com/spf13/cobra"
 )
 
@@ -92,7 +90,7 @@ docker format of [repository/organization/image].`,
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "edit a service",
-	Long: `edit a service definition file which is kept in ` + util.Tilde(common.ServicesPath) + `.
+	Long: `edit a service definition file which is kept in ` + util.Tilde(config.ServicesPath) + `.
 Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
@@ -108,7 +106,7 @@ var servicesStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start a service",
 	Long: `start a service according to the service definition file which
-eris stores in the ` + util.Tilde(common.ServicesPath) + `directory
+eris stores in the ` + util.Tilde(config.ServicesPath) + `directory
 
 The [eris services start NAME] command by default will put the
 service into the background so its logs will not be viewable
@@ -229,7 +227,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(common.ErisRoot)))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(config.ErisRoot)))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
@@ -268,25 +266,25 @@ func addServicesFlags() {
 }
 
 func StartService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
-	common.IfExit(services.StartService(do))
+	util.IfExit(services.StartService(do))
 }
 
 func LogService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	common.IfExit(services.LogsService(do))
+	util.IfExit(services.LogsService(do))
 }
 
 func ExecService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	args = args[1:]
 	if !do.Operations.Interactive {
 		if len(args) == 0 {
-			common.Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			util.Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
 	}
 	if len(args) == 1 {
@@ -297,37 +295,37 @@ func ExecService(cmd *cobra.Command, args []string) {
 	config.Global.InteractiveWriter = os.Stdout
 	config.Global.InteractiveErrorWriter = os.Stderr
 	_, err := services.ExecService(do)
-	common.IfExit(err)
+	util.IfExit(err)
 }
 
 func KillService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
-	common.IfExit(services.KillService(do))
+	util.IfExit(services.KillService(do))
 }
 
 func MakeService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(2, "ge", cmd, args))
+	util.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = []string{args[1]}
-	common.IfExit(services.MakeService(do))
+	util.IfExit(services.MakeService(do))
 }
 
 func EditService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	common.IfExit(services.EditService(do))
+	util.IfExit(services.EditService(do))
 }
 
 func RenameService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(2, "ge", cmd, args))
+	util.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
-	common.IfExit(services.RenameService(do))
+	util.IfExit(services.RenameService(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	if len(args) == 1 {
@@ -336,27 +334,27 @@ func InspectService(cmd *cobra.Command, args []string) {
 		do.Operations.Args = []string{args[1]}
 	}
 
-	common.IfExit(services.InspectService(do))
+	util.IfExit(services.InspectService(do))
 }
 
 func IPService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
-	common.IfExit(services.InspectService(do))
+	util.IfExit(services.InspectService(do))
 }
 
 func PortsService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
-	common.IfExit(services.PortsService(do))
+	util.IfExit(services.PortsService(do))
 }
 
 func UpdateService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
-	common.IfExit(services.UpdateService(do))
+	util.IfExit(services.UpdateService(do))
 }
 
 func ListServices(cmd *cobra.Command, args []string) {
@@ -370,22 +368,22 @@ func ListServices(cmd *cobra.Command, args []string) {
 		do.Format = "json"
 	}
 	if do.Known {
-		common.IfExit(list.Known("services", do.Format))
+		util.IfExit(list.Known("services", do.Format))
 	} else {
-		common.IfExit(list.Containers(definitions.TypeService, do.Format, do.Running))
+		util.IfExit(list.Containers(definitions.TypeService, do.Format, do.Running))
 	}
 }
 
 func RmService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
-	common.IfExit(services.RmService(do))
+	util.IfExit(services.RmService(do))
 }
 
 func CatService(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	out, err := services.CatService(do)
-	common.IfExit(err)
+	util.IfExit(err)
 	fmt.Fprint(config.Global.Writer, out)
 }

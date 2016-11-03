@@ -7,13 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/files"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func checkHash(hash string) (string, error) {
@@ -147,5 +146,5 @@ func SetTarballPath(bundleInfo map[string]string) string {
 	bundleID := bundleInfo["bundleId"]
 	version := bundleInfo["version"]
 
-	return filepath.Join(common.BundlesPath, groupID, bundleID, version)
+	return filepath.Join(config.BundlesPath, groupID, bundleID, version)
 }

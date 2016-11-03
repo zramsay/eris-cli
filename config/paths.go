@@ -1,4 +1,4 @@
-package common
+package config
 
 import (
 	"io"
@@ -12,36 +12,36 @@ import (
 )
 
 var (
-	// Convenience Directories
+	// Convenience directories.
 	GoPath            = os.Getenv("GOPATH")
 	ErisLtd           = filepath.Join(GoPath, "src", "github.com", "eris-ltd") // CSK: to deprecate
 	ErisGo            = filepath.Join(GoPath, "src", "github.com", "eris-ltd") // CSK: to keep
 	ErisGH            = "https://github.com/eris-ltd/"
 	ErisRoot          = ResolveErisRoot()
-	ErisContainerRoot = "/home/eris/.eris" // XXX: this is used as root in the `eris/base` image
+	ErisContainerRoot = "/home/eris/.eris"
 
-	// Major Directories
-	AppsPath     = filepath.Join(ErisRoot, "apps") // previously "dapps"
+	// Major directories.
+	AppsPath     = filepath.Join(ErisRoot, "apps")
 	BundlesPath  = filepath.Join(ErisRoot, "bundles")
-	ChainsPath   = filepath.Join(ErisRoot, "chains") // previously "blockchains"
+	ChainsPath   = filepath.Join(ErisRoot, "chains")
 	KeysPath     = filepath.Join(ErisRoot, "keys")
 	RemotesPath  = filepath.Join(ErisRoot, "remotes")
 	ScratchPath  = filepath.Join(ErisRoot, "scratch")
 	ServicesPath = filepath.Join(ErisRoot, "services")
 
-	// Chains Directories
+	// Chains directories.
 	HEAD             = filepath.Join(ChainsPath, "HEAD")
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
 	ChainTypePath    = filepath.Join(ChainsPath, "chain-types")
 
-	// Keys Directories
+	// Keys directories.
 	KeysDataPath      = filepath.Join(KeysPath, "data")
 	KeysNamesPath     = filepath.Join(KeysPath, "names")
 	KeysContainerPath = path.Join(ErisContainerRoot, "keys", "data")
 
-	// Scratch Directories (basically eris' cache) (globally coordinated)
+	// Scratch directories.
 	DataContainersPath   = filepath.Join(ScratchPath, "data")
-	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.eris/languages"
+	LanguagesScratchPath = filepath.Join(ScratchPath, "languages")
 	LllcScratchPath      = filepath.Join(LanguagesScratchPath, "lllc")
 	SolcScratchPath      = filepath.Join(LanguagesScratchPath, "sol")
 	SerpScratchPath      = filepath.Join(LanguagesScratchPath, "ser")

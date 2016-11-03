@@ -9,8 +9,8 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/list"
+	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
 
@@ -156,18 +156,18 @@ func ListData(cmd *cobra.Command, args []string) {
 	if do.JSON {
 		do.Format = "json"
 	}
-	common.IfExit(list.Containers(definitions.TypeData, do.Format, false))
+	util.IfExit(list.Containers(definitions.TypeData, do.Format, false))
 }
 
 func RenameData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(2, "ge", cmd, args))
+	util.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.NewName = args[1]
-	common.IfExit(data.RenameData(do))
+	util.IfExit(data.RenameData(do))
 }
 
 func InspectData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 	if len(args) == 1 {
@@ -176,40 +176,40 @@ func InspectData(cmd *cobra.Command, args []string) {
 		do.Operations.Args = []string{args[1]}
 	}
 
-	common.IfExit(data.InspectData(do))
+	util.IfExit(data.InspectData(do))
 }
 
 func RmData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
-	common.IfExit(data.RmData(do))
+	util.IfExit(data.RmData(do))
 }
 
 func ImportData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(3, "eq", cmd, args))
+	util.IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
 	do.Source = args[1]
 	do.Destination = args[2]
-	common.IfExit(data.ImportData(do))
+	util.IfExit(data.ImportData(do))
 }
 
 func ExportData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(3, "eq", cmd, args))
+	util.IfExit(ArgCheck(3, "eq", cmd, args))
 	do.Name = args[0]
 	do.Source = args[1]
 	do.Destination = args[2]
-	common.IfExit(data.ExportData(do))
+	util.IfExit(data.ExportData(do))
 }
 
 func ExecData(cmd *cobra.Command, args []string) {
-	common.IfExit(ArgCheck(1, "ge", cmd, args))
+	util.IfExit(ArgCheck(1, "ge", cmd, args))
 
 	do.Name = args[0]
 
 	// if interactive, we ignore args. if not, run args as command
 	if !do.Operations.Interactive {
 		if len(args) < 2 {
-			common.Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
+			util.Exit(fmt.Errorf("Non-interactive exec sessions must provide arguments to execute"))
 		}
 		args = args[1:]
 		if len(args) == 1 {
@@ -221,5 +221,5 @@ func ExecData(cmd *cobra.Command, args []string) {
 	config.Global.InteractiveWriter = os.Stdout
 	config.Global.InteractiveErrorWriter = os.Stderr
 	_, err := data.ExecData(do)
-	common.IfExit(err)
+	util.IfExit(err)
 }

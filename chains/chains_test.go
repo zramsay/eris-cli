@@ -15,8 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var (
@@ -109,7 +107,7 @@ func TestExecChain(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = chainName
-	do.Operations.Args = []string{"ls", common.ErisContainerRoot}
+	do.Operations.Args = []string{"ls", config.ErisContainerRoot}
 	buf, err := ExecChain(do)
 	if err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)
@@ -643,7 +641,7 @@ func create(t *testing.T, chain string) {
 	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(common.ChainsPath, chain) // --init-dir
+	do.Path = filepath.Join(config.ChainsPath, chain) // --init-dir
 	if err := StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}

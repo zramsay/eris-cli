@@ -18,8 +18,6 @@ import (
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 
-	"github.com/eris-ltd/common/go/common"
-
 	"github.com/BurntSushi/toml"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -303,7 +301,7 @@ func MakeService(do *definitions.Do) error {
 		"service": srv.Service.Name,
 		"image":   srv.Service.Image,
 	}).Debug("Creating a new service definition file")
-	err = WriteServiceDefinitionFile(srv, filepath.Join(common.ServicesPath, do.Name+".toml"))
+	err = WriteServiceDefinitionFile(srv, filepath.Join(config.ServicesPath, do.Name+".toml"))
 	if err != nil {
 		return err
 	}
@@ -313,7 +311,7 @@ func MakeService(do *definitions.Do) error {
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	log.WithField("=>", servDefFile).Info("Editing service")
-	return common.Editor(servDefFile)
+	return config.Editor(servDefFile)
 }
 
 func RenameService(do *definitions.Do) error {
@@ -359,7 +357,7 @@ func RenameService(do *definitions.Do) error {
 		if filepath.Ext(do.NewName) == "" {
 			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
 		} else {
-			newFile = filepath.Join(common.ServicesPath, do.NewName)
+			newFile = filepath.Join(config.ServicesPath, do.NewName)
 		}
 
 		serviceDef.Service.Name = strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
@@ -498,7 +496,7 @@ func WriteServiceDefinitionFile(serviceDef *definitions.ServiceDefinition, fileN
 
 	if filepath.Ext(fileName) == "" {
 		fileName = serviceDef.Service.Name + ".toml"
-		fileName = filepath.Join(common.ServicesPath, fileName)
+		fileName = filepath.Join(config.ServicesPath, fileName)
 	}
 
 	writer, err := os.Create(fileName)

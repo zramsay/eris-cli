@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/config"
+
 	"github.com/spf13/viper"
 )
 
 func Edit(conf *viper.Viper, configVals []string) error {
 	filePath := conf.ConfigFileUsed()
 	if len(configVals) == 0 {
-		if err := common.Editor(filePath); err != nil {
+		if err := config.Editor(filePath); err != nil {
 			return err
 		}
 	} else {

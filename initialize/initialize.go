@@ -13,8 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 func Initialize(do *definitions.Do) error {
@@ -87,7 +85,7 @@ Consider running [docker images] to see the images that were added.`)
 Eris sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
-`, "don't send", filepath.Join(common.ErisRoot, "eris.toml"))
+`, "don't send", filepath.Join(config.ErisRoot, "eris.toml"))
 
 		log.Warn("The marmots have everything set up for you. Type [eris] to get started")
 	}
@@ -97,13 +95,13 @@ line to the %s definition file.
 func InitDefaults(do *definitions.Do, newDir bool) error {
 	var srvPath string
 
-	srvPath = common.ServicesPath
+	srvPath = config.ServicesPath
 
 	if err := dropServiceDefaults(srvPath, do.ServicesSlice); err != nil {
 		return err
 	}
 
-	log.WithField("root", common.ErisRoot).Warn("Initialized Eris root directory")
+	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
 
 	return nil
 }
@@ -120,11 +118,11 @@ func dropServiceDefaults(dir string, services []string) error {
 
 		switch service {
 		case "keys":
-			err = writeDefaultFile(common.ServicesPath, "keys.toml", defServiceKeys)
+			err = writeDefaultFile(config.ServicesPath, "keys.toml", defServiceKeys)
 		case "ipfs":
-			err = writeDefaultFile(common.ServicesPath, "ipfs.toml", defServiceIPFS)
+			err = writeDefaultFile(config.ServicesPath, "ipfs.toml", defServiceIPFS)
 		case "compilers":
-			err = writeDefaultFile(common.ServicesPath, "compilers.toml", defServiceCompilers)
+			err = writeDefaultFile(config.ServicesPath, "compilers.toml", defServiceCompilers)
 		default:
 			err = drops([]string{service}, "services", dir)
 		}
@@ -239,14 +237,14 @@ func checkThenInitErisRoot(force bool) (bool, error) {
 	var newDir bool
 	if force {
 		log.Info("Force initializing Eris root directory")
-		if err := common.InitErisDir(); err != nil {
+		if err := config.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
 		}
 		return true, nil
 	}
-	if !util.DoesDirExist(common.ErisRoot) || !util.DoesDirExist(common.ServicesPath) {
+	if !util.DoesDirExist(config.ErisRoot) || !util.DoesDirExist(config.ServicesPath) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
-		if err := common.InitErisDir(); err != nil {
+		if err := config.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
 		}
 		newDir = true
@@ -257,7 +255,7 @@ func checkThenInitErisRoot(force bool) (bool, error) {
 }
 
 func checkIfMigrationRequired(doYes bool) error {
-	if err := util.MigrateDeprecatedDirs(common.DirsToMigrate, !doYes); err != nil {
+	if err := util.MigrateDeprecatedDirs(config.DirsToMigrate, !doYes); err != nil {
 		return fmt.Errorf("Could not migrate directories.\n%s", err)
 	}
 	return nil
@@ -268,12 +266,12 @@ func checkIfCanOverwrite(doYes bool) error {
 	if doYes {
 		return nil
 	}
-	log.WithField("path", common.ErisRoot).Warn("Eris root directory")
+	log.WithField("path", config.ErisRoot).Warn("Eris root directory")
 	log.WithFields(log.Fields{
-		"services path": common.ServicesPath,
-		"chains path":   common.ChainsPath,
+		"services path": config.ServicesPath,
+		"chains path":   config.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
-	if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
+	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 		log.Debug("Confirmation verified. Proceeding")
 	} else {
 		log.Warn("The marmots will not proceed without your permission")
@@ -300,7 +298,7 @@ on local host machines. If you already have the images, they'll be updated.
 		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
 		log.Warn()
 
-		if common.QueryYesOrNo("Do you wish to continue?") == common.Yes {
+		if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 			if err := pullDefaultImages(do.ImagesSlice); err != nil {
 				return err
 			}
@@ -321,7 +319,7 @@ func overwriteErisToml() error {
 	config.Global.ImageIPFS = version.ImageIPFS
 
 	// Ensure the directory the file being saved to exists.
-	if err := os.MkdirAll(common.ErisRoot, 0755); err != nil {
+	if err := os.MkdirAll(config.ErisRoot, 0755); err != nil {
 		return err
 	}
 

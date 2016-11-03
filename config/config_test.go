@@ -9,8 +9,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
 )
 
 var (
@@ -80,7 +78,7 @@ func TestNewNil(t *testing.T) {
 }
 
 func TestNewDefaultConfig(t *testing.T) {
-	common.ChangeErisRoot(configErisDir)
+	ChangeErisRoot(configErisDir)
 
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
@@ -128,7 +126,7 @@ ImageDB = "erisdb"
 `)
 	defer removeErisDir()
 
-	common.ChangeErisRoot(configErisDir)
+	ChangeErisRoot(configErisDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -164,7 +162,7 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 	placeSettings(``)
 	defer removeErisDir()
 
-	common.ChangeErisRoot(configErisDir)
+	ChangeErisRoot(configErisDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -219,7 +217,7 @@ func TestNewCustomBadConfig(t *testing.T) {
 	placeSettings(`*`)
 	defer removeErisDir()
 
-	common.ChangeErisRoot(configErisDir)
+	ChangeErisRoot(configErisDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -550,7 +548,7 @@ Verbose = true
 }
 
 func TestSaveNotExistentDir(t *testing.T) {
-	common.ChangeErisRoot("/non/existent/dir")
+	ChangeErisRoot("/non/existent/dir")
 	_, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)

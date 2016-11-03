@@ -41,7 +41,7 @@ git clone git@github.com:$user_name/$docs_site.git $tmp_dir/$docs_site
 rsync -av $docs_name $tmp_dir/$docs_site/content/docs/
 
 # ------------------------------------------------------------------
-# Commit and push if there are changes
+# Commit and push if there's changes
 
 cd $tmp_dir/$docs_site
 if [ -z "$(git status --porcelain)" ]; then

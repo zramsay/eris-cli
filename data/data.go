@@ -10,13 +10,12 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -84,7 +83,7 @@ func RmData(do *definitions.Do) (err error) {
 
 		if do.RmHF {
 			log.WithField("=>", do.Name).Warn("Removing host directory")
-			if err = os.RemoveAll(filepath.Join(common.DataContainersPath, do.Name)); err != nil {
+			if err = os.RemoveAll(filepath.Join(config.DataContainersPath, do.Name)); err != nil {
 				return err
 			}
 		}
@@ -106,7 +105,7 @@ func ImportData(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	do.Source = common.AbsolutePath(wd, do.Source)
+	do.Source = config.AbsolutePath(wd, do.Source)
 
 	// Check the source path exists.
 	if _, err := os.Stat(do.Source); err != nil {
@@ -204,7 +203,7 @@ func ExportData(do *definitions.Do) error {
 		if err != nil {
 			return err
 		}
-		do.Destination = common.AbsolutePath(wd, do.Destination)
+		do.Destination = config.AbsolutePath(wd, do.Destination)
 		log.WithField("=>", do.Name).Info("Exporting data container")
 
 		// we want to export to a temp directory.
@@ -239,7 +238,7 @@ func ExportData(do *definitions.Do) error {
 		go func() {
 			log.WithField("=>", containerName).Info("Copying out of container")
 			log.WithField("path", do.Source).Debug()
-			common.IfExit(util.DockerClient.DownloadFromContainer(srv.Operations.SrvContainerName, opts))
+			util.IfExit(util.DockerClient.DownloadFromContainer(srv.Operations.SrvContainerName, opts))
 			writer.Close()
 		}()
 
@@ -297,7 +296,7 @@ func MoveOutOfDirAndRmDir(src, dest string) error {
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
-		common.Copy(f, filepath.Join(dest, filepath.Base(f)))
+		config.Copy(f, filepath.Join(dest, filepath.Base(f)))
 	}
 
 	log.WithField("=>", src).Info("Removing directory")
@@ -324,12 +323,12 @@ func runData(name string, args []string) error {
 	return nil
 }
 
-// check path for common.ErisContainerRoot
+// check path for config.ErisContainerRoot
 // XXX this is opiniated & we may want to change in future
 // for more flexibility with filesystem of data conts
 // [zr] yes, it is opiniated; do.Operations.SkipCheck will silence it when needed
 func checkErisContainerRoot(do *definitions.Do, typ string) error {
-	r, err := regexp.Compile(common.ErisContainerRoot)
+	r, err := regexp.Compile(config.ErisContainerRoot)
 	if err != nil {
 		return err
 	}
@@ -337,14 +336,14 @@ func checkErisContainerRoot(do *definitions.Do, typ string) error {
 	switch typ {
 	case "import":
 		if r.MatchString(do.Destination) != true { //if not there join it
-			do.Destination = path.Join(common.ErisContainerRoot, do.Destination)
+			do.Destination = path.Join(config.ErisContainerRoot, do.Destination)
 			return nil
 		} else { // matches: do nothing
 			return nil
 		}
 	case "export":
 		if r.MatchString(do.Source) != true {
-			do.Source = path.Join(common.ErisContainerRoot, do.Source)
+			do.Source = path.Join(config.ErisContainerRoot, do.Source)
 			return nil
 		} else {
 			return nil
