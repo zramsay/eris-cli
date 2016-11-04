@@ -3,8 +3,7 @@
 %{define} release %{getenv:ERIS_RELEASE}
 %{define} gorepo %{_builddir}/src/github.com/eris-ltd/eris-cli
 
-Summary: Eris is an application platform for building, testing, maintaining, and
-operating applications built to run on an ecosystem level.
+Summary: Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
 Name: eris-cli
 License: GPL-3
