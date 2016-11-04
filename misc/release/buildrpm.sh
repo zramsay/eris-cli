@@ -90,16 +90,9 @@ rpm --import eris/RPM-GPG-KEY
 rpm --checksig eris/x86_64/*rpm eris/source/*rpm
 
 echo
-echo ">>> Syncing repos to Amazon S3"
+echo ">>> Generating eris.repo template"
 echo
-s3cmd sync eris s3://${AWS_S3_RPM_REPO}
-
-echo
-echo ">>> Installation instructions"
-echo
-echo "Create a file named /etc/yum.repos.d/eris.repo with the following contents"
-cat <<EOF
-
+cat > eris/eris.repo <<EOF
 [eris]
 name=Eris
 baseurl=https://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/x86_64/
@@ -116,7 +109,17 @@ enabled=1
 gpgkey=http://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/RPM-GPG-KEY
 gpgcheck=1
 EOF
+
 echo
-echo "  \$ yum update"
-echo "  \$ yum install eris-cli"
+echo ">>> Syncing repos to Amazon S3"
+echo
+s3cmd sync eris s3://${AWS_S3_RPM_REPO}
+
+echo
+echo ">>> Installation instructions"
+echo
+echo "  \$ sudo curl https://eris-rpm.s3.amazonaws.com/eris/eris.repo >/etc/yum.repos.d/eris.repo"
+echo
+echo "  \$ sudo yum update"
+echo "  \$ sudo yum install eris-cli"
 echo

@@ -44,14 +44,23 @@
 #      Copy pastable sample for public access policy:
 #
 #         {
-#           "Version":"2012-10-17",
-#           "Statement":[
+#           "Version": "2012-10-17",
+#           "Statement": [
 #             {
-#               "Sid":"AddPerm",
-#               "Effect":"Allow",
+#               "Sid": "Stmt1405592139000",
+#               "Effect": "Allow",
 #               "Principal": "*",
-#               "Action":["s3:GetObject"],
-#               "Resource":["arn:aws:s3:::examplebucket/*"]
+#               "Action": [
+#                 "s3:DeleteObject",
+#                 "s3:GetObject",
+#                 "s3:ListBucket",
+#                 "s3:PutObject",
+#                 "s3:PutObjectAcl"
+#               ],
+#               "Resource": [
+#                 "arn:aws:s3:::examplebucket/*",
+#                 "arn:aws:s3:::examplebucket"
+#               ]
 #             }
 #           ]
 #         }
@@ -71,7 +80,7 @@ export AWS_S3_RPM_REPO=eris-rpm
 export AWS_S3_RPM_PACKAGES=eris-rpm-files
 export AWS_S3_DEB_REPO=eris-deb
 export AWS_S3_DEB_PACKAGES=eris-deb-files
-export KEY_NAME="Monax Industries (DISTRIBUTION SIGNATURE MASTER KEY) <support@monax.io>"
+export KEY_NAME="Monax Industries (PACKAGES SIGNING KEY) <support@monax.io>"
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {
