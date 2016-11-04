@@ -11,13 +11,11 @@ import (
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
-	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
-
-	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -108,7 +106,7 @@ func TestCleanLatentChainDatas(t *testing.T) {
 func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	if yes { // fail if dirs/files don't exist
 		for _, chn := range chains {
-			if !util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+			if !util.DoesDirExist(filepath.Join(config.ChainsPath, chn)) {
 				t.Fatalf("chain directory does not exist when it should")
 			}
 			_, err := loaders.LoadChainDefinition(chn) // list.Known only Prints to stdout
@@ -118,10 +116,10 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 		}
 	} else { // !yes, fail if dirs/files do exist
 		for _, chn := range chains {
-			if util.DoesDirExist(filepath.Join(common.ChainsPath, chn)) {
+			if util.DoesDirExist(filepath.Join(config.ChainsPath, chn)) {
 				t.Fatalf("chain directory exists when it shouldn't")
 			}
-			_, err := loaders.LoadChainDefinition(chn)
+			_, err := loaders.LoadChainDefinition(chn, filepath.Join(config.ChainsPath, chn, "config.toml"))
 			if err == nil {
 				t.Fatalf("no error loading chain def that shouldn't exist")
 			}
@@ -205,7 +203,7 @@ func testStartService(serviceName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Operations.Args = []string{serviceName}
 	do.Operations.PublishAllPorts = true
-	if err := srv.StartService(do); err != nil {
+	if err := services.StartService(do); err != nil {
 		t.Fatalf("error starting service: %v", err)
 	}
 
@@ -224,14 +222,14 @@ func testStartChain(chainName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(common.ChainsPath, chainName)
+	do.Path = filepath.Join(config.ChainsPath, chainName)
 	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chainName, err)
 	}
 }
 
 func testCreateDataContainer(dataName string, t *testing.T) {
-	newDataDir := filepath.Join(common.DataContainersPath, dataName)
+	newDataDir := filepath.Join(config.DataContainersPath, dataName)
 	if err := os.MkdirAll(newDataDir, 0777); err != nil {
 		t.Fatalf("error mkdir: %v\n", err)
 	}
@@ -244,8 +242,8 @@ func testCreateDataContainer(dataName string, t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Source = filepath.Join(common.DataContainersPath, do.Name)
-	do.Destination = common.ErisContainerRoot
+	do.Source = filepath.Join(config.DataContainersPath, do.Name)
+	do.Destination = config.ErisContainerRoot
 	if err := data.ImportData(do); err != nil {
 		t.Fatalf("error importing data: %v", err)
 	}

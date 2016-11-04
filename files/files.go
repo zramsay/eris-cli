@@ -12,11 +12,9 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
-
-	. "github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/common/go/ipfs"
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/util"
 )
 
 func GetFiles(do *definitions.Do) error {
@@ -85,7 +83,7 @@ func PutFiles(do *definitions.Do) (string, error) {
 func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	// path to dir on host
 	do.Source = do.Name
-	do.Destination = filepath.Join(ErisContainerRoot, "scratch", "data", do.Source)
+	do.Destination = filepath.Join(config.ErisContainerRoot, "scratch", "data", do.Source)
 	do.Name = "ipfs"
 
 	do.Operations.Args = nil
@@ -140,7 +138,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 
 	do.Destination = do.Path
-	do.Source = path.Join(ErisContainerRoot, hash)
+	do.Source = path.Join(config.ErisContainerRoot, hash)
 	do.Operations.Args = nil
 	do.Operations.PublishAllPorts = false
 	if err := data.ExportData(do); err != nil {
@@ -245,7 +243,7 @@ func importFile(hash, fileName, port string) error {
 		"to path":   fileName,
 	}).Debug("Importing a file")
 
-	return ipfs.GetFromIPFS(hash, fileName, "", port)
+	return util.GetFromIPFS(hash, fileName, "", port)
 }
 
 func exportFile(fileName, gateway, port string) (string, error) {
@@ -254,19 +252,19 @@ func exportFile(fileName, gateway, port string) (string, error) {
 		"gateway": gateway,
 	}).Debug("Adding a file")
 
-	return ipfs.SendToIPFS(fileName, gateway, port)
+	return util.SendToIPFS(fileName, gateway, port)
 }
 
 func pinFile(fileHash string) (string, error) {
-	return ipfs.PinToIPFS(fileHash)
+	return util.PinToIPFS(fileHash)
 }
 
 func catFile(fileHash string) (string, error) {
-	return ipfs.CatFromIPFS(fileHash)
+	return util.CatFromIPFS(fileHash)
 }
 
 func listFile(objectHash string) (string, error) {
-	hash, err := ipfs.ListFromIPFS(objectHash)
+	hash, err := util.ListFromIPFS(objectHash)
 
 	if err != nil {
 		if fmt.Sprintf("%v", err) != "EOF" {
@@ -279,7 +277,7 @@ func listFile(objectHash string) (string, error) {
 }
 
 func listPinned() (string, error) {
-	return ipfs.ListPinnedFromIPFS()
+	return util.ListPinnedFromIPFS()
 }
 
 func rmAllPinned() (string, error) {
@@ -301,11 +299,8 @@ func rmAllPinned() (string, error) {
 }
 
 func rmPinnedByHash(hash string) (string, error) {
-	return ipfs.RemovePinnedFromIPFS(hash)
+	return util.RemovePinnedFromIPFS(hash)
 }
-
-//---------------------------------------------------------
-// helpers
 
 func EnsureIPFSrunning() error {
 	do := definitions.NowDo()

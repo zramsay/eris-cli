@@ -2,52 +2,46 @@ package loaders
 
 import (
 	"fmt"
-	"io/ioutil"
 	"path"
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
-	// "github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/version"
 
 	"github.com/spf13/viper"
 )
 
-// LoadChainDefinition finds the path to the chains config.toml by reading
-// from CONFIG_PATH (written in func setupChain()), and returns a chain
-// structure set accordingly, along with any errors
-func LoadChainDefinition(chainName string) (*definitions.ChainDefinition, error) {
+// LoadChainDefinition returns a ChainDefinition settings for the chainName
+// chain. It also enriches the the chain settings by reading the definition
+// file specified by the optional definiton parameter. It returns Viper package
+// and parsing errors.
+func LoadChainDefinition(chainName string, definition ...string) (*definitions.ChainDefinition, error) {
 	chain := definitions.BlankChainDefinition()
 	chain.Name = chainName
 	chain.Operations.ContainerType = definitions.TypeChain
 	chain.Operations.Labels = util.Labels(chain.Name, chain.Operations)
+	chain.Service.Image = path.Join(version.DefaultRegistry, version.ImageDB)
+	chain.Service.AutoData = true
 
-	whereIsTheConfigFile := filepath.Join(common.ChainsPath, chainName, "CONFIG_PATH")
-	var err error
-	pathToConfig, err := ioutil.ReadFile(whereIsTheConfigFile)
-	if err != nil {
-		return nil, err
+	// Optionally load settings from the definition file.
+	if len(definition) > 0 {
+		definition, err := config.LoadViper(filepath.Dir(definition[0]), filepath.Base(definition[0]))
+		if err != nil {
+			return nil, err
+		}
+
+		if err = MarshalChainDefinition(definition, chain); err != nil {
+			return nil, err
+		}
+
+		if chain.Dependencies != nil {
+			addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
+		}
 	}
 
-	definition := viper.New()
-	definition, err = config.LoadViper(string(pathToConfig), "config")
-	if err != nil {
-		return nil, err
-	}
-
-	if err = MarshalChainDefinition(definition, chain); err != nil {
-		return nil, err
-	}
-
-	if chain.Dependencies != nil {
-		addDependencyVolumesAndLinks(chain.Dependencies, chain.Service, chain.Operations)
-	}
-
-	// check chain names
 	chain.Service.Name = chain.Name
 	chain.Operations.SrvContainerName = util.ChainContainerName(chain.Name)
 	chain.Operations.DataContainerName = util.DataContainerName(chain.Name)
@@ -105,15 +99,9 @@ func ConnectToAChain(srv *definitions.Service, ops *definitions.Operation, name,
 // in the chain structure. Returns config read errors.
 func MarshalChainDefinition(definition *viper.Viper, chain *definitions.ChainDefinition) error {
 	log.Debug("Marshalling chain")
-	chnTemp := definitions.BlankChainDefinition()
 
-	if err := definition.Unmarshal(chnTemp); err != nil {
+	if err := definition.Unmarshal(chain); err != nil {
 		return fmt.Errorf("The marmots coult not read the chain definition: %v", err)
-	}
-
-	util.Merge(chain.Service, chnTemp.Service)
-	if len(chnTemp.Service.Ports) != 0 {
-		chain.Service.Ports = chnTemp.Service.Ports
 	}
 
 	// toml bools don't really marshal well "data_container". It can be

@@ -6,8 +6,8 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/files"
+	"github.com/eris-ltd/eris-cli/util"
 
-	. "github.com/eris-ltd/common/go/common"
 	"github.com/spf13/cobra"
 )
 
@@ -97,48 +97,48 @@ func addFilesFlags() {
 }
 
 func FilesGet(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Hash = args[0]
 	if do.Path == "" {
-		IfExit(errors.New("please specify a path to output your file with the [--output] flag"))
+		util.IfExit(errors.New("please specify a path to output your file with the [--output] flag"))
 	}
-	IfExit(files.GetFiles(do))
+	util.IfExit(files.GetFiles(do))
 }
 
 func FilesPut(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	out, err := files.PutFiles(do)
-	IfExit(err)
+	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesPin(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	out, err := files.PinFiles(do)
-	IfExit(err)
+	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesCat(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	out, err := files.CatFiles(do)
-	IfExit(err)
+	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesList(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(1, "eq", cmd, args))
+	util.IfExit(ArgCheck(1, "eq", cmd, args))
 	do.Name = args[0]
 	out, err := files.ListFiles(do)
-	IfExit(err)
+	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
 func FilesManageCached(cmd *cobra.Command, args []string) {
 	out, err := files.ManagePinned(do)
-	IfExit(err)
+	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
 }

@@ -10,13 +10,11 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-	def "github.com/eris-ltd/eris-cli/definitions"
-	srv "github.com/eris-ltd/eris-cli/services"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
 	"github.com/eris-ltd/eris-cli/util"
-
-	. "github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 func TestMain(m *testing.M) {
@@ -57,19 +55,19 @@ func TestExportKeySingle(t *testing.T) {
 
 	address := testsGenAKey()
 
-	keyPath := path.Join(ErisContainerRoot, "keys", "data", address, address)
+	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPath})
+	catOut, err := services.ExecHandler("keys", []string{"cat", keyPath})
 	if err != nil {
 		t.Fatalf("error exec-ing: %v", err)
 	}
 
 	keyInCont := strings.TrimSpace(catOut.String())
 
-	doExp := def.NowDo()
+	doExp := definitions.NowDo()
 	doExp.Address = address
-	doExp.Destination = filepath.Join(KeysPath, "data") //is default
+	doExp.Destination = filepath.Join(config.KeysPath, "data") //is default
 
 	//export
 	if err := ExportKey(doExp); err != nil {
@@ -97,7 +95,7 @@ func TestImportKeyAll(t *testing.T) {
 	addrs[testsGenAKey()] = true
 
 	// export them to host
-	doExp := def.NowDo()
+	doExp := definitions.NowDo()
 	doExp.All = true
 
 	//export
@@ -113,7 +111,7 @@ func TestImportKeyAll(t *testing.T) {
 	defer testKillService(t, "keys", true)
 
 	// eris keys import --all
-	doImp := def.NowDo()
+	doImp := definitions.NowDo()
 	doImp.All = true
 
 	if err := ImportKey(doImp); err != nil {
@@ -144,7 +142,7 @@ func TestExportKeyAll(t *testing.T) {
 	addrs[testsGenAKey()] = true
 
 	// export them all
-	doExp := def.NowDo()
+	doExp := definitions.NowDo()
 	doExp.All = true
 	//export
 	if err := ExportKey(doExp); err != nil {
@@ -172,7 +170,7 @@ func TestImportKeySingle(t *testing.T) {
 	address := testsGenAKey()
 
 	//export it
-	doExp := def.NowDo()
+	doExp := definitions.NowDo()
 	doExp.Address = address
 
 	if err := ExportKey(doExp); err != nil {
@@ -187,23 +185,23 @@ func TestImportKeySingle(t *testing.T) {
 	keyOnHost := strings.TrimSpace(string(key))
 
 	//rm key that was generated before import
-	keyPath := path.Join(ErisContainerRoot, "keys", "data", address)
+	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address)
 
-	if _, err := srv.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
+	if _, err := services.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
 		t.Fatalf("error exec-ing: %v", err)
 	}
 
-	doImp := def.NowDo()
+	doImp := definitions.NowDo()
 	doImp.Address = address
 
 	if err := ImportKey(doImp); err != nil {
 		t.Fatalf("error importing key: %v", err)
 	}
 
-	keyPathCat := path.Join(ErisContainerRoot, "keys", "data", address, address)
+	keyPathCat := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
-	catOut, err := srv.ExecHandler("keys", []string{"cat", keyPathCat})
+	catOut, err := services.ExecHandler("keys", []string{"cat", keyPathCat})
 	if err != nil {
 		t.Fatalf("error exec-ing: %v", err)
 	}
@@ -248,7 +246,7 @@ func TestListKeyHost(t *testing.T) {
 	addrs[addr0] = true
 	addrs[addr1] = true
 
-	doExp := def.NowDo()
+	doExp := definitions.NowDo()
 	doExp.All = true
 
 	if err := ExportKey(doExp); err != nil {
@@ -270,7 +268,7 @@ func TestListKeyHost(t *testing.T) {
 }
 
 func testListKeys(typ string) []string {
-	do := def.NowDo()
+	do := definitions.NowDo()
 
 	if typ == "container" {
 		do.Container = true
@@ -291,7 +289,7 @@ func testListKeys(typ string) []string {
 func testsGenAKey() string {
 	addr := new(bytes.Buffer)
 	config.Global.Writer = addr
-	doGen := def.NowDo()
+	doGen := definitions.NowDo()
 	testutil.IfExit(GenerateKey(doGen))
 
 	addrBytes := addr.Bytes()
@@ -300,9 +298,9 @@ func testsGenAKey() string {
 
 func testStartKeys(t *testing.T) {
 	serviceName := "keys"
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Operations.Args = []string{serviceName}
-	e := srv.StartService(do)
+	e := services.StartService(do)
 	if e != nil {
 		t.Fatalf("Error starting service: %v", e)
 	}
@@ -312,14 +310,14 @@ func testStartKeys(t *testing.T) {
 }
 
 func testKillService(t *testing.T, serviceName string, wipe bool) {
-	do := def.NowDo()
+	do := definitions.NowDo()
 	do.Name = serviceName
 	do.Operations.Args = []string{serviceName}
 	if wipe {
 		do.Rm = true
 		do.RmD = true
 	}
-	e := srv.KillService(do)
+	e := services.KillService(do)
 	if e != nil {
 		t.Fatalf("error killing service: %v", e)
 	}
@@ -338,9 +336,9 @@ func testNumbersExistAndRun(t *testing.T, servName string, containerExist, conta
 		"running#":  containerRun,
 	}).Info("Checking number of containers for")
 	log.WithField("=>", servName).Debug("Checking existing containers for")
-	exist := util.Exists(def.TypeService, servName)
+	exist := util.Exists(definitions.TypeService, servName)
 	log.WithField("=>", servName).Debug("Checking running containers for")
-	run := util.Running(def.TypeService, servName)
+	run := util.Running(definitions.TypeService, servName)
 
 	if exist != containerExist {
 		log.WithFields(log.Fields{

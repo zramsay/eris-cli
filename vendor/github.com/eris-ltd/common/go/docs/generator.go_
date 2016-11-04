@@ -13,11 +13,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Repository maintainers should customize the next two lines.
-var Description = "DESCRIPTION!!!"                                            // should match the docs site name
+// repos should customize the next two lines
+var Description = "DESCRIPTION!!!" // should match the docs site name
 var RenderDir = fmt.Sprintf("./docs/documentation/REPO/%s/", version.VERSION) // should be the "shortversion..."
 
-// The below variables should be updated only if necessary.
+// The below variables should be updated only if necessary
 var Specs = []*docs.Entry{}
 var Examples = []*docs.Entry{}
 var SpecsDir = "./docs/specs"
@@ -77,12 +77,12 @@ func RenderFiles(cmdRaw *cobra.Command, tmpl *template.Template) error {
 }
 
 func main() {
-	// Repository maintainers should populate the top level command object.
+	// repos should populate the top level command object
 	// pm := commands.EPMCmd
 	// commands.InitEPM()
 	// commands.AddGlobalFlags()
 
-	// Make the proper directory.
+	// make the proper directory
 	var err error
 	if _, err = os.Stat(RenderDir); os.IsNotExist(err) {
 		err = os.MkdirAll(RenderDir, 0755)
@@ -91,7 +91,7 @@ func main() {
 		}
 	}
 
-	// Generate specs and examples files.
+	// generate specs and examples files
 	Specs, err = docs.GenerateEntries(SpecsDir, (RenderDir + "specifications/"), Description)
 	if err != nil {
 		panic(err)
@@ -101,13 +101,13 @@ func main() {
 		panic(err)
 	}
 
-	// Get template from docs generator.
+	// Get template from docs generator
 	tmpl, err := docs.GenerateCommandsTemplate()
 	if err != nil {
 		panic(err)
 	}
 
-	// Render the templates.
+	// render templates
 	// if err = RenderFiles(pm, tmpl); err != nil {
 		panic(err)
 	}

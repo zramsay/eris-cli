@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/testutil"
-
-	log "github.com/eris-ltd/eris-logger"
 )
 
 var (

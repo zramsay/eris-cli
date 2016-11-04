@@ -9,9 +9,8 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/pkgs"
+	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
-
-	. "github.com/eris-ltd/common/go/common"
 
 	"github.com/spf13/cobra"
 )
@@ -63,19 +62,19 @@ func addPackagesFlags() {
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
-	IfExit(ArgCheck(0, "eq", cmd, args))
+	util.IfExit(ArgCheck(0, "eq", cmd, args))
 	if do.Path == "" {
 		var err error
 		do.Path, err = os.Getwd()
-		IfExit(err)
+		util.IfExit(err)
 	}
 	if do.ChainName == "" {
-		IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
+		util.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
 	if do.DefaultAddr == "" { // note that this is not strictly necessary since the addr can be set in the epm.yaml.
-		IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
+		util.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
-	IfExit(pkgs.RunPackage(do))
+	util.IfExit(pkgs.RunPackage(do))
 }
 
 func formCompilers() string {

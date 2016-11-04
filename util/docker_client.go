@@ -13,12 +13,10 @@ import (
 	"strconv"
 	"strings"
 
-	ver "github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/version"
 
-	log "github.com/eris-ltd/eris-logger"
 	docker "github.com/fsouza/go-dockerclient"
-
-	. "github.com/eris-ltd/common/go/common"
 )
 
 // Docker Client initialization
@@ -216,11 +214,11 @@ func DockerAPIVersion() (string, error) {
 // IsMinimalDockerClientVersion returns true if the connected Docker client
 // version is at least equal to the mimimal required for Eris.
 func IsMinimalDockerClientVersion() bool {
-	version, err := DockerClientVersion()
+	v, err := DockerClientVersion()
 	if err != nil {
 		return false
 	}
-	return CompareVersions(version, ver.DOCKER_VER_MIN)
+	return CompareVersions(v, version.DOCKER_VER_MIN)
 }
 
 func DockerMachineVersion() (string, error) {

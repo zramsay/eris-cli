@@ -9,9 +9,7 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
-
-	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 var erisDir string = filepath.Join(os.TempDir(), "eris")
@@ -112,7 +110,7 @@ func TestMigrationMoveFile(t *testing.T) {
 }
 
 func testsInit() error {
-	common.ChangeErisRoot(erisDir)
+	config.ChangeErisRoot(erisDir)
 
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	var err error

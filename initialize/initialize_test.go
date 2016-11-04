@@ -9,19 +9,15 @@ import (
 	"testing"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
-	ver "github.com/eris-ltd/eris-cli/version"
-
-	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/version"
 )
 
 var erisDir = filepath.Join(os.TempDir(), "eris")
 var servDir = filepath.Join(erisDir, "services")
 var chnDir = filepath.Join(erisDir, "chains")
 var chnDefDir = filepath.Join(chnDir, "default")
-
-// TODO refactor tests
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
@@ -41,19 +37,21 @@ func TestInitErisRootDir(t *testing.T) {
 		ifExit(err)
 	}
 
-	for _, dir := range common.MajorDirs {
+	for _, dir := range []string{
+		config.AppsPath,
+		config.BundlesPath,
+		config.ChainsPath,
+		config.KeysPath,
+		config.RemotesPath,
+		config.ScratchPath,
+		config.ServicesPath,
+		config.KeysDataPath,
+		config.KeysNamesPath,
+	} {
 		if !util.DoesDirExist(dir) {
 			ifExit(fmt.Errorf("Could not find the %s subdirectory", dir))
 		}
 	}
-}
-
-func TestMigration(t *testing.T) {
-	//already has its own test
-}
-
-func TestPullImages(t *testing.T) {
-	//already tested by virtue of being needed for tool level tests
 }
 
 func TestDropServiceDefaults(t *testing.T) {
@@ -71,7 +69,7 @@ func testDrops(dir, kind string) error {
 
 	switch kind {
 	case "services":
-		if err := dropServiceDefaults(dirGit, ver.SERVICE_DEFINITIONS); err != nil {
+		if err := dropServiceDefaults(dirGit, version.SERVICE_DEFINITIONS); err != nil {
 			ifExit(err)
 		}
 	}
@@ -89,7 +87,7 @@ func readDirs(dirGit string) {
 }
 
 func testsInit() error {
-	common.ChangeErisRoot(erisDir)
+	config.ChangeErisRoot(erisDir)
 
 	var err error
 	config.Global, err = config.New(os.Stdout, os.Stderr)

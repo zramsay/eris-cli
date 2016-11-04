@@ -8,9 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	log "github.com/eris-ltd/eris-logger"
-
-	. "github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 func GetFileByNameAndType(typ, name string) string {
@@ -37,9 +36,9 @@ func GetGlobalLevelConfigFilesByType(typ string, withExt bool) []string {
 	var path string
 	switch typ {
 	case "services":
-		path = ServicesPath
+		path = config.ServicesPath
 	case "chains":
-		path = ChainsPath
+		path = config.ChainsPath
 	}
 
 	files := []string{}
@@ -86,7 +85,7 @@ func MoveOutOfDirAndRmDir(src, dst string) error {
 		// using a copy (read+write) strategy to get around swap partitions and other
 		//   problems that cause a simple rename strategy to fail. it is more io overhead
 		//   to do this, but for now that is preferable to alternative solutions.
-		Copy(f, t)
+		config.Copy(f, t)
 	}
 
 	log.WithField("=>", src).Info("Removing directory")
@@ -225,9 +224,31 @@ func Tilde(path string) string {
 		return path
 	}
 
-	home := HomeDir()
+	home := config.HomeDir()
 	if strings.HasPrefix(path, home) {
 		return strings.Replace(path, home, "~", 1)
 	}
 	return path
+}
+
+// DoesDirExist returns true if the directory exists and readable,
+// otherwise false.
+func DoesDirExist(dir string) bool {
+	f, err := os.Stat(dir)
+	if err != nil {
+		return false
+	}
+	if !f.IsDir() {
+		return false
+	}
+	return true
+}
+
+// DoesFileExist returns true if the file exists and readable,
+// otherwise false.
+func DoesFileExist(file string) bool {
+	if _, err := os.Stat(file); err != nil {
+		return false
+	}
+	return true
 }
