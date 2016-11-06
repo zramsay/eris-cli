@@ -76,10 +76,10 @@ export GITHUB_TOKEN=
 export AWS_ACCESS_KEY=
 export AWS_SECRET_ACCESS_KEY=
 
-export AWS_S3_RPM_REPO=eris-rpm
-export AWS_S3_RPM_PACKAGES=eris-rpm-files
-export AWS_S3_DEB_REPO=eris-deb
-export AWS_S3_DEB_PACKAGES=eris-deb-files
+export AWS_S3_RPM_REPO=yum.monax.io
+export AWS_S3_RPM_PACKAGES=yum.files.monax.io
+export AWS_S3_DEB_REPO=apt.monax.io
+export AWS_S3_DEB_PACKAGES=apt.files.monax.io
 export KEY_NAME="Monax Industries (PACKAGES SIGNING KEY) <support@monax.io>"
 export KEY_PASSWORD="one1two!three"
 

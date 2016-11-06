@@ -141,8 +141,8 @@ s3cmd sync eris/pool s3://${AWS_S3_DEB_REPO}
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo add-apt-repository https://${AWS_S3_DEB_REPO}.s3.amazonaws.com"
-echo "  \$ curl https://${AWS_S3_DEB_REPO}.s3.amazonaws/APT-GPG-KEY | sudo apt-key add -"
+echo "  \$ sudo add-apt-repository http://${AWS_S3_DEB_REPO}"
+echo "  \$ curl -L http://${AWS_S3_DEB_REPO}/APT-GPG-KEY | sudo apt-key add -"
 echo
 echo "  \$ sudo apt-get update"
 echo "  \$ sudo apt-get install eris"

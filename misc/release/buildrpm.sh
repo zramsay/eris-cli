@@ -95,18 +95,18 @@ echo
 cat > eris/eris.repo <<EOF
 [eris]
 name=Eris
-baseurl=https://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/x86_64/
+baseurl=http://${AWS_S3_RPM_REPO}/eris/x86_64/
 metadata_expire=1d
 enabled=1
-gpgkey=http://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/RPM-GPG-KEY
+gpgkey=http://${AWS_S3_RPM_REPO}/eris/RPM-GPG-KEY
 gpgcheck=1
 
 [eris-source]
 name=Eris Source
-baseurl=http://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/source/
+baseurl=http://${AWS_S3_RPM_REPO}/eris/source/
 metadata_expire=1d
 enabled=1
-gpgkey=http://${AWS_S3_RPM_REPO}.s3.amazonaws.com/eris/RPM-GPG-KEY
+gpgkey=http://${AWS_S3_RPM_REPO}/eris/RPM-GPG-KEY
 gpgcheck=1
 EOF
 
@@ -118,7 +118,7 @@ s3cmd sync eris s3://${AWS_S3_RPM_REPO}
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo curl https://eris-rpm.s3.amazonaws.com/eris/eris.repo >/etc/yum.repos.d/eris.repo"
+echo "  \$ sudo curl -L http://${AWS_S3_RPM_REPO}/eris/eris.repo >/etc/yum.repos.d/eris.repo"
 echo
 echo "  \$ sudo yum update"
 echo "  \$ sudo yum install eris-cli"
