@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cm/definitions"
+	"github.com/eris-ltd/eris-cli/maker_definitions"
 	"github.com/eris-ltd/eris-cm/version"
 
 	log "github.com/eris-ltd/eris-logger"

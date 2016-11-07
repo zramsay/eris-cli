@@ -2,19 +2,24 @@ package chains
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
-	"path"
-	"path/filepath"
-	"strings"
+	//"io"
+	//"io/ioutil"
+	//"path"
+	//"path/filepath"
+	// "strings"
 
 	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
+	// "github.com/eris-ltd/eris-cli/data"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
+	//"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
+	//"github.com/eris-ltd/eris-cli/util"
+
+	cm_maker "github.com/eris-ltd/eris-cli/maker"
+	cm_definitions "github.com/eris-ltd/eris-cli/maker_definitions"
+	cm_util "github.com/eris-ltd/eris-cli/maker_util"
+	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )
 
 // MakeChain runs the `eris-cm make` command in a Docker container.
@@ -24,6 +29,7 @@ import (
 //
 //  do.Name          - name of the chain to be created (required)
 //  do.Known         - will use the mintgen tool to parse csv's and create a genesis.json (requires do.ChainMakeVals and do.ChainMakeActs) (optional)
+//  do.Output  	     - unclear what this does XXX
 //  do.ChainMakeVals - csv file to use for validators (optional)
 //  do.ChainMakeActs - csv file to use for accounts (optional)
 //  do.AccountTypes  - use eris-cm make account-types paradigm (example: Root:1,Participants:25,...) (optional)
@@ -40,111 +46,56 @@ func MakeChain(do *definitions.Do) error {
 		return err
 	}
 
-	do.Service.Name = do.Name
-	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageCM)
-	do.Service.User = "eris"
-	do.Service.AutoData = true
-	do.Service.Links = []string{fmt.Sprintf("%s:%s", util.ServiceContainerName("keys"), "keys")}
-	do.Service.DNS = []string{"8.8.8.8", "8.8.4.4"}
-	do.Service.Environment = []string{
-		fmt.Sprintf("ERIS_KEYS_PATH=http://keys:%d", 4767), // note, needs to be made aware of keys port...
-		fmt.Sprintf("ERIS_CHAINMANAGER_ACCOUNTTYPES=%s", strings.Join(do.AccountTypes, ",")),
-		fmt.Sprintf("ERIS_CHAINMANAGER_CHAINTYPE=%s", do.ChainType),
-		fmt.Sprintf("ERIS_CHAINMANAGER_TARBALLS=%v", do.Tarball),
-		fmt.Sprintf("ERIS_CHAINMANAGER_ZIPFILES=%v", do.ZipFile),
-		fmt.Sprintf("ERIS_CHAINMANAGER_OUTPUT=%v", do.Output),
-		fmt.Sprintf("ERIS_CHAINMANAGER_VERBOSE=%v", do.Verbose),
-		fmt.Sprintf("ERIS_CHAINMANAGER_DEBUG=%v", do.Debug),
+	// loop through chains directories to make sure they exist & are appropriately populated
+	//for _, d := range ChainsDirs {
+	//	if _, err := os.Stat(d); os.IsNotExist(err) {
+	//		os.MkdirAll(d, 0755)
+	//	}
+	//}
+	if err := cm_util.CheckDefaultTypes(config.AccountsTypePath, "account-types"); err != nil {
+		return err
 	}
-
-	do.Operations.ContainerType = definitions.TypeService
-	do.Operations.SrvContainerName = util.ServiceContainerName(do.Name)
-	do.Operations.DataContainerName = util.DataContainerName(do.Name)
-	do.Operations.Labels = util.Labels(do.Name, do.Operations)
-	if do.RmD {
-		do.Operations.Remove = true
-	}
-
-	if do.Known {
-		log.Debug("Using [mintgen]")
-		do.Service.EntryPoint = "mintgen"
-		do.Service.Command = fmt.Sprintf("known %s --csv=%s,%s", do.Name, do.ChainMakeVals, do.ChainMakeActs)
-		do.Operations.Args = append(do.Operations.Args, strings.Split(do.Service.Command, " ")...)
-		do.Service.WorkDir = path.Join(config.ErisContainerRoot, "chains", do.Name)
-	} else {
-		log.Debug("Using [eris-cm]")
-		do.Service.EntryPoint = fmt.Sprintf("eris-cm make %s", do.Name)
-	}
-
-	if do.Wizard && len(do.AccountTypes) == 0 && do.ChainType == "" {
-		do.Operations.Interactive = true
-		do.Operations.Args = strings.Split(do.Service.EntryPoint, " ")
-	}
-
-	doData := definitions.NowDo()
-	doData.Name = do.Name
-
-	doData.Operations.DataContainerName = util.DataContainerName(do.Name)
-	doData.Operations.ContainerType = "service"
-
-	doData.Source = config.AccountsTypePath
-	doData.Destination = path.Join(config.ErisContainerRoot, "chains", "account-types")
-	if err := data.ImportData(doData); err != nil {
-		return fmt.Errorf("Cannot import account-types into container: %v", err)
-	}
-
-	doData.Source = config.ChainTypePath
-	doData.Destination = path.Join(config.ErisContainerRoot, "chains", "chain-types")
-	if err := data.ImportData(doData); err != nil {
-		return fmt.Errorf("Cannot import chain-types into container: %v", err)
-	}
-
-	chnPath := filepath.Join(config.ChainsPath, do.Name)
-	doData.Source = chnPath
-	doData.Destination = path.Join(config.ErisContainerRoot, "chains", do.Name)
-	if util.DoesDirExist(doData.Source) {
-		if err := data.ImportData(doData); err != nil {
-			return fmt.Errorf("Cannot import chain directory into container: %v", err)
-		}
-	}
-
-	buf, err := perform.DockerExecService(do.Service, do.Operations)
-	if err != nil {
-		// Log to both screen and logs for further analysis in Bugsnag.
-		if buf != nil {
-			log.Debug("Dumping output")
-			log.Error(buf.String())
-		}
-
-		// After all the imports are in place, [eris-cm] should not fail,
-		// so it is worth investigating why it still failed.
-		util.SendReport("`eris chains make` failed")
-
+	if err := cm_util.CheckDefaultTypes(config.ChainTypePath, "chain-types"); err != nil {
 		return err
 	}
 
+	// announce.
+	log.Info("Hello! I'm the marmot who makes eris chains.")
+	maker := cm_definitions.NowDo()
+	keys.DaemonAddr = "http://172.17.0.2:4767" // tmp
+
+	// todo. clean this up... struct merge them or something
+	maker.Name = do.Name
+	maker.Verbose = do.Verbose
+	maker.Debug = do.Debug
+	maker.ChainType = do.ChainType
+	maker.AccountTypes = do.AccountTypes
+	maker.Zip = do.ZipFile
+	maker.Tarball = do.Tarball
+	maker.Output = do.Output
 	if do.Known {
-		if err := ioutil.WriteFile(filepath.Join(config.ErisRoot, "chains", do.Name, "genesis.json"), buf.Bytes(), 0644); err != nil {
+		maker.CSV = fmt.Sprintf("%s,%s", do.ChainMakeVals, do.ChainMakeActs)
+	}
+
+	// make it
+	if err := cm_maker.MakeChain(maker); err != nil {
+		return err
+	}
+
+	// cm currently is not opinionated about its writers.
+	if maker.Tarball {
+		if err := cm_util.Tarball(maker); err != nil {
+			return err
+		}
+	} else if maker.Zip {
+		if err := cm_util.Zip(maker); err != nil {
 			return err
 		}
 	}
-
-	// TODO(pv): remove writing to Global.Writer after the [eris-cm]
-	// command line handling is fixed. This is necessary now to
-	// capture [eris-cm] errors which return exit code 0.
-	io.Copy(config.Global.Writer, buf)
-
-	// Nothing to export to host when running with [--known].
-	if !do.Known {
-		doData.Source = path.Join(config.ErisContainerRoot, "chains")
-		doData.Destination = config.ErisRoot
-		if err := data.ExportData(doData); err != nil {
-			return fmt.Errorf("Cannot copy chain directory back to host: %v", err)
+	if maker.Output {
+		if err := cm_util.SaveAccountResults(maker); err != nil {
+			return err
 		}
-	}
-
-	if !do.RmD {
-		return data.RmData(doData)
 	}
 
 	return nil
