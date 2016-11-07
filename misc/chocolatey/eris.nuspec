@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>eris</id>
     <title>Eris</title>
-    <version>0.11.4</version>
+    <version>0.12.0</version>
     <authors>The marmots</authors>
     <owners>support@monax.io</owners>
     <summary>Ecosystem application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level</summary>
