@@ -1,0 +1,38 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "Participant"
+
+definition = """
+Users who have a key which is registered with participant privileges can send
+tokens; call contracts; and use the name registry
+"""
+
+typical_user = """
+Generally the number of participants in your chain who do not need elevated
+privileges should be given these keys.
+
+Usually this group will have the most number of keys of all of the groups.
+"""
+
+default_number = 25
+
+default_tokens = 9999999999
+
+default_bond = 0
+
+[perms]
+root = 0
+send = 1
+call = 1
+create_contract = 0
+create_account = 0
+bond = 0
+name = 1
+has_base = 0
+set_base = 0
+unset_base = 0
+set_global = 0
+has_role = 1
+add_role = 0
+rm_role = 0

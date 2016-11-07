@@ -1,0 +1,35 @@
+jobs:
+- name: deploySingleLib
+  job:
+    deploy:
+      contract: single-lib.sol
+      instance: Search
+      wait: true
+
+- name: deployConsumingContract
+  job:
+    deploy:
+      contract: consuming-contract.sol
+      libraries: Search:$deploySingleLib
+      wait: true
+
+- name: deployBasicMath
+  job:
+    deploy:
+      contract: multi-lib.sol
+      instance: basicMath
+      wait: true
+
+- name: deployIntStructs
+  job:
+    deploy:
+      contract: multi-lib.sol
+      instance: intStructs
+      wait: true
+
+- name: deployMultiConsumer
+  job:
+    deploy:
+      contract: multi-lib-consumer.sol
+      libraries: basicMath:$deployBasicMath,intStructs:$deployIntStructs
+      wait: true

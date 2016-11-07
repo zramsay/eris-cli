@@ -1,0 +1,40 @@
+machine:
+  environment:
+    REPO: ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+  post:
+    - rm -rf $REPO
+    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} $REPO
+    - git config --global user.email "billings@erisindustries.com"
+    - git config --global user.name "Billings the Bot"
+
+dependencies:
+  override:
+    - sudo curl -L -o /usr/bin/docker 'http://s3-external-1.amazonaws.com/circle-downloads/docker-1.8.2-circleci'; chmod 0755 /usr/bin/docker; true
+    - sudo service docker start
+    - go get github.com/Masterminds/glide
+test:
+  override:
+    - cd $REPO && glide install
+    - cd $REPO && glide novendor | xargs go test
+    - docker build -t eris/keys-test -f Dockerfile .
+    # TODO: this test breaks the cross-repository paradigm for testing pipeline
+    # and needs to be integrated into that standard
+    - docker run -it eris/keys-test /go/src/github.com/eris-ltd/eris-keys/test.sh
+
+deployment:
+  master:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - tests/build_tool.sh
+      - docker push quay.io/eris/keys
+      - docs/build.sh master
+  develop:
+    branch: develop
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - tests/build_tool.sh
+      - docker rmi quay.io/eris/keys:latest
+      - docker push quay.io/eris/keys
+      - docs/build.sh

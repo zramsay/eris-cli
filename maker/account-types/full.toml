@@ -1,0 +1,40 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "Full"
+
+definition = """
+Users who have a key which is registered with root privileges can do everything
+on the chain. They have all of the permissions possible. These users are also
+bonded at the genesis time, so these should be used only for simple chains with
+a few nodes who will be on during the prototyping session.
+"""
+
+typical_user = """
+If you are making a small chain just to play around then usually you would
+give all of the accounts needed for your experiment full accounts.
+
+If you are making a more complex chain, don't use this account type.
+"""
+
+default_number = 1
+
+default_tokens = 99999999999999
+
+default_bond = 9999999999
+
+[perms]
+root = 1
+send = 1
+call = 1
+create_contract = 1
+create_account = 1
+bond = 1
+name = 1
+has_base = 1
+set_base = 1
+unset_base = 1
+set_global = 1
+has_role = 1
+add_role = 1
+rm_role = 1

@@ -1,0 +1,47 @@
+machine:
+  environment:
+    GOPATH: $HOME/.go_workspace
+    REPO: ${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+    DOCKER_VERSION: 1.9.1
+    DOCKER_MACHINE_VERSION: 0.7.0
+    ERIS_CLI_BRANCH: develop
+    # ERIS_PM_LEAN is an intermediary measure to build eris-pm outside of the docker container
+    # and then move only the executable into the container to counteract bloating the image
+    # ERIS_PM_LEAN: true
+  post:
+    - git config --global user.email "billings@monax.io"
+    - git config --global user.name "Billings the Bot"
+    - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/.
+
+dependencies:
+  override:
+    - sudo curl -L -o /usr/bin/docker http://s3-external-1.amazonaws.com/circle-downloads/docker-$DOCKER_VERSION-circleci; sudo chmod 0775 /usr/bin/docker; sudo usermod -a -G docker $USER; true
+    - sudo service docker start
+    - sudo curl -sSL -o /usr/local/bin/docker-machine https://github.com/docker/machine/releases/download/v$DOCKER_MACHINE_VERSION/docker-machine-linux-x86_64; sudo chmod 0755 /usr/local/bin/docker-machine
+    - go version
+    - "go get github.com/eris-ltd/eris-cli; cd ${GOPATH%%:*}/src/github.com/eris-ltd/eris-cli && git checkout origin/$ERIS_CLI_BRANCH && GO15VENDOREXPERIMENT=1 go install ./cmd/eris"
+    - "sudo add-apt-repository -y ppa:masterminds/glide && sudo apt-get update; sudo apt-get install -y glide"
+    - docker version
+
+test:
+  override:
+    - cd $REPO && glide install 
+    - cd $REPO && go install ./cmd/eris-pm
+    - "tests/circle_test.sh | tee $CIRCLE_ARTIFACTS/output.log; test ${PIPESTATUS[0]} -eq 0"
+deployment:
+  master:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - ERIS_PM_LEAN=true tests/build_tool.sh
+      - docker push quay.io/eris/pm
+      - docs/build.sh master
+  develop:
+    branch: develop
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - ERIS_PM_LEAN=true tests/build_tool.sh
+      - docker push quay.io/eris/pm
+      - docs/build.sh

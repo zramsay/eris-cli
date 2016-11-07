@@ -1,0 +1,39 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "Developer"
+
+definition = """
+Users who have a key which is registered with developer privileges can send
+tokens; call contracts; create contracts; create accounts; use the name registry;
+and modify account's roles.
+"""
+
+typical_user = """
+Generally the development team seeking to build the application on top of the
+given chain would be within the group. If this is a multi organizational
+chain then developers from each of the stakeholders should generally be registered
+within this group, although that design is up to you.
+"""
+
+default_number = 6
+
+default_tokens = 9999999999
+
+default_bond = 0
+
+[perms]
+root = 0
+send = 1
+call = 1
+create_contract = 1
+create_account = 1
+bond = 0
+name = 1
+has_base = 0
+set_base = 0
+unset_base = 0
+set_global = 0
+has_role = 1
+add_role = 1
+rm_role = 1

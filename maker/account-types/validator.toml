@@ -1,0 +1,41 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "Validator"
+
+definition = """
+Users who have a key which is registered with validator privileges can
+only post a bond and begin validating the chain. This is the only privilege
+this account group gets.
+"""
+
+typical_user = """
+Generally the marmots recommend that you put your validator nodes onto a cloud
+(IaaS) provider so that they will be always running.
+
+We also recommend that if you are in a multi organizational chain then you would
+have some separation of the validators to be ran by the different organizations
+in the system.
+"""
+
+default_number = 7
+
+default_tokens = 9999999999
+
+default_bond = 9999999998
+
+[perms]
+root = 0
+send = 0
+call = 0
+create_contract = 0
+create_account = 0
+bond = 1
+name = 0
+has_base = 0
+set_base = 0
+unset_base = 0
+set_global = 0
+has_role = 0
+add_role = 0
+rm_role = 0

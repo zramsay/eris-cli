@@ -1,0 +1,229 @@
+jobs:
+
+- name: role
+  job:
+    set:
+      val: marmots_approve
+
+- name: permSetup
+  job:
+    permission:
+      action: set_base
+      target: $addr2
+      permission: call
+      value: "true"
+      wait: true
+
+- name: roleSetup
+  job:
+    permission:
+      action: add_role
+      target: $addr2
+      role: marmots_deny
+      wait: true
+
+- name: deployPermK
+  job:
+    deploy:
+      contract: permissions.sol
+      instance: permSNative
+      wait: true
+
+# contract needs perms
+- name: permContractAddRoles
+  job:
+    permission:
+      action: set_base
+      target: $deployPermK
+      permission: add_role
+      value: "true"
+      wait: true
+
+- name: permContractRmRoles
+  job:
+    permission:
+      action: set_base
+      target: $deployPermK
+      permission: rm_role
+      value: "true"
+      wait: true
+
+- name: permContractSetBase
+  job:
+    permission:
+      action: set_base
+      target: $deployPermK
+      permission: set_base
+      value: "true"
+      wait: true
+
+- name: permContractUnsetBase
+  job:
+    permission:
+      action: set_base
+      target: $deployPermK
+      permission: unset_base
+      value: "true"
+      wait: true
+
+# roles
+- name: checkRole1
+  job:
+    call:
+      destination: $deployPermK
+      function: has_role
+      data:
+        - $addr2
+        - marmots_deny
+      wait: true
+
+- name: assertRole1
+  job:
+    assert:
+      key: $checkRole1
+      relation: eq
+      val: true
+
+- name: setRole
+  job:
+    call:
+      destination: $deployPermK
+      function: add_role 
+      data: 
+        - $addr2
+        - $role
+      wait: true
+
+- name: checkRole2
+  job:
+    call:
+      destination: $deployPermK
+      function: has_role
+      data:
+        - $addr2
+        - $role
+      wait: true
+
+- name: assertRole2
+  job:
+    assert:
+      key: $checkRole2
+      relation: eq
+      val: true
+
+- name: unsetRole
+  job:
+    call:
+      destination: $deployPermK
+      function: rm_role
+      data:
+        - $addr2
+        - $role
+      wait: true
+
+- name: checkRole3
+  job:
+    query-contract:
+      destination: $deployPermK
+      function: has_role
+      data:
+        - $addr2
+        - $role
+
+- name: assertRole3
+  job:
+    assert:
+      key: $checkRole3
+      relation: eq
+      val: false
+
+# permissions
+- name: checkBase1
+  job:
+    call:
+      destination: $deployPermK
+      function: has_base
+      data:
+        - $addr2
+        - 2118
+      wait: true
+
+- name: assertBase1
+  job:
+    assert:
+      key: $checkBase1
+      relation: eq
+      val: true
+
+- name: checkBase2
+  job:
+    call:
+      destination: $deployPermK
+      function: has_base
+      data: 
+        - $addr2
+        - 14846
+      wait: true
+
+- name: assertBase
+  job:
+    assert:
+      key: $checkBase2
+      relation: ne
+      val: true
+
+- name: setBase
+  job:
+    call:
+      destination: $deployPermK
+      function: set_base 
+      data:
+        - $addr2
+        - 2119
+        - true
+      wait: true
+
+- name: checkBase3
+  job:
+    call:
+      destination: $deployPermK
+      function: has_base
+      data:
+        - $addr2
+        - 2119
+      wait: true
+
+- name: assertBase
+  job:
+    assert:
+      key: $checkBase3
+      relation: eq
+      val: true
+
+- name: unsetBase
+  job:
+    call:
+      destination: $deployPermK
+      function: unset_base
+      data:
+        - $addr2
+        - 2119
+      wait: true
+
+- name: checkBase4
+  job:
+    call:
+      destination: $deployPermK
+      function: has_base
+      data:
+        - $addr2
+        - 2119
+      wait: true
+
+- name: assertBase
+  job:
+    assert:
+      key: $checkBase4
+      relation: eq
+      val: true
+
