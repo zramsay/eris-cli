@@ -1,5 +1,6 @@
-package commands
+package maker
 
+/*
 import (
 	"fmt"
 	"os"
@@ -139,4 +140,4 @@ func defaultExportedPorts() []string {
 func defaultContainterEntrypoint() string {
 	return setDefaultString("ERIS_CHAINMANAGER_CONTAINER_ENTRYPOINT",
 		"")
-}
+}*/

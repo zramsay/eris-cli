@@ -9,15 +9,15 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/maker_definitions"
 
 	log "github.com/eris-ltd/eris-logger"
-	. "github.com/eris-ltd/common/go/common"
 )
 
 func Tarball(do *definitions.Do) error {
 
-	paths, err := filepath.Glob(filepath.Join(ChainsPath, do.Name, "*"))
+	paths, err := filepath.Glob(filepath.Join(config.ChainsPath, do.Name, "*"))
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func Tarball(do *definitions.Do) error {
 
 func Zip(do *definitions.Do) error {
 
-	paths, err := filepath.Glob(filepath.Join(ChainsPath, do.Name, "*"))
+	paths, err := filepath.Glob(filepath.Join(config.ChainsPath, do.Name, "*"))
 	if err != nil {
 		return err
 	}

@@ -7,12 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/maker_definitions"
+
+	// TODO remove/update
 	"github.com/eris-ltd/eris-cm/configuration"
 	"github.com/eris-ltd/eris-cm/version"
 
 	"github.com/BurntSushi/toml"
-	. "github.com/eris-ltd/common/go/common"
 	log "github.com/eris-ltd/eris-logger"
 )
 
@@ -24,29 +26,29 @@ type accountInfo struct {
 }
 
 func SaveAccountResults(do *definitions.Do) error {
-	addrFile, err := os.Create(filepath.Join(ChainsPath, do.Name, "addresses.csv"))
+	addrFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "addresses.csv"))
 	if err != nil {
 		return fmt.Errorf("Error creating addresses file. This usually means that there was a problem with the chain making process.")
 	}
 	defer addrFile.Close()
 
 	log.WithField("name", do.Name).Debug("Creating file")
-	actFile, err := os.Create(filepath.Join(ChainsPath, do.Name, "accounts.csv"))
+	actFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "accounts.csv"))
 	if err != nil {
 		return fmt.Errorf("Error creating accounts file.")
 	}
-	log.WithField("path", filepath.Join(ChainsPath, do.Name, "accounts.csv")).Debug("File successfully created")
+	log.WithField("path", filepath.Join(config.ChainsPath, do.Name, "accounts.csv")).Debug("File successfully created")
 	defer actFile.Close()
 
 	log.WithField("name", do.Name).Debug("Creating file")
-	actJSONFile, err := os.Create(filepath.Join(ChainsPath, do.Name, "accounts.json"))
+	actJSONFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "accounts.json"))
 	if err != nil {
 		return fmt.Errorf("Error creating accounts file.")
 	}
-	log.WithField("path", filepath.Join(ChainsPath, do.Name, "accounts.json")).Debug("File successfully created")
+	log.WithField("path", filepath.Join(config.ChainsPath, do.Name, "accounts.json")).Debug("File successfully created")
 	defer actJSONFile.Close()
 
-	valFile, err := os.Create(filepath.Join(ChainsPath, do.Name, "validators.csv"))
+	valFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "validators.csv"))
 	if err != nil {
 		return fmt.Errorf("Error creating validators file.")
 	}
@@ -117,7 +119,7 @@ func CheckDefaultTypes(erisPath, myPath string) error {
 	defaultTypsPath := filepath.Join("/defaults", myPath, "*.toml")
 	if _, err := os.Stat(filepath.Dir(defaultTypsPath)); os.IsNotExist(err) {
 		log.WithField("path", defaultTypsPath).Warn("Default types path does not exist. Trying GOPATH.")
-		defaultTypsPath = filepath.Join(ErisGo, version.NAME, myPath, "*.toml")
+		defaultTypsPath = filepath.Join(config.ErisGo, version.NAME, myPath, "*.toml")
 	}
 	if _, err := os.Stat(filepath.Dir(defaultTypsPath)); os.IsNotExist(err) {
 		log.WithField("path", defaultTypsPath).Info("Default types path does not exist. Exiting.")
@@ -159,7 +161,7 @@ func CheckDefaultTypes(erisPath, myPath string) error {
 				"file": file,
 				"path": filepath.Join(erisPath, f),
 			}).Debug("Copying default file")
-			Copy(file, filepath.Join(erisPath, f))
+			config.Copy(file, filepath.Join(erisPath, f))
 		}
 	}
 
@@ -219,19 +221,19 @@ func WriteConfigurationFile(chain_name, account_name, seeds string, single bool,
 	}
 	var file string
 	if !single {
-		file = filepath.Join(ChainsPath, chain_name, account_name, "config.toml")
+		file = filepath.Join(config.ChainsPath, chain_name, account_name, "config.toml")
 	} else {
-		file = filepath.Join(ChainsPath, chain_name, "config.toml")
+		file = filepath.Join(config.ChainsPath, chain_name, "config.toml")
 	}
 	log.WithField("path", file).Debug("Saving File.")
-	if err := WriteFile(string(fileBytes), file); err != nil {
+	if err := config.WriteFile(string(fileBytes), file); err != nil {
 		return err
 	}
 	return nil
 }
 
 func SaveAccountType(thisActT *definitions.AccountType) error {
-	writer, err := os.Create(filepath.Join(AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
+	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
 	defer writer.Close()
 	if err != nil {
 		return err
@@ -260,12 +262,12 @@ func writer(toWrangle interface{}, chain_name, account_name, fileBase string, si
 		return err
 	}
 	if !single {
-		file = filepath.Join(ChainsPath, chain_name, account_name, fileBase)
+		file = filepath.Join(config.ChainsPath, chain_name, account_name, fileBase)
 	} else {
-		file = filepath.Join(ChainsPath, chain_name, fileBase)
+		file = filepath.Join(config.ChainsPath, chain_name, fileBase)
 	}
 	log.WithField("path", file).Debug("Saving File.")
-	err = WriteFile(string(fileBytes), file)
+	err = config.WriteFile(string(fileBytes), file)
 	if err != nil {
 		return err
 	}
