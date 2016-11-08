@@ -70,7 +70,7 @@ cat > ${HOME}/.s3cfg <<EOF
 access_key = ${AWS_ACCESS_KEY}
 secret_key = ${AWS_SECRET_ACCESS_KEY}
 EOF
-s3cmd put ${PACKAGE} s3://${AWS_S3_DEB_PACKAGES}
+s3cmd put ${PACKAGE} s3://${AWS_S3_DEB_FILES}
 
 if [ "$ERIS_BRANCH" != "master" ]
 then

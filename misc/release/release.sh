@@ -36,10 +36,10 @@
 #
 #    Use bucket names only, without s3:// prefix or s3.amazonaws.com paths.
 #
-#    AWS_S3_RPM_REPO                -- YUM master repository bucket
-#    AWS_S3_RPM_PACKAGES            -- RPM downloadable packages bucket
-#    AWS_S3_DEB_REPO                -- APT master repository bucket
-#    AWS_S3_DEB_PACKAGES            -- Debian downloadable packages bucket
+#    AWS_S3_RPM_REPO              -- YUM master repository bucket
+#    AWS_S3_RPM_FILES             -- RPM downloadable packages bucket
+#    AWS_S3_DEB_REP               -- APT master repository bucket
+#    AWS_S3_DEB_FILES             -- Debian downloadable packages bucket
 #
 #      Copy pastable sample for public access policy:
 #
@@ -61,6 +61,15 @@
 #                 "arn:aws:s3:::examplebucket/*",
 #                 "arn:aws:s3:::examplebucket"
 #               ]
+#             },
+#             {
+#               "Sid": "2",
+#               "Effect": "Allow",
+#               "Principal": {
+#                 "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity EOCE76PZY29V8"
+#               },
+#               "Action": "s3:GetObject",
+#               "Resource": "arn:aws:s3:::apt.monax.io/*"
 #             }
 #           ]
 #         }
@@ -77,9 +86,9 @@ export AWS_ACCESS_KEY=
 export AWS_SECRET_ACCESS_KEY=
 
 export AWS_S3_RPM_REPO=yum.monax.io
-export AWS_S3_RPM_PACKAGES=yum.files.monax.io
+export AWS_S3_RPM_FILES=monax-rpm
 export AWS_S3_DEB_REPO=apt.monax.io
-export AWS_S3_DEB_PACKAGES=apt.files.monax.io
+export AWS_S3_DEB_FILES=monax-deb
 export KEY_NAME="Monax Industries (PACKAGES SIGNING KEY) <support@monax.io>"
 export KEY_PASSWORD="one1two!three"
 
@@ -119,7 +128,7 @@ keys_check() {
     echo "GPG key file(s) linux-private-key.asc or linux-public-key.asc are missing"
     exit 1
   fi
-  if [ -z "${AWS_S3_RPM_PACKAGES}" -o -z "${AWS_S3_DEB_PACKAGES}" ]
+  if [ -z "${AWS_S3_RPM_FILES}" -o -z "${AWS_S3_DEB_FILES}" ]
   then
     echo "Amazon S3 buckets have to be set to proceed"
     exit 1
@@ -227,9 +236,9 @@ release_deb() {
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
-    -e AWS_S3_RPM_PACKAGES=${AWS_S3_RPM_PACKAGES} \
+    -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
     -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
-    -e AWS_S3_DEB_PACKAGES=${AWS_S3_DEB_PACKAGES} \
+    -e AWS_S3_DEB_FILES=${AWS_S3_DEB_FILES} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     builddeb "$@" \
@@ -262,9 +271,9 @@ release_rpm() {
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
-    -e AWS_S3_RPM_PACKAGES=${AWS_S3_RPM_PACKAGES} \
+    -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
     -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
-    -e AWS_S3_DEB_PACKAGES=${AWS_S3_DEB_PACKAGES} \
+    -e AWS_S3_DEB_FILES=${AWS_S3_DEB_FILES} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \

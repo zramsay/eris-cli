@@ -62,8 +62,8 @@ access_key = ${AWS_ACCESS_KEY}
 secret_key = ${AWS_SECRET_ACCESS_KEY}
 EOF
 
-s3cmd put rpmbuild/RPMS/x86_64/* s3://${AWS_S3_RPM_PACKAGES}
-s3cmd put rpmbuild/SRPMS/* s3://${AWS_S3_RPM_PACKAGES}
+s3cmd put rpmbuild/RPMS/x86_64/* s3://${AWS_S3_RPM_FILES}
+s3cmd put rpmbuild/SRPMS/* s3://${AWS_S3_RPM_FILES}
 
 if [ "$ERIS_BRANCH" != "master" ]
 then
@@ -76,49 +76,49 @@ fi
 echo
 echo ">>> Creating repos"
 echo
-mkdir eris eris/x86_64 eris/source
-gpg2 --armor --export "${KEY_NAME}" > eris/RPM-GPG-KEY
-cp rpmbuild/RPMS/x86_64/* eris/x86_64
-cp rpmbuild/SRPMS/* eris/source
-createrepo eris/x86_64
-createrepo eris/source
+mkdir yum yum/x86_64 yum/source
+gpg2 --armor --export "${KEY_NAME}" > yum/RPM-GPG-KEY
+cp rpmbuild/RPMS/x86_64/* yum/x86_64
+cp rpmbuild/SRPMS/* yum/source
+createrepo yum/x86_64
+createrepo yum/source
 
 echo
 echo ">>> Verifying the signature"
 echo
-rpm --import eris/RPM-GPG-KEY
-rpm --checksig eris/x86_64/*rpm eris/source/*rpm
+rpm --import yum/RPM-GPG-KEY
+rpm --checksig yum/x86_64/*rpm yum/source/*rpm
 
 echo
 echo ">>> Generating eris.repo template"
 echo
-cat > eris/eris.repo <<EOF
+cat > yum/eris.repo <<EOF
 [eris]
 name=Eris
-baseurl=http://${AWS_S3_RPM_REPO}/eris/x86_64/
+baseurl=https://${AWS_S3_RPM_REPO}/yum/x86_64/
 metadata_expire=1d
 enabled=1
-gpgkey=http://${AWS_S3_RPM_REPO}/eris/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_RPM_REPO}/yum/RPM-GPG-KEY
 gpgcheck=1
 
 [eris-source]
 name=Eris Source
-baseurl=http://${AWS_S3_RPM_REPO}/eris/source/
+baseurl=https://${AWS_S3_RPM_REPO}/yum/source/
 metadata_expire=1d
 enabled=1
-gpgkey=http://${AWS_S3_RPM_REPO}/eris/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_RPM_REPO}/yum/RPM-GPG-KEY
 gpgcheck=1
 EOF
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-s3cmd sync eris s3://${AWS_S3_RPM_REPO}
+s3cmd sync yum s3://${AWS_S3_RPM_REPO}
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo curl -L http://${AWS_S3_RPM_REPO}/eris/eris.repo >/etc/yum.repos.d/eris.repo"
+echo "  \$ sudo curl -L https://${AWS_S3_RPM_REPO}/yum/eris.repo >/etc/yum.repos.d/eris.repo"
 echo
 echo "  \$ sudo yum update"
 echo "  \$ sudo yum install eris-cli"
