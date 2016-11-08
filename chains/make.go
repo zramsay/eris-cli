@@ -3,7 +3,6 @@ package chains
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/maker"
@@ -34,19 +33,6 @@ func MakeChain(do *definitions.Do) error {
 	doKeys := definitions.NowDo()
 	doKeys.Name = "keys"
 	if err := services.EnsureRunning(doKeys); err != nil {
-		return err
-	}
-
-	// loop through chains directories to make sure they exist & are appropriately populated
-	//for _, d := range ChainsDirs {
-	//	if _, err := os.Stat(d); os.IsNotExist(err) {
-	//		os.MkdirAll(d, 0755)
-	//	}
-	//}
-	if err := util.CheckDefaultTypes(config.AccountsTypePath, "account-types"); err != nil {
-		return err
-	}
-	if err := util.CheckDefaultTypes(config.ChainTypePath, "chain-types"); err != nil {
 		return err
 	}
 
