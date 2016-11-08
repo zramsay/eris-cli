@@ -5,7 +5,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
-	cm_definitions "github.com/eris-ltd/eris-cli/definitions/maker"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/maker"
 	"github.com/eris-ltd/eris-cli/services"
@@ -53,39 +52,29 @@ func MakeChain(do *definitions.Do) error {
 
 	// announce.
 	log.Info("Hello! I'm the marmot who makes eris chains.")
-	makerDef := cm_definitions.NowDo()
 	keys.DaemonAddr = "http://172.17.0.2:4767" // tmp
 
-	// todo. clean this up... struct merge them or something
-	makerDef.Name = do.Name
-	makerDef.Verbose = do.Verbose
-	makerDef.Debug = do.Debug
-	makerDef.ChainType = do.ChainType
-	makerDef.AccountTypes = do.AccountTypes
-	makerDef.Zip = do.ZipFile
-	makerDef.Tarball = do.Tarball
-	makerDef.Output = do.Output
 	if do.Known {
-		makerDef.CSV = fmt.Sprintf("%s,%s", do.ChainMakeVals, do.ChainMakeActs)
+		do.CSV = fmt.Sprintf("%s,%s", do.ChainMakeVals, do.ChainMakeActs)
 	}
 
 	// make it
-	if err := maker.MakeChain(makerDef); err != nil {
+	if err := maker.MakeChain(do); err != nil {
 		return err
 	}
 
 	// cm currently is not opinionated about its writers.
-	if makerDef.Tarball {
-		if err := util.Tarball(makerDef); err != nil {
+	if do.Tarball {
+		if err := util.Tarball(do); err != nil {
 			return err
 		}
-	} else if makerDef.Zip {
-		if err := util.Zip(makerDef); err != nil {
+	} else if do.ZipFile {
+		if err := util.Zip(do); err != nil {
 			return err
 		}
 	}
-	if makerDef.Output {
-		if err := util.SaveAccountResults(makerDef); err != nil {
+	if do.Output {
+		if err := util.SaveAccountResults(do); err != nil {
 			return err
 		}
 	}

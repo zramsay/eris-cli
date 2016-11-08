@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions/maker"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 )
 

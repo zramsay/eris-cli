@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
-	definitions "github.com/eris-ltd/eris-cli/definitions/maker"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-cli/log"
 	"github.com/spf13/viper"
 )
 

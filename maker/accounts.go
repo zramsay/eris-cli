@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	definitions "github.com/eris-ltd/eris-cli/definitions/maker"
+	"github.com/eris-ltd/eris-cli/definitions"
 
-	keys "github.com/eris-ltd/eris-keys/eris-keys"
 	log "github.com/eris-ltd/eris-cli/log"
+	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )
 
 func MakeAccounts(name, chainType string, accountTypes []*definitions.AccountType) ([]*definitions.Account, error) {

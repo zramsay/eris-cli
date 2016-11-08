@@ -99,6 +99,15 @@ type Do struct {
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
 
+	// stuff from maker
+	Accounts []*Account
+
+	// service definitions for maker config.toml
+	ChainImageName      string
+	UseDataContainer    bool
+	ExportedPorts       []string
+	ContainerEntrypoint string
+
 	// Return
 	Result string
 }
