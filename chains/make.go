@@ -17,7 +17,7 @@ import (
 	//"github.com/eris-ltd/eris-cli/util"
 
 	cm_maker "github.com/eris-ltd/eris-cli/maker"
-	cm_definitions "github.com/eris-ltd/eris-cli/maker_definitions"
+	cm_definitions "github.com/eris-ltd/eris-cli/definitions/maker"
 	cm_util "github.com/eris-ltd/eris-cli/util"
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )

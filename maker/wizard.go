@@ -3,7 +3,7 @@ package maker
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/maker_definitions"
+	"github.com/eris-ltd/eris-cli/definitions/maker"
 )
 
 func ChainsMakeWelcome() string {

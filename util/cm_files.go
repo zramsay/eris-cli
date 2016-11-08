@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/maker_definitions"
+	"github.com/eris-ltd/eris-cli/definitions/maker"
 
 	// TODO remove/update
 	"github.com/eris-ltd/eris-cm/configuration"

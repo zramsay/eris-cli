@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	definitions "github.com/eris-ltd/eris-cli/maker_definitions"
+	definitions "github.com/eris-ltd/eris-cli/definitions/maker"
 
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
 	log "github.com/eris-ltd/eris-logger"
