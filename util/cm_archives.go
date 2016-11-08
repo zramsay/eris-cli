@@ -12,7 +12,7 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions/maker"
 
-	log "github.com/eris-ltd/eris-logger"
+	log "github.com/eris-ltd/eris-cli/log"
 )
 
 func Tarball(do *definitions.Do) error {

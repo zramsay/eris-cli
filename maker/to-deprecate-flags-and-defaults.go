@@ -11,7 +11,7 @@ import (
 
 	. "github.com/eris-ltd/common/go/common"
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
-	log "github.com/eris-ltd/eris-logger"
+	log "github.com/eris-ltd/eris-cli/log"
 	"github.com/spf13/cobra"
 )
 

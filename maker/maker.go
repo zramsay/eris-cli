@@ -10,7 +10,7 @@ import (
 	definitions "github.com/eris-ltd/eris-cli/definitions/maker"
 	"github.com/eris-ltd/eris-cli/util"
 
-	log "github.com/eris-ltd/eris-logger"
+	log "github.com/eris-ltd/eris-cli/log"
 
 	common "github.com/eris-ltd/common/go/common"
 )

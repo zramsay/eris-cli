@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions/maker"
 
 	"github.com/BurntSushi/toml"
-	log "github.com/eris-ltd/eris-logger"
+	log "github.com/eris-ltd/eris-cli/log"
 )
 
 // XXX: this is temporary until eris-keys.js is more tightly integrated with eris-contracts.js

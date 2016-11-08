@@ -7,7 +7,7 @@ It also avoids logrus' shortcoming of not able to ignore logging levels set by t
 ## Generic Initialization
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import "github.com/eris-ltd/eris-cli/log"
 
 log.SetLevel(log.WarnLevel)
 if do.Verbose {
@@ -21,7 +21,7 @@ if do.Verbose {
 ## Initialization for Tests
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import log "github.com/eris-ltd/eris-cli/log"
 
 log.SetLevel(log.ErrorLevel)
 // log.SetLevel(log.InfoLevel)
