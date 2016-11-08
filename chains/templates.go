@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Eris-RT.  If not, see <http://www.gnu.org/licenses/>.
 
-package configuration
+package chains
 
 const headerCopyright = `# Copyright 2015, 2016 Eris Industries (UK) Ltd.
 # This file is part of Eris-RT
