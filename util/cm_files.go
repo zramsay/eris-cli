@@ -10,10 +10,6 @@ import (
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions/maker"
 
-	// TODO remove/update
-	"github.com/eris-ltd/eris-cm/configuration"
-	"github.com/eris-ltd/eris-cm/version"
-
 	"github.com/BurntSushi/toml"
 	log "github.com/eris-ltd/eris-logger"
 )
@@ -116,10 +112,11 @@ func CheckDefaultTypes(erisPath, myPath string) error {
 	// by default the dockerimage will move the default files to /default
 	//   however if anyone installs by binary then these files will be located
 	//   in the repo.
+	// TODO clean this way up
 	defaultTypsPath := filepath.Join("/defaults", myPath, "*.toml")
 	if _, err := os.Stat(filepath.Dir(defaultTypsPath)); os.IsNotExist(err) {
 		log.WithField("path", defaultTypsPath).Warn("Default types path does not exist. Trying GOPATH.")
-		defaultTypsPath = filepath.Join(config.ErisGo, version.NAME, myPath, "*.toml")
+		defaultTypsPath = filepath.Join(config.ErisGo, "eris-cm", myPath, "*.toml") // XXX [zr] temp replace for version.NAME
 	}
 	if _, err := os.Stat(filepath.Dir(defaultTypsPath)); os.IsNotExist(err) {
 		log.WithField("path", defaultTypsPath).Info("Default types path does not exist. Exiting.")
@@ -214,7 +211,7 @@ func WriteConfigurationFile(chain_name, account_name, seeds string, single bool,
 	}
 	var fileBytes []byte
 	var err error
-	if fileBytes, err = configuration.GetConfigurationFileBytes(chain_name,
+	if fileBytes, err = config.GetConfigurationFileBytes(chain_name,
 		account_name, seeds, chainImageName, useDataContainer,
 		convertExportPortsSliceToString(exportedPorts), containerEntrypoint); err != nil {
 		return err
