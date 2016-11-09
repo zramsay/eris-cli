@@ -2,7 +2,9 @@ package chains
 
 import (
 	"fmt"
+	"path"
 
+	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/maker"
@@ -12,6 +14,7 @@ import (
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )
 
+// TODO [zr] re-write
 // MakeChain runs the `eris-cm make` command in a Docker container.
 // It returns an error. Note that if do.Known, do.AccountTypes
 // or do.ChainType are not set the command will run via interactive
@@ -43,6 +46,14 @@ func MakeChain(do *definitions.Do) error {
 	if do.Known {
 		do.CSV = fmt.Sprintf("%s,%s", do.ChainMakeVals, do.ChainMakeActs)
 	}
+
+	// set infos
+	// do.Name; already set
+	// do.Accounts ...?
+	do.ChainImageName = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
+	do.ExportedPorts = []string{"1337", "46656", "46657"}
+	do.UseDataContainer = true
+	do.ContainerEntrypoint = ""
 
 	// make it
 	if err := maker.MakeChain(do); err != nil {
