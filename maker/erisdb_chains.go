@@ -6,7 +6,7 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func MakeMintChain(name string, accounts []*definitions.Account, chainImageName string,
+func MakeErisDBChain(name string, accounts []*definitions.ErisDBAccount, chainImageName string,
 	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
 	genesis := definitions.BlankGenesis()
 	genesis.ChainID = name
@@ -15,14 +15,14 @@ func MakeMintChain(name string, accounts []*definitions.Account, chainImageName 
 			"name":    account.Name,
 			"address": account.Address,
 			"tokens":  account.Tokens,
-			"perms":   account.MintPermissions.MintBase.MintPerms,
-		}).Debug("Making a Mint Account")
+			"perms":   account.ErisDBPermissions.ErisDBBase.ErisDBPerms,
+		}).Debug("Making an ErisDB Account")
 
-		thisAct := MakeMintAccount(account)
+		thisAct := MakeErisDBAccount(account)
 		genesis.Accounts = append(genesis.Accounts, thisAct)
 
 		if account.Validator {
-			thisVal := MakeMintValidator(account)
+			thisVal := MakeErisDBValidator(account)
 			genesis.Validators = append(genesis.Validators, thisVal)
 		}
 	}
@@ -45,20 +45,20 @@ func MakeMintChain(name string, accounts []*definitions.Account, chainImageName 
 	return nil
 }
 
-func MakeMintAccount(account *definitions.Account) *definitions.MintAccount {
-	mintAct := &definitions.MintAccount{}
+func MakeErisDBAccount(account *definitions.ErisDBAccount) *definitions.ErisDBAccount {
+	mintAct := &definitions.ErisDBAccount{}
 	mintAct.Address = account.Address
 	mintAct.Amount = account.Tokens
 	mintAct.Name = account.Name
-	mintAct.Permissions = account.MintPermissions
+	mintAct.Permissions = account.ErisDBPermissions
 	return mintAct
 }
 
-func MakeMintValidator(account *definitions.Account) *definitions.MintValidator {
-	mintVal := &definitions.MintValidator{}
+func MakeErisDBValidator(account *definitions.ErisDBAccount) *definitions.ErisDBValidator {
+	mintVal := &definitions.ErisDBValidator{}
 	mintVal.Name = account.Name
 	mintVal.Amount = account.ToBond
-	mintVal.UnbondTo = append(mintVal.UnbondTo, &definitions.MintTxOutput{
+	mintVal.UnbondTo = append(mintVal.UnbondTo, &definitions.ErisDBTxOutput{
 		Address: account.Address,
 		Amount:  account.ToBond,
 	})

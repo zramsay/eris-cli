@@ -11,23 +11,23 @@ import (
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )
 
-func MakeAccounts(name, chainType string, accountTypes []*definitions.AccountType) ([]*definitions.Account, error) {
-	accounts := []*definitions.Account{}
+func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAccountType) ([]*definitions.ErisDBAccount, error) {
+	accounts := []*definitions.ErisDBAccount{}
 
 	for _, accountT := range accountTypes {
 		log.WithField("type", accountT.Name).Info("Making Account Type")
 
-		perms := &definitions.MintAccountPermissions{}
+		perms := &definitions.ErisDBAccountPermissions{}
 		var err error
 		if chainType == "mint" {
-			perms, err = MintAccountPermissions(accountT.Perms, []string{}) // TODO: expose roles
+			perms, err = ErisDBAccountPermissions(accountT.Perms, []string{}) // TODO: expose roles
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		for i := 0; i < accountT.Number; i++ {
-			thisAct := &definitions.Account{}
+			thisAct := &definitions.ErisDBAccount{}
 			thisAct.Name = fmt.Sprintf("%s_%s_%03d", name, accountT.Name, i)
 			thisAct.Name = strings.ToLower(thisAct.Name)
 
@@ -44,12 +44,12 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.AccountTyp
 			}
 
 			if chainType == "mint" {
-				thisAct.MintPermissions = &definitions.MintAccountPermissions{}
-				thisAct.MintPermissions.MintBase = &definitions.MintBasePermissions{}
-				thisAct.MintPermissions.MintBase.MintPerms = perms.MintBase.MintPerms
-				thisAct.MintPermissions.MintBase.MintSetBit = perms.MintBase.MintSetBit
-				thisAct.MintPermissions.MintRoles = perms.MintRoles
-				log.WithField("perms", thisAct.MintPermissions.MintBase.MintPerms).Debug()
+				thisAct.ErisDBPermissions = &definitions.ErisDBAccountPermissions{}
+				thisAct.ErisDBPermissions.ErisDBBase = &definitions.ErisDBBasePermissions{}
+				thisAct.ErisDBPermissions.ErisDBBase.ErisDBPerms = perms.ErisDBBase.ErisDBPerms
+				thisAct.ErisDBPermissions.ErisDBBase.ErisDBSetBit = perms.ErisDBBase.ErisDBSetBit
+				thisAct.ErisDBPermissions.ErisDBRoles = perms.ErisDBRoles
+				log.WithField("perms", thisAct.ErisDBPermissions.ErisDBBase.ErisDBPerms).Debug()
 
 				if err := makeKey("ed25519,ripemd160", thisAct); err != nil {
 					return nil, err
@@ -63,7 +63,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.AccountTyp
 	return accounts, nil
 }
 
-func makeKey(keyType string, account *definitions.Account) error {
+func makeKey(keyType string, account *definitions.ErisDBAccount) error {
 	log.WithFields(log.Fields{
 		"path": keys.DaemonAddr,
 		"type": keyType,
@@ -99,7 +99,7 @@ func makeKey(keyType string, account *definitions.Account) error {
 	if err != nil {
 		return err
 	}
-
+	// [zr] leave MintKey / MintPrivValidator
 	account.MintKey = &definitions.MintPrivValidator{}
 	err = json.Unmarshal([]byte(mint), account.MintKey)
 	if err != nil {

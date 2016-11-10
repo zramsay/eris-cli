@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func LoadAccountTypes() ([]*definitions.AccountType, error) {
-	loadedAccounts := []*definitions.AccountType{}
+func LoadAccountTypes() ([]*definitions.ErisDBAccountType, error) {
+	loadedAccounts := []*definitions.ErisDBAccountType{}
 	accounts, err := util.AccountTypes(config.AccountsTypePath)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func LoadAccountTypes() ([]*definitions.AccountType, error) {
 	return loadedAccounts, nil
 }
 
-func LoadAccountType(fileName string) (*definitions.AccountType, error) {
+func LoadAccountType(fileName string) (*definitions.ErisDBAccountType, error) {
 	log.WithField("=>", fileName).Debug("Loading Account Type")
 	var accountType = viper.New()
 	typ := definitions.BlankAccountType()

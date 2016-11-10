@@ -100,7 +100,7 @@ type Do struct {
 	ServiceDefinition *ServiceDefinition
 
 	// stuff from maker
-	Accounts []*Account
+	Accounts []*ErisDBAccount
 
 	// service definitions for maker config.toml
 	ChainImageName      string

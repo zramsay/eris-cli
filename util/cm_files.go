@@ -64,13 +64,13 @@ func SaveAccountResults(do *definitions.Do) error {
 			log.Error("Error writing addresses file.")
 			return err
 		}
-		_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.Tokens, account.Name, account.MintPermissions.MintBase.MintPerms, account.MintPermissions.MintBase.MintSetBit))
+		_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.Tokens, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
 		if err != nil {
 			log.Error("Error writing accounts file.")
 			return err
 		}
 		if account.Validator {
-			_, err = valFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.ToBond, account.Name, account.MintPermissions.MintBase.MintPerms, account.MintPermissions.MintBase.MintSetBit))
+			_, err = valFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.ToBond, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
 			if err != nil {
 				log.Error("Error writing validators file.")
 				return err
@@ -127,11 +127,11 @@ func AccountTypesNames(erisPath string, withExt bool) ([]string, error) {
 	return names, nil
 }
 
-func WriteGenesisFile(name string, genesis *definitions.MintGenesis, account *definitions.Account, single bool) error {
+func WriteGenesisFile(name string, genesis *definitions.ErisDBGenesis, account *definitions.ErisDBAccount, single bool) error {
 	return writer(genesis, name, account.Name, "genesis.json", single)
 }
 
-func WritePrivVals(name string, account *definitions.Account, single bool) error {
+func WritePrivVals(name string, account *definitions.ErisDBAccount, single bool) error {
 	return writer(account.MintKey, name, account.Name, "priv_validator.json", single)
 }
 
@@ -163,7 +163,7 @@ func WriteConfigurationFile(chain_name, account_name, seeds string, single bool,
 	return nil
 }
 
-func SaveAccountType(thisActT *definitions.AccountType) error {
+func SaveAccountType(thisActT *definitions.ErisDBAccountType) error {
 	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
 	defer writer.Close()
 	if err != nil {

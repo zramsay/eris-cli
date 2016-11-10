@@ -1,6 +1,6 @@
 package definitions
 
-type AccountType struct {
+type ErisDBAccountType struct {
 	Name        string         `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
 	Definition  string         `mapstructure:"definition" json:"definition" yaml:"definition" toml:"definition"`
 	TypicalUser string         `mapstructure:"typical_user" json:"typical_user" yaml:"typical_user" toml:"typical_user"`
@@ -10,6 +10,6 @@ type AccountType struct {
 	Perms       map[string]int `mapstructure:"perms" json:"perms" yaml:"perms" toml:"perms"`
 }
 
-func BlankAccountType() *AccountType {
-	return &AccountType{}
+func BlankAccountType() *ErisDBAccountType {
+	return &ErisDBAccountType{}
 }

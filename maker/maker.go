@@ -96,18 +96,18 @@ func makeRaw(do *definitions.Do, typ string) error {
 	return maker(do, "mint", accountTypes)
 }
 
-func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.AccountType) error {
+func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.ErisDBAccountType) error {
 	var err error
 	do.Accounts, err = MakeAccounts(do.Name, consensus_type, accountTypes)
 	if err != nil {
 		return err
 	}
 
-	return MakeMintChain(do.Name, do.Accounts, do.ChainImageName,
+	return MakeErisDBChain(do.Name, do.Accounts, do.ChainImageName,
 		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint)
 }
 
-func assembleTypesWizard(accountT *definitions.AccountType, tokenIze bool) error {
+func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {
 	var err error
 	accountT.Number, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.Number, reader)
 	log.WithField("=>", accountT.Number).Debug("What the marmots heard")
@@ -138,9 +138,9 @@ func assembleTypesWizard(accountT *definitions.AccountType, tokenIze bool) error
 	return nil
 }
 
-func addManualAccountType(accountT []*definitions.AccountType, iterator int) ([]*definitions.AccountType, error) {
+func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator int) ([]*definitions.ErisDBAccountType, error) {
 	var err error
-	thisActT := &definitions.AccountType{}
+	thisActT := &definitions.ErisDBAccountType{}
 	thisActT.Name = fmt.Sprintf("%s_%02d", "manual", iterator)
 	iterator++
 
@@ -183,7 +183,7 @@ func addManualAccountType(accountT []*definitions.AccountType, iterator int) ([]
 	return accountT, nil
 }
 
-func assembleTypesRaw(accountT []*definitions.AccountType, do *definitions.Do, typ string) error {
+func assembleTypesRaw(accountT []*definitions.ErisDBAccountType, do *definitions.Do, typ string) error {
 	// TODO
 	switch typ {
 	case "accounttype":
@@ -196,7 +196,7 @@ func assembleTypesRaw(accountT []*definitions.AccountType, do *definitions.Do, t
 	return nil
 }
 
-func assembleTypesCSV(accountT []*definitions.AccountType, do *definitions.Do) error {
+func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	csvfile, err := os.Open(do.CSV)
@@ -254,7 +254,7 @@ func assembleTypesCSV(accountT []*definitions.AccountType, do *definitions.Do) e
 	return nil
 }
 
-func assembleTypesFlags(accountT []*definitions.AccountType, do *definitions.Do) error {
+func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	for _, acctT := range do.AccountTypes {
@@ -288,7 +288,7 @@ func assembleTypesFlags(accountT []*definitions.AccountType, do *definitions.Do)
 	return nil
 }
 
-func assembleTypesChainsTypesDefs(accountT []*definitions.AccountType, do *definitions.Do) error {
+func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	chainTypeAccounts, err := LoadChainTypes(do.ChainType)
@@ -318,7 +318,7 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.AccountType, do *defin
 	return nil
 }
 
-func clearDefaultNumbers(accountT []*definitions.AccountType) {
+func clearDefaultNumbers(accountT []*definitions.ErisDBAccountType) {
 	for _, acctT := range accountT {
 		acctT.Number = 0
 	}
