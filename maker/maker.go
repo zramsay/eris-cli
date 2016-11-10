@@ -28,9 +28,11 @@ func MakeChain(do *definitions.Do) error {
 	case do.CSV != "":
 		log.Info("Making chain using csv type paradigm.")
 		return makeRaw(do, "csv")
-	default:
+	case do.Wizard == true:
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
+	default:
+		return fmt.Errorf("bad")
 	}
 	return nil
 }

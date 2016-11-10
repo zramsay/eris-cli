@@ -21,10 +21,9 @@ dependencies:
     - go version
     - docker version
     - docker-machine version
-      # TEMP hack
-      # - "go get github.com/eris-ltd/eris-keys && go get github.com/Masterminds/glide"
-      # - cd ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys && glide install
-      # end temp hack
+    - "sudo add-apt-repository -y ppa:masterminds/glide && sudo apt-get update; sudo apt-get install -y glide"
+    - git clone https://github.com/eris-ltd/eris-keys.git ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys
+    - cd ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys && glide install
     - cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install
 
 test:

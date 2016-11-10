@@ -287,7 +287,6 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
-	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 
 	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
@@ -396,6 +395,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	}
 
 	if do.Wizard {
+		// TODO fix
 		config.Global.InteractiveWriter = os.Stdout
 		config.Global.InteractiveErrorWriter = os.Stderr
 		do.Operations.Terminal = true
