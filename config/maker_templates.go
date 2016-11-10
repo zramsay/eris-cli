@@ -36,6 +36,7 @@ const headerCopyright = `# Copyright 2015, 2016 Eris Industries (UK) Ltd.
 `
 
 const sectionServiceGeneral = `[service]
+
 # NOTE: this section is read by Eris tooling, and ignored by eris-db.
 # Image specifies the image name eris-cli needs to pull 
 # for running the chain.
@@ -52,6 +53,7 @@ entry_point = "{{.ContainerEntrypoint}}"{{ end }}
 `
 
 const sectionServiceDependencies = `[dependencies]
+
 # NOTE: this section is read by Eris tooling, and ignored by eris-db.
 # Eris-db expects these services to be available; eric-cli tooling will
 # automatically set these services up for you.
@@ -83,19 +85,20 @@ const separatorChainConsensus = `
 
 `
 
-const sectionChainConsensus = `  [chain.consensus]
-  # consensus defines the module to use for consensus and
-  # this will define the peer-to-peer consensus network;
-  # accepted values are ("noops", "tmsp",) "tendermint"
-  name = "{{.Name}}"
-  # version is the major and minor semantic version;
-  # the version will be asserted on
-  major_version = {{.MajorVersion}}
-  minor_version = {{.MinorVersion}}
-  # relative path to consensus' module root folder
-  relative_root = "{{.ModuleRelativeRoot}}"
+const sectionChainConsensus = `[chain.consensus]
 
-  `
+# consensus defines the module to use for consensus and
+# this will define the peer-to-peer consensus network;
+# accepted values are ("noops", "tmsp",) "tendermint"
+name = "{{.Name}}"
+# version is the major and minor semantic version;
+# the version will be asserted on
+major_version = {{.MajorVersion}}
+minor_version = {{.MinorVersion}}
+# relative path to consensus' module root folder
+relative_root = "{{.ModuleRelativeRoot}}"
+
+`
 
 const separatorChainApplicationManager = `
 ################################################################################
@@ -106,18 +109,19 @@ const separatorChainApplicationManager = `
 
 `
 
-const sectionChainApplicationManager = `  [chain.manager]
-  # application manager name defines the module to use for handling
-  # the transactions.  Supported names are "erismint"
-  name = "{{.Name}}"
-  # version is the major and minor semantic version;
-  # the version will be asserted on
-  major_version = {{.MajorVersion}}
-  minor_version = {{.MinorVersion}}
-  # relative path to application manager root folder
-  relative_root = "{{.ModuleRelativeRoot}}"
+const sectionChainApplicationManager = `[chain.manager]
 
-  `
+# application manager name defines the module to use for handling
+# the transactions.  Supported names are "erismint"
+name = "{{.Name}}"
+# version is the major and minor semantic version;
+# the version will be asserted on
+major_version = {{.MajorVersion}}
+minor_version = {{.MinorVersion}}
+# relative path to application manager root folder
+relative_root = "{{.ModuleRelativeRoot}}"
+
+`
 
 const separatorServerConfiguration = `
 ################################################################################
@@ -133,44 +137,44 @@ const separatorServerConfiguration = `
 // TODO: [ben] map entries to structure defined in eris-db
 const sectionServers = `[servers]
 
-  [servers.bind]
-  address = ""
-  port = 1337
+[servers.bind]
+address = ""
+port = 1337
 
-  [servers.tls]
-  tls = false
-  cert_path = ""
-  key_path = ""
+[servers.tls]
+tls = false
+cert_path = ""
+key_path = ""
 
-  [servers.cors]
-  enable = false
-  allow_origins = []
-  allow_credentials = false
-  allow_methods = []
-  allow_headers = []
-  expose_headers = []
-  max_age = 0
+[servers.cors]
+enable = false
+allow_origins = []
+allow_credentials = false
+allow_methods = []
+allow_headers = []
+expose_headers = []
+max_age = 0
 
-  [servers.http]
-  json_rpc_endpoint = "/rpc"
+[servers.http]
+json_rpc_endpoint = "/rpc"
 
-  [servers.websocket]
-  endpoint = "/socketrpc"
-  max_sessions = 50
-  read_buffer_size = 4096
-  write_buffer_size = 4096
+[servers.websocket]
+endpoint = "/socketrpc"
+max_sessions = 50
+read_buffer_size = 4096
+write_buffer_size = 4096
 
-	[servers.tendermint]
-	# Multiple listeners can be separated with a comma
-	rpc_local_address = "0.0.0.0:46657"
-	endpoint = "/websocket"
+      [servers.tendermint]
+      # Multiple listeners can be separated with a comma
+      rpc_local_address = "0.0.0.0:46657"
+      endpoint = "/websocket"
 
-  [servers.logging]
-  console_log_level = "info"
-  file_log_level = "warn"
-  log_file = ""
+[servers.logging]
+console_log_level = "info"
+file_log_level = "warn"
+log_file = ""
 
-  `
+`
 
 const separatorModules = `
 ################################################################################
@@ -219,60 +223,60 @@ const sectionTendermint = `
 # This file needs to be in the root directory
 private_validator_file = "priv_validator.json"
 
-  # Tendermint requires additional configuration parameters.
-  # Eris-DB's tendermint consensus module will load [tendermint.configuration]
-  # as the configuration for Tendermint.
-  # Eris-DB will respect the configurations set in this file where applicable,
-  # but reserves the option to override or block conflicting settings.
-  [tendermint.configuration]
-  # moniker is the name of the node on the tendermint p2p network
-  moniker = "{{.Moniker}}"
-  # seeds lists the peers tendermint can connect to join the network
-  seeds = "{{.Seeds}}"
-  # fast_sync allows a tendermint node to catch up faster when joining
-  # the network.
-  # NOTE: Tendermint has reported potential issues with fast_sync enabled.
-  # The recommended setting is for keeping it disabled.
-  fast_sync = {{.FastSync}}
-  # database backend to use for Tendermint. Supported "leveldb" and "memdb".
-  db_backend = "leveldb"
-  # logging level. Supported "error" < "warn" < "notice" < "info" < "debug"
-  log_level = "info"
-  # node local address
-  node_laddr = "0.0.0.0:46656"
-  # rpc local address
-	# NOTE: value is ignored when run in-process as RPC is
-	# handled by [servers.tendermint]
-  rpc_laddr = "0.0.0.0:46657"
-  # proxy application address - used for tmsp connections,
-  # and this port should not be exposed for in-process Tendermint
-  proxy_app = "tcp://127.0.0.1:46658"
+# Tendermint requires additional configuration parameters.
+# Eris-DB's tendermint consensus module will load [tendermint.configuration]
+# as the configuration for Tendermint.
+# Eris-DB will respect the configurations set in this file where applicable,
+# but reserves the option to override or block conflicting settings.
+[tendermint.configuration]
+# moniker is the name of the node on the tendermint p2p network
+moniker = "{{.Moniker}}"
+# seeds lists the peers tendermint can connect to join the network
+seeds = "{{.Seeds}}"
+# fast_sync allows a tendermint node to catch up faster when joining
+# the network.
+# NOTE: Tendermint has reported potential issues with fast_sync enabled.
+# The recommended setting is for keeping it disabled.
+fast_sync = {{.FastSync}}
+# database backend to use for Tendermint. Supported "leveldb" and "memdb".
+db_backend = "leveldb"
+# logging level. Supported "error" < "warn" < "notice" < "info" < "debug"
+log_level = "info"
+# node local address
+node_laddr = "0.0.0.0:46656"
+# rpc local address
+      # NOTE: value is ignored when run in-process as RPC is
+      # handled by [servers.tendermint]
+rpc_laddr = "0.0.0.0:46657"
+# proxy application address - used for tmsp connections,
+# and this port should not be exposed for in-process Tendermint
+proxy_app = "tcp://127.0.0.1:46658"
 
-  # Extended Tendermint configuration settings
-  # for reference to Tendermint see https://github.com/tendermint/tendermint/blob/master/config/tendermint/config.go
+# Extended Tendermint configuration settings
+# for reference to Tendermint see https://github.com/tendermint/tendermint/blob/master/config/tendermint/config.go
 
-  # genesis_file = "./data/tendermint/genesis.json"
-  # skip_upnp = false
-  # addrbook_file = "./data/tendermint/addrbook.json"
-  # priv_validator_file = "./data/tendermint/priv_validator.json"
-  # db_dir = "./data/tendermint/data"
-  # prof_laddr = ""
-  # revision_file = "./data/tendermint/revision"
-  # cswal = "./data/tendermint/data/cswal"
-  # cswal_light = false
+# genesis_file = "./data/tendermint/genesis.json"
+# skip_upnp = false
+# addrbook_file = "./data/tendermint/addrbook.json"
+# priv_validator_file = "./data/tendermint/priv_validator.json"
+# db_dir = "./data/tendermint/data"
+# prof_laddr = ""
+# revision_file = "./data/tendermint/revision"
+# cswal = "./data/tendermint/data/cswal"
+# cswal_light = false
 
-  # block_size = 10000
-  # disable_data_hash = false
-  # timeout_propose = 3000
-  # timeout_propose_delta = 500
-  # timeout_prevote = 1000
-  # timeout_prevote_delta = 500
-  # timeout_precommit = 1000
-  # timeout_precommit_delta = 500
-  # timeout_commit = 1000
-  # mempool_recheck = true
-  # mempool_recheck_empty = true
-  # mempool_broadcast = true
+# block_size = 10000
+# disable_data_hash = false
+# timeout_propose = 3000
+# timeout_propose_delta = 500
+# timeout_prevote = 1000
+# timeout_prevote_delta = 500
+# timeout_precommit = 1000
+# timeout_precommit_delta = 500
+# timeout_commit = 1000
+# mempool_recheck = true
+# mempool_recheck_empty = true
+# mempool_broadcast = true
 
 		[tendermint.configuration.p2p]
 		# Switch config keys
