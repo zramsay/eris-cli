@@ -1,50 +1,8 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------
-# PURPOSE
-
-# This is the test manager for ecm. It will run the testing
-# sequence for ecm using docker.
-
-# ----------------------------------------------------------
-# REQUIREMENTS
-
-# eris installed locally
-
-# ----------------------------------------------------------
-# USAGE
-
-# test.sh
-
-# ----------------------------------------------------------
-# Set defaults
-
-# Where are the Things?
-
-name=eris-cm
-base=github.com/eris-ltd/$name
-repo=`pwd`
-if [ "$CIRCLE_BRANCH" ]
-then
-  ci=true
-  linux=true
-elif [ "$TRAVIS_BRANCH" ]
-then
-  ci=true
-  osx=true
-elif [ "$APPVEYOR_REPO_BRANCH" ]
-then
-  ci=true
-  win=true
-else
-  repo=$GOPATH/src/$base
-  ci=false
-fi
-
-branch=${CIRCLE_BRANCH:=master}
-branch=${branch/-/_}
-branch=${branch/\//_}
 
 # Other variables
+repo=`pwd`
 was_running=0
 test_exit=0
 chains_dir=$HOME/.eris/chains
@@ -100,30 +58,8 @@ get_uuid() {
   echo $uuid
 }
 
-test_build() {
-  echo ""
-  echo "Building eris-cm in a docker container."
-  set -e
-  tests/build_tool.sh 1>/dev/null
-  set +e
-  if [ $? -ne 0 ]
-  then
-    echo "Could not build eris-cm. Debug via by directly running [`pwd`/tests/build_tool.sh]"
-    exit 1
-  fi
-  echo "Build complete."
-  echo ""
-}
-
 test_setup(){
-  echo "Getting Setup"
-  if [ "$ci" = true ]
-  then
-    eris init --yes --pull-images=true --testing=true 1>/dev/null
-  fi
-
   ensure_running keys
-  echo "Setup complete"
 }
 
 check_test(){
@@ -260,7 +196,7 @@ perform_tests(){
   echo "add a new account type test"
   uuid=$(get_uuid)
   direct=""
-  cp $repo/tests/fixtures/tester.toml $chains_dir/account-types/.
+  cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
   eris chains make $uuid --account-types=Test:1
   run_test
   if [ $test_exit -eq 1 ]
@@ -273,7 +209,7 @@ perform_tests(){
   echo "add a new chain type test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  cp $repo/tests/fixtures/testchain.toml $chains_dir/chain-types/.
+  cp $repo/tests/cm_test_fixtures/testchain.toml $chains_dir/chain-types/.
   eris chains make $uuid --chain-type=testchain
   run_test
   if [ $test_exit -eq 1 ]
@@ -348,11 +284,10 @@ test_teardown(){
 # ---------------------------------------------------------------------------
 # Get the things build and dependencies turned on
 
-echo "Hello! I'm the marmot that tests the eris-cm tooling"
+echo "Hello! I'm the marmot that tests the [eris chains make] command"
 start=`pwd`
 cd $repo
 test_setup
-test_build
 echo
 
 # ---------------------------------------------------------------------------
