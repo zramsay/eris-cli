@@ -54,7 +54,7 @@ func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (str
 	}
 
 	// Call the client
-	nodeClient := client.NewErisNodeClient(do.Chain)
+	nodeClient := client.NewErisNodeClient(do.ChainName)
 	result, _, err := nodeClient.QueryContract(fromAddrBytes, toAddrBytes, dataBytes)
 	if err != nil {
 		return "", make([]*definitions.Variable, 0), err

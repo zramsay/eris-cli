@@ -32,7 +32,7 @@ func ClearJobResults() error {
 
 func PrintPathPackage(do *definitions.Do) {
 	log.WithField("=>", do.Compiler).Info("Using Compiler at")
-	log.WithField("=>", do.Chain).Info("Using Chain at")
+	log.WithField("=>", do.ChainName).Info("Using Chain at")
 	log.WithField("=>", do.ChainID).Debug("With ChainID")
 	log.WithField("=>", do.Signer).Info("Using Signer at")
 }

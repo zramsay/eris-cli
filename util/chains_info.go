@@ -88,7 +88,7 @@ func ChangeHead(name string) error {
 
 // from epm
 func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
-	nodeClient := client.NewErisNodeClient(do.Chain)
+	nodeClient := client.NewErisNodeClient(do.ChainName)
 	// NOTE: NodeInfo is no longer exposed through Status();
 	// other values are currentlu not used by e-pm
 	_, _, _, latestBlockHeight, _, err = nodeClient.Status()
@@ -102,7 +102,7 @@ func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
 // TODO: it is unpreferable to mix static and non-static use of Do
 func GetChainID(do *definitions.Do) error {
 	if do.ChainID == "" {
-		nodeClient := client.NewErisNodeClient(do.Chain)
+		nodeClient := client.NewErisNodeClient(do.ChainName)
 		_, chainId, _, err := nodeClient.ChainId()
 		if err != nil {
 			return err
@@ -120,7 +120,7 @@ func AccountsInfo(account, field string, do *definitions.Do) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Account Addr %s is improper hex: %v", account, err)
 	}
-	nodeClient := client.NewErisNodeClient(do.Chain)
+	nodeClient := client.NewErisNodeClient(do.ChainName)
 	r, err := nodeClient.GetAccount(addrBytes)
 	if err != nil {
 		return "", err
@@ -157,7 +157,7 @@ func AccountsInfo(account, field string, do *definitions.Do) (string, error) {
 }
 
 func NamesInfo(name, field string, do *definitions.Do) (string, error) {
-	nodeClient := client.NewErisNodeClient(do.Chain)
+	nodeClient := client.NewErisNodeClient(do.ChainName)
 	owner, data, expirationBlock, err := nodeClient.GetName(name)
 	if err != nil {
 		return "", err
@@ -178,7 +178,7 @@ func NamesInfo(name, field string, do *definitions.Do) (string, error) {
 }
 
 func ValidatorsInfo(field string, do *definitions.Do) (string, error) {
-	nodeClient := client.NewErisNodeClient(do.Chain)
+	nodeClient := client.NewErisNodeClient(do.ChainName)
 	_, bondedValidators, unbondingValidators, err := nodeClient.ListValidators()
 	if err != nil {
 		return "", err

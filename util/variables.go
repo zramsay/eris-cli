@@ -87,7 +87,7 @@ func PreProcess(toProcess string, do *definitions.Do) (string, error) {
 
 func replaceBlockVariable(toReplace string, do *definitions.Do) (string, error) {
 	log.WithFields(log.Fields{
-		"chain": do.Chain,
+		"chain": do.ChainName,
 		"var":   toReplace,
 	}).Debug("Correcting $block variable")
 	blockHeight, err := GetBlockHeight(do)

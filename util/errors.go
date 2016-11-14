@@ -12,7 +12,7 @@ func MintChainErrorHandler(do *definitions.Do, err error) (string, error) {
 	log.WithFields(log.Fields{
 		"defAddr":  do.Package.Account,
 		"chainID":  do.ChainID,
-		"chainURL": do.Chain,
+		"chainURL": do.ChainName,
 		"rawErr":   err,
 	}).Error("")
 
