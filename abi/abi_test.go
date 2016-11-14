@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	// TODO eliminate dependency on common
 	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-keys/crypto"
 )

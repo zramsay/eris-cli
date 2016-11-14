@@ -19,6 +19,7 @@ package abi
 import (
 	"reflect"
 
+	// TODO remove dependency on common
 	"github.com/eris-ltd/common/go/common"
 )
 
@@ -61,5 +62,5 @@ func packElement(t Type, reflectValue reflect.Value) []byte {
 
 		return common.RightPadBytes(reflectValue.Bytes(), 32)
 	}
-	panic("abi: fatal error")
+	panic("abi: fatal error") // TODO never panic
 }

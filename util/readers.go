@@ -6,12 +6,14 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris-pm/definitions"
+	ebi "github.com/eris-ltd/eris-cli/abi"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 
-	"github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-db/client/core"
-	log "github.com/eris-ltd/eris-logger"
-	ebi "github.com/eris-ltd/eris-pm/abi"
+
+	// TODO eliminate this dep
+	"github.com/eris-ltd/common/go/common"
 )
 
 // This is a closer function which is called by most of the tx_run functions

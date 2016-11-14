@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-pm/definitions"
-
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 func PreProcess(toProcess string, do *definitions.Do) (string, error) {

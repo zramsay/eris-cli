@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/eris-ltd/eris-pm/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 
-	log "github.com/eris-ltd/eris-logger"
+	// TODO eliminate viper ... ?
 	"github.com/spf13/viper"
 )
 

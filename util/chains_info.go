@@ -9,12 +9,11 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
+	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 
 	//epm
 	"github.com/eris-ltd/eris-db/client"
-	log "github.com/eris-ltd/eris-logger"
-	"github.com/eris-ltd/eris-pm/definitions"
 )
 
 // Maximum entries in the HEAD file

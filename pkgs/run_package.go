@@ -1,8 +1,8 @@
 package pkgs
 
 import (
-	"github.com/eris-ltd/eris-pm/definitions"
-	"github.com/eris-ltd/eris-pm/perform"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/perform"
 )
 
 func RunPackage(do *definitions.Do) error {

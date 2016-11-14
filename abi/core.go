@@ -8,9 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	// TODO remove depedency on common
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
-	pmDefinitions "github.com/eris-ltd/eris-pm/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 func MakeAbi(abiData string) (ABI, error) {
@@ -264,11 +265,11 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 	}
 }
 
-func Unpacker(abiData, name string, data []byte) ([]*pmDefinitions.Variable, error) {
+func Unpacker(abiData, name string, data []byte) ([]*definitions.Variable, error) {
 
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {
-		return []*pmDefinitions.Variable{}, err
+		return []*definitions.Variable{}, err
 	}
 
 	numArgs, err := numReturns(abiSpec, name)
@@ -282,14 +283,14 @@ func Unpacker(abiData, name string, data []byte) ([]*pmDefinitions.Variable, err
 		var unpacked interface{}
 		err = abiSpec.Unpack(&unpacked, name, data)
 		if err != nil {
-			return []*pmDefinitions.Variable{}, err
+			return []*definitions.Variable{}, err
 		}
 		return formatUnpackedReturn(abiSpec, name, unpacked)
 	} else {
 		var unpacked []interface{}
 		err = abiSpec.Unpack(&unpacked, name, data)
 		if err != nil {
-			return []*pmDefinitions.Variable{}, err
+			return []*definitions.Variable{}, err
 		}
 		return formatUnpackedReturn(abiSpec, name, unpacked)
 	}
@@ -314,8 +315,8 @@ func numReturns(abiSpec ABI, methodName string) (uint, error) {
 	}
 }
 
-func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{}) ([]*pmDefinitions.Variable, error) {
-	var returnVars []*pmDefinitions.Variable
+func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{}) ([]*definitions.Variable, error) {
+	var returnVars []*definitions.Variable
 	method, exist := abiSpec.Methods[methodName]
 	if !exist {
 		return nil, fmt.Errorf("method '%s' not found", methodName)
@@ -335,7 +336,7 @@ func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{})
 				nameNum := i
 				name = strconv.Itoa(nameNum)
 			}
-			returnVar := &pmDefinitions.Variable{
+			returnVar := &definitions.Variable{
 				Name:  name,
 				Value: arg,
 			}
@@ -355,7 +356,7 @@ func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{})
 			nameNum := 0
 			name = strconv.Itoa(nameNum)
 		}
-		returnVar := &pmDefinitions.Variable{
+		returnVar := &definitions.Variable{
 			Name:  name,
 			Value: arg,
 		}
