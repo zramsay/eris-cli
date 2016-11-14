@@ -1,4 +1,4 @@
-package packages
+package pkgs
 
 import (
 	"github.com/eris-ltd/eris-pm/definitions"
