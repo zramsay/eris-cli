@@ -257,7 +257,7 @@ func DoesFileExist(file string) bool {
 
 // from epm
 func BundleHttpPathCorrect(do *definitions.Do) {
-	do.Chain = HttpPathCorrect(do.Chain, "tcp", true)
+	do.ChainName = HttpPathCorrect(do.ChainName, "tcp", true)
 	do.Signer = HttpPathCorrect(do.Signer, "http", false)
 	do.Compiler = HttpPathCorrect(do.Compiler, "http", false)
 }

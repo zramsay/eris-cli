@@ -1,11 +1,5 @@
 package definitions
 
-type Package struct {
-	Account   string
-	Jobs      []*Jobs
-	Libraries map[string]string
-}
-
 type Jobs struct {
 	// Name of the job
 	JobName string `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
@@ -53,8 +47,4 @@ type Job struct {
 	QueryVals *QueryVals `mapstructure:"query-vals" json:"query-vals" yaml:"query-vals" toml:"query-vals"`
 	// Makes and assertion (useful for testing purposes)
 	Assert *Assert `mapstructure:"assert" json:"assert" yaml:"assert" toml:"assert"`
-}
-
-func BlankPackage() *Package {
-	return &Package{}
 }
