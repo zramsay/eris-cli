@@ -1,0 +1,81 @@
+jobs:
+
+- name: setStorageBase
+  job:
+    set:
+      val: 5
+
+- name: deployGSFactoryFactory
+  job:
+    deploy:
+      contract: GSFactoryFactory.sol
+      instance: all
+
+- name: createGSFactory
+  job:
+    call:
+      destination: $deployGSFactoryFactory
+      function: create
+      abi: GSFactoryFactory
+
+#Double check created address
+- name:  getGSFactoryAddr
+  job:
+    query-contract:
+      destination: $deployGSFactoryFactory
+      abi: GSFactoryFactory
+      function: getLast
+
+- name: assertFactoryAddr
+  job:
+    assert:
+      key: $getGSFactoryAddr
+      relation: eq
+      val: $createGSFactory
+
+# Now talking to the factory-created factory...
+- name: createGSContract
+  job:
+    call:
+      destination: $createGSFactory
+      abi: GSFactory
+      function: create
+
+#Double check created address
+- name:  getGSAddr
+  job:
+    query-contract:
+      abi: GSFactory
+      destination: $createGSFactory
+      function: getLast
+
+- name: assertAddr
+  job:
+    assert:
+      key: $getGSAddr
+      relation: eq
+      val: $createGSContract
+
+#Normal get set contract testing
+- name: setStorage
+  job:
+    call:
+      destination: $createGSContract
+      function: set 
+      data: 
+        - $setStorageBase
+      abi: GSContract
+
+- name: queryStorage
+  job:
+    query-contract:
+      destination: $createGSContract
+      abi: GSContract
+      function: get
+
+- name: assertStorage
+  job:
+    assert:
+      key: $queryStorage
+      relation: eq
+      val: $setStorageBase
