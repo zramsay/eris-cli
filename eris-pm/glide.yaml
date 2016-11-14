@@ -1,0 +1,20 @@
+package: github.com/eris-ltd/eris-pm
+import:
+- package: github.com/eris-ltd/eris-db
+  version: develop
+- package: github.com/eris-ltd/eris-compilers
+  version: develop
+  subpackages:
+  - network
+  - util
+- package: github.com/eris-ltd/common
+  subpackages:
+  - go/common
+  - go/docs
+- package: github.com/eris-ltd/eris-keys
+- package: github.com/eris-ltd/eris-logger
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+# NOTE tendermint/go-wire is an explicit dependency [to be removed]
+# but inclusion causes additional dependency conflicts
+# - package: github.com/tendermint/go-wire

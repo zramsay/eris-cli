@@ -1,0 +1,187 @@
+jobs:
+
+- name: setStorageBase1
+  job:
+    set:
+      val: 5
+
+- name: setStorageBase2
+  job:
+    set:
+      val: 17
+
+- name: deployGSFactory
+  job:
+    deploy:
+      contract: GSFactory.sol
+      instance: GSFactory
+
+# Begin with single constructor contract
+- name: deployGSABIFactorySingle
+  job:
+    deploy:
+      contract: GSFactory.sol
+      instance: GSSingle
+
+- name: createGSContractSingle
+  job:
+    call:
+      destination: $deployGSFactory
+      function: createSingle
+      data:
+        - $setStorageBase1
+      abi: $deployGSFactory
+
+# Double check created address on single constructor
+- name:  getGSAddrSingle
+  job:
+    query-contract:
+      destination: $deployGSFactory
+      function: getLastSingle
+      abi: $deployGSFactory
+
+- name: assertAddrSingle
+  job:
+    assert:
+      key: $getGSAddrSingle
+      relation: eq
+      val: $createGSContractSingle
+
+# Test initialized value from construction is equal to setStorageBase1
+- name: queryStorageSingle
+  job:
+    query-contract:
+      destination: $createGSContractSingle
+      function: get
+      abi: $deployGSABIFactorySingle
+
+- name: assertStorageSingle
+  job:
+    assert:
+      key: $queryStorageSingle
+      relation: eq
+      val: $setStorageBase1
+
+# Set a new value to ensure constructors can be overwritten
+- name: setStorageSingle
+  job:
+    call:
+      destination: $createGSContractSingle
+      function: set 
+      data:
+        - $setStorageBase2
+      abi: $deployGSABIFactorySingle
+
+- name: queryStorageSingleNew
+  job:
+    query-contract:
+      destination: $createGSContractSingle
+      function: get
+      abi: $deployGSABIFactorySingle
+
+- name: assertStorageSingleNew
+  job:
+    assert:
+      key: $queryStorageSingleNew
+      relation: eq
+      val: $setStorageBase2
+
+# Now Multi constructor Contract
+- name: deployGSABIFactoryMulti
+  job:
+    deploy:
+      contract: GSFactory.sol
+      instance: GSMulti
+
+- name: createGSContractMulti
+  job:
+    call:
+      destination: $deployGSFactory
+      function: createMulti
+      data:
+        - $setStorageBase1
+        - $setStorageBase2
+      abi: $deployGSFactory
+
+# Double check created address on single constructor
+- name:  getGSAddrMulti
+  job:
+    query-contract:
+      destination: $deployGSFactory
+      function: getLastMulti
+      abi: $deployGSFactory
+
+- name: assertAddrMulti
+  job:
+    assert:
+      key: $getGSAddrMulti
+      relation: eq
+      val: $createGSContractMulti
+
+# Test initialized value from construction is equal to setStorageBase1
+- name: queryStorageMultiFirst
+  job:
+    query-contract:
+      destination: $createGSContractMulti
+      function: getFirst
+      abi: $deployGSABIFactoryMulti
+
+- name: assertStorageMultiFirst
+  job:
+    assert:
+      key: $queryStorageMultiFirst
+      relation: eq
+      val: $setStorageBase1
+
+- name: queryStorageMultiSecond
+  job:
+    query-contract:
+      destination: $createGSContractMulti
+      function: getSecond
+      abi: $deployGSABIFactoryMulti
+
+- name: assertStorageMultiSecond
+  job:
+    assert:
+      key: $queryStorageMultiSecond
+      relation: eq
+      val: $setStorageBase2
+
+# Set a new value to ensure constructors can be overwritten
+- name: setStorageMulti
+  job:
+    call:
+      destination: $createGSContractMulti
+      function: set
+      data: 
+        - $setStorageBase2 
+        - $setStorageBase1
+      abi: $deployGSABIFactoryMulti
+
+- name: queryStorageMultiNewFirst
+  job:
+    query-contract:
+      destination: $createGSContractMulti
+      function: getFirst
+      abi: $deployGSABIFactoryMulti
+
+- name: assertStorageMultiNewFirst
+  job:
+    assert:
+      key: $queryStorageMultiNewFirst
+      relation: eq
+      val: $setStorageBase2
+
+- name: queryStorageMultiNewSecond
+  job:
+    query-contract:
+      destination: $createGSContractMulti
+      function: getSecond
+      abi: $deployGSABIFactoryMulti
+
+- name: assertStorageMultiNewSecond
+  job:
+    assert:
+      key: $queryStorageMultiNewSecond
+      relation: eq
+      val: $setStorageBase1

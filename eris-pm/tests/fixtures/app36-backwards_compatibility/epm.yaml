@@ -1,0 +1,59 @@
+jobs:
+
+- name: setStorage1
+  job:
+    set:
+      val: 1
+
+- name: setStorage2
+  job:
+    set:
+      val: 2
+
+- name: setStorage3
+  job:
+    set:
+      val: 3
+
+- name: setStorage4
+  job:
+    set:
+      val: 4
+
+- name: deployC
+  job:
+    deploy:
+      contract: c.sol
+      data: $setStorage1 $setStorage2
+
+- name: queryConstructor
+  job:
+    query-contract:
+      destination: $deployC
+      data: getStorage
+
+- name: assertConstructorStorage
+  job:
+    assert:
+      key: $queryConstructor
+      relation: eq
+      val: (1, 2)
+
+- name: callC
+  job:
+    call:
+      destination: $deployC
+      data: updateStorage $setStorage3 $setStorage4
+
+- name: queryStorage
+  job:
+    query-contract:
+      destination: $deployC
+      data: getStorage
+
+- name: assertConstructorStorage
+  job:
+    assert:
+      key: $queryStorage
+      relation: eq
+      val: (3, 4)
