@@ -3,9 +3,10 @@ package abi
 import (
 	"bytes"
 	"fmt"
-	pm "github.com/eris-ltd/eris-pm/definitions"
 	"strings"
 	"testing"
+
+	pm "github.com/eris-ltd/eris-cli/definitions"
 )
 
 //To Test:

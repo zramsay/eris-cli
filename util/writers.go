@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/eris-ltd/eris-pm/definitions"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
 
-	log "github.com/eris-ltd/eris-logger"
 	// MARMOT: dependency on go-wire needs to be removed.
 	"github.com/tendermint/go-wire"
 )

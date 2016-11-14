@@ -6,10 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/eris-ltd/eris-pm/definitions"
-	"github.com/eris-ltd/eris-pm/util"
-
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-db/client"
 	"github.com/eris-ltd/eris-db/client/core"

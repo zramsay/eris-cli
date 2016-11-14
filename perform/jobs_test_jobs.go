@@ -4,13 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
-	//"strings"
-	//"unicode/utf8"
 
-	"github.com/eris-ltd/eris-pm/definitions"
-	"github.com/eris-ltd/eris-pm/util"
-
-	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-db/client"
 )

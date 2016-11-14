@@ -1,5 +1,7 @@
 package commands
 
+// TODO salvage
+/*
 import (
 	"fmt"
 	"os"
@@ -195,4 +197,4 @@ func setDefaultStringSlice(envVar string, def []string) []string {
 		return strings.Split(env, ";")
 	}
 	return def
-}
+}*/

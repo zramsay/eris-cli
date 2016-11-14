@@ -1,11 +1,11 @@
 package perform
 
 import (
-	"github.com/eris-ltd/eris-pm/definitions"
-	"github.com/eris-ltd/eris-pm/util"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/util"
 
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {

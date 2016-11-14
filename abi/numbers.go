@@ -20,6 +20,7 @@ import (
 	"math/big"
 	"reflect"
 
+	// TODO remove dependency on common
 	"github.com/eris-ltd/common/go/common"
 )
 

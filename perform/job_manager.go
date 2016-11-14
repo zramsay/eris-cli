@@ -3,11 +3,12 @@ package perform
 import (
 	"strings"
 
-	"github.com/eris-ltd/eris-pm/definitions"
-	"github.com/eris-ltd/eris-pm/util"
+	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/util"
 
+	// TODO remove this dependency
 	"github.com/eris-ltd/common/go/common"
-	log "github.com/eris-ltd/eris-logger"
 )
 
 func RunJobs(do *definitions.Do) error {
