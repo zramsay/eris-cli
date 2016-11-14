@@ -5,11 +5,15 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/log"
+
+	// epm
+	"github.com/eris-ltd/eris-pm/definitions"
 )
 
 func GetFileByNameAndType(typ, name string) string {
@@ -251,4 +255,31 @@ func DoesFileExist(file string) bool {
 		return false
 	}
 	return true
+}
+
+// from epm
+func BundleHttpPathCorrect(do *definitions.Do) {
+	do.Chain = HttpPathCorrect(do.Chain, "tcp", true)
+	do.Signer = HttpPathCorrect(do.Signer, "http", false)
+	do.Compiler = HttpPathCorrect(do.Compiler, "http", false)
+}
+
+func HttpPathCorrect(oldPath, requiredPrefix string, trailingSlash bool) string {
+	var newPath string
+	protoReg := regexp.MustCompile(fmt.Sprintf("%ss*://.*", requiredPrefix))
+	trailer := regexp.MustCompile("/$")
+
+	if !protoReg.MatchString(oldPath) {
+		newPath = requiredPrefix + "://" + oldPath
+	} else {
+		newPath = oldPath
+	}
+
+	if trailingSlash {
+		if !trailer.MatchString(newPath) {
+			newPath = newPath + "/"
+		}
+	}
+
+	return newPath
 }
