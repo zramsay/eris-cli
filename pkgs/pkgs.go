@@ -86,7 +86,6 @@ func RunPackageSkip(do *definitions.Do) error {
 //
 func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 
-	var err error
 	var srvs []*definitions.ServiceDefinition
 	do.ServicesSlice = append(do.ServicesSlice, pkg.Dependencies.Services...)
 
@@ -117,26 +116,6 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 	// overwrite do.ChainName with pkg.ChainName if do.ChainName blank
 	if do.ChainName == "" {
 		do.ChainName = pkg.ChainName
-	}
-
-	// boot the chain
-	switch do.ChainName { // switch on the flag
-	case "", "$chain":
-		head, _ := util.GetHead() // checks the checkedout chain
-		if head != "" {           // used checked out chain
-			log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
-			err = bootChain(head, do)
-		} else { // if no chain is checked out and no --chain given, default to a throwaway
-			log.Warn("No chain was given, please start a chain")
-			err = fmt.Errorf("no more throwaway chains")
-		}
-	default:
-		log.WithField("=>", do.ChainName).Info("No chain flag used. Booting chain from package file")
-		err = bootChain(do.ChainName, do)
-	}
-
-	if err != nil {
-		return err
 	}
 
 	return nil
