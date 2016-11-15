@@ -13,8 +13,6 @@ import (
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
 
-	"github.com/eris-ltd/common/go/common"
-
 	"github.com/spf13/cobra"
 )
 
@@ -49,8 +47,12 @@ in a package definition file`,
 		// util.BundleHttpPathCorrect(do)
 		util.PrintPathPackage(do)
 
+		log.Warn(do.ChainName)
+		//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
+		log.Warn(do.ChainName)
+
 		// Populates chainID from the chain (if its not passed)
-		common.IfExit(util.GetChainID(do))
+		util.IfExit(util.GetChainID(do))
 	},
 	Run: PackagesDo,
 }
@@ -92,8 +94,7 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 	if do.DefaultAddr == "" { // note that this is not strictly necessary since the addr can be set in the epm.yaml.
 		util.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
-	// clears epm.log file
-	util.ClearJobResults()
+
 	util.IfExit(pkgs.RunPackage(do))
 }
 
@@ -108,7 +109,7 @@ func formCompilers() string {
 // ---------------------------------------------------
 // Defaults
 func defaultSigner() string {
-	return setDefaultString("EPM_SIGNER_ADDR", "localhost:4767")
+	return setDefaultString("EPM_SIGNER_ADDR", "http://172.17.0.2:4767") // temp hack
 }
 
 func defaultFile() string {
