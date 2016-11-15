@@ -51,8 +51,6 @@ in a package definition file`,
 		//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
 		log.Warn(do.ChainName)
 
-		// Populates chainID from the chain (if its not passed)
-		util.IfExit(util.GetChainID(do))
 	},
 	Run: PackagesDo,
 }
