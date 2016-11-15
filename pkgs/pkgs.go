@@ -16,7 +16,7 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
+	//"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 )
@@ -176,27 +176,6 @@ func CleanUp(do *definitions.Do, pkg *definitions.Package) error {
 		}
 	}
 
-	// export process
-	//if err := getDataContainerSorted(do, false); err != nil {
-	//return err // errors marmotified in getDataContainerSorted
-	//}
-
-	// removal of data container
-	if !do.Rm {
-		doRemove := definitions.NowDo()
-		doRemove.Operations.SrvContainerName = do.Operations.DataContainerName
-		log.WithField("=>", doRemove.Operations.SrvContainerName).Debug("Removing data container")
-		if err := perform.DockerRemove(nil, doRemove.Operations, false, true, false); err != nil {
-			return err
-		}
-	}
-
-	// removal of data dir
-	if !do.RmD {
-		log.WithField("dir", filepath.Join(config.DataContainersPath, do.Service.Name)).Debug("Removing data dir on host")
-		os.RemoveAll(filepath.Join(config.DataContainersPath, do.Service.Name))
-	}
-
 	return nil
 }
 
@@ -249,6 +228,13 @@ func bootChain(name string, do *definitions.Do) error {
 	// let the chain boot properly
 	time.Sleep(5 * time.Second)
 	return nil
+}
+
+func linkKeys(do *definitions.Do) {
+	newLink2 := util.ServiceContainerName("keys") + ":" + "keys"
+	do.Signer = newLink2
+	// ah this isn't used by run_package
+	do.Service.Links = append(do.Service.Links, newLink2)
 }
 
 // linkAppToChain ensures chain properly connected to Eris PM services

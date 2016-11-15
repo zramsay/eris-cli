@@ -101,8 +101,6 @@ func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
 
 // TODO: it is unpreferable to mix static and non-static use of Do
 func GetChainID(do *definitions.Do) error {
-	keepName := do.ChainName
-	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
 	if do.ChainID == "" {
 		nodeClient := client.NewErisNodeClient(do.ChainName)
 		_, chainId, _, err := nodeClient.ChainId()
@@ -112,7 +110,6 @@ func GetChainID(do *definitions.Do) error {
 		do.ChainID = chainId
 		log.WithField("=>", do.ChainID).Info("Using ChainID from Node")
 	}
-	do.ChainName = keepName
 
 	return nil
 }
