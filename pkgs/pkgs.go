@@ -32,7 +32,9 @@ var pwd string
 //  do.Path      - root directory of the pkg
 //  do.ChainName - name of the chain to run the pkgs do against
 //
-func RunPackage(do *definitions.Do) error {
+
+// do.ChainID (todo, maybe) XXX
+func RunPackageSkip(do *definitions.Do) error {
 	log.Warn("Performing action. This can sometimes take a wee while")
 	var err error
 	pwd, err = os.Getwd()
