@@ -1,4 +1,4 @@
-package util
+package ebi
 
 import (
 	"fmt"
@@ -6,14 +6,12 @@ import (
 	"os"
 	"path"
 
-	ebi "github.com/eris-ltd/eris-cli/abi"
+	"github.com/eris-ltd/eris-cli/abi"
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/hex"
 	"github.com/eris-ltd/eris-cli/log"
 
 	"github.com/eris-ltd/eris-db/client/core"
-
-	// TODO eliminate this dep
-	"github.com/eris-ltd/common/go/common"
 )
 
 // This is a closer function which is called by most of the tx_run functions
@@ -64,7 +62,7 @@ func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do
 		"arguments": fmt.Sprintf("%v", args),
 	}).Debug("Packing Call via ABI")
 
-	return ebi.Packer(abiSpecBytes, funcName, args...)
+	return abi.Packer(abiSpecBytes, funcName, args...)
 }
 
 func ReadAndDecodeContractReturn(abiLocation, funcName string, resultRaw []byte, do *definitions.Do) ([]*definitions.Variable, error) {
@@ -75,11 +73,11 @@ func ReadAndDecodeContractReturn(abiLocation, funcName string, resultRaw []byte,
 	log.WithField("=>", abiSpecBytes).Debug("ABI Specification (Decode)")
 
 	// Unpack the result
-	return ebi.Unpacker(abiSpecBytes, funcName, resultRaw)
+	return abi.Unpacker(abiSpecBytes, funcName, resultRaw)
 }
 
 func readAbi(root, contract string) (string, error) {
-	p := path.Join(root, common.StripHex(contract))
+	p := path.Join(root, hex.StripHex(contract))
 	if _, err := os.Stat(p); err != nil {
 		return "", fmt.Errorf("Abi doesn't exist for =>\t%s", p)
 	}

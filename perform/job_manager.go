@@ -6,9 +6,6 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
-
-	// TODO remove this dependency
-	"github.com/eris-ltd/common/go/common"
 )
 
 func RunJobs(do *definitions.Do) error {
@@ -37,7 +34,7 @@ func RunJobs(do *definitions.Do) error {
 		} else if do.Overwrite == false && dup == true {
 			overwriteWarning := "You are about to overwrite a previous job name, continue?"
 
-			if common.QueryYesOrNo(overwriteWarning, []int{}...) == common.No {
+			if util.QueryYesOrNo(overwriteWarning, []int{}...) == util.No {
 				continue
 			}
 		}
