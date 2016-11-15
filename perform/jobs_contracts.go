@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/ebi"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -198,7 +199,7 @@ func deployContract(deploy *definitions.Deploy, do *definitions.Do, r response.R
 		if err != nil {
 			return "", err
 		}
-		packedBytes, err := util.ReadAbiFormulateCall(r.Objectname, "", callDataArray, do)
+		packedBytes, err := ebi.ReadAbiFormulateCall(r.Objectname, "", callDataArray, do)
 		if err != nil {
 			return "", err
 		}
@@ -282,10 +283,10 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 	// formulate call
 	var packedBytes []byte
 	if call.ABI == "" {
-		packedBytes, err = util.ReadAbiFormulateCall(call.Destination, call.Function, callDataArray, do)
+		packedBytes, err = ebi.ReadAbiFormulateCall(call.Destination, call.Function, callDataArray, do)
 		callData = hex.EncodeToString(packedBytes)
 	} else {
-		packedBytes, err = util.ReadAbiFormulateCall(call.ABI, call.Function, callDataArray, do)
+		packedBytes, err = ebi.ReadAbiFormulateCall(call.ABI, call.Function, callDataArray, do)
 		callData = hex.EncodeToString(packedBytes)
 	}
 	if err != nil {
@@ -338,9 +339,9 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 	if txResult != nil {
 		log.WithField("=>", result).Debug("Decoding Raw Result")
 		if call.ABI == "" {
-			call.Variables, err = util.ReadAndDecodeContractReturn(call.Destination, call.Function, txResult, do)
+			call.Variables, err = ebi.ReadAndDecodeContractReturn(call.Destination, call.Function, txResult, do)
 		} else {
-			call.Variables, err = util.ReadAndDecodeContractReturn(call.ABI, call.Function, txResult, do)
+			call.Variables, err = ebi.ReadAndDecodeContractReturn(call.ABI, call.Function, txResult, do)
 		}
 		if err != nil {
 			return "", make([]*definitions.Variable, 0), err
@@ -374,7 +375,7 @@ func deployFinalize(do *definitions.Do, tx interface{}) (string, error) {
 		return util.MintChainErrorHandler(do, err)
 	}
 
-	if err := util.ReadTxSignAndBroadcast(res, err); err != nil {
+	if err := ebi.ReadTxSignAndBroadcast(res, err); err != nil {
 		log.Error("ERROR =>")
 		return "", err
 	}
