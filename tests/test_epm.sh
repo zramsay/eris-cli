@@ -15,34 +15,6 @@
 
 # test.sh [setup]
 
-# ----------------------------------------------------------
-# Set defaults
-
-# Where are the Things?
-
-name=eris-pm
-base=github.com/eris-ltd/$name
-repo=`pwd`
-if [ "$CIRCLE_BRANCH" ]
-then
-  ci=true
-  linux=true
-elif [ "$TRAVIS_BRANCH" ]
-then
-  ci=true
-  osx=true
-elif [ "$APPVEYOR_REPO_BRANCH" ]
-then
-  ci=true
-  win=true
-else
-  repo=$GOPATH/src/$base
-  ci=false
-fi
-
-branch=${CIRCLE_BRANCH:=master}
-branch=${branch/-/_}
-branch=${branch/\//_}
 
 # Other variables
 if [[ "$(uname -s)" == "Linux" ]]
@@ -64,8 +36,6 @@ name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
 chain_dir=$chains_dir/$chain_name
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
 
 # ---------------------------------------------------------------------------
 # Needed functionality
@@ -104,10 +74,6 @@ early_exit(){
 
 test_setup(){
   echo "Getting Setup"
-  #if [ "$ci" = true ]
-  #then
-    #eris init --yes --pull-images=true --testing=true 1>/dev/null
-  #fi
   ensure_running keys
 
   # make a chain
@@ -128,7 +94,7 @@ test_setup(){
 }
 
 goto_base(){
-  cd $repo/tests/fixtures
+  cd tests/fixtures
 }
 
 run_test(){
