@@ -1,12 +1,12 @@
 package pkgs
 
 import (
-	//"fmt"
+	"fmt"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	//"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/perform"
-	//"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/util"
 )
 
 func RunPackage(do *definitions.Do) error {
@@ -14,14 +14,15 @@ func RunPackage(do *definitions.Do) error {
 
 	// Populates chainID from the chain
 	// TODO link properly
-	//keepName := do.ChainName
-	//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
-	//if err = util.GetChainID(do); err != nil {
-	//	return err
-	//}
-	//do.ChainName = keepName
+	keepName := do.ChainName
+	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
+	if err = util.GetChainID(do); err != nil {
+		return err
+	}
+	do.ChainName = keepName
+
 	// XXX temp hack
-	do.ChainID = do.ChainName
+	//do.ChainID = do.ChainName
 
 	// Load the package if it doesn't exist
 	if do.Package == nil {
@@ -49,8 +50,8 @@ func RunPackage(do *definitions.Do) error {
 		return err
 	}*/
 
-	linkKeys(do)
+	//linkKeys(do)
 	//linkAppToChain(do)
-	//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
+	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
 	return perform.RunJobs(do)
 }
