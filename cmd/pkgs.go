@@ -107,7 +107,7 @@ func formCompilers() string {
 // ---------------------------------------------------
 // Defaults
 func defaultSigner() string {
-	return setDefaultString("EPM_SIGNER_ADDR", "localhost:4767")
+	return setDefaultString("EPM_SIGNER_ADDR", "http://172.17.0.2:4767") // XXX temp
 }
 
 func defaultFile() string {
