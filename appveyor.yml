@@ -20,7 +20,7 @@ environment:
     secure: Lo717dojMJUNytpQPZWwyw==
   AWS_SECURITY_GROUP:
     secure: Jie7WuAzjiHVp7tX8MfaSQ==
-  EPM_BRANCH: develop
+  ECM_BRANCH: develop
 
 build_script:
 - cmd: >-
