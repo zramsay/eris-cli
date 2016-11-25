@@ -178,9 +178,5 @@ func postProcess(do *definitions.Do) error {
 		return util.WriteJobResultJSON(results)
 	}
 
-	if do.SummaryTable {
-		// TableWriter goes here.
-	}
-
 	return nil
 }
