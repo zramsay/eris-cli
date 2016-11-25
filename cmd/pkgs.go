@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
@@ -45,11 +46,7 @@ in a package definition file`,
 
 		// Fixes path issues and controls for mint-client / eris-keys assumptions
 		// util.BundleHttpPathCorrect(do)
-		//util.PrintPathPackage(do)
-
-		log.Warn(do.ChainName)
-		//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
-		log.Warn(do.ChainName)
+		util.PrintPathPackage(do)
 
 	},
 	Run: PackagesDo,
@@ -85,6 +82,12 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 	}
 	if do.DefaultAddr == "" { // note that this is not strictly necessary since the addr can be set in the epm.yaml.
 		util.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
+	}
+
+	var err error
+	do.ChainIP, err = chains.GetChainIP(do)
+	if err != nil {
+		util.IfExit(err)
 	}
 
 	util.IfExit(pkgs.RunPackage(do))

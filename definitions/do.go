@@ -37,6 +37,7 @@ type Do struct {
 	Task          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Tail          string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainName     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainIP       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainType     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile   string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Hash          string   `mapstructure:"," json:"," yaml:"," toml:","`

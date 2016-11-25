@@ -3,7 +3,7 @@ package pkgs
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/chains"
+	//"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
@@ -12,12 +12,13 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
+	var err error
 
-	chainIP, err := chains.GetChainIP(do)
-	if err != nil {
-		return err
-	}
-	fmt.Println(chainIP)
+	//chainIP, err := chains.GetChainIP(do)
+	//if err != nil {
+	//	return err
+	//}
+	fmt.Println(do.ChainIP)
 
 	// Populates chainID from the chain
 	// TODO link properly & get chainID not from chainName
