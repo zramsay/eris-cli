@@ -1,6 +1,7 @@
 package perform
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -76,7 +77,9 @@ func RunJobs(do *definitions.Do) error {
 			announce(job.JobName, "Call")
 			job.JobResult, job.JobVars, err = CallJob(job.Job.Call, do)
 			if len(job.JobVars) != 0 {
-				log.WithField("=>", job.JobVars).Info("Job Vars")
+				for _, theJob := range job.JobVars {
+					log.WithField("=>", fmt.Sprintf("%s,%s", theJob.Name, theJob.Value)).Info("Job Vars")
+				}
 			}
 		// State jobs
 		case job.Job.RestoreState != nil:
@@ -94,7 +97,9 @@ func RunJobs(do *definitions.Do) error {
 			announce(job.JobName, "QueryContract")
 			job.JobResult, job.JobVars, err = QueryContractJob(job.Job.QueryContract, do)
 			if len(job.JobVars) != 0 {
-				log.WithField("=>", job.JobVars).Info("Job Vars")
+				for _, theJob := range job.JobVars {
+					log.WithField("=>", fmt.Sprintf("%s,%s", theJob.Name, theJob.Value)).Info("Job Vars")
+				}
 			}
 		case job.Job.QueryName != nil:
 			announce(job.JobName, "QueryName")
