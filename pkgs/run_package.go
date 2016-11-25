@@ -5,7 +5,9 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/pkgs/jobs"
+	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -13,16 +15,13 @@ func RunPackage(do *definitions.Do) error {
 	var err error
 
 	// Populates chainID from the chain
-	// TODO link properly
-	keepName := do.ChainName
-	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
+	// TODO link properly & get chainID not from chainName
+	// XXX temp hack :-1:
+	//do.ChainID = do.ChainName
+	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, "46657") // TODO flexible port
 	if err = util.GetChainID(do); err != nil {
 		return err
 	}
-	do.ChainName = keepName
-
-	// XXX temp hack
-	//do.ChainID = do.ChainName
 
 	// Load the package if it doesn't exist
 	if do.Package == nil {
@@ -32,26 +31,32 @@ func RunPackage(do *definitions.Do) error {
 		}
 	}
 
-	// boot the chain
-	/*switch do.ChainName { // switch on the flag
-	case "", "$chain":
-		head, _ := util.GetHead() // checks the checkedout chain
-		if head != "" {           // used checked out chain
-			log.WithField("=>", head).Info("No chain flag or in package file. Booting chain from checked out chain")
-			err = bootChain(head, do)
-		} else { // if no chain is checked out and no --chain given, do nothing
-			log.Warn("No chain was given, please start a chain")
+	if do.LocalCompiler {
+		if err := bootCompiler(); err != nil {
+			return err
 		}
-	default:
-		log.WithField("=>", do.ChainName).Info("No chain flag used. Booting chain from package file")
-		err = bootChain(do.ChainName, do)
+		getLocalCompilerData(do)
 	}
-	if err != nil {
-		return err
-	}*/
 
-	//linkKeys(do)
-	//linkAppToChain(do)
-	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
-	return jobs.RunJobs(do)
+	return perform.RunJobs(do)
+}
+
+func bootCompiler() error {
+
+	// add the compilers to the local services if the flag is pushed
+	// [csk] note - when we move to default local compilers we'll remove
+	// the compilers service completely and this will need to get
+	// reworked to utilize DockerRun with a populated service def.
+	doComp := definitions.NowDo()
+	doComp.Name = "compilers"
+	return services.StartService(doComp)
+}
+
+// getLocalCompilerData populates the IP:port combo for the compilers.
+func getLocalCompilerData(do *definitions.Do) {
+	// [csk]: note this is brittle we should only expose one port in the
+	// docker file by default for the compilers service we can expose more
+	// forcibly
+
+	do.Compiler = "http://compilers:9099"
 }
