@@ -16,7 +16,9 @@ import (
 // LoadPackage loads a package definition specified by the directory or
 // filename path and chainName and returns a package definition structure.
 // LoadPackage can also return missing files or package loading errors.
-func LoadPackage(path, chainName string) (*definitions.Package, error) {
+
+// TODO [rj] deprecate
+func LoadPackageOLD(path, chainName string) (*definitions.Package, error) {
 	var name string
 	var dir bool
 
