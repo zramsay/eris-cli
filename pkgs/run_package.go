@@ -12,14 +12,21 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
-	var err error
+
+	chainIP, err := getChainIP(do.ChainName)
+	if err != nil {
+		return err
+	}
+	fmt.Println(chainIP)
 
 	// Populates chainID from the chain
 	// TODO link properly & get chainID not from chainName
 	// XXX temp hack :-1:
 	//do.ChainID = do.ChainName
+
+	// TODO implement do.ChainURL
 	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, "46657") // TODO flexible port
-	if err = util.GetChainID(do); err != nil {
+	if err := util.GetChainID(do); err != nil {
 		return err
 	}
 
@@ -39,6 +46,24 @@ func RunPackage(do *definitions.Do) error {
 	}
 
 	return perform.RunJobs(do)
+}
+
+func getChainIP(chainName string) (string, error) {
+
+	//if !util.IsChain(chainName, true) {
+	//	return "", fmt.Errorf("chain (%s) is not running", chainName)
+	//}
+
+	containerName := util.ContainerName(definitions.TypeChain, chainName)
+
+	cont, err := util.DockerClient.InspectContainer(containerName)
+	if err != nil {
+		return "", util.DockerError(err)
+	}
+	fmt.Println(cont.NetworkSettings.IPAddress)
+
+	//return chainIP, nil
+	return "", nil
 }
 
 func bootCompiler() error {
