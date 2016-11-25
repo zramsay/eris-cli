@@ -45,7 +45,7 @@ in a package definition file`,
 
 		// Fixes path issues and controls for mint-client / eris-keys assumptions
 		// util.BundleHttpPathCorrect(do)
-		util.PrintPathPackage(do)
+		//util.PrintPathPackage(do)
 
 		log.Warn(do.ChainName)
 		//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)

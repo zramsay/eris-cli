@@ -75,6 +75,14 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
 }
 
+func GetChainIP(do *definitions.Do) (string, error) {
+	chain, err := loaders.LoadChainDefinition(do.ChainName)
+	if err != nil {
+		return "", err
+	}
+	return chain.Name, nil
+}
+
 // InspectChain is Eris' version of [docker inspect]. It returns
 // an error.
 //

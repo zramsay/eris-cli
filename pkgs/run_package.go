@@ -3,6 +3,7 @@ package pkgs
 import (
 	"fmt"
 
+	"github.com/eris-ltd/eris-cli/chains"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
@@ -12,7 +13,7 @@ import (
 
 func RunPackage(do *definitions.Do) error {
 
-	chainIP, err := getChainIP(do.ChainName)
+	chainIP, err := chains.GetChainIP(do)
 	if err != nil {
 		return err
 	}
@@ -48,12 +49,18 @@ func RunPackage(do *definitions.Do) error {
 }
 
 func getChainIP(chainName string) (string, error) {
-
-	//if !util.IsChain(chainName, true) {
-	//	return "", fmt.Errorf("chain (%s) is not running", chainName)
+	//chain, err := loaders.LoadChainDefinition(chainName)
+	//if err != nil {
+	//	return "", err
 	//}
 
-	containerName := util.ContainerName(definitions.TypeChain, chainName)
+	//chainName, err := chains.GetChainIP(
+
+	if !util.IsChain(chainName, true) {
+		return "", fmt.Errorf("chain (%s) is not running", chainName)
+	}
+
+	containerName := util.ChainContainerName(chainName)
 
 	cont, err := util.DockerClient.InspectContainer(containerName)
 	if err != nil {

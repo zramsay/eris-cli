@@ -43,6 +43,7 @@ func LoadChainDefinition(chainName string, definition ...string) (*definitions.C
 	}
 
 	chain.Service.Name = chain.Name
+	fmt.Printf("but why: %s\n", chain.Name)
 	chain.Operations.SrvContainerName = util.ChainContainerName(chain.Name)
 	chain.Operations.DataContainerName = util.DataContainerName(chain.Name)
 

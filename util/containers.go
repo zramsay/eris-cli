@@ -67,6 +67,7 @@ func UniqueName(name string) string {
 // ContainerName returns a long container name by a given container type
 // and a short name.
 func ContainerName(t, name string) string {
+	fmt.Printf("WTF: %s\n", name)
 	lookup, err := Lookup(t, name)
 	if err != nil {
 		containerName := UniqueName(name)
@@ -78,6 +79,7 @@ func ContainerName(t, name string) string {
 
 		return containerName
 	}
+	fmt.Printf("look: %s\n", lookup)
 	return lookup
 }
 
