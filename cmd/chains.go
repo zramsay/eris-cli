@@ -452,9 +452,14 @@ func InspectChain(cmd *cobra.Command, args []string) {
 func IPChain(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 
-	do.Name = args[0]
-	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
-	util.IfExit(chains.InspectChain(do))
+	do.ChainName = args[0]
+	//do.Operations.Args = []string{"NetworkSettings.IPAddress"}
+	//util.IfExit(chains.InspectChain(do))
+	ip, err := chains.GetChainIP(do)
+	if err != nil {
+		util.IfExit(err)
+	}
+	fmt.Println(ip)
 }
 
 func ListChains(cmd *cobra.Command, args []string) {

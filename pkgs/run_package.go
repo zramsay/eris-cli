@@ -54,8 +54,6 @@ func getChainIP(chainName string) (string, error) {
 	//	return "", err
 	//}
 
-	//chainName, err := chains.GetChainIP(
-
 	if !util.IsChain(chainName, true) {
 		return "", fmt.Errorf("chain (%s) is not running", chainName)
 	}

@@ -80,6 +80,18 @@ func GetChainIP(do *definitions.Do) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if !util.IsChain(do.ChainName, true) {
+		return "", fmt.Errorf("chain (%s) is not running", do.ChainName)
+	}
+
+	containerName := util.ChainContainerName(do.ChainName)
+
+	cont, err := util.DockerClient.InspectContainer(containerName)
+	if err != nil {
+		return "", util.DockerError(err)
+	}
+	fmt.Println(cont.NetworkSettings.IPAddress)
 	return chain.Name, nil
 }
 
