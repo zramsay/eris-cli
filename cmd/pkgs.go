@@ -57,7 +57,7 @@ in a package definition file`,
 
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
-	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", "http://172.17.0.2:4767", "IP:port of keys daemon which EPM should use")
+	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", "http://172.17.0.2:4767", "IP:PORT of keys daemon which EPM should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
 	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "csv", "output format which epm should use [csv,json]")
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which EPM should use")
@@ -69,8 +69,6 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "1234", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
-	packagesDo.Flags().StringVarP(&do.ChainPort, "chain-port", "", "46657", "chain rpc port")
-	packagesDo.Flags().StringVarP(&do.KeysPort, "keys-port", "", "4767", "port for keys server")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
 	packagesDo.Flags().BoolVarP(&do.LocalCompiler, "local-compiler", "z", false, "use a local compiler service; overwrites anything added to compilers flag")
 }
