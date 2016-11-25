@@ -59,7 +59,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", "http://172.17.0.2:4767", "IP:PORT of keys daemon which EPM should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
-	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "csv", "output format which epm should use [csv,json]")
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which epm should use [csv,json]")
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which EPM should use")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address")
 	packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts EPM should use")
