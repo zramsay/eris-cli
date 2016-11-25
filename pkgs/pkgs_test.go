@@ -21,6 +21,8 @@ import (
 	"github.com/eris-ltd/eris-cli/version"
 )
 
+// [zr] there's a ton of refactoring to do here!
+
 var goodPkg string = filepath.Join(config.AppsPath, "good", "package.json")
 var badPkg string = filepath.Join(config.AppsPath, "bad", "package.json")
 var emptyPkg string = filepath.Join(config.AppsPath, "empty", "package.json")
