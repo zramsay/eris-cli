@@ -47,7 +47,7 @@ func RunPackageSkip(do *definitions.Do) error {
 		"pwd":       pwd,
 	}).Debug()
 
-	pkg, err := loaders.LoadPackage(do.Path, do.ChainName)
+	pkg, err := loaders.LoadPackageOLD(do.Path, do.ChainName)
 	if err != nil {
 		return err
 	}

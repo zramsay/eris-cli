@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	//"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/util"
 )
@@ -26,7 +26,7 @@ func RunPackage(do *definitions.Do) error {
 
 	// Load the package if it doesn't exist
 	if do.Package == nil {
-		do.Package, err = LoadPackage(do.YAMLPath)
+		do.Package, err = loaders.LoadPackage(do.YAMLPath)
 		if err != nil {
 			return err
 		}

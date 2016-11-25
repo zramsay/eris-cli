@@ -70,7 +70,6 @@ type Do struct {
 
 	//from epm
 	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
-	SummaryTable  bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PublicKey     string   `mapstructure:"," json:"," yaml:"," toml:","`
