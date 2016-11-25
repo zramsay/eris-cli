@@ -1,4 +1,4 @@
-package pkgs
+package loaders
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 
-	// TODO eliminate viper ... ?
 	"github.com/spf13/viper"
 )
 
