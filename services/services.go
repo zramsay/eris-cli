@@ -481,12 +481,7 @@ func CatService(do *definitions.Do) (string, error) {
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
-	err := perform.DockerInspect(srv, ops, field)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return perform.DockerInspect(srv, ops, field)
 }
 
 // if given empty string for fileName will use Service

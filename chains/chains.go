@@ -89,8 +89,7 @@ func InspectChain(do *definitions.Do) error {
 
 	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
-		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
-		if err != nil {
+		if err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0]); err != nil {
 			return err
 		}
 	}

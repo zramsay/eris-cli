@@ -5,24 +5,32 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/perform"
 	"github.com/eris-ltd/eris-cli/pkgs/jobs"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
 func RunPackage(do *definitions.Do) error {
-	var err error
+	// XXX [zr] why this fails I don't know
+	//chainIP, err := getChainIP(do.ChainName)
+	//if err != nil {
+	//	return err
+	//}
+	//fmt.Println(chainIP)
 
 	// Populates chainID from the chain
 	// TODO link properly & get chainID not from chainName
 	// XXX temp hack :-1:
 	//do.ChainID = do.ChainName
-	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, "46657") // TODO flexible port
-	if err = util.GetChainID(do); err != nil {
+
+	// TODO implement do.ChainURL
+	// TODO flexible port
+	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, "46657")
+	if err := util.GetChainID(do); err != nil {
 		return err
 	}
 
+	var err error
 	// Load the package if it doesn't exist
 	if do.Package == nil {
 		do.Package, err = loaders.LoadPackage(do.YAMLPath)
@@ -38,7 +46,25 @@ func RunPackage(do *definitions.Do) error {
 		getLocalCompilerData(do)
 	}
 
-	return perform.RunJobs(do)
+	return jobs.RunJobs(do)
+}
+
+func getChainIP(chainName string) (string, error) {
+
+	//if !util.IsChain(chainName, true) {
+	//	return "", fmt.Errorf("chain (%s) is not running", chainName)
+	//}
+
+	containerName := util.ContainerName(definitions.TypeChain, chainName)
+
+	cont, err := util.DockerClient.InspectContainer(containerName)
+	if err != nil {
+		return "", util.DockerError(err)
+	}
+	fmt.Println(cont.NetworkSettings.IPAddress)
+
+	//return chainIP, nil
+	return "", nil
 }
 
 func bootCompiler() error {
