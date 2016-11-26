@@ -3,7 +3,6 @@ machine:
     GOPATH: $HOME/.go_workspace
     GO15VENDOREXPERIMENT: 1
     REPO: ${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-    ECM_BRANCH: develop
     EPM_BRANCH: develop
     DOCKER_VERSION: 1.9.1
     DOCKER_MACHINE_VERSION: 0.7.0
@@ -22,10 +21,14 @@ dependencies:
     - go version
     - docker version
     - docker-machine version
+    - "sudo add-apt-repository -y ppa:masterminds/glide && sudo apt-get update; sudo apt-get install -y glide"
+    - git clone https://github.com/eris-ltd/eris-keys.git ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys
+    - cd ${GOPATH%%:*}/src/github.com/eris-ltd/eris-keys && glide install
     - cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install
 
 test:
   override:
+          # this can go once epm is in
     - case ${CIRCLE_NODE_INDEX} in 0) SKIP_STACK=true tests/test.sh;; 1) SKIP_PACKAGES=true tests/test.sh;; esac:
         parallel: true
     - "tests/dm_cleanup.sh"

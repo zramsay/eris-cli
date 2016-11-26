@@ -1,0 +1,30 @@
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "Test"
+
+definition = "Only use for testing."
+
+typical_user = "A bot that tests stuff"
+
+default_number = 1
+
+default_tokens = 888888888888
+
+default_bond = 9999
+
+[perms]
+root = 0
+send = 1
+call = 1
+create_contract = 1
+create_account = 1
+bond = 1
+name = 1
+has_base = 1
+set_base = 1
+unset_base = 1
+set_global = 1
+has_role = 1
+add_role = 1
+rm_role = 1
