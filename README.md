@@ -161,7 +161,6 @@ Created by `eris init` in $HOME directory:
 
 Are Welcome! Before submitting a pull request please:
 
-* read up on [How The Marmots Git](https://github.com/eris-ltd/coding/wiki/How-The-Marmots-Git)
 * fork from `develop`
 * go fmt your changes
 * have tests
@@ -182,4 +181,4 @@ The [issue template](.github/ISSUE_TEMPLATE.md) specifies what needs to be inclu
 
 # License
 
-[Proudly GPL-3](http://www.gnu.org/philosophy/enforcing-gpl.en.html). See [license file](https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md).
+[Proudly GPL-3](http://www.gnu.org/philosophy/enforcing-gpl.en.html). See [license file](LICENSE.md)
