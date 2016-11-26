@@ -127,16 +127,16 @@ func AccountTypesNames(erisPath string, withExt bool) ([]string, error) {
 	return names, nil
 }
 
-func WriteGenesisFile(name string, genesis *definitions.ErisDBGenesis, account *definitions.ErisDBAccount, single bool) error {
-	return writer(genesis, name, account.Name, "genesis.json", single)
+func WriteGenesisFile(name string, genesis *definitions.ErisDBGenesis, account *definitions.ErisDBAccount) error {
+	return writer(genesis, name, account.Name, "genesis.json")
 }
 
-func WritePrivVals(name string, account *definitions.ErisDBAccount, single bool) error {
-	return writer(account.MintKey, name, account.Name, "priv_validator.json", single)
+func WritePrivVals(name string, account *definitions.ErisDBAccount) error {
+	return writer(account.MintKey, name, account.Name, "priv_validator.json")
 }
 
-func WriteConfigurationFile(chain_name, account_name, seeds string, single bool,
-	chainImageName string, useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
+func WriteConfigurationFile(chain_name, account_name, seeds string, chainImageName string,
+	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
 	if account_name == "" {
 		account_name = "anonymous_marmot"
 	}
@@ -150,12 +150,9 @@ func WriteConfigurationFile(chain_name, account_name, seeds string, single bool,
 		convertExportPortsSliceToString(exportedPorts), containerEntrypoint); err != nil {
 		return err
 	}
-	var file string
-	if !single {
-		file = filepath.Join(config.ChainsPath, chain_name, account_name, "config.toml")
-	} else {
-		file = filepath.Join(config.ChainsPath, chain_name, "config.toml")
-	}
+
+	file := filepath.Join(config.ChainsPath, chain_name, account_name, "config.toml")
+
 	log.WithField("path", file).Debug("Saving File.")
 	if err := config.WriteFile(string(fileBytes), file); err != nil {
 		return err
@@ -186,17 +183,14 @@ func convertExportPortsSliceToString(exportPorts []string) string {
 	return `[ "` + strings.Join(exportPorts[:], `", "`) + `" ]`
 }
 
-func writer(toWrangle interface{}, chain_name, account_name, fileBase string, single bool) error {
-	var file string
+func writer(toWrangle interface{}, chain_name, account_name, fileBase string) error {
 	fileBytes, err := json.MarshalIndent(toWrangle, "", "  ")
 	if err != nil {
 		return err
 	}
-	if !single {
-		file = filepath.Join(config.ChainsPath, chain_name, account_name, fileBase)
-	} else {
-		file = filepath.Join(config.ChainsPath, chain_name, fileBase)
-	}
+
+	file := filepath.Join(config.ChainsPath, chain_name, account_name, fileBase)
+
 	log.WithField("path", file).Debug("Saving File.")
 	err = config.WriteFile(string(fileBytes), file)
 	if err != nil {
