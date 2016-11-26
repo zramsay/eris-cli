@@ -20,7 +20,7 @@ The first thing we're going to do is to add a very simple contract.
 
 {{ insert_file "contracts_deploying_adv/GSFactory.sol" }}
 
-Now you'll make a file in this directory. **Protip:** Get it with `curl -X GET https://raw.githubusercontent.com/eris-ltd/coding/master/contracts/advtut/GSFactory.sol -o GSFactory.sol`. Let's assume that is called `GSFactory.sol` and has the following contents
+Now you'll make a file in this directory. Let's assume that is called `GSFactory.sol` and has the following contents displayed above.
 
 This is a slightly more advanced set of contracts than that we used in the [101 tutorial sequence](/docs/tutorials/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates). Also, now we have multiple contracts we are going to handle.
 
@@ -28,7 +28,7 @@ What do these contracts do? Well, they aren't terribly interesting we know. The 
 
 # Fixup your epm.yaml
 
-Next we need to make an epm.yaml. **Protip:** Get it with: `curl -X GET https://raw.githubusercontent.com/eris-ltd/coding/master/contracts/advtut/epm.yaml -o epm.yaml`. It should look like this:
+Next we need to make an epm.yaml. It should look like this:
 
 {{ insert_file "contracts_deploying_adv/epm.yaml" }}
 
