@@ -15,7 +15,7 @@ Our [ISSUE_TEMPLATE.md](ISSUE_TEMPLATE.md) will autopopulate the new issue.
 
 ### Pull requests are always welcome (to `develop` rather than `master`).
 
-Not sure if that typo is worth a pull request? Found a bug and know how to fix it? Do it! We will appreciate it. Any significant improvement should be documented as a GitHub issue (or discussed in [The Marmot Den](https://slack.monax.io) Slack community prior to beginning.
+Not sure if that typo is worth a pull request? Found a bug and know how to fix it? Do it! We will appreciate it. Any significant improvement should be documented as a GitHub issue or discussed in [The Marmot Den](https://slack.monax.io) Slack community prior to beginning.
 
 We are always thrilled to receive pull requests (and bug reports!) and we do our best to process them quickly. 
 
@@ -23,8 +23,8 @@ We are always thrilled to receive pull requests (and bug reports!) and we do our
 
 Fork the repository and make changes on your fork in a feature branch (branched from develop), create an issue outlining your feature or a bug, or use an open one.
 
-    If it's a bug fix branch, name it XXXX-something where XXXX is the number of the issue.
-    If it's a feature branch, create an enhancement issue to announce your intentions, and name it XXXX-something where XXXX is the number of the issue.
+    If it's a bug fix branch, name it something-XXXX where XXXX is the number of the issue.
+    If it's a feature branch, create an enhancement issue to announce your intentions, and name it something-XXXX where XXXX is the number of the issue.
 
 Submit unit tests for your changes. Go has a great test framework built in; use it! Take a look at existing tests for inspiration. Run the full test suite on your branch before submitting a pull request.
 
