@@ -159,83 +159,83 @@ run_test(){
 }
 
 perform_tests(){
-#  echo
-#  echo "simplest test"
-#  uuid=$(get_uuid)
-#  direct=""
-#  eris chains make $uuid --account-types=Full:1
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  echo
-#
-#  echo "more complex flags test"
-#  uuid=$(get_uuid)
-#  direct="$uuid"_validator_000
-#  eris chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  echo
-#
-#  echo "chain-type test"
-#  uuid=$(get_uuid)
-#  direct=""
-#  eris chains make $uuid --chain-type=simplechain
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  echo
-#
-#  echo "add a new account type test"
-#  uuid=$(get_uuid)
-#  direct=""
-#  cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
-#  eris chains make $uuid --account-types=Test:1
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  rm $chains_dir/account-types/tester.toml
-#  echo
-#
-#  echo "add a new chain type test"
-#  uuid=$(get_uuid)
-#  direct="$uuid"_full_000
-#  cp $repo/tests/cm_test_fixtures/testchain.toml $chains_dir/chain-types/.
-#  eris chains make $uuid --chain-type=testchain
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  rm $chains_dir/chain-types/testchain.toml
-#  echo
-#
-#  echo "export/inspect tars"
-#  uuid=$(get_uuid)
-#  direct=""
-#  eris chains make $uuid --account-types=Full:2 --tar
-#  if [ $? -ne 0 ]
-#  then
-#    test_exit=1
-#    return 1
-#  fi
-#  tar -xzf $chains_dir/$uuid/"$uuid"_full_000.tar.gz -C $chains_dir/$uuid/.
-#  run_test
-#  if [ $test_exit -eq 1 ]
-#  then
-#    return 1
-#  fi
-#  echo
-#
+  echo
+  echo "simplest test"
+  uuid=$(get_uuid)
+  direct=""
+  eris chains make $uuid --account-types=Full:1
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  echo
+
+  echo "more complex flags test"
+  uuid=$(get_uuid)
+  direct="$uuid"_validator_000
+  eris chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  echo
+
+  echo "chain-type test"
+  uuid=$(get_uuid)
+  direct=""
+  eris chains make $uuid --chain-type=simplechain
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  echo
+
+  echo "add a new account type test"
+  uuid=$(get_uuid)
+  direct=""
+  cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
+  eris chains make $uuid --account-types=Test:1
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  rm $chains_dir/account-types/tester.toml
+  echo
+
+  echo "add a new chain type test"
+  uuid=$(get_uuid)
+  direct="$uuid"_full_000
+  cp $repo/tests/cm_test_fixtures/testchain.toml $chains_dir/chain-types/.
+  eris chains make $uuid --chain-type=testchain
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  rm $chains_dir/chain-types/testchain.toml
+  echo
+
+  echo "export/inspect tars"
+  uuid=$(get_uuid)
+  direct=""
+  eris chains make $uuid --account-types=Full:2 --tar
+  if [ $? -ne 0 ]
+  then
+    test_exit=1
+    return 1
+  fi
+  tar -xzf $chains_dir/$uuid/"$uuid"_full_000.tar.gz -C $chains_dir/$uuid/.
+  run_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  echo
+
 #  # export/inspect zips
 #  # todo
 
@@ -250,7 +250,7 @@ perform_tests(){
   fi
   rm $chains_dir/$uuid/genesis.json
   prev_dir=`pwd`
-  gen=$(eris chains make $uuid --known --accounts accounts.csv --validators validators.csv)
+  gen=$(eris chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv)
   echo "$gen" > $chains_dir/$uuid/genesis.json
   run_test
   cd $prev_dir
@@ -299,4 +299,4 @@ perform_tests
 # ---------------------------------------------------------------------------
 # Cleaning up
 
-#test_teardown
+test_teardown

@@ -11,6 +11,7 @@ import (
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 
+	"github.com/eris-ltd/eris-db/genesis"
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
 )
 
@@ -44,7 +45,19 @@ func MakeChain(do *definitions.Do) error {
 	keys.DaemonAddr = "http://172.17.0.2:4767" // tmp
 
 	if do.Known {
-		do.CSV = fmt.Sprintf("%s,%s", do.ChainMakeVals, do.ChainMakeActs)
+		log.Warn("Creating chain from known accounts and validators")
+		log.WithField("=>", do.ChainMakeActs).Info("Accounts path")
+		log.WithField("=>", do.ChainMakeVals).Info("Validators path")
+
+		genesisFileString, err := genesis.GenerateKnown(do.Name, do.ChainMakeActs, do.ChainMakeVals)
+		if err != nil {
+			return err
+		}
+		fmt.Println(genesisFileString)
+		// write to assumed location (maybe check if one is there?)
+		// there's nothing else to do, since all the accounts/vals
+		// were already generated
+		return nil
 	}
 
 	// set infos
