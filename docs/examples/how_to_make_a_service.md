@@ -104,7 +104,7 @@ server.listen(process.env.IDI_PORT, function () {
 });
 ```
 
-Copy this as the new `app.js`. **Protip:** Get it (after `rm app.js`) with `curl -X GET https://raw.githubusercontent.com/eris-ltd/coding/master/contracts/idi/new_app.js -o app.js`.
+Copy this as the new `app.js`. 
 
 Note the changes between this script and the previous script.  We've removed the interactive feature and replaced it with a [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) API server.
 
