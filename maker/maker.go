@@ -268,6 +268,7 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 
 			// If the number of account types is missing,
 			// assuming 1.
+			// [zr] this should throw an error ... (bad user input)
 			num int = 1
 		)
 		if len(tmp) > 1 {
