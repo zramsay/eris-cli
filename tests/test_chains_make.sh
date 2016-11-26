@@ -160,9 +160,9 @@ run_test(){
 
 perform_tests(){
   echo
-  echo "simplest test"
+  echo "single account-type test"
   uuid=$(get_uuid)
-  direct=""
+  direct="$uuid"_full_000
   eris chains make $uuid --account-types=Full:1
   run_test
   if [ $test_exit -eq 1 ]
@@ -182,10 +182,11 @@ perform_tests(){
   fi
   echo
 
-  echo "chain-type test"
+  echo "assume simplechain test"
   uuid=$(get_uuid)
-  direct=""
-  eris chains make $uuid --chain-type=simplechain
+  direct="$uuid"_full_000
+  # eris chains make $uuid --chain-type=simplechain (old, could also be tested)
+  eris chains make $uuid # (new)
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -195,7 +196,7 @@ perform_tests(){
 
   echo "add a new account type test"
   uuid=$(get_uuid)
-  direct=""
+  direct="$uuid"_test_000
   cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
   eris chains make $uuid --account-types=Test:1
   run_test
@@ -239,19 +240,19 @@ perform_tests(){
 #  # export/inspect zips
 #  # todo
 
-  echo "make a chain using csv test"
+  echo "make a known chain using csv test"
   uuid=$(get_uuid)
-  direct=""
+  direct="$uuid"_full_000
   eris chains make $uuid --account-types=Full:1
   if [ $? -ne 0 ]
   then
     test_exit=1
     return 1
   fi
-  rm $chains_dir/$uuid/genesis.json
+  rm $chains_dir/$uuid/$direct/genesis.json
   prev_dir=`pwd`
   gen=$(eris chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv)
-  echo "$gen" > $chains_dir/$uuid/genesis.json
+  echo "$gen" > $chains_dir/$uuid/$direct/genesis.json
   run_test
   cd $prev_dir
   if [ $test_exit -eq 1 ]
