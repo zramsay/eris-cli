@@ -105,7 +105,7 @@ func maker(do *definitions.Do, consensus_type string, accountTypes []*definition
 		return err
 	}
 
-	return MakeErisDBChain(do.Name, do.Accounts, do.ChainImageName,
+	return MakeErisDBChain(do.Name, do.SeedsIP, do.Accounts, do.ChainImageName,
 		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint)
 }
 
