@@ -63,6 +63,7 @@ type Do struct {
 	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeActs string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeVals string   `mapstructure:"," json:"," yaml:"," toml:","`
+	SeedsIP       []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ImagesSlice   []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`

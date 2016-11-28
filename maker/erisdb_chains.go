@@ -1,12 +1,14 @@
 package maker
 
 import (
+	"strings"
+
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
-func MakeErisDBChain(name string, accounts []*definitions.ErisDBAccount, chainImageName string,
+func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDBAccount, chainImageName string,
 	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
 	genesis := definitions.BlankGenesis()
 	genesis.ChainID = name
@@ -36,9 +38,10 @@ func MakeErisDBChain(name string, accounts []*definitions.ErisDBAccount, chainIm
 		// TODO: [ben] we can expose seeds to be written into the configuration file
 		// here, but currently not used and we'll overwrite the configuration file
 		// with flag or environment variable in eris-db container
-		// [zr] to be implemented in #1007
-		if err := util.WriteConfigurationFile(genesis.ChainID, account.Name, "", chainImageName,
-			useDataContainer, exportedPorts, containerEntrypoint); err != nil {
+		theSeeds := strings.Join(seeds, ",") // format for config file (if len>1)
+		if err := util.WriteConfigurationFile(genesis.ChainID, account.Name, theSeeds,
+			len(accounts) == 1, chainImageName, useDataContainer, exportedPorts,
+			containerEntrypoint); err != nil {
 			return err
 		}
 	}
