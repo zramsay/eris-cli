@@ -53,11 +53,10 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 
 	// assemble contract
 	var contractPath string
-	if _, err := os.Stat(deploy.Contract); err == nil {
-		contractPath = deploy.Contract
-	} else {
-		contractPath = filepath.Join(do.ContractsPath, deploy.Contract)
+	if _, err := os.Stat(deploy.Contract); err != nil {
+		return "", err
 	}
+	contractPath = deploy.Contract
 	log.WithField("=>", contractPath).Info("Contract path")
 
 	// use the proper compiler
@@ -99,6 +98,8 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 		} else if resp.Error != "" {
 			log.Errorln("Error compiling contracts: Language error:")
 			return "", fmt.Errorf("%v", resp.Error)
+		} else if resp.Warning != "" {
+			log.WithField("Warning", resp.Warning).Warn("Warning Generated during Contract Compilation")
 		}
 		// loop through objects returned from compiler
 		switch {
