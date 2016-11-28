@@ -1,4 +1,4 @@
-package perform
+package jobs
 
 import (
 	"github.com/eris-ltd/eris-cli/definitions"

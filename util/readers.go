@@ -1,4 +1,4 @@
-package ebi
+package util
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris-cli/abi"
-	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/hex"
 	"github.com/eris-ltd/eris-cli/log"
 
@@ -51,32 +49,7 @@ func ReadTxSignAndBroadcast(result *core.TxResult, err error) error {
 	return nil
 }
 
-func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do *definitions.Do) ([]byte, error) {
-	abiSpecBytes, err := readAbi(do.ABIPath, abiLocation)
-	if err != nil {
-		return []byte{}, err
-	}
-	log.WithField("=>", string(abiSpecBytes)).Debug("ABI Specification (Formulate)")
-	log.WithFields(log.Fields{
-		"function":  funcName,
-		"arguments": fmt.Sprintf("%v", args),
-	}).Debug("Packing Call via ABI")
-
-	return abi.Packer(abiSpecBytes, funcName, args...)
-}
-
-func ReadAndDecodeContractReturn(abiLocation, funcName string, resultRaw []byte, do *definitions.Do) ([]*definitions.Variable, error) {
-	abiSpecBytes, err := readAbi(do.ABIPath, abiLocation)
-	if err != nil {
-		return nil, err
-	}
-	log.WithField("=>", abiSpecBytes).Debug("ABI Specification (Decode)")
-
-	// Unpack the result
-	return abi.Unpacker(abiSpecBytes, funcName, resultRaw)
-}
-
-func readAbi(root, contract string) (string, error) {
+func ReadAbi(root, contract string) (string, error) {
 	p := path.Join(root, hex.StripHex(contract))
 	if _, err := os.Stat(p); err != nil {
 		return "", fmt.Errorf("Abi doesn't exist for =>\t%s", p)
