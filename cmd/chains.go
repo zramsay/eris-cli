@@ -288,7 +288,7 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
-	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set the seed IP:PORT for the root node. all other nodes will attempt to join at this IP") // [zr] limited to only one IP for the time being.
+	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
 
 	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	buildFlag(chainsNew, do, "publish", "chain")
@@ -373,11 +373,6 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "eq", cmd, args))
 
 	do.Name = args[0]
-
-	// maybe we want to expose this in the chain-type files <=> marmont
-	if len(do.SeedsIP) > 1 {
-		util.IfExit(fmt.Errorf("Only one IP:PORT can be provided for the time being"))
-	}
 
 	// TODO clean up this logic
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
