@@ -141,6 +141,18 @@ func dropAccountAndChainTypeDefaults() error {
 	if err := writeDefaultFile(config.ChainTypePath, "simplechain.toml", defaultSimpleChainType); err != nil {
 		return err
 	}
+	if err := writeDefaultFile(config.ChainTypePath, "adminchain.toml", defaultAdminChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "demochain.toml", defaultDemoChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "gochain.toml", defaultGoChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "sprawlchain.toml", defaultSprawlChainType); err != nil {
+		return err
+	}
 
 	// account-types
 	if err := writeDefaultFile(config.AccountsTypePath, "developer.toml", defaultDeveloperAccountType); err != nil {
