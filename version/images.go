@@ -14,7 +14,6 @@ var (
 	ImageKeys      = fmt.Sprintf("eris/keys:%s", VERSION)
 	ImageDB        = fmt.Sprintf("eris/db:%s", VERSION)
 	ImagePM        = fmt.Sprintf("eris/pm:%s", VERSION)
-	ImageCM        = fmt.Sprintf("eris/cm:%s", VERSION)
 	ImageIPFS      = "eris/ipfs"
 	ImageCompilers = fmt.Sprintf("eris/compilers:%s", VERSION)
 )
