@@ -5,7 +5,7 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/perform"
+	"github.com/eris-ltd/eris-cli/pkgs/jobs"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
@@ -53,5 +53,5 @@ func RunPackage(do *definitions.Do) error {
 	//linkKeys(do)
 	//linkAppToChain(do)
 	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
-	return perform.RunJobs(do)
+	return jobs.RunJobs(do)
 }

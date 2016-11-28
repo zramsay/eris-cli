@@ -1,4 +1,4 @@
-package perform
+package jobs
 
 import (
 	"encoding/csv"
@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/ebi"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
@@ -346,7 +345,7 @@ func txFinalize(do *definitions.Do, tx interface{}) (string, error) {
 		return util.MintChainErrorHandler(do, err)
 	}
 
-	if err := ebi.ReadTxSignAndBroadcast(res, err); err != nil {
+	if err := util.ReadTxSignAndBroadcast(res, err); err != nil {
 		log.Error("ERROR =>")
 		return "", err
 	}

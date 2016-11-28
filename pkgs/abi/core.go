@@ -11,8 +11,33 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/hex"
 	"github.com/eris-ltd/eris-cli/log"
-	//"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris-cli/util"
 )
+
+func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do *definitions.Do) ([]byte, error) {
+	abiSpecBytes, err := util.ReadAbi(do.ABIPath, abiLocation)
+	if err != nil {
+		return []byte{}, err
+	}
+	log.WithField("=>", string(abiSpecBytes)).Debug("ABI Specification (Formulate)")
+	log.WithFields(log.Fields{
+		"function":  funcName,
+		"arguments": fmt.Sprintf("%v", args),
+	}).Debug("Packing Call via ABI")
+
+	return Packer(abiSpecBytes, funcName, args...)
+}
+
+func ReadAndDecodeContractReturn(abiLocation, funcName string, resultRaw []byte, do *definitions.Do) ([]*definitions.Variable, error) {
+	abiSpecBytes, err := util.ReadAbi(do.ABIPath, abiLocation)
+	if err != nil {
+		return nil, err
+	}
+	log.WithField("=>", abiSpecBytes).Debug("ABI Specification (Decode)")
+
+	// Unpack the result
+	return Unpacker(abiSpecBytes, funcName, resultRaw)
+}
 
 func MakeAbi(abiData string) (ABI, error) {
 	if len(abiData) == 0 {
