@@ -396,9 +396,9 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	}
 
 	if do.Wizard {
-		config.Global.InteractiveWriter = os.Stdout
-		config.Global.InteractiveErrorWriter = os.Stderr
-		do.Operations.Terminal = true
+		//config.Global.InteractiveWriter = os.Stdout
+		//config.Global.InteractiveErrorWriter = os.Stderr
+		//do.Operations.Terminal = true
 	} else if len(do.AccountTypes) == 0 && do.ChainType == "" && do.ChainMakeActs == "" && do.ChainMakeVals == "" {
 		// no flags given assume simplechain
 		do.ChainType = "simplechain"

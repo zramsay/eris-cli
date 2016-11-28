@@ -29,6 +29,11 @@ type Package struct {
 	Operations        *Operation
 	SkipContractsPath bool
 	SkipABIPath       bool
+
+	// from epm
+	Account   string
+	Jobs      []*Jobs
+	Libraries map[string]string
 }
 
 func BlankPackageDefinition() *PackageDefinition {
