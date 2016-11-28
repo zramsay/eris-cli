@@ -373,6 +373,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 
+	// TODO clean up this logic
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
 		util.IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required"))
@@ -395,10 +396,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	}
 
 	if do.Wizard {
-		// TODO fix
-		config.Global.InteractiveWriter = os.Stdout
-		config.Global.InteractiveErrorWriter = os.Stderr
-		do.Operations.Terminal = true
+		// TODO ... something ... ?
 	} else if len(do.AccountTypes) == 0 && do.ChainType == "" && do.ChainMakeActs == "" && do.ChainMakeVals == "" {
 		// no flags given assume simplechain
 		do.ChainType = "simplechain"

@@ -3,6 +3,8 @@ package chains
 import (
 	"fmt"
 	"path"
+	"strconv"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -34,6 +36,7 @@ import (
 //  do.Debug         - debug output (optional)
 //
 func MakeChain(do *definitions.Do) error {
+
 	doKeys := definitions.NowDo()
 	doKeys.Name = "keys"
 	if err := services.EnsureRunning(doKeys); err != nil {
@@ -89,5 +92,30 @@ func MakeChain(do *definitions.Do) error {
 		}
 	}
 
+	// put at end so users see it after any verbose/debug logs
+	numberOfValidators, err := checkNumberValidators(do.AccountTypes)
+	if err != nil {
+		return err
+	}
+	if numberOfValidators == 0 {
+		log.Warn("WARNING: The chain made did not contain account types (Full/Validator) with validator permissions and will require further modification to run. The marmots recommend making a chain with Full/Validator account types")
+	}
+
 	return nil
+}
+
+func checkNumberValidators(accountTypes []string) (int, error) {
+	var num int = 0
+	var err error
+	for _, accT := range accountTypes {
+		accounts := strings.Split(accT, ":")
+		if accounts[0] == "Full" || accounts[0] == "Validator" {
+			num, err = strconv.Atoi(accounts[1])
+			if err != nil {
+				return -1, err
+			}
+			num += num
+		}
+	}
+	return num, nil
 }
