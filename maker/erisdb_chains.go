@@ -40,8 +40,7 @@ func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDB
 		// with flag or environment variable in eris-db container
 		theSeeds := strings.Join(seeds, ",") // format for config file (if len>1)
 		if err := util.WriteConfigurationFile(genesis.ChainID, account.Name, theSeeds,
-			len(accounts) == 1, chainImageName, useDataContainer, exportedPorts,
-			containerEntrypoint); err != nil {
+			chainImageName, useDataContainer, exportedPorts, containerEntrypoint); err != nil {
 			return err
 		}
 	}
