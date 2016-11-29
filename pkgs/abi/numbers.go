@@ -20,7 +20,7 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/eris-ltd/eris-cli/hex"
+	"github.com/eris-ltd/eris-cli/interpret"
 )
 
 var (
@@ -58,7 +58,7 @@ var (
 
 // U256 converts a big Int into a 256bit EVM number.
 func U256(n *big.Int) []byte {
-	return hex.LeftPadBytes(hex.U256(n).Bytes(), 32)
+	return interpret.LeftPadBytes(hex.U256(n).Bytes(), 32)
 }
 
 // packNum packs the given number (using the reflect value) and will cast it to appropriate number representation

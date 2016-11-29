@@ -19,14 +19,14 @@ package abi
 import (
 	"reflect"
 
-	"github.com/eris-ltd/eris-cli/hex"
+	"github.com/eris-ltd/eris-cli/interpret"
 )
 
 // packBytesSlice packs the given bytes as [L, V] as the canonical representation
 // bytes slice
 func packBytesSlice(bytes []byte, l int) []byte {
 	len := packNum(reflect.ValueOf(l))
-	return append(len, hex.RightPadBytes(bytes, (l+31)/32*32)...)
+	return append(len, interpret.RightPadBytes(bytes, (l+31)/32*32)...)
 }
 
 // packElement packs the given reflect value according to the abi specification in
@@ -42,12 +42,12 @@ func packElement(t Type, reflectValue reflect.Value) []byte {
 			reflectValue = mustArrayToByteSlice(reflectValue)
 		}
 
-		return hex.LeftPadBytes(reflectValue.Bytes(), 32)
+		return interpret.LeftPadBytes(reflectValue.Bytes(), 32)
 	case BoolTy:
 		if reflectValue.Bool() {
-			return hex.LeftPadBytes(hex.Big1.Bytes(), 32)
+			return interpret.LeftPadBytes(interpret.Big1.Bytes(), 32)
 		} else {
-			return hex.LeftPadBytes(hex.Big0.Bytes(), 32)
+			return interpret.LeftPadBytes(interpret.Big0.Bytes(), 32)
 		}
 	case BytesTy:
 		if reflectValue.Kind() == reflect.Array {
@@ -59,7 +59,7 @@ func packElement(t Type, reflectValue reflect.Value) []byte {
 			reflectValue = mustArrayToByteSlice(reflectValue)
 		}
 
-		return hex.RightPadBytes(reflectValue.Bytes(), 32)
+		return interpret.RightPadBytes(reflectValue.Bytes(), 32)
 	}
 	panic("abi: fatal error") // TODO never panic
 }
