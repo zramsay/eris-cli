@@ -199,13 +199,13 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 					}
 
 					values = append(values.([]*big.Int), value)
-				case Address:
+				case interpret.Address:
 					var ok bool
-					if values, ok = values.([]Address); ok {
+					if values, ok = values.([]interpret.Address); ok {
 						fmt.Printf("n=%#v\n", value)
 					}
 
-					values = append(values.([]Address), value)
+					values = append(values.([]interpret.Address), value)
 				}
 			}
 			return values, nil
@@ -283,7 +283,7 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 		case StringTy:
 			return val, nil
 		case AddressTy:
-			return HexToAddress(val), nil
+			return interpret.HexToAddress(val), nil
 		default:
 			return nil, fmt.Errorf("Could not get valid type from input")
 		}
@@ -350,7 +350,7 @@ func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{})
 	if len(method.Outputs) > 1 {
 		slice := reflect.ValueOf(reflect.ValueOf(values).Index(0).Interface())
 		for i, output := range method.Outputs {
-			arg, err := getStringValue(slice.Index(i).Interface(), output)
+			arg, err := getStringValue(slice.Index(i).Interface(), output.Type)
 			if err != nil {
 				return nil, err
 			}
@@ -370,7 +370,7 @@ func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{})
 	} else {
 		value := values[0]
 		output := method.Outputs[0]
-		arg, err := getStringValue(value, output)
+		arg, err := getStringValue(value, output.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -390,8 +390,7 @@ func formatUnpackedReturn(abiSpec ABI, methodName string, values ...interface{})
 	return returnVars, nil
 }
 
-func getStringValue(value interface{}, output Argument) (string, error) {
-	typ := output.Type
+func getStringValue(value interface{}, typ Type) (string, error) {
 
 	if typ.IsSlice || typ.IsArray {
 		if typ.T == BytesTy || typ.T == FixedBytesTy {
@@ -403,15 +402,18 @@ func getStringValue(value interface{}, output Argument) (string, error) {
 			for i := 0; i < byteVals.Len(); i++ {
 				val = append(val, string(bytes.Trim(byteVals.Index(i).Interface().([]byte), "\x00")[:]))
 			}
-
 		} else {
-			val = strings.Split(fmt.Sprintf("%v", value), " ")
+			values := reflect.ValueOf(value)
+			for i := 0; i < typ.SliceSize; i++ {
+				underlyingValue, err := getStringValue(values.Index(i).Interface(), *typ.Elem)
+				if err != nil {
+					return "", err
+				}
+				val = append(val, underlyingValue)
+			}
 		}
 		StringVal := strings.Join(val, ",")
-
-		if typ.Elem.T == FixedBytesTy {
-			StringVal = strings.Join([]string{"[", StringVal, "]"}, "")
-		}
+		StringVal = strings.Join([]string{"[", StringVal, "]"}, "")
 		return StringVal, nil
 	} else {
 		switch typ.T {
@@ -434,7 +436,7 @@ func getStringValue(value interface{}, output Argument) (string, error) {
 		case StringTy:
 			return value.(string), nil
 		case AddressTy:
-			return strings.ToUpper(Bytes2Hex(value.(Address).Bytes())), nil
+			return strings.ToUpper(interpret.Bytes2Hex(value.(interpret.Address).Bytes())), nil
 		default:
 			return "", fmt.Errorf("Could not unpack value %v", value)
 		}
