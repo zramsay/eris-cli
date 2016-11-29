@@ -1,5 +1,7 @@
 package definitions
 
+//TODO: Interface all the jobs, determine if they should remain in definitions or get their own package
+
 type Jobs struct {
 	// Name of the job
 	JobName string `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
