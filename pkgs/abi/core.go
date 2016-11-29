@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/hex"
+	"github.com/eris-ltd/eris-cli/interpret"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 )
@@ -104,17 +104,17 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 		//check for fixed byte types and bytes types
 		if typ.T == BytesTy {
 			bytez := bytes.NewBufferString(val)
-			return hex.RightPadBytes(bytez.Bytes(), bytez.Len()%32), nil
+			return interpret.RightPadBytes(bytez.Bytes(), bytez.Len()%32), nil
 		} else if typ.T == FixedBytesTy {
 			bytez := bytes.NewBufferString(val)
-			return hex.RightPadBytes(bytez.Bytes(), typ.SliceSize), nil
+			return interpret.RightPadBytes(bytez.Bytes(), typ.SliceSize), nil
 		} else if typ.Elem.T == BytesTy || typ.Elem.T == FixedBytesTy {
 			val = strings.Trim(val, "[]")
 			arr := strings.Split(val, ",")
 			var sliceOfFixedBytes [][]byte
 			for _, str := range arr {
 				bytez := bytes.NewBufferString(str)
-				sliceOfFixedBytes = append(sliceOfFixedBytes, hex.RightPadBytes(bytez.Bytes(), 32))
+				sliceOfFixedBytes = append(sliceOfFixedBytes, interpret.RightPadBytes(bytez.Bytes(), 32))
 			}
 			return sliceOfFixedBytes, nil
 		} else {
@@ -420,14 +420,14 @@ func getStringValue(value interface{}, output Argument) (string, error) {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return hex.S256(value.(*big.Int)).String(), nil
+				return interpret.S256(value.(*big.Int)).String(), nil
 			}
 		case UintTy:
 			switch typ.Size {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return hex.U256(value.(*big.Int)).String(), nil
+				return interpret.U256(value.(*big.Int)).String(), nil
 			}
 		case BoolTy:
 			return strconv.FormatBool(value.(bool)), nil
