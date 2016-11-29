@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-keys/crypto"
+	"github.com/eris-ltd/eris-cli/interpret"
 )
 
 // Event is an event potentially triggered by the EVM's LOG mechanism. The Event
@@ -32,12 +33,12 @@ type Event struct {
 
 // Id returns the canonical representation of the event's signature used by the
 // abi definition to identify event names and types.
-func (e Event) Id() Hash {
+func (e Event) Id() interpret.Hash {
 	types := make([]string, len(e.Inputs))
 	i := 0
 	for _, input := range e.Inputs {
 		types[i] = input.Type.String()
 		i++
 	}
-	return BytesToHash(crypto.Sha3([]byte(fmt.Sprintf("%v(%v)", e.Name, strings.Join(types, ",")))))
+	return interpret.BytesToHash(crypto.Sha3([]byte(fmt.Sprintf("%v(%v)", e.Name, strings.Join(types, ",")))))
 }
