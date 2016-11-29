@@ -93,12 +93,14 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	// put at end so users see it after any verbose/debug logs
-	numberOfValidators, err := checkNumberValidators(do.AccountTypes)
-	if err != nil {
-		return err
-	}
-	if numberOfValidators == 0 {
-		log.Warn("WARNING: The chain made did not contain account types (Full/Validator) with validator permissions and will require further modification to run. The marmots recommend making a chain with Full/Validator account types")
+	if len(do.AccountTypes) > 0 {
+		numberOfValidators, err := checkNumberValidators(do.AccountTypes)
+		if err != nil {
+			return err
+		}
+		if numberOfValidators == 0 {
+			log.Warn("WARNING: The chain made did not contain account types (Full/Validator) with validator permissions and will require further modification to run. The marmots recommend making a chain with Full/Validator account types")
+		}
 	}
 
 	return nil
