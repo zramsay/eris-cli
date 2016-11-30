@@ -23,6 +23,8 @@ import (
 	"math/big"
 	"reflect"
 	"strings"
+
+	"github.com/eris-ltd/eris-cli/interpret"
 )
 
 // The ABI holds information about a contract's context and available
@@ -92,9 +94,9 @@ func toGoSlice(i int, t Argument, output []byte) (interface{}, error) {
 	case IntTy, UintTy, BoolTy: // int, uint, bool can all be of type big int.
 		refSlice = reflect.ValueOf([]*big.Int(nil))
 	case AddressTy: // address must be of slice Address
-		refSlice = reflect.ValueOf([]Address(nil))
+		refSlice = reflect.ValueOf([]interpret.Address(nil))
 	case HashTy: // hash must be of slice hash
-		refSlice = reflect.ValueOf([]Hash(nil))
+		refSlice = reflect.ValueOf([]interpret.Hash(nil))
 	case FixedBytesTy:
 		refSlice = reflect.ValueOf([][]byte(nil))
 	default: // no other types are supported
@@ -107,14 +109,14 @@ func toGoSlice(i int, t Argument, output []byte) (interface{}, error) {
 	if t.Type.IsSlice {
 
 		// get the offset which determines the start of this array ...
-		offset = int(BytesToBig(output[index : index+32]).Uint64())
+		offset = int(interpret.BytesToBig(output[index : index+32]).Uint64())
 		if offset+32 > len(output) {
 			return nil, fmt.Errorf("abi: cannot marshal in to go slice: offset %d would go over slice boundary (len=%d)", len(output), offset+32)
 		}
 
 		slice = output[offset:]
 		// ... starting with the size of the array in elements ...
-		size = int(BytesToBig(slice[:32]).Uint64())
+		size = int(interpret.BytesToBig(slice[:32]).Uint64())
 		slice = slice[32:]
 		// ... and make sure that we've at the very least the amount of bytes
 		// available in the buffer.
@@ -150,13 +152,13 @@ func toGoSlice(i int, t Argument, output []byte) (interface{}, error) {
 		// set inter to the correct type (cast)
 		switch elem.T {
 		case IntTy, UintTy:
-			inter = BytesToBig(returnOutput)
+			inter = interpret.BytesToBig(returnOutput)
 		case BoolTy:
-			inter = BytesToBig(returnOutput).Uint64() > 0
+			inter = interpret.BytesToBig(returnOutput).Uint64() > 0
 		case AddressTy:
-			inter = BytesToAddress(returnOutput)
+			inter = interpret.BytesToAddress(returnOutput)
 		case HashTy:
-			inter = BytesToHash(returnOutput)
+			inter = interpret.BytesToHash(returnOutput)
 		case FixedBytesTy:
 			inter = returnOutput
 		}
@@ -189,12 +191,12 @@ func toGoType(i int, t Argument, output []byte) (interface{}, error) {
 	switch t.Type.T {
 	case StringTy, BytesTy: // variable arrays are written at the end of the return bytes
 		// parse offset from which we should start reading
-		offset := int(BytesToBig(output[index : index+32]).Uint64())
+		offset := int(interpret.BytesToBig(output[index : index+32]).Uint64())
 		if offset+32 > len(output) {
 			return nil, fmt.Errorf("abi: cannot marshal in to go type: length insufficient %d require %d", len(output), offset+32)
 		}
 		// parse the size up until we should be reading
-		size := int(BytesToBig(output[offset : offset+32]).Uint64())
+		size := int(interpret.BytesToBig(output[offset : offset+32]).Uint64())
 		if offset+32+size > len(output) {
 			return nil, fmt.Errorf("abi: cannot marshal in to go type: length insufficient %d require %d", len(output), offset+32+size)
 		}
@@ -208,7 +210,7 @@ func toGoType(i int, t Argument, output []byte) (interface{}, error) {
 	// convert the bytes to whatever is specified by the ABI.
 	switch t.Type.T {
 	case IntTy, UintTy:
-		bigNum := BytesToBig(returnOutput)
+		bigNum := interpret.BytesToBig(returnOutput)
 
 		// If the type is a integer convert to the integer type
 		// specified by the ABI.
@@ -233,11 +235,11 @@ func toGoType(i int, t Argument, output []byte) (interface{}, error) {
 			return bigNum, nil
 		}
 	case BoolTy:
-		return BytesToBig(returnOutput).Uint64() > 0, nil
+		return interpret.BytesToBig(returnOutput).Uint64() > 0, nil
 	case AddressTy:
-		return BytesToAddress(returnOutput), nil
+		return interpret.BytesToAddress(returnOutput), nil
 	case HashTy:
-		return BytesToHash(returnOutput), nil
+		return interpret.BytesToHash(returnOutput), nil
 	case BytesTy, FixedBytesTy:
 		return returnOutput, nil
 	case StringTy:
@@ -250,7 +252,7 @@ func toGoType(i int, t Argument, output []byte) (interface{}, error) {
 // assignment.
 var (
 	r_interSlice = reflect.TypeOf([]interface{}{})
-	r_hash       = reflect.TypeOf(Hash{})
+	r_hash       = reflect.TypeOf(interpret.Hash{})
 	r_bytes      = reflect.TypeOf([]byte{})
 	r_byte       = reflect.TypeOf(byte(0))
 )

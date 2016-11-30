@@ -38,8 +38,8 @@ var (
 	int16_t   = reflect.TypeOf(int16(0))
 	int32_t   = reflect.TypeOf(int32(0))
 	int64_t   = reflect.TypeOf(int64(0))
-	hash_t    = reflect.TypeOf(Hash{})
-	address_t = reflect.TypeOf(Address{})
+	hash_t    = reflect.TypeOf(interpret.Hash{})
+	address_t = reflect.TypeOf(interpret.Address{})
 
 	uint_ts   = reflect.TypeOf([]uint(nil))
 	uint8_ts  = reflect.TypeOf([]uint8(nil))
@@ -58,7 +58,7 @@ var (
 
 // U256 converts a big Int into a 256bit EVM number.
 func U256(n *big.Int) []byte {
-	return interpret.LeftPadBytes(hex.U256(n).Bytes(), 32)
+	return interpret.LeftPadBytes(interpret.U256(n).Bytes(), 32)
 }
 
 // packNum packs the given number (using the reflect value) and will cast it to appropriate number representation
