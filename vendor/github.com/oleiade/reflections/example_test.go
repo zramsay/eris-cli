@@ -2,15 +2,21 @@ package reflections_test
 
 import (
 	"fmt"
-	"github.com/oleiade/reflections"
 	"log"
 	"reflect"
+
+	"github.com/oleiade/reflections"
 )
 
 type MyStruct struct {
+	MyEmbeddedStruct
 	FirstField  string `matched:"first tag"`
 	SecondField int    `matched:"second tag"`
 	ThirdField  string `unmatched:"third tag"`
+}
+
+type MyEmbeddedStruct struct {
+	EmbeddedField string
 }
 
 func ExampleGetField() {
@@ -55,6 +61,32 @@ func ExampleGetFieldKind() {
 		log.Fatal(err)
 	}
 	fmt.Println(secondFieldKind)
+}
+
+func ExampleGetFieldType() {
+	s := MyStruct{
+		FirstField:  "first value",
+		SecondField: 2,
+		ThirdField:  "third value",
+	}
+
+	var firstFieldType string
+	var secondFieldType string
+	var err error
+
+	// GetFieldType will return reflect.String
+	firstFieldType, err = reflections.GetFieldType(s, "FirstField")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(firstFieldType)
+
+	// GetFieldType will return reflect.Int
+	secondFieldType, err = reflections.GetFieldType(s, "SecondField")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(secondFieldType)
 }
 
 func ExampleGetFieldTag() {
@@ -117,6 +149,25 @@ func ExampleItems() {
 	// Items will return a field name to
 	// field value map
 	structItems, _ = reflections.Items(s)
+	fmt.Println(structItems)
+}
+
+func ExampleItemsDeep() {
+	s := MyStruct{
+		FirstField:  "first value",
+		SecondField: 2,
+		ThirdField:  "third value",
+		MyEmbeddedStruct: MyEmbeddedStruct{
+			EmbeddedField: "embedded value",
+		},
+	}
+
+	var structItems map[string]interface{}
+
+	// ItemsDeep will return a field name to
+	// field value map, including fields from
+	// anonymous embedded structs
+	structItems, _ = reflections.ItemsDeep(s)
 	fmt.Println(structItems)
 }
 

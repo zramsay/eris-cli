@@ -6,12 +6,14 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/blang/semver"
 )
 
 func TestConfigure(t *testing.T) {
@@ -214,8 +216,8 @@ func TestHandler(t *testing.T) {
 		"payloadVersion":          "2",
 		"severity":                "info",
 		"user.id":                 "127.0.0.1",
-		"metaData.Request.Url":    "http://" + l.Addr().String() + "/ok?foo=bar",
-		"metaData.Request.Method": "GET",
+		"metaData.request.url":    "http://" + l.Addr().String() + "/ok?foo=bar",
+		"metaData.request.method": "GET",
 	} {
 		key := strings.Split(k, ".")
 		if event.GetPath(key...).MustString() != value {
@@ -223,7 +225,7 @@ func TestHandler(t *testing.T) {
 		}
 	}
 
-	if event.GetPath("metaData", "Request", "Params", "foo").GetIndex(0).MustString() != "bar" {
+	if event.GetPath("metaData", "request", "params", "foo").GetIndex(0).MustString() != "bar" {
 		t.Errorf("missing GET params in request metadata")
 	}
 
@@ -238,8 +240,19 @@ func TestHandler(t *testing.T) {
 	}
 
 	errorClass := exception.Get("errorClass").MustString()
-	if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" {
-		t.Errorf("Wrong errorClass in payload: %v, '%v'", exception.Get("errorClass").MustString(), "runtime.errorCString")
+	goVersion := runtime.Version()
+	plainErrVersion, _ := semver.Make("1.7.0")
+	semVersionString := goVersion[2:len(goVersion)]
+	if len(semVersionString) == 3 {
+		semVersionString = fmt.Sprintf("%s.0", semVersionString)
+	}
+	semVersion, _ := semver.Make(semVersionString)
+	if semVersion.GTE(plainErrVersion) {
+		if errorClass != "runtime.plainError" {
+			t.Errorf("Wrong errorClass in payload: %v, '%v'", exception.Get("errorClass").MustString(), "runtime.plainError")
+		}
+	} else if errorClass != "runtime.errorCString" && errorClass != "*errors.errorString" {
+		t.Errorf("%s Wrong errorClass in payload: %v, '%v'", semVersion.String(), exception.Get("errorClass").MustString(), "runtime.errorCString")
 	}
 
 	frame0 := exception.Get("stacktrace").GetIndex(0)

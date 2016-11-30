@@ -1,4 +1,4 @@
-// Copyright 2013-2014 Frank Schroeder. All rights reserved.
+// Copyright 2016 Frank Schroeder. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	. "gopkg.in/check.v1"
+	. "github.com/magiconair/properties/_third_party/gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -403,6 +403,25 @@ var filterPrefixTests = []struct {
 
 // ----------------------------------------------------------------------------
 
+var filterStripPrefixTests = []struct {
+	input  string
+	prefix string
+	keys   []string
+}{
+	{"", "", []string{}},
+	{"", "abc", []string{}},
+	{"key=value", "", []string{"key"}},
+	{"key=value", "key=", []string{}},
+	{"key=value\nfoo=bar", "", []string{"foo", "key"}},
+	{"key=value\nfoo=bar", "f", []string{"foo"}},
+	{"key=value\nfoo=bar", "fo", []string{"foo"}},
+	{"key=value\nfoo=bar", "foo", []string{"foo"}},
+	{"key=value\nfoo=bar", "fooo", []string{}},
+	{"key=value\nkey2=value2\nfoo=bar", "key", []string{"key", "key2"}},
+}
+
+// ----------------------------------------------------------------------------
+
 var setTests = []struct {
 	input      string
 	key, value string
@@ -440,6 +459,21 @@ func (s *TestSuite) TestErrors(c *C) {
 		c.Assert(err, NotNil)
 		c.Assert(strings.Contains(err.Error(), test.msg), Equals, true, Commentf("Expected %q got %q", test.msg, err.Error()))
 	}
+}
+
+func (s *TestSuite) TestDisableExpansion(c *C) {
+	input := "key=value\nkey2=${key}"
+	p, err := parse(input)
+	p.DisableExpansion = true
+	c.Assert(err, IsNil)
+	c.Assert(p.MustGet("key"), Equals, "value")
+	c.Assert(p.MustGet("key2"), Equals, "${key}")
+
+	// with expansion disabled we can introduce circular references
+	p.Set("keyA", "${keyB}")
+	p.Set("keyB", "${keyA}")
+	c.Assert(p.MustGet("keyA"), Equals, "${keyB}")
+	c.Assert(p.MustGet("keyB"), Equals, "${keyA}")
 }
 
 func (s *TestSuite) TestMustGet(c *C) {
@@ -774,12 +808,52 @@ func (s *TestSuite) TestPanicOn32BitIntOverflow(c *C) {
 
 func (s *TestSuite) TestPanicOn32BitUintOverflow(c *C) {
 	is32Bit = true
-	var max = math.MaxUint32 + 1
+	var max uint64 = math.MaxUint32 + 1
 	input := fmt.Sprintf("max=%d", max)
 	p, err := parse(input)
 	c.Assert(err, IsNil)
-	c.Assert(p.MustGetUint64("max"), Equals, uint64(max))
+	c.Assert(p.MustGetUint64("max"), Equals, max)
 	c.Assert(func() { p.MustGetUint("max") }, PanicMatches, ".* out of range")
+}
+
+func (s *TestSuite) TestDeleteKey(c *C) {
+	input := "#comments should also be gone\nkey=to-be-deleted\nsecond=key"
+	p, err := parse(input)
+	c.Assert(err, IsNil)
+	c.Check(len(p.m), Equals, 2)
+	c.Check(len(p.c), Equals, 1)
+	c.Check(len(p.k), Equals, 2)
+	p.Delete("key")
+	c.Check(len(p.m), Equals, 1)
+	c.Check(len(p.c), Equals, 0)
+	c.Check(len(p.k), Equals, 1)
+}
+
+func (s *TestSuite) TestDeleteUnknownKey(c *C) {
+	input := "#comments should also be gone\nkey=to-be-deleted"
+	p, err := parse(input)
+	c.Assert(err, IsNil)
+	c.Check(len(p.m), Equals, 1)
+	c.Check(len(p.c), Equals, 1)
+	c.Check(len(p.k), Equals, 1)
+	p.Delete("wrong-key")
+	c.Check(len(p.m), Equals, 1)
+	c.Check(len(p.c), Equals, 1)
+	c.Check(len(p.k), Equals, 1)
+}
+
+func (s *TestSuite) TestMerge(c *C) {
+	input1 := "#comment\nkey=value\nkey2=value2"
+	input2 := "#another comment\nkey=another value\nkey3=value3"
+	p1, err := parse(input1)
+	c.Assert(err, IsNil)
+	p2, err := parse(input2)
+	p1.Merge(p2)
+	c.Check(len(p1.m), Equals, 3)
+	c.Check(len(p1.c), Equals, 1)
+	c.Check(len(p1.k), Equals, 3)
+	c.Check(p1.MustGet("key"), Equals, "another value")
+	c.Check(p1.GetComment("key"), Equals, "another comment")
 }
 
 // ----------------------------------------------------------------------------
