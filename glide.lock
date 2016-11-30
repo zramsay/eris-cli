@@ -97,7 +97,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: f7137ae6b19afbfd61a94b746fda3b3fe0491874
+  version: da116c3771bf4a398a43f44e069195ef1c9688ef
   subpackages:
   - proto
 - name: github.com/golang/snappy
