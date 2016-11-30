@@ -1,4 +1,4 @@
-package hex
+package interpret
 
 import "math/big"
 
@@ -25,7 +25,7 @@ func Big(num string) *big.Int {
 // BigD
 //
 // Shortcut for new(big.Int).SetBytes(...)
-func BigD(data []byte) *big.Int {
+func BytesToBig(data []byte) *big.Int {
 	n := new(big.Int)
 	n.SetBytes(data)
 

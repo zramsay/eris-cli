@@ -1,4 +1,4 @@
-package perform
+package jobs
 
 import (
 	"encoding/hex"
@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/pkgs/abi"
+
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/ebi"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	compilers "github.com/eris-ltd/eris-compilers/network"
-	response "github.com/eris-ltd/eris-compilers/util"
+	compilers "github.com/eris-ltd/eris-compilers/perform"
 
 	"github.com/eris-ltd/eris-db/client"
 	"github.com/eris-ltd/eris-db/client/core"
@@ -53,11 +53,10 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 
 	// assemble contract
 	var contractPath string
-	if _, err := os.Stat(deploy.Contract); err == nil {
-		contractPath = deploy.Contract
-	} else {
-		contractPath = filepath.Join(do.ContractsPath, deploy.Contract)
+	if _, err := os.Stat(deploy.Contract); err != nil {
+		return "", err
 	}
+	contractPath = deploy.Contract
 	log.WithField("=>", contractPath).Info("Contract path")
 
 	// use the proper compiler
@@ -91,7 +90,7 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 		return result, err
 	} else {
 		// normal compilation/deploy sequence
-		resp, err := compilers.BeginCompile(do.Compiler, contractPath, false, deploy.Libraries)
+		resp, err := compilers.RequestCompile(do.Compiler, contractPath, false, deploy.Libraries)
 
 		if err != nil {
 			log.Errorln("Error compiling contracts: Compilers error:")
@@ -99,6 +98,8 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 		} else if resp.Error != "" {
 			log.Errorln("Error compiling contracts: Language error:")
 			return "", fmt.Errorf("%v", resp.Error)
+		} else if resp.Warning != "" {
+			log.WithField("Warning", resp.Warning).Warn("Warning Generated during Contract Compilation")
 		}
 		// loop through objects returned from compiler
 		switch {
@@ -154,7 +155,7 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 }
 
 // TODO [rj] refactor to remove [contractPath] from functions signature => only used in a single error throw.
-func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersResponse response.ResponseItem, contractPath string) (string, error) {
+func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersResponse compilers.ResponseItem, contractPath string) (string, error) {
 	log.WithField("=>", string(compilersResponse.ABI)).Debug("ABI Specification (From Compilers)")
 	contractCode := compilersResponse.Bytecode
 
@@ -198,7 +199,7 @@ func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersRes
 		if err != nil {
 			return "", err
 		}
-		packedBytes, err := ebi.ReadAbiFormulateCall(compilersResponse.Objectname, "", callDataArray, do)
+		packedBytes, err := abi.ReadAbiFormulateCall(compilersResponse.Objectname, "", callDataArray, do)
 		if err != nil {
 			return "", err
 		}
@@ -282,10 +283,10 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 	// formulate call
 	var packedBytes []byte
 	if call.ABI == "" {
-		packedBytes, err = ebi.ReadAbiFormulateCall(call.Destination, call.Function, callDataArray, do)
+		packedBytes, err = abi.ReadAbiFormulateCall(call.Destination, call.Function, callDataArray, do)
 		callData = hex.EncodeToString(packedBytes)
 	} else {
-		packedBytes, err = ebi.ReadAbiFormulateCall(call.ABI, call.Function, callDataArray, do)
+		packedBytes, err = abi.ReadAbiFormulateCall(call.ABI, call.Function, callDataArray, do)
 		callData = hex.EncodeToString(packedBytes)
 	}
 	if err != nil {
@@ -338,9 +339,9 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 	if txResult != nil {
 		log.WithField("=>", result).Debug("Decoding Raw Result")
 		if call.ABI == "" {
-			call.Variables, err = ebi.ReadAndDecodeContractReturn(call.Destination, call.Function, txResult, do)
+			call.Variables, err = abi.ReadAndDecodeContractReturn(call.Destination, call.Function, txResult, do)
 		} else {
-			call.Variables, err = ebi.ReadAndDecodeContractReturn(call.ABI, call.Function, txResult, do)
+			call.Variables, err = abi.ReadAndDecodeContractReturn(call.ABI, call.Function, txResult, do)
 		}
 		if err != nil {
 			return "", make([]*definitions.Variable, 0), err
@@ -374,7 +375,7 @@ func deployFinalize(do *definitions.Do, tx interface{}) (string, error) {
 		return util.MintChainErrorHandler(do, err)
 	}
 
-	if err := ebi.ReadTxSignAndBroadcast(res, err); err != nil {
+	if err := util.ReadTxSignAndBroadcast(res, err); err != nil {
 		log.Error("ERROR =>")
 		return "", err
 	}
