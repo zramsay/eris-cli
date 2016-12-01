@@ -132,7 +132,7 @@ func BootServicesAndChain(do *definitions.Do, pkg *definitions.Package) error {
 //
 func DefinePkgActionService(do *definitions.Do, pkg *definitions.Package) error {
 	do.Service.Name = pkg.Name + "_tmp_" + do.Name
-	do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImagePM)
+	//do.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImagePM)
 	do.Service.AutoData = true
 	do.Service.EntryPoint = fmt.Sprintf("eris-pm --chain tcp://chain:%s --sign http://keys:%s", do.ChainPort, do.KeysPort)
 	do.Service.WorkDir = path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path))

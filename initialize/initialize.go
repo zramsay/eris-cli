@@ -156,7 +156,6 @@ func pullDefaultImages(images []string) error {
 		"ipfs":      config.Global.ImageIPFS,
 		"db":        config.Global.ImageDB,
 		"cm":        config.Global.ImageCM,
-		"pm":        config.Global.ImagePM,
 		"compilers": config.Global.ImageCompilers,
 	}
 
@@ -314,7 +313,6 @@ func overwriteErisToml() error {
 	config.Global.ImageData = version.ImageData
 	config.Global.ImageKeys = version.ImageKeys
 	config.Global.ImageDB = version.ImageDB
-	config.Global.ImagePM = version.ImagePM
 	config.Global.ImageCM = version.ImageCM
 	config.Global.ImageIPFS = version.ImageIPFS
 
