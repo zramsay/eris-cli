@@ -234,10 +234,6 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("wrong service name, expected %s got %s", pkg.Name+"_tmp_"+do.Name, do.Service.Name)
 	}
 
-	if do.Service.Image != path.Join(version.DefaultRegistry, version.ImagePM) {
-		t.Fatalf("wrong service image, expected %s got %s", path.Join(version.DefaultRegistry, version.ImagePM), do.Service.Image)
-	}
-
 	if !do.Service.AutoData {
 		t.Fatalf("unexpectedly data containers are not turned on")
 	}
