@@ -47,7 +47,7 @@ type Settings struct {
 	ImageData      string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
 	ImageKeys      string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
 	ImageDB        string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
-	ImagePM        string `json:"ImagePM,omitempty" yaml:"ImagePM,omitempty" toml:"ImagePM,omitempty"`
+	ImageCM        string `json:"ImageCM,omitempty" yaml:"ImageCM,omitempty" toml:"ImageCM,omitempty"`
 	ImageIPFS      string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
 	ImageCompilers string `json:"ImageCompilers,omitempty" yaml:"ImageCompilers,omitempty" toml:"ImageCompilers,omitempty"`
 }
@@ -142,7 +142,7 @@ func SetDefaults() (*viper.Viper, error) {
 	config.SetDefault("ImageData", version.ImageData)
 	config.SetDefault("ImageKeys", version.ImageKeys)
 	config.SetDefault("ImageDB", version.ImageDB)
-	config.SetDefault("ImagePM", version.ImagePM)
+	config.SetDefault("ImageCM", version.ImageCM)
 	config.SetDefault("ImageIPFS", version.ImageIPFS)
 	config.SetDefault("ImageCompilers", version.ImageCompilers)
 
