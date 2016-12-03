@@ -131,10 +131,8 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./keys/... && passed Keys
     if [ $? -ne 0 ]; then return 1; fi
-    #go test ./pkgs/... && passed Packages
-    #if [ $? -ne 0 ]; then return 1; fi
-    # go test ./agent/... && passed Agent
-    # if [ $? -ne 0 ]; then return 1; fi
+    go test ./pkgs/... && passed Packages
+    if [ $? -ne 0 ]; then return 1; fi
     go test ./clean/... && passed Clean
     if [ $? -ne 0 ]; then return 1; fi
   fi
