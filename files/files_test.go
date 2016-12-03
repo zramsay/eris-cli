@@ -174,9 +174,6 @@ func testGetDirectoryFromIPFS(t *testing.T) {
 	}
 }
 
-// get a dir up in there
-// adapted from agent/agent_test.go
-// eventually deduplicate
 func testPutDirectoryToIPFS(t *testing.T) {
 	var err error
 
