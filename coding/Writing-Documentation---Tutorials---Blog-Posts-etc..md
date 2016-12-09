@@ -1,0 +1,1 @@
+This will be (or already has been) written in a `.github` folder with CONTRIBUTING.md file
