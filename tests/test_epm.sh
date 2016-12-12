@@ -35,6 +35,7 @@ chain_name=$name_base-$uuid
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
 chain_dir=$chains_dir/$chain_name
+repo=`pwd` #eris-cli
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +95,7 @@ test_setup(){
 }
 
 goto_base(){
-  cd tests/fixtures
+  cd $repo/tests/fixtures
 }
 
 run_test(){
@@ -113,7 +114,7 @@ run_test(){
     echo
     cat readme.md
     echo
-    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub" --rm
+    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub"
   fi
   test_exit=$?
 
@@ -182,26 +183,7 @@ test_teardown(){
 echo "Hello! I'm the marmot that tests the eris-pm tooling."
 echo
 start=`pwd`
-cd $repo
 test_setup
-
-# ---------------------------------------------------------------------------
-# Get the things build and dependencies turned on
-if [ "$SKIP_BUILD" != "true" ]
-then
-  echo
-  echo "Building eris-pm in a docker container."
-  set -e
-  tests/build_tool.sh 1>/dev/null
-  if [ $? -ne 0 ]
-  then
-    echo "Could not build eris-pm. Debug via by directly running [`pwd`/tests/build_outside_tool.sh]"
-    exit 1
-  fi
-  set +e
-  echo "Build complete."
-  echo ""
-fi
 
 # ---------------------------------------------------------------------------
 # Go!
