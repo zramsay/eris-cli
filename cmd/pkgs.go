@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/pkgs"
 	"github.com/eris-ltd/eris-cli/util"
 	"github.com/eris-ltd/eris-cli/version"
@@ -36,27 +35,18 @@ var packagesDo = &cobra.Command{
 
 [eris pkgs do] will perform the required functionality included
 in a package definition file`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PreRun: func(cmd *cobra.Command, args []string) {
 		// clears epm.log file
 		util.ClearJobResults()
 
-		// Welcomer....
-		log.Info("Hello! I'm EPM.")
-
-		// Fixes path issues and controls for mint-client / eris-keys assumptions
-		// util.BundleHttpPathCorrect(do)
 		util.PrintPathPackage(do)
-
-		log.Warn(do.ChainName)
-		//do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, do.ChainPort)
-		log.Warn(do.ChainName)
-
 	},
 	Run: PackagesDo,
 }
 
 func addPackagesFlags() {
-	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
+	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
+	// TODO links keys
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", "http://172.17.0.2:4767", "IP:PORT of keys daemon which EPM should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
 	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which epm should use [csv,json]")
