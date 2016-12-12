@@ -1,0 +1,190 @@
+jobs:
+
+- name: val1
+  job:
+    set:
+      val: 1234
+
+- name: less
+  job:
+    set:
+      val: 10000001232
+
+- name: same
+  job:
+    set:
+      val: 10000001233
+
+- name: more
+  job:
+    set:
+      val: 10000001234
+
+- name: receipient
+  job:
+    set:
+      val: 6A3AFFB16BFB95AA547930572D71C460EFBCD857
+
+- name: sendTxTest1
+  job:
+    send:
+      destination: 58FD1799AA32DED3F6EAC096A1DC77834A446B9C
+      amount: $val1
+
+- name: sendTxTest2
+  job:
+    send:
+      destination: $receipient
+      amount: $val1
+
+- name: sendTxTest3
+  job:
+    send:
+      destination: $addr2
+      amount: $val1
+
+- name: sendTxQuery1
+  job:
+    query-account:
+      account: $receipient
+      field: balance
+
+- name: sendTxQuery2
+  job:
+    query-account:
+      account: 58FD1799AA32DED3F6EAC096A1DC77834A446B9C
+      field: balance
+
+- name: sendTxQuery3
+  job:
+    query-account:
+      account: $addr2
+      field: balance
+
+- name: sendTxAssert1
+  job:
+    assert:
+      key: $sendTxQuery1
+      relation: eq
+      val: $val1
+
+- name: sendTxAssert2
+  job:
+    assert:
+      key: $sendTxQuery2
+      relation: eq
+      val: $val1
+
+# first test using "wordy" syntax, then symbol-y syntax
+- name: sendTxAssert3
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: eq
+      val: $same
+
+- name: sendTxAssert4
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ne
+      val: $more
+
+- name: sendTxAssert5
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: gt
+      val: $less
+
+- name: sendTxAssert6
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ge
+      val: $same
+
+- name: sendTxAssert7
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ge
+      val: $less
+
+- name: sendTxAssert8
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: lt
+      val: $more
+
+- name: sendTxAssert9
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: le
+      val: $same
+
+- name: sendTxAssert10
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: le
+      val: $more
+
+# second test using "symbol-y" syntax
+- name: sendTxAssert11
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ==
+      val: $same
+
+- name: sendTxAssert12
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: "!="
+      val: $more
+
+- name: sendTxAssert13
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ">"
+      val: $less
+
+- name: sendTxAssert14
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ">="
+      val: $same
+
+- name: sendTxAssert15
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: ">="
+      val: $less
+
+- name: sendTxAssert16
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: <
+      val: $more
+
+- name: sendTxAssert17
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: <=
+      val: $same
+
+- name: sendTxAssert18
+  job:
+    assert:
+      key: $sendTxQuery3
+      relation: <=
+      val: $more

@@ -1,0 +1,1 @@
+[{"constant":false,"inputs":[],"name":"getLast","outputs":[{"name":"GSAddr","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"create","outputs":[{"name":"GSAddr","type":"address"}],"type":"function"},{"constant":false,"inputs":[],"name":"create2","outputs":[{"name":"GSAddr","type":"address"}],"type":"function"}]
