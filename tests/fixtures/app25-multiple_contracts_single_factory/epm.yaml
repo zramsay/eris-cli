@@ -8,13 +8,13 @@ jobs:
 - name: deployGSFactory
   job:
     deploy:
-      contract: Factory.sol
+      contract: contracts/Factory.sol
       instance: GSFactory
 
 - name: deployGSABIFactory
   job:
     deploy:
-      contract: Factory.sol
+      contract: contracts/Factory.sol
       instance: Storage
 
 - name: createGSContract1
