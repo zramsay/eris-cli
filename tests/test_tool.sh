@@ -131,14 +131,9 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./keys/... && passed Keys
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./pkgs/... && passed Packages
-    if [ $? -ne 0 ]; then return 1; fi
-    # go test ./remotes/... && passed Remotes
-    # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./apps/... && passed Apps
-    # if [ $? -ne 0 ]; then return 1; fi
+    #go test ./pkgs/... && passed Packages
+    #if [ $? -ne 0 ]; then return 1; fi
     # go test ./agent/... && passed Agent
-    # XXX the agent test catches epm's error by running through a deploy
     # if [ $? -ne 0 ]; then return 1; fi
     go test ./clean/... && passed Clean
     if [ $? -ne 0 ]; then return 1; fi
