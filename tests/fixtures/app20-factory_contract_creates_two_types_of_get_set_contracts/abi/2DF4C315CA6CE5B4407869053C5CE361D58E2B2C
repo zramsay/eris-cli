@@ -1,0 +1,1 @@
+[{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set2","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"get2","outputs":[{"name":"retVal","type":"uint256"}],"type":"function"}]

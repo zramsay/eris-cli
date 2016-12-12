@@ -1,0 +1,11 @@
+{
+  "assertStorage": "passed",
+  "createGSContract": "FFD43F09E1FBDCBCF2AD9BAB0903C8745496C7DE",
+  "createGSContract2": "FBBBD6A68D53CC590CA362DDD28B8B35AF37E5F1",
+  "defaultAddr": "E89F29313DC13BC5D27CFD846A76ADE8D3ACC201",
+  "deployGSFactory": "C2CBD3CC85BAB672B796AFC1BD92C60E5DBB699F",
+  "queryStorage": "5",
+  "setStorage": "",
+  "setStorage2": "",
+  "setStorageBase": "5"
+}
