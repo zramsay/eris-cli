@@ -8,7 +8,7 @@ jobs:
 - name: deployStorageK
   job:
     deploy:
-      contract: storage.sol
+      contract: contracts/storage.sol
       instance: all
 
 - name: setStorage
