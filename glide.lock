@@ -15,6 +15,8 @@ imports:
   version: 718a5c3648c101c24adc20b7d3fe0be7af35a17a
   subpackages:
   - errors
+- name: github.com/bugsnag/osext
+  version: 0dd3f918b21bec95ace9dc86c7e70266cfc5c702
 - name: github.com/bugsnag/panicwrap
   version: aa7703c9414b36d4e9b2e42e6c704d0bfae7db64
 - name: github.com/BurntSushi/toml
@@ -98,8 +100,11 @@ imports:
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/gogo/protobuf
   version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
+<<<<<<< 1a699d952d1a3c373d8c1f6847b41587ae319762
   subpackages:
   - proto
+=======
+>>>>>>> ...
 - name: github.com/golang/protobuf
   version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
   subpackages:
