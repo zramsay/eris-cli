@@ -43,9 +43,16 @@ import:
   subpackages:
   - unix
 - package: gopkg.in/yaml.v2
+- package: github.com/gogo/protobuf
+  version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
+  subpackages:
+  - proto
+- package: github.com/golang/protobuf
+  version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
+  subpackages:
+  - proto
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
-- package: github.com/gogo/protobuf
-  version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
+

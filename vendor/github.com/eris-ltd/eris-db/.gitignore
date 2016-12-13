@@ -1,6 +1,0 @@
-# do not vendor in dependencies
-vendor
-# Temporary / cached
-*.swp
-debug
-.idea

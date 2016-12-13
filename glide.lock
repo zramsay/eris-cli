@@ -1,5 +1,5 @@
-hash: 0e1d65973aef70517302d417ebb8eedee4fe26eda7370cab1b92e0023b07a25c
-updated: 2016-12-13T11:35:02.443788376-06:00
+hash: 592f99e81ddc8b304229e976bdcd58f7b73ff7ced90005c75548d55cf349de1c
+updated: 2016-12-13T12:18:37.382703211-06:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: fa152c58bc15761d0200cb75fe958b89a9d4888e
@@ -20,7 +20,7 @@ imports:
 - name: github.com/BurntSushi/toml
   version: 99064174e013895bbd9b025c31100bd1d9b590ca
 - name: github.com/docker/docker
-  version: 4b3740d0094868bd24f81b7be4cab19bad5d93c2
+  version: 39473dad5425d734fdc73df0a678c6edc3d4054b
   subpackages:
   - api/types
   - api/types/blkiodev
@@ -93,11 +93,15 @@ imports:
 - name: github.com/fsnotify/fsnotify
   version: bd2828f9f176e52d7222e565abb2d338d3f3c103
 - name: github.com/fsouza/go-dockerclient
-  version: 06afd508f2c79dec3a44c5c92b3c2d7c235b8e22
+  version: 4611598e6e6615762544f0805acd59dfede5c9a2
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
+- name: github.com/gogo/protobuf
+  version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
+  subpackages:
+  - proto
 - name: github.com/golang/protobuf
-  version: f7137ae6b19afbfd61a94b746fda3b3fe0491874
+  version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
   subpackages:
   - proto
 - name: github.com/golang/snappy
