@@ -90,8 +90,6 @@ imports:
   - crypto/secp256k1
   - crypto/sha3
   - eris-keys
-- name: github.com/eris-ltd/eris-logger
-  version: cb5a0fa6ec4162413cfd5abf070d4c508b30541d
 - name: github.com/fsnotify/fsnotify
   version: bd2828f9f176e52d7222e565abb2d338d3f3c103
 - name: github.com/fsouza/go-dockerclient
