@@ -21,13 +21,13 @@ dependencies:
     - go version
     - docker version
     - docker-machine version
-    - "sudo add-apt-repository -y ppa:masterminds/glide && sudo apt-get update; sudo apt-get install -y glide"
-    - cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+      #- "sudo add-apt-repository -y ppa:masterminds/glide && sudo apt-get update; sudo apt-get install -y glide"
+    - cd ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/cmd/eris && go install
 
 test:
   override:
-    - glide install
-    - go install ./cmd/eris
+          #- glide install
+    # - go install ./cmd/eris
     #- glide novendor | xargs go test
     - case ${CIRCLE_NODE_INDEX} in 0) SKIP_STACK=true tests/test.sh;; 1) SKIP_PACKAGES=true tests/test.sh;; esac:
         parallel: true
