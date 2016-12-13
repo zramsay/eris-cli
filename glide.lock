@@ -1,5 +1,5 @@
 hash: 0e1d65973aef70517302d417ebb8eedee4fe26eda7370cab1b92e0023b07a25c
-updated: 2016-11-30T14:16:15.899934341-06:00
+updated: 2016-12-13T11:35:02.443788376-06:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: fa152c58bc15761d0200cb75fe958b89a9d4888e
@@ -97,7 +97,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: da116c3771bf4a398a43f44e069195ef1c9688ef
+  version: f7137ae6b19afbfd61a94b746fda3b3fe0491874
   subpackages:
   - proto
 - name: github.com/golang/snappy

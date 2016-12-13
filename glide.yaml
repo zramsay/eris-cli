@@ -47,3 +47,5 @@ testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
+- package: github.com/gogo/protobuf
+  version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
