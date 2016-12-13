@@ -1,5 +1,5 @@
-hash: 592f99e81ddc8b304229e976bdcd58f7b73ff7ced90005c75548d55cf349de1c
-updated: 2016-12-13T12:18:37.382703211-06:00
+hash: 0ad16381438d593a1089760aaca6086f2f29b484e22a7845570be215c00324ec
+updated: 2016-12-13T13:47:41.751213218-05:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: fa152c58bc15761d0200cb75fe958b89a9d4888e
@@ -90,6 +90,8 @@ imports:
   - crypto/secp256k1
   - crypto/sha3
   - eris-keys
+- name: github.com/eris-ltd/eris-logger
+  version: cb5a0fa6ec4162413cfd5abf070d4c508b30541d
 - name: github.com/fsnotify/fsnotify
   version: bd2828f9f176e52d7222e565abb2d338d3f3c103
 - name: github.com/fsouza/go-dockerclient
@@ -98,11 +100,8 @@ imports:
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/gogo/protobuf
   version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
-<<<<<<< 1a699d952d1a3c373d8c1f6847b41587ae319762
   subpackages:
   - proto
-=======
->>>>>>> ...
 - name: github.com/golang/protobuf
   version: 1f49d83d9aa00e6ce4fc8258c71cc7786aec968a
   subpackages:
