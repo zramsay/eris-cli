@@ -1,5 +1,8 @@
 package: github.com/eris-ltd/eris-cli
 import:
+- package: github.com/gogo/protobuf
+  version: a11c89fbb0ad4acfa8abc4a4d5f7e27c477169b1
+- package: github.com/bugsnag/osext
 - package: github.com/BurntSushi/toml
 - package: github.com/bugsnag/bugsnag-go
 - package: github.com/docker/docker
