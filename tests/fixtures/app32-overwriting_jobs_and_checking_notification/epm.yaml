@@ -1,0 +1,10 @@
+jobs: 
+- name: c
+  job:
+    deploy:
+      contract: app32.sol
+      wait: true
+- name: c
+  job:
+    set:
+      val: 1 

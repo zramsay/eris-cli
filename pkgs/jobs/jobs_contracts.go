@@ -245,7 +245,7 @@ func deployRaw(do *definitions.Do, deploy *definitions.Deploy, contractName, con
 		"code":   contractCode,
 	}).Info()
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainName)
+	erisNodeClient := client.NewErisNodeClient(do.ChainURL)
 	erisKeyClient := keys.NewErisKeyClient(do.Signer)
 	tx, err := core.Call(erisNodeClient, erisKeyClient, do.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
 	if err != nil {
@@ -311,7 +311,7 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 		"data":        callData,
 	}).Info("Calling")
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainName)
+	erisNodeClient := client.NewErisNodeClient(do.ChainURL)
 	erisKeyClient := keys.NewErisKeyClient(do.Signer)
 	tx, err := core.Call(erisNodeClient, erisKeyClient, do.PublicKey, call.Source, call.Destination, call.Amount, call.Nonce, call.Gas, call.Fee, callData)
 	if err != nil {
@@ -368,7 +368,7 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 func deployFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	var result string
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainName)
+	erisNodeClient := client.NewErisNodeClient(do.ChainURL)
 	erisKeyClient := keys.NewErisKeyClient(do.Signer)
 	res, err := core.SignAndBroadcast(do.ChainID, erisNodeClient, erisKeyClient, tx.(txs.Tx), true, true, true)
 	if err != nil {

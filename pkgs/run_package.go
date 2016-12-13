@@ -11,21 +11,12 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
-	// XXX [zr] why this fails I don't know
-	//chainIP, err := getChainIP(do.ChainName)
-	//if err != nil {
-	//	return err
-	//}
-	//fmt.Println(chainIP)
+	if err := getChainIP(do); err != nil {
+		return err
+	}
 
-	// Populates chainID from the chain
-	// TODO link properly & get chainID not from chainName
-	// XXX temp hack :-1:
-	//do.ChainID = do.ChainName
-
-	// TODO implement do.ChainURL
 	// TODO flexible port
-	do.ChainName = fmt.Sprintf("tcp://%s:%s", do.ChainName, "46657")
+	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, "46657")
 	if err := util.GetChainID(do); err != nil {
 		return err
 	}
@@ -49,22 +40,22 @@ func RunPackage(do *definitions.Do) error {
 	return jobs.RunJobs(do)
 }
 
-func getChainIP(chainName string) (string, error) {
+func getChainIP(do *definitions.Do) error {
 
-	//if !util.IsChain(chainName, true) {
-	//	return "", fmt.Errorf("chain (%s) is not running", chainName)
-	//}
+	if !util.IsChain(do.ChainName, true) {
+		return fmt.Errorf("chain (%s) is not running", do.ChainName)
+	}
 
-	containerName := util.ContainerName(definitions.TypeChain, chainName)
+	containerName := util.ContainerName(definitions.TypeChain, do.ChainName)
 
 	cont, err := util.DockerClient.InspectContainer(containerName)
 	if err != nil {
-		return "", util.DockerError(err)
+		return util.DockerError(err)
 	}
-	fmt.Println(cont.NetworkSettings.IPAddress)
 
-	//return chainIP, nil
-	return "", nil
+	do.ChainIP = cont.NetworkSettings.IPAddress
+
+	return nil
 }
 
 func bootCompiler() error {

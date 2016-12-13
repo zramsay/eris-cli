@@ -74,6 +74,8 @@ type Do struct {
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PublicKey     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainIP       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainURL      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultOutput string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultSets   []string `mapstructure:"," json:"," yaml:"," toml:","`
 	Package       *Package
