@@ -36,7 +36,7 @@ func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, er
 	return result, nil
 }
 
-func SetValJob(set *definitions.Set, do *definitions.Do) (string, error) {
+func SetValJob(set *definitions.SetJob, do *definitions.Do) (string, error) {
 	var result string
 	set.Value, _ = util.PreProcess(set.Value, do)
 	log.WithField("=>", set.Value).Info("Setting Variable")

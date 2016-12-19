@@ -14,7 +14,7 @@ type Account struct {
 	Address string `mapstructure:"address" json:"address" yaml:"address" toml:"address"`
 }
 
-type Set struct {
+type SetJob struct {
 	// (Required) value which should be saved along with the jobName (which will be the key)
 	// this is useful to set variables which can be used throughout the epm definition file.
 	// It should be noted that arrays and bools must be defined using strings as such "[1,2,3]"

@@ -17,7 +17,7 @@ type Job struct {
 	// Sets/Resets the primary account to use
 	Account *Account `mapstructure:"account" json:"account" yaml:"account" toml:"account"`
 	// Set an arbitrary value
-	Set *Set `mapstructure:"set" json:"set" yaml:"set" toml:"set"`
+	Set *SetJob `mapstructure:"set" json:"set" yaml:"set" toml:"set"`
 	// Contract compile and send to the chain functions
 	Deploy *Deploy `mapstructure:"deploy" json:"deploy" yaml:"deploy" toml:"deploy"`
 	// Send tokens from one account to another
