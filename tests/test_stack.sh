@@ -65,30 +65,6 @@ test_exit=$?
 check_and_exit
 cd $start
 
-<<<<<<< fd13490686d879843df8a75b41a7a9d28c26212f
-## ----------------------------------------------------------------------------
-## Get EPM
-#
-#echo
-#if [ -d "$epm_dir" ]; then
-#  echo "eris-pm present on host; not cloning"
-#  cd $epm_dir
-#else
-#  echo -e "Cloning eris-pm to:\t\t$epm_dir:$epm_branch"
-#  git clone $epm_repo $epm_dir &>/dev/null
-#  cd $epm_dir 1>/dev/null
-#  git checkout origin/$epm_branch &>/dev/null
-#fi
-#echo
-#
-## ----------------------------------------------------------------------------
-## Run EPM tests
-#
-#tests/test.sh
-#test_exit=$?
-#check_and_exit
-#cd $start
-=======
 # ----------------------------------------------------------------------------
 # Run EPM tests
 
@@ -96,7 +72,6 @@ tests/test_epm.sh
 test_exit=$?
 check_and_exit
 cd $start
->>>>>>> sort tests, first pass
 
 # ----------------------------------------------------------------------------
 # Cleanup
