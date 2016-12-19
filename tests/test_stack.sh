@@ -46,11 +46,6 @@ export ERIS_PULL_APPROVE="true"
 export ERIS_MIGRATE_APPROVE="true"
 export SKIP_BUILD="true"
 
-epm=eris-pm
-epm_repo=https://github.com/eris-ltd/$epm.git
-epm_dir=$repo/../$epm
-epm_branch=${EPM_BRANCH:=master}
-
 # ----------------------------------------------------------------------------
 # Utility functions
 
@@ -70,6 +65,7 @@ test_exit=$?
 check_and_exit
 cd $start
 
+<<<<<<< fd13490686d879843df8a75b41a7a9d28c26212f
 ## ----------------------------------------------------------------------------
 ## Get EPM
 #
@@ -92,6 +88,15 @@ cd $start
 #test_exit=$?
 #check_and_exit
 #cd $start
+=======
+# ----------------------------------------------------------------------------
+# Run EPM tests
+
+tests/test_epm.sh
+test_exit=$?
+check_and_exit
+cd $start
+>>>>>>> sort tests, first pass
 
 # ----------------------------------------------------------------------------
 # Cleanup

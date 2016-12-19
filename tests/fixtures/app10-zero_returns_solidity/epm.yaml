@@ -1,0 +1,71 @@
+jobs:
+
+- name: contract
+  job:
+    deploy:
+      contract: zero.sol
+
+- name: queryInt
+  job:
+    query-contract:
+      destination: $contract
+      function: zeroInt
+
+- name: assertZeroInt
+  job:
+    assert:
+      key: $queryInt
+      relation: eq
+      val: 0
+
+- name: queryUInt
+  job:
+    query-contract:
+      destination: $contract
+      function: zeroUInt
+
+- name: assertZeroUInt
+  job:
+    assert:
+      key: $queryUInt
+      relation: eq
+      val: 0
+
+- name: queryByte
+  job:
+    query-contract:
+      destination: $contract
+      function: zeroBytes
+
+- name: assertZeroByte
+  job:
+    assert:
+      key: $queryByte
+      relation: eq
+      val: ""
+
+- name: zeroAddress
+  job:
+    query-contract:
+      destination: $contract
+      function: zeroAddress
+
+- name: assertZeroAddress
+  job:
+    assert:
+      key: $zeroAddress
+      relation: eq
+      val: "0000000000000000000000000000000000000000"
+
+- name: queryBool
+  job:
+    query-contract:
+      destination: $contract
+      function: zeroBool
+
+- name: assertZeroBool
+  job:
+    assert:
+      key: $queryBool
+      relation: eq
+      val: "false"

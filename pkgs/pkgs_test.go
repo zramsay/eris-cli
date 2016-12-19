@@ -21,6 +21,8 @@ import (
 	"github.com/eris-ltd/eris-cli/version"
 )
 
+// [zr] there's a ton of refactoring to do here!
+
 var goodPkg string = filepath.Join(config.AppsPath, "good", "package.json")
 var badPkg string = filepath.Join(config.AppsPath, "bad", "package.json")
 var emptyPkg string = filepath.Join(config.AppsPath, "empty", "package.json")
@@ -232,10 +234,6 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 
 	if do.Service.Name != pkg.Name+"_tmp_"+do.Name {
 		t.Fatalf("wrong service name, expected %s got %s", pkg.Name+"_tmp_"+do.Name, do.Service.Name)
-	}
-
-	if do.Service.Image != path.Join(version.DefaultRegistry, version.ImagePM) {
-		t.Fatalf("wrong service image, expected %s got %s", path.Join(version.DefaultRegistry, version.ImagePM), do.Service.Image)
 	}
 
 	if !do.Service.AutoData {

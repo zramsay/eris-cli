@@ -198,7 +198,6 @@ func pullDefaultImages(images []string) error {
 		"keys":      config.Global.ImageKeys,
 		"ipfs":      config.Global.ImageIPFS,
 		"db":        config.Global.ImageDB,
-		"pm":        config.Global.ImagePM,
 		"compilers": config.Global.ImageCompilers,
 	}
 
@@ -356,7 +355,6 @@ func overwriteErisToml() error {
 	config.Global.ImageData = version.ImageData
 	config.Global.ImageKeys = version.ImageKeys
 	config.Global.ImageDB = version.ImageDB
-	config.Global.ImagePM = version.ImagePM
 	config.Global.ImageIPFS = version.ImageIPFS
 
 	// Ensure the directory the file being saved to exists.

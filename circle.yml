@@ -3,7 +3,6 @@ machine:
     GOPATH: $HOME/.go_workspace
     GO15VENDOREXPERIMENT: 1
     REPO: ${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-    EPM_BRANCH: develop
     DOCKER_VERSION: 1.9.1
     DOCKER_MACHINE_VERSION: 0.7.0
   post:

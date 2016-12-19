@@ -69,6 +69,18 @@ type Do struct {
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
 
+	//from epm
+	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	PublicKey     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainIP       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainURL      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultOutput string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultSets   []string `mapstructure:"," json:"," yaml:"," toml:","`
+	Package       *Package
+
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
 	ChnDirs    bool `mapstructure:"," json:"," yaml:"," toml:","`
