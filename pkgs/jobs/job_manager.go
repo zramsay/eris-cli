@@ -154,7 +154,7 @@ func defaultSetJobs(do *definitions.Do) {
 			newJobs = append(newJobs, &definitions.Jobs{
 				JobName: blowdUp[0],
 				Job: &definitions.Job{
-					Set: &definitions.Set{
+					Set: &definitions.SetJob{
 						Value: blowdUp[1],
 					},
 				},
