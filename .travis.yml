@@ -4,7 +4,6 @@ language: go
 
 env:
   global:
-    - ECM_BRANCH=develop
     - TEST_ON_MACOSX=true
   matrix:
     - SKIP_STACK=true

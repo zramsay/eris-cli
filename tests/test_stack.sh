@@ -46,11 +46,6 @@ export ERIS_PULL_APPROVE="true"
 export ERIS_MIGRATE_APPROVE="true"
 export SKIP_BUILD="true"
 
-ecm=eris-cm
-ecm_repo=https://github.com/eris-ltd/$ecm.git
-ecm_dir=$repo/../$ecm
-ecm_branch=${ECM_BRANCH:=master}
-
 # ----------------------------------------------------------------------------
 # Utility functions
 
