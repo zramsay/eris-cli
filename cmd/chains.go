@@ -287,8 +287,8 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
-	chainsMake.PersistentFlags().BoolVarP(&do.RmD, "data", "x", true, "remove data containers after stopping")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
+	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
 
 	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	buildFlag(chainsNew, do, "publish", "chain")
@@ -374,6 +374,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 
 	do.Name = args[0]
 
+	// TODO clean up this logic
 	if do.Known && (do.ChainMakeActs == "" || do.ChainMakeVals == "") {
 		cmd.Help()
 		util.IfExit(fmt.Errorf("If you are using the --known flag the --validators *and* the --accounts flags are both required"))
@@ -396,9 +397,7 @@ func MakeChain(cmd *cobra.Command, args []string) {
 	}
 
 	if do.Wizard {
-		config.Global.InteractiveWriter = os.Stdout
-		config.Global.InteractiveErrorWriter = os.Stderr
-		do.Operations.Terminal = true
+		// TODO ... something ... ?
 	} else if len(do.AccountTypes) == 0 && do.ChainType == "" && do.ChainMakeActs == "" && do.ChainMakeVals == "" {
 		// no flags given assume simplechain
 		do.ChainType = "simplechain"
