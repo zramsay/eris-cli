@@ -11,12 +11,12 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
-	if err := getChainIP(do); err != nil {
+	// sets do.ChainIP and do.ChainPort
+	if err := setChainIPandPort(do); err != nil {
 		return err
 	}
 
-	// TODO flexible port
-	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, "46657")
+	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
 	if err := util.GetChainID(do); err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func RunPackage(do *definitions.Do) error {
 	return jobs.RunJobs(do)
 }
 
-func getChainIP(do *definitions.Do) error {
+func setChainIPandPort(do *definitions.Do) error {
 
 	if !util.IsChain(do.ChainName, true) {
 		return fmt.Errorf("chain (%s) is not running", do.ChainName)
@@ -54,6 +54,7 @@ func getChainIP(do *definitions.Do) error {
 	}
 
 	do.ChainIP = cont.NetworkSettings.IPAddress
+	do.ChainPort = "46657" // [zr] this can be hardcoded even if [--publish] is used
 
 	return nil
 }
