@@ -24,7 +24,7 @@ func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, er
 	if err != nil {
 		return util.KeysErrorHandler(do, err)
 	}
-	do.PublicKey, err = keyClient.PubKey(do.Package.Account)
+	do.PublicKey, err = keyClient.PubKey(do.Package.Account, "")
 	if err != nil {
 		return util.KeysErrorHandler(do, err)
 	}
