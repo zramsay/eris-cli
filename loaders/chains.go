@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
@@ -13,6 +14,48 @@ import (
 
 	"github.com/spf13/viper"
 )
+
+func LoadChainTypes(fileName string) (*definitions.ChainType, error) {
+	fileName = filepath.Join(config.ChainTypePath, fileName)
+	log.WithField("file name", fileName).Info("Loading Chain Definition.")
+	var typ = definitions.BlankChainType()
+	var chainType = viper.New()
+
+	if err := getSetup(fileName, chainType); err != nil {
+		return nil, err
+	}
+
+	// marshall file
+	if err := chainType.Unmarshal(typ); err != nil {
+		return nil, fmt.Errorf("\nSorry, the marmots could not figure that chain types file out.\nPlease check your chain type definition file is properly formatted.\nERROR =>\t\t\t%v", err)
+	}
+
+	return typ, nil
+}
+
+func getSetup(fileName string, cfg *viper.Viper) error {
+	// setup file
+	abs, err := filepath.Abs(fileName)
+	if err != nil {
+		return fmt.Errorf("\nSorry, the marmots were unable to find the absolute path to the account types file.")
+	}
+
+	path := filepath.Dir(abs)
+	file := filepath.Base(abs)
+	extName := filepath.Ext(file)
+	bName := file[:len(file)-len(extName)]
+
+	cfg.AddConfigPath(path)
+	cfg.SetConfigName(bName)
+	cfg.SetConfigType(strings.Replace(extName, ".", "", 1))
+
+	// load file
+	if err := cfg.ReadInConfig(); err != nil {
+		return fmt.Errorf("\nSorry, the marmots were unable to load the file: (%s). Please check your path.\nERROR =>\t\t\t%v", fileName, err)
+	}
+
+	return nil
+}
 
 // LoadChainDefinition returns a ChainDefinition settings for the chainName
 // chain. It also enriches the the chain settings by reading the definition

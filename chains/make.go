@@ -6,12 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eris-ltd/eris-cli/chains/maker"
 	"github.com/eris-ltd/eris-cli/config"
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/maker"
 	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
 
 	"github.com/eris-ltd/eris-db/genesis"
 	keys "github.com/eris-ltd/eris-keys/eris-keys"
@@ -78,16 +77,16 @@ func MakeChain(do *definitions.Do) error {
 
 	// cm currently is not opinionated about its writers.
 	if do.Tarball {
-		if err := util.Tarball(do); err != nil {
+		if err := maker.Tarball(do); err != nil {
 			return err
 		}
 	} else if do.ZipFile {
-		if err := util.Zip(do); err != nil {
+		if err := maker.Zip(do); err != nil {
 			return err
 		}
 	}
 	if do.Output {
-		if err := util.SaveAccountResults(do); err != nil {
+		if err := maker.SaveAccountResults(do); err != nil {
 			return err
 		}
 	}

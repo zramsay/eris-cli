@@ -113,7 +113,7 @@ func RegisterNameJob(name *definitions.RegisterName, do *definitions.Do) (string
 
 			n := fmt.Sprintf("%s:%s", record[0], record[1])
 			// TODO: fix this... simple and naive result just now.
-			if err = util.WriteJobResultCSV(n, r); err != nil {
+			if err = WriteJobResultCSV(n, r); err != nil {
 				log.Error("ERROR =>")
 				return "", err
 			}
