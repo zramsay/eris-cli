@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path"
@@ -14,8 +15,6 @@ import (
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/services"
-
-	"github.com/eris-ltd/eris-db/keys"
 )
 
 type KeyClient struct{}
@@ -94,22 +93,24 @@ func (keys *KeyClient) ListKeys(host, container, quiet bool) ([]string, error) {
 	return result, nil
 }
 
-//TODO: Need to add a "type" field
 // Keyclient generates a key.
 // params:
 // save - whether or not to export it from container to host when we're done generating
+// keyType - the type of key to generate, if left empty, will default to creating a ed25519,ripemd160 key/curve combination
 // password - not implemented yet
-func (keys *KeyClient) GenerateKey(save bool, password string) (string, error) {
+func (keys *KeyClient) GenerateKey(save bool, keyType, password string) (string, error) {
 	err := keys.ensureRunning()
 	if err != nil {
 		return "", err
 	}
-
+	if keyType == "" {
+		keyType = "ed25519,ripemd160"
+	}
 	buf := new(bytes.Buffer)
 	if password != "" {
 		return "", fmt.Errorf("Password currently unimplemented. Marmots are confused at how you got here.")
 	}
-	buf, err = services.ExecHandler("keys", []string{"eris-keys", "gen", "--no-pass"})
+	buf, err = services.ExecHandler("keys", []string{"eris-keys", "gen", "--type", keyType, "--no-pass"})
 	if err != nil {
 		return "", err
 	}
@@ -205,16 +206,28 @@ func (keys *KeyClient) ensureRunning() error {
 // Keyclient returns the public key of an address.
 // params:
 // address - address whose public key we want to know
-func (keys *KeyClient) PubKey(address string) (string, error) {
+// name - name of the key whose address we want
+func (keys *KeyClient) PubKey(address, name string) (string, error) {
 	err := keys.ensureRunning()
 	if err != nil {
 		return "", err
 	}
 
-	addr := strings.TrimSpace(address)
-	buf, err := services.ExecHandler("keys", []string{"eris-keys", "pub", "--addr", addr, "--name", ""})
-	if err != nil {
-		return "", err
+	buf := new(bytes.Buffer)
+	if address != "" && name == "" {
+		addr := strings.TrimSpace(address)
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "pub", "--addr", addr})
+		if err != nil {
+			return "", err
+		}
+	} else if address == "" && name != "" {
+		name := strings.TrimSpace(name)
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "pub", "--name", name})
+		if err != nil {
+			return "", err
+		}
+	} else {
+		return "", errors.New("Expected either name or address, cannot have both")
 	}
 
 	return strings.TrimSpace(buf.String()), nil
@@ -265,4 +278,33 @@ func (keys *KeyClient) Verify(keyType, signature, publicKey, msg string) (bool, 
 	}
 
 	return strconv.ParseBool(strings.TrimSpace(buf.String()))
+}
+
+// Keyclient converts a eris-keys key to priv-validator.json
+// params:
+// address - address of the key to convert
+// name - name of the key to convert
+func (keys *KeyClient) Convert(address, name string) ([]byte, error) {
+	err := keys.ensureRunning()
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	if address != "" && name == "" {
+		addr := strings.TrimSpace(address)
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "convert", "--addr", addr})
+		if err != nil {
+			return nil, err
+		}
+	} else if address == "" && name != "" {
+		name := strings.TrimSpace(name)
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "convert", "--name", name})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("Must have one and only one of either name or address.")
+	}
+
+	return buf.Bytes(), nil
 }

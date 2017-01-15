@@ -97,7 +97,7 @@ func GenerateKey(cmd *cobra.Command, args []string) {
 	// if do.Password {}
 	keyClient, err := keys.InitKeyClient()
 	util.IfExit(err)
-	_, err = keyClient.GenerateKey(do.Save, "")
+	_, err = keyClient.GenerateKey(do.Save, "", "")
 	util.IfExit(err)
 }
 

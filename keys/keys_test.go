@@ -64,7 +64,7 @@ func TestGenerateKey(t *testing.T) {
 	}
 	//todo: clean this test up to be made from a test struct/loop
 	//Try without saving the key
-	address, err := testsGenAKey(keyClient, false, "")
+	address, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestGenerateKey(t *testing.T) {
 	}
 
 	//Try saving the key
-	address, err = testsGenAKey(keyClient, true, "")
+	address, err = testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -103,7 +103,7 @@ func TestGenerateKey(t *testing.T) {
 	}
 
 	// Todo: implement password and change this
-	_, err = testsGenAKey(keyClient, true, "marmot")
+	_, err = testsGenAKey(keyClient, true, "", "marmot")
 	if err == nil {
 		t.Fatal("Expected error for password usage in key generation. Got none.")
 	}
@@ -116,7 +116,7 @@ func TestExportKeySingle(t *testing.T) {
 		t.Fatalf("Could not initialize key client, got err %v", err)
 	}
 
-	address, err := testsGenAKey(keyClient, false, "")
+	address, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestImportKeySingle(t *testing.T) {
 		t.Fatalf("Could not initialize key client, got err %v", err)
 	}
 	// automatically exported when we save
-	address, err := testsGenAKey(keyClient, true, "")
+	address, err := testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -201,11 +201,11 @@ func TestImportKeyAll(t *testing.T) {
 
 	// gen some keys, and export them to the host
 	addrs := make(map[string]bool)
-	addr1, err := testsGenAKey(keyClient, true, "")
+	addr1, err := testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
-	addr2, err := testsGenAKey(keyClient, true, "")
+	addr2, err := testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -246,11 +246,11 @@ func TestExportKeyAll(t *testing.T) {
 	}
 	// gen some keys
 	addrs := make(map[string]bool)
-	addr1, err := testsGenAKey(keyClient, false, "")
+	addr1, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
-	addr2, err := testsGenAKey(keyClient, false, "")
+	addr2, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -285,11 +285,11 @@ func TestListKeyContainer(t *testing.T) {
 
 	// gen some keys
 	addrs := make(map[string]bool)
-	addr1, err := testsGenAKey(keyClient, false, "")
+	addr1, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
-	addr2, err := testsGenAKey(keyClient, false, "")
+	addr2, err := testsGenAKey(keyClient, false, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -319,11 +319,11 @@ func TestListKeyHost(t *testing.T) {
 
 	// gen some keys
 	addrs := make(map[string]bool)
-	addr1, err := testsGenAKey(keyClient, true, "")
+	addr1, err := testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
-	addr2, err := testsGenAKey(keyClient, true, "")
+	addr2, err := testsGenAKey(keyClient, true, "", "")
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
@@ -363,8 +363,8 @@ func testListKeys(keys *KeyClient, typ string) []string {
 	return result
 }
 
-func testsGenAKey(keys *KeyClient, save bool, password string) (string, error) {
-	return keys.GenerateKey(save, password)
+func testsGenAKey(keys *KeyClient, save bool, keyType, password string) (string, error) {
+	return keys.GenerateKey(save, keyType, password)
 }
 
 func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {
