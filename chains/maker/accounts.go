@@ -70,17 +70,17 @@ func makeKey(keyType string, account *definitions.ErisDBAccount) error {
 
 	keyClient, err := keys.InitKeyClient()
 
-	account.Address, err = keyClient.GenerateKey(false, keyType, "") // note, for now we use not password to lock/unlock keys
+	account.Address, err = keyClient.GenerateKey(false, true, keyType, "") // note, for now we use not password to lock/unlock keys
 	if err != nil {
 		return err
 	}
 
-	account.PubKey, err = keyClient.PubKey(account.Address, account.Name)
+	account.PubKey, err = keyClient.PubKey(account.Address, "")
 	if err != nil {
 		return err
 	}
 
-	mint, err := keyClient.Convert(account.Address, account.Name)
+	mint, err := keyClient.Convert(account.Address, "")
 	if err != nil {
 		return err
 	}

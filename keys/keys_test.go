@@ -364,7 +364,7 @@ func testListKeys(keys *KeyClient, typ string) []string {
 }
 
 func testsGenAKey(keys *KeyClient, save bool, keyType, password string) (string, error) {
-	return keys.GenerateKey(save, keyType, password)
+	return keys.GenerateKey(save, true, keyType, password)
 }
 
 func testExistAndRun(t *testing.T, servName string, toExist, toRun bool) {

@@ -96,9 +96,10 @@ func (keys *KeyClient) ListKeys(host, container, quiet bool) ([]string, error) {
 // Keyclient generates a key.
 // params:
 // save - whether or not to export it from container to host when we're done generating
+// quiet - boolean for whether or not to display logs.
 // keyType - the type of key to generate, if left empty, will default to creating a ed25519,ripemd160 key/curve combination
 // password - not implemented yet
-func (keys *KeyClient) GenerateKey(save bool, keyType, password string) (string, error) {
+func (keys *KeyClient) GenerateKey(save, quiet bool, keyType, password string) (string, error) {
 	err := keys.ensureRunning()
 	if err != nil {
 		return "", err
@@ -117,12 +118,16 @@ func (keys *KeyClient) GenerateKey(save bool, keyType, password string) (string,
 
 	address := strings.TrimSpace(buf.String())
 	if save {
-		log.WithField("=>", address).Warn("Saving key to host")
+		if !quiet {
+			log.WithField("=>", address).Warn("Saving key to host")
+		}
 		if err := keys.ExportKey(address, false); err != nil {
 			return "", err
 		}
 	} else {
-		log.Warn(address)
+		if !quiet {
+			log.Warn(address)
+		}
 	}
 	return address, nil
 }
