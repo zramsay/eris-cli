@@ -69,12 +69,9 @@ func makeKey(keyType string, account *definitions.ErisDBAccount) error {
 		"type": keyType,
 	}).Debug("Sending Call to eris-keys server")
 
-	var err error
-	log.WithField("endpoint", "gen").Debug()
-	account.Address, err = keys.Call("gen", map[string]string{"auth": "", "type": keyType, "name": account.Name}) // note, for now we use not password to lock/unlock keys
-	if _, ok := err.(keys.ErrConnectionRefused); ok {
-		return fmt.Errorf("Could not connect to eris-keys server. Start it with `eris services start keys`. Error: %v", err)
-	}
+	keyClient, err := keys.InitKeyClient()
+
+	account.Address, err = keys.GenerateKey(false, "") // note, for now we use not password to lock/unlock keys
 	if err != nil {
 		return err
 	}
