@@ -16,7 +16,7 @@ func RunPackage(do *definitions.Do) error {
 	// clears job_outputs file
 	jobs.ClearJobResults()
 	// useful for debugging
-	PrintPathPackage(do)
+	printPathPackage(do)
 
 	// sets do.ChainIP and do.ChainPort
 	if err := setChainIPandPort(do); err != nil {
@@ -86,7 +86,7 @@ func getLocalCompilerData(do *definitions.Do) {
 	do.Compiler = "http://compilers:9099"
 }
 
-func PrintPathPackage(do *definitions.Do) {
+func printPathPackage(do *definitions.Do) {
 	log.WithField("=>", do.Compiler).Info("Using Compiler at")
 	log.WithField("=>", do.ChainName).Info("Using Chain at")
 	log.WithField("=>", do.ChainID).Debug("With ChainID")
