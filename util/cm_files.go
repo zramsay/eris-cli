@@ -64,7 +64,7 @@ func SaveAccountResults(do *definitions.Do) error {
 			log.Error("Error writing addresses file.")
 			return err
 		}
-		_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.Tokens, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
+		_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.Amount, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
 		if err != nil {
 			log.Error("Error writing accounts file.")
 			return err

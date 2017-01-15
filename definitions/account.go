@@ -1,20 +1,16 @@
 package definitions
 
 type ErisDBAccount struct {
-	Name    string `mapstructure:"," json:"," yaml:"," toml:","`
-	Address string `mapstructure:"," json:"," yaml:"," toml:","`
-	PubKey  string `mapstructure:"," json:"," yaml:"," toml:","`
-	Tokens  int    `mapstructure:"," json:"," yaml:"," toml:","`
-	ToBond  int    `mapstructure:"," json:"," yaml:"," toml:","`
+	Name        string                    `mapstructure:"name" json:"name"`
+	Address     string                    `mapstructure:"address" json:"address"`
+	Amount      int                       `mapstructure:"amount" json:"amount"`
+	Permissions *ErisDBAccountPermissions `mapstructure:"permissions" json:"permissions"`
 
-	// [zr] from definitions/erisdb_chains.go
-	//Address     string                    `json:"address"`
-	Amount int `json:"amount"`
-	//Name        string                    `json:"name"`
-	Permissions *ErisDBAccountPermissions `json:"permissions"`
-
-	Validator         bool
-	PermissionsMap    map[string]int
-	ErisDBPermissions *ErisDBAccountPermissions
-	MintKey           *MintPrivValidator
+	//ignored fields
+	Validator         bool                      `json:"-"`
+	PermissionsMap    map[string]int            `json:"-"`
+	ErisDBPermissions *ErisDBAccountPermissions `json:"-"`
+	MintKey           *MintPrivValidator        `json:"-"`
+	PubKey            string                    `json:"-"`
+	ToBond            int                       `json:"-"`
 }

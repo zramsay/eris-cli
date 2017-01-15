@@ -16,7 +16,7 @@ func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDB
 		log.WithFields(log.Fields{
 			"name":    account.Name,
 			"address": account.Address,
-			"tokens":  account.Tokens,
+			"tokens":  account.Amount,
 			"perms":   account.ErisDBPermissions.ErisDBBase.ErisDBPerms,
 		}).Debug("Making an ErisDB Account")
 
@@ -50,7 +50,7 @@ func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDB
 func MakeErisDBAccount(account *definitions.ErisDBAccount) *definitions.ErisDBAccount {
 	mintAct := &definitions.ErisDBAccount{}
 	mintAct.Address = account.Address
-	mintAct.Amount = account.Tokens
+	mintAct.Amount = account.Amount
 	mintAct.Name = account.Name
 	mintAct.Permissions = account.ErisDBPermissions
 	return mintAct
