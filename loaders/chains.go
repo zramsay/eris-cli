@@ -27,7 +27,8 @@ func LoadChainTypes(fileName string) (*definitions.ChainType, error) {
 
 	// marshall file
 	if err := chainType.Unmarshal(typ); err != nil {
-		return nil, fmt.Errorf("\nSorry, the marmots could not figure that chain types file out.\nPlease check your chain type definition file is properly formatted.\nERROR =>\t\t\t%v", err)
+		return nil, fmt.Errorf(`Sorry, your chain types file "%v" confused the marmots.
+			Please check your chain type definition file is properly formatted: %v`, fileName, err)
 	}
 
 	return typ, nil
@@ -37,7 +38,7 @@ func getSetup(fileName string, cfg *viper.Viper) error {
 	// setup file
 	abs, err := filepath.Abs(fileName)
 	if err != nil {
-		return fmt.Errorf("\nSorry, the marmots were unable to find the absolute path to the account types file.")
+		return fmt.Errorf("Sorry, the marmots were unable to find the absolute path to the account types file.")
 	}
 
 	path := filepath.Dir(abs)
@@ -51,7 +52,8 @@ func getSetup(fileName string, cfg *viper.Viper) error {
 
 	// load file
 	if err := cfg.ReadInConfig(); err != nil {
-		return fmt.Errorf("\nSorry, the marmots were unable to load the file: (%s). Please check your path.\nERROR =>\t\t\t%v", fileName, err)
+		return fmt.Errorf(`Sorry, the marmots were unable to load the file: %s. Please check your path. 
+			Error: %v`, fileName, err)
 	}
 
 	return nil
@@ -144,7 +146,7 @@ func MarshalChainDefinition(definition *viper.Viper, chain *definitions.ChainDef
 	log.Debug("Marshalling chain")
 
 	if err := definition.Unmarshal(chain); err != nil {
-		return fmt.Errorf("The marmots coult not read the chain definition: %v", err)
+		return fmt.Errorf("The marmots could not read the chain definition: %v", err)
 	}
 
 	// toml bools don't really marshal well "data_container". It can be

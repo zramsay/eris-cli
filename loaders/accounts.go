@@ -40,7 +40,8 @@ func LoadAccountType(fileName string) (*definitions.ErisDBAccountType, error) {
 
 	// marshall file
 	if err := accountType.Unmarshal(typ); err != nil {
-		return nil, fmt.Errorf("\nSorry, the marmots could not figure that account types file out.\nPlease check your account type definition file is properly formatted.\nERROR =>\t\t\t%v", err)
+		return nil, fmt.Errorf(`Sorry, the account type file %v confused the marmots.
+			Please check that your account type definition file is properly formatted: %v`, fileName, err)
 	}
 
 	return typ, nil

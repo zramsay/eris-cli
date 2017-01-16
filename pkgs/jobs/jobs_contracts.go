@@ -376,7 +376,6 @@ func deployFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	}
 
 	if err := util.ReadTxSignAndBroadcast(res, err); err != nil {
-		log.Error("ERROR =>")
 		return "", err
 	}
 
