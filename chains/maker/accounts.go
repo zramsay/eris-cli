@@ -33,7 +33,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 
 			log.WithField("name", thisAct.Name).Debug("Making Account")
 
-			thisAct.Tokens = accountT.Tokens
+			thisAct.Amount = accountT.Tokens
 			thisAct.ToBond = accountT.ToBond
 
 			thisAct.PermissionsMap = accountT.Perms
