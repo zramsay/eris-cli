@@ -5,7 +5,6 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/util"
 )
 
 func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDBAccount, chainImageName string,
@@ -29,17 +28,17 @@ func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDB
 		}
 	}
 	for _, account := range accounts {
-		if err := util.WritePrivVals(genesis.ChainID, account); err != nil {
+		if err := WritePrivVals(genesis.ChainID, account); err != nil {
 			return err
 		}
-		if err := util.WriteGenesisFile(genesis.ChainID, genesis, account); err != nil {
+		if err := WriteGenesisFile(genesis.ChainID, genesis, account); err != nil {
 			return err
 		}
 		// TODO: [ben] we can expose seeds to be written into the configuration file
 		// here, but currently not used and we'll overwrite the configuration file
 		// with flag or environment variable in eris-db container
 		theSeeds := strings.Join(seeds, ",") // format for config file (if len>1)
-		if err := util.WriteConfigurationFile(genesis.ChainID, account.Name, theSeeds,
+		if err := WriteConfigurationFile(genesis.ChainID, account.Name, theSeeds,
 			chainImageName, useDataContainer, exportedPorts, containerEntrypoint); err != nil {
 			return err
 		}

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris-cli/loaders"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 )
@@ -58,7 +59,7 @@ func makeWizard(do *definitions.Do) error {
 		}
 	}
 
-	accountTypes, err := LoadAccountTypes()
+	accountTypes, err := loaders.LoadAccountTypes()
 	if err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func makeWizard(do *definitions.Do) error {
 }
 
 func makeRaw(do *definitions.Do, typ string) error {
-	accountTypes, err := LoadAccountTypes()
+	accountTypes, err := loaders.LoadAccountTypes()
 	if err != nil {
 		return err
 	}
@@ -169,7 +170,7 @@ func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator in
 	name, err := util.GetStringResponse(AccountTypeManualSave(), "", reader)
 	if name != "" {
 		thisActT.Name = name
-		if err := util.SaveAccountType(thisActT); err != nil {
+		if err := SaveAccountType(thisActT); err != nil {
 			return nil, err
 		}
 	}
@@ -293,7 +294,7 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
-	chainTypeAccounts, err := LoadChainTypes(do.ChainType)
+	chainTypeAccounts, err := loaders.LoadChainTypes(do.ChainType)
 	if err != nil {
 		return err
 	}

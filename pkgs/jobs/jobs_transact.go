@@ -68,7 +68,6 @@ func RegisterNameJob(name *definitions.RegisterName, do *definitions.Do) (string
 		// open the file and use a reader
 		fileReader, err := os.Open(name.DataFile)
 		if err != nil {
-			log.Error("ERROR =>")
 			return "", err
 		}
 
@@ -85,7 +84,6 @@ func RegisterNameJob(name *definitions.RegisterName, do *definitions.Do) (string
 				break
 			}
 			if err != nil {
-				log.Error("ERROR =>")
 				return "", err
 			}
 
@@ -107,14 +105,12 @@ func RegisterNameJob(name *definitions.RegisterName, do *definitions.Do) (string
 			}, do)
 
 			if err != nil {
-				log.Error("ERROR =>")
 				return "", err
 			}
 
 			n := fmt.Sprintf("%s:%s", record[0], record[1])
 			// TODO: fix this... simple and naive result just now.
-			if err = util.WriteJobResultCSV(n, r); err != nil {
-				log.Error("ERROR =>")
+			if err = WriteJobResultCSV(n, r); err != nil {
 				return "", err
 			}
 		}
@@ -346,7 +342,6 @@ func txFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	}
 
 	if err := util.ReadTxSignAndBroadcast(res, err); err != nil {
-		log.Error("ERROR =>")
 		return "", err
 	}
 

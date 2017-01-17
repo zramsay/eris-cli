@@ -170,7 +170,7 @@ func postProcess(do *definitions.Do) error {
 	case "csv":
 		log.Info("Writing [epm.csv] to current directory")
 		for _, job := range do.Package.Jobs {
-			if err := util.WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
+			if err := WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
 				return err
 			}
 		}
@@ -180,7 +180,7 @@ func postProcess(do *definitions.Do) error {
 		for _, job := range do.Package.Jobs {
 			results[job.JobName] = job.JobResult
 		}
-		return util.WriteJobResultJSON(results)
+		return WriteJobResultJSON(results)
 	}
 
 	return nil

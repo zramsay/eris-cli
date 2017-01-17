@@ -1,4 +1,4 @@
-package util
+package maker
 
 import (
 	"encoding/json"
@@ -97,34 +97,6 @@ func SaveAccountResults(do *definitions.Do) error {
 	log.WithField("path", valFile.Name()).Debug("Saving File.")
 
 	return nil
-}
-
-// returns a list of filenames which are the account_types files
-// these *should be* absolute paths, but this is not a contract
-// with calling functions.
-func AccountTypes(erisPath string) ([]string, error) {
-	haveTyps, err := filepath.Glob(filepath.Join(erisPath, "*.toml"))
-	if err != nil {
-		return []string{}, err
-	}
-	return haveTyps, nil
-}
-
-func AccountTypesNames(erisPath string, withExt bool) ([]string, error) {
-	files, err := AccountTypes(erisPath)
-	if err != nil {
-		return []string{}, err
-	}
-	names := []string{}
-	for _, file := range files {
-		names = append(names, filepath.Base(file))
-	}
-	if !withExt {
-		for e, name := range names {
-			names[e] = strings.Replace(name, ".toml", "", 1)
-		}
-	}
-	return names, nil
 }
 
 func WriteGenesisFile(name string, genesis *definitions.ErisDBGenesis, account *definitions.ErisDBAccount) error {

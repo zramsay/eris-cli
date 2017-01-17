@@ -5,12 +5,19 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
+	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/pkgs/jobs"
 	"github.com/eris-ltd/eris-cli/services"
 	"github.com/eris-ltd/eris-cli/util"
 )
 
 func RunPackage(do *definitions.Do) error {
+
+	// clears job_outputs file
+	jobs.ClearJobResults()
+	// useful for debugging
+	printPathPackage(do)
+
 	// sets do.ChainIP and do.ChainPort
 	if err := setChainIPandPort(do); err != nil {
 		return err
@@ -77,4 +84,11 @@ func getLocalCompilerData(do *definitions.Do) {
 	// forcibly
 
 	do.Compiler = "http://compilers:9099"
+}
+
+func printPathPackage(do *definitions.Do) {
+	log.WithField("=>", do.Compiler).Info("Using Compiler at")
+	log.WithField("=>", do.ChainName).Info("Using Chain at")
+	log.WithField("=>", do.ChainID).Debug("With ChainID")
+	log.WithField("=>", do.Signer).Info("Using Signer at")
 }

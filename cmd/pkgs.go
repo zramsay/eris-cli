@@ -35,12 +35,6 @@ var packagesDo = &cobra.Command{
 
 [eris pkgs do] will perform the required functionality included
 in a package definition file`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// clears epm.log file
-		util.ClearJobResults()
-
-		util.PrintPathPackage(do)
-	},
 	Run: PackagesDo,
 }
 
