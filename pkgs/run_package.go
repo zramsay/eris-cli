@@ -2,6 +2,7 @@ package pkgs
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/eris-ltd/eris-cli/definitions"
 	"github.com/eris-ltd/eris-cli/loaders"
@@ -45,15 +46,18 @@ func setChainIPandPort(do *definitions.Do) error {
 	if !util.IsChain(do.ChainName, true) {
 		return fmt.Errorf("chain (%s) is not running", do.ChainName)
 	}
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		do.ChainIP = "127.0.0.1"
+	} else {
+		containerName := util.ContainerName(definitions.TypeChain, do.ChainName)
 
-	containerName := util.ContainerName(definitions.TypeChain, do.ChainName)
+		cont, err := util.DockerClient.InspectContainer(containerName)
+		if err != nil {
+			return util.DockerError(err)
+		}
 
-	cont, err := util.DockerClient.InspectContainer(containerName)
-	if err != nil {
-		return util.DockerError(err)
+		do.ChainIP = cont.NetworkSettings.IPAddress
 	}
-
-	do.ChainIP = cont.NetworkSettings.IPAddress
 	do.ChainPort = "46657" // [zr] this can be hardcoded even if [--publish] is used
 
 	return nil
