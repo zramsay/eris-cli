@@ -5,6 +5,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -41,7 +42,7 @@ in a package definition file`,
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
 	// TODO links keys
-	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", "http://172.17.0.2:4767", "IP:PORT of keys daemon which EPM should use")
+	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which EPM should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
 	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which epm should use [csv,json]")
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which EPM should use")
@@ -80,4 +81,12 @@ func formCompilers() string {
 	min, _ := strconv.Atoi(verSplit[1])
 	pat, _ := strconv.Atoi(verSplit[2])
 	return fmt.Sprintf("https://compilers.monax.io:1%01d%02d%01d", maj, min, pat)
+}
+
+func defaultSigner() string {
+	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		return "http://0.0.0.0:4767"
+	} else {
+		return "http://172.17.0.2:4767"
+	}
 }

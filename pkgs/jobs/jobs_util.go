@@ -5,7 +5,7 @@ import (
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
 
-	keys "github.com/eris-ltd/eris-keys/eris-keys"
+	"github.com/eris-ltd/eris-cli/keys"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {
@@ -20,13 +20,11 @@ func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, er
 	log.WithField("=>", do.Package.Account).Info("Setting Account")
 
 	// Set the public key from eris-keys
-	keys.DaemonAddr = do.Signer
-	log.WithField("from", keys.DaemonAddr).Info("Getting Public Key")
-	do.PublicKey, err = keys.Call("pub", map[string]string{"addr": do.Package.Account, "name": ""})
-	if _, ok := err.(keys.ErrConnectionRefused); ok {
-		keys.ExitConnectErr(err)
+	keyClient, err := keys.InitKeyClient()
+	if err != nil {
+		return util.KeysErrorHandler(do, err)
 	}
-
+	do.PublicKey, err = keyClient.PubKey(do.Package.Account, "")
 	if err != nil {
 		return util.KeysErrorHandler(do, err)
 	}

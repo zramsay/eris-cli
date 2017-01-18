@@ -29,6 +29,7 @@ status = "unfit for production"
 [service]
 image = "` + path.Join(version.DefaultRegistry, version.ImageKeys) + `"
 data_container = true
+ports = ["4767:4767"]
 exec_host = "ERIS_KEYS_HOST"
 
 [maintainer]

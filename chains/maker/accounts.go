@@ -7,8 +7,8 @@ import (
 
 	"github.com/eris-ltd/eris-cli/definitions"
 
-	log "github.com/eris-ltd/eris-cli/log"
-	keys "github.com/eris-ltd/eris-keys/eris-keys"
+	"github.com/eris-ltd/eris-cli/keys"
+	"github.com/eris-ltd/eris-cli/log"
 )
 
 func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAccountType) ([]*definitions.ErisDBAccount, error) {
@@ -65,43 +65,28 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 
 func makeKey(keyType string, account *definitions.ErisDBAccount) error {
 	log.WithFields(log.Fields{
-		"path": keys.DaemonAddr,
 		"type": keyType,
 	}).Debug("Sending Call to eris-keys server")
 
-	var err error
-	log.WithField("endpoint", "gen").Debug()
-	account.Address, err = keys.Call("gen", map[string]string{"auth": "", "type": keyType, "name": account.Name}) // note, for now we use not password to lock/unlock keys
-	if _, ok := err.(keys.ErrConnectionRefused); ok {
-		return fmt.Errorf("Could not connect to eris-keys server. Start it with `eris services start keys`. Error: %v", err)
-	}
+	keyClient, err := keys.InitKeyClient()
+
+	account.Address, err = keyClient.GenerateKey(false, true, keyType, "") // note, for now we use not password to lock/unlock keys
 	if err != nil {
 		return err
 	}
 
-	log.WithField("endpoint", "pub").Debug()
-	account.PubKey, err = keys.Call("pub", map[string]string{"addr": account.Address, "name": account.Name})
-	if _, ok := err.(keys.ErrConnectionRefused); ok {
-		return fmt.Errorf("Could not connect to eris-keys server. Start it with `eris services start keys`. Error: %v", err)
-	}
+	account.PubKey, err = keyClient.PubKey(account.Address, "")
 	if err != nil {
 		return err
 	}
 
-	// log.WithField("endpoint", "to-mint").Debug()
-	// mint, err := keys.Call("to-mint", map[string]string{"addr": account.Address, "name": account.Name})
-
-	log.WithField("endpoint", "mint").Debug()
-	mint, err := keys.Call("mint", map[string]string{"addr": account.Address, "name": account.Name})
-	if _, ok := err.(keys.ErrConnectionRefused); ok {
-		return fmt.Errorf("Could not connect to eris-keys server. Start it with `eris services start keys`. Error: %v", err)
-	}
+	mint, err := keyClient.Convert(account.Address, "")
 	if err != nil {
 		return err
 	}
 	// [zr] leave MintKey / MintPrivValidator
 	account.MintKey = &definitions.MintPrivValidator{}
-	err = json.Unmarshal([]byte(mint), account.MintKey)
+	err = json.Unmarshal(mint, account.MintKey)
 	if err != nil {
 		log.Error(string(mint))
 		log.Error(account.MintKey)

@@ -437,7 +437,7 @@ func setupChain(do *definitions.Do) (err error) {
 	// mintkey has been removed from the erisdb image. this functionality
 	// needs to be wholesale refactored. For now we'll just run the keys
 	// service (where mintkey is....)
-	log.Info("Moving priv_validator.json into eris-keys")
+
 	importKey := definitions.NowDo()
 	importKey.Name = "keys"
 	importKey.Destination = containerDst
@@ -448,13 +448,7 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
 	}
 
-	doKeys := definitions.NowDo()
-	doKeys.Name = "keys"
-	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}
-	doKeys.Operations.SkipLink = true
-	doKeys.Service.VolumesFrom = []string{util.DataContainerName(do.Name)}
-	doKeys.Service.User = "eris"
-	if out, err := services.ExecService(doKeys); err != nil {
+	if out, err := services.ExecHandler("keys", []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}); err != nil {
 		log.Error(err)
 		do.RmD = true
 		RemoveChain(do)

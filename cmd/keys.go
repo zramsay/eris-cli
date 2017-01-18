@@ -77,7 +77,7 @@ Latter flag is equivalent to: [eris services exec keys "ls /home/eris/.eris/keys
 func addKeysFlags() {
 	// [zr] eventually we'll want to flip (both?) these bools. definitely the latter, probably the former
 	keysGen.Flags().BoolVarP(&do.Save, "save", "", false, "export the key to host following creation")
-	//keysGen.Flags().BoolVarP(&do.Password, "passwd", "", false, "require a password prompt to generate the key")
+	//keysGen.Flags().BoolVarP(&do.Password, "pass", "", false, "require a password prompt to generate the key")
 
 	keysExport.Flags().StringVarP(&do.Address, "addr", "", "", "address of key to export")
 	keysExport.Flags().BoolVarP(&do.All, "all", "", false, "export all keys. do not provide any arguments")
@@ -95,8 +95,10 @@ func GenerateKey(cmd *cobra.Command, args []string) {
 
 	// TODO implement once we move to using keys client exclusively
 	// if do.Password {}
-
-	util.IfExit(keys.GenerateKey(do))
+	keyClient, err := keys.InitKeyClient()
+	util.IfExit(err)
+	_, err = keyClient.GenerateKey(do.Save, do.Quiet, "", "")
+	util.IfExit(err)
 }
 
 func ExportKey(cmd *cobra.Command, args []string) {
@@ -105,8 +107,11 @@ func ExportKey(cmd *cobra.Command, args []string) {
 	} else {
 		util.IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
+
 	}
-	util.IfExit(keys.ExportKey(do))
+	keyClient, err := keys.InitKeyClient()
+	util.IfExit(err)
+	util.IfExit(keyClient.ExportKey(do.Address, do.All))
 }
 
 func ImportKey(cmd *cobra.Command, args []string) {
@@ -115,16 +120,21 @@ func ImportKey(cmd *cobra.Command, args []string) {
 	} else {
 		util.IfExit(ArgCheck(1, "eq", cmd, args))
 		do.Address = strings.TrimSpace(args[0])
+
 	}
-	util.IfExit(keys.ImportKey(do))
+	keyClient, err := keys.InitKeyClient()
+	util.IfExit(err)
+	util.IfExit(keyClient.ImportKey(do.Address, do.All))
 }
 
 func ListKeys(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(0, "eq", cmd, args))
+	keyClient, err := keys.InitKeyClient()
 	if !do.Host && !do.Container {
-		do.Host = true
-		do.Container = true
+		// search on both
+		_, err = keyClient.ListKeys(true, true, do.Quiet)
+	} else {
+		_, err = keyClient.ListKeys(do.Host, do.Container, do.Quiet)
 	}
-	_, err := keys.ListKeys(do)
 	util.IfExit(err)
 }
