@@ -1,6 +1,7 @@
 package clean
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,7 +29,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"keys", "ipfs", "data", "db", "cm"},
+		Images:   []string{"keys", "ipfs", "data", "db"},
 		Services: []string{"keys", "ipfs"},
 	}))
 
@@ -222,7 +223,7 @@ func testStartChain(chainName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(config.ChainsPath, chainName)
+	do.Path = filepath.Join(config.ChainsPath, chainName, fmt.Sprintf("%s_full_000", chainName)) // --init-dir
 	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chainName, err)
 	}
