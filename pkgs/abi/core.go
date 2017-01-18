@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/interpret"
 	"github.com/eris-ltd/eris-cli/log"
 	"github.com/eris-ltd/eris-cli/util"
+	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do *definitions.Do) ([]byte, error) {
@@ -39,12 +40,12 @@ func ReadAndDecodeContractReturn(abiLocation, funcName string, resultRaw []byte,
 	return Unpacker(abiSpecBytes, funcName, resultRaw)
 }
 
-func MakeAbi(abiData string) (ABI, error) {
+func MakeAbi(abiData string) (ethAbi.ABI, error) {
 	if len(abiData) == 0 {
 		return ABI{}, nil
 	}
 
-	abiSpec, err := JSON(strings.NewReader(abiData))
+	abiSpec, err := ethAbi.JSON(strings.NewReader(abiData))
 	if err != nil {
 		return ABI{}, err
 	}
@@ -72,7 +73,7 @@ func Packer(abiData, funcName string, args ...string) ([]byte, error) {
 	return packedBytes, nil
 }
 
-func getPackingTypes(abiSpec ABI, methodName string, args ...string) ([]interface{}, error) {
+func getPackingTypes(abiSpec ethAbi.ABI, methodName string, args ...string) ([]interface{}, error) {
 	var method Method
 	if methodName == "" {
 		method = abiSpec.Constructor
@@ -104,17 +105,17 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 		//check for fixed byte types and bytes types
 		if typ.T == BytesTy {
 			bytez := bytes.NewBufferString(val)
-			return interpret.RightPadBytes(bytez.Bytes(), bytez.Len()%32), nil
+			return common.RightPadBytes(bytez.Bytes(), bytez.Len()%32), nil
 		} else if typ.T == FixedBytesTy {
 			bytez := bytes.NewBufferString(val)
-			return interpret.RightPadBytes(bytez.Bytes(), typ.SliceSize), nil
+			return common.RightPadBytes(bytez.Bytes(), typ.SliceSize), nil
 		} else if typ.Elem.T == BytesTy || typ.Elem.T == FixedBytesTy {
 			val = strings.Trim(val, "[]")
 			arr := strings.Split(val, ",")
 			var sliceOfFixedBytes [][]byte
 			for _, str := range arr {
 				bytez := bytes.NewBufferString(str)
-				sliceOfFixedBytes = append(sliceOfFixedBytes, interpret.RightPadBytes(bytez.Bytes(), 32))
+				sliceOfFixedBytes = append(sliceOfFixedBytes, common.RightPadBytes(bytez.Bytes(), 32))
 			}
 			return sliceOfFixedBytes, nil
 		} else {
@@ -199,13 +200,13 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 					}
 
 					values = append(values.([]*big.Int), value)
-				case interpret.Address:
+				case common.Address:
 					var ok bool
-					if values, ok = values.([]interpret.Address); ok {
+					if values, ok = values.([]common.Address); ok {
 						fmt.Printf("n=%#v\n", value)
 					}
 
-					values = append(values.([]interpret.Address), value)
+					values = append(values.([]common.Address), value)
 				}
 			}
 			return values, nil
@@ -283,7 +284,7 @@ func packInterfaceValue(typ Type, val string) (interface{}, error) {
 		case StringTy:
 			return val, nil
 		case AddressTy:
-			return interpret.HexToAddress(val), nil
+			return common.HexToAddress(val), nil
 		default:
 			return nil, fmt.Errorf("Could not get valid type from input")
 		}
@@ -422,21 +423,21 @@ func getStringValue(value interface{}, typ Type) (string, error) {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return interpret.S256(value.(*big.Int)).String(), nil
+				return common.S256(value.(*big.Int)).String(), nil
 			}
 		case UintTy:
 			switch typ.Size {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return interpret.U256(value.(*big.Int)).String(), nil
+				return common.U256(value.(*big.Int)).String(), nil
 			}
 		case BoolTy:
 			return strconv.FormatBool(value.(bool)), nil
 		case StringTy:
 			return value.(string), nil
 		case AddressTy:
-			return strings.ToUpper(interpret.Bytes2Hex(value.(interpret.Address).Bytes())), nil
+			return strings.ToUpper(common.Bytes2Hex(value.(common.Address).Bytes())), nil
 		default:
 			return "", fmt.Errorf("Could not unpack value %v", value)
 		}
