@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris/definitions"
 )
 
 func DumpStateJob(dump *definitions.DumpState, do *definitions.Do) (string, error) {

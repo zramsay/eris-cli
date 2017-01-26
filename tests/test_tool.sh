@@ -32,7 +32,7 @@
 # Defaults
 
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 
 # If an arg is passed to the script we will assume that only local

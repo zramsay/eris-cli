@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	pm "github.com/eris-ltd/eris-cli/definitions"
+	pm "github.com/eris-ltd/eris/definitions"
 
 	"github.com/ethereum/go-ethereum/common"
 )

@@ -131,7 +131,7 @@ To confirm: `docker-machine active`, which should output "eris".
 
 If you're an OSX/Windows user wanting to quickly get started on the eris platform, here is where you would:
 
-* install eris via go (`go get github.com/eris-ltd/eris-cli/cmd/eris`) or via [the latest binary](https://github.com/eris-ltd/eris-cli/releases)
+* install eris via go (`go get github.com/eris-ltd/eris/cmd/eris`) or via [the latest binary](https://github.com/eris-ltd/eris/releases)
 * run `eris init`
 * note the ip of your machine with `docker-machine ip eris`, which should match the ip seen in `docker-machine ls`.
 

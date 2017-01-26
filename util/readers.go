@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris/log"
 
 	"github.com/eris-ltd/eris-db/client/core"
 )

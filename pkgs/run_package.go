@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/pkgs/jobs"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/loaders"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/pkgs/jobs"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/util"
 )
 
 func RunPackage(do *definitions.Do) error {

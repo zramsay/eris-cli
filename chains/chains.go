@@ -8,14 +8,14 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/data"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/loaders"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/perform"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/util"
 )
 
 func StartChain(do *definitions.Do) error {
@@ -173,7 +173,7 @@ func CatChain(do *definitions.Do) error {
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
+	// TODO re-implement with erisent ... mintinfo was remove from container (and write tests for these cmds)
 	// case "status":
 	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	// case "validators":

@@ -1,11 +1,11 @@
 %{define} home %{getenv:HOME}
 %{define} version %{getenv:ERIS_VERSION}
 %{define} release %{getenv:ERIS_RELEASE}
-%{define} gorepo %{_builddir}/src/github.com/eris-ltd/eris-cli
+%{define} gorepo %{_builddir}/src/github.com/eris-ltd/eris
 
 Summary: Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
-Name: eris-cli
+Name: eris
 License: GPL-3
 Version: %{version}
 Release: %{release}
@@ -20,7 +20,7 @@ applications built to run on an ecosystem level. It makes it easy and simple to 
 %prep
 rm -fr %{_builddir}/*
 mkdir -p %{gorepo}
-git clone https://github.com/eris-ltd/eris-cli %{gorepo}
+git clone https://github.com/eris-ltd/eris %{gorepo}
 
 pushd %{gorepo}
 git fetch origin ${ERIS_BRANCH}
@@ -29,7 +29,7 @@ popd
 
 %build
 pushd %{gorepo}
-GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/eris-ltd/eris-cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/eris-ltd/eris-cli/cmd/eris
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/eris-ltd/eris/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/eris-ltd/eris/cmd/eris
 popd
 
 %install

@@ -90,10 +90,10 @@ We have RPM support for most current versions of Fedora, CentOS, and RHEL:
 
 #### Binary Installation
 
-Alternatively, you can download a release binary for the latest [Release](https://github.com/eris-ltd/eris-cli/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
+Alternatively, you can download a release binary for the latest [Release](https://github.com/eris-ltd/eris/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris-cli/releases/download/v0.12.0/eris_0.12.0_linux_amd64 > eris
+curl -L https://github.com/eris-ltd/eris/releases/download/v0.12.0/eris_0.12.0_linux_amd64 > eris
 chmod +x eris
 ```
 
@@ -105,10 +105,10 @@ We **highly recommend** that you utilize [Homebrew](https://brew.sh) to install 
 {{< data_coding brew >}}
 ```
 
-If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris-cli/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
+If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris-cli/releases/download/v0.12.0/eris_0.12.0_darwin_amd64 > eris
+curl -L https://github.com/eris-ltd/eris/releases/download/v0.12.0/eris_0.12.0_darwin_amd64 > eris
 chmod +x eris
 ```
 
@@ -139,7 +139,7 @@ We **highly recommend** that you utilize [Chocolatey](https://chocolatey.org) to
 {{< data_coding choco >}}
 ```
 
-If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris-cli/releases) page.
+If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris/releases) page.
 Make sure you put the binary under one of the paths in your `%PATH%` variable.
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.

@@ -1,9 +1,9 @@
 package loaders
 
 import (
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/util"
 )
 
 // LoadDataDefinition returns an Operation structure for a blank data container

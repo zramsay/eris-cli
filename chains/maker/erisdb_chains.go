@@ -3,8 +3,8 @@ package maker
 import (
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
 )
 
 func MakeErisDBChain(name string, seeds []string, accounts []*definitions.ErisDBAccount, chainImageName string,

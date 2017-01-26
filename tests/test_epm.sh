@@ -35,7 +35,7 @@ chain_name=$name_base-$uuid
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
 chain_dir=$chains_dir/$chain_name
-repo=`pwd` #eris-cli
+repo=`pwd` #eris
 
 
 # ---------------------------------------------------------------------------

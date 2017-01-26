@@ -24,7 +24,7 @@
 
 # Where are the Things
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 if [ "$CIRCLE_BRANCH" ] # TODO add windows/osx
 then

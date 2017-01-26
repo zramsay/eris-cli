@@ -150,7 +150,7 @@ Sometimes when using extremely small cloud instances eris has trouble building. 
 
 ```irc
 Building eris.
-# github.com/eris-ltd/eris-cli/cmd/eris
+# github.com/eris-ltd/eris/cmd/eris
 /usr/local/go/pkg/tool/linux_amd64/link: running gcc failed: fork/exec /usr/bin/gcc: cannot allocate memory
 ```
 

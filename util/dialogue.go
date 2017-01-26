@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris/log"
 )
 
 func GetStringResponse(question string, defaultAnswer string, reader *os.File) (string, error) {

@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/chains"
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/list"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/chains"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/list"
+	"github.com/eris-ltd/eris/util"
 
 	"github.com/spf13/cobra"
 )
@@ -272,7 +272,7 @@ var chainsCat = &cobra.Command{
 	Example: `$ eris chains cat simplechain config -- display the config.toml file from inside the container
 $ eris chains cat simplechain genesis -- display the genesis.json file from the container`,
 	// [zr] these don't work (mintinfo not found in container)
-	// TODO re-implement when eris-client is merged into edb
+	// TODO re-implement when erisent is merged into edb
 	// $ eris chains cat simplechain status -- display chain status
 	// $ eris chains cat simplechain validators -- display chain validators`,
 	Run: CatChain,

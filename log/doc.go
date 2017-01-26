@@ -4,7 +4,7 @@ Package logger is a logrus fork for Monax Industries, Ltd.
   package main
 
   import (
-    "github.com/eris-ltd/eris-cli/log"
+    "github.com/eris-ltd/eris/log"
   )
 
   func main() {

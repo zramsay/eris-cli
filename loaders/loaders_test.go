@@ -8,11 +8,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/testutil"
+	"github.com/eris-ltd/eris/util"
 )
 
 type ab struct {
@@ -306,7 +306,7 @@ func TestLoadDataDefinition(t *testing.T) {
 	}
 }
 
-/* TODO: [RJ] - https://github.com/eris-ltd/eris-cli/issues/1173
+/* TODO: [RJ] - https://github.com/eris-ltd/eris/issues/1173
 func TestLoadPackageSimple(t *testing.T) {
 	const (
 		name = "test"
