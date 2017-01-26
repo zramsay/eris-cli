@@ -1,0 +1,126 @@
+jobs:
+
+#first test that we can kill the dummy ourselves
+- name: sendTxQuery1
+  job:
+    query-account:
+      account: $addr1
+      field: balance
+
+- name: deployDummy
+  job:
+    deploy:
+      from: $addr1
+      contract: dummyFactory.sol
+      instance: Dummy
+      amount: 5000
+      wait: true
+
+- name: sendTxQuery2
+  job:
+    query-account:
+      account: $addr1
+      field: balance
+
+- name: assertBalanceWithdrawn
+  job:
+    assert:
+      key: $sendTxQuery1
+      relation: gt
+      val: $sendTxQuery2
+
+- name: testDummy
+  job:
+    call:
+      destination: $deployDummy
+      function: destroy
+      wait: true
+
+#- name: sendTxQuery3
+#  job:
+#    query-account:
+#      account: $deployDummy
+#      field: balance
+
+- name: sendTxQuery4
+  job:
+    query-account:
+      account: $addr1
+      field: balance
+
+#- name: assertContractEmpty
+#  job:
+#    assert:
+#      key: $sendTxQuery3
+#      relation: eq
+#      val: 0
+
+#- name: assertBalanceRestored
+#  job:
+#    assert:
+#      key: $sendTxQuery1
+#      relation: eq
+#      val: $sendTxQuery4
+
+# Now test that we can do this with a factory
+
+- name: deployDummyFactory
+  job:
+    deploy:
+      contract: dummyFactory.sol
+      instance: DummyFactory
+      wait: true
+
+#- name: setOriginalBalance
+#  job:
+#    query-account:
+#      account: $deployDummyFactory
+#      field: balance
+
+- name: testDummyCreation
+  job:
+    call:
+      destination: $deployDummyFactory
+      function: createADummy
+      amount: 5000
+      wait: true
+
+#- name: checkDummyFactoryBalance
+#  job:
+#    query-account:
+#      account: $deployDummyFactory
+#      field: balance
+
+#- name: assertStillSame
+#  job:
+#    assert:
+#      key: $setOriginalBalance
+#      relation: eq
+#      val: $checkDummyFactoryBalance
+
+- name: testDummyDestruction
+  job:
+    call:
+      destination: $deployDummyFactory
+      function: destroyADummy
+      wait: true
+
+- name: assertDummyDestroyed
+  job:
+    assert:
+      key: $testDummyDestructionm
+      relation: eq
+      val: "true"
+
+#- name: checkDummyFactoryBalance2
+#  job:
+#    query-account:
+#      account: $deployDummyFactory
+#      field: balance
+
+#- name: assertBalanceGreater
+#  job:
+#    assert:
+#      key: $setOriginalBalance
+#      relation: lt
+#      val: $checkDummyFactoryBalance2
