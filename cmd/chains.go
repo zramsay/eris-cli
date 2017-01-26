@@ -272,7 +272,7 @@ var chainsCat = &cobra.Command{
 	Example: `$ eris chains cat simplechain config -- display the config.toml file from inside the container
 $ eris chains cat simplechain genesis -- display the genesis.json file from the container`,
 	// [zr] these don't work (mintinfo not found in container)
-	// TODO re-implement when erisent is merged into edb
+	// TODO re-implement when eris-client is merged into edb
 	// $ eris chains cat simplechain status -- display chain status
 	// $ eris chains cat simplechain validators -- display chain validators`,
 	Run: CatChain,

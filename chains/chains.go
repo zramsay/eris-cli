@@ -173,7 +173,7 @@ func CatChain(do *definitions.Do) error {
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// TODO re-implement with erisent ... mintinfo was remove from container (and write tests for these cmds)
+	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
 	// case "status":
 	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	// case "validators":
