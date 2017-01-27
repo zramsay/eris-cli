@@ -12,12 +12,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/testutil"
+	"github.com/eris-ltd/eris/util"
 	//"github.com/eris-ltd/eris-keys/crypto"
 	//ed25519 "github.com/eris-ltd/eris-keys/crypto/helpers"
 )

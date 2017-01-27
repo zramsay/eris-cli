@@ -3,7 +3,7 @@ package maker
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/definitions"
+	"github.com/eris-ltd/eris/definitions"
 )
 
 func ErisDBAccountPermissions(perms map[string]int, roles []string) (*definitions.ErisDBAccountPermissions, error) {

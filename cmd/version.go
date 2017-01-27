@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris/version"
 
 	"github.com/spf13/cobra"
 )

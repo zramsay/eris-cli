@@ -19,7 +19,7 @@
 # Set definitions and defaults
 
 # Where are the Things
-base=github.com/eris-ltd/eris-cli
+base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 if [ "$TRAVIS_BRANCH" ]
 then

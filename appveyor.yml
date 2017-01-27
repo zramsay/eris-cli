@@ -1,5 +1,5 @@
 version: 1.0.{build}-{branch}
-clone_folder: C:\src\github.com\eris-ltd\eris-cli
+clone_folder: C:\src\github.com\eris-ltd\eris
 
 environment:
   TEST_ON_WINDOWS: "true"
@@ -32,16 +32,16 @@ build_script:
 
     choco install -yr docker-machine -version %DOCKER_MACHINE_VERSION%
 
-    cd c:\src\github.com\eris-ltd\eris-cli\cmd\eris
+    cd c:\src\github.com\eris-ltd\eris\cmd\eris
 
     go get
 
     go install
 
 after_test:
-  - bash c:\src\github.com\eris-ltd\eris-cli\tests\dm_cleanup.sh
+  - bash c:\src\github.com\eris-ltd\eris\tests\dm_cleanup.sh
 
 test_script:
 - cmd: >-
 
-    bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh
+    bash c:\src\github.com\eris-ltd\eris\tests\test.sh

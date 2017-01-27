@@ -38,10 +38,10 @@ const headerCopyright = `# Copyright 2015, 2016 Eris Industries (UK) Ltd.
 const sectionServiceGeneral = `[service]
 
 # NOTE: this section is read by Eris tooling, and ignored by eris-db.
-# Image specifies the image name eris-cli needs to pull 
+# Image specifies the image name eris needs to pull 
 # for running the chain.
 image = "{{.ChainImageName}}"
-# Define whether eris-cli needs to attach the data container
+# Define whether eris needs to attach the data container
 # for the chain.
 data_container = {{.UseDataContainer}}
 # Specify a list of ports that need to be exported on the container.

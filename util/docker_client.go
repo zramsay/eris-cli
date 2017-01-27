@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )

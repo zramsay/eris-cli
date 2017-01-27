@@ -3,7 +3,7 @@ package initialize
 import (
 	"path"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris/version"
 )
 
 func defServiceCompilers() string {

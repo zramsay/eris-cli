@@ -21,7 +21,7 @@ if [ "$CIRCLE_BRANCH" ]
 then
   repo=`pwd`
 else
-  repo=$GOPATH/src/github.com/eris-ltd/eris-cli
+  repo=$GOPATH/src/github.com/eris-ltd/eris
 fi
 branch=${CIRCLE_BRANCH:=master}
 branch=${branch/-/_}

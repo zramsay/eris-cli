@@ -41,7 +41,7 @@ EOF
 
 expect <<EOF
 set timeout 300
-spawn rpmbuild -ba --sign rpmbuild/SPECS/eris-cli.spec
+spawn rpmbuild -ba --sign rpmbuild/SPECS/eris.spec
 expect {
     timeout              { send_error "Failed to submit password"; exit 1 }
     "Enter pass phrase:" { send -- "${KEY_PASSWORD}\r";
@@ -121,5 +121,5 @@ echo
 echo "  \$ sudo curl -L https://${AWS_S3_RPM_REPO}/yum/eris.repo >/etc/yum.repos.d/eris.repo"
 echo
 echo "  \$ sudo yum update"
-echo "  \$ sudo yum install eris-cli"
+echo "  \$ sudo yum install eris"
 echo
