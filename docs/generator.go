@@ -6,7 +6,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/eris-ltd/common/go/docs"
 	commands "github.com/eris-ltd/eris-cli/cmd"
 	"github.com/eris-ltd/eris-cli/version"
 
@@ -18,25 +17,25 @@ var Description = "Command Line Interface"                                   // 
 var RenderDir = fmt.Sprintf("./docs/documentation/cli/%s/", version.VERSION) // should be the "shortversion..."
 
 // The below variables should be updated only if necessary.
-var Specs = []*docs.Entry{}
-var Examples = []*docs.Entry{}
+var Specs = []*Entry{}
+var Examples = []*Entry{}
 var SpecsDir = "./docs/specs"
 var ExamplesDir = "./docs/examples"
 
 type Cmd struct {
 	Command     *cobra.Command
-	Entry       *docs.Entry
+	Entry       *Entry
 	Description string
 }
 
 func RenderFiles(cmdRaw *cobra.Command, tmpl *template.Template) error {
-	this_entry := &docs.Entry{
+	this_entry := &Entry{
 		Title:          cmdRaw.CommandPath(),
 		Specifications: Specs,
 		Examples:       Examples,
 		BaseURL:        strings.Replace(RenderDir, ".", "", 1),
 		Template:       tmpl,
-		FileName:       docs.GenerateFileName(RenderDir, cmdRaw.CommandPath()),
+		FileName:       GenerateFileName(RenderDir, cmdRaw.CommandPath()),
 	}
 
 	cmd := &Cmd{
@@ -56,7 +55,7 @@ func RenderFiles(cmdRaw *cobra.Command, tmpl *template.Template) error {
 			entry.Examples = cmd.Entry.Examples
 			entry.CmdEntryPoint = cmd.Entry.Title
 			entry.BaseURL = cmd.Entry.BaseURL
-			if err := docs.RenderEntry(entry); err != nil {
+			if err := RenderEntry(entry); err != nil {
 				return err
 			}
 		}
@@ -93,17 +92,17 @@ func main() {
 	}
 
 	// Generate specs and examples files.
-	Specs, err = docs.GenerateEntries(SpecsDir, (RenderDir + "specifications/"), Description)
+	Specs, err = GenerateEntries(SpecsDir, (RenderDir + "specifications/"), Description)
 	if err != nil {
 		panic(err)
 	}
-	Examples, err = docs.GenerateEntries(ExamplesDir, (RenderDir + "examples/"), Description)
+	Examples, err = GenerateEntries(ExamplesDir, (RenderDir + "examples/"), Description)
 	if err != nil {
 		panic(err)
 	}
 
 	// Get template from docs generator.
-	tmpl, err := docs.GenerateCommandsTemplate()
+	tmpl, err := GenerateCommandsTemplate()
 	if err != nil {
 		panic(err)
 	}
