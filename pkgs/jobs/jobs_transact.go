@@ -42,7 +42,7 @@ func SendJob(send *definitions.Send, do *definitions.Do) (string, error) {
 	}).Info("Sending Transaction")
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer)
+	erisKeyClient := keys.NewErisKeyClient(do.Signer, lifecycle.NewStdErrLogger())
 	tx, err := rpc.Send(erisNodeClient, erisKeyClient, do.PublicKey, send.Source, send.Destination, send.Amount, send.Nonce)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -155,7 +155,7 @@ func registerNameTx(name *definitions.RegisterName, do *definitions.Do) (string,
 	}).Info("NameReg Transaction")
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer)
+	erisKeyClient := keys.NewErisKeyClient(do.Signer, lifecycle.NewStdErrLogger())
 	tx, err := rpc.Name(erisNodeClient, erisKeyClient, do.PublicKey, name.Source, name.Amount, name.Nonce, name.Fee, name.Name, name.Data)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -210,7 +210,7 @@ func PermissionJob(perm *definitions.Permission, do *definitions.Do) (string, er
 	log.WithField(perm.Action, arg).Info("Setting Permissions")
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer)
+	erisKeyClient := keys.NewErisKeyClient(do.Signer, lifecycle.NewStdErrLogger())
 	tx, err := rpc.Permissions(erisNodeClient, erisKeyClient, do.PublicKey, perm.Source, perm.Nonce, perm.Action, args)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -244,7 +244,7 @@ func BondJob(bond *definitions.Bond, do *definitions.Do) (string, error) {
 	}).Infof("Bond Transaction")
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer)
+	erisKeyClient := keys.NewErisKeyClient(do.Signer, lifecycle.NewStdErrLogger())
 	tx, err := rpc.Bond(erisNodeClient, erisKeyClient, do.PublicKey, bond.Account, bond.Amount, bond.Nonce)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -336,7 +336,7 @@ func txFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	var result string
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer)
+	erisKeyClient := keys.NewErisKeyClient(do.Signer, lifecycle.NewStdErrLogger())
 	res, err := rpc.SignAndBroadcast(do.ChainID, erisNodeClient, erisKeyClient, tx.(txs.Tx), true, true, true)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
