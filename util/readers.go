@@ -8,11 +8,11 @@ import (
 
 	"github.com/eris-ltd/eris/log"
 
-	"github.com/eris-ltd/eris-db/client/core"
+	"github.com/eris-ltd/eris-db/client/rpc"
 )
 
 // This is a closer function which is called by most of the tx_run functions
-func ReadTxSignAndBroadcast(result *core.TxResult, err error) error {
+func ReadTxSignAndBroadcast(result *rpc.TxResult, err error) error {
 	// if there's an error just return.
 	if err != nil {
 		return err

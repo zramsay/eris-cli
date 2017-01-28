@@ -11,6 +11,7 @@ import (
 	"github.com/eris-ltd/eris/util"
 
 	"github.com/eris-ltd/eris-db/client"
+	"github.com/eris-ltd/eris-db/logging/lifecycle"
 )
 
 func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (string, []*definitions.Variable, error) {
@@ -55,7 +56,7 @@ func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (str
 	}
 
 	// Call the client
-	nodeClient := client.NewErisNodeClient(do.ChainURL)
+	nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
 	result, _, err := nodeClient.QueryContract(fromAddrBytes, toAddrBytes, dataBytes)
 	if err != nil {
 		return "", make([]*definitions.Variable, 0), err

@@ -2,10 +2,9 @@ package jobs
 
 import (
 	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/keys"
 	"github.com/eris-ltd/eris/log"
 	"github.com/eris-ltd/eris/util"
-
-	"github.com/eris-ltd/eris/keys"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {

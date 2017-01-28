@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris/definitions"
-
 	"github.com/eris-ltd/eris/keys"
 	"github.com/eris-ltd/eris/log"
 )
