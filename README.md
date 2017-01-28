@@ -167,11 +167,31 @@ Are Welcome! Before submitting a pull request please:
 * pull request
 * be awesome
 
-That's pretty much it. 
+A note about glide specifically as it regards to CLI:
+
+To add a package as a dependency into CLI, make sure that you have [glide](http://glide.readthedocs.io/en/latest/#installing-glide) installed, and then follow these steps:
+
+```
+# add the package to the glide.yaml
+glide get your/package/here
+# make changes to the glide.yaml file for versioning purposes
+# update the glide.lock file
+glide up
+# install the dependencies in vendor
+glide install
+# Use glide vendor cleaner to keep the vendor small
+./cleanVendor.sh
+# commit the vendor and push
+git add vendor/*
+git commit -sm "some helpful message here about the dependency added"
+git push yourRepo yourBranch
+```
 
 See our [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for more details.
 
 Please note that this repository is GPLv3.0 per the LICENSE file. Any code which is contributed via pull request shall be deemed to have consented to GPLv3.0 via submission of the code (were such code accepted into the repository).
+
+
 
 # Bug Reporting
 
