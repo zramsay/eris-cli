@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
 	. "gopkg.in/check.v1"
+	"gopkg.in/yaml.v2"
 	"net"
+	"os"
 )
 
 var marshalIntTest = 123
@@ -189,6 +190,12 @@ var marshalTests = []struct {
 			A struct{ X, y int } "a,omitempty,flow"
 		}{struct{ X, y int }{0, 1}},
 		"{}\n",
+	}, {
+		&struct {
+			A float64 "a,omitempty"
+			B float64 "b,omitempty"
+		}{1, 0},
+		"a: 1\n",
 	},
 
 	// Flow flag
@@ -295,15 +302,31 @@ var marshalTests = []struct {
 		map[string]net.IP{"a": net.IPv4(1, 2, 3, 4)},
 		"a: 1.2.3.4\n",
 	},
+	{
+		map[string]time.Time{"a": time.Unix(1424801979, 0)},
+		"a: 2015-02-24T18:19:39Z\n",
+	},
 
 	// Ensure strings containing ": " are quoted (reported as PR #43, but not reproducible).
 	{
 		map[string]string{"a": "b: c"},
 		"a: 'b: c'\n",
 	},
+
+	// Containing hash mark ('#') in string should be quoted
+	{
+		map[string]string{"a": "Hello #comment"},
+		"a: 'Hello #comment'\n",
+	},
+	{
+		map[string]string{"a": "你好 #comment"},
+		"a: '你好 #comment'\n",
+	},
 }
 
 func (s *S) TestMarshal(c *C) {
+	defer os.Setenv("TZ", os.Getenv("TZ"))
+	os.Setenv("TZ", "UTC")
 	for _, item := range marshalTests {
 		data, err := yaml.Marshal(item.value)
 		c.Assert(err, IsNil)
