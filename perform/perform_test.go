@@ -2,6 +2,7 @@ package perform
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -1658,7 +1659,8 @@ func TestPullBadName(t *testing.T) {
 
 func TestLogsSimple(t *testing.T) {
 	const (
-		name = "ipfs"
+		//name = "ipfs"
+		name = "keys"
 		tail = "100"
 	)
 
@@ -1677,22 +1679,28 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	// XXX [zr] stopping the ipfs service then checking its logs
-	// leads to an IPFS panic; this test fails if using keys rather than IPFS
-	// for reasons not clear to me at this time
-	//if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
-	//	t.Fatalf("expected service container to stop, got %v", err)
-	//}
+	// XXX [zr] stopping the ipfs service then checking its logs can
+	// lead to an IPFS panic; this test fails if using keys rather than IPFS
+	// except if using the ErrorWriter instead
+	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
+		t.Fatalf("expected service container to stop, got %v", err)
+	}
 
 	buf := new(bytes.Buffer)
+	bufErr := new(bytes.Buffer)
+
 	config.Global.Writer = buf
+	config.Global.ErrorWriter = bufErr
 
 	if err := DockerLogs(srv.Service, srv.Operations, false, tail); err != nil {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Starting IPFS") {
-		t.Fatalf("expected certain log entries, got %q", buf.String())
+	fmt.Printf("MARMOT: %s", buf.String())
+	fmt.Printf("MARMOT BAD: %s", bufErr.String())
+
+	if !strings.Contains(bufErr.String(), "Starting eris-keys") {
+		t.Fatalf("expected certain log entries, got %q", bufErr.String())
 	}
 }
 
