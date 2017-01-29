@@ -185,8 +185,6 @@ func pullDefaultImages(images []string) error {
 			"keys",
 			"ipfs",
 			"db",
-			"cm",
-			"pm",
 			"compilers",
 		}
 	}
