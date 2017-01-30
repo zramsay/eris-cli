@@ -17,7 +17,7 @@ Variables come in the following types:
 
 The result of every job is set as a variable with the `JobName` as the key and the `JobResult` as the value. The `JobResult` for transaction jobs is the transaction hash. The `JobResult`  for contract deployments is the address of the contract. The `JobResult` for queries and calls is the return value from the blockchain or the query.
 
-The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from eris-db's tooling.
+The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from eris-client's tooling.
 
 ## <a name="setVars"></a>Set Variables
 

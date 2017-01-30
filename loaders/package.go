@@ -35,12 +35,13 @@ func LoadPackage(fileName string) (*definitions.Package, error) {
 
 	// load file
 	if err := epmJobs.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("Sorry, the marmots were unable to load the eris jobs file. Please check your path.\nERROR =>\t\t\t%v", err)
+		return nil, fmt.Errorf("Sorry, the marmots were unable to load the eris jobs file. Please check your path: %v", err)
 	}
 
 	// marshall file
 	if err := epmJobs.Unmarshal(pkg); err != nil {
-		return nil, fmt.Errorf("Sorry, the marmots could not figure that eris jobs file out.\nPlease check your epm.yaml is properly formatted.\n")
+		return nil, fmt.Errorf(`Sorry, the marmots could not figure that eris jobs file out. 
+			Please check that your epm.yaml is properly formatted: %v`, err)
 	}
 
 	return pkg, nil
