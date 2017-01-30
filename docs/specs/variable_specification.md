@@ -1,8 +1,8 @@
 # Variables Specification
 
-Variables can be used for nearly every epm [jobs](jobs_specification) field (largely with the exception of nonce and wait).
+Variables can be used for nearly every eris [jobs](jobs_specification) field (largely with the exception of nonce and wait).
 
-eris:pm variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
+eris:jobs variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
 
 Variables come in the following types:
 
@@ -17,11 +17,11 @@ Variables come in the following types:
 
 The result of every job is set as a variable with the `JobName` as the key and the `JobResult` as the value. The `JobResult` for transaction jobs is the transaction hash. The `JobResult`  for contract deployments is the address of the contract. The `JobResult` for queries and calls is the return value from the blockchain or the query.
 
-The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from mint-client's tooling.
+The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from eris-db's tooling.
 
 ## <a name="setVars"></a>Set Variables
 
-Set variables will take the `JobName` and use the `val` field from the epm file to set the variable.
+Set variables will take the `JobName` and use the `val` field from the job file to set the variable.
 
 ## <a name="setVars"></a>Variable Types
 
@@ -51,7 +51,7 @@ In order to test your fallback function in your contract using the call job, sim
 
 ## <a name="tupleReturns"></a>Tuples and Returns
 
-eris:pm can now effectively handle multiple return values for all static types such as
+eris:jobs can now effectively handle multiple return values for all static types such as
 
 * `address` `int` `uint` `bool` `bytes(1-32)`
 
@@ -75,7 +75,7 @@ Hold with us while the marmots get those in control :)
 
 ## <a name="arrays"></a> Array Packing and Returns
 
-eris:pm can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris-pm/tree/master/tests/fixtures/app31/epm.yaml). Until then, you can declare arrays for most static types such as:
+eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/tree/master/tests/fixtures/app31/epm.yaml). Until then, you can declare arrays for most static types such as:
 
 *  `int` `uint` `bool` `bytes(1-32)`
 

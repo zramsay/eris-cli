@@ -68,7 +68,7 @@ cd $start
 # ----------------------------------------------------------------------------
 # Run EPM tests
 
-tests/test_epm.sh
+tests/test_jobs.sh
 test_exit=$?
 check_and_exit
 cd $start
