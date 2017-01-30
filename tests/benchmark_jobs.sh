@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-time ./test_epm.sh
+time ./test_jobs.sh

@@ -2,8 +2,8 @@
 # ----------------------------------------------------------
 # PURPOSE
 
-# This is the test manager for eris-pm. It will run the testing
-# sequence for eris-pm using docker.
+# This is the test manager for eris jobs. It will run the testing
+# sequence for eris jobs referencing test fixtures in this tests directory.
 
 # ----------------------------------------------------------
 # REQUIREMENTS
@@ -30,7 +30,7 @@ fi
 was_running=0
 test_exit=0
 chains_dir=$HOME/.eris/chains
-name_base=eris-pm-tests
+name_base="eris-jobs-tests"
 chain_name=$name_base-$uuid
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
@@ -95,13 +95,13 @@ test_setup(){
 }
 
 goto_base(){
-  cd $repo/tests/fixtures
+  cd $repo/tests/jobs_fixtures
 }
 
 run_test(){
-  # Run the epm deploy
+  # Run the jobs test
   echo ""
-  echo -e "Testing eris-pm using fixture =>\t$1"
+  echo -e "Testing eris jobs using fixture =>\t$1"
   goto_base
   cd $1
   if [ "$ci" = false ]
@@ -109,7 +109,7 @@ run_test(){
     echo
     cat readme.md
     echo
-    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub" --local-compiler #--debug
+    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub" #--debug
   else
     echo
     cat readme.md
@@ -121,7 +121,7 @@ run_test(){
   rm -rf ./abi &>/dev/null
   rm *.bin &>/dev/null
   rm ./jobs_output.json &>/dev/null
-  rm ./epm.csv &>/dev/null
+  rm ./jobs_output.csv &>/dev/null
 
   # Reset for next run
   goto_base
@@ -180,7 +180,7 @@ test_teardown(){
 # Setup
 
 
-echo "Hello! I'm the marmot that tests the eris-pm tooling."
+echo "Hello! I'm the marmot that tests the eris jobs tooling."
 echo
 start=`pwd`
 test_setup

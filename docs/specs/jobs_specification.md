@@ -1,20 +1,16 @@
 # Jobs Specification
 
-Jobs are defined in **epm definition files**.
+Jobs are defined in **job definition files**.
 
-Action definition files may be formatted in any of the following formats:
+Action definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-* `json`
-* `toml`
-* `yaml` (default)
+Examples of eris job definition files are available in the [`tests/fixtures` directory](https://github.com/eris-ltd/eris/tree/master/tests/jobs_fixtures).
 
-Examples of epm definition files are available in the [`tests/fixtures` directory](https://github.com/eris-ltd/eris-pm/tree/master/tests/fixtures).
-
-Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using eris:pm's [variable specification](variable_specification).
+Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using eris:jobs' [variable specification](variable_specification).
 
 # Jobs
 
-Jobs are performed as sequentially based on the order they are given in the epm definition file. By default EPM will perform the entire sequence of jobs which has been outlined in a given jobs file.
+Jobs are performed as sequentially based on the order they are given in the jobs definition file. By default eris:jobs will perform the entire sequence of jobs which has been outlined in a given jobs file.
 
 Job categories are categorize into:
 
@@ -27,7 +23,7 @@ For each job which is specified, EPM will parse the following information:
 
 {{ insert_definition "package.go" "Jobs" }}
 
-Each job must then specify one **and only one** key which will determine the `type` of job which eris:pm should run. It is not invalid to add additional jobs, but only one of the jobs will be ran by eris:pm. The jobs and their purposes are outlined in the Job struct.
+Each job must then specify one **and only one** key which will determine the `type` of job which eris:jobs should run. It is not invalid to add additional jobs, but only one of the jobs will be ran by eris:jobs. The jobs and their purposes are outlined in the Job struct.
 
 {{ insert_definition "package.go" "Job" }}
 
@@ -99,7 +95,7 @@ The call job will parse the following information:
 
 ## <a name="testJobs"></a>Test Jobs
 
-Test jobs exposed through eris:pm are available in the following job types:
+Test jobs exposed through eris:jobs are available in the following job types:
 
 * [query-account](#queryAccountJob): get information about an account on the blockchain
 * [query-contract](#queryContractJob): perform a simulated call against a specific contract (usually used to trigger accessor functions which retrieve information from a return variable of a contract's function)
