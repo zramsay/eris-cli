@@ -3,7 +3,7 @@
 # -------------------------------------------------------------------
 # Set vars (change if used in another repo)
 
-base_name=eris-cli
+base_name=eris
 user_name=eris-ltd
 docs_site=monax.io
 docs_name=./docs/documentation

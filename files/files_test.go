@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/testutil"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/testutil"
 )
 
 var (
@@ -174,9 +174,6 @@ func testGetDirectoryFromIPFS(t *testing.T) {
 	}
 }
 
-// get a dir up in there
-// adapted from agent/agent_test.go
-// eventually deduplicate
 func testPutDirectoryToIPFS(t *testing.T) {
 	var err error
 

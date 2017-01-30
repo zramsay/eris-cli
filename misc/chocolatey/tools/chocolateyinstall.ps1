@@ -2,7 +2,7 @@
 
 $packageName= 'eris'
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url64      = 'https://github.com/eris-ltd/eris-cli/releases/download/v0.12.0/eris_0.12.0_windows_amd64.exe'
+$url64      = 'https://github.com/eris-ltd/eris/releases/download/v0.12.0/eris_0.12.0_windows_amd64.exe'
 
 $packageArgs = @{
   packageName   = $packageName

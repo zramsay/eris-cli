@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/util"
+	"github.com/eris-ltd/eris/version"
 )
 
 func Initialize(do *definitions.Do) error {
@@ -101,13 +101,15 @@ func InitDefaults(do *definitions.Do, newDir bool) error {
 		return err
 	}
 
+	if err := dropAccountAndChainTypeDefaults(); err != nil {
+		return err
+	}
+
 	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
 
 	return nil
 }
 
-// XXX all files in this sequence must be added to both
-// the respective GH repo & mindy testnet (pinkpenguin.interblock.io:46657/list_names)
 func dropServiceDefaults(dir string, services []string) error {
 	if len(services) == 0 {
 		services = version.SERVICE_DEFINITIONS
@@ -134,6 +136,47 @@ func dropServiceDefaults(dir string, services []string) error {
 	return nil
 }
 
+func dropAccountAndChainTypeDefaults() error {
+	// chain-types
+	if err := writeDefaultFile(config.ChainTypePath, "simplechain.toml", defaultSimpleChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "adminchain.toml", defaultAdminChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "demochain.toml", defaultDemoChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "gochain.toml", defaultGoChainType); err != nil {
+		return err
+	}
+	if err := writeDefaultFile(config.ChainTypePath, "sprawlchain.toml", defaultSprawlChainType); err != nil {
+		return err
+	}
+
+	// account-types
+	if err := writeDefaultFile(config.AccountsTypePath, "developer.toml", defaultDeveloperAccountType); err != nil {
+		return err
+	}
+
+	if err := writeDefaultFile(config.AccountsTypePath, "full.toml", defaultFullAccountType); err != nil {
+		return err
+	}
+
+	if err := writeDefaultFile(config.AccountsTypePath, "participant.toml", defaultParticipantAccountType); err != nil {
+		return err
+	}
+
+	if err := writeDefaultFile(config.AccountsTypePath, "root.toml", defaultRootAccountType); err != nil {
+		return err
+	}
+
+	if err := writeDefaultFile(config.AccountsTypePath, "validator.toml", defaultValidatorAccountType); err != nil {
+		return err
+	}
+	return nil
+}
+
 func pullDefaultImages(images []string) error {
 	// Default images.
 	if len(images) == 0 {
@@ -142,8 +185,6 @@ func pullDefaultImages(images []string) error {
 			"keys",
 			"ipfs",
 			"db",
-			"cm",
-			"pm",
 			"compilers",
 		}
 	}
@@ -155,8 +196,6 @@ func pullDefaultImages(images []string) error {
 		"keys":      config.Global.ImageKeys,
 		"ipfs":      config.Global.ImageIPFS,
 		"db":        config.Global.ImageDB,
-		"cm":        config.Global.ImageCM,
-		"pm":        config.Global.ImagePM,
 		"compilers": config.Global.ImageCompilers,
 	}
 
@@ -218,7 +257,7 @@ func drops(files []string, typ, dir string) error {
 	return nil
 }
 
-// TODO eventually eliminate this.
+// TODO [zr] use templates
 func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
 	if err := os.MkdirAll(savePath, 0777); err != nil {
 		return err
@@ -314,8 +353,6 @@ func overwriteErisToml() error {
 	config.Global.ImageData = version.ImageData
 	config.Global.ImageKeys = version.ImageKeys
 	config.Global.ImageDB = version.ImageDB
-	config.Global.ImagePM = version.ImagePM
-	config.Global.ImageCM = version.ImageCM
 	config.Global.ImageIPFS = version.ImageIPFS
 
 	// Ensure the directory the file being saved to exists.

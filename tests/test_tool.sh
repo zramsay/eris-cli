@@ -32,7 +32,7 @@
 # Defaults
 
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 
 # If an arg is passed to the script we will assume that only local
@@ -127,19 +127,12 @@ packagesToTest() {
     if [ $? -ne 0 ]; then return 1; fi
     go test ./services/... && passed Services
     if [ $? -ne 0 ]; then return 1; fi
-    go test -timeout=900s ./chains/... && passed Chains
+    go test ./chains/... && passed Chains
     if [ $? -ne 0 ]; then return 1; fi
     go test ./keys/... && passed Keys
     if [ $? -ne 0 ]; then return 1; fi
     go test ./pkgs/... && passed Packages
     if [ $? -ne 0 ]; then return 1; fi
-    # go test ./remotes/... && passed Remotes
-    # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./apps/... && passed Apps
-    # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./agent/... && passed Agent
-    # XXX the agent test catches epm's error by running through a deploy
-    # if [ $? -ne 0 ]; then return 1; fi
     go test ./clean/... && passed Clean
     if [ $? -ne 0 ]; then return 1; fi
   fi

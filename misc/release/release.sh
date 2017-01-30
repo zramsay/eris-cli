@@ -9,7 +9,7 @@
 #
 #  2. `github-release` utility installed (go get github.com/aktau/github-release)
 #     and GITHUB_TOKEN environment variable set
-#    (with release permissions for github.com/eris-ltd/eris-cli).
+#    (with release permissions for github.com/eris-ltd/eris).
 #
 #  3. GPG release signing private key in `misc/release/linux-private-key.asc` file:
 #
@@ -74,7 +74,7 @@
 #           ]
 #         }
 #
-REPO=${GOPATH}/src/github.com/eris-ltd/eris-cli
+REPO=${GOPATH}/src/github.com/eris-ltd/eris
 BUILD_DIR=${REPO}/builds
 ERIS_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
 LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
@@ -154,7 +154,7 @@ cross_compile() {
   pushd ${REPO}/cmd/eris
   echo "Starting cross compile"
 
-  LDFLAGS="-X github.com/eris-ltd/eris-cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+  LDFLAGS="-X github.com/eris-ltd/eris/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
   GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_386
   GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_amd64
@@ -175,7 +175,7 @@ prepare_gh() {
   then
     github-release release \
       --user eris-ltd \
-      --repo eris-cli \
+      --repo eris \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
@@ -183,7 +183,7 @@ prepare_gh() {
   else
     github-release release \
       --user eris-ltd \
-      --repo eris-cli \
+      --repo eris \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
@@ -201,7 +201,7 @@ release_gh() {
     echo "Uploading: ${file}"
     github-release upload \
       --user eris-ltd \
-      --repo eris-cli \
+      --repo eris \
       --tag v${LATEST_TAG} \
       --name ${file} \
       --file ${file}
@@ -277,7 +277,7 @@ release_rpm() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-cli-${ERIS_RPM_VERSION}-${ERIS_RELEASE}.x86_64.rpm ${BUILD_DIR} \
+  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-${ERIS_RPM_VERSION}-${ERIS_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
   echo "Finished releasing RPM packages"
 }

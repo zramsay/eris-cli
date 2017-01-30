@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris/log"
 )
 
 var (

@@ -7,7 +7,7 @@ It also avoids logrus' shortcoming of not able to ignore logging levels set by t
 ## Generic Initialization
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import "github.com/eris-ltd/eris/log"
 
 log.SetLevel(log.WarnLevel)
 if do.Verbose {
@@ -21,7 +21,7 @@ if do.Verbose {
 ## Initialization for Tests
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import log "github.com/eris-ltd/eris/log"
 
 log.SetLevel(log.ErrorLevel)
 // log.SetLevel(log.InfoLevel)
@@ -79,4 +79,4 @@ log.WithField("=>", servName).Info("Checking number of containers for")
 
 ## Recommended Style
 
-See the [CONTRIBUTING](https://github.com/eris-ltd/eris-cli/blob/master/.github/CONTRIBUTING.md#errors-and-log-messages-style) document.
+See the [CONTRIBUTING](https://github.com/eris-ltd/eris/blob/master/.github/CONTRIBUTING.md#errors-and-log-messages-style) document.

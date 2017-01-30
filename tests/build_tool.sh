@@ -2,13 +2,13 @@
 set -e
 
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 if [ "$CIRCLE_BRANCH" ]
 then
   repo=`pwd`
 else
-  repo=$GOPATH/src/github.com/eris-ltd/eris-cli
+  repo=$GOPATH/src/github.com/eris-ltd/eris
 fi
 
 testimage="quay.io/eris/eris"

@@ -1,4 +1,4 @@
-# Contributing to `eris-cli`:
+# Contributing to `eris`:
 Forked from Docker's [contributing guidelines](https://github.com/docker/docker/blob/master/CONTRIBUTING.md)
 
 ## Bug Reporting

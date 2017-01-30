@@ -56,7 +56,7 @@ RUN curl -sSL -o $INSTALL_BASE/docker-machine \
   chmod +x $INSTALL_BASE/docker-machine
 
 # INSTALL CLI
-ENV REPO github.com/eris-ltd/eris-cli
+ENV REPO github.com/eris-ltd/eris
 ENV BASE $GOPATH/src/$REPO
 ENV NAME eris
 RUN mkdir --parents $BASE

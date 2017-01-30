@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/data"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/loaders"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/perform"
+	"github.com/eris-ltd/eris/util"
 
 	"github.com/BurntSushi/toml"
 	yaml "gopkg.in/yaml.v2"
@@ -481,12 +481,7 @@ func CatService(do *definitions.Do) (string, error) {
 }
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
-	err := perform.DockerInspect(srv, ops, field)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return perform.DockerInspect(srv, ops, field)
 }
 
 // if given empty string for fileName will use Service

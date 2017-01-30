@@ -242,6 +242,17 @@ func (f *FlagSet) HasFlags() bool {
 	return len(f.formal) > 0
 }
 
+// HasAvailableFlags returns a bool to indicate if the FlagSet has any flags
+// definied that are not hidden or deprecated.
+func (f *FlagSet) HasAvailableFlags() bool {
+	for _, flag := range f.formal {
+		if !flag.Hidden && len(flag.Deprecated) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // VisitAll visits the command-line flags in lexicographical order, calling
 // fn for each.  It visits all flags, even those not set.
 func VisitAll(fn func(*Flag)) {
@@ -405,23 +416,39 @@ func Set(name, value string) error {
 // otherwise, the default values of all defined flags in the set.
 func (f *FlagSet) PrintDefaults() {
 	usages := f.FlagUsages()
-	fmt.Fprintf(f.out(), "%s", usages)
+	fmt.Fprint(f.out(), usages)
 }
 
-// isZeroValue guesses whether the string represents the zero
-// value for a flag. It is not accurate but in practice works OK.
-func isZeroValue(value string) bool {
-	switch value {
-	case "false":
-		return true
-	case "<nil>":
-		return true
-	case "":
-		return true
-	case "0":
-		return true
+// defaultIsZeroValue returns true if the default value for this flag represents
+// a zero value.
+func (f *Flag) defaultIsZeroValue() bool {
+	switch f.Value.(type) {
+	case boolFlag:
+		return f.DefValue == "false"
+	case *durationValue:
+		// Beginning in Go 1.7, duration zero values are "0s"
+		return f.DefValue == "0" || f.DefValue == "0s"
+	case *intValue, *int8Value, *int32Value, *int64Value, *uintValue, *uint8Value, *uint16Value, *uint32Value, *uint64Value, *countValue, *float32Value, *float64Value:
+		return f.DefValue == "0"
+	case *stringValue:
+		return f.DefValue == ""
+	case *ipValue, *ipMaskValue, *ipNetValue:
+		return f.DefValue == "<nil>"
+	case *intSliceValue, *stringSliceValue, *stringArrayValue:
+		return f.DefValue == "[]"
+	default:
+		switch f.Value.String() {
+		case "false":
+			return true
+		case "<nil>":
+			return true
+		case "":
+			return true
+		case "0":
+			return true
+		}
+		return false
 	}
-	return false
 }
 
 // UnquoteUsage extracts a back-quoted name from the usage
@@ -444,22 +471,19 @@ func UnquoteUsage(flag *Flag) (name string, usage string) {
 			break // Only one back quote; use type name.
 		}
 	}
-	// No explicit name, so use type if we can find one.
-	name = "value"
-	switch flag.Value.(type) {
-	case boolFlag:
+
+	name = flag.Value.Type()
+	switch name {
+	case "bool":
 		name = ""
-	case *durationValue:
-		name = "duration"
-	case *float64Value:
+	case "float64":
 		name = "float"
-	case *intValue, *int64Value:
+	case "int64":
 		name = "int"
-	case *stringValue:
-		name = "string"
-	case *uintValue, *uint64Value:
+	case "uint64":
 		name = "uint"
 	}
+
 	return
 }
 
@@ -490,7 +514,7 @@ func (f *FlagSet) FlagUsages() string {
 		if len(flag.NoOptDefVal) > 0 {
 			switch flag.Value.Type() {
 			case "string":
-				line += fmt.Sprintf("[=%q]", flag.NoOptDefVal)
+				line += fmt.Sprintf("[=\"%s\"]", flag.NoOptDefVal)
 			case "bool":
 				if flag.NoOptDefVal != "true" {
 					line += fmt.Sprintf("[=%s]", flag.NoOptDefVal)
@@ -508,9 +532,9 @@ func (f *FlagSet) FlagUsages() string {
 		}
 
 		line += usage
-		if !isZeroValue(flag.DefValue) {
+		if !flag.defaultIsZeroValue() {
 			if flag.Value.Type() == "string" {
-				line += fmt.Sprintf(" (default %q)", flag.DefValue)
+				line += fmt.Sprintf(" (default \"%s\")", flag.DefValue)
 			} else {
 				line += fmt.Sprintf(" (default %s)", flag.DefValue)
 			}
@@ -611,7 +635,7 @@ func (f *FlagSet) VarPF(value Value, name, shorthand, usage string) *Flag {
 
 // VarP is like Var, but accepts a shorthand letter that can be used after a single dash.
 func (f *FlagSet) VarP(value Value, name, shorthand, usage string) {
-	_ = f.VarPF(value, name, shorthand, usage)
+	f.VarPF(value, name, shorthand, usage)
 }
 
 // AddFlag will add the flag to the FlagSet
@@ -728,7 +752,7 @@ func containsShorthand(arg, shorthand string) bool {
 	return strings.Contains(arg, shorthand)
 }
 
-func (f *FlagSet) parseLongArg(s string, args []string) (a []string, err error) {
+func (f *FlagSet) parseLongArg(s string, args []string, fn parseFunc) (a []string, err error) {
 	a = args
 	name := s[2:]
 	if len(name) == 0 || name[0] == '-' || name[0] == '=' {
@@ -762,11 +786,14 @@ func (f *FlagSet) parseLongArg(s string, args []string) (a []string, err error) 
 		err = f.failf("flag needs an argument: %s", s)
 		return
 	}
-	err = f.setFlag(flag, value, s)
+	err = fn(flag, value, s)
 	return
 }
 
-func (f *FlagSet) parseSingleShortArg(shorthands string, args []string) (outShorts string, outArgs []string, err error) {
+func (f *FlagSet) parseSingleShortArg(shorthands string, args []string, fn parseFunc) (outShorts string, outArgs []string, err error) {
+	if strings.HasPrefix(shorthands, "test.") {
+		return
+	}
 	outArgs = args
 	outShorts = shorthands[1:]
 	c := shorthands[0]
@@ -798,16 +825,16 @@ func (f *FlagSet) parseSingleShortArg(shorthands string, args []string) (outShor
 		err = f.failf("flag needs an argument: %q in -%s", c, shorthands)
 		return
 	}
-	err = f.setFlag(flag, value, shorthands)
+	err = fn(flag, value, shorthands)
 	return
 }
 
-func (f *FlagSet) parseShortArg(s string, args []string) (a []string, err error) {
+func (f *FlagSet) parseShortArg(s string, args []string, fn parseFunc) (a []string, err error) {
 	a = args
 	shorthands := s[1:]
 
 	for len(shorthands) > 0 {
-		shorthands, a, err = f.parseSingleShortArg(shorthands, args)
+		shorthands, a, err = f.parseSingleShortArg(shorthands, args, fn)
 		if err != nil {
 			return
 		}
@@ -816,7 +843,7 @@ func (f *FlagSet) parseShortArg(s string, args []string) (a []string, err error)
 	return
 }
 
-func (f *FlagSet) parseArgs(args []string) (err error) {
+func (f *FlagSet) parseArgs(args []string, fn parseFunc) (err error) {
 	for len(args) > 0 {
 		s := args[0]
 		args = args[1:]
@@ -836,9 +863,9 @@ func (f *FlagSet) parseArgs(args []string) (err error) {
 				f.args = append(f.args, args...)
 				break
 			}
-			args, err = f.parseLongArg(s, args)
+			args, err = f.parseLongArg(s, args, fn)
 		} else {
-			args, err = f.parseShortArg(s, args)
+			args, err = f.parseShortArg(s, args, fn)
 		}
 		if err != nil {
 			return
@@ -854,7 +881,41 @@ func (f *FlagSet) parseArgs(args []string) (err error) {
 func (f *FlagSet) Parse(arguments []string) error {
 	f.parsed = true
 	f.args = make([]string, 0, len(arguments))
-	err := f.parseArgs(arguments)
+
+	assign := func(flag *Flag, value, origArg string) error {
+		return f.setFlag(flag, value, origArg)
+	}
+
+	err := f.parseArgs(arguments, assign)
+	if err != nil {
+		switch f.errorHandling {
+		case ContinueOnError:
+			return err
+		case ExitOnError:
+			os.Exit(2)
+		case PanicOnError:
+			panic(err)
+		}
+	}
+	return nil
+}
+
+type parseFunc func(flag *Flag, value, origArg string) error
+
+// ParseAll parses flag definitions from the argument list, which should not
+// include the command name. The arguments for fn are flag and value. Must be
+// called after all flags in the FlagSet are defined and before flags are
+// accessed by the program. The return value will be ErrHelp if -help was set
+// but not defined.
+func (f *FlagSet) ParseAll(arguments []string, fn func(flag *Flag, value string) error) error {
+	f.parsed = true
+	f.args = make([]string, 0, len(arguments))
+
+	assign := func(flag *Flag, value, origArg string) error {
+		return fn(flag, value)
+	}
+
+	err := f.parseArgs(arguments, assign)
 	if err != nil {
 		switch f.errorHandling {
 		case ContinueOnError:
@@ -878,6 +939,14 @@ func (f *FlagSet) Parsed() bool {
 func Parse() {
 	// Ignore errors; CommandLine is set for ExitOnError.
 	CommandLine.Parse(os.Args[1:])
+}
+
+// ParseAll parses the command-line flags from os.Args[1:] and called fn for each.
+// The arguments for fn are flag and value. Must be called after all flags are
+// defined and before flags are accessed by the program.
+func ParseAll(fn func(flag *Flag, value string) error) {
+	// Ignore errors; CommandLine is set for ExitOnError.
+	CommandLine.ParseAll(os.Args[1:], fn)
 }
 
 // SetInterspersed sets whether to support interspersed option/non-option arguments.

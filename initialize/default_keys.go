@@ -3,7 +3,7 @@ package initialize
 import (
 	"path"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/eris-ltd/eris/version"
 )
 
 func defServiceKeys() string {
@@ -29,6 +29,7 @@ status = "unfit for production"
 [service]
 image = "` + path.Join(version.DefaultRegistry, version.ImageKeys) + `"
 data_container = true
+ports = ["4767:4767"]
 exec_host = "ERIS_KEYS_HOST"
 
 [maintainer]

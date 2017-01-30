@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/testutil"
+	"github.com/eris-ltd/eris/util"
 )
 
 var (
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images: []string{"data", "cm", "db", "keys", "ipfs"},
+		Images: []string{"data", "db", "keys", "ipfs"},
 	}))
 
 	exitCode := m.Run()
@@ -641,7 +641,7 @@ func create(t *testing.T, chain string) {
 	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(config.ChainsPath, chain) // --init-dir
+	do.Path = filepath.Join(config.ChainsPath, chain, fmt.Sprintf("%s_full_000", chain)) // --init-dir
 	if err := StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}

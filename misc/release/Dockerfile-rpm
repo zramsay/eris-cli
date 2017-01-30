@@ -33,7 +33,7 @@ WORKDIR /root
 
 COPY linux-private-key.asc /root
 COPY linux-public-key.asc /root
-COPY eris-cli.spec /root/rpmbuild/SPECS/
+COPY eris.spec /root/rpmbuild/SPECS/
 COPY buildrpm.sh   /root/
 
 ENTRYPOINT ["/root/buildrpm.sh"]

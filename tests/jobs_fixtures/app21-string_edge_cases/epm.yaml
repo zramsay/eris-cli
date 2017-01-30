@@ -1,0 +1,146 @@
+jobs:
+
+- name: deployStorageK
+  job:
+    deploy:
+      contract: storage.sol
+
+# first run
+- name: setStorageBaseString1
+  job:
+    set:
+      val: hello world the marmots are here
+
+- name: setStorageString1
+  job:
+    call:
+      destination: $deployStorageK
+      function: setString 
+      data:
+        - $setStorageBaseString1
+
+- name: queryStorageString1
+  job:
+    query-contract:
+      destination: $deployStorageK
+      function: getString
+
+- name: assertStorageString1
+  job:
+    assert:
+      key: $queryStorageString1
+      relation: eq
+      val: $setStorageBaseString1
+
+# second run
+- name: setStorageBaseString2
+  job:
+    set:
+      val: hello world the marmots are here hello world the marmots are here
+
+- name: setStorageString2
+  job:
+    call:
+      destination: $deployStorageK
+      function: setString 
+      data:
+        - $setStorageBaseString2
+
+- name: queryStorageString2
+  job:
+    query-contract:
+      destination: $deployStorageK
+      function: getString
+
+- name: assertStorageString2
+  job:
+    assert:
+      key: $queryStorageString2
+      relation: eq
+      val: $setStorageBaseString2
+
+# third run
+- name: setStorageBaseString3
+  job:
+    set:
+      val: hello world the marmots are here hello world the marmots are here hello world the marmots are here
+
+- name: setStorageString3
+  job:
+    call:
+      destination: $deployStorageK
+      function: setString 
+      data: 
+        - $setStorageBaseString3
+
+- name: queryStorageString3
+  job:
+    query-contract:
+      destination: $deployStorageK
+      function: getString
+
+- name: assertStorageString3
+  job:
+    assert:
+      key: $queryStorageString3
+      relation: eq
+      val: $setStorageBaseString3
+
+# fourth run
+- name: setStorageBaseString4
+  job:
+    set:
+      val: hello world the marmots are here hello world the marmots are here hello world the marmots are here hello world the marmots are here
+
+- name: setStorageString4
+  job:
+    call:
+      destination: $deployStorageK
+      function: setString
+      data:
+        - $setStorageBaseString4
+
+- name: queryStorageString4
+  job:
+    query-contract:
+      destination: $deployStorageK
+      function: getString
+
+- name: assertStorageString4
+  job:
+    assert:
+      key: $queryStorageString4
+      relation: eq
+      val: $setStorageBaseString4
+
+# fifth run
+- name: setStorageBaseString5
+  job:
+    set:
+      val: |
+        hello world the marmots are here
+        hello world the marmots are here
+        hello world the marmots are here
+        hello world the marmots are here
+        hello world the marmots are here
+
+- name: setStorageString5
+  job:
+    call:
+      destination: $deployStorageK
+      function: setString
+      data:
+        - $setStorageBaseString5
+
+- name: queryStorageString5
+  job:
+    query-contract:
+      destination: $deployStorageK
+      function: getString
+
+- name: assertStorageString5
+  job:
+    assert:
+      key: $queryStorageString5
+      relation: eq
+      val: $setStorageBaseString5

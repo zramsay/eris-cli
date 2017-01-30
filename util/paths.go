@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/log"
 )
 
 func GetFileByNameAndType(typ, name string) string {

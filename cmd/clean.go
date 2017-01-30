@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris-cli/clean"
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/clean"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/util"
 
 	"github.com/spf13/cobra"
 )
@@ -29,7 +29,7 @@ func addCleanFlags() {
 	Clean.Flags().BoolVarP(&do.Yes, "yes", "y", false, "overrides prompts prior to removing things")
 	Clean.Flags().BoolVarP(&do.All, "all", "a", false, "removes everything, stopping short of uninstalling eris")
 	Clean.Flags().BoolVarP(&do.Containers, "containers", "c", true, "remove all eris containers")
-	Clean.Flags().BoolVarP(&do.ChnDirs, "chains", "", false, "remove latent chain data in "+util.Tilde(config.ChainsPath))
+	Clean.Flags().BoolVarP(&do.ChnDirs, "chains", "x", false, "remove latent chain data in "+util.Tilde(config.ChainsPath))
 	Clean.Flags().BoolVarP(&do.Scratch, "scratch", "s", true, "remove contents of "+util.Tilde(config.ScratchPath))
 	Clean.Flags().BoolVarP(&do.RmD, "dir", "", false, "remove the eris home directory in "+util.Tilde(config.ErisRoot))
 	Clean.Flags().BoolVarP(&do.Images, "images", "i", false, "remove all eris docker images")

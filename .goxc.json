@@ -30,7 +30,7 @@
 		},
 		"publish-github": {
 			"owner": "eris-ltd",
-			"repository": "eris-cli"
+			"repository": "eris"
 		},
 		"xc": {
 			"GOARM": "",

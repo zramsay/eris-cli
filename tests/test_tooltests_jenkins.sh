@@ -37,19 +37,13 @@ tests() {
   run_test chains
   run_test keys
   run_test pkgs
-  run_test agent
-
-  # run_test remotes
-  # run_test apps
-  # run_test update
-
   run_test clean
 }
 
 # ---------------------------------------------------------------------------
 # Local test utility functions
 run_test() {
-  go test -cover ./$1/... && passed $1
+  go test -cover -timeout 20m ./$1/... && passed $1
   if [ $? -ne 0 ]; then test_exit=1; fi
 }
 

@@ -63,10 +63,23 @@ type Do struct {
 	DefaultAmount string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeActs string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeVals string   `mapstructure:"," json:"," yaml:"," toml:","`
+	SeedsIP       []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ImagesSlice   []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ConfigOpts    []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes  []string `mapstructure:"," json:"," yaml:"," toml:","`
+
+	//from epm
+	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	PublicKey     string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainID       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainIP       string   `mapstructure:"," json:"," yaml:"," toml:","`
+	ChainURL      string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultOutput string   `mapstructure:"," json:"," yaml:"," toml:","`
+	DefaultSets   []string `mapstructure:"," json:"," yaml:"," toml:","`
+	Package       *Package
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
@@ -98,6 +111,15 @@ type Do struct {
 	Operations        *Operation
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
+
+	// stuff from maker
+	Accounts []*ErisDBAccount
+
+	// service definitions for maker config.toml
+	ChainImageName      string
+	UseDataContainer    bool
+	ExportedPorts       []string
+	ContainerEntrypoint string
 
 	// Return
 	Result string

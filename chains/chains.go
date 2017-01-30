@@ -8,14 +8,14 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/data"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/loaders"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/perform"
+	"github.com/eris-ltd/eris/services"
+	"github.com/eris-ltd/eris/util"
 )
 
 func StartChain(do *definitions.Do) error {
@@ -89,8 +89,7 @@ func InspectChain(do *definitions.Do) error {
 
 	if util.IsChain(chain.Name, false) {
 		log.WithField("=>", chain.Service.Name).Debug("Inspecting chain")
-		err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0])
-		if err != nil {
+		if err := services.InspectServiceByService(chain.Service, chain.Operations, do.Operations.Args[0]); err != nil {
 			return err
 		}
 	}
@@ -438,7 +437,7 @@ func setupChain(do *definitions.Do) (err error) {
 	// mintkey has been removed from the erisdb image. this functionality
 	// needs to be wholesale refactored. For now we'll just run the keys
 	// service (where mintkey is....)
-	log.Info("Moving priv_validator.json into eris-keys")
+
 	importKey := definitions.NowDo()
 	importKey.Name = "keys"
 	importKey.Destination = containerDst
@@ -449,13 +448,7 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
 	}
 
-	doKeys := definitions.NowDo()
-	doKeys.Name = "keys"
-	doKeys.Operations.Args = []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}
-	doKeys.Operations.SkipLink = true
-	doKeys.Service.VolumesFrom = []string{util.DataContainerName(do.Name)}
-	doKeys.Service.User = "eris"
-	if out, err := services.ExecService(doKeys); err != nil {
+	if out, err := services.ExecHandler("keys", []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}); err != nil {
 		log.Error(err)
 		do.RmD = true
 		RemoveChain(do)
