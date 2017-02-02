@@ -14,7 +14,7 @@ import (
 
 	//epm
 	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/logging"
+	"github.com/eris-ltd/eris-db/logging/loggers"
 )
 
 // Maximum entries in the HEAD file

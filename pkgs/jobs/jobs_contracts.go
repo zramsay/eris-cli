@@ -18,7 +18,7 @@ import (
 	"github.com/eris-ltd/eris-db/client"
 	"github.com/eris-ltd/eris-db/client/rpc"
 	"github.com/eris-ltd/eris-db/keys"
-	"github.com/eris-ltd/eris-db/logging"
+	"github.com/eris-ltd/eris-db/logging/loggers"
 	"github.com/eris-ltd/eris-db/txs"
 )
 

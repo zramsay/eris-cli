@@ -42,7 +42,7 @@ import:
   subpackages:
   - client
   - client/rpc
-  - logging/lifecycle
+  - logging/loggers
   - genesis
   - txs
   - keys
