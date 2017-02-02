@@ -14,7 +14,7 @@ import (
 
 	//epm
 	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/logging/lifecycle"
+	"github.com/eris-ltd/eris-db/logging/loggers"
 )
 
 // Maximum entries in the HEAD file
@@ -89,7 +89,7 @@ func ChangeHead(name string) error {
 
 // from epm
 func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
-	nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
+	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	// NOTE: NodeInfo is no longer exposed through Status();
 	// other values are currentlu not used by e-pm
 	_, _, _, latestBlockHeight, _, err = nodeClient.Status()
@@ -103,7 +103,7 @@ func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
 // TODO: it is unpreferable to mix static and non-static use of Do
 func GetChainID(do *definitions.Do) error {
 	if do.ChainID == "" {
-		nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
+		nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 		_, chainId, _, err := nodeClient.ChainId()
 		if err != nil {
 			return err
@@ -121,7 +121,7 @@ func AccountsInfo(account, field string, do *definitions.Do) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Account Addr %s is improper hex: %v", account, err)
 	}
-	nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
+	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	r, err := nodeClient.GetAccount(addrBytes)
 	if err != nil {
 		return "", err
@@ -158,7 +158,7 @@ func AccountsInfo(account, field string, do *definitions.Do) (string, error) {
 }
 
 func NamesInfo(name, field string, do *definitions.Do) (string, error) {
-	nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
+	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	owner, data, expirationBlock, err := nodeClient.GetName(name)
 	if err != nil {
 		return "", err
@@ -179,7 +179,7 @@ func NamesInfo(name, field string, do *definitions.Do) (string, error) {
 }
 
 func ValidatorsInfo(field string, do *definitions.Do) (string, error) {
-	nodeClient := client.NewErisNodeClient(do.ChainURL, lifecycle.NewStdErrLogger())
+	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	_, bondedValidators, unbondingValidators, err := nodeClient.ListValidators()
 	if err != nil {
 		return "", err
