@@ -11,7 +11,7 @@ import (
 	"github.com/eris-ltd/eris/util"
 
 	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/logging"
+	"github.com/eris-ltd/eris-db/logging/loggers"
 )
 
 func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (string, []*definitions.Variable, error) {
