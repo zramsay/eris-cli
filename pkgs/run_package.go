@@ -92,7 +92,7 @@ func getLocalCompilerData(do *definitions.Do) error {
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		IPAddress = "127.0.0.1"
 	} else {
-		containerName := util.ServiceContainerName(do.Name)
+		containerName := util.ServiceContainerName("compilers")
 
 		cont, err := util.DockerClient.InspectContainer(containerName)
 		if err != nil {
