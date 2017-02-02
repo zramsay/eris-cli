@@ -38,11 +38,13 @@ func RunPackage(do *definitions.Do) error {
 		}
 	}
 
-	if do.LocalCompiler {
+	if !do.RemoteCompiler {
 		if err := bootCompiler(); err != nil {
 			return err
 		}
-		getLocalCompilerData(do)
+		if err = getLocalCompilerData(do); err != nil {
+			return err
+		}
 	}
 
 	return jobs.RunJobs(do)
@@ -78,16 +80,30 @@ func bootCompiler() error {
 	// reworked to utilize DockerRun with a populated service def.
 	doComp := definitions.NowDo()
 	doComp.Name = "compilers"
-	return services.StartService(doComp)
+	return services.EnsureRunning(doComp)
 }
 
 // getLocalCompilerData populates the IP:port combo for the compilers.
-func getLocalCompilerData(do *definitions.Do) {
+func getLocalCompilerData(do *definitions.Do) error {
 	// [csk]: note this is brittle we should only expose one port in the
 	// docker file by default for the compilers service we can expose more
 	// forcibly
+	var IPAddress string
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		IPAddress = "127.0.0.1"
+	} else {
+		containerName := util.ServiceContainerName(do.Name)
 
-	do.Compiler = "http://compilers:9099"
+		cont, err := util.DockerClient.InspectContainer(containerName)
+		if err != nil {
+			return util.DockerError(err)
+		}
+
+		IPAddress = cont.NetworkSettings.IPAddress
+	}
+
+	do.Compiler = fmt.Sprintf("http://%s:9099", IPAddress)
+	return nil
 }
 
 func printPathPackage(do *definitions.Do) {

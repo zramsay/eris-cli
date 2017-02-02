@@ -29,7 +29,7 @@ status = "beta"
 [service]
 image          = "` + path.Join(version.DefaultRegistry, version.ImageCompilers) + `"
 data_container = true
-ports          = [  ]
+ports          = ["9099:9099"]
 volumes        = [  ]
 environment    = [  ]
 
