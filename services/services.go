@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +17,6 @@ import (
 	"github.com/eris-ltd/eris/util"
 
 	"github.com/BurntSushi/toml"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var (
@@ -239,7 +237,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 		var err error
 		chainName, err = util.GetHead()
 		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Marmot disapproval face.\nYou tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
+			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
 	s, err := loaders.ChainsAsAService(chainName)
@@ -300,8 +298,8 @@ func MakeService(do *definitions.Do) error {
 		"service": srv.Service.Name,
 		"image":   srv.Service.Image,
 	}).Debug("Creating a new service definition file")
-	err = WriteServiceDefinitionFile(srv, filepath.Join(config.ServicesPath, do.Name+".toml"))
-	if err != nil {
+
+	if err := WriteServiceDefinitionFile(srv, do.Name); err != nil {
 		return err
 	}
 	return nil
@@ -415,40 +413,26 @@ func InspectServiceByService(srv *definitions.Service, ops *definitions.Operatio
 // if given empty string for fileName will use Service
 // Definition Name
 func WriteServiceDefinitionFile(serviceDef *definitions.ServiceDefinition, fileName string) error {
-	// writer := os.Stdout
 
 	if filepath.Ext(fileName) == "" {
 		fileName = serviceDef.Service.Name + ".toml"
 		fileName = filepath.Join(config.ServicesPath, fileName)
 	}
 
-	writer, err := os.Create(fileName)
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-
-	switch filepath.Ext(fileName) {
-	case ".json":
-		mar, err := json.MarshalIndent(serviceDef, "", "  ")
+	if filepath.Ext(fileName) == ".toml" {
+		writer, err := os.Create(fileName)
+		defer writer.Close()
 		if err != nil {
 			return err
 		}
-		mar = append(mar, '\n')
-		writer.Write(mar)
-	case ".yaml":
-		mar, err := yaml.Marshal(serviceDef)
-		if err != nil {
-			return err
-		}
-		mar = append(mar, '\n')
-		writer.Write(mar)
-	default:
 		WriteDefaultServiceTOML(writer, serviceDef)
+	} else {
+		return fmt.Errorf("Services must be .toml files only")
 	}
 	return nil
 }
 
+// TODO [zr] remove/refactor after templates
 func WriteDefaultServiceTOML(writer *os.File, serviceDef *definitions.ServiceDefinition) {
 
 	writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
