@@ -11,12 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// flags to add: --no-clone
 var Init = &cobra.Command{
 	Use:   "init",
 	Short: "initialize your work space for smart contract glory",
-	Long: `create the Eris root ` + util.Tilde(config.ErisRoot) + ` directory with services subdirectories
-and clone github.com/eris-ltd/eris-services into them.`,
+	Long:  `create the Eris root ` + util.Tilde(config.ErisRoot) + ` directory and associated sub-directories`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Router(cmd, args)
 	},

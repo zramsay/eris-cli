@@ -5,12 +5,10 @@ package version
 var (
 	SERVICE_DEFINITIONS = []string{
 		"compilers",
-		"geth",
 		"ipfs",
 		"keys",
-		"logspout",
+		// used by [eris chains start myChain --logrotate]
+		// but its docker image is not pulled
 		"logrotate",
-		"watchtower",
-		"do_not_use",
 	}
 )
