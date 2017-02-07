@@ -87,8 +87,10 @@ line to the %s definition file.
 
 func InitDefaults() error {
 
-	if err := dropServiceDefaults(); err != nil {
-		return err
+	for _, serviceName := range SERVICE_DEFINITIONS {
+		if err := writeServiceDefinitionFile(serviceName); err != nil {
+			return err
+		}
 	}
 
 	if err := dropAccountAndChainTypeDefaults(); err != nil {
@@ -96,28 +98,6 @@ func InitDefaults() error {
 	}
 
 	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
-
-	return nil
-}
-
-func dropServiceDefaults() error {
-
-	for _, service := range version.SERVICE_DEFINITIONS {
-		var err error
-
-		switch service {
-		case "keys":
-			err = writeDefaultFile(config.ServicesPath, "keys.toml", defServiceKeys)
-		case "ipfs":
-			err = writeDefaultFile(config.ServicesPath, "ipfs.toml", defServiceIPFS)
-		case "compilers":
-			err = writeDefaultFile(config.ServicesPath, "compilers.toml", defServiceCompilers)
-		}
-
-		if err != nil {
-			return fmt.Errorf("Cannot add default %s:\n\n%v", service, err)
-		}
-	}
 
 	return nil
 }

@@ -2,7 +2,6 @@ package services
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -17,10 +16,6 @@ import (
 	"github.com/eris-ltd/eris/util"
 
 	"github.com/BurntSushi/toml"
-)
-
-var (
-	ErrServiceNotRunning = errors.New("The requested service is not running, start it with `eris services start [serviceName]`")
 )
 
 func StartService(do *definitions.Do) (err error) {
