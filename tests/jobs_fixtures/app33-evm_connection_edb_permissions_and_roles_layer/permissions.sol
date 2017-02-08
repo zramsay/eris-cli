@@ -4,7 +4,7 @@ contract Permissions {
   function has_base(address addr, int permFlag) constant returns (bool value);
   function set_base(address addr, int permFlag, bool value) constant returns (bool val);
   function unset_base(address addr, int permFlag) constant returns (int pf);
-  function set_global(address addr, int permFlag, bool value) constant returns (int pf);
+  function set_global(int permFlag, bool value) constant returns (int pf);
   function has_role(address addr, bytes32 role) constant returns (bool val);
   function add_role(address addr, bytes32 role) constant returns (bool added);
   function rm_role(address addr, bytes32 role) constant returns (bool removed);
@@ -27,8 +27,8 @@ contract permSNative {
   }
 
   // not currently tested
-  function set_global(address addr, int permFlag, bool value) constant returns (int pf) {
-    return perm.set_global(addr, permFlag, value);
+  function set_global(int permFlag, bool value) constant returns (int pf) {
+    return perm.set_global(permFlag, value);
   }
 
   function has_role(address addr, bytes32 role) constant returns (bool val) {
