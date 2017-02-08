@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 import "./single-lib.sol";
 
 contract C {

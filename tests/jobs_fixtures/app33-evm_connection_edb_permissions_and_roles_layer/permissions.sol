@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 contract Permissions {
   function has_base(address addr, int permFlag) constant returns (bool value);
   function set_base(address addr, int permFlag, bool value) constant returns (bool val);

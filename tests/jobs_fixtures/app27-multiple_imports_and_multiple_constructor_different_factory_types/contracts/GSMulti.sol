@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 contract GSMulti {
   uint storedData1;
   uint storedData2;

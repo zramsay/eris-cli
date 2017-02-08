@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 contract Structs2 {
     struct Thing {
         address thingMaker;

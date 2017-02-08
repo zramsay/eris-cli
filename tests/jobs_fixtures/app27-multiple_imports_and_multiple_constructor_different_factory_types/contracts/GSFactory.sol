@@ -1,5 +1,7 @@
-import "GSSingle.sol";
-import "GSMulti.sol";
+pragma solidity >=0.0.0;
+
+import "./GSSingle.sol";
+import "./GSMulti.sol";
 
 contract GSFactory {
     address lastCreatedSingle;
