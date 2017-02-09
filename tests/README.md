@@ -7,6 +7,7 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 * test the tool itself
 * test minimum viable stack connection and sequencing
 * test the tool against a multitude of docker-engine APIs
+* test the tool against docker-machine and native docker options until the latter becomes fully viable in all operating systems.
 * test the tool from a multitude of host environments
   * Debian (not implemented)
   * RHEL/Centos (not implemented)
@@ -16,7 +17,7 @@ This is a hard tool to test. In order to clearly define (and limit) the testing 
 
 ## Goal 1: Test The Tool Itself
 
-Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container (but I also use it for quick testing of the package level tests locally — see below).
+Testing the tool itself is performed from the `tests/test_tool.sh` script. This script should only concern itself with the mechanisms for testing the tool. This script should be run typically from inside the eris/eris container unless testing on a specific os environment. It is also acceptable to use it for quick testing of the package level tests locally — see below.
 
 ## Goal 2: Test The Minimum Viable Stack Connection and Sequencing (Apps and Contract Suites)
 
