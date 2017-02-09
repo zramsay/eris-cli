@@ -31,7 +31,7 @@ install:
   - go install ./cmd/eris
 
 script:
-- tests/test.sh
+  - test DOCKER_MACHINE != true && tests/test.sh || tests/test.sh machine
 
 notifications:
   email: false
