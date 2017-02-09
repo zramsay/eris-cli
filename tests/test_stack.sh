@@ -60,7 +60,7 @@ check_and_exit() {
 # ----------------------------------------------------------------------------
 # Run ECM tests
 
-tests/test_chains_make.sh
+time tests/test_chains_make.sh
 test_exit=$?
 check_and_exit
 cd $start
@@ -68,7 +68,7 @@ cd $start
 # ----------------------------------------------------------------------------
 # Run EPM tests
 
-tests/test_jobs.sh
+time tests/test_jobs.sh
 test_exit=$?
 check_and_exit
 cd $start
