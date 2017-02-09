@@ -37,12 +37,9 @@ repo=$GOPATH/src/$base
 
 # If an arg is passed to the script we will assume that only local
 #   tests will be ran.
-if [ $1 ]
-then
-  machine="eris-test-local"
-else
-  machine=$MACHINE_NAME
-fi
+
+machine="$MACHINE_NAME"
+
 
 start=`pwd`
 declare -a checks
@@ -55,7 +52,13 @@ export ERIS_MIGRATE_APPROVE="true"
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
 
-announce() {
+announceNative() {
+  echo
+  echo "Testing against native docker"
+  echo
+}
+
+announceMachine() {
   echo
   echo "Testing against"
   echo -e "\tMachine name:\t$machine"
@@ -111,29 +114,29 @@ setup() {
 packagesToTest() {
   if [[ "$SKIP_PACKAGES" != "true" ]]
   then
-    go test ./initialize/... && passed Initialize
+    go test ./initialize/... -v -timeout 20m && passed Initialize
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./util/... && passed Util
+    go test ./util/... -v -timeout 20m && passed Util
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./config/... && passed Config
+    go test ./config/... -v -timeout 20m && passed Config
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./loaders/... && passed Loaders
+    go test ./loaders/... -v -timeout 20m && passed Loaders
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./perform/... && passed Perform
+    go test ./perform/... -v -timeout 20m && passed Perform
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./data/... && passed Data
+    go test ./data/... -v -timeout 20m && passed Data
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./files/... && passed Files
+    go test ./files/... -v -timeout 20m && passed Files
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./services/... && passed Services
+    go test ./services/... -v -timeout 20m && passed Services
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./chains/... && passed Chains
+    go test ./chains/... -v -timeout 20m && passed Chains
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./keys/... && passed Keys
+    go test ./keys/... -v -timeout 20m && passed Keys
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./pkgs/... && passed Packages
+    go test ./pkgs/... -v -timeout 20m && passed Packages
     if [ $? -ne 0 ]; then return 1; fi
-    go test ./clean/... && passed Clean
+    go test ./clean/... -v -timeout 20m && passed Clean
     if [ $? -ne 0 ]; then return 1; fi
   fi
   # The appveyor.yml and circle.yml currently use SKIP_PACKAGES and 
@@ -205,27 +208,23 @@ flame_out() {
 # ---------------------------------------------------------------------------
 # Go!
 echo "Hello! The marmots will begin testing now."
-if [[ "$machine" == "eris-test-local" ]]
+if [[ "$DOCKER_MACHINE" = true ]]
 then
-  announce
-else
-  announce
+  announceMachine
   connect
   setup
+else
+  announceNative
 fi
 passed Setup
 
-if [[ $machine == "eris-test-local" ]]
+if [[ -z "$1" ]]
 then
-  if [[ $1 == "local" ]]
-  then
-    packagesToTest
-  else
-    go test ./$1/... && passed $1
-  fi
-else
   packagesToTest
+else
+  go test ./$1/... && passed $1
 fi
+
 test_exit=$?
 
 # ---------------------------------------------------------------------------

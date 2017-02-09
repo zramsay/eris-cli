@@ -1,17 +1,21 @@
 version: "{build}-{branch}"
-
+os: Visual Studio 2015
 # Source Config
 clone_folder: C:\gopath\src\github.com\eris-ltd\eris
 
 environment:
   global:
     TEST_ON_WINDOWS: "true"
-    DOCKER_MACHINE: "true"
     GOPATH: C:\gopath
     GOBIN: C:\gopath\bin
-    PATH: '%PATH%;C:\gopath\bin'
+    CC: gcc.exe
+    PATH: '%PATH%;C:\gopath\bin;C:\msys64\mingw64\bin\;C:\Program Files (x86)\NSIS\;'
+    MSYS2_ARCH: x86_64
+    MSYS2_BITS: 64
+    MSYSTEM: MINGW64
+  matrix:
+  - DOCKER_MACHINE: "true"
     MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
-    SKIP_STACK: "true" # remove later when stack tests work on windows.
     DOCKER_VERSION: 1.10.0
     DOCKER_MACHINE_VERSION: 0.4.1
     AWS_ACCESS_KEY_ID:
@@ -23,28 +27,34 @@ environment:
       secure: Lo717dojMJUNytpQPZWwyw==
     AWS_SECURITY_GROUP:
       secure: Jie7WuAzjiHVp7tX8MfaSQ==
+  - allow_failures:
+    DOCKER_NATIVE: "true"
+
+
+
+install:
+  - gcc --version
+  - choco upgrade golang
+  - cinst cygwin
+  - cinst jq
+  - ps: >-
+      If ($env:DOCKER_MACHINE -eq "true") {
+        cinst docker --version $env:DOCKER_VERSION; cinst docker-machine --version $env:DOCKER_MACHINE_VERSION
+      } Else {
+        cinst docker-for-windows
+      }
 
 build_script:
 - cmd: >-
 
-    choco install -yr cygwin > nul
+    cd c:\gopath\src\github.com\eris-ltd\eris
 
-    choco install -yr jq
-
-    choco install -yr docker -version %DOCKER_VERSION%
-
-    choco install -yr docker-machine -version %DOCKER_MACHINE_VERSION%
-
-    cd c:\src\github.com\eris-ltd\eris\cmd\eris
-
-    go get
-
-    go install
+    go install .\cmd\eris
 
 after_test:
-  - bash c:\src\github.com\eris-ltd\eris\tests\dm_cleanup.sh
+  - bash c:\gopath\src\github.com\eris-ltd\eris\tests\dm_cleanup.sh
 
 test_script:
 - cmd: >-
 
-    bash c:\src\github.com\eris-ltd\eris\tests\test.sh
+    bash c:\gopath\src\github.com\eris-ltd\eris\tests\test.sh

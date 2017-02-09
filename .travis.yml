@@ -5,33 +5,35 @@ language: go
 env:
   global:
     - TEST_ON_MACOSX=true
+    - MACHINE_NAME="eris-test-osx-$TRAVIS_BUILD_ID"
 matrix:
+  allow_failures:
+    #Native Docker job, expect potential failures as it's still fresh
+    - env:
+        - DOCKER_NATIVE=true
   include:
     #Docker machine job, expect this to pass
-    - go: 1.6
-      before_install:
-        - brew update
-        - sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.10.1 >/usr/local/bin/docker"
-        - sudo chmod +x /usr/local/bin/docker
-        - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-darwin-x86_64 >/usr/local/bin/docker-machine"
-        - sudo chmod +x /usr/local/bin/docker-machine
+    - go: 1.7.3
       env:
         - DOCKER_MACHINE=true
       after_script: 
         - tests/dm_cleanup.sh
-  allow_failures:
-    #Native Docker job, expect potential failures as it's still fresh
-    - go: 1.6
-      before_install:
-        - brew update
-        - brew cask install docker
+        #Native Docker job, expect potential failures as it's still fresh
+    - go: 1.7.3
+      env:
+        - DOCKER_NATIVE=true
+
 
 install:
+  - brew update
   - brew install jq
+  - brew install caskroom/cask/brew-cask
+  - test "$DOCKER_MACHINE" = true && brew install docker docker-machine || brew cask install docker
+  - docker --version
   - go install ./cmd/eris
 
 script:
-  - test DOCKER_MACHINE != true && tests/test.sh || tests/test.sh machine
+  - ./tests/test.sh
 
 notifications:
   email: false
