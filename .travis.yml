@@ -5,23 +5,35 @@ language: go
 env:
   global:
     - TEST_ON_MACOSX=true
-  matrix:
-    - SKIP_STACK=true
-    - SKIP_PACKAGES=true
+matrix:
+  include:
+    #Docker machine job, expect this to pass
+    - go: 1.6
+      before_install:
+        - brew update
+        - sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.10.1 >/usr/local/bin/docker"
+        - sudo chmod +x /usr/local/bin/docker
+        - sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-darwin-x86_64 >/usr/local/bin/docker-machine"
+        - sudo chmod +x /usr/local/bin/docker-machine
+      env:
+        - DOCKER_MACHINE=true
+      after_script: 
+        - tests/dm_cleanup.sh
+  allow_failures:
+    #Native Docker job, expect potential failures as it's still fresh
+    - go: 1.6
+      before_install:
+        - brew update
+        - brew cask install docker
+      env:
+        - NATIVE_DOCKER=true
 
 install:
-- eval "$(gimme 1.6)"
-- brew update
-- brew install jq
-- sudo bash -c "curl -sSL https://get.docker.com/builds/Darwin/x86_64/docker-1.10.1 >/usr/local/bin/docker"
-- sudo chmod +x /usr/local/bin/docker
-- sudo bash -c "curl -sSL https://github.com/docker/machine/releases/download/v0.6.0/docker-machine-darwin-x86_64 >/usr/local/bin/docker-machine"
-- sudo chmod +x /usr/local/bin/docker-machine
-- go install ./cmd/eris
+  - brew install jq
+  - go install ./cmd/eris
 
 script:
 - tests/test.sh
-- tests/dm_cleanup.sh
 
 notifications:
   email: false
