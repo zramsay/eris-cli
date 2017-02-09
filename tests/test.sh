@@ -31,12 +31,7 @@
 # Where are the Things
 base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
-if [ "$CIRCLE_BRANCH" ]
-then
-  repo=${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-  ci=true
-  linux=true
-elif [ "$TRAVIS_BRANCH" ]
+if [ "$TRAVIS_BRANCH" ]
 then
   ci=true
   osx=true
