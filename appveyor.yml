@@ -1,25 +1,28 @@
-version: 1.0.{build}-{branch}
-clone_folder: C:\src\github.com\eris-ltd\eris
+version: "{build}-{branch}"
+
+# Source Config
+clone_folder: C:\gopath\src\github.com\eris-ltd\eris
 
 environment:
-  TEST_ON_WINDOWS: "true"
-  GOPATH: C:\
-  GOBIN: C:\bin
-  GO15VENDOREXPERIMENT: 1
-  PATH: '%PATH%;C:\bin'
-  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
-  SKIP_STACK: "true" # remove later when stack tests work on windows.
-  DOCKER_VERSION: 1.10.0
-  DOCKER_MACHINE_VERSION: 0.4.1
-  AWS_ACCESS_KEY_ID:
-    secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
-  AWS_SECRET_ACCESS_KEY:
-    secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
-  AWS_DEFAULT_REGION: eu-west-1
-  AWS_VPC_ID:
-    secure: Lo717dojMJUNytpQPZWwyw==
-  AWS_SECURITY_GROUP:
-    secure: Jie7WuAzjiHVp7tX8MfaSQ==
+  global:
+    TEST_ON_WINDOWS: "true"
+    DOCKER_MACHINE: "true"
+    GOPATH: C:\gopath
+    GOBIN: C:\gopath\bin
+    PATH: '%PATH%;C:\gopath\bin'
+    MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+    SKIP_STACK: "true" # remove later when stack tests work on windows.
+    DOCKER_VERSION: 1.10.0
+    DOCKER_MACHINE_VERSION: 0.4.1
+    AWS_ACCESS_KEY_ID:
+      secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
+    AWS_SECRET_ACCESS_KEY:
+      secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
+    AWS_DEFAULT_REGION: eu-west-1
+    AWS_VPC_ID:
+      secure: Lo717dojMJUNytpQPZWwyw==
+    AWS_SECURITY_GROUP:
+      secure: Jie7WuAzjiHVp7tX8MfaSQ==
 
 build_script:
 - cmd: >-
