@@ -54,14 +54,9 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 	// assemble contract
 	var contractPath string
 	if _, err := os.Stat(deploy.Contract); err != nil {
-		return "", err
-	}
-	contractPath = deploy.Contract
-	log.WithField("=>", contractPath).Info("Contract path")
-
-	// use the proper compiler
-	if do.Compiler != "" {
-		log.WithField("=>", do.Compiler).Info("Setting compiler path")
+		if _, secErr := os.Stat(filepath.Join(do.BinPath, deploy.Contract)); secErr != nil {
+			return "", fmt.Errorf("Could not find contract in %v or in binary path %v", deploy.Contract, do.BinPath)
+		}
 	}
 
 	// Don't use pubKey if account override
@@ -73,12 +68,18 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 
 	// compile
 	if filepath.Ext(deploy.Contract) == ".bin" {
+		contractPath = filepath.Join(do.BinPath, deploy.Contract)
 		log.Info("Binary file detected. Using binary deploy sequence.")
-		// binary deploy sequence
-		contractCode, err := ioutil.ReadFile(contractPath)
+		log.WithField("=>", contractPath).Info("Binary path")
+		binaryResponse, err := compilers.RequestBinaryLinkage(do.Compiler+"/binaries", contractPath, deploy.Libraries)
 		if err != nil {
-			return "could not read binary file", err
+			return "", fmt.Errorf("Something went wrong with your binary deployment: %v", err)
 		}
+		if binaryResponse.Error != "" {
+			return "", fmt.Errorf("Something went wrong when you were trying to link your binaries: %v", binaryResponse.Error)
+		}
+		contractCode := binaryResponse.Binary
+
 		tx, err := deployRaw(do, deploy, contractName, string(contractCode))
 		if err != nil {
 			return "could not deploy binary contract", err
@@ -89,6 +90,8 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 		}
 		return result, err
 	} else {
+		contractPath = deploy.Contract
+		log.WithField("=>", contractPath).Info("Contract path")
 		// normal compilation/deploy sequence
 		resp, err := compilers.RequestCompile(do.Compiler, contractPath, false, deploy.Libraries)
 
@@ -106,8 +109,10 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 		case len(resp.Objects) == 1:
 			log.WithField("path", contractPath).Info("Deploying the only contract in file")
 			response := resp.Objects[0]
+			log.WithField("=>", response.ABI).Warn("Abi")
+			log.WithField("=>", response.Bytecode).Warn("Bin")
 			if response.Bytecode != "" {
-				result, err = deployContract(deploy, do, response, contractPath)
+				result, err = deployContract(deploy, do, response)
 				if err != nil {
 					return "", err
 				}
@@ -119,7 +124,7 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 				if response.Bytecode == "" {
 					continue
 				}
-				result, err = deployContract(deploy, do, response, contractPath)
+				result, err = deployContract(deploy, do, response)
 				if err != nil {
 					return "", err
 				}
@@ -137,7 +142,7 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 					continue
 				}
 				if strings.ToLower(response.Objectname) == strings.ToLower(deploy.Instance) {
-					result, err = deployContract(deploy, do, response, contractPath)
+					result, err = deployContract(deploy, do, response)
 					if err != nil {
 						return "", err
 					}
@@ -155,13 +160,18 @@ func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, e
 }
 
 // TODO [rj] refactor to remove [contractPath] from functions signature => only used in a single error throw.
-func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersResponse compilers.ResponseItem, contractPath string) (string, error) {
+func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersResponse compilers.ResponseItem) (string, error) {
 	log.WithField("=>", string(compilersResponse.ABI)).Debug("ABI Specification (From Compilers)")
 	contractCode := compilersResponse.Bytecode
 
 	// Save ABI
 	if _, err := os.Stat(do.ABIPath); os.IsNotExist(err) {
 		if err := os.Mkdir(do.ABIPath, 0775); err != nil {
+			return "", err
+		}
+	}
+	if _, err := os.Stat(do.BinPath); os.IsNotExist(err) {
+		if err := os.Mkdir(do.BinPath, 0775); err != nil {
 			return "", err
 		}
 	}
@@ -176,18 +186,6 @@ func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersRes
 		}
 	} else {
 		log.Debug("Objectname from compilers is blank. Not saving abi.")
-	}
-
-	// saving binary
-	if deploy.SaveBinary {
-		contractDir := filepath.Dir(deploy.Contract)
-		contractName := filepath.Join(contractDir, fmt.Sprintf("%s.bin", strings.TrimSuffix(deploy.Contract, filepath.Ext(deploy.Contract))))
-		log.WithField("=>", contractName).Warn("Saving Binary")
-		if err := ioutil.WriteFile(contractName, []byte(contractCode), 0664); err != nil {
-			return "", err
-		}
-	} else {
-		log.Debug("Not saving binary.")
 	}
 
 	// additional data may be sent along with the contract
@@ -215,7 +213,7 @@ func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersRes
 	// Sign, broadcast, display
 	result, err := deployFinalize(do, tx)
 	if err != nil {
-		return "", fmt.Errorf("Error finalizing contract deploy %s: %v", contractPath, err)
+		return "", fmt.Errorf("Error finalizing contract deploy %s: %v", deploy.Contract, err)
 	}
 
 	// saving contract/library abi at abi/address
@@ -224,6 +222,16 @@ func deployContract(deploy *definitions.Deploy, do *definitions.Do, compilersRes
 		log.WithField("=>", abiLocation).Debug("Saving ABI")
 		if err := ioutil.WriteFile(abiLocation, []byte(compilersResponse.ABI), 0664); err != nil {
 			return "", err
+		}
+		// saving binary
+		if deploy.SaveBinary {
+			contractName := filepath.Join(do.BinPath, fmt.Sprintf("%s.bin", compilersResponse.Objectname))
+			log.WithField("=>", contractName).Warn("Saving Binary")
+			if err := ioutil.WriteFile(contractName, []byte(contractCode), 0664); err != nil {
+				return "", err
+			}
+		} else {
+			log.Debug("Not saving binary.")
 		}
 	} else {
 		// we shouldn't reach this point because we should have an error before this.
