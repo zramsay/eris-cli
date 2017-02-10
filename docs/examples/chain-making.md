@@ -307,7 +307,7 @@ With all the files made for us by the eris chain maker out we're ready to rock a
 Let's start the chain and use our root credentials!
 
 ```bash
-eris chains new advchain --dir advchain/advchain_root_000
+eris chains start advchain --init-dir ~/.eris/chains/advchain/advchain_root_000
 ```
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, blockchain. Except for one thing. This particular chain won't run out of the box though. Why? Because you'll need to deploy the validators and connect them to one another.

@@ -202,7 +202,7 @@ func TestChainsNewConfig(t *testing.T) {
 	}
 }
 
-// chains new should import the priv_validator.json (available in mint form)
+// chains start (--init-dir) should import the priv_validator.json (available in mint form)
 // into eris-keys (available in eris form) so it can be used by the rest
 // of the platform
 func TestChainsNewKeysImported(t *testing.T) {

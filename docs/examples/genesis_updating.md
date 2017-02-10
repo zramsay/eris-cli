@@ -24,13 +24,8 @@ How one does this depends on how one started the chain. If one started the chain
 # Step 3: Turn the New Chain On
 
 ```
-eris chains new idiaminchain
-```
-
-or
+eris chains start idiaminchain --init-dir ~/.eris/chains/idiaminchain/idiaminchain_full_000
 
 ```
-eris chains new idiaminchain --dir idiaminchain
-```
 
-or whatever command you used before. **N.B.**, we used `new` here rather than start. That is because we want to copy the reformulated genesis.json into the data container and ready for the service container to use when it starts again.
+or whatever command you used before. 

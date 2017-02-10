@@ -47,12 +47,12 @@ do
     peer_server_ip=$(docker-machine ip "$machine_base"-$(expr $i - 1))
   fi
   # perform an ugly text transform to get the configs sorted
-  cat ~/.eris/chains/default/config.toml | \
+  # note: seeds can be set in [chains make]
+ cat ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml | \
     sed -e 's/seeds.*$/seeds = "'"$peer_server_ip"':46656"/g' | \
-    sed -e 's/moniker.*$/moniker = "'"$machine_base-$i"'"/g' | \
     > ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml
   # start the chain on this machine with a logs rotator on (a good practice for validator nodes)
-  eris chains new --dir $chain_name/"$chain_name"_validator_00"$i" --machine "$machine_base-$i" --logrotate $chain_name
+  eris chains start $chain_name --init-dir $chain_name/"$chain_name"_validator_00"$i" --machine "$machine_base-$i" --logrotate
 done
 ```
 
@@ -77,7 +77,7 @@ The next step is to boot the chain locally and to make sure it is making blocks.
 cat ~/.eris/chains/$chain_name/"$chain_name"_validator_000/config.toml | \
   sed -e 's/moniker.*$/moniker = "imma_b_da_root"/g' \
   > ~/.eris/chains/$chain_name/"$chain_name"_root_000/config.toml
-eris chains new --dir $chain_name/"$chain_name"_root_000 $chain_name
+eris chains start $chain_name--init-dir $chain_name/"$chain_name"_root_000
 sleep 10 # let it boot before we check the logs
 eris chains logs "$chain_name"
 ```

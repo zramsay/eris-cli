@@ -124,16 +124,16 @@ eris chains ls
 
 If your simplechain is running, then you're chain is on, please skip to the last step in this `Quick Test` section.
 
-If your simplechain is present but not running, then just start it with:
+If your simplechain is present but not running, then start it with:
 
 ```bash
 eris chains start simplechain
 ```
 
-If your simplechain is not present, then just start it with:
+If your simplechain is not present, then start it with:
 
 ```bash
-eris chains new simplechain --dir simplechain
+eris chains start simplechain --init-dir ~/.eris/chains/simplechain/simplechain_full_000
 ```
 
 As usual, `eris` is a quiet tool. Let's make sure our chain is running:

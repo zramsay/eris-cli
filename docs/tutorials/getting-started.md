@@ -395,14 +395,14 @@ eris clean -y --chains
 Per the above and after our review of the account types, we know we want to have two Root account types and one Full account type for our new chain. So let's get to business.
 
 ```bash
-chain_dir=$HOME/.eris/chains/simplechain
-chain_dir_this=$chain_dir/simplechain_full_000
+chain_dir=$HOME/.eris/chains/meachain
+chain_dir_this=$chain_dir/meachain_full_000
 ```
 
 That will just create a few variables we'll be using in the future. Now, we're ready.
 
 ```bash
-eris chains make --account-types=Root:2,Full:1 simplechain
+eris chains make --account-types=Root:2,Full:1 meachain
 ```
 
 That's it! Let's double check the files to make sure we are squared away.
@@ -419,7 +419,7 @@ You'll see a `genesis.json` and `priv_validator.json` in `$chain_dir_this`.
 With all the files prepared we're ready to rock and roll.
 
 ```bash
-eris chains new simplechain --dir $chain_dir_this
+eris chains start meachain --init-dir $chain_dir_this
 ```
 
 Check that the chain is running with:
@@ -432,7 +432,7 @@ You'll see something like:
 
 ```bash
 CHAIN        ON     CONTAINER ID     DATA CONTAINER
-simplechain  *      efeeb0dd63       d06301b3a5
+meachain     *      efeeb0dd63       d06301b3a5
 ```
 
 As with the `eris services ls -a` command, you can also see more information about your chain with `eris chains ls -a`. Note: the same holds true with `eris ls` and `eris ls -a`.
@@ -440,13 +440,13 @@ As with the `eris services ls -a` command, you can also see more information abo
 To see the logs of the chain:
 
 ```bash
-eris chains logs simplechain
+eris chains logs meachain
 ```
 
 To turn off the chain:
 
 ```bash
-eris chains stop simplechain
+eris chains stop meachain 
 ```
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, chain.
@@ -454,7 +454,7 @@ Boom. You're all set with your custom built, permissioned, smart contract-ified,
 You can remove all trace of the chain with:
 
 ```
-eris chains rm simplechain --data --dir --file --force
+eris chains rm meachain --data --dir --force
 ```
 
 and clean up your Eris environment with:
