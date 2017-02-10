@@ -1,4 +1,6 @@
-import "one.sol";
+pragma solidity >=0.0.0;
+
+import "./one.sol";
 
 contract two is one{
 

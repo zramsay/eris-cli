@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 contract SimpleStorage {
   string storedString1;
   string storedString2;

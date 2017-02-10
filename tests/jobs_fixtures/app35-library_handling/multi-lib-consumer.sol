@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 import "./multi-lib.sol";
 
 contract c {

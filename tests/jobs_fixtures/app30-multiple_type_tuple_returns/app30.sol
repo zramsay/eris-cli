@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 contract multiReturn {
 
 	function getInts() returns (uint, int) {

@@ -52,10 +52,10 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
 	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Eris PM should use")
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
-	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "1234", "default fee to use")
+	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
-	packagesDo.Flags().BoolVarP(&do.LocalCompiler, "local-compiler", "z", false, "use a local compiler service; overwrites anything added to compilers flag")
+	packagesDo.Flags().BoolVarP(&do.RemoteCompiler, "remote-compiler", "r", false, "use a remote compiler; if set uses the url specified with the compiler flag.")
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {

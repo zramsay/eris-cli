@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 library Set {
   // We define a new struct datatype that will be used to
   // hold its data in the calling contract.
