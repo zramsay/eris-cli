@@ -25,15 +25,15 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 			}
 		}
 
-		for i := 0; i < accountT.Number; i++ {
+		for i := 0; i < accountT.DefaultNumber; i++ {
 			thisAct := &definitions.ErisDBAccount{}
 			thisAct.Name = fmt.Sprintf("%s_%s_%03d", name, accountT.Name, i)
 			thisAct.Name = strings.ToLower(thisAct.Name)
 
 			log.WithField("name", thisAct.Name).Debug("Making Account")
 
-			thisAct.Amount = accountT.Tokens
-			thisAct.ToBond = accountT.ToBond
+			thisAct.Amount = accountT.DefaultTokens
+			thisAct.ToBond = accountT.DefaultBond
 
 			thisAct.PermissionsMap = accountT.Perms
 			thisAct.Validator = false

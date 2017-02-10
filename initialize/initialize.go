@@ -37,7 +37,7 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	if do.Pull {
-		if err := GetTheImages(do); err != nil {
+		if err := getTheImages(do); err != nil {
 			return err
 		}
 	}
@@ -87,59 +87,26 @@ line to the %s definition file.
 
 func InitDefaults() error {
 
-	for _, serviceName := range SERVICE_DEFINITIONS {
+	for _, serviceName := range ServiceDefinitions {
 		if err := writeServiceDefinitionFile(serviceName); err != nil {
 			return err
 		}
 	}
 
-	if err := dropAccountAndChainTypeDefaults(); err != nil {
-		return err
+	for _, accountType := range AccountTypeDefinitions {
+		if err := writeAccountTypeDefinitionFile(accountType); err != nil {
+			return err
+		}
+	}
+
+	for _, chainType := range ChainTypeDefinitions {
+		if err := writeChainTypeDefinitionFile(chainType); err != nil {
+			return err
+		}
 	}
 
 	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
 
-	return nil
-}
-
-func dropAccountAndChainTypeDefaults() error {
-	// chain-types
-	if err := writeDefaultFile(config.ChainTypePath, "simplechain.toml", defaultSimpleChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "adminchain.toml", defaultAdminChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "demochain.toml", defaultDemoChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "gochain.toml", defaultGoChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "sprawlchain.toml", defaultSprawlChainType); err != nil {
-		return err
-	}
-
-	// account-types
-	if err := writeDefaultFile(config.AccountsTypePath, "developer.toml", defaultDeveloperAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "full.toml", defaultFullAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "participant.toml", defaultParticipantAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "root.toml", defaultRootAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "validator.toml", defaultValidatorAccountType); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -256,7 +223,7 @@ func checkIfCanOverwrite(doYes bool) error {
 	return nil
 }
 
-func GetTheImages(do *definitions.Do) error {
+func getTheImages(do *definitions.Do) error {
 	if os.Getenv("ERIS_PULL_APPROVE") == "true" || do.Yes {
 		if err := pullDefaultImages(do.ImagesSlice); err != nil {
 			return err
