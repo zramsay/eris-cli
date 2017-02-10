@@ -13,8 +13,7 @@ import (
 
 // ------------------ services ------------------
 
-const serviceHeader = `
-# For more information on configurations, see the services specification:
+const serviceHeader = `# For more information on configurations, see the services specification:
 # https://monax.io/docs/documentation/cli/latest/services_specification/
 
 # These fields marshal roughly into the [docker run] command, see:
@@ -26,6 +25,7 @@ const serviceHeader = `
 
 const serviceDefinitionGeneral = `
 name = "{{ .Name}}"
+
 description = """
 {{ .Description}}
 """
@@ -46,14 +46,14 @@ email = "{{ .Maintainer.Email}}"
 
 // ------------------ account types ------------------
 
-const accountTypeHeader = `
-# This is a TOML config file.
+const accountTypeHeader = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 `
 
 // [description] used to be [definition]
 const accountTypeDefinitionGeneral = `
 name = "{{ .Name}}"
+
 description = """
 {{ .Description}}
 """
@@ -87,24 +87,24 @@ rm_role = {{index .Perms "rm_role"}}
 
 // ------------------ chain types ------------------
 
-const chainTypeHeader = `
-# This is a TOML config file.
+const chainTypeHeader = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 `
 
 // [description] used to be [definition]
 const chainTypeDefinitionGeneral = `
 name = "{{ .Name}}"
+
 description = """
 {{ .Description}}
 """
 
 [account_types]
-Full = {{ .Full}}
-Developer = {{ .Developer}}
-Participant = {{ .Participant}}
-Root = {{ .Root}}
-Validator = {{ .Validator}}
+Full = {{index .AccountTypes "Full"}}
+Developer = {{index .AccountTypes "Developer"}}
+Participant = {{index .AccountTypes "Participant"}}
+Root = {{index .AccountTypes "Root"}}
+Validator = {{index .AccountTypes "Validator"}}
 
 [servers]
 
@@ -125,6 +125,9 @@ func init() {
 	if accountTypeDefinitionTemplate, err = template.New("accountTypeDefinition").Parse(accountTypeDefinitionGeneral); err != nil {
 		panic(err)
 	}
+	if chainTypeDefinitionTemplate, err = template.New("chainTypeDefinition").Parse(chainTypeDefinitionGeneral); err != nil {
+		panic(err)
+	}
 }
 
 func writeServiceDefinitionFile(name string) error {
@@ -136,7 +139,7 @@ func writeServiceDefinitionFile(name string) error {
 	// write copyright header
 	buffer.WriteString(serviceHeader)
 
-	// write section [service]
+	// write main section
 	if err := serviceDefinitionTemplate.Execute(&buffer, serviceDefinition); err != nil {
 		return fmt.Errorf("Failed to write service definition template %s", err)
 	}
@@ -162,7 +165,7 @@ func writeAccountTypeDefinitionFile(name string) error {
 
 	// write section [service]
 	if err := accountTypeDefinitionTemplate.Execute(&buffer, accountDefinition); err != nil {
-		return fmt.Errorf("Failed to account type definition template %s", err)
+		return fmt.Errorf("Failed to write account type definition template %s", err)
 	}
 	// create file
 	file := filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", name))
@@ -176,5 +179,24 @@ func writeAccountTypeDefinitionFile(name string) error {
 }
 
 func writeChainTypeDefinitionFile(name string) error {
+	chainDefinition := defaultChainTypes(name)
+
+	var buffer bytes.Buffer
+
+	// write copyright header
+	buffer.WriteString(chainTypeHeader)
+
+	// write main section
+	if err := chainTypeDefinitionTemplate.Execute(&buffer, chainDefinition); err != nil {
+		return fmt.Errorf("Failed to write chain type definition template %s", err)
+	}
+	// create file
+	file := filepath.Join(config.ChainTypePath, fmt.Sprintf("%s.toml", name))
+
+	// write file
+	log.WithField("path", file).Debug("Saving File.")
+	if err := config.WriteFile(buffer.String(), file); err != nil {
+		return err
+	}
 	return nil
 }
