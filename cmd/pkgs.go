@@ -55,7 +55,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
-	packagesDo.Flags().BoolVarP(&do.RemoteCompiler, "remote-compiler", "z", false, "use a remote compiler; if set uses the url specified with the compiler flag.")
+	packagesDo.Flags().BoolVarP(&do.RemoteCompiler, "remote-compiler", "r", false, "use a remote compiler; if set uses the url specified with the compiler flag.")
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
