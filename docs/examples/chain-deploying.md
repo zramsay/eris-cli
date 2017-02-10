@@ -76,7 +76,7 @@ Many of us at Eris put that in our ~/.bashrc, ~/.zshrc or equivalent. Now, deplo
 ```bash
 for i in `seq 0 6`
 do
-  eris chains new --dir advchain/"advchain_validator_00$i" --machine "my-advchain-val-00$i" advchain
+  eris chains start advchain --init-dir advchain/"advchain_validator_00$i" --machine "my-advchain-val-00$i"
 done
 ```
 
@@ -118,7 +118,7 @@ That's it, we added all that functionality to our system with that little comman
 Now we need to connect into the chain from our local nodes now that the cloud based validator nodes are all set up. That will take some time.
 
 ```bash
-eris chains new --dir advchain/advchain_root_000 advchain
+eris chains start advchain --init-dir advchain/advchain_root_000
 ```
 
 Check that it is running:
