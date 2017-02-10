@@ -38,7 +38,6 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsCurrent)
@@ -158,18 +157,6 @@ To checkout a new chain use [eris chains checkout NAME].
 
 To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
-}
-
-var chainsNew = &cobra.Command{
-	Use:   "new NAME",
-	Short: "initialize a new chain",
-	Long: `initialize a new chain
-
-This command has been replaced by [eris chains start --init-dir].
-
-Please update any scripts that rely on [eris chains new].`,
-	Deprecated: "it has been replaced by [eris chains start NAME --init-dir]",
-	Run:        StartChain,
 }
 
 var chainsStart = &cobra.Command{
