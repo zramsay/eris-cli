@@ -14,16 +14,25 @@ import (
 	"github.com/eris-ltd/eris/version"
 )
 
+// The entrypoint for [eris init]
+// - Is required to be run after every version upgrade
+// - Writes some default service & chain definition files
+// - Pulls the required docker images
+// - Overwrites the eris.toml config file
 func Initialize(do *definitions.Do) error {
-	newDir, err := checkThenInitErisRoot(do.Quiet)
+
+	// Create the directory structure.
+	newDir, err := checkThenInitErisRoot()
 	if err != nil {
 		return err
 	}
 
+	// Overwrite the ~/.eris/eris.toml configuration file.
 	if err := overwriteErisToml(); err != nil {
 		return err
 	}
 
+	// If this is the first installation of eris, skip these checks.
 	if !newDir {
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
 			return nil
@@ -33,17 +42,16 @@ func Initialize(do *definitions.Do) error {
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
 			return nil
 		}
-
 	}
 
+	// Pull the default docker images (wraps [docker pull]).
 	if do.Pull {
 		if err := getTheImages(do); err != nil {
 			return err
 		}
 	}
 
-	log.Warn("Initializing default chains and service definition files")
-	if err := InitDefaults(); err != nil {
+	if err := initDefaultFiles(); err != nil {
 		return fmt.Errorf("Could not instantiate defaults:\n\n%s", err)
 	}
 
@@ -85,7 +93,7 @@ line to the %s definition file.
 	return nil
 }
 
-func InitDefaults() error {
+func initDefaultFiles() error {
 
 	for _, serviceName := range ServiceDefinitions {
 		if err := writeServiceDefinitionFile(serviceName); err != nil {
@@ -104,8 +112,6 @@ func InitDefaults() error {
 			return err
 		}
 	}
-
-	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
 
 	return nil
 }
@@ -161,30 +167,9 @@ This is likely a network performance issue with our Docker hosting provider`)
 	return nil
 }
 
-// todo: remove when templates are done
-func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
-	if err := os.MkdirAll(savePath, 0777); err != nil {
-		return err
-	}
-	pth := filepath.Join(savePath, fileName)
-	writer, err := os.Create(pth)
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	writer.Write([]byte(toWrite()))
-	return nil
-}
-
-func checkThenInitErisRoot(force bool) (bool, error) {
+func checkThenInitErisRoot() (bool, error) {
 	var newDir bool
-	if force {
-		log.Info("Force initializing Eris root directory")
-		if err := config.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
-		}
-		return true, nil
-	}
+
 	if !util.DoesDirExist(config.ErisRoot) || !util.DoesDirExist(config.ServicesPath) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := config.InitErisDir(); err != nil {

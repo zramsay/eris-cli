@@ -9,6 +9,12 @@ import (
 	"github.com/eris-ltd/eris/version"
 )
 
+const tomlHeader = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+`
+
+// ------------------ services ------------------
+
 var ServiceDefinitions = []string{
 	"compilers",
 	"ipfs",
@@ -18,6 +24,36 @@ var ServiceDefinitions = []string{
 	"logrotate",
 }
 
+const serviceHeader = `# For more information on configurations, see the services specification:
+# https://monax.io/docs/documentation/cli/latest/services_specification/
+
+# These fields marshal roughly into the [docker run] command, see:
+# https://docs.docker.com/engine/reference/run/
+`
+
+const serviceDefinitionGeneral = `
+name = "{{ .Name}}"
+
+description = """
+{{ .Description}}
+"""
+
+status = "{{ .Status}}"
+
+[service]
+image = "{{ .Service.Image}}"
+data_container = {{ .Service.AutoData}}
+ports = {{ .Service.Ports}}
+exec_host = "{{ .Service.ExecHost}}"
+volumes = {{ .Service.Volumes}}
+
+[maintainer]
+name = "{{ .Maintainer.Name}}"
+email = "{{ .Maintainer.Email}}"
+`
+
+// ------------------ account types ------------------
+
 var AccountTypeDefinitions = []string{
 	"participant",
 	"developer",
@@ -26,6 +62,42 @@ var AccountTypeDefinitions = []string{
 	"root",
 }
 
+const accountTypeDefinitionGeneral = `
+name = "{{ .Name}}"
+
+description = """
+{{ .Description}}
+"""
+
+typical_user = """
+{{ .TypicalUser}}
+"""
+
+default_number = {{ .DefaultNumber}}
+
+default_tokens = {{ .DefaultTokens}}
+
+default_bond = {{ .DefaultBond}}
+
+[perms]
+root = {{index .Perms "root"}}
+send = {{index .Perms "send"}}
+call = {{index .Perms "call"}}
+create_contract = {{index .Perms "create_contract"}}
+create_account = {{index .Perms "create_account"}}
+bond = {{index .Perms "bond"}}
+name = {{index .Perms "name"}}
+has_base = {{index .Perms "has_base"}}
+set_base = {{index .Perms "set_base"}}
+unset_base = {{index .Perms "unset_base"}}
+set_global = {{index .Perms "set_global"}}
+has_role = {{index .Perms "has_role"}}
+add_role = {{index .Perms "add_role"}}
+rm_role = {{index .Perms "rm_role"}}
+`
+
+// ------------------ chain types ------------------
+
 var ChainTypeDefinitions = []string{
 	"simplechain",
 	"sprawlchain",
@@ -33,6 +105,27 @@ var ChainTypeDefinitions = []string{
 	"demochain",
 	"gochain",
 }
+
+const chainTypeDefinitionGeneral = `
+name = "{{ .Name}}"
+
+description = """
+{{ .Description}}
+"""
+
+[account_types]
+Full = {{index .AccountTypes "Full"}}
+Developer = {{index .AccountTypes "Developer"}}
+Participant = {{index .AccountTypes "Participant"}}
+Root = {{index .AccountTypes "Root"}}
+Validator = {{index .AccountTypes "Validator"}}
+
+[servers]
+
+[erismint]
+
+[tendermint]
+`
 
 func defaultServices(service string) *definitions.ServiceDefinition {
 
