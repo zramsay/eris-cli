@@ -62,7 +62,7 @@ done
 
 **Temporary Hack**
 
-That `cat | sed` sequence is ugly, we know. In upcoming releases we'll be addressing some of the friction here with our `eris remotes` command which will have more network level cognizance.
+That `cat | sed` sequence is ugly, we know. We'll be updating the tutorials to reflect the addition of the [--seeds-ip] flag for the [eris chains make] command.
 
 **End Temporary Hack**
 
