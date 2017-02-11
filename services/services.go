@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
 	"github.com/eris-ltd/eris/definitions"
 	"github.com/eris-ltd/eris/loaders"
 	"github.com/eris-ltd/eris/log"
@@ -312,77 +311,6 @@ func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	log.WithField("=>", servDefFile).Info("Editing service")
 	return config.Editor(servDefFile)
-}
-
-func RenameService(do *definitions.Do) error {
-	log.WithFields(log.Fields{
-		"from": do.Name,
-		"to":   do.NewName,
-	}).Info("Renaming service")
-
-	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
-	}
-
-	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-	transformOnly := newNameBase == do.Name
-
-	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Debug("Performing container rename")
-			err = perform.DockerRename(serviceDef.Operations, do.NewName)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.Info("Changing service definition file only. Not renaming container")
-		}
-
-		oldFile := FindServiceDefinitionFile(do.Name)
-
-		if filepath.Base(oldFile) == do.NewName {
-			log.Info("Those are the same file. Not renaming")
-			return nil
-		}
-
-		var newFile string
-		if filepath.Ext(do.NewName) == "" {
-			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
-		} else {
-			newFile = filepath.Join(config.ServicesPath, do.NewName)
-		}
-
-		serviceDef.Service.Name = strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-		serviceDef.Name = serviceDef.Service.Name
-		err = WriteServiceDefinitionFile(serviceDef, newFile)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Debug("Performing data container rename")
-			err = data.RenameData(do)
-			if err != nil {
-				return err
-			}
-		}
-
-		os.Remove(oldFile)
-	} else {
-		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
-	}
-	return nil
 }
 
 func InspectService(do *definitions.Do) error {

@@ -38,7 +38,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
-	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
 	Services.AddCommand(servicesCat)
@@ -179,13 +178,6 @@ var servicesStop = &cobra.Command{
 	Run:   KillService,
 }
 
-var servicesRename = &cobra.Command{
-	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "rename an installed service",
-	Long:  `rename an installed service`,
-	Run:   RenameService,
-}
-
 var servicesUpdate = &cobra.Command{
 	Use:     "update NAME",
 	Aliases: []string{"restart"},
@@ -315,13 +307,6 @@ func EditService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	util.IfExit(services.EditService(do))
-}
-
-func RenameService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.NewName = args[1]
-	util.IfExit(services.RenameService(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {
