@@ -24,11 +24,12 @@ var ServiceDefinitions = []string{
 	"logrotate",
 }
 
-const serviceHeader = `# For more information on configurations, see the services specification:
-# https://monax.io/docs/documentation/cli/latest/services_specification/
-
+const serviceHeader = `
 # These fields marshal roughly into the [docker run] command, see:
 # https://docs.docker.com/engine/reference/run/
+
+# For more information on configurations, see the services specification:
+# https://monax.io/docs/documentation/cli/latest/services_specification/
 `
 
 const serviceDefinitionGeneral = `
@@ -49,8 +50,7 @@ volumes = {{ .Service.Volumes}}
 
 [maintainer]
 name = "{{ .Maintainer.Name}}"
-email = "{{ .Maintainer.Email}}"
-`
+email = "{{ .Maintainer.Email}}"`
 
 // ------------------ account types ------------------
 
@@ -93,8 +93,7 @@ unset_base = {{index .Perms "unset_base"}}
 set_global = {{index .Perms "set_global"}}
 has_role = {{index .Perms "has_role"}}
 add_role = {{index .Perms "add_role"}}
-rm_role = {{index .Perms "rm_role"}}
-`
+rm_role = {{index .Perms "rm_role"}}`
 
 // ------------------ chain types ------------------
 
@@ -124,8 +123,7 @@ Validator = {{index .AccountTypes "Validator"}}
 
 [erismint]
 
-[tendermint]
-`
+[tendermint]`
 
 func defaultServices(service string) *definitions.ServiceDefinition {
 
@@ -145,6 +143,7 @@ This service is usually linked to a chain and/or an application. Its functionali
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageKeys)
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4767:4767"`} // XXX these exposed ports are a gaping security flaw
+		serviceDefinition.Service.ExecHost = "ERIS_KEYS_HOST"
 
 	case "compilers":
 
@@ -170,7 +169,8 @@ This eris service is all but essential as part of the eris tool. The [eris files
 		serviceDefinition.Status = "alpha"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageIPFS)
 		serviceDefinition.Service.AutoData = true
-		serviceDefinition.Service.Ports = []string{`"4001:4001"`, `"5001:5001"`, `"` + port_to_use + `:` + port_to_use + `"`}
+		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
+		serviceDefinition.Service.ExecHost = "ERIS_IPFS_HOST"
 
 	case "logrotate":
 

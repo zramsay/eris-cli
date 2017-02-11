@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
 )
 
 var serviceDefinitionTemplate *template.Template
@@ -26,9 +27,7 @@ func init() {
 	}
 }
 
-func writeServiceDefinitionFile(name string) error {
-
-	serviceDefinition := defaultServices(name)
+func WriteServiceDefinitionFile(name string, serviceDefinition *definitions.ServiceDefinition) error {
 
 	var buffer bytes.Buffer
 
@@ -53,8 +52,7 @@ func writeServiceDefinitionFile(name string) error {
 	return nil
 }
 
-func writeAccountTypeDefinitionFile(name string) error {
-	accountDefinition := defaultAccountTypes(name)
+func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.ErisDBAccountType) error {
 
 	var buffer bytes.Buffer
 
@@ -72,8 +70,7 @@ func writeAccountTypeDefinitionFile(name string) error {
 	return nil
 }
 
-func writeChainTypeDefinitionFile(name string) error {
-	chainDefinition := defaultChainTypes(name)
+func writeChainTypeDefinitionFile(name string, chainDefinition *definitions.ChainType) error {
 
 	var buffer bytes.Buffer
 

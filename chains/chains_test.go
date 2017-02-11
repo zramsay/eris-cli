@@ -17,10 +17,7 @@ import (
 	"github.com/eris-ltd/eris/util"
 )
 
-var (
-	erisDir   = filepath.Join(os.TempDir(), "eris")
-	chainName = "test-chain"
-)
+var chainName = "test-chain"
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)

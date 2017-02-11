@@ -35,12 +35,12 @@ func Initialize(do *definitions.Do) error {
 	// If this is the first installation of eris, skip these checks.
 	if !newDir {
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
-			return nil
+			return err
 		}
 
 		log.Info("Checking if migration is required")
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
-			return nil
+			return err
 		}
 	}
 
@@ -96,19 +96,22 @@ line to the %s definition file.
 func initDefaultFiles() error {
 
 	for _, serviceName := range ServiceDefinitions {
-		if err := writeServiceDefinitionFile(serviceName); err != nil {
+		serviceDefinition := defaultServices(serviceName)
+		if err := WriteServiceDefinitionFile(serviceName, serviceDefinition); err != nil {
 			return err
 		}
 	}
 
 	for _, accountType := range AccountTypeDefinitions {
-		if err := writeAccountTypeDefinitionFile(accountType); err != nil {
+		accountDefinition := defaultAccountTypes(accountType)
+		if err := writeAccountTypeDefinitionFile(accountType, accountDefinition); err != nil {
 			return err
 		}
 	}
 
 	for _, chainType := range ChainTypeDefinitions {
-		if err := writeChainTypeDefinitionFile(chainType); err != nil {
+		chainDefinition := defaultChainTypes(chainType)
+		if err := writeChainTypeDefinitionFile(chainType, chainDefinition); err != nil {
 			return err
 		}
 	}
