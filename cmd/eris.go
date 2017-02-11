@@ -45,7 +45,7 @@ Complete documentation is available at https://monax.io/docs/documentation
 			return
 		}
 
-		util.DockerConnect(do.Verbose, do.MachineName)
+		util.DockerConnect(do.Verbose)
 		util.IpfsHost = config.Global.IpfsHost
 		util.IpfsPort = config.Global.IpfsPort
 
@@ -147,7 +147,6 @@ var do *definitions.Do
 func AddGlobalFlags() {
 	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
-	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
 }
 
 func InitializeConfig() {

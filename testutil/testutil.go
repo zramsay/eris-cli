@@ -57,7 +57,7 @@ func Init(args ...interface{}) (err error) {
 		IfExit(fmt.Errorf("Could not set global config"))
 	}
 
-	util.DockerConnect(false, "eris")
+	util.DockerConnect(false)
 
 	// Just connect.
 	if len(args) == 0 {

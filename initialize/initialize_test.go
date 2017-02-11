@@ -58,6 +58,7 @@ default_tokens = 1234
 
 default_bond = 0
 
+<<<<<<< 82e8fea23268c9c840cebe0e5219c133f8e5e1c2
 [perms]
 root = 0
 send = 0

@@ -19,7 +19,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	DockerConnect(false, "eris")
+	DockerConnect(false)
 
 	// Pull the necessary image.
 	PullImage(path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys), os.Stdout)

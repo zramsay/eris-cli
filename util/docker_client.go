@@ -22,14 +22,13 @@ import (
 // Docker Client initialization
 var DockerClient *docker.Client
 
-func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
+func DockerConnect(verbose bool) { // TODO: return an error...?
 	var err error
 	var dockerHost string
 	var dockerCertPath string
 
 	// This means we aren't gonna use docker-machine (kind of).
-	if (machName == "eris" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
-		//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
+	if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 		endpoint := "unix:///var/run/docker.sock"
 
 		log.WithField("=>", endpoint).Debug("Checking Linux Docker socket")
@@ -48,17 +47,17 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			"host":      os.Getenv("DOCKER_HOST"),
 			"cert path": os.Getenv("DOCKER_CERT_PATH"),
 		}).Debug("Getting connection details from environment")
-		log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
 
-		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
+		dockerHost, dockerCertPath, err = getMachineDeets("eris")
 		if err != nil {
-			log.Debug("Could not connect to Eris Docker Machine")
-			log.Errorf("Trying %q Docker Machine: %v", "default", err)
+			log.Warn(`Could not connect to "eris" Docker Machine:`)
+			log.Warn(fmt.Sprintf("\n%v", err))
+			log.Warn(`Trying "default" Docker Machine:`)
 			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
 			if err != nil {
-				log.Debugf("Could not connect to %q Docker Machine", "default")
-				log.Debugf("Error: %v", err)
-				log.Debug("Trying to set up new machine")
+				log.Warn(`Could not connect to "default" Docker Machine`)
+				log.Warn(fmt.Sprintf("\n%v", err))
+				log.Warn("Trying to set up new machine")
 				if e2 := CheckDockerClient(); e2 != nil {
 					IfExit(DockerError(e2))
 				}
@@ -72,7 +71,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug()
 
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
+			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS:\n\n%v", err))
 		}
 		log.Debug("Successfully connected to Docker daemon")
 
