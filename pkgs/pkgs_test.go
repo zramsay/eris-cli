@@ -1042,7 +1042,7 @@ func writeEmptyPkgJson() error {
 }
 
 func checkLinks(do *definitions.Do) error {
-	if do.LocalCompiler {
+	if !do.RemoteCompiler {
 		notFound := true
 		for _, srv := range do.ServicesSlice {
 			if srv == "compilers" {
@@ -1050,7 +1050,7 @@ func checkLinks(do *definitions.Do) error {
 			}
 		}
 		if notFound == true {
-			return fmt.Errorf("local compiler not placed into do.ServicesSlice")
+			return fmt.Errorf("remote compiler not placed into do.ServicesSlice")
 		}
 	}
 	for _, dep := range do.ServicesSlice {
