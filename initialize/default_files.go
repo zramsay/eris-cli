@@ -45,6 +45,7 @@ status = "{{ .Status}}"
 image = "{{ .Service.Image}}"
 data_container = {{ .Service.AutoData}}
 ports = {{ .Service.Ports}}
+user = "{{ .Service.User}}"
 exec_host = "{{ .Service.ExecHost}}"
 volumes = {{ .Service.Volumes}}
 
@@ -171,6 +172,7 @@ This eris service is all but essential as part of the eris tool. The [eris files
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
 		serviceDefinition.Service.ExecHost = "ERIS_IPFS_HOST"
+		serviceDefinition.Service.User = `"root"`
 
 	case "logrotate":
 
