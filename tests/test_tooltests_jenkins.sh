@@ -76,9 +76,9 @@ enviro() {
   echo
   docker version
   echo
-  eris clean --yes --containers --images --scratch
+  eris clean --yes --containers --images --scratch --dir
   eris version
-  eris init --yes --testing
+  eris init --yes
 }
 
 passed() {
