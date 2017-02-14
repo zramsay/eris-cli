@@ -1,139 +1,203 @@
 package initialize
 
 import (
-	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/eris-ltd/eris/definitions"
 )
 
-var erisDir = filepath.Join(os.TempDir(), "eris")
-var servDir = filepath.Join(erisDir, "services")
-var chnDir = filepath.Join(erisDir, "chains")
-var chnDefDir = filepath.Join(chnDir, "default")
+const serviceToNeverUseToml = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
 
-func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
-	// log.SetLevel(log.InfoLevel)
-	// log.SetLevel(log.DebugLevel)
+# These fields marshal roughly into the [docker run] command, see:
+# https://docs.docker.com/engine/reference/run/
 
-	ifExit(testsInit())
+# For more information on configurations, see the services specification:
+# https://monax.io/docs/documentation/cli/latest/services_specification/
 
-	exitCode := m.Run()
-	ifExit(testsTearDown())
-	os.Exit(exitCode)
-}
+name = "tester"
 
-func TestInitErisRootDir(t *testing.T) {
-	_, err := checkThenInitErisRoot(false)
+description = """
+This is for testing only.
+"""
+
+status = "do not use"
+
+[service]
+image = "cats"
+data_container = false
+ports = ["12:12"]
+user = ""
+exec_host = ""
+volumes = []
+
+[maintainer]
+name = "Marmotoshi"
+email = "burrow@rollachain.now"`
+
+const accountTypeToNeverUseToml = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "tester"
+
+description = """
+Use this account for all the people
+"""
+
+typical_user = """
+Everyone.
+"""
+
+default_number = 4
+
+default_tokens = 1234
+
+default_bond = 0
+
+[perms]
+root = 0
+send = 0
+call = 0
+create_contract = 0
+create_account = 0
+bond = 0
+name = 0
+has_base = 1
+set_base = 1
+unset_base = 1
+set_global = 1
+has_role = 1
+add_role = 1
+rm_role = 1`
+
+const chainTypeToNeverUseToml = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+name = "tester"
+
+description = """
+This is a description.
+"""
+
+[account_types]
+Full = 7
+Developer = 8
+Participant = 9
+Root = 101
+Validator = 2000
+
+[servers]
+
+[erismint]
+
+[tendermint]`
+
+func TestWriteServiceDefinitionFile(t *testing.T) {
+
+	const serviceName = "tester"
+	testFile := filepath.Join(config.ServicesPath, "tester.toml")
+
+	serviceDefinition := definitions.BlankServiceDefinition()
+	serviceDefinition.Name = "tester"
+	serviceDefinition.Description = "This is for testing only."
+	serviceDefinition.Status = "do not use"
+	serviceDefinition.Service.Image = "cats"
+	serviceDefinition.Service.AutoData = false
+	serviceDefinition.Service.Ports = []string{`"12:12"`}
+	serviceDefinition.Maintainer.Name = "Marmotoshi"
+	serviceDefinition.Maintainer.Email = "burrow@rollachain.now"
+
+	if err := WriteServiceDefinitionFile(serviceName, serviceDefinition); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(testFile)
+
+	fileBytes, err := ioutil.ReadFile(testFile)
 	if err != nil {
-		ifExit(err)
+		t.Fatal(err)
 	}
 
-	for _, dir := range []string{
-		config.AppsPath,
-		config.BundlesPath,
-		config.ChainsPath,
-		config.KeysPath,
-		config.RemotesPath,
-		config.ScratchPath,
-		config.ServicesPath,
-		config.KeysDataPath,
-		config.KeysNamesPath,
-	} {
-		if !util.DoesDirExist(dir) {
-			ifExit(fmt.Errorf("Could not find the %s subdirectory", dir))
-		}
+	if string(fileBytes) != serviceToNeverUseToml {
+		t.Fatalf("got %s, expected %s", string(fileBytes), serviceToNeverUseToml)
 	}
 }
 
-func TestDropServiceDefaults(t *testing.T) {
-	if err := testDrops(servDir, "services"); err != nil {
-		ifExit(fmt.Errorf("error dropping services: %v\n", err))
+func TestWriteAccountTypeDefinitionFile(t *testing.T) {
+
+	const accountTypeName = "tester"
+	testFile := filepath.Join(config.AccountsTypePath, "tester.toml")
+
+	accountDefinition := definitions.BlankAccountType()
+	accountDefinition.Name = "tester"
+	accountDefinition.Description = "Use this account for all the people"
+	accountDefinition.TypicalUser = "Everyone."
+
+	accountDefinition.DefaultNumber = 4
+	accountDefinition.DefaultTokens = 1234
+	accountDefinition.DefaultBond = 0
+	accountDefinition.Perms = map[string]int{
+		"root":            0,
+		"send":            0,
+		"call":            0,
+		"create_contract": 0,
+		"create_account":  0,
+		"bond":            0,
+		"name":            0,
+		"has_base":        1,
+		"set_base":        1,
+		"unset_base":      1,
+		"set_global":      1,
+		"has_role":        1,
+		"add_role":        1,
+		"rm_role":         1,
 	}
-}
 
-func testDrops(dir, kind string) error {
-	var dirGit = filepath.Join(dir, "git")
-
-	if err := os.MkdirAll(dirGit, 0777); err != nil {
-		ifExit(err)
+	if err := writeAccountTypeDefinitionFile(accountTypeName, accountDefinition); err != nil {
+		t.Fatal(err)
 	}
+	defer os.Remove(testFile)
 
-	switch kind {
-	case "services":
-		if err := dropServiceDefaults(dirGit, version.SERVICE_DEFINITIONS); err != nil {
-			ifExit(err)
-		}
-	}
-
-	readDirs(dirGit)
-
-	return nil
-}
-
-func readDirs(dirGit string) {
-	_, err := ioutil.ReadDir(dirGit)
+	fileBytes, err := ioutil.ReadFile(testFile)
 	if err != nil {
-		ifExit(err)
+		t.Fatal(err)
+	}
+
+	if string(fileBytes) != accountTypeToNeverUseToml {
+		t.Fatalf("got %s, expected %s", string(fileBytes), accountTypeToNeverUseToml)
 	}
 }
 
-func testsInit() error {
-	config.ChangeErisRoot(erisDir)
+func TestWriteChainTypeDefinitionFile(t *testing.T) {
 
-	var err error
-	config.Global, err = config.New(os.Stdout, os.Stderr)
+	const chainTypeName = "tester"
+	testFile := filepath.Join(config.ChainTypePath, "tester.toml")
+
+	chainTypeDefinition := definitions.BlankChainType()
+	chainTypeDefinition.Name = "tester"
+	chainTypeDefinition.Description = "This is a description."
+	chainTypeDefinition.AccountTypes = map[string]int{
+		"Full":        7,
+		"Developer":   8,
+		"Participant": 9,
+		"Root":        101,
+		"Validator":   2000,
+	}
+
+	if err := writeChainTypeDefinitionFile(chainTypeName, chainTypeDefinition); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(testFile)
+
+	fileBytes, err := ioutil.ReadFile(testFile)
 	if err != nil {
-		ifExit(fmt.Errorf("TRAGIC. Could not set global config.\n"))
+		t.Fatal(err)
 	}
 
-	util.DockerConnect(false, "eris")
-
-	log.Info("Test init completed. Starting main test sequence now")
-	return nil
-
-}
-
-func testsCompareFiles(path1, path2 string) error {
-	//skip dirs
-	if util.DoesDirExist(path1) || util.DoesDirExist(path2) {
-		return nil
-	}
-	file1, err := ioutil.ReadFile(path1)
-	if err != nil {
-		return err
-	}
-
-	file2, err := ioutil.ReadFile(path2)
-	if err != nil {
-		return err
-	}
-
-	if !bytes.Equal(file1, file2) {
-		return fmt.Errorf("Error: Got %s\nExpected %s", string(file1), string(file1))
-	}
-	return nil
-}
-
-func testsTearDown() error {
-	return os.RemoveAll(erisDir)
-}
-
-//copied from testutils
-func ifExit(err error) {
-	if err != nil {
-		log.Error(err)
-		if err := testsTearDown(); err != nil {
-			log.Error(err)
-		}
-		os.Exit(1)
+	if string(fileBytes) != chainTypeToNeverUseToml {
+		t.Fatalf("got %s, expected %s", string(fileBytes), chainTypeToNeverUseToml)
 	}
 }

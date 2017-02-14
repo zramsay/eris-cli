@@ -49,7 +49,7 @@ type Service struct {
 	MemLimit int64 `mapstructure:"mem_limit" json:"memory,omitempty,omitzero" yaml:"memory,omitempty" toml:"memory,omitempty,omitzero"`
 
 	// an env variable to set for when we are running `eris exec` so we can find the main container
-	ExecHost string `mapstructure:"exec_host" json:"memory,omitempty,omitzero" yaml:"memory,omitempty" toml:"memory,omitempty,omitzero"`
+	ExecHost string `mapstructure:"exec_host" json:"exec_host,omitempty,omitzero" yaml:"exec_host,omitempty" toml:"exec_host,omitempty,omitzero"`
 }
 
 func BlankService() *Service {

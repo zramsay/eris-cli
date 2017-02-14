@@ -38,7 +38,6 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsCurrent)
@@ -160,18 +159,6 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
 }
 
-var chainsNew = &cobra.Command{
-	Use:   "new NAME",
-	Short: "initialize a new chain",
-	Long: `initialize a new chain
-
-This command has been replaced by [eris chains start --init-dir].
-
-Please update any scripts that rely on [eris chains new].`,
-	Deprecated: "it has been replaced by [eris chains start NAME --init-dir]",
-	Run:        StartChain,
-}
-
 var chainsStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start an existing chain or initialize a new one",
@@ -289,13 +276,6 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
-
-	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	buildFlag(chainsNew, do, "publish", "chain")
-	buildFlag(chainsNew, do, "ports", "chain")
-	buildFlag(chainsNew, do, "env", "chain")
-	buildFlag(chainsNew, do, "links", "chain")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")

@@ -78,13 +78,6 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 // LoadViper reads the definition file pointed to by
 // the definitionPath path and definitionName filename.
 func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
-	var errKnown string
-	switch definitionPath {
-	case ServicesPath:
-		errKnown = fmt.Sprintf(`
-
-List available definitions with the [eris %s ls --known] command`, filepath.Base(definitionPath))
-	}
 
 	// Don't use ReadInConfig() for checking file existence because
 	// is error is too murky (e.g.:it doesn't say "file not found").
@@ -92,15 +85,18 @@ List available definitions with the [eris %s ls --known] command`, filepath.Base
 	// Don't use os.Stat() for checking file existence because there might
 	// be a selection of supported definition files, e.g.: keys.toml,
 	// keys.json, keys.yaml, etc.
+
 	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
-		return nil, fmt.Errorf("Unable to find the %q definition: %v%s", definitionName, os.ErrNotExist, errKnown)
+		errKnown := fmt.Sprintf("List available definitions with the [eris %s ls --known] command", filepath.Base(definitionPath))
+		return nil, fmt.Errorf("Unable to find the %q definition: %v\n\n%s", definitionName, os.ErrNotExist, errKnown)
 	}
 
 	conf := viper.New()
 	conf.AddConfigPath(definitionPath)
 	conf.SetConfigName(definitionName)
 	if err := conf.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("Unable to load the %q definition: %v%s", definitionName, err, errKnown)
+		// [zr] this error to deduplicate with loaders/services.go:66 in #468
+		return nil, fmt.Errorf("Formatting error with your %q definition:\n\n%v", definitionName, err)
 	}
 
 	return conf, nil
