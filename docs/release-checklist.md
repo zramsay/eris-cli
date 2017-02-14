@@ -1,11 +1,9 @@
 # eris:cli
 - [ ] Agree on a version to which the #develop branch will be bumped
-- [ ] execute eris:keys's release checklist
-- [ ] execute eris:cm's release checklist
-- [ ] execute eris:db's release checklist
-- [ ] execute eris:compiler's release checklist
-- [ ] execute eris:pm's release checklist
-- [ ] execute eris:release_script checklist
+- [ ] execute keys's release checklist
+- [ ] execute db's release checklist
+- [ ] execute compiler's release checklist
+- [ ] execute release_script checklist
 - [ ] draft a [PR](#draft-a-release-pr) from eris-cli:develop to eris-cli:master on Github.
 - [ ] when tests are stable, merge the PR to master
 - [ ] [tag](#tag-the-release) the release with a changelog
@@ -34,27 +32,6 @@
 - [ ] [tag](#tag-the-release) the release with a changelog
 - [ ] once tests pass ensure images pushed
 - [ ] version bump develop
-
-# eris:chain_manager
-- [ ] ensure circle-ci tests against cli:master
-- [ ] [draft](#draft-a-release-pr) a PR from develop to master
-- [ ] merge develop to master
-- [ ] [tag](#tag-the-release) the release with a changelog
-- [ ] once tests pass ensure images pushed
-- [ ] version bump develop
-
-# eris:package_manager
-- [ ] ensure develop is green and has pushed a docker image with develop's version
-- [ ] make sure usage on readme is updated
-- [ ] execute eris:compiler's release checklist
-- [ ] ensure circle.yaml tests against cli:master (subsequent push may fail; allow)
-- [ ] [draft](#draft-a-release-pr) a PR from develop to master
-- [ ] merge develop to master (subsequent build may fail; allow)
-- [ ] [tag](#tag-the-release) the release with a changelog
-- [ ] execute eris:cli release checklist
-- [ ] rerun master to ensure green
-- [ ] version bump develop
-- [ ] ensure green
 
 # eris:compilers
 - [ ] ensure circle-ci tests against cli:master
