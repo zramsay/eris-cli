@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const LogFileNameCSV = "epm.csv"
+const LogFileNameCSV = "jobs_output.csv"
 const LogFileNameJSON = "jobs_output.json"
 
 func ClearJobResults() error {

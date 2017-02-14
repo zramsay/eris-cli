@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 library basicMath {
 	function add(uint x, uint y) returns (uint z) {
 		z = x + y;

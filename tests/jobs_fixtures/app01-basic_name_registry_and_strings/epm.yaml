@@ -33,6 +33,8 @@ jobs:
     register:
       name: marmots
       data: love_eris
+      amount: $to_save
+      fee: $MinersFee
 
 - name: queryReg1
   job:

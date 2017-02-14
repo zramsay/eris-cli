@@ -12,6 +12,11 @@ type Request struct {
 	FileReplacement map[string]string         `json:"replacement"`
 }
 
+type BinaryRequest struct {
+	BinaryFile string `json:"binary"`
+	Libraries  string `json:"libraries"`
+}
+
 // this handles all of our imports
 type IncludedFiles struct {
 	ObjectNames []string `json:"objectNames"` //objects in the file

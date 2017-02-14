@@ -1,6 +1,7 @@
 package perform
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -21,6 +22,11 @@ type Response struct {
 	Warning string         `json:"warning"`
 	Version string         `json:"version"`
 	Error   string         `json:"error"`
+}
+
+type BinaryResponse struct {
+	Binary string `json:"binary"`
+	Error  string `json:"error"`
 }
 
 // Compile response object
@@ -53,6 +59,44 @@ func (resp Response) CacheNewResponse(req definitions.Request) {
 			}
 		}
 	}
+}
+
+func linkBinaries(req *definitions.BinaryRequest) *BinaryResponse {
+	// purely for solidity and solidity alone as this is soon to be deprecated.
+	if req.Libraries == "" {
+		return &BinaryResponse{
+			Binary: req.BinaryFile,
+			Error:  "",
+		}
+	}
+
+	buf := bytes.NewBufferString(req.BinaryFile)
+	var output bytes.Buffer
+	var stderr bytes.Buffer
+	linkCmd := exec.Command("solc", "--link", "--libraries", req.Libraries)
+	linkCmd.Stdin = buf
+	linkCmd.Stderr = &stderr
+	linkCmd.Stdout = &output
+	linkCmd.Start()
+	linkCmd.Wait()
+
+	return &BinaryResponse{
+		Binary: strings.TrimSpace(output.String()),
+		Error:  stderr.String(),
+	}
+}
+
+func RequestBinaryLinkage(url string, file string, libraries string) (*BinaryResponse, error) {
+	//Create Binary Request, send it off
+	code, err := ioutil.ReadFile(file)
+	if err != nil {
+		return &BinaryResponse{}, err
+	}
+	request := &definitions.BinaryRequest{
+		BinaryFile: string(code),
+		Libraries:  libraries,
+	}
+	return requestBinaryResponse(request, url)
 }
 
 //todo: Might also need to add in a map of library names to addrs
