@@ -112,32 +112,38 @@ setup() {
 }
 
 packagesToTest() {
+  fail="false"
   if [[ "$SKIP_PACKAGES" != "true" ]]
   then
-    go test ./initialize/... -v -timeout 20m && passed Initialize
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./util/... -v -timeout 20m && passed Util
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./config/... -v -timeout 20m && passed Config
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./loaders/... -v -timeout 20m && passed Loaders
-    if [ $? -ne 0 ]; then return 1; fi
+    go test ./initialize/... -v && passed Initialize
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./util/... -v && passed Util
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./config/... -v && passed Config
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./loaders/... -v && passed Loaders
+    if [ $? -ne 0 ]; then fail="true"; fi
     go test ./perform/... -v -timeout 20m && passed Perform
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./data/... -v -timeout 20m && passed Data
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./files/... -v -timeout 20m && passed Files
-    if [ $? -ne 0 ]; then return 1; fi
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./data/... -v && passed Data
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./files/... -v && passed Files
+    if [ $? -ne 0 ]; then fail="true"; fi
     go test ./services/... -v -timeout 20m && passed Services
-    if [ $? -ne 0 ]; then return 1; fi
+    if [ $? -ne 0 ]; then fail="true"; fi
     go test ./chains/... -v -timeout 20m && passed Chains
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./keys/... -v -timeout 20m && passed Keys
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./pkgs/... -v -timeout 20m && passed Packages
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./clean/... -v -timeout 20m && passed Clean
-    if [ $? -ne 0 ]; then return 1; fi
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./keys/... -v && passed Keys
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./pkgs/... -v && passed Packages
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./clean/... -v && passed Clean
+    if [ $? -ne 0 ]; then fail="true"; fi
+
+    if [ $fail = "true" ]
+    then
+      return 1
+    fi
   fi
   # The appveyor.yml and circle.yml currently use SKIP_PACKAGES and 
   # SKIP_STACK to parallelize Go and stack tests; otherwise this is 

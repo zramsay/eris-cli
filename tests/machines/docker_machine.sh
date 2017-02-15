@@ -30,36 +30,9 @@ function sleeper() {
 # ----------------------------------------------------------------------------
 # Build eris in a docker images
 
-# build docker images; runs as background process
-function build_eris() {
-  echo "Building eris in a docker container."
-  cd $repo
-  export BRANCH=$1
-  tests/build_tool.sh &>/dev/null
-  if [ $? -ne 0 ]
-  then
-    exit 1
-  fi
-  exit 0
-}
-
 # ensure eris image builds; machines built; and machines can be connected to
 function check_build() {
   echo
-  if [ "$build_result" -ne 0 ] && [ -z $1 ]
-  then
-    echo "Could not build eris image. Rebuilding eris image."
-    sleep 5
-    build_eris $BRANCH &
-    wait $!
-    build_result=$?
-    check_build "rebuild"
-  elif [ "$build_result" -ne 0 ] && [ ! -z $1 ]
-  then
-    echo "Failure building eris image. Debug via by directly running [`pwd`/tests/build_tool.sh]. Exiting tests."
-    remove_machine
-    exit 1
-  fi
 
   if [ -z $1 ]
   then 
