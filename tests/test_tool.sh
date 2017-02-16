@@ -129,7 +129,7 @@ packagesToTest() {
     if [ $? -ne 0 ]; then fail="true"; fi
     go test ./files/... -v && passed Files
     if [ $? -ne 0 ]; then fail="true"; fi
-    go test ./services/... -v -timeout 20m && passed Services
+    go test ./services/... -v && passed Services
     if [ $? -ne 0 ]; then fail="true"; fi
     go test ./chains/... -v -timeout 20m && passed Chains
     if [ $? -ne 0 ]; then fail="true"; fi
