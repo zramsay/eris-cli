@@ -263,7 +263,7 @@ perform_tests(){
 }
 
 test_teardown(){
-  if [ "$ci" = false ]
+  if [ -z "$ci" ]
   then
     echo
     if [ "$was_running" -eq 0 ]
