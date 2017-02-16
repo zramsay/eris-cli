@@ -49,7 +49,6 @@ BRANCH=${BRANCH/\//_}
 
 # Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="$GOPATH/src/github.com/eris-ltd/eris/tests/test_tool.sh"
-testimage=quay.io/eris/eris
 testuser=eris
 remotesocket=2376
 hostsocket=6732
