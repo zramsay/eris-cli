@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"data", "db", "keys", "quay.io/eris/compilers"},
+		Images:   []string{"data", "db", "keys", "compilers"},
 		Services: []string{"keys", "ipfs", "compilers"},
 	}))
 
