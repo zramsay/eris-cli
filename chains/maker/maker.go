@@ -101,12 +101,12 @@ func makeRaw(do *definitions.Do, typ string) error {
 
 func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.ErisDBAccountType) error {
 	var err error
-	do.Accounts, err = MakeAccounts(do.Name, consensus_type, accountTypes)
+	accounts, err := MakeAccounts(do.Name, consensus_type, accountTypes)
 	if err != nil {
 		return err
 	}
 
-	return MakeErisDBChain(do.Name, do.SeedsIP, do.Accounts, do.ChainImageName,
+	return MakeErisDBChain(do.Name, do.SeedsIP, accounts, do.ChainImageName,
 		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint)
 }
 
