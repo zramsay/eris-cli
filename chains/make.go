@@ -79,11 +79,6 @@ func MakeChain(do *definitions.Do) error {
 			return err
 		}
 	}
-	if do.Output {
-		if err := maker.SaveAccountResults(do); err != nil {
-			return err
-		}
-	}
 
 	// put at end so users see it after any verbose/debug logs
 	if len(do.AccountTypes) > 0 {

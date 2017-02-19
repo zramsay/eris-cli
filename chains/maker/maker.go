@@ -33,8 +33,10 @@ func MakeChain(do *definitions.Do) error {
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
 	default:
-		return fmt.Errorf("bad")
+		// TODO: [ben] construct the switch statement to be logically complete.
+		return fmt.Errorf("Unexpected configuration encountered while attempting to make a chain. Please contact the support@monax.io.")
 	}
+
 	return nil
 }
 
@@ -101,13 +103,26 @@ func makeRaw(do *definitions.Do, typ string) error {
 
 func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.ErisDBAccountType) error {
 	var err error
-	accounts, err := MakeAccounts(do.Name, consensus_type, accountTypes)
+	// make the accountConstructor slice bases on the accountTypes
+	accounts, err := MakeAccounts(do.Name, consensus_type, accountTypes, do.Unsafe)
 	if err != nil {
 		return err
 	}
 
-	return MakeErisDBChain(do.Name, do.SeedsIP, accounts, do.ChainImageName,
-		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint)
+	// use the accountConstructors to write the necessary files (config, genesis and private validator) per node
+	if err = MakeErisDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
+			do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
+		return err
+	}
+
+	// write out the overview files on the host: accounts.csv, validators.csv (and *unsafe* accounts.json)
+	if do.Output {
+		if err = SaveAccountResults(do, accounts); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {
