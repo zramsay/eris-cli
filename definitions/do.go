@@ -112,9 +112,6 @@ type Do struct {
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
 
-	// stuff from maker
-	Accounts []*ErisDBAccount
-
 	// service definitions for maker config.toml
 	ChainImageName      string
 	UseDataContainer    bool
