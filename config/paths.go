@@ -250,19 +250,6 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func WriteFile(data, path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0775); err != nil {
-		return err
-	}
-	writer, err := os.Create(filepath.Join(path))
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	writer.Write([]byte(data))
-	return nil
-}
-
 func Editor(file string) error {
 	editr := os.Getenv("EDITOR")
 	if strings.Contains(editr, "/") {
