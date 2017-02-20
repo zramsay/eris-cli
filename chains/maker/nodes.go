@@ -44,7 +44,7 @@ func MakeErisDBNodes(chainName string, seeds []string, accounts []*ErisDBAccount
 	}
 
 	// generate the json bytes for the genesis file which are unique for all nodes.
-	genesisFileBytes, err := genesis.GenerateGenesisDoc(chainName, genesisAccounts, genesisValidators)
+	genesisFileBytes, err := genesis.GenerateGenesisFileBytes(chainName, genesisAccounts, genesisValidators)
 	if err != nil {
 		return err
 	}

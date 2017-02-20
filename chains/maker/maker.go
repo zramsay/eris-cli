@@ -32,6 +32,21 @@ func MakeChain(do *definitions.Do) error {
 	case do.Wizard == true:
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
+	case do.Known == true:
+		log.Info("Making chain from known accounts and validators")
+		log.WithField("=>", do.ChainMakeActs).Info("Accounts path")
+		log.WithField("=>", do.ChainMakeVals).Info("Validators path")
+
+		genesisFileString, err := genesis.GenerateKnown(do.Name, do.ChainMakeActs, do.ChainMakeVals)
+		if err != nil {
+			return err
+		}
+		fmt.Println(genesisFileString)
+		// write to assumed location (maybe check if one is there?)
+		// there's nothing else to do, since all the accounts/vals
+		// were already generated
+		return nil
+	}
 	default:
 		// TODO: [ben] construct the switch statement to be logically complete.
 		return fmt.Errorf("Unexpected configuration encountered while attempting to make a chain. Please contact the support@monax.io.")
