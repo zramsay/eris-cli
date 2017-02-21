@@ -66,7 +66,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 				accountConstructor, err := newErisDBAccountConstructor(accountName, "ed25519,ripemd160",
 					accountType, false, unsafe)
 				if err != nil {
-					return nil, fmt.Errorf("Failed to construct account %s for %s", accountName, name)
+					return nil, fmt.Errorf("Failed to construct account %s for %s: %v", accountName, name, err)
 				}
 				// add the account constructor to the return slice
 				accountConstructors = append(accountConstructors, accountConstructor)
@@ -112,12 +112,22 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 		// NOTE: [ben] these auxiliary fields in the constructor are to be deprecated
 		// but introduced to support current unsafe behaviour where all private keys
 		// are extracted from eris-keys
-		copy(accountConstructor.untypedPublicKeyBytes, publicKeyBytes)
+		accountConstructor.untypedPublicKeyBytes = make([]byte, len(publicKeyBytes)) 
+		copy(accountConstructor.untypedPublicKeyBytes[:], publicKeyBytes[:])
 		// tendermint/go-crypto typebyte for ed25519
 		accountConstructor.typeBytePublicKey = byte(0x01)
 
-		if unsafe {
-			copy(accountConstructor.untypedPrivateKeyBytes, genesisPrivateValidator.PrivKey.Bytes())
+		if unsafe && genesisPrivateValidator != nil {
+			// NOTE: [ben] this is a round-about way to not include tendermints crypto-types
+			// before we deprecate private_validator files
+			if privateKeyString, ok := genesisPrivateValidator.PrivKey[1].(string); ok {
+				if privateKeyBytes, err := hex.DecodeString(privateKeyString); err != nil {
+					return  nil, err
+				} else {
+					accountConstructor.untypedPrivateKeyBytes = make([]byte, len(privateKeyBytes))
+					copy(accountConstructor.untypedPrivateKeyBytes[:], privateKeyBytes[:])
+				}
+			}
 		}
 	default:
 		// the other code paths in eris-keys are currently not tested for;
@@ -185,12 +195,19 @@ func generateAddressAndKey(keyAddressType string, blockPrivateValidator bool) (a
 	}
 
 	if !blockPrivateValidator {
-		// TODO: [ben] check that empty byte slice returns error and does not unmarshal into
-		// zero GenesisPrivateValidator type
-		if err = json.Unmarshal(privateValidatorJson, genesisPrivateValidator); err != nil {
-			log.Error(string(privateValidatorJson))
-			return
-		}
+		if privateValidatorJson != nil {
+			genesisPrivateValidator = new(genesis.GenesisPrivateValidator)
+			if err = json.Unmarshal(privateValidatorJson, genesisPrivateValidator); err != nil {
+				log.Error(string(privateValidatorJson))
+				return
+			}
+			// TODO: [ben] this is a hack, because the response from eris keys has a wrongly recoded
+			// address that is provided as the original input; as we look to deprecate priv_validator
+			// on v0.17 this can simply be patched for now.
+			genesisPrivateValidator.Address = fmt.Sprintf("%X", address)
+		} else {
+			genesisPrivateValidator = nil
+		} 
 	}
 
 	return
