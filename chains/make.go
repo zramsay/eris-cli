@@ -1,7 +1,6 @@
 package chains
 
 import (
-	"fmt"
 	"path"
 	"strconv"
 	"strings"
@@ -11,8 +10,6 @@ import (
 	"github.com/eris-ltd/eris/definitions"
 	"github.com/eris-ltd/eris/keys"
 	"github.com/eris-ltd/eris/log"
-
-	"github.com/eris-ltd/eris-db/genesis"
 )
 
 // TODO [zr] re-write
@@ -39,22 +36,6 @@ func MakeChain(do *definitions.Do) error {
 
 	// announce.
 	log.Info("Hello! I'm the marmot who makes eris chains.")
-
-	if do.Known {
-		log.Warn("Creating chain from known accounts and validators")
-		log.WithField("=>", do.ChainMakeActs).Info("Accounts path")
-		log.WithField("=>", do.ChainMakeVals).Info("Validators path")
-
-		genesisFileString, err := genesis.GenerateKnown(do.Name, do.ChainMakeActs, do.ChainMakeVals)
-		if err != nil {
-			return err
-		}
-		fmt.Println(genesisFileString)
-		// write to assumed location (maybe check if one is there?)
-		// there's nothing else to do, since all the accounts/vals
-		// were already generated
-		return nil
-	}
 
 	// set infos
 	// do.Name; already set
