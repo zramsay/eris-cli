@@ -67,7 +67,7 @@ contract Permissions {
 
 contract permSNative {
   // github.com/eris-ltd/eris-db/permission/types/snatives.go#L17
-  Permissions perm = Permissions(address(bytes11("Permissions")));
+  Permissions perm = Permissions(address(sha3("Permissions")));
 
   function hasBase(address addr, uint64 permFlag) constant returns (uint64) {
     return perm.hasBase(addr, permFlag);
