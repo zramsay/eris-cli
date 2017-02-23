@@ -36,13 +36,13 @@ create_contract = 1
 create_account = 1
 bond = 0
 name = 1
-has_base = 0
-set_base = 0
-unset_base = 0
-set_global = 0
-has_role = 1
-add_role = 1
-rm_role = 1
+hasBase = 0
+setBase = 0
+unsetBase = 0
+setGlobal = 0
+hasRole = 1
+addRole = 1
+removeRole = 1
 `
 }
 
@@ -81,13 +81,13 @@ create_contract = 1
 create_account = 1
 bond = 1
 name = 1
-has_base = 1
-set_base = 1
-unset_base = 1
-set_global = 1
-has_role = 1
-add_role = 1
-rm_role = 1
+hasBase = 1
+setBase = 1
+unsetBase = 1
+setGlobal = 1
+hasRole = 1
+addRole = 1
+removeRole = 1
 `
 }
 
@@ -124,13 +124,13 @@ create_contract = 0
 create_account = 0
 bond = 0
 name = 1
-has_base = 0
-set_base = 0
-unset_base = 0
-set_global = 0
-has_role = 1
-add_role = 0
-rm_role = 0
+hasBase = 0
+setBase = 0
+unsetBase = 0
+setGlobal = 0
+hasRole = 1
+addRole = 0
+removeRole = 0
 `
 }
 
@@ -170,13 +170,13 @@ create_contract = 1
 create_account = 1
 bond = 1
 name = 1
-has_base = 1
-set_base = 1
-unset_base = 1
-set_global = 1
-has_role = 1
-add_role = 1
-rm_role = 1
+hasBase = 1
+setBase = 1
+unsetBase = 1
+setGlobal = 1
+hasRole = 1
+addRole = 1
+removeRole = 1
 `
 }
 
@@ -216,12 +216,12 @@ create_contract = 0
 create_account = 0
 bond = 1
 name = 0
-has_base = 0
-set_base = 0
-unset_base = 0
-set_global = 0
-has_role = 0
-add_role = 0
-rm_role = 0
+hasBase = 0
+setBase = 0
+unsetBase = 0
+setGlobal = 0
+hasRole = 0
+addRole = 0
+removeRole = 0
 `
 }
