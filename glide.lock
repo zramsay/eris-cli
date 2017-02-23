@@ -64,7 +64,7 @@ imports:
   - perform
   - util
 - name: github.com/eris-ltd/eris-db
-  version: adb1232f1d68b8271bd33b444ce3e541934c28f6
+  version: 50e0a5e0519b71a3366655af95ab2cb3648d9568
   subpackages:
   - account
   - client
