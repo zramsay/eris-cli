@@ -38,7 +38,7 @@ import:
   subpackages:
   - perform
 - package: github.com/eris-ltd/eris-db
-  version: develop
+  version: release-0.16
   subpackages:
   - client
   - client/rpc

@@ -94,13 +94,13 @@ func AccountTypeManualPerms() []string {
 		"create_account",
 		"bond",
 		"name",
-		"has_base",
-		"set_base",
-		"unset_base",
-		"set_global",
-		"has_role",
-		"add_role",
-		"rm_role",
+		"hasBase",
+		"setBase",
+		"unsetBase",
+		"setGlobal",
+		"hasRole",
+		"addRole",
+		"removeRole",
 	}
 }
 
