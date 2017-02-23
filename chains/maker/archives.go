@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/eris-ltd/eris/config"
 	"github.com/eris-ltd/eris/definitions"
@@ -15,8 +16,7 @@ import (
 )
 
 func Tarball(do *definitions.Do) error {
-
-	paths, err := filepath.Glob(filepath.Join(config.ChainsPath, do.Name, "*"))
+	paths, err := filepath.Glob(filepath.Join(config.ChainsPath, do.Name, strings.ToLower(do.Name)+"_*_*"))
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func Tarball(do *definitions.Do) error {
 	for _, path := range paths {
 		fileP := fmt.Sprintf("%s.tar.gz", path)
 		log.WithFields(log.Fields{
-			// "path": path,
+			"path": path,
 			"file": fileP,
 		}).Debug("Making A Tarball")
 
@@ -33,12 +33,10 @@ func Tarball(do *definitions.Do) error {
 			return err
 		}
 		defer dir.Close()
-
 		files, err := dir.Readdir(0) // grab the files list
 		if err != nil {
 			return err
 		}
-
 		tarfile, err := os.Create(fileP)
 		if err != nil {
 			return err

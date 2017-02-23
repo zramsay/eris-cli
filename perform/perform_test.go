@@ -18,7 +18,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.WarnLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
@@ -1771,7 +1771,7 @@ func TestLogsFollow(t *testing.T) {
 	}
 }
 
-func TestLogsTail(t *testing.T) {
+/*func TestLogsTail(t *testing.T) {
 	const (
 		name = "ipfs"
 		tail = "100"
@@ -1806,7 +1806,7 @@ func TestLogsTail(t *testing.T) {
 	if !strings.Contains(buf.String(), "Starting IPFS") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
-}
+}*/
 
 func TestLogsTail0(t *testing.T) {
 	const (
