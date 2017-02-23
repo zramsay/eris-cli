@@ -11,9 +11,10 @@ import (
 	"github.com/eris-ltd/eris/definitions"
 	"github.com/eris-ltd/eris/log"
 
-	"github.com/BurntSushi/toml"
 	configurationFile "github.com/eris-ltd/eris-db/config"
 	"github.com/eris-ltd/eris-db/genesis"
+
+	"github.com/BurntSushi/toml"
 )
 
 // XXX: this is temporary until eris-keys.js is more tightly integrated with eris-contracts.js

@@ -123,10 +123,10 @@ func makeRaw(do *definitions.Do, typ string) error {
 	return maker(do, "mint", accountTypes)
 }
 
-func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.ErisDBAccountType) error {
+func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.ErisDBAccountType) error {
 	var err error
 	// make the accountConstructor slice bases on the accountTypes
-	accounts, err := MakeAccounts(do.Name, consensus_type, accountTypes, do.Unsafe)
+	accounts, err := MakeAccounts(do.Name, consensusType, accountTypes, do.Unsafe)
 	if err != nil {
 		return err
 	}

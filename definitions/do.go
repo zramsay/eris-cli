@@ -27,11 +27,6 @@ type Do struct {
 	Dump           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RemoteCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Save           bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	// NOTE: [ben] the unsafe flag is introduced to start pushing out bad
-	// practices from the tooling with regards to extracting private keys
-	// from eris-keys.  Extracting the private keys can be convenient for
-	// the development and poc phase, but must be deprecated even in that
-	// case.
 	Unsafe         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Wizard         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines          int      `mapstructure:"," json:"," yaml:"," toml:","`
