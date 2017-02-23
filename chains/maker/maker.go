@@ -11,6 +11,8 @@ import (
 	"github.com/eris-ltd/eris/loaders"
 	"github.com/eris-ltd/eris/log"
 	"github.com/eris-ltd/eris/util"
+
+	"github.com/eris-ltd/eris-db/genesis"
 )
 
 var (
@@ -27,14 +29,36 @@ func MakeChain(do *definitions.Do) error {
 		log.Info("Making chain using chain type paradigm.")
 		return makeRaw(do, "chaintype")
 	case do.CSV != "":
+		// TODO: [ben] if do.CSV is a dead-code path, then realign it with
+		// do.Known
 		log.Info("Making chain using csv type paradigm.")
 		return makeRaw(do, "csv")
 	case do.Wizard == true:
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
+	case do.Known == true:
+		// TODO: [ben] do.Known needs to become the default way to generate the config
+		// and genesis files from a set of known public keys; so follow the same logic
+		// and go over makeRaw(do, "known"); and construct the account constructors
+		// from the known csv files.
+		log.Info("Making chain from known accounts and validators")
+		log.WithField("=>", do.ChainMakeActs).Info("Accounts path")
+		log.WithField("=>", do.ChainMakeVals).Info("Validators path")
+
+		genesisFileString, err := genesis.GenerateKnown(do.Name, do.ChainMakeActs, do.ChainMakeVals)
+		if err != nil {
+			return err
+		}
+		fmt.Println(genesisFileString)
+		// write to assumed location (maybe check if one is there?)
+		// there's nothing else to do, since all the accounts/vals
+		// were already generated
+		return nil
 	default:
-		return fmt.Errorf("bad")
+		// TODO: [ben] construct the switch statement to be logically complete.
+		return fmt.Errorf("Unexpected configuration encountered while attempting to make a chain. Please contact the support@monax.io.")
 	}
+
 	return nil
 }
 
@@ -99,15 +123,28 @@ func makeRaw(do *definitions.Do, typ string) error {
 	return maker(do, "mint", accountTypes)
 }
 
-func maker(do *definitions.Do, consensus_type string, accountTypes []*definitions.ErisDBAccountType) error {
+func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.ErisDBAccountType) error {
 	var err error
-	do.Accounts, err = MakeAccounts(do.Name, consensus_type, accountTypes)
+	// make the accountConstructor slice bases on the accountTypes
+	accounts, err := MakeAccounts(do.Name, consensusType, accountTypes, do.Unsafe)
 	if err != nil {
 		return err
 	}
 
-	return MakeErisDBChain(do.Name, do.SeedsIP, do.Accounts, do.ChainImageName,
-		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint)
+	// use the accountConstructors to write the necessary files (config, genesis and private validator) per node
+	if err = MakeErisDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
+			do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
+		return err
+	}
+
+	// write out the overview files on the host: accounts.csv, validators.csv (and *unsafe* accounts.json)
+	if do.Output {
+		if err = SaveAccountResults(do, accounts); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {

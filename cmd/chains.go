@@ -289,6 +289,12 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
+	// NOTE: [ben] the unsafe flag is introduced to start pushing out bad
+	// practices from the tooling with regards to extracting private keys
+	// from eris-keys.  Extracting the private keys can be convenient for
+	// the development and poc phase, but must be deprecated even in that
+	// case.
+	chainsMake.PersistentFlags().BoolVarP(&do.Unsafe, "unsafe", "", false, "require explicit confirmation to write private keys from eris-keys to host during make in accounts.json")
 
 	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
 	buildFlag(chainsNew, do, "publish", "chain")

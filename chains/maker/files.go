@@ -11,6 +11,9 @@ import (
 	"github.com/eris-ltd/eris/definitions"
 	"github.com/eris-ltd/eris/log"
 
+	configurationFile "github.com/eris-ltd/eris-db/config"
+	"github.com/eris-ltd/eris-db/genesis"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -21,7 +24,7 @@ type accountInfo struct {
 	PrivKey string `mapstructure:"privKey" json:"privKey" yaml:"privKey" toml:"privKey"`
 }
 
-func SaveAccountResults(do *definitions.Do) error {
+func SaveAccountResults(do *definitions.Do, accounts []*ErisDBAccountConstructor) error {
 	addrFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "addresses.csv"))
 	if err != nil {
 		return fmt.Errorf("Error creating addresses file. This usually means that there was a problem with the chain making process.")
@@ -52,29 +55,40 @@ func SaveAccountResults(do *definitions.Do) error {
 
 	accountJsons := make(map[string]*accountInfo)
 
-	for _, account := range do.Accounts {
-		accountJsons[account.Name] = &accountInfo{
-			Address: account.Address,
-			PubKey:  account.PubKey,
-			PrivKey: account.MintKey.PrivKey[1].(string),
-		}
+	for _, accountConstructor := range accounts {
+		if accountConstructor.genesisAccount != nil {
+			address := fmt.Sprintf("%X", accountConstructor.genesisAccount.Address)
+			name := accountConstructor.genesisAccount.Name
+			// NOTE: [ben] this an untyped public key
+			publicKey := fmt.Sprintf("%X", accountConstructor.untypedPublicKeyBytes)
+			amount := accountConstructor.genesisAccount.Amount
+			basePermissions := accountConstructor.genesisAccount.Permissions.Base
+			accountJsons[name] = &accountInfo{
+				Address: address,
+				PubKey:  publicKey,
+				// if do.Unsafe is not true, the private key bytes have not been copied
+				PrivKey: fmt.Sprintf("%X", accountConstructor.untypedPrivateKeyBytes),
+			}
 
-		_, err := addrFile.WriteString(fmt.Sprintf("%s,%s\n", account.Address, account.Name))
-		if err != nil {
-			log.Error("Error writing addresses file.")
-			return err
-		}
-		_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.Amount, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
-		if err != nil {
-			log.Error("Error writing accounts file.")
-			return err
-		}
-		if account.Validator {
-			_, err = valFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", account.PubKey, account.ToBond, account.Name, account.ErisDBPermissions.ErisDBBase.ErisDBPerms, account.ErisDBPermissions.ErisDBBase.ErisDBSetBit))
+			_, err := addrFile.WriteString(fmt.Sprintf("%s,%s\n", address, name))
 			if err != nil {
-				log.Error("Error writing validators file.")
+				log.Error("Error writing addresses file.")
 				return err
 			}
+			_, err = actFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", publicKey, amount, 
+				name, basePermissions.Perms, basePermissions.SetBit))
+			if err != nil {
+				log.Error("Error writing accounts file.")
+				return err
+			}
+			if accountConstructor.genesisValidator != nil {
+				_, err = valFile.WriteString(fmt.Sprintf("%s,%d,%s,%d,%d\n", publicKey,
+					accountConstructor.genesisValidator.Amount, name, basePermissions.Perms, basePermissions.SetBit))
+				if err != nil {
+					log.Error("Error writing validators file.")
+					return err
+				}
+			}			
 		}
 	}
 	addrFile.Sync()
@@ -99,37 +113,36 @@ func SaveAccountResults(do *definitions.Do) error {
 	return nil
 }
 
-func WriteGenesisFile(name string, genesis *definitions.ErisDBGenesis, account *definitions.ErisDBAccount) error {
-	return writer(genesis, name, account.Name, "genesis.json")
+func WriteGenesisFile(chainName, accountName string, genesisFileBytes []byte) error {
+	return writer(genesisFileBytes, chainName, accountName, "genesis.json")
 }
 
-func WritePrivVals(name string, account *definitions.ErisDBAccount) error {
-	return writer(account.MintKey, name, account.Name, "priv_validator.json")
-}
-
-func WriteConfigurationFile(chain_name, account_name, seeds string, chainImageName string,
-	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
-	if account_name == "" {
-		account_name = "anonymous_marmot"
+func WritePrivateValidatorFile(chainName, accountName string,
+	genesisPrivateValidator *genesis.GenesisPrivateValidator) error {
+	privateValidatorFileBytes, err := json.MarshalIndent(genesisPrivateValidator, "", "  ")
+	if err != nil {
+		return err
 	}
-	if chain_name == "" {
+	return writer(privateValidatorFileBytes, chainName, accountName, "priv_validator.json")
+}
+
+func WriteConfigurationFile(chainName, accountName, seeds string, chainImageName string,
+	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
+	if accountName == "" {
+		return fmt.Errorf("No account name provided.")
+	}
+	if chainName == "" {
 		return fmt.Errorf("No chain name provided.")
 	}
-	var fileBytes []byte
-	var err error
-	if fileBytes, err = config.GetConfigurationFileBytes(chain_name,
-		account_name, seeds, chainImageName, useDataContainer,
-		convertExportPortsSliceToString(exportedPorts), containerEntrypoint); err != nil {
+
+	configurationFileBytes, err := configurationFile.GetConfigurationFileBytes(chainName,
+		accountName, seeds, chainImageName, useDataContainer,
+		convertExportPortsSliceToString(exportedPorts), containerEntrypoint)
+	if err != nil {
 		return err
 	}
 
-	file := filepath.Join(config.ChainsPath, chain_name, account_name, "config.toml")
-
-	log.WithField("path", file).Debug("Saving File.")
-	if err := config.WriteFile(string(fileBytes), file); err != nil {
-		return err
-	}
-	return nil
+	return writer(configurationFileBytes, chainName, accountName, "config.toml")
 }
 
 func SaveAccountType(thisActT *definitions.ErisDBAccountType) error {
@@ -155,18 +168,22 @@ func convertExportPortsSliceToString(exportPorts []string) string {
 	return `[ "` + strings.Join(exportPorts[:], `", "`) + `" ]`
 }
 
-func writer(toWrangle interface{}, chain_name, account_name, fileBase string) error {
-	fileBytes, err := json.MarshalIndent(toWrangle, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	file := filepath.Join(config.ChainsPath, chain_name, account_name, fileBase)
+func writer(fileBytes []byte, chainName, accountName, fileBase string) error {
+	file := filepath.Join(config.ChainsPath, chainName, accountName, fileBase)
 
 	log.WithField("path", file).Debug("Saving File.")
-	err = config.WriteFile(string(fileBytes), file)
+	return writeFile(fileBytes, file)
+}
+
+func writeFile(data []byte, path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0775); err != nil {
+		return err
+	}
+	writer, err := os.Create(filepath.Join(path))
+	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	writer.Write(data)
 	return nil
 }
