@@ -19,7 +19,7 @@ import (
 const servName = "ipfs"
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.WarnLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
