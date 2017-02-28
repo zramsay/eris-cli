@@ -39,16 +39,6 @@ type Settings struct {
 	CrashReport       string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 	ImagesPullTimeout string `json:"ImagesPullTimeout,omitempty" yaml:"ImagesPullTimeout,omitempty" toml:"ImagesPullTimeout,omitempty"`
 	Verbose           bool
-
-	// Image defaults.
-	DefaultRegistry string `json:"DefaultRegistry,omitempty" yaml:"DefaultRegistry,omitempty" toml:"DefaultRegistry,omitempty"`
-	BackupRegistry  string `json:"BackupRegistry,omitempty" yaml:"BackupRegistry,omitempty" toml:"BackupRegistry,omitempty"`
-
-	ImageData      string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
-	ImageKeys      string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
-	ImageDB        string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
-	ImageIPFS      string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
-	ImageCompilers string `json:"ImageCompilers,omitempty" yaml:"ImageCompilers,omitempty" toml:"ImageCompilers,omitempty"`
 }
 
 // New initializes the global configuration with default settings
@@ -130,15 +120,6 @@ func SetDefaults() (*viper.Viper, error) {
 	// Compiler defaults.
 	config.SetDefault("CompilersHost", "https://compilers.monax.io")
 	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(version.VERSION, "-")[0], ".", "", -1))
-
-	// Image defaults.
-	config.SetDefault("DefaultRegistry", version.DefaultRegistry)
-	config.SetDefault("BackupRegistry", version.BackupRegistry)
-	config.SetDefault("ImageData", version.ImageData)
-	config.SetDefault("ImageKeys", version.ImageKeys)
-	config.SetDefault("ImageDB", version.ImageDB)
-	config.SetDefault("ImageIPFS", version.ImageIPFS)
-	config.SetDefault("ImageCompilers", version.ImageCompilers)
 
 	return config, nil
 }

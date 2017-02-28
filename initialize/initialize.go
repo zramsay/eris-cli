@@ -18,7 +18,7 @@ import (
 // - Is required to be run after every version upgrade
 // - Writes some default service & chain definition files
 // - Pulls the required docker images
-// - Overwrites the eris.toml config file
+// - Write the ~/.eris/eris.toml file.
 func Initialize(do *definitions.Do) error {
 
 	// Create the directory structure.
@@ -27,14 +27,15 @@ func Initialize(do *definitions.Do) error {
 		return err
 	}
 
-	// Overwrite the ~/.eris/eris.toml configuration file.
-	if err := overwriteErisToml(); err != nil {
-		return err
-	}
-
 	// If this is the first installation of eris, skip these checks.
 	if !newDir {
+
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
+			return err
+		}
+
+		// Write the ~/.eris/eris.toml file.
+		if err := config.Save(&config.Global.Settings); err != nil {
 			return err
 		}
 
@@ -45,12 +46,14 @@ func Initialize(do *definitions.Do) error {
 	}
 
 	// Pull the default docker images (wraps [docker pull]).
+	// Can and will overwrite versions. Not usually a problem.
 	if do.Pull {
 		if err := getTheImages(do); err != nil {
 			return err
 		}
 	}
 
+	// Write the default files to services/ and chains/account-&-chain-types/ subdirectories.
 	if err := initDefaultFiles(); err != nil {
 		return fmt.Errorf("Could not instantiate defaults:\n\n%s", err)
 	}
@@ -134,26 +137,26 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data":      config.Global.ImageData,
-		"keys":      config.Global.ImageKeys,
-		"ipfs":      config.Global.ImageIPFS,
-		"db":        config.Global.ImageDB,
-		"compilers": config.Global.ImageCompilers,
+		"data":      version.ImageData,
+		"keys":      version.ImageKeys,
+		"ipfs":      version.ImageIPFS,
+		"db":        version.ImageDB,
+		"compilers": version.ImageCompilers,
 	}
 
 	for i, image := range images {
 		images[i] = versionedImageNames[image]
 
 		// Attach default registry prefix.
-		if !strings.HasPrefix(images[i], config.Global.DefaultRegistry) {
-			images[i] = path.Join(config.Global.DefaultRegistry, images[i])
+		if !strings.HasPrefix(images[i], version.DefaultRegistry) {
+			images[i] = path.Join(version.DefaultRegistry, images[i])
 		}
 	}
 
 	// Spacer.
 	log.Warn()
 
-	log.Warn("Pulling default Docker images from " + config.Global.DefaultRegistry)
+	log.Warn("Pulling default Docker images from " + version.DefaultRegistry)
 	for i, image := range images {
 		log.WithField("image", image).Warnf("Pulling image %d out of %d", i+1, len(images))
 
@@ -234,25 +237,6 @@ on local host machines. If you already have the images, they'll be updated.
 			}
 			log.Warn("Successfully pulled default images")
 		}
-	}
-	return nil
-}
-
-func overwriteErisToml() error {
-	config.Global.DefaultRegistry = version.DefaultRegistry
-	config.Global.BackupRegistry = version.BackupRegistry
-	config.Global.ImageData = version.ImageData
-	config.Global.ImageKeys = version.ImageKeys
-	config.Global.ImageDB = version.ImageDB
-	config.Global.ImageIPFS = version.ImageIPFS
-
-	// Ensure the directory the file being saved to exists.
-	if err := os.MkdirAll(config.ErisRoot, 0755); err != nil {
-		return err
-	}
-
-	if err := config.Save(&config.Global.Settings); err != nil {
-		return err
 	}
 	return nil
 }

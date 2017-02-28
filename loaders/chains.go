@@ -110,7 +110,7 @@ func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) 
 	}
 
 	chain.Service.Name = chain.Name
-	chain.Service.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
+	chain.Service.Image = path.Join(version.DefaultRegistry, version.ImageDB)
 	chain.Service.AutoData = true
 
 	s := &definitions.ServiceDefinition{
