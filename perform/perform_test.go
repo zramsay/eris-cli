@@ -1696,9 +1696,6 @@ func TestLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	fmt.Printf("MARMOT: %s\n", buf.String())
-	fmt.Printf("MARMOT BAD: %s\n", bufErr.String())
-
 	if !strings.Contains(bufErr.String(), "Starting eris-keys") {
 		t.Fatalf("expected certain log entries, got %q", bufErr.String())
 	}
