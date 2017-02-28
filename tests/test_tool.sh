@@ -35,6 +35,8 @@ start=`pwd`
 base=github.com/eris-ltd/eris
 repo=$GOPATH/src/$base
 
+source $repo/tests/machines/docker_machine.sh
+
 # If an arg is passed to the script we will assume that only local
 #   tests will be ran.
 
@@ -113,6 +115,20 @@ setup() {
 
 packagesToTest() {
   fail="false"
+  
+  if [[ "$SKIP_STACK" != "true" ]]
+  then
+    echo "Running Stack Tests"
+    echo
+    if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
+    then
+      $HOME/test_stack.sh && passed Stack
+    else
+      tests/test_stack.sh && passed Stack
+    fi
+    if [ $? -ne 0 ]; then fail="true"; fi
+  fi
+
   if [[ "$SKIP_PACKAGES" != "true" ]]
   then
     go test ./initialize/... -v && passed Initialize
@@ -131,6 +147,9 @@ packagesToTest() {
     if [ $? -ne 0 ]; then fail="true"; fi
     go test ./services/... -v && passed Services
     if [ $? -ne 0 ]; then fail="true"; fi
+    #this is put here because otherwise Travis stalls out because output
+    #is very slow to come up.
+    sleeper &
     go test ./chains/... -v -timeout 20m && passed Chains
     if [ $? -ne 0 ]; then fail="true"; fi
     go test ./keys/... -v && passed Keys
@@ -143,22 +162,6 @@ packagesToTest() {
     if [ $fail = "true" ]
     then
       return 1
-    fi
-  fi
-  # The appveyor.yml and circle.yml currently use SKIP_PACKAGES and 
-  # SKIP_STACK to parallelize Go and stack tests; otherwise this is 
-  # here for faster test runs when needed.
-  # Set either variable in your shell before calling `tests/test.sh` 
-  # or `tests/test_tool.sh`
-  if [[ "$SKIP_STACK" != "true" ]]
-  then
-    echo "Running Stack Tests"
-    echo
-    if [[ "$( dirname "${BASH_SOURCE[0]}" )" == "$HOME" ]]
-    then
-      $HOME/test_stack.sh && passed Stack
-    else
-      tests/test_stack.sh && passed Stack
     fi
   fi
 }
