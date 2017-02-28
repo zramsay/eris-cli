@@ -2,6 +2,8 @@ os: osx
 
 language: go
 
+go: 1.7.3
+
 env:
   matrix:
     - DOCKER_NATIVE=true
@@ -11,7 +13,8 @@ env:
 matrix:
   allow_failures:
     #Native Docker job, expect potential failures as it's still fresh
-    - env:
+    - go: 1.7.3
+      env:
         - DOCKER_NATIVE=true
   include:
     #Docker machine job, expect this to pass
