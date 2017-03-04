@@ -56,7 +56,11 @@ func setChainIPandPort(do *definitions.Do) error {
 		return fmt.Errorf("chain (%s) is not running", do.ChainName)
 	}
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		do.ChainIP = "127.0.0.1"
+		var err error
+		do.ChainIP, err = util.DockerWindowsAndMacIP(do)
+		if err != nil {
+			return err
+		}
 	} else {
 		containerName := util.ContainerName(definitions.TypeChain, do.ChainName)
 
@@ -89,8 +93,12 @@ func getLocalCompilerData(do *definitions.Do) error {
 	// docker file by default for the compilers service we can expose more
 	// forcibly
 	var IPAddress string
+	var err error
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		IPAddress = "127.0.0.1"
+		IPAddress, err = util.DockerWindowsAndMacIP(do)
+		if err != nil {
+			return err
+		}
 	} else {
 		containerName := util.ServiceContainerName("compilers")
 
