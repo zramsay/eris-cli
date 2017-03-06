@@ -217,6 +217,11 @@ flame_out() {
 # ---------------------------------------------------------------------------
 # Go!
 echo "Hello! The marmots will begin testing now."
+
+eris clean --yes --containers --images --scratch
+eris version
+eris init --yes --testing
+
 if [[ "$DOCKER_MACHINE" = true ]]
 then
   announceMachine

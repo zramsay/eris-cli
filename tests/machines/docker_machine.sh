@@ -86,7 +86,7 @@ function create_machine() {
         --amazonec2-vpc-id          "$AWS_VPC_ID"           \
         --amazonec2-security-group  "$AWS_SECURITY_GROUP"   \
         --amazonec2-zone            "b"                     \
-        "$MACHINE_NAME"
+        --debug "$MACHINE_NAME"
     else
       docker-machine create                                 \
         --driver amazonec2                                  \
@@ -140,7 +140,7 @@ function start_machine() {
   sleeper &
   ticker=$!
   cd $repo/tests/machines
-  docker-machine start "$MACHINE_NAME"
+  docker-machine start --debug "$MACHINE_NAME"
   #pass in local env vars
   eval "$(docker-machine env $MACHINE_NAME)"
   
