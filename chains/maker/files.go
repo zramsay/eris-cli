@@ -25,6 +25,16 @@ type accountInfo struct {
 }
 
 func SaveAccountResults(do *definitions.Do, accounts []*ErisDBAccountConstructor) error {
+	// Log a warning to users for the new behaviour:
+	// if asked to output the accounts with do.Output, and `eris chains make --unsafe` is not
+	// provided with the unsafe flag, then we no longer write the private keys in `accounts.json`
+	if !do.Unsafe {
+		log.Warn("The marmots care about your safety and no longer export the generated private keys onto your local host. "+
+			"If you do want accounts.json to contain the private keys for use in a development environment, please make your "+
+			"chain with `--unsafe` to write the private keys to disk.  This option will be deprecated once the javascript libraries "+
+			"implements a remote signing path as tooling does.")
+	}
+	
 	addrFile, err := os.Create(filepath.Join(config.ChainsPath, do.Name, "addresses.csv"))
 	if err != nil {
 		return fmt.Errorf("Error creating addresses file. This usually means that there was a problem with the chain making process.")
