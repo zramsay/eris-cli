@@ -78,7 +78,7 @@ function create_machine() {
     AWS_SSH_USER=""
     if [ "$win" = true ] || [ "$osx" = true ]
     then 
-      docker-machine create                                 \
+      docker-machine --debug create                                 \
         --driver amazonec2                                  \
         --amazonec2-access-key      "$AWS_ACCESS_KEY_ID"    \
         --amazonec2-secret-key      "$AWS_SECRET_ACCESS_KEY"\
@@ -86,7 +86,7 @@ function create_machine() {
         --amazonec2-vpc-id          "$AWS_VPC_ID"           \
         --amazonec2-security-group  "$AWS_SECURITY_GROUP"   \
         --amazonec2-zone            "b"                     \
-        --debug "$MACHINE_NAME"
+        "$MACHINE_NAME"
     else
       docker-machine create                                 \
         --driver amazonec2                                  \
