@@ -140,7 +140,7 @@ function start_machine() {
   sleeper &
   ticker=$!
   cd $repo/tests/machines
-  docker-machine start --debug "$MACHINE_NAME"
+  docker-machine --debug start "$MACHINE_NAME"
   #pass in local env vars
   eval "$(docker-machine env $MACHINE_NAME)"
   
