@@ -133,7 +133,7 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 
 	// use the accountConstructors to write the necessary files (config, genesis and private validator) per node
 	if err = MakeErisDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
-			do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
+		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
 		return err
 	}
 
