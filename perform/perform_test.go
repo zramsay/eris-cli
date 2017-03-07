@@ -2,7 +2,6 @@ package perform
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path"
 	"runtime"
