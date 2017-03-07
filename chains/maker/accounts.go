@@ -112,7 +112,7 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 		// NOTE: [ben] these auxiliary fields in the constructor are to be deprecated
 		// but introduced to support current unsafe behaviour where all private keys
 		// are extracted from eris-keys
-		accountConstructor.untypedPublicKeyBytes = make([]byte, len(publicKeyBytes)) 
+		accountConstructor.untypedPublicKeyBytes = make([]byte, len(publicKeyBytes))
 		copy(accountConstructor.untypedPublicKeyBytes[:], publicKeyBytes[:])
 		// tendermint/go-crypto typebyte for ed25519
 		accountConstructor.typeBytePublicKey = byte(0x01)
@@ -122,7 +122,7 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 			// before we deprecate private_validator files
 			if privateKeyString, ok := genesisPrivateValidator.PrivKey[1].(string); ok {
 				if privateKeyBytes, err := hex.DecodeString(privateKeyString); err != nil {
-					return  nil, err
+					return nil, err
 				} else {
 					accountConstructor.untypedPrivateKeyBytes = make([]byte, len(privateKeyBytes))
 					copy(accountConstructor.untypedPrivateKeyBytes[:], privateKeyBytes[:])
@@ -167,7 +167,7 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 
 		if genesisPrivateValidator != nil && !blockPrivateValidator {
 			// explicitly copy genesis private validator for clarity
-			accountConstructor.genesisPrivateValidator = genesisPrivateValidator			
+			accountConstructor.genesisPrivateValidator = genesisPrivateValidator
 		}
 	}
 
@@ -207,7 +207,7 @@ func generateAddressAndKey(keyAddressType string, blockPrivateValidator bool) (a
 			genesisPrivateValidator.Address = fmt.Sprintf("%X", address)
 		} else {
 			genesisPrivateValidator = nil
-		} 
+		}
 	}
 
 	return

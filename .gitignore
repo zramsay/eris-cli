@@ -9,6 +9,9 @@ eris
 _obj
 _test
 
+# build target
+target
+
 # Architecture specific extensions/prefixes
 *.[568vq]
 [568vq].out
