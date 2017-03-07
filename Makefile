@@ -67,7 +67,8 @@ build_eris:
 # test eris
 .PHONY: test
 test: build
-	@go test ${PACKAGES_NOVENDOR}
+	# run go tests sequentially for the different packages
+	@go test ${PACKAGES_NOVENDOR} -p 1
 
 ### Clean up
 
