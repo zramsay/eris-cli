@@ -27,28 +27,29 @@ This is a slightly more advanced set of contracts than that we used in the [101 
 What do these contracts do? Well, they aren't terribly interesting we know. The first contract, the `GSContract`, merely `gets` and `sets` a value which is an unsigned integer type. The second contract, the `GSFactory`, merely makes a new `GSContract` when `create` is called or it returns the address of the most recent contract created when `getLast` is called.
 
 # Fixup your epm.yaml
+//// THIS IS A LOT OF DUPLICATE WITH THE `tutorials/getting-started.md`
 
 Next we need to make an epm.yaml. It should look like this:
 
 {{ insert_file "contracts_deploying_adv/epm.yaml" }}
 
-Now. What does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. eris:package_manager will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file.
+Now. What does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file.
 
-So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/documentation/pm/latest/jobs_specification/).
+So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/specs/jobs_specification/).
 
 ### Job 1: Deploy Job
 
-This job will compile the `GSFactory.sol` contracts using Eris' compiler service (or run your own locally; which will be covered later in this tutorial). But which contract(s) will get deployed even though they both are in the contract? When we have more than one contract in a file, we designate the one eris:package_manager should deploy with the `instance` field.
+This job will compile the `GSFactory.sol` contracts using Eris' compiler service (or run your own locally; which will be covered later in this tutorial). But which contract(s) will get deployed even though they both are in the contract? When we have more than one contract in a file, we tell the package manager which one it should deploy with the `instance` field.
 
-Here we are asking eris:package_manager to deploy `all` of the contracts so that we will have an ABI for the `GSContract` address. This is something important to understand about Factory contracts. Namely that at some point you will have to deploy a "fake" contract to your chain so that the ABI for it is properly saved to the ABI folder.
+Here we are asking the package manager to deploy `all` of the contracts so that we will have an ABI for the `GSContract` address. This is something important to understand about Factory contracts. Namely that at some point you will have to deploy a "fake" contract to your chain so that the ABI for it is properly saved to the ABI folder.
 
 ### Job 2: Call Job
 
-This job will send a call to the contract. eris:package_manager will automagically utilize the abi's produced during the compilation process and allow users to formulate contracts calls using the very simple notation of `functionName` `params`.
+This job will send a call to the contract. The package manager will automagically use the abi's produced during the compilation process and allow users to formulate contracts calls using the very simple notation of `functionName` `params`.
 
-In this job we are explictly using the `abi` field, which is optional. ABI's are the encoding scheme for how we are able to "talk" to our contracts. When eris:package_manager compiles contracts it all will compile their ABIs and save them in the ABI folder (which by default is `./abi` where `./` is wherever your epm.yaml file is). It will save the files using both the name of the contract as well as the address of the contract which is deployed onto the chain.
+In this job we are explictly using the `abi` field, which is optional. ABI's are the encoding scheme for how we are able to "talk" to our contracts. When the package manager compiles contracts it will compile their ABIs and save them in the ABI folder (which by default is `./abi` where `./` is wherever your epm.yaml file is). It will save the files using both the name of the contract as well as the address of the contract which is deployed onto the chain.
 
-We explicitly tell eris:package_manager in this call to use the GSFactory ABI. This ABI will be saved as above as the same name of the contract(s) which eris:package_manager finds.
+We explicitly tell the package manager in this call to use the GSFactory ABI. This ABI will be saved as above as the same name of the contract(s) which the package manager finds.
 
 Finally, it is waiting on the call to be sunk into a block before it will proceed.
 
@@ -62,7 +63,7 @@ This job checks that the contract last deployed matches the return from the crea
 
 ### Job 5: Call Job
 
-This job will send a call to the contract. We explicitly tell eris:package_manager in this call to use the GSContract ABI.
+This job will send a call to the contract. We explicitly tell the package manager in this call to use the GSContract ABI.
 
 ### Job 6: Query Contract Job
 
@@ -84,9 +85,9 @@ That's it! Your contract is all ready to go. You should see the output in `epm.j
 
 {{ insert_bash_lines "contracts_deploying_adv/test.sh" "14" }}
 
-# Working With a Local Compiler
+# The compiler?
 
-Where are the contracts compiling? By default they are compiled using a microservice which we run at https://compilers.monax.io. However, it is just as easy to run the compilers service locally and use that to compile contracts. To work with the local compilers service just add the `--local-compilers` flag do your `eris pkgs do` command.
+Where are the contracts compiling? By default they are compiled using a microservice which is automagically turned on when running `eris pkgs do` and subsequently removed. If you'd like to use the remote compiler, specify its URL with the `--remote-compiler` flag.
 
 # Clean Up
 

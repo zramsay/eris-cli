@@ -21,8 +21,7 @@ There are four steps need to get moving with Eris:
 
 # Step 1. Install the Eris Platform
 
-**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and [Docker Machine](https://https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine
-allows you to run Docker on remote machines. For Linux, Docker Machine dependency is optional but recommended.
+**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and for macOS and Windows *only* [Docker Machine](https://https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine allows you to run Docker on remote machines. For Linux, Docker Machine dependency is optional but recommended.
 
 Currently we consider the most workable setup to be (what our tests consider authoritative) with these operating system and dependencies' versions:
 
@@ -64,7 +63,7 @@ eval $(docker-machine env eris)
 
 **Note** Installation of VirtualBox is not a prerequisite, because you may choose to create your virtual machine on Amazon AWS cloud or DigitalOcean, but VirtualBox is what most people use alongside Docker Machine and what we recommend for the Docker Machine setup.
 
-Proceed to a one of the package or a binary installation below to install the `eris` binary then finalize your setup by running.
+Proceed to one of the package or binary installations below to install the `eris` binary then finalize your setup by running.
 
 ```bash
 eris init
@@ -93,7 +92,7 @@ We have RPM support for most current versions of Fedora, CentOS, and RHEL:
 Alternatively, you can download a release binary for the latest [Release](https://github.com/eris-ltd/eris/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris/releases/download/v0.12.0/eris_0.12.0_linux_amd64 > eris
+curl -L https://github.com/eris-ltd/eris/releases/download/v0.16.0/eris_0.16.0_linux_amd64 > eris
 chmod +x eris
 ```
 
@@ -108,7 +107,7 @@ We **highly recommend** that you utilize [Homebrew](https://brew.sh) to install 
 If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris/releases/download/v0.12.0/eris_0.12.0_darwin_amd64 > eris
+curl -L https://github.com/eris-ltd/eris/releases/download/v0.16.0/eris_0.16.0_darwin_amd64 > eris
 chmod +x eris
 ```
 
@@ -121,7 +120,7 @@ docker-machine create -d virtualbox eris
 eval $(docker-machine env eris)
 ```
 
-**N.B.** At this time Docker for Mac (DFM), which is still in beta, is not currently supported.
+**N.B.** At this time Docker for Mac (DFM) and Docker for Windows (DFW), which are still in beta, are not currently supported.
 
 Finalize your setup by running:
 
@@ -171,7 +170,7 @@ eris init
 
 ### ARM Installation (IoT devices)
 
-[See this tutorial](/docs/tutorials/install-arm/) for more info on getting setup on IoT devices.
+Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. 
 
 ### Building From Source
 
@@ -179,7 +178,7 @@ If you would like to build from source [see our documentation](/docs/tutorials/i
 
 ### Troubleshooting Your Install
 
-If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/tutorials/install-troubleshooting/) or visit our [support forums](https://support.monax.io)
+If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/tutorials/install-troubleshooting/) or join [The Marmot Den](https://slack.monax.io)
 
 # Step 2: Roll Your Own Blockchain in Seconds
 
@@ -187,7 +186,7 @@ If you want to create your blockchain it is very easy.
 
 ```bash
 eris chains make test_chain
-eris chains start test_chain
+eris chains start test_chain --init-dir ~/.eris/chain/test_chain/test_chain_full_000
 ```
 
 That `test_chain` can be whatever name you would like it to be. These two simple commands will create a permissioned, smart contract enabled blockchain suitable for testing.
@@ -205,13 +204,15 @@ eris chains logs test_chain
 eris chains logs -f test_chain
 ```
 
+Note: although your chain may be "running" (i.e., has been started and has a docker container that is "ON", it is possible that you chain is not making blocks and thus will be useless for deploying contracts. After running the above command, ensure you chain is indeed making blocks. In the future, we'll be introducing commands that will specify the health of your chain.
+
 Stop your chain:
 
 ```bash
 eris chains stop test_chain
 ```
 
-Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to):
+Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to, and `-d` to remove the chain directory entirely):
 
 ```bash
 eris chains rm -xf test_chain
@@ -249,9 +250,9 @@ To do this we need to, first, consider, *who* will get *what* permissions and *w
 
 * 3 Administrators (these would be developers who have **full** control over the chain) (one of which will be "running" the chain performing validation)
 
-If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see our documentation on the subject](/docs/documentation/db/).
+If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see our documentation on the subject](see edb's readme).
 
-We use an abstraction to simplify the chain making process called [Account Types](/docs/documentation/cm/latest/account_types/). This abstraction is just that, an abstraction to help users quickly get up to speed. In order to reduce the complexity of dealing with different types of accounts typically built on a chain, we use the idea of "account types". Account types are not restrictive in the sense that they are not the "only" types of accounts you can make with eris chains.
+We use an abstraction to simplify the chain making process called Account Types. This abstraction is just that, an abstraction to help users quickly get up to speed. In order to reduce the complexity of dealing with different types of accounts typically built on a chain, we use the idea of "account types". Account types are not restrictive in the sense that they are not the "only" types of accounts you can make with eris chains.
 
 Account types are simply bundles of permissions no more no less. Using the eris tooling you can also create your own account types with your own bundles of permissions which will be helpful.
 
@@ -261,6 +262,7 @@ Everyone who interacts with an eris chains chain will need to have a properly fo
 
 `eris keys` usually operates as a signing daemon, but when we use eris keys to *create* key pairs what we are doing effectively is writing files. As is usual with the eris tooling, `eris keys` is opinionated and will work by default against the following directory: `~/.eris/keys/data`. When a key pair is created, that key pair will get written into that directory.
 
+////AHAHAHAHAHAHAHA FUCK DOCKER and all the edge cases it brings us
 Because we use Docker to take out most of the edge cases with various operating systems and simplify the development environment for our users, these files will be written to a file system located inside the eris keys container. As we go through this tutorial we will explain a bit about what that means. When we are using containers, these containers are not built to *hold* data, but rather are built to hold what is needed to run processes. But, if we're making keypairs, then we definitely want to *keep* these.
 
 To accomplish this, we will use the `eris` tooling only. First we need to start the `eris-keys` daemon:
@@ -326,12 +328,11 @@ To see the keys which eris-keys generated both *inside* the container type and a
 eris keys ls
 ```
 
-Before we move on to actual chainmaking, if you would like to explore more of the eris keys functionality please see our [keys tutorial](/docs/documentation/keys/latest/examples/exporting_your_keys/).
-
 Now, we're all ready to make a chain.
 
 ## Step 2.a.2. Make the genesis.json
 
+//// JESUS h. krist this shit is old
 Before we begin, we should quickly talk through the various files which are needed to run an eris chain. When you ran `eris init` during the [getting started](/docs/tutorials/getting-started/) step, eris created a folder called `~/.eris/chains/default` on your host's hard drive. This is to hold the default files for using eris chains. There are a few primary files used by eris chains:
 
 1. the chain definition file for Eris chains is called `config.toml` and is located in your `~/.eris/chains/<your_chain>` directory.
@@ -353,7 +354,7 @@ eris chains make -h
 That will give you an overview of the chains maker tool. Now we are ready.
 
 ```bash
-eris chains make toRemoveLater
+eris chains make toRemoveLater --wizard
 ```
 
 This will drop you into an interactive, command line wizard. Follow the text and the prompts to chain making bliss. Since we're going to throw this chain away later you can just press "Enter" at each of the prompts or you can change the variables and get a feel for the wizard.
@@ -370,7 +371,7 @@ You should see three `*.csv` files and a bunch of directories. Let's look in one
 ls ~/.eris/chains/toRemoveLater/toremovelater_full_000
 ```
 
-In that directory you should see a genesis.json and a priv_validator.json. The marmots call these a "bundle" as generally they are what is needed to get a chain going (in addition to a config.toml which with the proper seed and moniker filled out).
+In that directory you should see a `genesis.json`, a `priv_validator.json` and a `config.toml`. The marmots call these a "bundle" as generally they are what is needed to get a chain going.
 
 What about those `csv` files? There should be three of them. Let's take a look:
 
@@ -380,9 +381,9 @@ cat ~/.eris/chains/toRemoveLater/validators.csv
 cat ~/.eris/chains/toRemoveLater/addresses.csv
 ```
 
-The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. In other circumstances this is not helpful.
+The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate.
 
-In general, we recommend that if you are making a chain for a consortium that you have your consortium members **make their own keys** and then send the public key to you. Once you've assembled the keys then you will create an accounts.csv and validators.csv files in this format and then run `eris chains make` with the `--known` flag. More information on complex chain making is included in our [advanced chain making tutorial](/docs/documentation/cm/latest/examples/chain-making/).
+In general, we recommend that if you are making a chain for a consortium that you have your consortium members **make their own keys** and then send the public key to you. Once you've assembled the keys then you will create an `accounts.csv` and `validators.csv` files in this format and then run `eris chains make` with the `--known` flag. More information on complex chain making is included in our [advanced chain making tutorial](/tutorials/chain-making/).
 
 The last file is the `addresses.csv` file which is another artifact of the chain making process. It simply has the addresses and the "names" of the nodes. We find it useful when scripting out complex interactions and it is simply a reference file along the lines of `addr=$(cat $chain_dir/addresses.csv | grep $name | cut -d ',' -f 1)`.
 
@@ -393,6 +394,8 @@ eris clean -y --chains
 ```
 
 Per the above and after our review of the account types, we know we want to have two Root account types and one Full account type for our new chain. So let's get to business.
+
+XXXX let's not ever call a chainName simplechain because we also have a chain-type that is simplechain!!!!!!! (i won't point fingers)
 
 ```bash
 chain_dir=$HOME/.eris/chains/simplechain
@@ -412,14 +415,14 @@ ls $chain_dir
 ls $chain_dir_this
 ```
 
-You'll see a `genesis.json` and `priv_validator.json` in `$chain_dir_this`.
+You'll see a `genesis.json`, a `priv_validator.json` and a `config.toml` in `$chain_dir_this`.
 
 ## Step 2.a.3. Instantiate the Blockchain
 
 With all the files prepared we're ready to rock and roll.
 
 ```bash
-eris chains new simplechain --dir $chain_dir_this
+eris chains start simplechain --init-dir $chain_dir_this
 ```
 
 Check that the chain is running with:
@@ -431,8 +434,8 @@ eris chains ls
 You'll see something like:
 
 ```bash
-CHAIN        ON     CONTAINER ID     DATA CONTAINER
-simplechain  *      efeeb0dd63       d06301b3a5
+CHAIN        ON     VERSION 
+simplechain  *      0.16.0
 ```
 
 As with the `eris services ls -a` command, you can also see more information about your chain with `eris chains ls -a`. Note: the same holds true with `eris ls` and `eris ls -a`.
@@ -454,7 +457,7 @@ Boom. You're all set with your custom built, permissioned, smart contract-ified,
 You can remove all trace of the chain with:
 
 ```
-eris chains rm simplechain --data --dir --file --force
+eris chains rm simplechain --data --dir --force
 ```
 
 and clean up your Eris environment with:
@@ -488,6 +491,8 @@ cd idi
 ```
 
 Now you'll make a file in this directory. Let's assume that is called `idi.sol` and has the following contents
+
+XXXXX use the sexy templating stuff for bash!!!!!
 
 ```javascript
 contract IdisContractsFTW {
@@ -544,13 +549,11 @@ jobs:
       val: $setStorageBase
 ```
 
-**Protip:** Get the file with `curl -X GET https://raw.githubusercontent.com/eris-ltd/coding/master/contracts/idi/epm.yaml -o epm.yaml`
-
-Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. `eris:package_manager` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/documentation/pm/latest/jobs_specification/).
+Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/specs/jobs_specification/).
 
 ### Job 1: Set Job
 
-The `set` job simply sets a variable. `eris:package_manager` includes a very naive key value store which can be used for pretty much anything.
+The `set` job simply sets a variable. The package manager includes a naive key value store which can be used for pretty much anything.
 
 ### Job 2: Deploy Job
 
@@ -558,11 +561,11 @@ This job will compile and deploy the `idi.sol` contract using Eris' compiler ser
 
 ### Job 3: Call Job
 
-This job will send a call to the contract. `eris:package_manager` will automagically utilize the abi's produced during the compilation process and allow users to formulate contract calls using the very simple notation of `functionName` `params`. `eris:package_manager` also allows for variable expansion.
+This job will send a call to the contract. The package manager will automagically utilize the abi's produced during the compilation process and allow users to formulate contract calls using the very simple notation of `functionName` `params`. The package manager also allows for variable expansion.
 
-So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (`eris:package_manager` knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in `eris:package_manager`, please see the [variables specification](/docs/documentation/pm/latest/variable_specification/).
+So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (the package manager knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in the package manager, please see the [variables specification](/specs/variable_specification/).
 
-Finally, it is waiting on the call to be sunk into a block before it will proceed.
+Finally, it is waiting on the call to be sunk into a block before it will proceed. /// **** wait is gone, right ?!?!?!?!?!
 
 ### Job 4: Query Contract Job
 
@@ -572,7 +575,7 @@ The value returned from a `query-contract` job then is usually paired with an as
 
 ### Job 5: Assert Job
 
-In order to know that things have deployed or gone through correctly, you need to be able to assert relations. `eris:package_manager` provides you with:
+In order to know that things have deployed or gone through correctly, you need to be able to assert relations. The package manager provides you with:
 
 * equality
 * non-equality
@@ -624,17 +627,11 @@ That will make sure we have available the address we would like to use to deploy
 eris pkgs do --chain simplechain --address $addr
 ```
 
-**N.B.**: For users still on eris version 0.11.X series please add the following:
-
-```bash
-eris pkgs do --chain simplechain --address $addr --compiler https://compilers.monax.io:10114
-```
-
 You *should* be able to use any of the addresses you generated during the chainmaking tutorial since they all have the same permission levels on the chain (which, if you followed the simple tutorial are basically all public). If you are using this tutorial outside of the tutorial sequence then you can just give it the address that you'd like to use to sign transactions instead of the `grep simplechain_full_000` bash expansion.
 
 (For those that do not know what is happening in that bash line: `cat` is used to "print the file" and "pipe" it into the second command; `grep` is a finder tool which will find the line which has the right name we want to use; the `cut` says split the line at the `,` and give me the first field).
 
-Note that `eris:package_manager` can override the account which is used in any single job and/or, `eris:package_manager` can set a default `account` job which will establish a default account within the yaml. We find setting the default account within the yaml to usually be counter-productive because others will not be able to easily use your yaml unless they have the same keys in their `eris-keys` (which we **never** recommend). For more on using accounts [please see the jobs specification](/docs/documentation/pm/latest/jobs_specification/).
+Note that the package manager can override the account which is used in any single job and/or can set a default `account` job which will establish a default account within the yaml. We find setting the default account within the yaml to usually be counter-productive because others will not be able to easily use your yaml unless they have the same keys in their `eris-keys` (which we **never** recommend). For more on using accounts [please see the jobs specification](/specs/jobs_specification/).
 
 Since we have a deployed contract on a running chain, please do take a look at the available options for eris contracts with:
 
@@ -682,6 +679,8 @@ For trouble shooting information regarding Step 4.1 please see our guide -> [^7]
 ## Step 4.2. Make the Main Application Script
 
 Once we have that set up, then we'll make an `app.js` file and we'll add the following contents into it:
+
+// USE THE SEXY BASH insert thingy
 
 ```javascript
 // requires
@@ -744,8 +743,8 @@ function setValue(value) {
 // run
 getValue(changeValue);
 ```
-**Protip:** Get the file with `curl -X GET https://raw.githubusercontent.com/eris-ltd/coding/master/contracts/idi/app.js -o app.js` while in the same directory as the `epm.yaml`.
 
+// XXXX deal with this!
 **N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script (spoiler alert, only do that on Linux). See our [docker-machine tutorial](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) for more information.
 
 **N.B. 2** -- be sure to edit this line: `var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.simplechain_full_000);` in the `app.js` to reflect the chain name (in lowercase) and account if you did not make a chain with the name `simplechain` or a chain with >1 account. See `$chain_dir/accounts.json` for more info (see below for the step to retrieve this file.)
@@ -843,7 +842,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) for more information.
 
-[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](/docs/documentation/db/) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. The easiest thing to do at this point is to [update your genesis.json](/docs/documentation/cm/latest/examples/genesis_updating/).
+[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](/docs/documentation/db/) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. The easiest thing to do at this point is to [update your genesis.json](/docs/documentation/cm/latest/examples/genesis_updating/). <==== NO,ewwwww
 
     Once you have the following sorted:
 
