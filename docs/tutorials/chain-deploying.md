@@ -1,3 +1,4 @@
+//// NEEDS MASSIVE OVERHAUL
 # Introduction
 
 In general what is going to happen here is that we are going to establish what we at Eris call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system.
@@ -13,14 +14,11 @@ In general we are going to take two steps in order to get the chain setup:
 
 # Step 1. Deploy the Chain to Each Machine
 
+// TODO previous tutorial needs to use the `eris chains make --seeds-ip` flag.
 Now that we have our machines created we're ready to deploy the chain. We need to do one thing before we deploy the chain: we're going to need to change the config.toml files.
 
-```bash
-cd ~/.eris/chains/advchain
-cp ../default/config.toml .
-```
 
-Before we edit the file, let's get the IP address of our peer sergeant major node.
+Before we edit the file, let's get the IP address of our peer sergeant major node. (THIS NEEDS TO BE DEALT WITH ALREADY)
 
 ```bash
 docker-machine ip my-advchain-val-000
