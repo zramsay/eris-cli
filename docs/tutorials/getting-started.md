@@ -1,7 +1,7 @@
 ---
 
 layout: single
-title: "Tutorials | Getting Started"
+title: "Getting Started"
 aliases:
   - /docs
 menu:
@@ -19,9 +19,9 @@ There are four steps need to get moving with Eris:
 3. **Deploy** your ecosystem application using smart contract templates and a simple, web-based user interface.
 4. **Integrate** your ecosystem application with a web server or other microservices.
 
-# Step 1. Install the Eris Platform
+## Step 1. Install the Eris Platform
 
-**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and for macOS and Windows *only* [Docker Machine](https://https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine allows you to run Docker on remote machines. For Linux, Docker Machine dependency is optional but recommended.
+**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and for macOS and Windows *only* [Docker Machine](https://https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine allows you to run Docker on remote machines. We do not currently support Docker for Mac/Windows as they are still in beta.
 
 Currently we consider the most workable setup to be (what our tests consider authoritative) with these operating system and dependencies' versions:
 
@@ -54,7 +54,7 @@ docker version
 
 **Note** you will need to make sure that you perform the above command for the *user* which will be running Eris.
 
-If you've also chosen to install Docker Machine, please follow [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) instructions to install Docker Machine and [these](https://www.virtualbox.org/wiki/Linux_Downloads) to install VirtualBox; then create an Eris virtual machine and put the latter (`eval`) command into your `~/.bashrc` file:
+If you've also chosen to install Docker Machine, please follow [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) instructions to install Docker Machine and [these](https://www.virtualbox.org/wiki/Linux_Downloads) to install VirtualBox; then create an Eris virtual machine and run the (`eval`) command:
 
 ```bash
 docker-machine create -d virtualbox eris
@@ -113,7 +113,7 @@ chmod +x eris
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.
 
-If you have chosen not to use Docker Toolbox at all, you need to create an Eris virtual machine and put the latter (`eval`) command into your `~/.bashrc` file:
+If you have chosen not to use Docker Toolbox at all, you need to create an Eris virtual machine and run the (`eval`) command:
 
 ```bash
 docker-machine create -d virtualbox eris
@@ -170,7 +170,7 @@ eris init
 
 ### ARM Installation (IoT devices)
 
-Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. 
+Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. See [this issue](https://github.com/eris-ltd/eris/issues/1088) for more details on progress.
 
 ### Building From Source
 
@@ -178,20 +178,20 @@ If you would like to build from source [see our documentation](/docs/tutorials/i
 
 ### Troubleshooting Your Install
 
-If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/tutorials/install-troubleshooting/) or join [The Marmot Den](https://slack.monax.io)
+If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/tutorials/install-troubleshooting/) or join [The Marmot Den](https://slack.monax.io) to ask for help.
 
-# Step 2: Roll Your Own Blockchain in Seconds
+## Step 2: Roll Your Own Blockchain in Seconds
 
-If you want to create your blockchain it is very easy.
+If you want to create your blockchain it is two commands:
 
 ```bash
 eris chains make test_chain
 eris chains start test_chain --init-dir ~/.eris/chain/test_chain/test_chain_full_000
 ```
 
-That `test_chain` can be whatever name you would like it to be. These two simple commands will create a permissioned, smart contract enabled blockchain suitable for testing.
+That `test_chain` can be whatever name you would like it to be. These two commands will create a permissioned, smart contract enabled blockchain suitable for testing.
 
-To check that your chain is running type (running chains have a `*` symbol next to them):
+To check that your chain is running type (running chains have a `*` symbol next to them rather than a `-`):
 
 ```bash
 eris chains ls
@@ -215,7 +215,7 @@ eris chains stop test_chain
 Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to, and `-d` to remove the chain directory entirely):
 
 ```bash
-eris chains rm -xf test_chain
+eris chains rm -xfd test_chain
 ```
 
 Obviously, you will want an ability to make chains which you properly parameterize. As such you can always type:
@@ -223,8 +223,6 @@ Obviously, you will want an ability to make chains which you properly parameteri
 ```bash
 eris chains make --help
 ```
-
-To see the various ways which you instantiate a chain, you should check the `chains start --help` command.
 
 That's it! Your chain is rolled!
 
@@ -234,7 +232,9 @@ Let's remove all of the eris "stuff" before we move on to the next portion of th
 eris clean -y
 ```
 
-# Step 2.a: Making a "real" permissioned chain.
+## Step 2.a: Making a "real" permissioned chain.
+
+**Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below.
 
 There are three steps to making a permissioned chain:
 
@@ -244,28 +244,27 @@ There are three steps to making a permissioned chain:
 
 We shall go through these in their logical order.
 
-### Users Design
+#### Users Design
 
 To do this we need to, first, consider, *who* will get *what* permissions and *why*. It is outside the scope of this tutorial to outline all of the considerations which would come into play when thinking about creating a permissioning system, but for the purposes of this tutorial, we will craft the genesis block to use the following paradigm:
 
 * 3 Administrators (these would be developers who have **full** control over the chain) (one of which will be "running" the chain performing validation)
 
-If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see our documentation on the subject](see edb's readme).
+If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see the eris-db repository for more information](https://github.com/eris-ltd/eris-db/blob/master/README.md).
 
 We use an abstraction to simplify the chain making process called Account Types. This abstraction is just that, an abstraction to help users quickly get up to speed. In order to reduce the complexity of dealing with different types of accounts typically built on a chain, we use the idea of "account types". Account types are not restrictive in the sense that they are not the "only" types of accounts you can make with eris chains.
 
 Account types are simply bundles of permissions no more no less. Using the eris tooling you can also create your own account types with your own bundles of permissions which will be helpful.
 
-## Step 2.a.1. Make (or Get) the Public Keys
+### Step 2.a.1. Make (or Get) the Public Keys
 
-Everyone who interacts with an eris chains chain will need to have a properly formated keypair. To make a keypair we will use `eris keys`.
+Everyone who interacts with an eris chain will need to have a properly formated keypair. To make a keypair we will use `eris keys`.
 
 `eris keys` usually operates as a signing daemon, but when we use eris keys to *create* key pairs what we are doing effectively is writing files. As is usual with the eris tooling, `eris keys` is opinionated and will work by default against the following directory: `~/.eris/keys/data`. When a key pair is created, that key pair will get written into that directory.
 
-////AHAHAHAHAHAHAHA FUCK DOCKER and all the edge cases it brings us
-Because we use Docker to take out most of the edge cases with various operating systems and simplify the development environment for our users, these files will be written to a file system located inside the eris keys container. As we go through this tutorial we will explain a bit about what that means. When we are using containers, these containers are not built to *hold* data, but rather are built to hold what is needed to run processes. But, if we're making keypairs, then we definitely want to *keep* these.
+These files will be written to a file system located inside the eris keys data container. As we go through this tutorial we will explain a bit about what that means. When we are using containers, these containers are not built to *hold* data, but rather are built to hold what is needed to run processes. But, if we're making keypairs, then we definitely want to *keep* these.
 
-To accomplish this, we will use the `eris` tooling only. First we need to start the `eris-keys` daemon:
+To accomplish this, we will use the `eris` tooling. First we need to start the `eris-keys` daemon:
 
 ```bash
 eris services start keys
@@ -280,8 +279,8 @@ eris services ls
 You'll see something like:
 
 ```bash
-SERVICE     ON     CONTAINER ID     DATA CONTAINER
-keys        *      f2e9930e4a       3644788be1
+SERVICE     ON     VERSION
+keys        *      0.16.0 
 ```
 
 which indicates that the keys services is on (running). To see a more comprehensive output for your services, try `eris services ls -a`.
@@ -292,9 +291,9 @@ To see what we can do with eris keys we will run:
 eris services exec keys "eris-keys -h"
 ```
 
-What this is doing is running the `eris-keys -h` "inside" the keys containers. Technically it is not inside the keys container, but inside a separate container based on the keys image with the data container mounted, but if this sentence doesn't make sense to you then feel free to ignore.
+What this is doing is running the `eris-keys -h` "inside" the keys containers. 
 
-But instead of dealing with the `eris-keys` service directly, we mostly use `eris keys` from the eris cli tool. The `eris keys` commands are basically wrappers around the `eris-keys` commands which are ran inside containers. To see the wrappers which the eris cli tooling provides around the `eris-keys` daemon, please type:
+Instead of dealing with the `eris-keys` service directly, however, we will use `eris keys` from the eris cli tool. The `eris keys` commands are basically wrappers around the `eris-keys` commands which are ran inside containers. To see the wrappers which the eris cli tooling provides around the `eris-keys` daemon, please type:
 
 ```bash
 eris keys -h
@@ -305,22 +304,16 @@ Now it is time to generate some keys!
 For the purposes of this tutorial **only** we will also create all of the necessary keys for all of the "users" of the chain and we will do so without passwords. Again, this is for demonstration purposes only, for a production system you will not do what we're about to do.
 
 ```bash
-eris keys gen
+eris keys gen --save
 ```
 
 This will create one key for you. The output here should look something like this:
 
 ```irc
-49CA2456F65B524BDEF50217AE539B8E10B37421
+Saving key to host      49CA2456F65B524BDEF50217AE539B8E10B37421
 ```
 
-Now. Let's export that key onto our host's drive so that we can back it up and keep it safe in the future.
-
-```bash
-eris keys export 49CA2456F65B524BDEF50217AE539B8E10B37421
-```
-
-Note, that in the above command we used the output from the `eris keys gen` command with the `eris keys export`. You will want to replace the argument in the `export` command with whatever the address for the public key you created is. Your key will in the directory at `~/.eris/keys/data/49CA2456F65B524BDEF50217AE539B8E10B37421/`
+The `--save` flag exported your key, which will be in the directory at `~/.eris/keys/data/49CA2456F65B524BDEF50217AE539B8E10B37421/`. If omitted, you key will remain in the container and you can use `eris keys export 49CA2456F65B524BDEF50217AE539B8E10B37421` to save it to host afterwards.
 
 To see the keys which eris-keys generated both *inside* the container type and available on your host machine type:
 
@@ -330,10 +323,9 @@ eris keys ls
 
 Now, we're all ready to make a chain.
 
-## Step 2.a.2. Make the genesis.json
+### Step 2.a.2. Make the genesis.json
 
-//// JESUS h. krist this shit is old
-Before we begin, we should quickly talk through the various files which are needed to run an eris chain. When you ran `eris init` during the [getting started](/docs/tutorials/getting-started/) step, eris created a folder called `~/.eris/chains/default` on your host's hard drive. This is to hold the default files for using eris chains. There are a few primary files used by eris chains:
+Before we begin, we should quickly talk through the various files which are needed to run an eris chain. When you ran `eris init` during the [getting started](/tutorials/getting-started/) step, eris created a folder called `~/.eris/chains/default` on your host's hard drive. This is to hold the default files for using eris chains. There are a few primary files used by eris chains:
 
 1. the chain definition file for Eris chains is called `config.toml` and is located in your `~/.eris/chains/<your_chain>` directory.
 2. the `genesis.json` which tells Eris chains how it should configure itself at the beginning of the chain (or, its genesis state)
@@ -341,7 +333,7 @@ Before we begin, we should quickly talk through the various files which are need
 
 The three files you *may* need to edit are the `genesis.json` and `priv_validator.json` (both of which we're about to get "made" for us) and the `config.toml`.
 
-In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/docs/documentation/cm/latest/examples/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
+In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/tutorials/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
 
 The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the genesis.json provides the starting point. Luckily `eris` takes care of making this for you and there is very little which should be required for you in way of editing.
 
@@ -395,17 +387,15 @@ eris clean -y --chains
 
 Per the above and after our review of the account types, we know we want to have two Root account types and one Full account type for our new chain. So let's get to business.
 
-XXXX let's not ever call a chainName simplechain because we also have a chain-type that is simplechain!!!!!!! (i won't point fingers)
-
 ```bash
-chain_dir=$HOME/.eris/chains/simplechain
-chain_dir_this=$chain_dir/simplechain_full_000
+chain_dir=$HOME/.eris/chains/firstchain
+chain_dir_this=$chain_dir/firstchain_full_000
 ```
 
 That will just create a few variables we'll be using in the future. Now, we're ready.
 
 ```bash
-eris chains make --account-types=Root:2,Full:1 simplechain
+eris chains make firstchain --account-types=Root:2,Full:1
 ```
 
 That's it! Let's double check the files to make sure we are squared away.
@@ -417,12 +407,12 @@ ls $chain_dir_this
 
 You'll see a `genesis.json`, a `priv_validator.json` and a `config.toml` in `$chain_dir_this`.
 
-## Step 2.a.3. Instantiate the Blockchain
+### Step 2.a.3: Instantiate the Blockchain
 
 With all the files prepared we're ready to rock and roll.
 
 ```bash
-eris chains start simplechain --init-dir $chain_dir_this
+eris chains start firstchain --init-dir $chain_dir_this
 ```
 
 Check that the chain is running with:
@@ -435,7 +425,7 @@ You'll see something like:
 
 ```bash
 CHAIN        ON     VERSION 
-simplechain  *      0.16.0
+firstchain  *      0.16.0
 ```
 
 As with the `eris services ls -a` command, you can also see more information about your chain with `eris chains ls -a`. Note: the same holds true with `eris ls` and `eris ls -a`.
@@ -443,13 +433,13 @@ As with the `eris services ls -a` command, you can also see more information abo
 To see the logs of the chain:
 
 ```bash
-eris chains logs simplechain
+eris chains logs firstchain
 ```
 
 To turn off the chain:
 
 ```bash
-eris chains stop simplechain
+eris chains stop firstchain
 ```
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, chain.
@@ -457,10 +447,10 @@ Boom. You're all set with your custom built, permissioned, smart contract-ified,
 You can remove all trace of the chain with:
 
 ```
-eris chains rm simplechain --data --dir --force
+eris chains rm firstchain --data --dir --force
 ```
 
-and clean up your Eris environment with:
+and *remove everything* with:
 
 ```
 eris clean -y
@@ -468,7 +458,7 @@ eris clean -y
 
 If anything went wrong with Step 2 please see our trouble shooting guide -> [^1], [^2], [^3], [^4], [^5], [^6].
 
-# Step 3: Deploy your ecosystem application using smart contract templates
+## Step 3: Deploy your ecosystem application using smart contract templates
 
 In general we are going to take three steps in order to get our contracts deployed to the blockchain:
 
@@ -476,11 +466,11 @@ In general we are going to take three steps in order to get our contracts deploy
 2. Make sure your application package has the proper information
 3. Deploy the contracts
 
-### Contracts Strategy
+#### Contracts Strategy
 
 We are going to use a very simple `get` / `set` contract which sets a variable and gets that same variable. It is about the easiest interactive contract one can imagine and as such we will use that for showing how to work with the eris platform.
 
-## Step 3.1. Make A Contract for Idi
+### Step 3.1: Make A Contract for Idi
 
 The first thing we're going to do is to add a very simple contract.
 
@@ -492,88 +482,41 @@ cd idi
 
 Now you'll make a file in this directory. Let's assume that is called `idi.sol` and has the following contents
 
-XXXXX use the sexy templating stuff for bash!!!!!
-
-```javascript
-contract IdisContractsFTW {
-  uint storedData;
-
-  function set(uint x) {
-    storedData = x;
-  }
-
-  function get() constant returns (uint retVal) {
-    return storedData;
-  }
-}
-```
+{{ insert_file "contracts_simple_idi/idi.sol" }}
 
 What does this contract do? Well, it isn't very interesting, we know. It merely `gets` and `sets` a value which is an unsigned integer type.
 
-## Step 3.2. Fixup your epm.yaml
+### Step 3.2: Fixup your epm.yaml
 
 Next we need to make an `epm.yaml` and make it look something like this:
 
-```yaml
-jobs:
-
-- name: setStorageBase
-  job:
-    set:
-      val: 5
-
-- name: deployStorageK
-  job:
-    deploy:
-      contract: idi.sol
-      wait: true
-
-- name: setStorage
-  job:
-    call:
-      destination: $deployStorageK
-      data: set $setStorageBase
-      wait: true
-
-- name: queryStorage
-  job:
-    query-contract:
-      destination: $deployStorageK
-      data: get
-
-- name: assertStorage
-  job:
-    assert:
-      key: $queryStorage
-      relation: eq
-      val: $setStorageBase
-```
+{{ insert_file "contracts_simple_idi/epm.yaml" }}
 
 Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/specs/jobs_specification/).
 
-### Job 1: Set Job
+#### Job 1: Set Job
 
 The `set` job simply sets a variable. The package manager includes a naive key value store which can be used for pretty much anything.
 
-### Job 2: Deploy Job
+#### Job 2: Deploy Job
 
-This job will compile and deploy the `idi.sol` contract using Eris' compiler service (or run your own locally). The job will wait for the deploy transaction to confirm before it will proceed.
+This job will compile and deploy the `idi.sol` contract using the local compiler service. The job will wait for the deploy transaction to confirm before it will proceed.
 
-### Job 3: Call Job
+#### Job 3: Call Job
 
 This job will send a call to the contract. The package manager will automagically utilize the abi's produced during the compilation process and allow users to formulate contract calls using the very simple notation of `functionName` `params`. The package manager also allows for variable expansion.
 
 So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (the package manager knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in the package manager, please see the [variables specification](/specs/variable_specification/).
 
-Finally, it is waiting on the call to be sunk into a block before it will proceed. /// **** wait is gone, right ?!?!?!?!?!
+**Finally, it is waiting on the call to be sunk into a block before it will proceed.**
 
-### Job 4: Query Contract Job
+#### Job 4: Query Contract Job
 
 This job is going to send what are alternatively called `simulated calls` or just `queries` to an accessor function of a contract. In other words, these are `read` transactions. Generally the `query-contract` is married to an accessor function (such as `get` in the `idi.sol` contract). Usually accessor, or read only functions, in a solidity contracts are denoted as a `constant` function which means that any call sent to the contract will not update the state of the contract.
 
 The value returned from a `query-contract` job then is usually paired with an assert.
 
-### Job 5: Assert Job
+#### Job 5: Assert Job
 
 In order to know that things have deployed or gone through correctly, you need to be able to assert relations. The package manager provides you with:
 
@@ -588,9 +531,9 @@ Relations can use either `eq` `ne` `ge` `gt` `le` `lt` syntax, or, in the altern
 
 Both the `key` and the `val` (which in other testing frameworks are the `given` and `expect`ed in an assert function) use variable expansion to compare the result of what was supposed to be sent to the `setStorageBase` job (which should have been sent to and stored in the contracts' storage) with what was received from the `queryStorage` job (which in turn called the `get` function of the contract).
 
-## Step 3.3. Deploy (and Test) The Contract
+### Step 3.3: Deploy (and Test) The Contract
 
-See the [chain making tutorial](/docs/tutorials/getting-started/#step-2-roll-your-own-blockchain-in-seconds) if you need to review the chain making process. This series of commands assumed you followed that tutorial and continued here after `eris chains stop simplechain`.
+See the Step 2 above if you need to review the chain making process. This series of commands assumed you followed that tutorial and continued here after `eris chains stop firstchain`.
 
 First, let's get our chain turned back on.
 
@@ -601,39 +544,39 @@ eris chains ls
 If it's on, you'll see:
 
 ```
-CHAIN        ON     CONTAINER ID     DATA CONTAINER
-simplechain  *      efeeb0dd63       d06301b3a5
+CHAIN        ON     VERSION
+firstchain  *      0.16.0 
 ```
 
 Whereas if it has been stopped, the `ON` field will have `-` rather than `*`. The same logic applies to services.
 
-If simplechain is not running, then turn it on with:
+If `firstchain` is not running, then turn it on with:
 
 ```bash
-eris chains start simplechain
+eris chains start firstchain
 ```
 
-or create a new chain if simplechain no longer exists.
+or create a new chain if firstchain no longer exists.
 
 Now, we are ready to deploy this world changing contract. Make sure you are in the `~/.eris/apps/idi` folder, or wherever you saved your `epm.yaml`. Note that this is a very common pattern in simple contract testing and development; namely to (1) deploy a contract; (2) send it some transactions (or `call`s); (3) query some results from the contract (or `query-contract`s); and (4) assert a result. As you get moving with contract development you will likely find yourself doing this a lot.
 
 ```bash
-addr=$(cat $chain_dir/addresses.csv | grep simplechain_full_000 | cut -d ',' -f 1)
+addr=$(cat $chain_dir/addresses.csv | grep firstchain_full_000 | cut -d ',' -f 1)
 ```
 
-That will make sure we have available the address we would like to use to deploy the contracts. Now we're ready. If the above does not output an address then check your $chain_dir variable and also check that the `simplechain_full_000` variable exists in the addresses.csv.
+That will make sure we have available the address we would like to use to deploy the contracts. Now we're ready. If the above does not output an address then check your $chain_dir variable and also check that the `firstchain_full_000` variable exists in the addresses.csv.
 
 ```bash
-eris pkgs do --chain simplechain --address $addr
+eris pkgs do --chain firstchain --address $addr
 ```
 
-You *should* be able to use any of the addresses you generated during the chainmaking tutorial since they all have the same permission levels on the chain (which, if you followed the simple tutorial are basically all public). If you are using this tutorial outside of the tutorial sequence then you can just give it the address that you'd like to use to sign transactions instead of the `grep simplechain_full_000` bash expansion.
+You *should* be able to use any of the addresses you generated during the chainmaking tutorial since they all have the same permission levels on the chain (which, if you followed the simple tutorial are basically all public). If you are using this tutorial outside of the tutorial sequence then you can just give it the address that you'd like to use to sign transactions instead of the `grep firstchain_full_000` bash expansion.
 
 (For those that do not know what is happening in that bash line: `cat` is used to "print the file" and "pipe" it into the second command; `grep` is a finder tool which will find the line which has the right name we want to use; the `cut` says split the line at the `,` and give me the first field).
 
 Note that the package manager can override the account which is used in any single job and/or can set a default `account` job which will establish a default account within the yaml. We find setting the default account within the yaml to usually be counter-productive because others will not be able to easily use your yaml unless they have the same keys in their `eris-keys` (which we **never** recommend). For more on using accounts [please see the jobs specification](/specs/jobs_specification/).
 
-Since we have a deployed contract on a running chain, please do take a look at the available options for eris contracts with:
+Since we have a deployed contract on a running chain, please do take a look at the available options for deployment using the package manager with:
 
 ```bash
 eris pkgs do --help
@@ -641,7 +584,7 @@ eris pkgs do --help
 
 That's it! Your contract is all ready to go. You should see the output in `jobs_output.json` which will have the transaction hash of the transactions as well as the address of the deployed `idi.sol` contract.
 
-# Step 4. Integrate your ecosystem application
+## Step 4: Integrate your ecosystem application
 
 Let us expand the very simple idiscontract out into a very simple smart contract backed application. To do this, we will be using node.js. To use this tutorial you will need a relatively recent version of [node](https://nodejs.org/en/download/package-manager/) installed on your box.
 
@@ -651,107 +594,35 @@ What we are going to make is a very simple application which tells the user what
 2. Build our Integration Script/Server
 3. Run our Application
 
-## Step 4.1. Set up the Application
+### Step 4.1: Set up the Application
 
 As with all node.js applications, we will start by making a package.json. This should be made in the same folder as your `epm.yaml`. We will keep the `package.json` very simple.
 
-```json
-{
-  "name": "idis_app",
-  "version": "0.0.1",
-  "dependencies": {
-    "eris-contracts": "^0.13.1",
-    "prompt": "*"
-  }
-}
-```
+{{ insert_file "contracts_simple_idi/package.json" }}
 
-Once you have saved your package.json then you will run (from the same directory) this command:
+Once you have saved your `package.json` then you will run (from the same directory) this command:
 
 ```bash
 npm install
 ```
 
-That will install eris-db.js and eris-contracts.js and their dependencies (plus another simple node.js package we'll use in the application).
+That will install eris-contracts.js and their dependencies (plus another simple node.js package we'll use in the application).
 
 For trouble shooting information regarding Step 4.1 please see our guide -> [^7], [^8], [^9]
 
-## Step 4.2. Make the Main Application Script
+### Step 4.2: Make the Main Application Script
 
 Once we have that set up, then we'll make an `app.js` file and we'll add the following contents into it:
 
-// USE THE SEXY BASH insert thingy
+{{ insert_file "contracts_simple_idi/app.js" }}
 
-```javascript
-// requires
-var fs = require ('fs');
-var prompt = require('prompt');
-var erisC = require('eris-contracts');
+**N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script. See our [docker-machine tutorial](../deprecated/using_docker_machine_with_eris/) for more information.
 
-// NOTE. On Windows/OSX do not use localhost. find the
-// url of your chain with:
-// docker-machine ls
-// and find the docker machine name you are using (usually default or eris).
-// for example, if the URL returned by docker-machine is tcp://192.168.99.100:2376
-// then your erisdbURL should be http://192.168.99.100:1337/rpc
-var erisdbURL = "http://localhost:1337/rpc";
-
-// get the abi and deployed data squared away
-var contractData = require('./jobs_output.json');
-var idisContractAddress = contractData["deployStorageK"];
-var idisAbi = JSON.parse(fs.readFileSync("./abi/" + idisContractAddress));
-
-// properly instantiate the contract objects manager using the erisdb URL
-// and the account data (which is a temporary hack)
-var accountData = require('./accounts.json');
-var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.simplechain_full_000);
-
-// properly instantiate the contract objects using the abi and address
-var idisContract = contractsManager.newContractFactory(idisAbi).at(idisContractAddress);
-
-// display the current value of idi's contract by calling
-// the `get` function of idi's contract
-function getValue(callback) {
-  idisContract.get(function(error, result){
-    if (error) { throw error }
-    console.log("Idi's number is:\t\t\t" + result.toNumber());
-    callback();
-  });
-}
-
-// prompt the user to change the value of idi's contract
-function changeValue() {
-  prompt.message = "What number should Idi make it?";
-  prompt.delimiter = "\t";
-  prompt.start();
-  prompt.get(['value'], function (error, result) {
-    if (error) { throw error }
-    setValue(result.value)
-  });
-}
-
-// using eris-contracts call the `set` function of idi's
-// contract using the value which was recieved from the
-// changeValue prompt
-function setValue(value) {
-  idisContract.set(value, function(error, result){
-    if (error) { throw error }
-    getValue(function(){});
-  });
-}
-
-// run
-getValue(changeValue);
-```
-
-// XXXX deal with this!
-**N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script (spoiler alert, only do that on Linux). See our [docker-machine tutorial](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) for more information.
-
-**N.B. 2** -- be sure to edit this line: `var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.simplechain_full_000);` in the `app.js` to reflect the chain name (in lowercase) and account if you did not make a chain with the name `simplechain` or a chain with >1 account. See `$chain_dir/accounts.json` for more info (see below for the step to retrieve this file.)
+**N.B. 2** -- be sure to edit this line: `var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.firstchain_full_000);` in the `app.js` to reflect the chain name (in lowercase) and account if you did not make a chain with the name `firstchain`. See `$chain_dir/accounts.json` for more info (see below for the step to retrieve this file.)
 
 The code should be self explanatory if you understand even a little bit of javascript. Once we properly instantiate all of the objects then there are three functions.
 
-The first function, the `getValue` function will call the `get` function of `idi.sol` (see the previous tutorial for the code of that contract) and then it will display the result of that to the command line. This function takes a callback which fires after the result of the call to idi.sol's get function (which simply returns the `storedData`).
+The first function, the `getValue` function will call the `get` function of `idi.sol` and then it will display the result of that to the command line. This function takes a callback which fires after the result of the call to idi.sol's get function (which simply returns the `storedData`).
 
 The second function is a simple function which will prompt the user to change the value (there is no validation here to make sure it is a number, so when playing with this just sure make it is a number). Once the user has entered what the value should be then the `setValue` function will be called.
 
@@ -763,30 +634,21 @@ The beginning of the script, which gets everything sets up includes this line:
 var contractData = require('./jobs_output.json');
 ```
 
-But in the [previous tutorial](/docs/tutorials/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates) we only worked with an `epm.yaml`, not an `jobs_output.json`. So what is the `jobs_output.json`? That file is an artifact of the `eris pkgs do` process. If you look at the `jobs_output.json` file it should look something like this:
+But we've only worked with an `epm.yaml`, not an `jobs_output.json`. So what is the `jobs_output.json`? That file is an artifact of the `eris pkgs do` process. If you look at the `jobs_output.json` file it should look something like this:
 
-```javascript
-{
-  "account": "1FDD813D68F73BBABFEA6EF6FB83118441CFC347",
-  "assertStorage": "passed",
-  "deployStorageK": "41672393A960D3A706C8345B5149961F8A755BBC",
-  "queryStorage": "5",
-  "setStorage": "67394093FD93BB4C8BEE2C1CB38BC454AAA56E86",
-  "setStorageBase": "5"
-}
-```
+{{ insert_file "contracts_simple_idi/sample_jobs_output.json" }}
 
 The json file is the result of each of the jobs. What we really need from this file is the contracts address that was deployed (the key to the `deployStorageK` field) so that the app.js script knows what contract on the chain it should be "talking" to.
 
-We need to do one final thing before we finish this section. We need to copy over the accounts.json which was an artifact of the chain making process and is included in our chains directory into this directory so that it can be consumed by the eris-contracts.js library.
+We need to do one final thing before we finish this section. We need to copy over the `accounts.json` which was an artifact of the chain making process and is included in our chains directory into this directory so that it can be consumed by the eris-contracts.js library.
 
 ```bash
 cp $chain_dir/accounts.json .
 ```
 
-For more about eris-contracts please see [the eris-contracts documentation](/docs/documentation/contracts.js/). If you have any trouble, please see our trouble shooting guide -> [^10]
+For more about eris-contracts please see [its repository](https://github.com/eris-ltd/eris-contracts.js). If you have any trouble, please see our trouble shooting guide -> [^10]
 
-## Step 4.3. Run The Application
+### Step 4.3: Run The Application
 
 Now we are ready to go:
 
@@ -794,7 +656,7 @@ Now we are ready to go:
 node app.js
 ```
 
-The first time you run the script it should tell you that the value is `5` or whatever value you entered into the `setStorageBase` job of the epm.yaml from the [previous tutorial](/docs/tutorials/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates). Then it will prompt you to change the value. The second time you run the script it should tell you that the value is whatever you entered the first time and so on.
+The first time you run the script it should tell you that the value is `5` or whatever value you entered into the `setStorageBase` job of the `epm.yaml` from earlier in this tutorial. Then it will prompt you to change the value. The second time you run the script it should tell you that the value is whatever you entered the first time and so on.
 
 Congratulations, you've just made your very own smart contract backed application on a permissioned blockchain! If you had any trouble with this step please see our trouble shooting guide -> [^11]
 
@@ -806,7 +668,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     Container eris_interactive_eris_service_idi_tmp_deploy_1 exited with status 1
     ```
 
-    That means that your chain is not started. Please start the chain and give the chain a second to reboot before rerunning the deploy command again.
+    That means that your chain is not started. Please start the chain and give the chain a second to reboot before rerunning the deploy command again. Ensure your chain is making blocks by running `eris chains logs` a few times. The block height should be increasing.
 
 [^2]: If you get an error which looks something like this:
 
@@ -823,7 +685,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     eris keys ls
     ```
 
-    If you do not have any keys then please take the time to [make some keys](/docs/documentation/keys/latest/examples/exporting_your_keys/). After you find a key which you currently have, then add that as the `address` flag to the `eris pkgs do` command.
+    If you do not have any keys then please take the time to generate some keys as described in Step 2 of this tutorial.
 
 [^3]: If you choose the wrong key then you'll get an error which will probably look something like this:
 
@@ -837,12 +699,12 @@ Congratulations, you've just made your very own smart contract backed applicatio
     To "see" your `genesis.json` then do this:
 
     ```
-    eris chains cat simplechain genesis
+    eris chains cat firstchain genesis
     ```
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) for more information.
 
-[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](/docs/documentation/db/) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. The easiest thing to do at this point is to [update your genesis.json](/docs/documentation/cm/latest/examples/genesis_updating/). <==== NO,ewwwww
+[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/eris-ltd/eris-db) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
 
     Once you have the following sorted:
 
@@ -852,7 +714,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     Then you'll be ready to:
 
     ```bash
-    eris pkgs do --chain simplechain --address ADDR
+    eris pkgs do --chain firstchain --address ADDR
     ```
 
     Where `ADDR` in the above command is the address you want to use.
@@ -892,7 +754,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     Once the service is running, you can deploy packages by adding the address of your compiler service to the command line parameters. Replace the IP address with your local IP address, depending on your OS. If you're on Windows or Mac OS X, you will have to use the Docker-Machine VM's IP address (`192.168.99.100` by default):
 
     ```bash
-    eris pkgs do --chain simplechain --address $addr --compiler 192.168.99.100:9091
+    eris pkgs do --chain firstchain --address $addr --compiler 192.168.99.100:9091
     ```
 
     When you're done with your work, you can stop the _compilers_ service like the other eris services:
