@@ -22,7 +22,7 @@ The first thing we're going to do is to add a very simple contract.
 
 Now you'll make a file in this directory. Let's assume that is called `GSFactory.sol` and has the following contents displayed above.
 
-This is a slightly more advanced set of contracts than that we used in the [101 tutorial sequence](/docs/tutorials/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates). Also, now we have multiple contracts we are going to handle.
+This is a slightly more advanced set of contracts than that we used in the [getting started tutorial](/getting-started). Also, now we have multiple contracts we are going to handle.
 
 What do these contracts do? Well, they aren't terribly interesting we know. The first contract, the `GSContract`, merely `gets` and `sets` a value which is an unsigned integer type. The second contract, the `GSFactory`, merely makes a new `GSContract` when `create` is called or it returns the address of the most recent contract created when `getLast` is called.
 

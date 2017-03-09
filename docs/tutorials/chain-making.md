@@ -56,8 +56,8 @@ The third section of the toml file is the permissions table. This section looks 
 root = 1
 send = 1
 call = 1
-create_contract = 1
-create_account = 1
+createContract = 1
+createAccount = 1
 bond = 1
 name = 1
 hasBase = 1

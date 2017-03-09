@@ -204,7 +204,7 @@ eris chains logs test_chain
 eris chains logs -f test_chain
 ```
 
-Note: although your chain may be "running" (i.e., has been started and has a docker container that is "ON", it is possible that you chain is not making blocks and thus will be useless for deploying contracts. After running the above command, ensure you chain is indeed making blocks. In the future, we'll be introducing commands that will specify the health of your chain.
+Note: although your chain may be "running" (i.e., has been started and has a docker container that is "ON", it is possible that you chain is not making blocks and thus will be useless for deploying contracts. After running the above command, ensure you chain is indeed making blocks. Stay tuned for an `eris chains info/status` command.
 
 Stop your chain:
 
@@ -212,7 +212,7 @@ Stop your chain:
 eris chains stop test_chain
 ```
 
-Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to, and `-d` to remove the chain directory entirely):
+Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to, and `-d` to remove the (local)  chain directory entirely):
 
 ```bash
 eris chains rm -xfd test_chain
@@ -229,121 +229,16 @@ That's it! Your chain is rolled!
 Let's remove all of the eris "stuff" before we move on to the next portion of the tutorials:
 
 ```bash
-eris clean -y
+eris clean -yx
 ```
 
-## Step 2.a: Making a "real" permissioned chain.
+## Step 2.a: Advanced Chain Making
 
-**Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below.
+**Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below. (TODO, link)
 
-There are three steps to making a permissioned chain:
+Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/known-chain-making.md) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
 
-1. Make (or get) the public keys for the individuals
-2. Make the `genesis.json` file
-3. Instantiate the chain
-
-We shall go through these in their logical order.
-
-#### Users Design
-
-To do this we need to, first, consider, *who* will get *what* permissions and *why*. It is outside the scope of this tutorial to outline all of the considerations which would come into play when thinking about creating a permissioning system, but for the purposes of this tutorial, we will craft the genesis block to use the following paradigm:
-
-* 3 Administrators (these would be developers who have **full** control over the chain) (one of which will be "running" the chain performing validation)
-
-If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see the eris-db repository for more information](https://github.com/eris-ltd/eris-db/blob/master/README.md).
-
-We use an abstraction to simplify the chain making process called Account Types. This abstraction is just that, an abstraction to help users quickly get up to speed. In order to reduce the complexity of dealing with different types of accounts typically built on a chain, we use the idea of "account types". Account types are not restrictive in the sense that they are not the "only" types of accounts you can make with eris chains.
-
-Account types are simply bundles of permissions no more no less. Using the eris tooling you can also create your own account types with your own bundles of permissions which will be helpful.
-
-### Step 2.a.1. Make (or Get) the Public Keys
-
-Everyone who interacts with an eris chain will need to have a properly formated keypair. To make a keypair we will use `eris keys`.
-
-`eris keys` usually operates as a signing daemon, but when we use eris keys to *create* key pairs what we are doing effectively is writing files. As is usual with the eris tooling, `eris keys` is opinionated and will work by default against the following directory: `~/.eris/keys/data`. When a key pair is created, that key pair will get written into that directory.
-
-These files will be written to a file system located inside the eris keys data container. As we go through this tutorial we will explain a bit about what that means. When we are using containers, these containers are not built to *hold* data, but rather are built to hold what is needed to run processes. But, if we're making keypairs, then we definitely want to *keep* these.
-
-To accomplish this, we will use the `eris` tooling. First we need to start the `eris-keys` daemon:
-
-```bash
-eris services start keys
-```
-
-By default, `eris` is a very "quiet" tool. To check that the keys service started correctly type:
-
-```bash
-eris services ls
-```
-
-You'll see something like:
-
-```bash
-SERVICE     ON     VERSION
-keys        *      0.16.0 
-```
-
-which indicates that the keys services is on (running). To see a more comprehensive output for your services, try `eris services ls -a`.
-
-To see what we can do with eris keys we will run:
-
-```bash
-eris services exec keys "eris-keys -h"
-```
-
-What this is doing is running the `eris-keys -h` "inside" the keys containers. 
-
-Instead of dealing with the `eris-keys` service directly, however, we will use `eris keys` from the eris cli tool. The `eris keys` commands are basically wrappers around the `eris-keys` commands which are ran inside containers. To see the wrappers which the eris cli tooling provides around the `eris-keys` daemon, please type:
-
-```bash
-eris keys -h
-```
-
-Now it is time to generate some keys!
-
-For the purposes of this tutorial **only** we will also create all of the necessary keys for all of the "users" of the chain and we will do so without passwords. Again, this is for demonstration purposes only, for a production system you will not do what we're about to do.
-
-```bash
-eris keys gen --save
-```
-
-This will create one key for you. The output here should look something like this:
-
-```irc
-Saving key to host      49CA2456F65B524BDEF50217AE539B8E10B37421
-```
-
-The `--save` flag exported your key, which will be in the directory at `~/.eris/keys/data/49CA2456F65B524BDEF50217AE539B8E10B37421/`. If omitted, you key will remain in the container and you can use `eris keys export 49CA2456F65B524BDEF50217AE539B8E10B37421` to save it to host afterwards.
-
-To see the keys which eris-keys generated both *inside* the container type and available on your host machine type:
-
-```bash
-eris keys ls
-```
-
-Now, we're all ready to make a chain.
-
-### Step 2.a.2. Make the genesis.json
-
-Before we begin, we should quickly talk through the various files which are needed to run an eris chain. When you ran `eris init` during the [getting started](/tutorials/getting-started/) step, eris created a folder called `~/.eris/chains/default` on your host's hard drive. This is to hold the default files for using eris chains. There are a few primary files used by eris chains:
-
-1. the chain definition file for Eris chains is called `config.toml` and is located in your `~/.eris/chains/<your_chain>` directory.
-2. the `genesis.json` which tells Eris chains how it should configure itself at the beginning of the chain (or, its genesis state)
-3. the keypair which the tendermit consensus engine will use to sign blocks, etc. called the `priv_validator.json`
-
-The three files you *may* need to edit are the `genesis.json` and `priv_validator.json` (both of which we're about to get "made" for us) and the `config.toml`.
-
-In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/tutorials/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
-
-The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the genesis.json provides the starting point. Luckily `eris` takes care of making this for you and there is very little which should be required for you in way of editing.
-
-With all that said, we're ready to make a chain. First let us make a "fake" chain just to get a tour of the chain maker tool. Once we go through that process then we will make our "real" chain which we will use for the rest of this tutorial series. Let's see what eris chains make can do for us.
-
-```bash
-eris chains make -h
-```
-
-That will give you an overview of the chains maker tool. Now we are ready.
+To learn about the account types paradigm, try the chain making wizard:
 
 ```bash
 eris chains make toRemoveLater --wizard
@@ -373,16 +268,16 @@ cat ~/.eris/chains/toRemoveLater/validators.csv
 cat ~/.eris/chains/toRemoveLater/addresses.csv
 ```
 
-The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate.
+The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate. See the [known chain making tutorial](/known-chain-making) for more info.
 
-In general, we recommend that if you are making a chain for a consortium that you have your consortium members **make their own keys** and then send the public key to you. Once you've assembled the keys then you will create an `accounts.csv` and `validators.csv` files in this format and then run `eris chains make` with the `--known` flag. More information on complex chain making is included in our [advanced chain making tutorial](/tutorials/chain-making/).
+The `eris chains make` tool comes with advanced account type and chain type definition capabilities. More information on complex chain making is included in our [advanced chain making tutorial](/tutorials/chain-making/).
 
 The last file is the `addresses.csv` file which is another artifact of the chain making process. It simply has the addresses and the "names" of the nodes. We find it useful when scripting out complex interactions and it is simply a reference file along the lines of `addr=$(cat $chain_dir/addresses.csv | grep $name | cut -d ',' -f 1)`.
 
 OK, enough playing around let's get serious! Cleaning after our previous experiment:
 
 ```bash
-eris clean -y --chains
+eris clean -yx
 ```
 
 Per the above and after our review of the account types, we know we want to have two Root account types and one Full account type for our new chain. So let's get to business.
@@ -425,7 +320,7 @@ You'll see something like:
 
 ```bash
 CHAIN        ON     VERSION 
-firstchain  *      0.16.0
+firstchain   *      0.16.0
 ```
 
 As with the `eris services ls -a` command, you can also see more information about your chain with `eris chains ls -a`. Note: the same holds true with `eris ls` and `eris ls -a`.
@@ -500,15 +395,13 @@ The `set` job simply sets a variable. The package manager includes a naive key v
 
 #### Job 2: Deploy Job
 
-This job will compile and deploy the `idi.sol` contract using the local compiler service. The job will wait for the deploy transaction to confirm before it will proceed.
+This job will compile and deploy the `idi.sol` contract using the local compiler service. 
 
 #### Job 3: Call Job
 
 This job will send a call to the contract. The package manager will automagically utilize the abi's produced during the compilation process and allow users to formulate contract calls using the very simple notation of `functionName` `params`. The package manager also allows for variable expansion.
 
 So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (the package manager knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in the package manager, please see the [variables specification](/specs/variable_specification/).
-
-**Finally, it is waiting on the call to be sunk into a block before it will proceed.**
 
 #### Job 4: Query Contract Job
 

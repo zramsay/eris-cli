@@ -9,14 +9,12 @@ jobs:
   job:
     deploy:
       contract: idi.sol
-      wait: true
 
 - name: setStorage
   job:
     call:
       destination: $deployStorageK
       data: set $setStorageBase
-      wait: true
 
 - name: queryStorage
   job:
