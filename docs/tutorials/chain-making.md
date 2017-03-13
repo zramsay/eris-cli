@@ -1,3 +1,15 @@
+---
+
+layout: single
+title: "Tutorials | Chain Making"
+aliases:
+  - /docs/chain-making
+menu:
+  tutorials:
+    weight: 5
+
+---
+
 # Introduction
 
 There are typically two steps to making a permissioned blockchain (for less advanced users we say there are three but really there are two):

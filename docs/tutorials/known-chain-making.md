@@ -1,9 +1,9 @@
 ---
 
 layout: single
-title: "Known Chain Making"
+title: "Tutorials | Known Chain Making"
 aliases:
-  - /docs
+  - /docs/known-chain-making
 menu:
   tutorials:
     weight: 5
@@ -109,7 +109,7 @@ Before we begin, we should quickly talk through the various files which are need
 
 The three files you *may* need to edit are the `genesis.json` and `priv_validator.json` (both of which we're about to get "made" for us) and the `config.toml`.
 
-In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/tutorials/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
+In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/docs/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
 
 The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the genesis.json provides the starting point. Luckily `eris` takes care of making this for you and there is very little which should be required for you in way of editing.
 
