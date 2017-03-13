@@ -2,16 +2,21 @@
 
 layout: single
 title: "Tutorials | Trouble Shooting Your Installation"
+aliases:
+  - /docs/install-troubleshooting
+menu:
+  tutorials:
+    weight: 5
 
 ---
 
 # I'm On macOS or Windows and It's All Wonky!
 
-Never fear, the marmots are here. See [Section 1 of our docker-machine tutorial](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) and come back to your installation. All will be well.
+Never fear, the marmots are here. See [Section 1 of our docker-machine tutorial](/docs/) and come back to your installation. All will be well.
 
 # No `eris` Command Found
 
-If you get a "eris: command not found" error then (if you built it from source) you need to make sure that your `$GOBIN` variable value is in your `$PATH` (see [Getting Started](/docs/tutorials/getting-started/) and then do:
+If you get a "eris: command not found" error then (if you built it from source) you need to make sure that your `$GOBIN` variable value is in your `$PATH` (see [Getting Started](/docs/getting-started/) and then do:
 
 ```irc
 cd $GOPATH/src/github.com/eris-ltd/eris/cmd/eris

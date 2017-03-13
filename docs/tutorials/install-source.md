@@ -2,12 +2,18 @@
 
 layout: single
 title: "Tutorials | Building From Source"
+aliases:
+  - /docs/install-source
+menu:
+  tutorials:
+    weight: 5
 
 ---
 
+
 You will need `go` and `git` installed to do this.
 
-## Install Go
+# Install Go
 
 At the current time, `eris` requires `go` version >= {{< data_coding golang_min >}}. Go is not needed if you install `eris` as a binary.
 
@@ -35,7 +41,7 @@ If you do not add those lines to the relevant shell files then you can just type
 
 Now you're ready to install the components of the Eris platform.
 
-## Building Eris from source
+# Building Eris from source
 
 Go makes it very easy to build from source. Indeed, it is really only one command.
 
