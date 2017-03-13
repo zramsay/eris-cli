@@ -1,3 +1,15 @@
+---
+
+layout: single
+title: "Tutorials | Deploying Advanced Smart Contracts To A Chain"
+aliases:
+  - /docs/deploying-advanced-smart-contracts
+menu:
+  tutorials:
+    weight: 5
+
+---
+
 # Introduction
 
 For this tutorial, we are going to work with multiple contracts. All the base contract does is get and sets a value, but we'll add some layers to the contract which will satisfy common patterns smart contract writers adopt.
