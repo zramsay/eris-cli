@@ -160,7 +160,7 @@ sudo apt-get install -y bc jq gcc git build-essential nodejs &>/dev/null
 
 ## Start blockchain, run contracts!
 
-Learn more and play with eris blockchain, go to [Getting Started With Eris](/docs/tutorials/getting-started/)
+Learn more and play with eris blockchain, go to [Getting Started With Eris](../getting-started/)
 
 
 
