@@ -234,7 +234,7 @@ eris clean -yx
 
 ## Step 2.a: Advanced Chain Making
 
-**Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below. (TODO, link)
+**Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below.
 
 Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/known-chain-making.md) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
 
@@ -270,7 +270,7 @@ cat ~/.eris/chains/toRemoveLater/addresses.csv
 
 The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate. See the [known chain making tutorial](/known-chain-making) for more info.
 
-The `eris chains make` tool comes with advanced account type and chain type definition capabilities. More information on complex chain making is included in our [advanced chain making tutorial](/docs/chain-making/).
+The `eris chains make` tool comes with advanced account type and chain type definition capabilities. More information on complex chain making is included in our [advanced chain making tutorial](/chain-making).
 
 The last file is the `addresses.csv` file which is another artifact of the chain making process. It simply has the addresses and the "names" of the nodes. We find it useful when scripting out complex interactions and it is simply a reference file along the lines of `addr=$(cat $chain_dir/addresses.csv | grep $name | cut -d ',' -f 1)`.
 
