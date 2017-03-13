@@ -1,16 +1,16 @@
 ---
 
 layout: single
-title: "Multi Node Chains"
+title: "Tutorials | Multi Node Chains"
 aliases:
-  - /docs
+  - /docs/chain-deploying
 menu:
   tutorials:
     weight: 5
 
 ---
 
-## Introduction
+# Introduction
 
 In general what is going to happen here is that we are going to establish what we call a "peer sergeant major" cloud node who is responsible for being the easy connection point for any nodes which need to connect into the system.
 
@@ -22,7 +22,7 @@ Note also that we are using four validators for this chain. This means it will t
 
 Previously, the recommended way of creating a multi-node chain was with docker-machine, but we have [deprecated this tutorial](../deprecated/using-docker-machine-with-eris) and as of the 0.17.0 release, will be eliminating the global `--machine` flag.
 
-## Overview of Tutorial
+# Overview of Tutorial
 
 We are going to take these steps in order to get the chain setup:
 
@@ -33,7 +33,7 @@ We are going to take these steps in order to get the chain setup:
 5. Start additional services to ensure chain longevity
 6. Inspect the health of our chain
 
-## Step 1: Create cloud machine
+# Step 1: Create cloud machine
 
 Using any cloud provider of your choice, create four seperate instances and note their IP addresses. For the sake of this tutorial, we'll refer to these instances as CL0, CL1, CL2, and CL3 respectively. For example:
 
@@ -46,7 +46,7 @@ CL3: 48.413.82.16
 
 In this case, the IP addresses are fake so take note your own. You'll need to [install eris](/getting-started) and run `eris init` on each machine. Ensure `ssh` is enable on all machines.
 
-## Step 2: Make the chain
+# Step 2: Make the chain
 
 We'll use `CL0` as our "peer seargent major", so ssh yourself in. For simplicty, we'll use one Full account and three Validator accounts:
 
@@ -62,7 +62,7 @@ We created a handful of directories within `~/.eris/chains/multichain`. Feel fre
 
 For this tutorial, we'll be copying the raw directories as-is, however, note that the `eris chains make` command can be run with either the `--tar` or `--zip` flag as required for your scripting purposes.
 
-## Step 3: Copy the files around
+# Step 3: Copy the files around
 
 The following describes which directories are required for each cloud machine:
 
