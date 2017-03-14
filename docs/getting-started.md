@@ -21,7 +21,7 @@ There are four steps need to get moving with Eris:
 
 # Step 1. Install the Eris Platform
 
-**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and for macOS and Windows *only* [Docker Machine](https://https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine allows you to run Docker on remote machines. We do not currently support Docker for Mac/Windows as they are still in beta.
+**Dependencies**: `eris` has 2 dependencies: [Docker](https://www.docker.com/) and for macOS and Windows *only* [Docker Machine](https://docs.docker.com/machine/). Docker is a run anywhere container solution which makes development, deployment, testing, and running of ecosystem applications a breeze and Docker Machine allows you to run Docker on remote machines. We do not currently support Docker for Mac/Windows as they are still in beta.
 
 Currently we consider the most workable setup to be (what our tests consider authoritative) with these operating system and dependencies' versions:
 
@@ -174,11 +174,11 @@ Although we once supported IoT installations, this has been temporarily disabled
 
 ## Building From Source
 
-If you would like to build from source [see our documentation](/docs/install-source/).
+If you would like to build from source [see our documentation](/docs/install-source).
 
 ## Troubleshooting Your Install
 
-If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/install-troubleshooting/) or join [The Marmot Den](https://slack.monax.io) to ask for help.
+If you have any errors which arise during the installation process, please see our [trouble shooting page](/docs/install-troubleshooting) or join [The Marmot Den](https://slack.monax.io) to ask for help.
 
 # Step 2: Roll Your Own Blockchain in Seconds
 
@@ -236,7 +236,7 @@ eris clean -yx
 
 **Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below.
 
-Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/known-chain-making.md) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
+Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/docs/known-chain-making.md) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
 
 To learn about the account types paradigm, try the chain making wizard:
 
@@ -268,9 +268,9 @@ cat ~/.eris/chains/toRemoveLater/validators.csv
 cat ~/.eris/chains/toRemoveLater/addresses.csv
 ```
 
-The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate. See the [known chain making tutorial](/known-chain-making) for more info.
+The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate. See the [known chain making tutorial](/docs/known-chain-making) for more info.
 
-The `eris chains make` tool comes with advanced account type and chain type definition capabilities. More information on complex chain making is included in our [advanced chain making tutorial](/chain-making).
+The `eris chains make` tool comes with advanced account type and chain type definition capabilities. More information on complex chain making is included in our [advanced chain making tutorial](/docs/chain-making).
 
 The last file is the `addresses.csv` file which is another artifact of the chain making process. It simply has the addresses and the "names" of the nodes. We find it useful when scripting out complex interactions and it is simply a reference file along the lines of `addr=$(cat $chain_dir/addresses.csv | grep $name | cut -d ',' -f 1)`.
 
@@ -377,7 +377,7 @@ cd idi
 
 Now you'll make a file in this directory. Let's assume that is called `idi.sol` and has the following contents
 
-{{ insert_file "contracts_simple_idi/idi.sol" }}
+{{ insert_file "/docs/contracts_simple_idi/idi.sol" }}
 
 What does this contract do? Well, it isn't very interesting, we know. It merely `gets` and `sets` a value which is an unsigned integer type.
 
@@ -385,9 +385,9 @@ What does this contract do? Well, it isn't very interesting, we know. It merely 
 
 Next we need to make an `epm.yaml` and make it look something like this:
 
-{{ insert_file "contracts_simple_idi/epm.yaml" }}
+{{ insert_file "/docs/contracts_simple_idi/epm.yaml" }}
 
-Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/specs/jobs_specification/).
+Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/specs/jobs_specification).
 
 ### Job 1: Set Job
 
@@ -401,7 +401,7 @@ This job will compile and deploy the `idi.sol` contract using the local compiler
 
 This job will send a call to the contract. The package manager will automagically utilize the abi's produced during the compilation process and allow users to formulate contract calls using the very simple notation of `functionName` `params`. The package manager also allows for variable expansion.
 
-So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (the package manager knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in the package manager, please see the [variables specification](https://github.com/eris-ltd/eris/blob/issue-1093-sort-documentation/docs/specs/variable_specification.md).
+So what this job is doing is this. The job is pulling the value of the `$setStorageBase` job (the package manager knows this because it resolved `$` + `jobName` to the result of the `setStorageBase` job) and replacing that with the value, which is `5`. Then it will send that `5` value to the `set` function of the contract which is at the `destination` that is the result of the `deployStorageK` job; in other words the result of Job 3. For more on variables in the package manager, please see the [variables specification](/docs/specs/variable_specification).
 
 ### Job 4: Query Contract Job
 
@@ -437,7 +437,7 @@ eris chains ls
 If it's on, you'll see:
 
 ```
-CHAIN        ON     VERSION
+CHAIN        ON    VERSION
 firstchain  *      0.16.0 
 ```
 
@@ -467,7 +467,7 @@ You *should* be able to use any of the addresses you generated during the chainm
 
 (For those that do not know what is happening in that bash line: `cat` is used to "print the file" and "pipe" it into the second command; `grep` is a finder tool which will find the line which has the right name we want to use; the `cut` says split the line at the `,` and give me the first field).
 
-Note that the package manager can override the account which is used in any single job and/or can set a default `account` job which will establish a default account within the yaml. We find setting the default account within the yaml to usually be counter-productive because others will not be able to easily use your yaml unless they have the same keys in their `eris-keys` (which we **never** recommend). For more on using accounts [please see the jobs specification](/specs/jobs_specification/).
+Note that the package manager can override the account which is used in any single job and/or can set a default `account` job which will establish a default account within the yaml. We find setting the default account within the yaml to usually be counter-productive because others will not be able to easily use your yaml unless they have the same keys in their `eris-keys` (which we **never** recommend). For more on using accounts [please see the jobs specification](/docs/specs/jobs_specification).
 
 Since we have a deployed contract on a running chain, please do take a look at the available options for deployment using the package manager with:
 
@@ -491,7 +491,7 @@ What we are going to make is a very simple application which tells the user what
 
 As with all node.js applications, we will start by making a package.json. This should be made in the same folder as your `epm.yaml`. We will keep the `package.json` very simple.
 
-{{ insert_file "contracts_simple_idi/package.json" }}
+{{ insert_file "/docs/contracts_simple_idi/package.json" }}
 
 Once you have saved your `package.json` then you will run (from the same directory) this command:
 
@@ -507,7 +507,7 @@ For trouble shooting information regarding Step 4.1 please see our guide -> [^7]
 
 Once we have that set up, then we'll make an `app.js` file and we'll add the following contents into it:
 
-{{ insert_file "contracts_simple_idi/app.js" }}
+{{ insert_file "/docs/contracts_simple_idi/app.js" }}
 
 **N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script. See our [docker-machine tutorial](../deprecated/using_docker_machine_with_eris/) for more information.
 
@@ -529,7 +529,7 @@ var contractData = require('./jobs_output.json');
 
 But we've only worked with an `epm.yaml`, not an `jobs_output.json`. So what is the `jobs_output.json`? That file is an artifact of the `eris pkgs do` process. If you look at the `jobs_output.json` file it should look something like this:
 
-{{ insert_file "contracts_simple_idi/sample_jobs_output.json" }}
+{{ insert_file "/docs/contracts_simple_idi/sample_jobs_output.json" }}
 
 The json file is the result of each of the jobs. What we really need from this file is the contracts address that was deployed (the key to the `deployStorageK` field) so that the app.js script knows what contract on the chain it should be "talking" to.
 

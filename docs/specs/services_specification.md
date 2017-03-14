@@ -2,23 +2,13 @@
 
 Services are defined in **service definition files**. These reside on the host in `~/.eris/services`.
 
-Service definition files may be formatted in any of the following formats:
+Service definition files are formatted using `toml`.
 
-* `json`
-* `toml` (default)
-* `yaml`
-
-eris will marshal the following fields from service definition files:
-
-{{ insert_definition "service_definition.go" "ServiceDefinition" }}
-
-{{ insert_definition "service_definition.go" "Dependencies" }}
-
-{{ insert_definition "service.go" "Service" }}
+See the [source code](https://github.com/eris-ltd/eris/blob/master/definitions/service_definition.go) for more details on fields that will be marshalled. These largely mirror the fields used in `docker run/start`.
 
 ## Service Dependencies
 
-Service dependencies are started by eris prior to the service itself starting.
+Service dependencies are started by `eris` prior to the service itself starting.
 
 ## Linking to Chains
 

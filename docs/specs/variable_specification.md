@@ -1,6 +1,6 @@
 # Variables Specification
 
-Variables can be used for nearly every eris [jobs](jobs_specification) field (largely with the exception of nonce and wait).
+Variables can be used for nearly every eris [jobs](/docs/specs/jobs_specification) field (largely with the exception of nonce and wait).
 
 eris:jobs variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
 
