@@ -7,7 +7,7 @@ title: "Tutorials | Solidity 3: Solidity Language Features"
 
 # Solidity Series
 
-This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/tutorials/getting-started/).
+This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 

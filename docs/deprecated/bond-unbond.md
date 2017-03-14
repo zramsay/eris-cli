@@ -1,11 +1,11 @@
 The concept of bonding/unbonding validators here refers to validators which are voluntarily adding (bonding) or removing (unbonding) themselves. New validators (not included in the genesis file) first require tokens on the chain to post a bond with. Future tutorials will cover slashing/removing unwelcome/byzantine validators.
 
-For this example, we'll be using a [simplechain](/docs/tutorials/getting-started/#step-2-roll-your-own-blockchain-in-seconds), which has a single Full Account (see: `cat ~/.eris/chains/account-types/full.toml` for more information). One another host, a new account will be created and connect to the running chain. Once our Full Account sends this new account some tokens, the new account will be in a position to post a bond and begin validating. Eventually, this validator can unbond if they so choose.
+For this example, we'll be using a [simplechain](../getting-started), which has a single Full Account (see: `cat ~/.eris/chains/account-types/full.toml` for more information). One another host, a new account will be created and connect to the running chain. Once our Full Account sends this new account some tokens, the new account will be in a position to post a bond and begin validating. Eventually, this validator can unbond if they so choose.
 
 Let's get started!
 
 # Get the chain sorted
-We'll do this part [using docker-machine](/docs/documentation/cli/latest/examples/using_docker_machine_with_eris/) to simulate another host that starts the chain as a single validator.
+We'll do this part [using docker-machine](/using_docker_machine_with_eris/) to simulate another host that starts the chain as a single validator.
 
 ### Create a docker machine and initialize eris
 ```bash
