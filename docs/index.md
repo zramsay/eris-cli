@@ -1,11 +1,13 @@
 ---
 
 type:   docs
-layout: li
-title: "Documentation"
+layout: single
+title: "Tutorials & Examples"
 index_file: ""
-menu: "tutorial"
-path: "docs/"
+menu: "tutorials"
+path: "content/docs/"
+aliases:
+  - /docs/
 
 ---
 
@@ -13,18 +15,18 @@ Welcome to the Monax Documentation homepage. Here you'll find everything needed 
 
 ### Getting going
 
-* For installation and writing your first application, see our [getting started tutorial](/getting-started).
-* For deploying multi-node chains in the cloud, see our [chain deploying tutorial](/chain-deploying).
-* For making consortium chains with several stakeholders, see our [known chain making tutorial](/known-chain-making).
-* For advanced smart contract deployments, see [this tutorial](/deploying-advanced-smart-contracts-to-a-chain).
+* For installation and writing your first application, see our [getting started tutorial](/docs/getting-started).
+* For deploying multi-node chains in the cloud, see our [chain deploying tutorial](/docs/chain-deploying).
+* For making consortium chains with several stakeholders, see our [known chain making tutorial](/docs/known-chain-making).
+* For advanced smart contract deployments, see [this tutorial](/docs/deploying-advanced-smart-contracts-to-a-chain).
 
 ### Solidity skills
 
-* Explore our comprehensive smart-contract writing [in solidity series](/solidity/) with 7 modules and counting.
+* Explore our comprehensive smart-contract writing [in solidity series](/docs/solidity/) with 7 modules and counting.
 
 ### Specifications
 
-* Apply to chain and account types, services, and the package manager. They can be found [here](/specs/).
+* Apply to chain and account types, services, and the package manager. They can be found [here](/docs/specs/).
 
 ### Other repositories and documentation
 
@@ -33,7 +35,7 @@ Welcome to the Monax Documentation homepage. Here you'll find everything needed 
 
 ### Deprecated
 
-Looking for a tutorial that's missing? Dig into the [deprecated directory](/deprecated/).
+Looking for a tutorial that's missing? Dig into the [deprecated directory](/docs/deprecated/).
 
 ### Contribute
 
