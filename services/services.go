@@ -140,8 +140,14 @@ func ExecService(do *definitions.Do) (buf *bytes.Buffer, err error) {
 			log.Info("exec_host not found in service definition file")
 			log.WithField("service", do.Name).Info("May not be able to communicate with the service")
 		} else {
+			// Grab the Container to inspect the service's IP address
+			cont, err := util.DockerClient.InspectContainer(main)
+			if err != nil {
+				return nil, util.DockerError(err)
+			}
 			service.Service.Environment = append(service.Service.Environment,
-				fmt.Sprintf("%s=%s", service.Service.ExecHost, do.Name))
+				fmt.Sprintf("%s=%s", service.Service.ExecHost,
+					cont.NetworkSettings.IPAddress))
 		}
 
 		// Use service's short name as a link alias.
