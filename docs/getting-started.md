@@ -170,7 +170,7 @@ eris init
 
 ## ARM Installation (IoT devices)
 
-Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. See [this issue](https://github.com/eris-ltd/eris/issues/1088) for more details on progress.
+Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. See [this issue](https://github.com/eris-ltd/eris/issues/1088) for more details on progress. See also the [deprecated ARM installation tutorial](/docs/deprecated/install-arm).
 
 ## Building From Source
 
@@ -236,7 +236,7 @@ eris clean -yx
 
 **Note:** If you'd like to get right into deploying contracts and building your ecosystem application, jump to Step 3 below.
 
-Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/docs/known-chain-making.md) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
+Blockchains are meant to be trustless, and that means everyone generates their own keys. Validators and any other accounts to be included at the inception of a chain must be included in the `genesis.json` file. This is done using the `--known` flag for `eris chains make`. See our [known chain making tutorial](/docs/known-chain-making) for more information. For the purposes of this tutorial, however, we'll be using a simplechain with one account.
 
 To learn about the account types paradigm, try the chain making wizard:
 
@@ -587,7 +587,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     Container edbae127e1a31f1f85fbe14359362f7943028e57dc5eec4d91a71df706f5240f exited with status 1
     ```
 
-    This means that the account `03E3FAC131CC111D78B569CEC45FA42CE5DA8AD8` has not been registered in the `genesis.json`. The account which is not registered will be the same account you told epm to use via the signing server (`eris-keys`).
+    This means that the account `03E3FAC131CC111D78B569CEC45FA42CE5DA8AD8` has not been registered in the `genesis.json`. The account which is not registered will be the same account you told [eris pkgs do] to use via the signing server (`eris-keys`).
 
     To "see" your `genesis.json` then do this:
 
@@ -595,7 +595,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     eris chains cat firstchain genesis
     ```
 
-    You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/) for more information.
+    You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/deprecated/using-docker-machine-with-eris) for more information.
 
 [^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/eris-ltd/eris-db) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
 

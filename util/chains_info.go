@@ -12,7 +12,6 @@ import (
 	"github.com/eris-ltd/eris/definitions"
 	"github.com/eris-ltd/eris/log"
 
-	//epm
 	"github.com/eris-ltd/eris-db/client"
 	"github.com/eris-ltd/eris-db/logging/loggers"
 )
@@ -87,11 +86,10 @@ func ChangeHead(name string) error {
 	return nil
 }
 
-// from epm
 func GetBlockHeight(do *definitions.Do) (latestBlockHeight int, err error) {
 	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	// NOTE: NodeInfo is no longer exposed through Status();
-	// other values are currentlu not used by e-pm
+	// other values are currently not use by the package manager
 	_, _, _, latestBlockHeight, _, err = nodeClient.Status()
 	if err != nil {
 		return 0, err

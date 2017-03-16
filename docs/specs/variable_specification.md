@@ -25,7 +25,7 @@ Set variables will take the `JobName` and use the `val` field from the job file 
 
 ## <a name="setVars"></a>Variable Types
 
-If you're using solidity then you will be familiar with variable types. Here is how eris:pm deals with variable types:
+If you're using solidity then you will be familiar with variable types. Here is how the package manager deals with variable types:
 
 * `address` - addresses should be given according to the 40 character string **without** the leading `0x`
   * Example: 1040E6521541DAB4E7EE57F21226DD17CE9F0FB7
@@ -35,7 +35,7 @@ If you're using solidity then you will be familiar with variable types. Here is 
 * `string` and `byteX` -- just give it a string
   * Example: marmatoshi
 
-For a more complete handling of the types, please see the epm.yaml in tests/fixtures/app06 directory of the repository.
+For a more complete handling of the types, please see the epm.yaml in `tests/jobs_fixtures/app06` directory of the repository.
 
 ## <a name="reservedVars"></a>Reserved Variables
 
@@ -47,7 +47,7 @@ The following are reserved variables:
 
 ## <a name="fallBack"></a>Fallback Function
 
-In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See app37.
+In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See `tests/jobs_fixture/app37` in the `eris` repository.
 
 ## <a name="tupleReturns"></a>Tuples and Returns
 
@@ -67,7 +67,7 @@ contract tuples {
 }
 ```
 
-for now the epm cannot handle dynamic types such as
+for now, the package manager cannot handle dynamic types such as
 
 * `string` `bytes` `struct`
 
@@ -75,7 +75,7 @@ Hold with us while the marmots get those in control :)
 
 ## <a name="arrays"></a> Array Packing and Returns
 
-eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/tree/master/tests/fixtures/app31/epm.yaml). Until then, you can declare arrays for most static types such as:
+eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
 
 *  `int` `uint` `bool` `bytes(1-32)`
 

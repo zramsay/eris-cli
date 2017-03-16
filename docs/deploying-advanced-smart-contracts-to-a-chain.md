@@ -34,12 +34,11 @@ The first thing we're going to do is to add a very simple contract.
 
 Now you'll make a file in this directory. Let's assume that is called `GSFactory.sol` and has the following contents displayed above.
 
-This is a slightly more advanced set of contracts than that we used in the [getting started tutorial](/getting-started). Also, now we have multiple contracts we are going to handle.
+This is a slightly more advanced set of contracts than that we used in the [getting started tutorial](/docs/getting-started). Also, now we have multiple contracts we are going to handle.
 
 What do these contracts do? Well, they aren't terribly interesting we know. The first contract, the `GSContract`, merely `gets` and `sets` a value which is an unsigned integer type. The second contract, the `GSFactory`, merely makes a new `GSContract` when `create` is called or it returns the address of the most recent contract created when `getLast` is called.
 
 # Fixup your epm.yaml
-//// THIS IS A LOT OF DUPLICATE WITH THE `tutorials/getting-started.md`
 
 Next we need to make an epm.yaml. It should look like this:
 
@@ -47,7 +46,7 @@ Next we need to make an epm.yaml. It should look like this:
 
 Now. What does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `eris pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file.
 
-So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/specs/jobs_specification/).
+So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/specs/jobs_specification).
 
 ### Job 1: Deploy Job
 
@@ -93,7 +92,7 @@ Now, we are ready to deploy this world changing contract.
 
 Note that here we used both the `--address` flag to set the address which we would be using for the jobs and we also set the `setStorageBase` from a flag rather than from a job.
 
-That's it! Your contract is all ready to go. You should see the output in `epm.json` which will have the transaction hash of the transactions as well as the address of the deployed `GSFactory.sol` contract. You can also see your ABI folder:
+That's it! Your contract is all ready to go. You should see the output in `jobs_output.json` which will have the transaction hash of the transactions as well as the address of the deployed `GSFactory.sol` contract. You can also see your ABI folder:
 
 {{ insert_bash_lines "contracts_deploying_adv/test.sh" "14" }}
 

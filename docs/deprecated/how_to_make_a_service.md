@@ -260,7 +260,7 @@ If we had really wanted to, we could have performed the previous tutorial withou
 
 # Build Idi's Service
 
-Great. Now we are ready to build the [service definition file](/docs/documentation/cli/latest/services_specification/). A service definition file is the thing that tells `eris` how to "turn it on or off" where "it" is a docker image.
+Great. Now we are ready to build a service definition file. This file is the thing that tells `eris` how to "turn it on or off" where "it" is a docker image.
 
 So let's start by adding a service!
 

@@ -31,7 +31,7 @@ Each job must then specify one **and only one** key which will determine the `ty
 
 ## <a name="txJobs"></a>Transaction Jobs
 
-Transaction jobs exposed through eris:pm are available in the following job types:
+Transaction jobs exposed through the package manager are available in the following job types:
 
 * [send](#sendJob): a transaction which sends tokens from one account to another
 * [register](#registerJob): register a name in the native name registry
@@ -78,7 +78,7 @@ The rebond job will parse the following information:
 
 ## <a name="contractsJobs"></a>Contracts Jobs
 
-Contracts jobs exposed through eris:pm are available in the following job types:
+Contracts jobs exposed through the package manager are available in the following job types:
 
 * [deploy](#deployJob): deploy a single contract
 * [call](#callJob): send a transaction to a contract (can only be sent to existing contracts)
@@ -137,7 +137,7 @@ The assert job will parse the following information:
 
 ## <a name="otherJobs"></a>Other Jobs
 
-Other jobs exposed through eris:pm are available in the following job types:
+Other jobs exposed through the package manager are available in the following job types:
 
 * [account](#accountJob): set the account to use
 * [set](#setJob): set the value of a variable

@@ -142,7 +142,7 @@ done
 
 That's it! Eris is now installed on all the machines we just made!
 
-**N.B.** -- The script is only meant to work against Ubuntu. It is not tested against other operating systems. Should you be using RHEL, Fedora, CentOS or another Linux distribution you should follow our normal [getting started](../getting-started) sequence.
+**N.B.** -- The script is only meant to work against Ubuntu. It is not tested against other operating systems. Should you be using RHEL, Fedora, CentOS or another Linux distribution you should follow our normal [getting started](/docs/getting-started) sequence.
 
 **Troubleshooting**
 

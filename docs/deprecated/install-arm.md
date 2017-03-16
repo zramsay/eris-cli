@@ -3,7 +3,7 @@
 layout: single
 title: Tutorial | Install Eris blockchain tools on IoT (ARM) devices
 aliases:
-   - /docs/documentation/install-eris-arm/
+   - /docs/deprecated/install-arm
 ---
 
 This tutorial uses Raspberry Pi 3 as referenced IoT device to demonstrate how to install eris blockchain tools on IoT devices.
@@ -160,7 +160,7 @@ sudo apt-get install -y bc jq gcc git build-essential nodejs &>/dev/null
 
 ## Start blockchain, run contracts!
 
-Learn more and play with eris blockchain, go to [Getting Started With Eris](../getting-started/)
+Learn more and play with eris blockchain, go to [Getting Started With Eris](/docs/getting-started)
 
 
 
