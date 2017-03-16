@@ -215,7 +215,7 @@ eris chains stop test_chain
 Remove your chain (`-f` to force remove a running chain, `-x` to remove the chain's separate data container which it writes to, and `-d` to remove the (local)  chain directory entirely):
 
 ```bash
-eris chains rm -xfd test_chain
+eris chains rm -xfr test_chain
 ```
 
 Obviously, you will want an ability to make chains which you properly parameterize. As such you can always type:

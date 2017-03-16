@@ -9,7 +9,7 @@ import (
 func defServiceCompilers() string {
 	return `
 # For more information on configurations, see the services specification:
-# https://monax.io/docs/documentation/cli/latest/specifications/services_specification/
+# https://monax.io/docs/specs
 
 # These fields marshal roughly into the [docker run] command, see:
 # https://docs.docker.com/engine/reference/run/
@@ -39,6 +39,5 @@ email = "support@monax.io"
 
 [location]
 repository = "https://github.com/eris-ltd/eris-compilers"
-website = "https://monax.io/docs/documentation/compilers"
 `
 }

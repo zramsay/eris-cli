@@ -14,7 +14,7 @@
     <projectUrl>https://monax.io</projectUrl>
     <packageSourceUrl>https://github.com/eris-ltd/eris</packageSourceUrl>
     <projectSourceUrl>https://github.com/eris-ltd/eris</projectSourceUrl>
-    <docsUrl>https://monax.io/docs/documentation/</docsUrl>
+    <docsUrl>https://monax.io/docs/</docsUrl>
     <mailingListUrl>https://support.monax.io/helpdesk</mailingListUrl>
     <bugTrackerUrl>https://github.com/eris-ltd/eris/issues</bugTrackerUrl>
     <tags>eris monax admin docker blockchains</tags>
