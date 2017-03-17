@@ -10,29 +10,31 @@ menu:
 
 ---
 
-// todo better intro
-
-There are three steps to making a permissioned chain:
+There are three steps to making a permissioned chain with known keys:
 
 1. Make for (or get from) the public keys for all parties
-2. Make the `genesis.json` file
-3. Instantiate the chain
+2. Make the `genesis.json` file and share it
+3. Sort out a `config.toml` for each party
+4. Instantiate the chain
 
 We shall go through these in their logical order.
 
-#### Users Design
+### User Design
 
 To do this we need to, first, consider, *who* will get *what* permissions and *why*. It is outside the scope of this tutorial to outline all of the considerations which would come into play when thinking about creating a permissioning system, but for the purposes of this tutorial, we will craft the genesis block to use the following paradigm:
 
-* 3 Administrators (these would be developers who have **full** control over the chain) (one of which will be "running" the chain performing validation)
+* 1 Administrator (the developer who has **full** control over the chain) => this is a "Full Account" type
+* 2 Validators (who participate in the consensus of the chain but do nothing else) => this is a "Validator Account" type
 
-If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see the eris-db repository for more information](https://github.com/eris-ltd/eris-db/blob/master/README.md).
+If you would like to understand all of the permissions which an eris chains smart contract network is capable of providing, [please see here for more information](/platform/db). 
 
 We use an abstraction to simplify the chain making process called Account Types. This abstraction is just that, an abstraction to help users quickly get up to speed. In order to reduce the complexity of dealing with different types of accounts typically built on a chain, we use the idea of "account types". Account types are not restrictive in the sense that they are not the "only" types of accounts you can make with eris chains.
 
 Account types are simply bundles of permissions no more no less. Using the eris tooling you can also create your own account types with your own bundles of permissions which will be helpful.
 
-### Step 2.a.1. Make (or Get) the Public Keys
+To learn about advanced chain making and account types, [see here](/docs/chain-making).
+
+## Step 1: Make (or get) the public keys
 
 Everyone who interacts with an eris chain will need to have a properly formated keypair. To make a keypair we will use `eris keys`.
 
@@ -46,7 +48,7 @@ To accomplish this, we will use the `eris` tooling. First we need to start the `
 eris services start keys
 ```
 
-By default, `eris` is a very "quiet" tool. To check that the keys service started correctly type:
+Check that is it indeed running with:
 
 ```bash
 eris services ls
@@ -59,7 +61,7 @@ SERVICE     ON     VERSION
 keys        *      0.16.0 
 ```
 
-which indicates that the keys services is on (running). To see a more comprehensive output for your services, try `eris services ls -a`.
+which indicates (`*` rather than `-`) that the keys services is on (running). To see a more comprehensive output for your services, try `eris services ls -a`
 
 To see what we can do with eris keys we will run:
 
@@ -67,7 +69,7 @@ To see what we can do with eris keys we will run:
 eris services exec keys "eris-keys -h"
 ```
 
-What this is doing is running the `eris-keys -h` "inside" the keys containers. 
+This runs the `eris-keys -h` command "inside" the keys container.
 
 Instead of dealing with the `eris-keys` service directly, however, we will use `eris keys` from the eris cli tool. The `eris keys` commands are basically wrappers around the `eris-keys` commands which are ran inside containers. To see the wrappers which the eris cli tooling provides around the `eris-keys` daemon, please type:
 
@@ -97,20 +99,96 @@ To see the keys which eris-keys generated both *inside* the container type and a
 eris keys ls
 ```
 
-Now, we're all ready to make a chain.
+Each of the three participants in this chain would run these series of commands independently, on their own trusted machine then submit their public key and address to whoever is making the `genesis.json`. For maximum trust in the chain, each party ought to generate their own `genesis.json` and ensure they match.
 
-### Step 2.a.2. Make the genesis.json
+**Note** In version 0.16, we do not have a simple method of easily creating a `priv_validator.json` from an existing key. Thus, rather than creating keys via `eris keys gen --save`, we're going to take advantage of `eris chains make` as it creates keys and some other files we'll need. These three commands are meant to be run _seperately by each participant_ on their own machine:
 
-Before we begin, we should quickly talk through the various files which are needed to run an eris chain.  This is to hold the default files for using eris chains. There are a few primary files used by eris chains:
+```bash
+eris chains make throwawayFull --account-type=Full:1
+eris chains make throwawayVal --account-type=Validator:1
+eris chains make throwawayVal --account-type=Validator:1
+```
 
-1. the chain definition file for Eris chains is called `config.toml` and is located in your `~/.eris/chains/<your_chain>` directory.
-2. the `genesis.json` which tells Eris chains how it should configure itself at the beginning of the chain (or, its genesis state)
-3. the keypair which the tendermit consensus engine will use to sign blocks, etc. called the `priv_validator.json`
+then getting the address and exporting the key from container to host (`eris keys export ADDR`). This will create a `priv_validator.json` in the chains directory on the host. It is needed for Step 4. Future versions will simplify this process and abstract/harden the way keys are handled.
 
-The three files you *may* need to edit are the `genesis.json` and `priv_validator.json` (both of which we're about to get "made" for us) and the `config.toml`.
+**End Note**
 
-In any chain with more than one validator the `config.toml` file will be edited to fill in the `seeds` and `moniker` fields. The `seeds` field is used to point your consensus engine to the peers it should connect into. For more information on how to deal with this please see our [advanced chain deploying tutorial](/docs/chain-deploying/). The `moniker` field is "your node's name on the network". It should be unique on the given network.
+Next, we'll make the all important `genesis.json` file.
 
-The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the genesis.json provides the starting point. Luckily `eris` takes care of making this for you and there is very little which should be required for you in way of editing.
+## Step 2: Make the genesis.json
 
-With all that said, we're ready to make a chain. First let us make a "fake" chain just to get a tour of the chain maker tool. Once we go through that process then we will make our "real" chain which we will use for the rest of this tutorial series. Let's see what eris chains make can do for us.
+Before we begin, let's walk through the various files which are needed to run a chain:
+
+1. the `genesis.json` which tells the chain how it should configure itself at the beginning (or, its genesis state).
+2. the chain configuration file for Monax chains is called `config.toml`; see Step 3 for more information.
+3. the keypair used by tendermint for signing blocks is the `priv_validator.json`.
+
+All three files are usually located in the `~/.eris/chains/<your_chain>/<an_account>` directory after running `eris chains make`
+
+The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the `genesis.json` provides the starting point.
+
+With all that said, we're ready to make a known chain. Doing so requires preparing two additional files and using three additional flags to the `eris chains make` command.
+
+First, you'll need to the public keys for each party. This can be found in the `priv_validator.json` as described in the Note in Step 1. Then, make a file named `accounts.csv` and replace the public keys seen below with the ones submitted by each participant:
+
+```bash
+0962E87A7A75B27174FB0F2C76FE9A54B78BBD5AD0E9605BF946E08F080BC657,99999999999999,admin_alice,16383,16383
+C8E4C807152F70B5CE44E072D2CFB34F2521382CCA892AE90F1E058EE619E418,9999999999,validator_bob,32,16383
+22774A27B9471BD7B0D9015B35067020FA99E7DD017721A577864127789DA0F2,9999999999,validator_charlie,32,16383
+```
+
+as well as a file named `validators.csv`, which is _nearly_ identical:
+
+```bash
+0962E87A7A75B27174FB0F2C76FE9A54B78BBD5AD0E9605BF946E08F080BC657,99999999999999,admin_alice,16383,16383
+C8E4C807152F70B5CE44E072D2CFB34F2521382CCA892AE90F1E058EE619E418,9999999998,validator_bob,32,16383
+22774A27B9471BD7B0D9015B35067020FA99E7DD017721A577864127789DA0F2,9999999998,validator_charlie,32,16383
+```
+
+Some notes on these two files: they are automatically generated when making unknown chains and are useful templates that can be used to regenerate a `genesis.json`. In this case, however, because all accounts happen to also be validators, the files are _nearly_ identical. With a chain where some accounts are not validators, the `accounts.csv` will have more accounts than the `validators.csv`. The latter two rows in the `validators.csv` have one less token allocated compared to the same rows in the `accounts.csv`. This is because the `99999...` column in the `accounts.csv` is the initial token allocation whereas in the `validators.csv` this number represent the number of _tokens to bond_. The third column in both the `.csv`'s is the account name and should, but need not, match the `moniker` field in the `config.toml`. The latter two columns handle permissions, a topic dealt with elsewhere.
+
+We're ready to go!
+
+```bash
+eris chains make myCustomChain --known --accounts /path/to/accounts.csv --validators /path/to/validators.csv
+```
+
+This will output a `genesis.json` to stdout, so we recommend adding `>> genesis.json` to the end of the above command.
+
+Finally, distribute this `genesis.json` to two validators who will be participating in the chain. They should also make one and confirm that it is identical.
+
+## Step 3: Sort the config.toml
+
+With the exception of known chains (this tutorial), the `eris chains make` command automatically makes a `config.toml` _for each account_. The moniker field for each account willtake on the name of the account. Optionally, the `--seeds-ip` flag will take a csv string of IP:PORT combinations and is used to point your consensus engine to the peers it should connect into. Review the [advanced chain deploying tutorial](/docs/chain-deploying) for more information.
+
+Since we used `eris chains make` rather than (ideally, and in later versions) `eris keys gen` to make a key for each participant, they will each have an existing `config.toml`. At this point, `admin_alice` (the Full Account administrator) will provide his or her public IP address to the validators. Each user should now edit their `config.toml` to have the `moniker` field with their respective account names, while `validator_bob` and `validator_charlie` should edit `seeds = "IP-OF-ALICE:46656"`.
+
+At this point, each user should have, on their own machine:
+
+* keys service running, with one key in it
+* the key saved (exported) to host
+* a directory with each: `priv_validator.json`, `config.toml`, and `genesis.json`
+
+For the next step, we are assuming that each user has the files in a directory like so:
+
+```bash
+~/.eris/chains/myCustomChain/admin_alice
+~/.eris/chains/myCustomChain/validator_bob
+~/.eris/chains/myCustomChain/validator_charlie
+```
+
+on their respective machines.
+
+## Step 4: Instantiate the chain
+
+Given the directory structure above and a chain name of myCustomChain, each user runs:
+
+```bash
+eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/admin_alice
+eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/validator_bob
+eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/validator_charlie
+```
+
+in that order (well, as long as `admin_alice` is run first). What will happen is that once `admin_alice` is up and running, each `validator_`, will, when started, "dial-in" to connect to `admin_alice`.
+
+And there you have it; a custom chain built using pre-generated keys!
