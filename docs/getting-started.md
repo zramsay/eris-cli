@@ -290,7 +290,7 @@ chain_dir_this=$chain_dir/firstchain_full_000
 That will just create a few variables we'll be using in the future. Now, we're ready.
 
 ```bash
-eris chains make firstchain --account-types=Root:2,Full:1
+eris chains make firstchain --account-types=Root:2,Full:1 --unsafe
 ```
 
 That's it! Let's double check the files to make sure we are squared away.
@@ -339,19 +339,20 @@ eris chains stop firstchain
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, chain.
 
-You can remove all trace of the chain with:
 
-```
-eris chains rm firstchain --data --dir --force
-```
+You start your chain up again for the next step:
 
-and *remove everything* with:
-
-```
-eris clean -y
+```bash
+eris chains start firstchain
 ```
 
-If anything went wrong with Step 2 please see our trouble shooting guide -> [^1], [^2], [^3], [^4], [^5], [^6].
+or *remove everything* with:
+
+```bash
+eris clean -yx
+```
+
+If anything went wrong, please see our trouble shooting guide -> [^1], [^2], [^3], [^4], [^5], [^6]
 
 # Step 3: Deploy your ecosystem application using smart contract templates
 
