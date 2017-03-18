@@ -324,13 +324,13 @@ eris services edit idi
 Update the file to look like this:
 
 ```toml
-## This is a TOML config file.
-## For more information, see https://github.com/toml-lang/toml
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
 
 name = "idi"
 
 description = """
-## idis service; cause i'm a learning marmot
+# idis service; cause i'm a learning marmot
 """
 
 status = "alpha" # alpha, beta, ready

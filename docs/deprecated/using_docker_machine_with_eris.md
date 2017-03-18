@@ -115,8 +115,8 @@ export DOCKER_TLS_VERIFY="1"
 export DOCKER_HOST="tcp://192.168.99.101:2376"
 export DOCKER_CERT_PATH="/Users/zicter/.docker/machine/machines/eris"
 export DOCKER_MACHINE_NAME="eris"
-## Run this command to configure your shell:
-## eval "$(docker-machine env eris)"
+# Run this command to configure your shell:
+# eval "$(docker-machine env eris)"
 ```
 
 To put the eris machine "in scope", run:
