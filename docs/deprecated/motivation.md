@@ -1,4 +1,12 @@
-# Why?
+---
+
+type:   docs
+layout: single
+title: "Deprecated | Motivation"
+
+---
+
+## Why?
 
 Blockchain applications are a nightmare. They really are. As currently implemented blockchain-backed applications are almost always structured in one of two ways:
 
@@ -7,7 +15,7 @@ Blockchain applications are a nightmare. They really are. As currently implement
 
 But we have always thought there was a better way.
 
-# Eris: The Background
+## Eris: The Background
 
 At Eris our approach to blockchain technologies is that blockchains, but really more interestingly and importantly, smart contract networks (which just so happen to currently reside on blockchains), are an immensely helpful tool.
 
@@ -15,7 +23,7 @@ When used appropriately.
 
 Here is a brief overview of our experiences designing, building, running, and distributing our own distributed applications with smart contract backbones.
 
-## Take 1: The Original Eris
+### Take 1: The Original Eris
 
 In the summer of 2014 when we built a reddit-like application on a smart contract backbone we built on a simple fork of eth's POC5 testnet, connected it to bittorrent, added in some pretty interesting smart contracts, and built a bunch of ruby glue to hold the thing together into an application built to provide users with a serverless application that had a view layer harmonized across nodes and where the data and processes were built across different and distinct distributed platform building blocks. Folks wanted to tinker with this concept. Some from a technical perspective. Some from a social perspective.
 
@@ -39,7 +47,7 @@ Yet it was also a bit magical. We were building smart contracts which mediated c
 
 Exciting stuff! When the damn thing ran.
 
-## Take 2: The 0.9 Stack
+### Take 2: The 0.9 Stack
 
 In the winter of 2015 when we built a youtube-like application on a smart contract backbone we built on a very complicated and divergent fork of eth's POC8 goclient with smart contract technology embedded in the genesis block providing a permissions layer for an ethereum style POW blockchain, connected it to IPFS and built a sophisticated go wrapper we called `decerver` which had scripting capabilities and provided a much more rich, while also much more robust middle layer than the Ruby glue we originally used to tie together early eth and transmission. Also IPFS, FTW! Again folks wanted to tinker with this idea.
 
@@ -66,7 +74,7 @@ It has been this journey which has led us directly to the many design and implem
 eris
 ```
 
-# Eris: The Philosophy
+## Eris: The Philosophy
 
 We have learned along this arc that blockchain-backed applications are hard. They're hard to develop against. They're hard to work *on*. They're hard to explain. And that's probably (a part of) why very few folks are using blockchains nearly as much as they *could*.
 
@@ -89,3 +97,6 @@ We have learned that application superusers wanting to participate in the data s
 **No matter the blockchain**.
 
 These are the lessons which underpin the design of the `eris` tool.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)

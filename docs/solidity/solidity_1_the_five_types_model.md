@@ -5,21 +5,21 @@ title: "Tutorials | Solidity 1: The Five Types Model"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 This is an introduction to systems of smart contracts. The purpose of these documents is to teach methods of writing large, scalable smart contract back-ends for ecosystem applications. The reader should be familiar with the basics of smart contract writing, and they should know what accounts, contracts and transactions are, and how to work with them. A good introduction to smart contract development (and a must-read) from the official Solidity site (the language this tutorial is written in) can be found [here](http://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html).
 
@@ -27,13 +27,13 @@ On top of this, we would also recommend checking out the [Ethereum wiki](https:/
 
 About trust: The systems we study here are designed to be modular, i.e. parts of the code can be replaced during runtime, which in turn makes them inherently trust-ful. Someone must be allowed to make these updates. It is important to know this. If you want to learn how to write small trust-less, automated systems this is not really the place (although many of the principles are the same in both types of systems).
 
-# Smart contracts as services
+## Smart contracts as services
 
 One way of thinking about smart contracts, and the way we're going to think about them here, is as extremely basic, stateless web-services. Webservices are units of functionality in a system (the internet), with a well defined API and an identifier (IP address) that can be used to call them. Similarly, a smart contract is a unit of functionality, the public functions exposed by their Solidity contracts is the API, and their public address is the identifier. A web-service is normally called by making an http request, and a contract is called by making a transaction. Also, in most cases everyone is allowed to call them the endpoints are exposed to the public, so security must be handled on a call-by-call basis, and the same thing goes for contracts and their functions. We can even utilize common patterns and architectures, such as for example the microservices architecture.
 
 Finally, before we get started it is important to know this: Writing smart contracts can be tricky. The transition from normal code writing to smart contract writing is not seamless. The environment in which smart contract code runs is different from that of normal code. The analogy with webservices is good, because it makes smart contracts and systems of smart contracts more tangible, and it makes it simpler to use already existing concepts and tools when working with them, but writing the actual code is still difficult.
 
-## A simple smart contract
+### A simple smart contract
 
 This document is about systems of smart contracts, but we will start by looking at single contracts. This for example is a standard name registry contract. Name registry, or "namereg" contracts generally lets people associate a name with an user account address. This is an example of such a contract:
 
@@ -69,7 +69,7 @@ contract HelloSystem {
 }
 ```
 
-## Deploying and removing contracts
+### Deploying and removing contracts
 
 The `HelloSystem` contract can be deployed as-is without any problems, but once it's been deployed it will remain on the chain for good. We need a way to remove it. In Solidity, the command for removing (or suiciding) a contract is this: `selfdestruct(addr)`. The argument here is the address to which any remaining funds should be sent. In order to expose this functionality, we need to put it inside a (implicitly public) function. This is what a selfdestruct function could look like in `HelloSystem`:
 
@@ -138,7 +138,7 @@ contract HelloFactory {
 
 Notice what happened here. We're creating a new contract but we aren't adding it to a mapping or other variable, instead we just create it and pass its address back to the caller. We need the `deleteHS` function because the creator of all the `HelloSystem` contracts is `HelloFactory`, which means that `HelloFactory` is the only contract (or account) that is allowed to remove them.
 
-## Account permissions and contract dependencies
+### Account permissions and contract dependencies
 
 When it comes to the relations between different parts of the system, there are two things we have to keep track of:
 
@@ -155,7 +155,7 @@ We need to use permissions like this because each contract is a separate account
 
 {{< image src="/images/docs/ContractsOnChain.png" >}}
 
-## A simple banking system
+### A simple banking system
 
 We're now going to make a simple bank account contract that lets people deposit and withdraw money (Ether). We're going to start by putting all the blockchain logic in one single contract.
 
@@ -374,7 +374,7 @@ contract FundManager {
 
 This system is better, but it is still not very flexible; nor is it safe. For one thing, we only allow the owner to set the bank. We might want a more sophisticated system for assigning permissions. We also need to protect the bank contract functions, of course, so they become accessible only from the fund manager.
 
-## More permission-management
+### More permission-management
 
 First, let us add some simple user permission levels to the fund manager. We only use the value 0 for no permissions, and 1 for banking permissions at this point, but we use a `uint` instead of a `bool` so that we may extend it later. We will also make it possible to set the owner of the bank contract, so that we can set the owner address at any time instead of automatically assigning when the contract is deployed.
 
@@ -553,33 +553,33 @@ Also, the permissions structure is a bit more complicated now. Not only do we ha
 
 At this point we’re gonna stop making patches though, and instead use a model in which some of the basics has been fleshed out.
 
-# Systems of smart contracts - the five types model
+## Systems of smart contracts - the five types model
 
 First of all: Every non-trivial DApp will require more then one contract to work well. There is no way to write a secure and scalable smart contract back-end without distributing the data and logic over multiple contracts. It may be hard to know exactly how to do this, so we're going to start by dividing contracts up into categories; instead of thinking about them in terms of what they do, we're going to start thinking about them in terms of what they are. There are many different ways to classify contracts, but we're going to use what I call "the five types model". It is a simple model where contracts are divided up into five basic categories:
 
-### 1) Database contracts
+#### 1) Database contracts
 
 These are used only as data storage. The only logic they need is functions that allow other contracts to write, update and get data, and some simple way of checking caller permissions (whatever those permissions may be).
 
-### 2) Controller contracts
+#### 2) Controller contracts
 
 These contracts operate on the storage contracts. In a flexible system, both controllers and databases can be replaced by other, similar contracts that share the same public api (although this is not always needed). Controllers can be advanced, and could for example do batched reads/writes, or read from and write to multiple different databases instead of just one.
 
-### 3) Contract managing contracts (CMCs)
+#### 3) Contract managing contracts (CMCs)
 
 The purpose of these contracts is only to manage other contracts. Their main tasks is to keep track of all the contracts/components of the system, handle the communication between these components, and to make modular design easier. Keeping this functionality separate from normal business logic should be considered good practice, and has a number of positive effects on the system (as we will see later).
 
-### 4) Application logic contracts (ALCs)
+#### 4) Application logic contracts (ALCs)
 
 Application logic contracts contains application-specific code. Generally speaking, if the contract utilizes controllers and other contracts to perform application specific tasks it's an ALC.
 
-### 5) Utility contracts
+#### 5) Utility contracts
 
 These type of contracts usually perform a specific task, and can be called by other contracts without restrictions. It could be a contract that hashes strings using some algorithm, provide random numbers, or other things. They normally don't need a lot of storage, and often have few or no dependencies.
 
 The rationale for this division will be laid out after we've tried to apply it to the fund manager system, as it will be a lot more clear then.
 
-## The fund management system - take 2
+### The fund management system - take 2
 
 We will now analyze the fund management system using the five types model. It is a very small system so analyzing it will be simple. What we have is the bank component and the fund manager component. The functionality of the bank component is exposed only to the fund manager. The first thing we should be doing is to break the permissions part out of the fund manager, then we should divide the bank and permissions components up into controller and database contracts. This is what we'd get.
 
@@ -589,7 +589,7 @@ Note how the permissions work. The bank does not use the permissions contract; i
 
 Also, this permissions chart is not complete. First of all, the owner could be a user as well and be allowed to do banking. Secondly, we actually have two types of permissions here, banking and administration (the adding and removal of contracts). If we wanted to do this right we would have to divide each contract account up into different sections, depending on the permissions needed to call the code in that block, and use one arrow for each permission type, but we're not going to that here.
 
-## Adding a CMC
+### Adding a CMC
 
 Now we have to tie this all together. We need to make sure that the two controller-database pairs finds eachother, and that the fund manager finds the two controllers, but instead of keeping this type of logic in the contracts themselves we will break it out and put it into CMC contracts. If we wanted to do this right we would probably add one CMC for managing the controller-database flow for the bank, one for permissions and an additional one for the system as a whole, giving it a tree-like structure, but for simplicity we're going to flatten things and go with a standard CMC for everything:
 
@@ -686,7 +686,7 @@ function deposit(...) {
 
 Controllers would use Doug to check to make sure the caller is "fundmanager", and it would also use Doug to get the address to the respecive database to do reads, and the fundmanager would use Doug to get the address to the bank and permission controllers. Also, again using this CMC would be somewhat like craming everything into the global namespace. There is no real structure which is usually wrong but this is a small system and we want to keep things simple. In most systems you'd have more then one CMC and also more advanced CMC logic.
 
-# The Finished Contracts
+## The Finished Contracts
 
 This is all the contracts in their final form.
 
@@ -983,7 +983,7 @@ contract FundManager is DougEnabled {
 }
 ```
 
-## Usage
+### Usage
 
 This is how this system would be deployed:
 
@@ -993,7 +993,7 @@ This is how this system would be deployed:
 
 To run the system, just add permissions for people and start sending money to the fund manager.
 
-## Extending the system
+### Extending the system
 
 If we want to add more banks to the system we could do that. The Doug contract makes it easy to add and remove contracts. We could also extend the already existing code quite easily even when the system is running. Let's say we want to add logging to the bank. The idea is that a short log entry should be written when someone makes a deposit or withdrawal. The entry should contain the transaction type (deposit or withdraw), the amount of Ether, and the timestamp. How would we do that?
 
@@ -1060,10 +1060,13 @@ function setPermission(address addr, uint8 permLvl) returns (bool res) {
 }
 ```
 
-## Cost benefit analysis
+### Cost benefit analysis
 
 Given all of the extra contracts and indirection that's needed, we may ask if it's even worth doing. For example, if all I want to do is to deposit some money, why do i have to call one contract that calls a second contract that calls a third one, also doing calls to a fourth one all the way?
 
 There are some things to consider when deciding how the system should be designed. Modularity is good, but it comes with a price. All this indirection means more calls and more processing, which means the cost for executing the code is higher, and the added bytecode makes storing the contracts more expensive.
 
 There is also the matter of trust, but I treat that in the beginning of the document.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)

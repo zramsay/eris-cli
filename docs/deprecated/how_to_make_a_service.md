@@ -1,8 +1,16 @@
-# Introduction
+---
+
+type:   docs
+layout: single
+title: "Deprecated | How To Make A Service"
+
+---
+
+## Introduction
 
 We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about Docker and Eris later.
 
-# Copy Over Your Previous `idi` Application
+## Copy Over Your Previous `idi` Application
 
 ```bash
 cd ~/.eris/apps # or, wherever you made the idi app
@@ -12,7 +20,7 @@ cd ~/.eris/apps/idi-service
 
 That will give us a new base application. Now this tutorial will assume that your simple chain is still around and that all of the key and capabilities based permission is all well and good. It will also assume that your contracts are running on the chain. If you have followed the previous tutorials and are coming back to this later with no docker containers or anything (but you have all of the old files on your hard drive) that is a-OK. With `eris` we can get you back up and running in no time.
 
-# Change Idi's `app.js`
+## Change Idi's `app.js`
 
 In the previous tutorial Idi was interactive. Typically interactive applications (CLIs) are not what we would use `eris-services` for. So what are eris-services? Let's ask `eris`.
 
@@ -112,11 +120,11 @@ In addition, we will be populating two variables from environment variables. In 
 
 With that in mind, when you're crafting services for to be used in docker, it is generally a good idea to use env variables for when you want to answer the "how should I be running" question. Obviously many services will also use config files, but for eris systems we generally find it is better when crafting services to override config files with environment variables (and to override those with flags).
 
-# A Quick Test
+## A Quick Test
 
 Let's do a quick test to make sure everything appears to be running correctly before we build this script into a docker image and subsequently into an eris service.
 
-## Step 1: Get the Chain On
+### Step 1: Get the Chain On
 
 ```bash
 eris chains ls
@@ -142,7 +150,7 @@ As usual, `eris` is a quiet tool. Let's make sure our chain is running:
 eris chains ls
 ```
 
-## Step 2: Deploy the Contracts
+### Step 2: Deploy the Contracts
 
 Let's get our address as in previous tutorials:
 
@@ -158,7 +166,7 @@ eris pkgs do --chain simplechain --address $addr
 
 If you had any trouble with this step please see our trouble shooting guide -> [^1]
 
-## Step 3: Run the New app.js
+### Step 3: Run the New app.js
 
 ```bash
 node app.js
@@ -188,7 +196,7 @@ You can fix this with:
 export IDI_PORT=1111
 ```
 
-# Make a Dockerfile
+## Make a Dockerfile
 
 Docker. People love it or they hate. We think it has its place in the future of distributed systems and the marmots love it! Let's see how easy it is to build a Dockerfile. First do this in your command line:
 
@@ -218,7 +226,7 @@ That's all we need to tell docker what to do here, fun ha! Now we need to make o
 
 Note the changes here, we have added a [start script](https://docs.npmjs.com/misc/scripts#default-values) to the `package.json` and we have removed the dependency for the command line tool (_prompt_).
 
-# Build Idi's Image
+## Build Idi's Image
 
 OK. Now we're ready to build our docker image!
 
@@ -228,7 +236,7 @@ docker build -t idiservice .
 
 What this is going to do is to tell Docker to take this directory and build the `Dockerfile` in it. After it does, it's going to give it a `tag` of `idiservice`. When you build a docker image you will nearly always give it a `tag`. Tags in dockerland are like `names` in other lands. If you had any trouble with this step please see our trouble shooting guide -> [^2]
 
-## What is a Docker Image?
+### What is a Docker Image?
 
 A [Docker Image](https://docs.docker.com/engine/introduction/understanding-docker/) is a layered, statically compiled, file system. Each line in a Dockerfile represents a way to build the required functionality that is included in the produced docker image. You can think of docker images as _the thing_ that can get us a whole lot of verifiable computing because of its deterministic methods of building and static nature. Once a docker image is built, it can never be changed. (But you can remove it and replace it with a new docker image of the same name of course).
 
@@ -258,7 +266,7 @@ The `onbuild` image, during the build process will copy in the directory in whic
 
 If we had really wanted to, we could have performed the previous tutorial without having node installed natively via using these `onbuild` images, but we find that nuance is better left for a later stage (meaning, now).
 
-# Build Idi's Service
+## Build Idi's Service
 
 Great. Now we are ready to build a service definition file. This file is the thing that tells `eris` how to "turn it on or off" where "it" is a docker image.
 
@@ -305,7 +313,7 @@ $> idis_app@0.0.1 start /usr/src/app
 /Listening for HTTP requests on port undefined.
 ```
 
-## Add a Dependency to the Service Definition File
+### Add a Dependency to the Service Definition File
 
 To edit a service definition file we can either open `~/.eris/services/idi.toml` in our favorite text editor, of if you have an `EDITOR` variable set in for your shell, then just use:
 
@@ -316,13 +324,13 @@ eris services edit idi
 Update the file to look like this:
 
 ```toml
-# This is a TOML config file.
-# For more information, see https://github.com/toml-lang/toml
+## This is a TOML config file.
+## For more information, see https://github.com/toml-lang/toml
 
 name = "idi"
 
 description = """
-# idis service; cause i'm a learning marmot
+## idis service; cause i'm a learning marmot
 """
 
 status = "alpha" # alpha, beta, ready
@@ -355,7 +363,7 @@ Which would tell eris to use the "current chain" that was given to the service b
 
 What are dependencies to eris? Well, they tell eris under the hood to make sure that the dependent service (yes, services can depend on other services, see your mindy service with `eris services cat mindy` for a complex example) or chain is up and running before the "target" service or chain is started. Not only that, but eris will make sure [there is a docker link](https://docs.docker.com/engine/userguide/networking/default_network/dockerlinks/) between the dependency and the target service. This is very helpful because we no longer need to worry about IP addresses, hurray!
 
-## Updating our app.js for Dockerizing
+### Updating our app.js for Dockerizing
 
 Now we need to change one line in our `app.js`. The line where the `chainUrl` variable is set needs to read like this:
 
@@ -378,7 +386,7 @@ eris services logs idi -f
 
 That last command is similar to `tail -f` in that it will `follow` the logs until it exits or you press `Control-C`. Wow. So that's pretty neat!
 
-# Modify our Service Definition File
+## Modify our Service Definition File
 
 Now that we've turned on idi a few times we'll be ready to change a few things.  We will have two levels of variables we need to pass into a "thing we turn on or off".  Generally we always put the things that won't change that much as environment variables in the services definition file, and for variables which change more frequently we add the default in the environment variables and then override it from the command line flags when necessary to.
 
@@ -403,7 +411,7 @@ eris services logs idi
 
 Idi should now have displayed the port.
 
-# Test the Microservice
+## Test the Microservice
 
 You can use `curl` to talk to your microservice's REST API.  First set the `host` variable based on which platform you're using:
 
@@ -452,7 +460,7 @@ $> idis_app@0.0.1 start /usr/src/app
 
 That's it! You've made a service! Now let's share it with our colleagues.
 
-# Share your Service
+## Share your Service
 
 First things first, you'll need a Docker Hub to push to. So make sure you have a [Docker Hub](https://hub.docker.com/) account, [quay.io](https://quay.io) (which we use at eris and have been very satisfied with), or an account with a corporate Docker Registry. Then make sure you are logged in:
 
@@ -509,7 +517,7 @@ Hey, idi's service is ready for testing, please run `eris services import idi Qm
 
 Obviously with your own language and your own hash.
 
-# :tada:
+## :tada:
 
 Congratulations, you've just made your very own smart contract backed service running alongside and interacting with a permissioned blockchain! That is the end of our tutorial series for the first level of understanding of the eris platform. Please see some of our more advanced tutorials if you still are curious about the eris platform. But you should have all the base building blocks to building your own next-generation data and process management solutions!
 
@@ -539,3 +547,7 @@ Congratulations, you've just made your very own smart contract backed service ru
 
     CMD [ "npm", "start" ]
     ```
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)
+

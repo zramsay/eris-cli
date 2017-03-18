@@ -5,21 +5,21 @@ title: "Tutorials | Solidity 2: An Action-Driven Architecture"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 The system proposed in part 1 is a good system in theory. It has good separation of concerns, is very modular, and is set up to handle permissions. This is how a typical system would look:
 
@@ -43,7 +43,7 @@ Action driven architecture:
 
 - Expensive, as there is lot of code and contracts, so usually not good in production environments.
 
-# Actions
+## Actions
 
 PRODOUG was made secure by encapsulating all the code that users could run in something called actions. All incoming transactions had to be on a specific format, and had to be sent through the 'action manager' contract (with a few exceptions). Here's an example of a super simple action interface:
 
@@ -307,7 +307,7 @@ contract ActionCharge {
 
 When we add these actions to the action manager it will be possible for users to execute them and work with the bank contract that way. Note that it is still possible to interact with the bank contract directly so the actions are not useful yet, but we will fix that.
 
-# Permissions
+## Permissions
 
 Step 2 is to control Doug contract access from the outside. It should only be possible to interact with the contracts through actions, and it should only be possible to run actions through the actions manager. The first thing we need to do is make sure the action manager (and later the action database) calls the 'setDougAddress' function that we added to the actions. It should call it and pass the DOUG address to the action as soon as it's registered. If the function returns false, that means it already has a doug address set which in turn means the action should not be registered with the action manager at all. It is unsafe.
 
@@ -315,7 +315,7 @@ We also need to add the DOUG address to the action manager. In fact, the bank an
 
 The action manager will also get a 'validate' function that can be called by other contracts to ensure that only actions can call them, and we will also break out the actions list into a separate actions database contract so that we can modify the action manager without having to clear all the actions.
 
-## The Updated Contracts
+### The Updated Contracts
 
 This is the new action manager. We're adding the setDougAddress functionality when adding actions and also an 'active contract' field that will be used for validation. We will make `ActionDb`callable only from the action manager now, but there will be an even better system later.
 
@@ -461,7 +461,7 @@ What we have now is a system that allows us to add contracts (any contracts) to 
 
 There is other benefits to a system like this as well, for example PRODOUG used the fact that all transactions went through the action manager to log them. The log included data such as the caller address, which action was called, the number of the block in which the tx was added, etc. This is good if you want to keep track of what's going on.
 
-# Locking Things Down
+## Locking Things Down
 
 The last thing we have to fix is access to DOUG and the action manager. It is true that the bank and other contracts must be called via actions, but anyone is allowed to add and remove actions, and also to add and remove contracts from DOUG. We're going to start by adding a simple permissions contract that we can use to set permissions for accounts. It'll be registered with DOUG under the name "perms". We're then going to add functions to actions where permissions can be gotten and set. Finally we will complement the system with the following basic actions:
 
@@ -547,7 +547,7 @@ function execute(bytes32 actionName, bytes data) returns (bool) {
 }
 ```
 
-# The Doubly Linked List
+## The Doubly Linked List
 
 Before moving on to assembling the final contracts, we need to address something important that we haven't touched upon yet. If we look at Doug, or the action database, or any database contract for that matter, what bad thing do they all have in common? Well, the fact that we have no way of getting a collection of all the entries in the mappings. We have to get entries (such as contracts in the case of Doug) by key. The `mapping` type that backs all these databases has no built in iterator or function to get all elements. One way of adding these features to a mapping it by wrapping it inside a linked list data-structure.
 
@@ -557,7 +557,7 @@ The doubly linked list over a `mapping` provides many benefits. We can add and r
 
 So, what do we need to add?
 
-## Step 1
+### Step 1
 
 First we need to add three additional fields to the contract - the size of the list, and references to the current head and tail. Let us start with a "generic" linked list contract that uses addresses as keys, and a fixed-length string as the value.
 
@@ -570,7 +570,7 @@ contract DoublyLinkedList {
 }
 ```
 
-## Step 2
+### Step 2
 
 To keep references to the previous and next element, we need to switch out the bytes32 value with a struct, like this:
 
@@ -591,7 +591,7 @@ contract DoublyLinkedList {
 }
 ```
 
-## Step 3
+### Step 3
 
 Now we need to implement the logic for adding and removing elements. Let's start with add. We're going to add elements as the new `head`, and the adding logic for an element is easy: Either the list is **empty**, which means the new element becomes both tail and head, or it is **non empty** and it becomes the new head.
 
@@ -805,7 +805,7 @@ A note on generic types: Linked lists can not be fully generic right now. It wou
 
 Finally, since linked lists adds to the complexity of a big set of new contracts they will not be added to the finished contracts; instead there is a regular linked-list Doug contract included in the finished contracts section that can be used as a model. In part 3 it will use only linked lists.
 
-## Wrapping up
+### Wrapping up
 
 Before assembling a list of the final contracts, we need to do some final modifications.
 
@@ -815,7 +815,7 @@ Keep in mind, this is just a basic action driven architecture. PRODOUG for examp
 
 Finally, this system is still a bit tainted by the low level system it came out of.
 
-## The finished contracts
+### The finished contracts
 
 Gonna throw in a few actions for locking and unlocking of the actionmanager as well as some extra logging stuff. It's good to be able to do that.
 
@@ -843,7 +843,7 @@ contract Endower {
 }
 ```
 
-# Base Contracts
+## Base Contracts
 
 ```javascript
 contract DougEnabled {
@@ -896,7 +896,7 @@ contract Validee {
 }
 ```
 
-## ActionDB
+### ActionDB
 
 ```javascript
 contract ActionDb is ActionManagerEnabled {
@@ -948,7 +948,7 @@ contract ActionDb is ActionManagerEnabled {
 }
 ```
 
-## ActionManager
+### ActionManager
 
 ```javascript
 contract ActionManager is DougEnabled {
@@ -1076,7 +1076,7 @@ contract ActionManager is DougEnabled {
 }
 ```
 
-## Doug
+### Doug
 
 ```javascript
 contract Doug {
@@ -1141,7 +1141,7 @@ contract Doug {
 }
 ```
 
-## Bank
+### Bank
 
 ```javascript
 contract Bank is Validee {
@@ -1172,7 +1172,7 @@ contract Bank is Validee {
 }
 ```
 
-## Permissions
+### Permissions
 
 ```javascript
 // The Permissions contract
@@ -1191,7 +1191,7 @@ contract Permissions is Validee {
 }
 ```
 
-## Actions
+### Actions
 
 ```javascript
 contract Action is ActionManagerEnabled, Validee {
@@ -1549,3 +1549,6 @@ contract Doug is DougDb {
 
 }
 ```
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)

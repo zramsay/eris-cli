@@ -10,15 +10,15 @@ menu:
 
 ---
 
-# Introduction
+## Introduction
 
 For this tutorial, we are going to work with multiple contracts. All the base contract does is get and sets a value, but we'll add some layers to the contract which will satisfy common patterns smart contract writers adopt.
 
-## Contracts Strategy
+### Contracts Strategy
 
 We are going to use a very simple `get` / `set` contract which sets a variable and gets that same variable. It is about the easiest interactive contract one can imagine and as such we will use that for showing how to work with the eris platform.
 
-## Make a Chain
+### Make a Chain
 
 Let's make a chain with a few keys on it.
 
@@ -26,7 +26,7 @@ Let's make a chain with a few keys on it.
 
 Check that it is running of course with `eris chains ls`.
 
-# Let's make a more advanced get-set contract sequence.
+## Let's make a more advanced get-set contract sequence.
 
 The first thing we're going to do is to add a very simple contract.
 
@@ -38,7 +38,7 @@ This is a slightly more advanced set of contracts than that we used in the [gett
 
 What do these contracts do? Well, they aren't terribly interesting we know. The first contract, the `GSContract`, merely `gets` and `sets` a value which is an unsigned integer type. The second contract, the `GSFactory`, merely makes a new `GSContract` when `create` is called or it returns the address of the most recent contract created when `getLast` is called.
 
-# Fixup your epm.yaml
+## Fixup your epm.yaml
 
 Next we need to make an epm.yaml. It should look like this:
 
@@ -48,13 +48,13 @@ Now. What does this file mean? Well, this file is the manager file for how to de
 
 So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/specs/jobs_specification).
 
-### Job 1: Deploy Job
+#### Job 1: Deploy Job
 
 This job will compile the `GSFactory.sol` contracts using Eris' compiler service (or run your own locally; which will be covered later in this tutorial). But which contract(s) will get deployed even though they both are in the contract? When we have more than one contract in a file, we tell the package manager which one it should deploy with the `instance` field.
 
 Here we are asking the package manager to deploy `all` of the contracts so that we will have an ABI for the `GSContract` address. This is something important to understand about Factory contracts. Namely that at some point you will have to deploy a "fake" contract to your chain so that the ABI for it is properly saved to the ABI folder.
 
-### Job 2: Call Job
+#### Job 2: Call Job
 
 This job will send a call to the contract. The package manager will automagically use the abi's produced during the compilation process and allow users to formulate contracts calls using the very simple notation of `functionName` `params`.
 
@@ -64,27 +64,27 @@ We explicitly tell the package manager in this call to use the GSFactory ABI. Th
 
 Finally, it is waiting on the call to be sunk into a block before it will proceed.
 
-### Job 3: Query Contract Job
+#### Job 3: Query Contract Job
 
 This job is going to send what are alternatively called `simulated calls` or just `queries` to an accessor function of a contract. In other words, these are `read` transactions. We're selecting the abi to use here based on the job result paradigm. As stated above, ABI's are saved both as the names of the contracts when they are deployed but also as the address of the deployed contract. Since we only deployed one contract our ABI directory will have three files in it: `GSContract`, `GSFactory`, `B995CBBFA3BA0E7DFB0293BA008E0E98A75A53E3` (or whatever the address of the contract was). In this job we are using the result of the `deploy` job.
 
-### Job 4: Assert Job
+#### Job 4: Assert Job
 
 This job checks that the contract last deployed matches the return from the create.
 
-### Job 5: Call Job
+#### Job 5: Call Job
 
 This job will send a call to the contract. We explicitly tell the package manager in this call to use the GSContract ABI.
 
-### Job 6: Query Contract Job
+#### Job 6: Query Contract Job
 
 This job gets the value which was set in Job 7
 
-### Job 7: Assert Job
+#### Job 7: Assert Job
 
 This job checks that the get and set match.
 
-# Deploy (and Test) The Contract
+## Deploy (and Test) The Contract
 
 Now, we are ready to deploy this world changing contract.
 
@@ -96,12 +96,15 @@ That's it! Your contract is all ready to go. You should see the output in `jobs_
 
 {{ insert_bash_lines "contracts_deploying_adv/test.sh" "14" }}
 
-# The compiler?
+## The compiler?
 
 Where are the contracts compiling? By default they are compiled using a microservice which is automagically turned on when running `eris pkgs do` and subsequently removed. If you'd like to use the remote compiler, specify its URL with the `--remote-compiler` flag.
 
-# Clean Up
+## Clean Up
 
 Let's clean up after ourselves
 
 {{ insert_bash_lines "contracts_deploying_adv/test.sh" "16" }}
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)

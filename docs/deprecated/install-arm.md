@@ -164,3 +164,6 @@ Learn more and play with eris blockchain, go to [Getting Started With Eris](/doc
 
 
 
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)
+
+

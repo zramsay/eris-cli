@@ -10,7 +10,7 @@ menu:
 
 ---
 
-# Introduction
+## Introduction
 
 In general what is going to happen here is that we are going to establish what we call a "peer sergeant major" cloud node who is responsible for being the easy connection point for any nodes which need to connect into the system.
 
@@ -22,7 +22,7 @@ Note also that we are using four validators for this chain. This means it will t
 
 Previously, the recommended way of creating a multi-node chain was with docker-machine, but we have [deprecated this tutorial](/docs/deprecated/using-docker-machine-with-eris) and as of the 0.17.0 release, will be eliminating the global `--machine` flag.
 
-# Overview of Tutorial
+## Overview of Tutorial
 
 We are going to take these steps in order to get the chain setup:
 
@@ -33,7 +33,7 @@ We are going to take these steps in order to get the chain setup:
 5. Start additional services to ensure chain longevity
 6. Inspect the health of our chain
 
-# Step 1: Create cloud machine
+## Step 1: Create cloud machine
 
 Using any cloud provider of your choice, create four seperate instances and note their IP addresses. For the sake of this tutorial, we'll refer to these instances as CL0, CL1, CL2, and CL3 respectively. For example:
 
@@ -46,7 +46,7 @@ CL3: 48.413.82.16
 
 In this case, the IP addresses are fake so take note your own. You'll need to [install eris](/docs/getting-started) and run `eris init` on each machine. Ensure `ssh` is enable on all machines.
 
-# Step 2: Make the chain
+## Step 2: Make the chain
 
 We'll use `CL0` as our "peer seargent major", so ssh yourself in. For simplicty, we'll use one Full account and three Validator accounts:
 
@@ -62,7 +62,7 @@ We created a handful of directories within `~/.eris/chains/multichain`. Feel fre
 
 For this tutorial, we'll be copying the raw directories as-is, however, note that the `eris chains make` command can be run with either the `--tar` or `--zip` flag as required for your scripting purposes.
 
-# Step 3: Copy the files around
+## Step 3: Copy the files around
 
 The following describes which directories are required for each cloud machine:
 
@@ -75,7 +75,7 @@ CL3: ~/.eris/chain/multichain/multichain_validator_002
 
 Using `scp` or your preferred method, ensure each directory is on each machine.
 
-## Step 4: Start the node on each cloud machine
+### Step 4: Start the node on each cloud machine
 
 You'll have to `ssh` into each machine:
 
@@ -105,7 +105,7 @@ eris chains start multichain --init-dir ~/.eris/chains/multichain_validator_002 
 
 And voila! You multi-node, permissioned chain is started!
 
-## Step 5: Start some services
+### Step 5: Start some services
 
 We're now going to start a few services which help us manage cloud instances. You'll notice we used the `--logrotate` flag when starting the chains. This service is **absolutely essential** when working with cloud boxes. We have had **dozens** of cloud nodes overfill on us due to logs overloading the allocated storage space on the node. To overcome this, we use a [logs rotator service](https://github.com/tutumcloud/logrotate) which discards the old logs. If you forgot to use the flag, don't fret! `eris services start logrotate` will get you squared away.
 
@@ -128,7 +128,7 @@ You can use any of the services logspout provides. Or if you use PaperTrail, the
 
 That's it, we added all that functionality to our system with that little command! Optionally, you can use watchtower to automatically pull in the latest updates for your chain -> [^2]
 
-## Step 6: Inspect health of chain
+### Step 6: Inspect health of chain
 
 ... better health inspection
 
@@ -165,3 +165,6 @@ One thing to watch if you hard code the ports which the host machine will expose
 [^2]
 
 The watchtower service will ping the docker hub for the images on the docker machine and if there are any updates to the image, they will automatically pull in the updates and gracefully restart all our containers for us. We can do this because of docker's fine grained tags system allows us to fine tune what docker image we are using. Users get the benefit when turning a `watchtower` service on that any tested pushes or security fixes which the service providers push to the docker hub will automatically be updated within about 5 minutes of pushing.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)

@@ -5,25 +5,25 @@ title: "Tutorials | Solidity 5: Modular design and strategies"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 This post is about how we can divide contracts up into components. By creating smart contracts from a set of specialized super-contracts, it becomes easier to manage them, test them, and to build on previously written code. The focus here will be on something I refer to as "strategy contracts". It is a more or less direct application of the strategy pattern, and while it doesn't really introduce anything new it is in my opinion a good way to think about the components that makes up a (non-trivial) contract.
 
-## owned and mortal
+### owned and mortal
 
 We're going to start with basic permissions. This is something I've written about before, and I used the same contracts. In the [Solidity standard library](https://github.com/ethereum/wiki/wiki/Solidity-standard-library#contracts), you will find these two contracts called `owned` and `mortal`.  The point of the `owned` is to provide a simple basis for access control, because a contract that extends `owned` will get the `address owner` field, which is automatically set to `msg.sender` in the constructor (so the address of the account that creates the contract). It also provides a modifier which can be added to a function in order to check if the caller of the function is the owner.
 
@@ -100,7 +100,7 @@ contract ownedTest {
 }
 ```
 
-# Strategies
+## Strategies
 
 The `owned` and `mortal` contracts are useful, but very limited in their scope. In most systems we would not be happy with this arrangement, but would rather want a more flexible system for deciding who gets to do what, or in other words: we would want a different permission strategy. Regardless of what that strategy is, though, it should still have a number of properties in common with `owned`. For example, if we change the no-argument `isOwner` function to `isAdmin`, and change the fields, we should be able to create similar contracts that use the same basis, but implement different strategies for managing (single account) access control. Here is one way of creating the same basic system, but allows for two different access-control strategies:
 
@@ -182,7 +182,7 @@ contract Mortal is Auth {
 }
 ```
 
-# Testing
+## Testing
 
 The point of strategies is not just to provide a convenient toolbox that allows strategies to be mixed and matched, it also makes testing easier. If you do a proper unit-test of each of the different strategies, then the sub-contract tests can use that. For example, this is a [sol-unit](https://github.com/androlo/sol-unit) test for `AdminAuth` (don't mind the assertion code):
 
@@ -212,12 +212,15 @@ contract AdminAuthTest is Asserter {
 }
 ```
 
-# Extending
+## Extending
 
 In most systems you'd want more sophisticated access control; for example, you might want to allow multiple accounts to be admins and not just one. In that case you could still use the `Auth` interface, but the `SingleAccountAuth` contract would no longer be useful. This would be implemented in the same way it would in most other code. Maybe you want to make a `MultiAccountAuth` contract and branch off, or perhaps separate the address management logic from the authentication altogether, and have a separate interface for that (i.e. address management is itself a strategy for authentication contracts). There are many possible solutions.
 
-# Conclusion
+## Conclusion
 
 The combination of abstract (interface) contracts with inheritance makes it possible to encode different strategies/solutions to the same problem into separate contracts that all use a common interface. Doing so makes the code re-usable, clean, and easy to test. This applies to the strategy contracts themselves but also to the contracts that uses them.
 
 Finally, some general advice for beginners - A lot of this is harder then it may sound because of how young Solidity still is, but planned features such as shared contracts and templated structs will gradually make it easier. Also, Solidity will still go through many changes (some of them breaking), so whatever code is written today will probably not compile in a few months or so (or will at least have to be refactored). It will likely continue like this for some time. At this point it is best to start simple, and to continue to keep it simple.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)

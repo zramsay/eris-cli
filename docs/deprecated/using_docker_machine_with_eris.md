@@ -1,8 +1,16 @@
-# Introduction
+---
+
+type:   docs
+layout: single
+title: "Deprecated | Using Docker Machine With Eris"
+
+---
+
+## Introduction
 
 This tutorial will provide an overview of working with [docker-machine](https://docs.docker.com/machine/), a nifty tool for managing and deploying docker hosts.
 
-# Dependencies
+## Dependencies
 
 Eris uses a handful of docker-machine features, both as an integral part of the tool and for continous integration/testing.
 
@@ -10,7 +18,7 @@ Many features of the `eris` platform are available without `docker-machine` (eve
 
 This tutorial requires `eris` be installed (see links above) for all Sections except for the first.
 
-# Overview
+## Overview
 
 The first section of this tutorial will highlight basic `docker-machine` commands and functioning. If it feels oddly familiar, that's because I've modeled after [this intro](https://docs.docker.com/machine/get-started/) but with a marmot twist.
 
@@ -20,7 +28,7 @@ Section three focuses on cloud deployments.
 
 **Protip** The marmots use docker-machine a *lot*. As such we normally `alias dm=docker-machine` to our ~/.bashrc, ~/.zshrc, etc.
 
-# Setup & Basic Commands
+## Setup & Basic Commands
 
 This section is tailored for OSX/Windows. If you are on Linux you can use if you like, but mostly it should be thought of as informational.
 
@@ -107,8 +115,8 @@ export DOCKER_TLS_VERIFY="1"
 export DOCKER_HOST="tcp://192.168.99.101:2376"
 export DOCKER_CERT_PATH="/Users/zicter/.docker/machine/machines/eris"
 export DOCKER_MACHINE_NAME="eris"
-# Run this command to configure your shell:
-# eval "$(docker-machine env eris)"
+## Run this command to configure your shell:
+## eval "$(docker-machine env eris)"
 ```
 
 To put the eris machine "in scope", run:
@@ -139,7 +147,7 @@ This ip replaces the use of `localhost` (re: linux) in some of our tutorials and
 
 There are several more `docker-machine` commands that we will save you from since they aren't immediately relevant to our purposes though they're definitely worth checking out.
 
-# Machine Thinking
+## Machine Thinking
 
 Above, we created two machines.
 
@@ -196,3 +204,7 @@ This flag is global (applies to all `eris` commands) and overides any machine/en
 This means that when using `eris`, you never have to check which one of your docker-machines is active and put it into scope before executing a command (that will simply provide `eris` with its default that can always be overridden with the cli flag).
 
 We think this is pretty functionality for wrangling the blockchain dragons.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)
+

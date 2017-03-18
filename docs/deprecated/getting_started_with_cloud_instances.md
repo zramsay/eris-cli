@@ -1,3 +1,11 @@
+---
+
+type:   docs
+layout: single
+title: "Deprecated | Getting Started With Cloud Instances"
+
+---
+
 This tutorial will cover the first step when seeking to install Eris on cloud providers. Covered in this tutorial are the following cloud providers:
 
 * Digital Ocean
@@ -9,7 +17,7 @@ On all cloud providers a Ubuntu base will be assumed. While eris does run fine o
 
 **N.B. 2** -- what about on premise deployments? Generally speaking they will work the same way, but on premise is difficult to generalize and as such will not be covered.
 
-# Dependencies
+## Dependencies
 
 We use a lot of docker machine to do our work. We find it is a fast and convenient way to get started with various cloud providers folks end up needing to work with. If you are running eris from OSX or Windows machine then docker machine is required and you will certainly have it installed on your machine.
 
@@ -42,7 +50,7 @@ env | grep AWS
 
 (or `DIGIT`).
 
-# Introduction
+## Introduction
 
 To make our advanced chain run over non-proprietary lines we are going to deploy this chain to four digital ocean nodes in four different data centers and three AWS machines in three data centers. Obviously you may not want to do something this complex, so you can mix and match data centers and cloud providers with relative ease if you have even a base understanding of docker machine.
 
@@ -51,13 +59,13 @@ There are only two steps necessary to get `eris` working properly in the cloud:
 1. Provision Your Machines
 2. Install Eris
 
-# Provision Your Machines
+## Provision Your Machines
 
 Obviously, if we're going to work on remote cloud instances we should first provision them. Provisioning is the process where a cloud provider reserves space in their data center for "your computer" and then gives you access to that computer. While there are a number of ways in which any one cloud provider generally offers to allow you to provision your machines, since we already have docker machine installed, we will use that to provision our machines.
 
 Docker machine not only is a super convenient (marmot approved) provisioning and connection device, it also allows us to easily share access to machines within our teams (we will see this later).
 
-## Digital Ocean
+### Digital Ocean
 
 First let's make our digital ocean machines. We'll choose the following data centers (but feel free to mix and match to suit your needs / compliance requirements):
 
@@ -89,7 +97,7 @@ Note that we use 1gb droplet sizes as go has a bit of trouble building `eris` on
 
 Nothing within this tutorial requires that Digital Ocean be used; the beauty of the docker-machine approach is that it normalizes working with docker engines running in the cloud. As we will see later, once one of these machines is "in scope" Eris can easily connect to it and run `eris` commands against the remote docker engine in the cloud. Pretty neat!
 
-## Amazon Web Services
+### Amazon Web Services
 
 AWS is, admittedly, a bit more complicated to get started with. You will need to make sure that you have the appropriate VPC's and security groups set up for three different data centers. For this tutorial we're going to use the following data centers:
 
@@ -113,7 +121,7 @@ docker-machine create --driver amazonec2 --amazonec2-region us-east-1 ----amazon
 
 Again, this will take a few minutes to provision all of these machines. If you are unfamiliar with the nuances of AWS's VPCs and Security Groups then please use another cloud provider. Eris is not in a position to debug problems around your network configuration so if there are problems provisioning AWS boxes, please see docker-machines documentation and issues.
 
-## Finalizing Provisioning
+### Finalizing Provisioning
 
 Now let us check that all the machines are on and running:
 
@@ -123,7 +131,7 @@ docker-machine ls
 
 If you do not see any errors in the output and you see all seven validator nodes, then you're a-OK.
 
-# Install Eris
+## Install Eris
 
 Strictly speaking, we do not really need eris installed on the remote boxes. The way that `eris` tooling is designed is that it is built to run locally on the machine you are currently using and to connect, via docker's API, into a remote box. However, sometimes it is helpful to be able to SSH into a remote machine to debug something. Also, if you do not provision machines via docker machine then you may not be able to connect directly into the docker engine on the remote box.
 
@@ -155,3 +163,6 @@ Building eris.
 ```
 
 That means you don't have enough RAM on the machine to build eris. Sometimes this can be fixed by restarting a machine and rebuilding eris. Sometimes it requires migration to a larger machine.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)

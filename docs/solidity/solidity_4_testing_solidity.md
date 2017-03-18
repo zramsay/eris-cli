@@ -5,25 +5,25 @@ title: "Tutorials | Solidity 4: Testing Solidity"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 This post and the following ones will be about validating smart contracts; making sure that they do what they are designed to do, and that they continue to do so.
 
-# Testing smart-contracts
+## Testing smart-contracts
 
 The topics of this and the coming posts will mostly be smart contract testing, building and CI. In this one we're going to do some tests using a simple Coin/Bank contract as an example. This particular contract can also be found in the official [Solidity tutorial](https://github.com/ethereum/wiki/wiki/Solidity-Tutorial#subcurrency-example).
 
@@ -65,7 +65,7 @@ To mint new coins, the `minter` may call the `mint` function. It takes the targe
 
 Regular users may use the `send` function to transfer coins from their account to others, or `queryBalance` to get the balance of an account.
 
-## Unit tests
+### Unit tests
 
 We're going to start by testing this contract through other contracts, so as to isolate the contract functionality from everything else (blockchain transaction infrastructure etc). There are many ways to divide tests up. I tend to divide them into different "tiers".
 
@@ -83,7 +83,7 @@ If the second tier of tests fails, but the first tier passes, it could be any of
 
 If the first tier fails, then it could still be due to a number of different things. Tier 1 tests could certainly fail for other reasons then bugs in the target contract. It could be that the chain is not properly set up. It could be that the unit tests are bad. It could be that the transaction sent to the test-contract doesn't work. There are other things as well. One way of eliminating some unknowns would be to use a proper unit-testing framework.
 
-## A unit-testing framework
+### A unit-testing framework
 
 A unit-testing framework would do a number of different things:
 
@@ -97,11 +97,11 @@ A unit-testing framework would do a number of different things:
 
 Now lets get to work.
 
-## Coin test-cases
+### Coin test-cases
 
 First - in this case we have a contract, and we're going to test it. We're not starting from a conceptual model; the code is already in front of us. Our mission here is simply to test the `Coin` contract to make sure it works as intended. In order to do so, we will consider a number of different test-cases and design a test for each one.
 
-## Minting
+### Minting
 
 The rules for minting is rather simple - the contract creator becomes the minter, and only the minter is allowed to endow user accounts with coin. The first rule is encoded in the constructor, and the second one in the `mint` function.
 
@@ -111,7 +111,7 @@ The rules for minting is rather simple - the contract creator becomes the minter
 
 **Test 3:** Ensure that only the minter can mint coins.
 
-## Transferring coin
+### Transferring coin
 
 The rules for transacting is simple as well - any account can send and receive coin. The only restriction is that an account cannot send more coins then it has. There is no target check - accounts are not created, instead a non existent account is the same as an account with balance 0. Also, accounts are allowed to send coins to themselves.
 
@@ -119,7 +119,7 @@ The rules for transacting is simple as well - any account can send and receive c
 
 **Test 2:** Check that an account cannot send more coins then it has.
 
-# Implementing the tests
+## Implementing the tests
 
 We will start with as simple a format as possible. There will be a test contract with a function for each unit test, which returns `false` if it fails, or `true` if it passes.
 
@@ -266,7 +266,7 @@ These tests should show that the contract generally works as intended. Again - t
 
 There's not much we can do about this though, since the contract is what it is - but that observation itself is good. When we design a similar contract we can keep that in mind, and perhaps allow minter strategy to be passed in using DI (shared contracts will be good in that respect), and do other modifications as well. Of course, the `Coin` contract is not supposed to be anything but a super-simple Solidity example, so nothing is really wrong here.
 
-# A solUnit test.
+## A solUnit test.
 
 The test above is fine, but it lacks a number of features. What if I want to do more then one assertion per test method. What if I want standardized assertion methods. What if I want to communicate the results in the form of Solidity events? What if I would like to do some basic coverage analysis? It would have to be added in by the person doing the test, and could get messy.
 
@@ -390,7 +390,7 @@ I should add that solUnits coverage report is not 100% definite proof. The way i
 
 The full, working version of this contract (including Asserter.sol and other things) can be found [here](https://github.com/androlo/sol-unit/blob/master/contracts/src/CoinTest.sol).
 
-# Conclusion
+## Conclusion
 
 Proper tests for smart-contracts will soon become the standard. This means real, well-designed, multi-level tests and not just some crappy javascript calling some function then checking the return value; however, unit testing is not all. Another thing I believe that a serious Solidity project should have is a proper workspace, with the files laid out as they would in any other code project, and a clear system for building and deploying.
 
@@ -399,3 +399,6 @@ Javascript is good. It has become the de facto language not just for the web, bu
 One of the best things with `Node.js` integration is that we get full access to its tools. [gulp](https://github.com/gulpjs/gulp) is particularly useful. It's a very popular build-automation tool that lets you create different tasks, chain them, and many other things. There's also a unit-testing framework called [mocha](https://github.com/mochajs/mocha), and a bunch of different assertion libraries. Since `solUnit` is a node.js library, it is possible to run the tests from mocha, and thereby integrating the Solidity tests with the tests of other DApp code (at least if it is `node.js` javascript).
 
 In the next post I will be making a simple multi-agent test in Javascript. The way it'll work is I will make a simple `CoinAgent` class in javascript, which holds a reference to the javascript version of the`Coin` contract (created through `eris-contracts.js`). Each of these agents would have functions to `mint` and `send`, but they would all transact to it using their own key. There will be a script which deploys a `Coin` contract, then creates a number of agents and have them run a series of transactions to make sure that it all works.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)

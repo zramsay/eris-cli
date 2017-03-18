@@ -5,25 +5,25 @@ title: "Tutorials | Solidity 3: Solidity Language Features"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 In this tutorial we will cover some of the basic ones, types, interfaces, events, errors, and give a few examples of how these work in practice.
 
-# Types - the basics
+## Types - the basics
 
 *Type-related information can be found in the official Solidity tutorial, under [types](https://github.com/ethereum/wiki/wiki/Solidity-Tutorial#types). It is good to have read that first.*
 
@@ -43,7 +43,7 @@ contract Test {
 
 The error it would throw is this: `Error: Type address not implicitly convertible to expected type bool.`
 
-## Type conversion
+### Type conversion
 
 The compiler allows you to convert between types in certain cases. Let's say you have the number `1` stored in a `uint` variable, and you want to use it in another variable of type `int`. That is possible - but you generally have to do the conversion yourself. This is how you would do it:
 
@@ -58,7 +58,7 @@ Type conversion is also checked at compile time and will generally be caught but
 
 Finally, type conversion is something that should be used with care. It's good in some cases, but excessive and/or careless casting is usually a sign that the code is not well written and can sometimes have bad consequences (such as data-loss). Remember types are there for a reason.
 
-# Contracts and Interfaces
+## Contracts and Interfaces
 
 Solidity uses the `contract` data-type to model smart contracts. It is very similar to a `class`.
 
@@ -186,7 +186,7 @@ contract ARiskyBankUser is BankUser {
 
 It has `risky` in it because it is not safe. First of all, `bank` starts out un-initialized, which means the `deposit` and `withdraw` functions might fail. Secondly, `setBank` has an address in the method signature and there is no guarantee that this contract is a bank. Finally, of course this is generally a bad contract because it has no permissions structure. It's just a demonstration of interfaces so it shouldn't have that, but it's still worth keeping in mind.
 
-# Events
+## Events
 
 Events are used to dump information from Solidity contract code into the blockchain clients log. It is a way of making that information available to the "outside world". On top of the events themselves, most clients also have a way of capturing this output and encapsulating it in an event data-structures. This is particularly important for efficiency between the blockchain clients and the "outside world" which will rely upon these events in order for other things to happen.
 
@@ -266,7 +266,7 @@ contract C {
 }
 ```
 
-# Converting Addresses to Contracts
+## Converting Addresses to Contracts
 
 You can convert between contracts and addresses. This for example is allowed:
 
@@ -317,6 +317,9 @@ This compiles, and we can check to see that `Tester` has "Hello!" written into i
 
 One way of circumventing this is to only allow contracts to be added in very controlled ways, for example through dedicated factories or through methods that only certain accounts are allowed to access, but it is something that needs to be done with care.
 
-# Errors
+## Errors
 
 There is no real error handling system in Solidity (yet). There are no `try - catch` or `throw` statements, or something to that effect. Contract designers need to deal with errors themselves. Solidity does some sanity checks on arrays and such, but will often respond simply by executing the `(STOP)` instruction. According to the developers, this is just put in as a placeholder until a more sophisticated error handling and recovery system is put in place.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)

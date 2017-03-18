@@ -5,25 +5,25 @@ title: "Tutorials | Solidity 6: Advanced Solidity Features"
 
 ---
 
-# Solidity Series
+## Solidity Series
 
 This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
-* [The Five Types Model (Solidity 1)](solidity_1_the_five_types_model)
-* [Action-Driven Architecture (Solidity 2)](solidity_2_action_driven_architecture)
-* [Solidity Language Features (Solidity 3)](solidity_3_solidity_language_features)
-* [Testing Solidity (Solidity 4)](solidity_4_testing_solidity)
-* [Modular Solidity (Solidity 5)](solidity_5_modular_solidity)
-* [Advanced Solidity Features (Solidity 6)](solidity_6_advanced_solidity_features)
-* [Updating Solidity Contracts (Solidity 7)](solidity_7_updating_solidity_contracts)
+* [Part 1: The Five Types Model](/docs/solidity/solidity_1_the_five_types_model)
+* [Part 2: Action-Driven Architecture](/docs/solidity/solidity_2_action_driven_architecture)
+* [Part 3: Solidity Language Features](/docs/solidity/solidity_3_solidity_language_features)
+* [Part 4: Testing Solidity](/docs/solidity/solidity_4_testing_solidity)
+* [Part 5: Modular Solidity](/docs/solidity/solidity_5_modular_solidity)
+* [Part 6: Advanced Solidity Features](/docs/solidity/solidity_6_advanced_solidity_features)
+* [Part 7: Updating Solidity Contracts](/docs/solidity/solidity_7_updating_solidity_contracts)
 
-# Introduction
+## Introduction
 
 In this post we're going to look at some Solidity-features that are fairly new, tuples, memory arrays, libraries, index access/conversion between all types, and the new imports. We're also going to look at some fun weird things.
 
-# Tuples
+## Tuples
 
 [Tuples](http://solidity.readthedocs.org/en/latest/control-structures.html#destructuring-assignments-and-returning-multiple-values) are fairly new, and lets you work with multiple values of (potentially) different types at the same time.
 
@@ -52,7 +52,7 @@ contract Tuples {
 }
 ```
 
-# Memory arrays
+## Memory arrays
 
 Dynamically sized arrays can now be allocated directly in memory.
 
@@ -71,7 +71,7 @@ contract C {
 
 There are some important restrictions though; the most important one is that they can't be re-sized. This is different from storage arrays that can be resized either by using `push`, or just change the length, e.g. `arr.length = 453;`. The reasons has to do with differences in the way storage and memory works.
 
-# Libraries
+## Libraries
 
 [Libraries](http://solidity.readthedocs.org/en/latest/contracts.html#libraries) are contracts that are deployed to specific accounts, and provide code for other contracts. They enable many useful things, like attaching functions to types.
 
@@ -173,13 +173,13 @@ contract IntsUser {
 }
 ```
 
-# Index Access and Conversion
+## Index Access and Conversion
 
 [This](https://github.com/ethereum/wiki/wiki/Solidity-Features#index-access-for-fixed-bytes-type) is brand new and hasn't made it into the online compiler yet, but since you can convert between all value-types, it means you can turn basically anything into bytes, and thus also strings.
 
 Strings can't be accessed by index yet (unless it changed yesterday), but bytes can, and you can convert between them as shown [here](https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol) (notice it is also a library).
 
-# Imports
+## Imports
 
 The [new imports](https://solidity.readthedocs.org/en/latest/layout-of-source-files.html#importing-other-source-files) lets you import files like you would in JavaScript. It is also possible to add include directories in compiler commands, and to remap paths. Remapping can be very useful; especially when the code is contained in many different directories and subdirectories.
 
@@ -204,4 +204,7 @@ import "lib2/Lib2Contract.sol";
 ```
 
 Remapping is marginally useful in a case like this, but when you start getting many folders that are spread out it will make things a lot easier.
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Solidity Tutorials](/docs/solidity/)
 

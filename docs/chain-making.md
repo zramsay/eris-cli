@@ -10,7 +10,7 @@ menu:
 
 ---
 
-# Introduction
+## Introduction
 
 There are typically two steps to making a permissioned blockchain (for less advanced users we say there are three but really there are two):
 
@@ -19,7 +19,7 @@ There are typically two steps to making a permissioned blockchain (for less adva
 
 We shall go through these in their logical order.
 
-## Chain Design
+### Chain Design
 
 To design our chain we need to, first, consider, *who* will get *what* permissions and *why*. It is outside the scope of this tutorial to outline all of the considerations which would come into play when thinking about creating a [permissioning system](/platform/db), but for the purposes of this tutorial, we will craft the genesis block to use the following paradigm:
 
@@ -32,7 +32,7 @@ For the purposes of this tutorial, we will have (1) administrator, (7) validator
 
 If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/eris-ltd/eris-db/blob/master/README.md).
 
-# Step 1. Make the Necessary Files
+## Step 1. Make the Necessary Files
 
 If you have run through the chain making tool (`eris chains make myChain` with the `--wizard` flag) then you will have been introduced to the idea of account-types. In eris, we are not restrictive about what account-types you can use. We expose a wide variety of permissions which you can utilize to add a network level permissioning system to your network of `eris:db` clients (see links above). This adds a large amount of complexity to the equation, however, and to simplify the use of permissions, we utilize a layer of abstraction which are `account types`. These account types are simply bundles of permissions and tokens which the `eris chains make` command uses to package up our files for us.
 
@@ -312,7 +312,7 @@ This directory contains the **minimum** necessary files to start a chain. As we 
 
 **N.B.** You will want to export your keys onto the host at this point so that you have them backed up. Run `eris keys export --all` and you'll see the keys on your host by running `eris keys ls` or looking in `~/.eris/keys/data`. 
 
-# Step 2. Instantiate the Blockchain
+## Step 2. Instantiate the Blockchain
 
 With all the files made for us by the eris chain maker out we're ready to rock and roll.
 
@@ -332,7 +332,7 @@ eris chains logs advchain -f
 
 That command will `follow` the logs. To stop following the logs use `ctrl+c`. As you will see, nothing appears to be happening here. This is a feature not a bug.
 
-## A Bit About Validators
+### A Bit About Validators
 
 eris:db utilizes the tendermint consensus engine under the hood (on our roadmap is to be able to provide eris:db's comprehensive RPC and application manager portion over various consensus engines.
 
@@ -351,3 +351,6 @@ But before we do that, let's actually remove the chain for now so it doesn't get
 ```bash
 eris chains rm -xfd advchain
 ```
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)

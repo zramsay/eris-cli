@@ -1,10 +1,18 @@
-# Introduction
+---
+
+type:   docs
+layout: single
+title: "Deprecated | Chain Maintaining"
+
+---
+
+## Introduction
 
 In general what is going to happen here is that we are going to establish what we at Eris call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.
 
 In addition to the one "peer sergeant major" we will also deploy six "peer sergeants" who will be cloud based validator nodes.
 
-# Overview
+## Overview
 
 In this tutorial we will cover the following maintenance tasks:
 
@@ -16,7 +24,7 @@ In this tutorial we will cover the following maintenance tasks:
 
 Over the course of working through these processes, we'll be introducing `eris actions` which has not, yet, been covered as there as not then a need for it. Now, we can leverage this aspect of `eris` to our benefit to greatly reduce the friction around standardized processes.
 
-## Get Setup Part 1: The "Remote" Machines
+### Get Setup Part 1: The "Remote" Machines
 
 For the purposes of this tutorial let's first make a chain with three validators (we're going to run them on virtualbox locally for this tutorial) and one root node (which we're going to run "locally"; or if you are on OSX or Windows in the main `eris` machine).
 
@@ -68,7 +76,7 @@ That `cat | sed` sequence is ugly, we know. In upcoming releases we'll be addres
 
 You can use that bash snippet for a wide variety of networks you need to establish. Just change the variables at the top of the snippet to suit your scenario.
 
-## Get Setup Part 2: Turn on Your "Local" Node
+### Get Setup Part 2: Turn on Your "Local" Node
 
 The next step is to boot the chain locally and to make sure it is making blocks.
 
@@ -111,7 +119,7 @@ That will let us know that our chain is all connected.
 
 Now that we have a chain running let's do some fun tasks on it.
 
-# <a name="adding"></a>Maintenance Task 1: Adding Actors
+## Maintenance Task 1: Adding Actors
 
 Let us start by making a key. Generally, best practice is for the actor you are trying to add to the permissioned chain network will generate the key on their machine and notice you (presumably one of the chain administrators) what their generated address is. But for the purposes of this tutorial we will simply do it all on our machine.
 
@@ -181,23 +189,23 @@ eris chains exec $chain_name -- mintx permission set_base $new_addr call true --
 
 
 
-# <a name="removing"></a>Maintenance Task 2: Removing Actors
+#### Maintenance Task 2: Removing Actors
 
 
 
-# <a name="status"></a>Maintenance Task 3: Understanding Chain Status
+#### Maintenance Task 3: Understanding Chain Status
 
 
 
-# <a name="recovery"></a>Maintenance Task 4: Chain Recovery
+#### Maintenance Task 4: Chain Recovery
 
 
 
-# <a name="upgrade"></a>Maintenance Task 5: Chain Upgrade
+#### Maintenance Task 5: Chain Upgrade
 
 
 
-# Cleanup
+## Cleanup
 
 Let's remove those machines so they don't get in our way.
 
@@ -207,4 +215,8 @@ do
   docker-machine rm -y "$machine_base-$i"
 done
 ```
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)
+
 
