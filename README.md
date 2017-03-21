@@ -12,7 +12,7 @@ operating applications built to run on an ecosystem level.
 
 `eris:cli` is a tool which makes it easy for developers to build, test, manage, and operate smart contract applications. **No matter the blockchain**.
 
-[For the motivation behind this tool see this post](https://monax.io/docs/deprecated/motivation).
+[For the motivation behind this tool see this post](https://monax.io/platform/motivation).
 
 # Install (For Developers)
 
