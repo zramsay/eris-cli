@@ -46,7 +46,7 @@ Version: ${ERIS_VERSION}-${ERIS_RELEASE}
 Section: devel
 Architecture: amd64
 Priority: standard
-Homepage: https://monax.io/docs/documentation/
+Homepage: https://monax.io/docs
 Maintainer: Monax Industries <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4

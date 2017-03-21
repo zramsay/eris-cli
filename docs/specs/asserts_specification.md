@@ -1,4 +1,12 @@
-# Assert Jobs Specification
+---
+
+type:   docs
+layout: single
+title: "Specifications | Assert Jobs Specification"
+
+---
+
+## Assert Jobs Specification
 
 Asserts can be used to compare two "things". These "things" may be the result of two jobs or the result against one job against a baseline. (Indeed, it could be the comparison of two baselines but that wouldn't really get folks anywhere).
 
@@ -79,3 +87,7 @@ Currently, the only way to call an assert value of equals for an array is to dec
 * `"!="`
 * `">="`
 * `">"`
+
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](/docs/specs/)
+

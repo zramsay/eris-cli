@@ -10,7 +10,7 @@ License: GPL-3
 Version: %{version}
 Release: %{release}
 Group: Applications/Productivity
-URL: https://monax.io/docs/documentation
+URL: https://monax.io/docs
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
 
 %description

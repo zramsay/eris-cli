@@ -16,7 +16,7 @@ type Account struct {
 
 type SetJob struct {
 	// (Required) value which should be saved along with the jobName (which will be the key)
-	// this is useful to set variables which can be used throughout the epm definition file.
+	// this is useful to set variables which can be used throughout the jobs definition file (epm.yaml).
 	// It should be noted that arrays and bools must be defined using strings as such "[1,2,3]"
 	// if they are intended to be used further in a assert job.
 	Value string `mapstructure:"val" json:"val" yaml:"val" toml:"val"`
@@ -264,7 +264,7 @@ type Assert struct {
 	// (Required) must be of the set ["eq", "ne", "ge", "gt", "le", "lt", "==", "!=", ">=", ">", "<=", "<"]
 	// establishes the relation to be tested by the assertion. If a strings key:value pair is being used
 	// only the equals or not-equals relations may be used as the key:value will try to be converted to
-	// ints for the remainder of the relations. if strings are passed to them then eris:pm will return an
+	// ints for the remainder of the relations. if strings are passed to them then `eris pkgs do` will return an
 	// error
 	Relation string `mapstructure:"relation" json:"relation" yaml:"relation" toml:"relation"`
 	// (Required) value which should be used for the assertion. This is usually known as the "given"

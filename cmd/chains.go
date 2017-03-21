@@ -82,9 +82,8 @@ the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.Chain
 which will import all of the files which make creates into containers and
 start your shiny new chain.
 
-If you have any questions on eris chains make, please see the Eris CM (chain manager)
-documentation here:
-https://monax.io/docs/documentation/cm/`,
+If you have any questions on [eris chains make], see the documentation here:
+https://monax.io/docs`,
 	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
 $ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive); use the [--chain-type] flag to specify chain types
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:1,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
