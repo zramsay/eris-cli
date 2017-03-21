@@ -41,20 +41,6 @@ Examples of eris job definition files are available in the jobs_fixtures directo
 
 
 
-### Chains Specification
-
-Chains are defined in **chain definition files**. These reside on the host in `~/.eris/chains`.
-
-Chain definition files may be formatted in any of the following formats:
-
-* `json`
-* `toml` (default)
-* `yaml`
-
-[Read the Chains Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/chains_specification)
-
-
-
 ### Assert Jobs Specification
 
 Asserts can be used to compare two "things". These "things" may be the result of two jobs or the result against one job against a baseline. (Indeed, it could be the comparison of two baselines but that wouldn't really get folks anywhere).
