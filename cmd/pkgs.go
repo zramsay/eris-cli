@@ -44,7 +44,7 @@ func addPackagesFlags() {
 	// TODO links keys
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
-	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which epm should use [csv,json]")
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which should be used [csv,json]") // [zr] this is not well tested!
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which jobs should use")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
 	packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")

@@ -81,9 +81,8 @@ the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.Chain
 which will import all of the files which make creates into containers and
 start your shiny new chain.
 
-If you have any questions on eris chains make, please see the Eris CM (chain manager)
-documentation here:
-https://monax.io/docs/documentation/cm/`,
+If you have any questions on [eris chains make], see the documentation here:
+https://monax.io/docs`,
 	Example: `$ eris chains make myChain --wizard -- will use the interactive chain-making wizard and make your chain named myChain
 $ eris chains make myChain -- will use the simplechain definition file to make your chain named myChain (non-interactive); use the [--chain-type] flag to specify chain types
 $ eris chains make myChain --account-types=Root:1,Developer:0,Validator:1,Participant:1 -- will use the flag to make your chain named myChain (non-interactive)
@@ -276,6 +275,12 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
+	// NOTE: [ben] the unsafe flag is introduced to start pushing out bad
+	// practices from the tooling with regards to extracting private keys
+	// from eris-keys.  Extracting the private keys can be convenient for
+	// the development and poc phase, but must be deprecated even in that
+	// case.
+	chainsMake.PersistentFlags().BoolVarP(&do.Unsafe, "unsafe", "", false, "require explicit confirmation to write private keys from eris-keys to host during make in accounts.json")
 
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")

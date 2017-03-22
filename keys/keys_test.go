@@ -1,10 +1,6 @@
 package keys
 
 import (
-	//"bytes"
-	//"encoding/hex"
-	"encoding/json"
-	//"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,8 +14,6 @@ import (
 	"github.com/eris-ltd/eris/services"
 	"github.com/eris-ltd/eris/testutil"
 	"github.com/eris-ltd/eris/util"
-	//"github.com/eris-ltd/eris-keys/crypto"
-	//ed25519 "github.com/eris-ltd/eris-keys/crypto/helpers"
 )
 
 func TestMain(m *testing.M) {
@@ -350,58 +344,6 @@ func TestListKeyHost(t *testing.T) {
 	}
 }
 
-/*
-func TestKeyPub(t *testing.T) {
-	keyClient, err := InitKeyClient()
-	defer testKillService(t, "keys", true)
-	if err != nil {
-		t.Fatalf("Could not initialize key client, got err %v", err)
-	}
-
-	tendermintKey, err := testsGenAKey(keyClient, true, "ed25519,ripemd160", "")
-	if err != nil {
-		t.Fatalf("Unexpected error in key generation: %v", err)
-	}
-	pub, err := keyClient.PubKey(tendermintKey, "")
-	if err != nil {
-		t.Fatalf("Unexpected error when grabbing pub key from address %v", tendermintKey)
-	}
-	pub2, _ := hex.DecodeString(pub)
-	tendermintKey2, _ := hex.DecodeString(tendermintKey)
-	if err = checkAddrFromPub("ed25519,ripemd160", pub2, tendermintKey2); err != nil {
-		t.Fatalf("Invalid pub key for type %v, address %v", "ed25519,ripemd160", tendermintKey)
-	}
-
-	bitcoinKey, err := testsGenAKey(keyClient, true, "secp256k1,ripemd160sha256", "")
-	if err != nil {
-		t.Fatalf("Unexpected error in key generation: %v", err)
-	}
-	pub, err = keyClient.PubKey(bitcoinKey, "")
-	if err != nil {
-		t.Fatalf("Unexpected error when grabbing pub key from address %v", bitcoinKey)
-	}
-	pub2, _ = hex.DecodeString(pub)
-	bitcoinKey2, _ := hex.DecodeString(bitcoinKey)
-	if err = checkAddrFromPub("secp256k1,ripemd160sha256", pub2, bitcoinKey2); err != nil {
-		t.Fatalf("Invalid pub key for type %v, address %v", "secp256k1,ripemd160sha256", bitcoinKey)
-	}
-
-	ethereumKey, err := testsGenAKey(keyClient, true, "secp256k1,sha3", "")
-	if err != nil {
-		t.Fatalf("Unexpected error in key generation: %v", err)
-	}
-	pub, err = keyClient.PubKey(ethereumKey, "")
-	if err != nil {
-		t.Fatalf("Unexpected error when grabbing pub key from address %v", ethereumKey)
-	}
-	pub2, _ = hex.DecodeString(pub)
-	ethereumKey2, _ := hex.DecodeString(ethereumKey)
-	if err = checkAddrFromPub("secp256k1,sha3", pub2, ethereumKey2); err != nil {
-		t.Fatalf("Invalid pub key for type %v, address %v", "secp256k1,sha3", ethereumKey)
-	}
-
-}*/
-
 func TestKeyConvert(t *testing.T) {
 	keyClient, err := InitKeyClient()
 	defer testKillService(t, "keys", true)
@@ -412,14 +354,9 @@ func TestKeyConvert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
-	bytez, err := keyClient.Convert(tendermintKey, "")
+	_, err = keyClient.Convert(tendermintKey, "")
 	if err != nil {
 		t.Fatalf("Unexpected error during conversion of address %v to priv validator.json", tendermintKey)
-	}
-	privVal := &definitions.MintPrivValidator{}
-	err = json.Unmarshal(bytez, privVal)
-	if err != nil {
-		t.Fatalf("Conversion to priv validator.json failed for address %v", tendermintKey)
 	}
 }
 
@@ -441,29 +378,6 @@ func testListKeys(keys *KeyClient, typ string) []string {
 
 	return result
 }
-
-/*
-//an exact copy of the helper function from https://github.com/eris-ltd/eris-keys/blob/master/eris-keys/core_test.go#L122
-func checkAddrFromPub(typ string, pub, addr []byte) error {
-	var addr2 []byte
-	switch typ {
-	case "secp256k1,sha3":
-		addr2 = crypto.Sha3(pub[1:])[12:]
-	case "secp256k1,ripemd160sha256":
-		addr2 = crypto.Ripemd160(crypto.Sha256(pub))
-	case "ed25519,ripemd160":
-		var pubArray ed25519.PubKeyEd25519
-		copy(pubArray[:], pub)
-		addr2 = pubArray.Address()
-	default:
-		return fmt.Errorf("Unknown or incomplete typ %s", typ)
-	}
-	if bytes.Compare(addr, addr2) != 0 {
-		return fmt.Errorf("Keygen addr doesn't match pub. Got %X, expected %X", addr2, addr)
-	}
-	return nil
-}
-*/
 
 func testsGenAKey(keys *KeyClient, save bool, keyType, password string) (string, error) {
 	return keys.GenerateKey(save, true, keyType, password)

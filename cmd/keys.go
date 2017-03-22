@@ -18,9 +18,7 @@ var Keys = &cobra.Command{
 [eris-keys] and requires a keys container to be running
 
 It is for development only. Advanced functionality is available via
-the [eris services exec keys "eris-keys CMD"] command.
-
-See https://monax.io/docs/documentation/keys/ for more info.`,
+the [eris services exec keys "eris-keys CMD"] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 

@@ -143,9 +143,9 @@ func PreProcessInputData(function string, data interface{}, do *definitions.Do, 
 	var callArray []string
 	if function == "" && !constructor {
 		if reflect.TypeOf(data).Kind() == reflect.Slice {
-			return "", []string{""}, fmt.Errorf("Incorrect formatting of epm run file. Please update your epm run file to include a function field.")
+			return "", []string{""}, fmt.Errorf("Incorrect formatting of epm.yaml. Please update it to include a function field.")
 		}
-		log.Warn("Deprecation Warning: The use of the 'data' field to specify the name of the contract function has been deprecated. Please update your epm jobs file to utilize a combination of 'function' and 'data' fields instead. See documentation for further details.")
+		log.Warn("Deprecation Warning: The use of the 'data' field to specify the name of the contract function has been deprecated. Please update your epm.yaml file to use a combination of 'function' and 'data' fields instead. See documentation for further details.")
 		function = strings.Split(data.(string), " ")[0]
 		callArray = strings.Split(data.(string), " ")[1:]
 		for _, val := range callArray {
@@ -163,7 +163,7 @@ func PreProcessInputData(function string, data interface{}, do *definitions.Do, 
 				}
 				return function, callDataArray, nil
 			} else {
-				return "", make([]string, 0), fmt.Errorf("Incorrect formatting of epm run file. Please update your epm run file to include a function field.")
+				return "", make([]string, 0), fmt.Errorf("Incorrect formatting of epm.yaml file. Please update it to include a function field.")
 			}
 		}
 		val := reflect.ValueOf(data)

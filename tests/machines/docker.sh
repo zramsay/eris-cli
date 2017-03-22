@@ -8,9 +8,6 @@
 # we need to be on a specific version of docker. It will likely be unuseful to
 # you.
 
-# If you are looking for a quick and easy way to set up eris on a cloud machin
-# please see https://github.com/eris-ltd/common/cloud/chains/setup/setup.sh
-
 # If $DOCKER_VERSION is set then the host will use that.
 
 # -----------------------------------------------------------------------------
@@ -135,4 +132,3 @@ echo
 echo "All set"
 echo
 echo
-docker version

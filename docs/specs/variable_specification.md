@@ -1,31 +1,39 @@
-# Variables Specification
+---
 
-Variables can be used for nearly every eris [jobs](jobs_specification) field (largely with the exception of nonce and wait).
+type:   docs
+layout: single
+title: "Specifications | Variables Specification"
+
+---
+
+## Variables Specification
+
+Variables can be used for nearly every eris [jobs](/docs/specs/jobs_specification) field (largely with the exception of nonce and wait).
 
 eris:jobs variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
 
 Variables come in the following types:
 
-* [job result variables](#jobResultVars)
-* [set variables](#setVars)
-* [reserved variables](#reservedVars)
-* [fallback function](#fallBack)
-* [tuple returns](#tupleReturns)
-* [array packing and returns](#arrays)
+* [job result variables](#job-result-variable)
+* [set variables](#set-variables)
+* [reserved variables](#reserved-variables)
+* [fallback function](#fallback-function)
+* [tuple returns](#tuples-and-returns)
+* [array packing and returns](#array-packing-and-returns)
 
-## <a name="jobResultVars"></a>Job Result Variable
+### Job Result Variable
 
 The result of every job is set as a variable with the `JobName` as the key and the `JobResult` as the value. The `JobResult` for transaction jobs is the transaction hash. The `JobResult`  for contract deployments is the address of the contract. The `JobResult` for queries and calls is the return value from the blockchain or the query.
 
 The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from eris-client's tooling.
 
-## <a name="setVars"></a>Set Variables
+### Set Variables
 
 Set variables will take the `JobName` and use the `val` field from the job file to set the variable.
 
-## <a name="setVars"></a>Variable Types
+### Variable Types
 
-If you're using solidity then you will be familiar with variable types. Here is how eris:pm deals with variable types:
+If you're using solidity then you will be familiar with variable types. Here is how the package manager deals with variable types:
 
 * `address` - addresses should be given according to the 40 character string **without** the leading `0x`
   * Example: 1040E6521541DAB4E7EE57F21226DD17CE9F0FB7
@@ -35,9 +43,9 @@ If you're using solidity then you will be familiar with variable types. Here is 
 * `string` and `byteX` -- just give it a string
   * Example: marmatoshi
 
-For a more complete handling of the types, please see the epm.yaml in tests/fixtures/app06 directory of the repository.
+For a more complete handling of the types, please see the epm.yaml in `tests/jobs_fixtures/app06` directory of the repository.
 
-## <a name="reservedVars"></a>Reserved Variables
+### Reserved Variables
 
 The following are reserved variables:
 
@@ -45,11 +53,11 @@ The following are reserved variables:
 * `$block+X`: where `X` can be any digit; will return a string version of the current block height `+X` blocks
 * `$block-X`: where `X` can be any digit; will return a string version of the current block heigh `-X` blocks
 
-## <a name="fallBack"></a>Fallback Function
+### Fallback Function
 
-In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See app37.
+In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See `tests/jobs_fixture/app37` in the `eris` repository.
 
-## <a name="tupleReturns"></a>Tuples and Returns
+### Tuples and Returns
 
 eris:jobs can now effectively handle multiple return values for all static types such as
 
@@ -67,16 +75,19 @@ contract tuples {
 }
 ```
 
-for now the epm cannot handle dynamic types such as
+for now, the package manager cannot handle dynamic types such as
 
 * `string` `bytes` `struct`
 
 Hold with us while the marmots get those in control :)
 
-## <a name="arrays"></a> Array Packing and Returns
+### Array Packing and Returns
 
-eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/tree/master/tests/fixtures/app31/epm.yaml). Until then, you can declare arrays for most static types such as:
+eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
 
 *  `int` `uint` `bool` `bytes(1-32)`
 
 We currently do not handle packing of 2D arrays nor arrays of `address`, `string`, `bytes`, or `struct`. These are scheduled for upcoming releases.
+
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](/docs/specs/)
+

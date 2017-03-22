@@ -104,7 +104,7 @@ run_test(){
   echo -e "Testing eris jobs using fixture =>\t$1"
   goto_base
   cd $1
-  if [ "$ci" = false ]
+  if [ -z "$ci" ]
   then
     echo
     cat readme.md
@@ -147,7 +147,7 @@ perform_tests(){
 }
 
 test_teardown(){
-  if [ "$ci" = false ]
+  if [ -z "$ci" ]
   then
     echo ""
     if [ "$was_running" -eq 0 ]
