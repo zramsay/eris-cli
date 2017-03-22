@@ -1,9 +1,9 @@
 package util
 
 import (
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/version"
 )
 
 var crashReport CrashReport

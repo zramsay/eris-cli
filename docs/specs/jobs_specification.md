@@ -12,7 +12,7 @@ Jobs are defined in **job definition files**.
 
 Action definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-Examples of eris job definition files are available in the [jobs_fixtures directory](https://github.com/eris-ltd/eris/tree/master/tests/jobs_fixtures).
+Examples of eris job definition files are available in the [jobs_fixtures directory](https://github.com/monax/eris/tree/master/tests/jobs_fixtures).
 
 Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using eris:jobs' [variable specification](/docs/specs/variable_specification).
 

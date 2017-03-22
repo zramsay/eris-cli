@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/log"
 
-	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/logging/loggers"
+	"github.com/monax/eris-db/client"
+	"github.com/monax/eris-db/logging/loggers"
 )
 
 // Maximum entries in the HEAD file

@@ -30,7 +30,7 @@ To design our chain we need to, first, consider, *who* will get *what* permissio
 
 For the purposes of this tutorial, we will have (1) administrator, (7) validators, (3) developers, and (20) participants. This will require a total of 31 keys, and all of their specifics to be generated and added to the genesis block.
 
-If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/eris-ltd/eris-db/blob/master/README.md).
+If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/monax/eris-db/blob/master/README.md).
 
 ## Step 1. Make the Necessary Files
 

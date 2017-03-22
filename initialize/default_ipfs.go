@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/eris/version"
 )
 
 func defServiceIPFS() string {
@@ -44,7 +44,7 @@ name = "Monax Industries"
 email = "support@monax.io"
 
 [location]
-dockerfile = "https://github.com/eris-ltd/eris/blob/master/docker/x86/ipfs/Dockerfile"
+dockerfile = "https://github.com/monax/eris/blob/master/docker/x86/ipfs/Dockerfile"
 repository = "https://github.com/ipfs/go-ipfs"
 website = "https://ipfs.io/"
 `, port_to_use, port_to_use)

@@ -83,7 +83,7 @@ Hold with us while the marmots get those in control :)
 
 ### Array Packing and Returns
 
-eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/eris-ltd/eris/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
+eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/monax/eris/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
 
 *  `int` `uint` `bool` `bytes(1-32)`
 

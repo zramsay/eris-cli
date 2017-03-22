@@ -55,13 +55,13 @@ imports:
   version: 47238d5aae8c0fefd518ef2bee46290909cf8263
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
-- name: github.com/eris-ltd/eris-compilers
+- name: github.com/monax/eris-compilers
   version: 80a2287ac76b8426dcf6bbbfd1e164b52154ba82
   subpackages:
   - definitions
   - perform
   - util
-- name: github.com/eris-ltd/eris-db
+- name: github.com/monax/eris-db
   version: 50e0a5e0519b71a3366655af95ab2cb3648d9568
   subpackages:
   - account

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/keys"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/keys"
+	"github.com/monax/eris/log"
 
-	"github.com/eris-ltd/eris-db/genesis"
-	ptypes "github.com/eris-ltd/eris-db/permission/types"
+	"github.com/monax/eris-db/genesis"
+	ptypes "github.com/monax/eris-db/permission/types"
 )
 
 // ErisDBAccountConstructor contains different views on a single account

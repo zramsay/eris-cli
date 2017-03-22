@@ -8,14 +8,14 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/perform"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/data"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/loaders"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/perform"
+	"github.com/monax/eris/services"
+	"github.com/monax/eris/util"
 )
 
 func StartChain(do *definitions.Do) error {

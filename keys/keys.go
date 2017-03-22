@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/services"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/data"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/services"
 )
 
 type KeyClient struct{}

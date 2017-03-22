@@ -5,9 +5,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )

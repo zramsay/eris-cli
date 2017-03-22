@@ -12,14 +12,14 @@
     <description>Ecosystem application platform CLI
     </description>
     <projectUrl>https://monax.io</projectUrl>
-    <packageSourceUrl>https://github.com/eris-ltd/eris</packageSourceUrl>
-    <projectSourceUrl>https://github.com/eris-ltd/eris</projectSourceUrl>
+    <packageSourceUrl>https://github.com/monax/eris</packageSourceUrl>
+    <projectSourceUrl>https://github.com/monax/eris</projectSourceUrl>
     <docsUrl>https://monax.io/docs/</docsUrl>
     <mailingListUrl>https://support.monax.io/helpdesk</mailingListUrl>
-    <bugTrackerUrl>https://github.com/eris-ltd/eris/issues</bugTrackerUrl>
+    <bugTrackerUrl>https://github.com/monax/eris/issues</bugTrackerUrl>
     <tags>eris monax admin docker blockchains</tags>
     <copyright>2016 (c) Monax Industries</copyright>
-    <licenseUrl>https://github.com/eris-ltd/eris/blob/master/LICENSE.md</licenseUrl>
+    <licenseUrl>https://github.com/monax/eris/blob/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
       <dependency id="docker" />

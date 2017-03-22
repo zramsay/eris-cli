@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/chains"
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/list"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/chains"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/list"
+	"github.com/monax/eris/util"
 
 	"github.com/spf13/cobra"
 )

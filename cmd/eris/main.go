@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/eris-ltd/eris/cmd"
+	"github.com/monax/eris/cmd"
 )
 
 func main() {

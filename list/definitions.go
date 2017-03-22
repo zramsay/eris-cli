@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/util"
 
 	"github.com/docker/docker/pkg/term"
 	"github.com/kr/text/colwriter"

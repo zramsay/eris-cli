@@ -1,8 +1,8 @@
 package clean
 
 import (
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/util"
 )
 
 func Clean(do *definitions.Do) error {

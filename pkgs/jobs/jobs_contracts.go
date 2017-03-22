@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/pkgs/abi"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/pkgs/abi"
+	"github.com/monax/eris/util"
 
-	compilers "github.com/eris-ltd/eris-compilers/perform"
+	compilers "github.com/monax/eris-compilers/perform"
 
-	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/client/rpc"
-	"github.com/eris-ltd/eris-db/keys"
-	"github.com/eris-ltd/eris-db/logging/loggers"
-	"github.com/eris-ltd/eris-db/txs"
+	"github.com/monax/eris-db/client"
+	"github.com/monax/eris-db/client/rpc"
+	"github.com/monax/eris-db/keys"
+	"github.com/monax/eris-db/logging/loggers"
+	"github.com/monax/eris-db/txs"
 )
 
 func PackageDeployJob(pkgDeploy *definitions.PackageDeploy, do *definitions.Do) (string, error) {

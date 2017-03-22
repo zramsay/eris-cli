@@ -29,7 +29,7 @@
 # Set definitions and defaults
 
 # Where are the Things
-base=github.com/eris-ltd/eris
+base=github.com/monax/eris
 repo=$GOPATH/src/$base
 if [ "$TRAVIS_BRANCH" ]
 then
@@ -48,7 +48,7 @@ BRANCH=${BRANCH/-/_}
 BRANCH=${BRANCH/\//_}
 
 # Define now the tool tests within the Docker container will be booted from docker run
-entrypoint="$GOPATH/src/github.com/eris-ltd/eris/tests/test_tool.sh"
+entrypoint="$GOPATH/src/github.com/monax/eris/tests/test_tool.sh"
 testuser=eris
 remotesocket=2376
 hostsocket=6732

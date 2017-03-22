@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/pkgs/abi"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/pkgs/abi"
+	"github.com/monax/eris/util"
 
-	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/logging/loggers"
+	"github.com/monax/eris-db/client"
+	"github.com/monax/eris-db/logging/loggers"
 )
 
 func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (string, []*definitions.Variable, error) {

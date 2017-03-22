@@ -1,7 +1,7 @@
 version: "{build}-{branch}"
 os: Visual Studio 2015
 # Source Config
-clone_folder: C:\gopath\src\github.com\eris-ltd\eris
+clone_folder: C:\gopath\src\github.com\monax\eris
 
 environment:
   global:
@@ -47,14 +47,14 @@ install:
 build_script:
 - cmd: >-
 
-    cd c:\gopath\src\github.com\eris-ltd\eris
+    cd c:\gopath\src\github.com\monax\eris
 
     go install .\cmd\eris
 
 after_test:
-  - bash c:\gopath\src\github.com\eris-ltd\eris\tests\dm_cleanup.sh
+  - bash c:\gopath\src\github.com\monax\eris\tests\dm_cleanup.sh
 
 test_script:
 - cmd: >-
 
-    bash c:\gopath\src\github.com\eris-ltd\eris\tests\test.sh
+    bash c:\gopath\src\github.com\monax\eris\tests\test.sh

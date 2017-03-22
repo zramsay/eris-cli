@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/chains/maker"
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/keys"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/chains/maker"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/keys"
+	"github.com/monax/eris/log"
 )
 
 // TODO [zr] re-write

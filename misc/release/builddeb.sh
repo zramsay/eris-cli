@@ -22,8 +22,8 @@ echo
 gpg --import linux-public-key.asc
 gpg --import linux-private-key.asc
 
-export GOREPO=${GOPATH}/src/github.com/eris-ltd/eris
-git clone https://github.com/eris-ltd/eris ${GOREPO}
+export GOREPO=${GOPATH}/src/github.com/monax/eris
+git clone https://github.com/monax/eris ${GOREPO}
 pushd ${GOREPO}/cmd/eris
 git fetch origin ${ERIS_BRANCH}
 git checkout ${ERIS_BRANCH}
@@ -31,7 +31,7 @@ echo
 echo ">>> Building the Eris binary"
 echo
 go get
-go build -ldflags "-X github.com/eris-ltd/eris/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+go build -ldflags "-X github.com/monax/eris/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 popd
 
 echo

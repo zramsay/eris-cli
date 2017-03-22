@@ -14,9 +14,9 @@ import (
 var (
 	// Convenience directories.
 	GoPath            = os.Getenv("GOPATH")
-	ErisLtd           = filepath.Join(GoPath, "src", "github.com", "eris-ltd") // CSK: to deprecate
-	ErisGo            = filepath.Join(GoPath, "src", "github.com", "eris-ltd") // CSK: to keep
-	ErisGH            = "https://github.com/eris-ltd/"
+	ErisLtd           = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to deprecate
+	ErisGo            = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to keep
+	ErisGH            = "https://github.com/monax/"
 	ErisRoot          = ResolveErisRoot()
 	ErisContainerRoot = "/home/eris/.eris"
 

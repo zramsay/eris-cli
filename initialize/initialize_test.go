@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/util"
+	"github.com/monax/eris/version"
 )
 
 var erisDir = filepath.Join(os.TempDir(), "eris")

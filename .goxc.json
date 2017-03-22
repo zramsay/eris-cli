@@ -29,7 +29,7 @@
 			"rmtemp": true
 		},
 		"publish-github": {
-			"owner": "eris-ltd",
+			"owner": "monax",
 			"repository": "eris"
 		},
 		"xc": {

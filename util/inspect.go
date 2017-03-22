@@ -7,8 +7,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/log"
 
 	docker "github.com/fsouza/go-dockerclient"
 

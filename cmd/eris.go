@@ -6,12 +6,12 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/initialize"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/definitions"
+	"github.com/monax/eris/initialize"
+	"github.com/monax/eris/log"
+	"github.com/monax/eris/util"
+	"github.com/monax/eris/version"
 
 	"github.com/spf13/cobra"
 )
