@@ -27,6 +27,7 @@ type Do struct {
 	Dump           bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	RemoteCompiler bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Save           bool     `mapstructure:"," json:"," yaml:"," toml:","`
+	Unsafe         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Wizard         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Lines          int      `mapstructure:"," json:"," yaml:"," toml:","`
 	Timeout        uint     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -70,7 +71,7 @@ type Do struct {
 	ConfigOpts     []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes   []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	//from epm
+	// for [eris pkgs do]
 	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -112,9 +113,6 @@ type Do struct {
 	Operations        *Operation
 	Service           *Service
 	ServiceDefinition *ServiceDefinition
-
-	// stuff from maker
-	Accounts []*ErisDBAccount
 
 	// service definitions for maker config.toml
 	ChainImageName      string

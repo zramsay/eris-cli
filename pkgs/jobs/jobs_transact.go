@@ -188,13 +188,13 @@ func PermissionJob(perm *definitions.Permission, do *definitions.Do) (string, er
 	// Populate the transaction appropriately
 	var args []string
 	switch perm.Action {
-	case "set_global":
+	case "setGlobal":
 		args = []string{perm.PermissionFlag, perm.Value}
-	case "set_base":
+	case "setBase":
 		args = []string{perm.Target, perm.PermissionFlag, perm.Value}
-	case "unset_base":
+	case "unsetBase":
 		args = []string{perm.Target, perm.PermissionFlag}
-	case "add_role", "rm_role":
+	case "addRole", "removeRole":
 		args = []string{perm.Target, perm.Role}
 	}
 
@@ -206,8 +206,8 @@ func PermissionJob(perm *definitions.Permission, do *definitions.Do) (string, er
 	}
 
 	// Formulate tx
-	arg := fmt.Sprintf("%s:%s", args[0], args[1])
-	log.WithField(perm.Action, arg).Info("Setting Permissions")
+	//arg := fmt.Sprintf("%s:%s", args[0], args[1])
+	//log.WithField(perm.Action, arg).Info("Setting Permissions")
 
 	erisNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	erisKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())

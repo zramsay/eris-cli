@@ -71,7 +71,11 @@ Don't ask us, you are the one that wanted "manual" :-)
 
 For more on eris chains permissions see here:
 
-https://monax.io/docs/documentation/db/latest/eris-db/
+https://monax.io/platform/db
+
+or
+
+https://github.com/eris-ltd/eris-db
 
 How many keys do you want in *this* manual group? (You can make more than one manual group)`
 }
@@ -90,17 +94,17 @@ func AccountTypeManualPerms() []string {
 		"root",
 		"send",
 		"call",
-		"create_contract",
-		"create_account",
+		"createContract",
+		"createAccount",
 		"bond",
 		"name",
-		"has_base",
-		"set_base",
-		"unset_base",
-		"set_global",
-		"has_role",
-		"add_role",
-		"rm_role",
+		"hasBase",
+		"setBase",
+		"unsetBase",
+		"setGlobal",
+		"hasRole",
+		"addRole",
+		"removeRole",
 	}
 }
 
