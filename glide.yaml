@@ -33,7 +33,7 @@ import:
   subpackages:
   - unix
 - package: gopkg.in/yaml.v2
-- package: github.com/monax/eris-compilers
+- package: github.com/monax/compilers
   version: develop
   subpackages:
   - perform
