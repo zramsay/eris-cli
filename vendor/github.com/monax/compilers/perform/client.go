@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eris-ltd/eris-compilers/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/compilers/definitions"
+	"github.com/monax/eris/log"
 )
 
 // send an http request and wait for the response

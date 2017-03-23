@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/eris-ltd/eris-compilers/definitions"
+	"github.com/monax/compilers/definitions"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/log"
 )
 
 // Start the compile server

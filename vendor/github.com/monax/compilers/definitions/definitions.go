@@ -1,6 +1,6 @@
 package definitions
 
-import "github.com/eris-ltd/eris/config"
+import "github.com/monax/eris/config"
 
 // Compile request object
 type Request struct {

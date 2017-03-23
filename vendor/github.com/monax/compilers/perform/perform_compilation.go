@@ -10,11 +10,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/eris-ltd/eris-compilers/definitions"
-	"github.com/eris-ltd/eris-compilers/util"
+	"github.com/monax/compilers/definitions"
+	"github.com/monax/compilers/util"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/eris/config"
+	"github.com/monax/eris/log"
 )
 
 type Response struct {

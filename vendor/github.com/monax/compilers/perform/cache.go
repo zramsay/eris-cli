@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"github.com/eris-ltd/eris-compilers/definitions"
+	"github.com/monax/compilers/definitions"
 )
 
 // check/cache all includes, hash the code, return whether or not there was a full cache hit
