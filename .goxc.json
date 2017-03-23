@@ -18,8 +18,8 @@
 			"bin-dir": "/usr/bin",
 			"go-sources-dir": ".",
 			"metadata": {
-				"maintainer": "Eris Industries, Ltd.",
-				"maintainerEmail": "support@erisindustries.com"
+				"maintainer": "Monax Industries",
+				"maintainerEmail": "support@monax.io"
 			},
 			"metadata-deb": {
 				"Build-Depends": "debhelper (\u003e=4.0.0), golang-go, gcc",
@@ -30,7 +30,7 @@
 		},
 		"publish-github": {
 			"owner": "monax",
-			"repository": "eris"
+			"repository": "cli"
 		},
 		"xc": {
 			"GOARM": "",

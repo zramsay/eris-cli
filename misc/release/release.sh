@@ -175,7 +175,7 @@ prepare_gh() {
   then
     github-release release \
       --user monax \
-      --repo eris \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
@@ -183,7 +183,7 @@ prepare_gh() {
   else
     github-release release \
       --user monax \
-      --repo eris \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
@@ -201,7 +201,7 @@ release_gh() {
     echo "Uploading: ${file}"
     github-release upload \
       --user monax \
-      --repo eris \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name ${file} \
       --file ${file}
