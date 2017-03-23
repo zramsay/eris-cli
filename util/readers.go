@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/log"
 
 	"github.com/monax/eris-db/client/rpc"
 )

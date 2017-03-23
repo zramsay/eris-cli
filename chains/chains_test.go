@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/monax/eris/config"
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/services"
-	"github.com/monax/eris/testutil"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
 )
 
 var (

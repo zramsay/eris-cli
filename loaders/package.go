@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 
 	"github.com/spf13/viper"
 )

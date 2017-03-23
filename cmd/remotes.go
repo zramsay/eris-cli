@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/monax/eris/remotes"
+	"github.com/monax/cli/remotes"
 
 	"github.com/spf13/cobra"
 )

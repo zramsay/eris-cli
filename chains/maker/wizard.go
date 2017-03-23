@@ -3,7 +3,7 @@ package maker
 import (
 	"fmt"
 
-	"github.com/monax/eris/definitions"
+	"github.com/monax/cli/definitions"
 )
 
 func ChainsMakeWelcome() string {

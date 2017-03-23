@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/eris/config"
-	"github.com/monax/eris/keys"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/keys"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )

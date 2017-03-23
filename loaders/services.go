@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/eris/config"
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/viper"
 )

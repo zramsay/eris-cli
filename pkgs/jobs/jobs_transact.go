@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
 	"github.com/monax/eris-db/client"
 	"github.com/monax/eris-db/client/rpc"

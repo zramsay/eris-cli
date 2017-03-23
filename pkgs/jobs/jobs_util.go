@@ -1,10 +1,10 @@
 package jobs
 
 import (
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/keys"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/keys"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {

@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/pkgs/abi"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/pkgs/abi"
+	"github.com/monax/cli/util"
 
-	compilers "github.com/monax/eris-compilers/perform"
+	compilers "github.com/monax/compilers/perform"
 
 	"github.com/monax/eris-db/client"
 	"github.com/monax/eris-db/client/rpc"

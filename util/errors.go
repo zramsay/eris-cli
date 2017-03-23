@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 )
 
 func MintChainErrorHandler(do *definitions.Do, err error) (string, error) {

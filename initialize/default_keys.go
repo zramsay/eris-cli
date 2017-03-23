@@ -3,7 +3,7 @@ package initialize
 import (
 	"path"
 
-	"github.com/monax/eris/version"
+	"github.com/monax/cli/version"
 )
 
 func defServiceKeys() string {
@@ -37,6 +37,6 @@ name = "Monax Industries"
 email = "support@monax.io"
 
 [location]
-repository = "https://github.com/monax/eris-keys"
+repository = "https://github.com/monax/keys"
 `
 }

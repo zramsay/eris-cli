@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	pm "github.com/monax/eris/definitions"
+	pm "github.com/monax/cli/definitions"
 
 	"github.com/ethereum/go-ethereum/common"
 )

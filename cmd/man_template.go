@@ -141,7 +141,7 @@ Copyright \[co] 2014-{{date "2006"}} by Monax Industries, Ltd.
 The software is distributed under the terms of the
 .Em GNU General Public License Version 3 .
 .Sh BUGS
-http://github.com/monax/eris/issues`
+http://github.com/monax/cli/issues`
 
 var manHelpers = map[string]interface{}{
 	"escape": func(text string) string {

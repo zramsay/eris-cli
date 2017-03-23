@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/monax/compilers/definitions"
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/log"
 )
 
 // send an http request and wait for the response

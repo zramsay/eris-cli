@@ -24,5 +24,5 @@ This is a consolidation release that merges in two repositories (eris-cm & eris-
 
 #### Other repositories
 - see [here](https://github.com/monax/eris-db/blob/v0.16.0/CHANGELOG.md) for the `eris-db` changelog.
-- see [this PR](https://github.com/monax/eris-compilers/pull/121) for the `eris-compilers` changelog.
+- see [this PR](https://github.com/monax/compilers/pull/121) for the compilers changelog.
 - no changes were made to `eris-keys`. 

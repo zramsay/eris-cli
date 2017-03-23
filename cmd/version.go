@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/monax/eris/version"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )

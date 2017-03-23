@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/log"
 )
 
 //XXX this command absolutely needs a good test!!

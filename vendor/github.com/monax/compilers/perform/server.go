@@ -8,8 +8,8 @@ import (
 
 	"github.com/monax/compilers/definitions"
 
-	"github.com/monax/eris/config"
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/log"
 )
 
 // Start the compile server

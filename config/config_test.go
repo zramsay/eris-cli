@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/version"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/version"
 )
 
 var (

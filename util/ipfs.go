@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/log"
 )
 
 var (

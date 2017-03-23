@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )

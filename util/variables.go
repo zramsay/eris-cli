@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 )
 
 func PreProcess(toProcess string, do *definitions.Do) (string, error) {

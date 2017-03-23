@@ -8,11 +8,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/monax/eris/config"
-	"github.com/monax/eris/definitions"
-	"github.com/monax/eris/log"
-	"github.com/monax/eris/testutil"
-	"github.com/monax/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
 )
 
 type ab struct {
@@ -306,7 +306,7 @@ func TestLoadDataDefinition(t *testing.T) {
 	}
 }
 
-/* TODO: [RJ] - https://github.com/monax/eris/issues/1173
+/* TODO: [RJ] - https://github.com/monax/cli/issues/1173
 func TestLoadPackageSimple(t *testing.T) {
 	const (
 		name = "test"

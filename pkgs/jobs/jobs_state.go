@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"github.com/monax/eris/definitions"
+	"github.com/monax/cli/definitions"
 )
 
 func DumpStateJob(dump *definitions.DumpState, do *definitions.Do) (string, error) {

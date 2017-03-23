@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/monax/eris/log"
+	"github.com/monax/cli/log"
 )
 
 type Compiler struct {

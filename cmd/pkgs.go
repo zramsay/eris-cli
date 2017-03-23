@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/eris/pkgs"
-	"github.com/monax/eris/util"
-	"github.com/monax/eris/version"
+	"github.com/monax/cli/pkgs"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )
