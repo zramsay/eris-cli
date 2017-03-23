@@ -32,7 +32,7 @@
 # Defaults
 
 start=`pwd`
-base=github.com/monax/eris
+base=github.com/monax/cli
 repo=$GOPATH/src/$base
 
 source $repo/tests/machines/docker_machine.sh

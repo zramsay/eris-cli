@@ -181,7 +181,7 @@ using the same hardcoded `$addr_new` and `$pub_new` as in the previous sections.
 The concept is no different than bonding, simply `eris chains exec bonding "mintx unbond ..."` with the appropriate flags and you'll be set. Note that unbond address was already given in the bond transaction.
 
 #### With epm
-See [this test in eris job fixtures](https://github.com/monax/eris/tree/master/tests/job_fixtures/app04-bonding_unbonding_rebonding_tx_and_validation_status) for more information on the bond/unbond/rebond pipeline. Note that the `epm.yaml`'s in this tutorial are modified from that test.
+See [this test in eris job fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures/app04-bonding_unbonding_rebonding_tx_and_validation_status) for more information on the bond/unbond/rebond pipeline. Note that the `epm.yaml`'s in this tutorial are modified from that test.
 
 
 ## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)

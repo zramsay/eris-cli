@@ -9,7 +9,7 @@
 SHELL := /bin/bash
 REPO := $(shell pwd)
 GOFILES_NOVENDOR := $(shell find ${REPO} -type f -name '*.go' -not -path "${REPO}/vendor/*")
-PACKAGES_NOVENDOR := $(shell go list github.com/monax/eris/... | grep -v /vendor/)
+PACKAGES_NOVENDOR := $(shell go list github.com/monax/cli/... | grep -v /vendor/)
 VERSION := $(shell cat ${REPO}/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
 VERSION_MIN := $(shell echo ${VERSION} | cut -d . -f 1-2)
 COMMIT_SHA := $(shell echo `git rev-parse --short --verify HEAD`)
@@ -38,7 +38,7 @@ fmt:
 	@echo "Correcting any formatting style corrections."
 	@gofmt -l -w ${GOFILES_NOVENDOR}
 
-### Dependency management for github.com/monax/eris
+### Dependency management for github.com/monax/cli
 
 # erase vendor wipes the full vendor directory
 .PHONY: erase_vendor
@@ -51,9 +51,9 @@ install_vendor:
 	go get github.com/Masterminds/glide
 	glide install
 
-### Building github.com/monax/eris
+### Building github.com/monax/cli
 
-# build all targets in github.com/monax/eris
+# build all targets in github.com/monax/cli
 .PHONY: build
 build:	check build_eris
 
@@ -62,7 +62,7 @@ build:	check build_eris
 build_eris:
 	go build -o ${REPO}/target/eris-${COMMIT_SHA} ./cmd/eris
 
-### Testing github.com/monax/eris
+### Testing github.com/monax/cli
 
 # test eris
 .PHONY: test

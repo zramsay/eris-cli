@@ -24,7 +24,7 @@
 
 # Where are the Things
 start=`pwd`
-base=github.com/monax/eris
+base=github.com/monax/cli
 repo=$GOPATH/src/$base
 if [ "$TRAVIS_BRANCH" ]
 then

@@ -12,7 +12,7 @@ Services are defined in **service definition files**. These reside on the host i
 
 Service definition files are formatted using `toml`.
 
-See the [source code](https://github.com/monax/eris/blob/master/definitions/service_definition.go) for more details on fields that will be marshalled. These largely mirror the fields used in `docker run/start`.
+See the [source code](https://github.com/monax/cli/blob/master/definitions/service_definition.go) for more details on fields that will be marshalled. These largely mirror the fields used in `docker run/start`.
 
 ### Service Dependencies
 

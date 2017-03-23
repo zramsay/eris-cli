@@ -1,8 +1,3 @@
-|[![GoDoc](https://godoc.org/github.com/monax/eris/cmd/eris?status.png)](https://godoc.org/github.com/monax/eris/cmd/eris) | Linux | macOS | Windows |
-|---|-------|-----|---------|
-| Master | [![Linux](https://circleci.com/gh/monax/eris/tree/master.svg?style=svg)](https://circleci.com/gh/monax/eris/tree/master) | [![macOS](https://travis-ci.org/monax/eris.svg?branch=master)](https://travis-ci.org/monax/eris) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/master?svg=true)](https://ci.appveyor.com/project/monax/eris) |
-| Develop | [![Linux](https://circleci.com/gh/monax/eris/tree/develop.svg?style=svg)](https://circleci.com/gh/monax/eris/tree/develop) | [![macOS](https://travis-ci.org/monax/eris.svg?branch=develop)](https://travis-ci.org/monax/eris) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/develop?svg=true)](https://ci.appveyor.com/project/monax/eris) |
-
 # Introduction
 
 ```
@@ -20,7 +15,7 @@ operating applications built to run on an ecosystem level.
 * Install Go.
 
 ```
-go get github.com/monax/eris/cmd/eris
+go get github.com/monax/cli/cmd/eris
 eris init
 ```
 
