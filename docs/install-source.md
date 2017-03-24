@@ -46,7 +46,7 @@ Now you're ready to install the components of the Eris platform.
 Go makes it very easy to build from source. Indeed, it is really only one command.
 
 ```
-go get github.com/eris-ltd/eris/cmd/eris
+go get github.com/monax/cli/cmd/eris
 eris init
 ```
 

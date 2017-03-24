@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris/clean"
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/clean"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )

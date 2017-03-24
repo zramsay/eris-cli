@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/data"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/util"
 )
 
 func GetFiles(do *definitions.Do) error {

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/files"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/files"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )

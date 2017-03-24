@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/testutil"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
 )
 
 func TestMain(m *testing.M) {
@@ -1657,7 +1657,7 @@ func TestPullBadName(t *testing.T) {
 }
 
 // TODO: [ben] issue-1262: perform/TestLogsSimple fails
-// https://github.com/eris-ltd/eris/issues/1262
+// https://github.com/monax/cli/issues/1262
 func testLogsSimple(t *testing.T) {
 	const (
 		//name = "ipfs"

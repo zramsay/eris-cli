@@ -9,16 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris/chains"
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
-	"github.com/eris-ltd/eris/definitions"
-	//"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/testutil"
-	//"github.com/eris-ltd/eris/util"
-	//"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/chains"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/data"
+	"github.com/monax/cli/definitions"
+	//"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
+	//"github.com/monax/cli/util"
+	//"github.com/monax/cli/version"
 )
 
 // [zr] there's a ton of refactoring to do here!

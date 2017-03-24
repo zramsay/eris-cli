@@ -3,7 +3,7 @@ package maker
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris/definitions"
+	"github.com/monax/cli/definitions"
 )
 
 func ChainsMakeWelcome() string {
@@ -75,7 +75,7 @@ https://monax.io/platform/db
 
 or
 
-https://github.com/eris-ltd/eris-db
+https://github.com/monax/eris-db
 
 How many keys do you want in *this* manual group? (You can make more than one manual group)`
 }

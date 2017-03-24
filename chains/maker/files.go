@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 
-	configurationFile "github.com/eris-ltd/eris-db/config"
-	"github.com/eris-ltd/eris-db/genesis"
+	configurationFile "github.com/monax/eris-db/config"
+	"github.com/monax/eris-db/genesis"
 
 	"github.com/BurntSushi/toml"
 )

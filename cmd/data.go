@@ -5,11 +5,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/data"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/list"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/data"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/list"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )

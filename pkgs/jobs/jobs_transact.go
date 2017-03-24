@@ -6,15 +6,15 @@ import (
 	"io"
 	"os"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
-	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/client/rpc"
-	"github.com/eris-ltd/eris-db/keys"
-	"github.com/eris-ltd/eris-db/logging/loggers"
-	"github.com/eris-ltd/eris-db/txs"
+	"github.com/monax/eris-db/client"
+	"github.com/monax/eris-db/client/rpc"
+	"github.com/monax/eris-db/keys"
+	"github.com/monax/eris-db/logging/loggers"
+	"github.com/monax/eris-db/txs"
 )
 
 func SendJob(send *definitions.Send, do *definitions.Do) (string, error) {

@@ -137,14 +137,14 @@ Strictly speaking, we do not really need eris installed on the remote boxes. The
 
 Since this is a tutorial, we want to cover how easy it is to install eris on cloud providers.
 
-What we are going to do is to pipe a shell file into a shell. Some folks get freaked out about this, and if you are of that calibre then you can accomplish what this script will do in any event! The script we will be using is [available here](https://github.com/eris-ltd/common/blob/master/cloud/setup/setup.sh). It is eris' cloud setup script. The script assumes that docker is installed. If you have provisioned a box via a web interface or otherwise and docker is not installed, you can set an environment variable and the script will automtically install Docker for you.
+What we are going to do is to pipe a shell file into a shell. Some folks get freaked out about this, and if you are of that calibre then you can accomplish what this script will do in any event! The script we will be using is [available here](https://github.com/monax/common/blob/master/cloud/setup/setup.sh). It is eris' cloud setup script. The script assumes that docker is installed. If you have provisioned a box via a web interface or otherwise and docker is not installed, you can set an environment variable and the script will automtically install Docker for you.
 
 Since we provisioned these instances using docker-machine we do not need to do that.
 
 ```bash
 for i in `seq 0 6`
 do
-  docker-machine ssh "my-advchain-val-00$i" "curl -sSL --ssl-req https://raw.githubusercontent.com/eris-ltd/common/master/cloud/setup/setup.sh | sudo bash"
+  docker-machine ssh "my-advchain-val-00$i" "curl -sSL --ssl-req https://raw.githubusercontent.com/monax/common/master/cloud/setup/setup.sh | sudo bash"
 done
 ```
 
@@ -158,7 +158,7 @@ Sometimes when using extremely small cloud instances eris has trouble building. 
 
 ```irc
 Building eris.
-# github.com/eris-ltd/eris/cmd/eris
+# github.com/monax/cli/cmd/eris
 /usr/local/go/pkg/tool/linux_amd64/link: running gcc failed: fork/exec /usr/bin/gcc: cannot allocate memory
 ```
 

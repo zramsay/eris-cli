@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
-	"github.com/eris-ltd/eris-db/genesis"
+	"github.com/monax/eris-db/genesis"
 )
 
 var (

@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/eris-ltd/eris/list"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/list"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )

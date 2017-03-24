@@ -11,10 +11,10 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/util"
 
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/log"
 	docker "github.com/fsouza/go-dockerclient"
 )
 

@@ -3,7 +3,7 @@ package initialize
 import (
 	"path"
 
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/version"
 )
 
 func defServiceCompilers() string {
@@ -38,6 +38,6 @@ name = "Monax Industries"
 email = "support@monax.io"
 
 [location]
-repository = "https://github.com/eris-ltd/eris-compilers"
+repository = "https://github.com/monax/compilers"
 `
 }

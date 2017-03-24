@@ -9,7 +9,7 @@
 #
 #  2. `github-release` utility installed (go get github.com/aktau/github-release)
 #     and GITHUB_TOKEN environment variable set
-#    (with release permissions for github.com/eris-ltd/eris).
+#    (with release permissions for github.com/monax/cli).
 #
 #  3. GPG release signing private key in `misc/release/linux-private-key.asc` file:
 #
@@ -74,7 +74,7 @@
 #           ]
 #         }
 #
-REPO=${GOPATH}/src/github.com/eris-ltd/eris
+REPO=${GOPATH}/src/github.com/monax/cli
 BUILD_DIR=${REPO}/builds
 ERIS_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
 LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
@@ -154,7 +154,7 @@ cross_compile() {
   pushd ${REPO}/cmd/eris
   echo "Starting cross compile"
 
-  LDFLAGS="-X github.com/eris-ltd/eris/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+  LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
   GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_386
   GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_amd64
@@ -174,16 +174,16 @@ prepare_gh() {
   if [[ "$1" == "pre" ]]
   then
     github-release release \
-      --user eris-ltd \
-      --repo eris \
+      --user monax \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
       --pre-release
   else
     github-release release \
-      --user eris-ltd \
-      --repo eris \
+      --user monax \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
@@ -200,8 +200,8 @@ release_gh() {
   do
     echo "Uploading: ${file}"
     github-release upload \
-      --user eris-ltd \
-      --repo eris \
+      --user monax \
+      --repo cli \
       --tag v${LATEST_TAG} \
       --name ${file} \
       --file ${file}

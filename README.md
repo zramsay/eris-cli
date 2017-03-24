@@ -1,8 +1,3 @@
-|[![GoDoc](https://godoc.org/github.com/eris-ltd/eris/cmd/eris?status.png)](https://godoc.org/github.com/eris-ltd/eris/cmd/eris) | Linux | macOS | Windows |
-|---|-------|-----|---------|
-| Master | [![Linux](https://circleci.com/gh/eris-ltd/eris/tree/master.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris/tree/master) | [![macOS](https://travis-ci.org/eris-ltd/eris.svg?branch=master)](https://travis-ci.org/eris-ltd/eris) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/master?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris) |
-| Develop | [![Linux](https://circleci.com/gh/eris-ltd/eris/tree/develop.svg?style=svg)](https://circleci.com/gh/eris-ltd/eris/tree/develop) | [![macOS](https://travis-ci.org/eris-ltd/eris.svg?branch=develop)](https://travis-ci.org/eris-ltd/eris) | [![Windows](https://ci.appveyor.com/api/projects/status/lfkvvy6h7u0owv19/branch/develop?svg=true)](https://ci.appveyor.com/project/eris-ltd/eris) |
-
 # Introduction
 
 ```
@@ -20,7 +15,7 @@ operating applications built to run on an ecosystem level.
 * Install Go.
 
 ```
-go get github.com/eris-ltd/eris/cmd/eris
+go get github.com/monax/cli/cmd/eris
 eris init
 ```
 
@@ -97,7 +92,7 @@ eris pkgs
 
 ## Keys
 
-Keys is an opinionated toolchain around [eris-keys](https://github.com/eris-ltd/eris-keys). Please note that this concept of the `eris` platform is **for development only** and should not be used in production because it has not been fully security audited **and we do not plan for it to be**. In production the keys service should be replaced with your audited security system of choice.
+Keys is an opinionated toolchain around [eris-keys](https://github.com/monax/keys). Please note that this concept of the `eris` platform is **for development only** and should not be used in production because it has not been fully security audited **and we do not plan for it to be**. In production the keys service should be replaced with your audited security system of choice.
 
 To see the various ways in which `eris` can help you manage your various key pairs, please type:
 

@@ -1,4 +1,4 @@
-package: github.com/eris-ltd/eris
+package: github.com/monax/cli
 import:
 - package: github.com/BurntSushi/toml
   version: v0.2.0
@@ -33,12 +33,11 @@ import:
   subpackages:
   - unix
 - package: gopkg.in/yaml.v2
-- package: github.com/eris-ltd/eris-compilers
+- package: github.com/monax/compilers
   version: develop
   subpackages:
   - perform
-- package: github.com/eris-ltd/eris-db
-  version: release-0.16
+- package: github.com/monax/eris-db
   subpackages:
   - client
   - client/rpc

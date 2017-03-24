@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/log"
 
-	"github.com/eris-ltd/eris-db/genesis"
+	"github.com/monax/eris-db/genesis"
 )
 
 // MakeErisDBNode writes the chain name folder with a folder for every account.

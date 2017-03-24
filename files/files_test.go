@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/testutil"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
 )
 
 var (

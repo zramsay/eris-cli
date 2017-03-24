@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/version"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"

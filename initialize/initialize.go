@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 func Initialize(do *definitions.Do) error {
@@ -250,7 +250,7 @@ func drops(files []string, typ, dir string) error {
 
 	for _, file := range files {
 		log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
-		if err := util.GetFromGithub("eris-ltd", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
+		if err := util.GetFromGithub("monax", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
 			return err
 		}
 	}
