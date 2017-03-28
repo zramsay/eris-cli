@@ -78,7 +78,7 @@ be tarballs or zip files, and **they will contain the private keys** so please
 be aware of that.
 
 The make process will *not* start a chain for you. You will want to use
-the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME")) + `] for that
+the [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME", "ACCOUNT")) + `] for that
 which will import all of the files which make creates into containers and
 start your shiny new chain.
 
@@ -181,14 +181,9 @@ the background. Its logs will not be viewable from the command line.
 
 To initialize (create) a new chain, the [eris chains make NAME] command
 must first be run. This will (by default) create a simple chain with
-relevant files in ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME")) + `. The path to this directory is then passed into the [--init-dir] flag like so:
+relevant files in ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME", "ACCOUNT")) + `. The path to this directory is then passed into the [--init-dir] flag like so:
 
-  [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME")) + `]
-
-Note that it is also possible to use only the name of the relevant
-directory like so (e.g., for complex chains):
-
-  [eris chains start NAME --init-dir name_full_000]
+  [eris chains start NAME --init-dir ` + util.Tilde(filepath.Join(config.ChainsPath, "NAME", "ACCOUNT")) + `]
 
 To stop the chain use: [eris chains stop NAME]. To view a chain's logs use:
 [eris chains logs NAME].
