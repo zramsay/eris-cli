@@ -10,9 +10,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	flow "github.com/tendermint/flowcontrol"
 	. "github.com/tendermint/go-common"
 	cfg "github.com/tendermint/go-config"
+	flow "github.com/tendermint/go-flowrate/flowrate"
 	"github.com/tendermint/go-wire" //"github.com/tendermint/log15"
 )
 
@@ -87,8 +87,6 @@ type MConnection struct {
 }
 
 func NewMConnection(config cfg.Config, conn net.Conn, chDescs []*ChannelDescriptor, onReceive receiveCbFunc, onError errorCbFunc) *MConnection {
-	setConfigDefaults(config)
-
 	mconn := &MConnection{
 		conn:        conn,
 		bufReader:   bufio.NewReaderSize(conn, minReadBufferSize),
@@ -117,7 +115,8 @@ func NewMConnection(config cfg.Config, conn net.Conn, chDescs []*ChannelDescript
 	var channels = []*Channel{}
 
 	for _, desc := range chDescs {
-		channel := newChannel(mconn, desc)
+		descCopy := *desc // copy the desc else unsafe access across connections
+		channel := newChannel(mconn, &descCopy)
 		channelsIdx[channel.id] = channel
 		channels = append(channels, channel)
 	}

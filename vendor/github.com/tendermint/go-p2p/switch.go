@@ -26,13 +26,13 @@ type Reactor interface {
 //--------------------------------------
 
 type BaseReactor struct {
-	QuitService // Provides Start, Stop, .Quit
+	BaseService // Provides Start, Stop, .Quit
 	Switch      *Switch
 }
 
 func NewBaseReactor(log log15.Logger, name string, impl Reactor) *BaseReactor {
 	return &BaseReactor{
-		QuitService: *NewQuitService(log, name, impl),
+		BaseService: *NewBaseService(log, name, impl),
 		Switch:      nil,
 	}
 }
@@ -65,6 +65,9 @@ type Switch struct {
 	dialing      *CMap
 	nodeInfo     *NodeInfo             // our node info
 	nodePrivKey  crypto.PrivKeyEd25519 // our node privkey
+
+	filterConnByAddr   func(net.Addr) error
+	filterConnByPubKey func(crypto.PubKeyEd25519) error
 }
 
 var (
@@ -181,8 +184,8 @@ func (sw *Switch) OnStop() {
 	// Stop peers
 	for _, peer := range sw.peers.List() {
 		peer.Stop()
+		sw.peers.Remove(peer)
 	}
-	sw.peers = NewPeerSet()
 	// Stop reactors
 	for _, reactor := range sw.reactors {
 		reactor.Stop()
@@ -192,6 +195,13 @@ func (sw *Switch) OnStop() {
 // NOTE: This performs a blocking handshake before the peer is added.
 // CONTRACT: Iff error is returned, peer is nil, and conn is immediately closed.
 func (sw *Switch) AddPeerWithConnection(conn net.Conn, outbound bool) (*Peer, error) {
+
+	// Filter by addr (ie. ip:port)
+	if err := sw.FilterConnByAddr(conn.RemoteAddr()); err != nil {
+		conn.Close()
+		return nil, err
+	}
+
 	// Set deadline for handshake so we don't block forever on conn.ReadFull
 	conn.SetDeadline(time.Now().Add(
 		time.Duration(sw.config.GetInt(configKeyHandshakeTimeoutSeconds)) * time.Second))
@@ -206,6 +216,13 @@ func (sw *Switch) AddPeerWithConnection(conn net.Conn, outbound bool) (*Peer, er
 			return nil, err
 		}
 	}
+
+	// Filter by p2p-key
+	if err := sw.FilterConnByPubKey(sconn.(*SecretConnection).RemotePubKey()); err != nil {
+		sconn.Close()
+		return nil, err
+	}
+
 	// Then, perform node handshake
 	peerNodeInfo, err := peerHandshake(sconn, sw.nodeInfo)
 	if err != nil {
@@ -249,6 +266,29 @@ func (sw *Switch) AddPeerWithConnection(conn net.Conn, outbound bool) (*Peer, er
 
 	log.Notice("Added peer", "peer", peer)
 	return peer, nil
+}
+
+func (sw *Switch) FilterConnByAddr(addr net.Addr) error {
+	if sw.filterConnByAddr != nil {
+		return sw.filterConnByAddr(addr)
+	}
+	return nil
+}
+
+func (sw *Switch) FilterConnByPubKey(pubkey crypto.PubKeyEd25519) error {
+	if sw.filterConnByPubKey != nil {
+		return sw.filterConnByPubKey(pubkey)
+	}
+	return nil
+
+}
+
+func (sw *Switch) SetAddrFilter(f func(net.Addr) error) {
+	sw.filterConnByAddr = f
+}
+
+func (sw *Switch) SetPubKeyFilter(f func(crypto.PubKeyEd25519) error) {
+	sw.filterConnByPubKey = f
 }
 
 func (sw *Switch) startInitPeer(peer *Peer) {
@@ -414,4 +454,83 @@ type SwitchEventNewPeer struct {
 type SwitchEventDonePeer struct {
 	Peer  *Peer
 	Error interface{}
+}
+
+//------------------------------------------------------------------
+// Switches connected via arbitrary net.Conn; useful for testing
+
+// Returns n switches, connected according to the connect func.
+// If connect==Connect2Switches, the switches will be fully connected.
+// initSwitch defines how the ith switch should be initialized (ie. with what reactors).
+// NOTE: panics if any switch fails to start.
+func MakeConnectedSwitches(n int, initSwitch func(int, *Switch) *Switch, connect func([]*Switch, int, int)) []*Switch {
+	switches := make([]*Switch, n)
+	for i := 0; i < n; i++ {
+		switches[i] = makeSwitch(i, "testing", "123.123.123", initSwitch)
+	}
+
+	if err := StartSwitches(switches); err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < n; i++ {
+		for j := i; j < n; j++ {
+			connect(switches, i, j)
+		}
+	}
+
+	return switches
+}
+
+var PanicOnAddPeerErr = false
+
+// Will connect switches i and j via net.Pipe()
+// Blocks until a conection is established.
+// NOTE: caller ensures i and j are within bounds
+func Connect2Switches(switches []*Switch, i, j int) {
+	switchI := switches[i]
+	switchJ := switches[j]
+	c1, c2 := net.Pipe()
+	doneCh := make(chan struct{})
+	go func() {
+		_, err := switchI.AddPeerWithConnection(c1, false) // AddPeer is blocking, requires handshake.
+		if PanicOnAddPeerErr && err != nil {
+			panic(err)
+		}
+		doneCh <- struct{}{}
+	}()
+	go func() {
+		_, err := switchJ.AddPeerWithConnection(c2, true)
+		if PanicOnAddPeerErr && err != nil {
+			panic(err)
+		}
+		doneCh <- struct{}{}
+	}()
+	<-doneCh
+	<-doneCh
+}
+
+func StartSwitches(switches []*Switch) error {
+	for _, s := range switches {
+		_, err := s.Start() // start switch and reactors
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func makeSwitch(i int, network, version string, initSwitch func(int, *Switch) *Switch) *Switch {
+	privKey := crypto.GenPrivKeyEd25519()
+	// new switch, add reactors
+	// TODO: let the config be passed in?
+	s := initSwitch(i, NewSwitch(cfg.NewMapConfig(nil)))
+	s.SetNodeInfo(&NodeInfo{
+		PubKey:  privKey.PubKey().(crypto.PubKeyEd25519),
+		Moniker: Fmt("switch%d", i),
+		Network: network,
+		Version: version,
+	})
+	s.SetNodePrivKey(privKey)
+	return s
 }
