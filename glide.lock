@@ -55,14 +55,16 @@ imports:
   version: 47238d5aae8c0fefd518ef2bee46290909cf8263
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
+- name: github.com/ebuchman/fail-test
+  version: c1eddaa09da2b4017351245b0d43234955276798
 - name: github.com/monax/compilers
-  version: 80a2287ac76b8426dcf6bbbfd1e164b52154ba82
+  version: fc3199e9f4a8d049bb8199fed47790be3c54df73
   subpackages:
   - definitions
   - perform
   - util
 - name: github.com/monax/eris-db
-  version: 50e0a5e0519b71a3366655af95ab2cb3648d9568
+  version: cc5eaa9a2d8c009b509e624fab190e9127c59c08
   subpackages:
   - account
   - client
@@ -197,58 +199,75 @@ imports:
   - leveldb/util
 - name: github.com/tcnksm/go-gitconfig
   version: d154598bacbf4501c095a309753c5d4af66caa81
+- name: github.com/tendermint/abci
+  version: 699d45bc678865b004b90213bf88a950f420973b
+  subpackages:
+  - client
+  - example/counter
+  - example/dummy
+  - example/nil
+  - server
+  - types
 - name: github.com/tendermint/ed25519
-  version: fdac6641497281ed1cc368687ec6377e96e02b24
+  version: 1f52c6f8b8a5c7908aff4497c186af344b428925
   subpackages:
   - edwards25519
   - extra25519
 - name: github.com/tendermint/flowcontrol
   version: 84d9671090430e8ec80e35b339907e0579b999eb
+- name: github.com/tendermint/go-autofile
+  version: 0416e0aa9c68205aa44844096f9f151ada9d0405
 - name: github.com/tendermint/go-clist
-  version: 634527f5b60fd7c71ca811262493df2ad65ee0ca
+  version: 3baa390bbaf7634251c42ad69a8682e7e3990552
 - name: github.com/tendermint/go-common
-  version: dcfa46af1341d03b80d32e4901019d1668b978b9
+  version: e289af53b6bf6af28da129d9ef64389a4cf7987f
+  subpackages:
+  - test
 - name: github.com/tendermint/go-config
-  version: cfcef384d64b94e50909596e39b32ffb3cc20573
+  version: e64b424499acd0eb9856b88e10c0dff41628c0d6
 - name: github.com/tendermint/go-crypto
-  version: 41cfb7b677f4e16cdfd22b6ce0946c89919fbc7b
+  version: 4b11d62bdb324027ea01554e5767b71174680ba0
 - name: github.com/tendermint/go-db
-  version: 31fdd21c7eaeed53e0ea7ca597fb1e960e2988a5
+  version: 72f6dacd22a686cdf7fcd60286503e3aceda77ba
 - name: github.com/tendermint/go-events
-  version: 7b75ca7bb55aa25e9ef765eb8c0b69486b227357
+  version: fddee66d90305fccb6f6d84d16c34fa65ea5b7f6
+- name: github.com/tendermint/go-flowrate
+  version: a20c98e61957faa93b4014fbd902f20ab9317a6a
+  subpackages:
+  - flowrate
 - name: github.com/tendermint/go-logger
-  version: 529efe50eab1a8a9c111d55f4de4ecd95f482761
+  version: cefb3a45c0bf3c493a04e9bcd9b1540528be59f2
 - name: github.com/tendermint/go-merkle
-  version: 05042c6ab9cad51d12e4cecf717ae68e3b1409a8
+  version: 7a86b4486f2cd84ac885c5bbc609fdee2905f5d1
 - name: github.com/tendermint/go-p2p
-  version: 5bd7692323ec60d6461678f09b5024a952164151
+  version: 3d98f675f30dc4796546b8b890f895926152fa8d
   subpackages:
   - upnp
 - name: github.com/tendermint/go-rpc
-  version: 479510be0e80dd9e5d6b1f941adad168df0af85f
+  version: fcea0cda21f64889be00a0f4b6d13266b1a76ee7
   subpackages:
   - client
+  - server
   - types
 - name: github.com/tendermint/go-wire
-  version: 3b0adbc86ed8425eaed98516165b6788d9f4de7a
+  version: 2f3b7aafe21c80b19b6ee3210ecb3e3d07c7a471
 - name: github.com/tendermint/log15
-  version: 9545b249b3aacafa97f79e0838b02b274adc6f5f
+  version: ae0f3d6450da9eac7074b439c8e1c3cabf0d5ce6
   subpackages:
   - term
 - name: github.com/tendermint/tendermint
-  version: aaea0c5d2e3ecfbf29f2608f9d43649ec7f07f50
+  version: 764091dfbb035f1b28da4b067526e04c6a849966
   subpackages:
   - blockchain
   - consensus
   - mempool
+  - node
   - proxy
+  - rpc/core
+  - rpc/core/types
   - state
   - types
-- name: github.com/tendermint/tmsp
-  version: 73e5c3cb7bbee2f9c49792e5a0fcbcab442bf7dc
-  subpackages:
-  - client
-  - types
+  - version
 - name: golang.org/x/crypto
   version: 854ae91cdcbf914b499b1d7641d07859f3653481
   subpackages:
@@ -282,7 +301,7 @@ imports:
   - transform
   - unicode/norm
 - name: google.golang.org/grpc
-  version: e78224b060cf3215247b7be455f80ea22e469b66
+  version: 50955793b0183f9de69bd78e2ec251cf20aab121
   subpackages:
   - codes
   - credentials
@@ -291,6 +310,8 @@ imports:
   - metadata
   - naming
   - peer
+  - stats
+  - tap
   - transport
 - name: gopkg.in/yaml.v2
   version: 4c78c975fe7c825c6d1466c42be594d1d6f3aba6
