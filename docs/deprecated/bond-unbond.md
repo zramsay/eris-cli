@@ -6,6 +6,12 @@ title: "Deprecated | Bonding/Unbonding"
 
 ---
 
+## Introduction
+
+<div class="note">
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 The concept of bonding/unbonding validators here refers to validators which are voluntarily adding (bonding) or removing (unbonding) themselves. New validators (not included in the genesis file) first require tokens on the chain to post a bond with. Future tutorials will cover slashing/removing unwelcome/byzantine validators.
 
 For this example, we'll be using a [simplechain](/docs/getting-started), which has a single Full Account (see: `cat ~/.eris/chains/account-types/full.toml` for more information). One another host, a new account will be created and connect to the running chain. Once our Full Account sends this new account some tokens, the new account will be in a position to post a bond and begin validating. Eventually, this validator can unbond if they so choose.
@@ -181,7 +187,7 @@ using the same hardcoded `$addr_new` and `$pub_new` as in the previous sections.
 The concept is no different than bonding, simply `eris chains exec bonding "mintx unbond ..."` with the appropriate flags and you'll be set. Note that unbond address was already given in the bond transaction.
 
 #### With epm
-See [this test in eris job fixtures](https://github.com/eris-ltd/eris/tree/master/tests/job_fixtures/app04-bonding_unbonding_rebonding_tx_and_validation_status) for more information on the bond/unbond/rebond pipeline. Note that the `epm.yaml`'s in this tutorial are modified from that test.
+See [this test in eris job fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures/app04-bonding_unbonding_rebonding_tx_and_validation_status) for more information on the bond/unbond/rebond pipeline. Note that the `epm.yaml`'s in this tutorial are modified from that test.
 
 
 ## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Deprecated](/docs/deprecated/)

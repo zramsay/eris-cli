@@ -11,12 +11,11 @@ menu:
 
 ---
 
-
 ## Deprecated Tutorials
 
 * [Bonding/Unbonding](/docs/deprecated/bond-unbond/)
 * [Chain Maintaining](/docs/deprecated/chain-maintaining/)
-* [Exporting Your Keys](/docs/deprecated/exporting_your_leys/)
+* [Exporting Your Keys](/docs/deprecated/exporting_your_keys/)
 * [Genesis Updating](/docs/deprecated/genesis_updating/)
 * [Getting Started With Cloud Instances](/docs/deprecated/getting_started_with_cloud_instances/)
 * [How To Make A Service](/docs/deprecated/how_to_make_a_service/)

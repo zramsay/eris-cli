@@ -10,6 +10,10 @@ menu:
 
 ---
 
+<div class="note">
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 Eris is the ecosystem application platform built by `Monax`.
 
 There are four steps need to get moving with Eris:
@@ -89,10 +93,10 @@ We have RPM support for most current versions of Fedora, CentOS, and RHEL:
 
 #### Binary Installation
 
-Alternatively, you can download a release binary for the latest [Release](https://github.com/eris-ltd/eris/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
+Alternatively, you can download a release binary for the latest [Release](https://github.com/monax/cli/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris/releases/download/v0.16.0/eris_0.16.0_linux_amd64 > eris
+curl -L https://github.com/monax/cli/releases/download/v0.16.0/eris_0.16.0_linux_amd64 > eris
 chmod +x eris
 ```
 
@@ -104,10 +108,10 @@ We **highly recommend** that you utilize [Homebrew](https://brew.sh) to install 
 {{< data_coding brew >}}
 ```
 
-If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
+If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/monax/cli/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
 
 ```bash
-curl -L https://github.com/eris-ltd/eris/releases/download/v0.16.0/eris_0.16.0_darwin_amd64 > eris
+curl -L https://github.com/monax/cli/releases/download/v0.16.0/eris_0.16.0_darwin_amd64 > eris
 chmod +x eris
 ```
 
@@ -138,7 +142,7 @@ We **highly recommend** that you utilize [Chocolatey](https://chocolatey.org) to
 {{< data_coding choco >}}
 ```
 
-If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/eris-ltd/eris/releases) page.
+If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/monax/cli/releases) page.
 Make sure you put the binary under one of the paths in your `%PATH%` variable.
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.
@@ -170,7 +174,7 @@ eris init
 
 ### ARM Installation (IoT devices)
 
-Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. See [this issue](https://github.com/eris-ltd/eris/issues/1088) for more details on progress. See also the [deprecated ARM installation tutorial](/docs/deprecated/install-arm).
+Although we once supported IoT installations, this has been temporarily disabled while the platform undergoes further consolidation. See [this issue](https://github.com/monax/cli/issues/1088) for more details on progress. See also the [deprecated ARM installation tutorial](/docs/deprecated/install-arm).
 
 ### Building From Source
 
@@ -539,7 +543,7 @@ We need to do one final thing before we finish this section. We need to copy ove
 cp $chain_dir/accounts.json .
 ```
 
-For more about eris-contracts please see [its repository](https://github.com/eris-ltd/eris-contracts.js). If you have any trouble, please see our trouble shooting guide -> [^10]
+For more about eris-contracts please see [its repository](https://github.com/monax/eris-contracts.js). If you have any trouble, please see our trouble shooting guide -> [^10]
 
 #### Step 4.3: Run The Application
 
@@ -597,7 +601,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/deprecated/using-docker-machine-with-eris) for more information.
 
-[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/eris-ltd/eris-db) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
+[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/monax/eris-db) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
 
     Once you have the following sorted:
 
@@ -656,7 +660,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     eris services stop compilers
     ```
 
-[^7]: If you are on Ubuntu 14.04 LTS, the version of NPM which will likely be installed will create an error when installing eris-contracts. Please see the [fix here](https://github.com/eris-ltd/eris-contracts.js#installation).
+[^7]: If you are on Ubuntu 14.04 LTS, the version of NPM which will likely be installed will create an error when installing eris-contracts. Please see the [fix here](https://github.com/monax/eris-contracts.js#installation).
 
 [^8]: If you are behind a firewall then you may need to let npm know about your proxy. To do that add a line to your ~/.npmrc:
 
