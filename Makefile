@@ -58,17 +58,33 @@ install_vendor:
 build:	check build_eris
 
 # build eris
-.PHONY: build_eris
+.PHONY: build_cli
 build_eris:
-	go build -o ${REPO}/target/eris-${COMMIT_SHA} ./cmd/eris
+	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/eris
 
 ### Testing github.com/monax/cli
 
-# test eris
-.PHONY: test
-test: build
+# test go unit tests
+.PHONY: test_unit
+test_unit:
 	# run go tests sequentially for the different packages
 	@go test ${PACKAGES_NOVENDOR} -p 1
+
+# test user stories for chains
+.PHONY: test_chains_make
+test_chains_make:
+	# run user stories for chains
+	@./tests/test_chains_make.sh
+
+# test user stories for pkgs do
+.PHONY: test_jobs
+test_jobs:
+	# run user stories for pkgs do
+	@./tests/test_jobs.sh
+
+# test monax cli
+.PHONY: test
+test: build test_unit test_chains_make test_jobs
 
 ### Clean up
 

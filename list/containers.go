@@ -14,8 +14,8 @@ import (
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/cli/log"
 	docker "github.com/fsouza/go-dockerclient"
+	"github.com/monax/cli/log"
 )
 
 const (
