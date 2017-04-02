@@ -30,8 +30,8 @@ Welcome to the Monax Documentation homepage. Here you'll find everything needed 
 
 ### Other repositories and documentation
 
-* For details on permissioning, secure natives, and the eris-db API, see the [eris-db repository](https://github.com/eris-ltd/eris-db)
-* For information about the javascript libraries, see the [eris-contracts.js](https://github.com/eris-ltd/eris-contracts.js), [eris-db.js](https://github.com/eris-ltd/eris-db.js), and [eris-keys.js](https://github.com/eris-ltd/eris-keys.js) repositories.
+* For details on permissioning, secure natives, and the eris-db API, see the [eris-db repository](https://github.com/monax/eris-db)
+* For information about the javascript libraries, see the [eris-contracts.js](https://github.com/monax/eris-contracts.js), [eris-db.js](https://github.com/monax/eris-db.js), and [eris-keys.js](https://github.com/monax/eris-keys.js) repositories.
 
 ### Deprecated
 
@@ -39,4 +39,4 @@ Looking for a tutorial that's missing? Dig into the [deprecated directory](/docs
 
 ### Contribute
 
-By making a pull request to the [docs](https://github.com/eris-ltd/eris/blob/master/docs)
+By making a pull request to the [docs](https://github.com/monax/cli/blob/master/docs)

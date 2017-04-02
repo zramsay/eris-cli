@@ -10,6 +10,10 @@ menu:
 
 ---
 
+<div class="note">
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 ## Introduction
 
 In general what is going to happen here is that we are going to establish what we call a "peer sergeant major" cloud node who is responsible for being the easy connection point for any nodes which need to connect into the system.
