@@ -64,7 +64,7 @@ imports:
   - perform
   - util
 - name: github.com/monax/eris-db
-  version: cc5eaa9a2d8c009b509e624fab190e9127c59c08
+  version: 40d6b9fd39c133981fc9f1f7b9a02f562f879980
   subpackages:
   - account
   - client

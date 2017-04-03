@@ -68,7 +68,7 @@ vendors:
 - path: github.com/monax/compilers
   rev: fc3199e9f4a8d049bb8199fed47790be3c54df73
 - path: github.com/monax/eris-db
-  rev: cc5eaa9a2d8c009b509e624fab190e9127c59c08
+  rev: 40d6b9fd39c133981fc9f1f7b9a02f562f879980
 - path: github.com/oleiade/reflections
   rev: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
 - path: github.com/opencontainers/runc
