@@ -55,11 +55,11 @@ install_vendor:
 
 # build all targets in github.com/monax/cli
 .PHONY: build
-build:	check build_eris
+build:	check build_cli
 
 # build eris
 .PHONY: build_cli
-build_eris:
+build_cli:
 	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/eris
 
 ### Testing github.com/monax/cli
