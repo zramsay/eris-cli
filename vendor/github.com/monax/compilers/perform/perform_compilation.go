@@ -169,7 +169,12 @@ func compile(req *definitions.Request) *Response {
 		log.WithField("Filepath of include: ", file.Name()).Debug("To Cache")
 	}
 
-	command := lang.Cmd(includes, req.Libraries, req.Optimize)
+	libsFile, err := util.CreateTemporaryFile("eris-libs", []byte(req.Libraries))
+	if err != nil {
+		return compilerResponse("", "", "", "", "", err)
+	}
+	defer os.Remove(libsFile.Name())
+	command := lang.Cmd(includes, libsFile.Name(), req.Optimize)
 	log.WithField("Command: ", command).Debug("Command Input")
 	output, err := runCommand(command...)
 

@@ -1,12 +1,13 @@
 /*
 
 Classical-inheritance-style service declarations.
-Services can be started, then stopped.
+Services can be started, then stopped, then optionally restarted.
 Users can override the OnStart/OnStop methods.
-These methods are guaranteed to be called at most once.
+By default, these methods are guaranteed to be called at most once.
+A call to Reset will panic, unless OnReset is overwritten, allowing OnStart/OnStop to be called again.
 Caller must ensure that Start() and Stop() are not called concurrently.
 It is ok to call Stop() without calling Start() first.
-Services cannot be re-started unless otherwise documented.
+Services cannot be re-started unless OnReset is overwritten to allow it.
 
 Typical usage:
 
@@ -51,6 +52,9 @@ type Service interface {
 	Stop() bool
 	OnStop()
 
+	Reset() (bool, error)
+	OnReset() error
+
 	IsRunning() bool
 
 	String() string
@@ -61,6 +65,7 @@ type BaseService struct {
 	name    string
 	started uint32 // atomic
 	stopped uint32 // atomic
+	Quit    chan struct{}
 
 	// The "subclass" of BaseService
 	impl Service
@@ -70,6 +75,7 @@ func NewBaseService(log log15.Logger, name string, impl Service) *BaseService {
 	return &BaseService{
 		log:  log,
 		name: name,
+		Quit: make(chan struct{}),
 		impl: impl,
 	}
 }
@@ -98,6 +104,8 @@ func (bs *BaseService) Start() (bool, error) {
 }
 
 // Implements Service
+// NOTE: Do not put anything in here,
+// that way users don't need to call BaseService.OnStart()
 func (bs *BaseService) OnStart() error { return nil }
 
 // Implements Service
@@ -107,6 +115,7 @@ func (bs *BaseService) Stop() bool {
 			bs.log.Info(Fmt("Stopping %v", bs.name), "impl", bs.impl)
 		}
 		bs.impl.OnStop()
+		close(bs.Quit)
 		return true
 	} else {
 		if bs.log != nil {
@@ -117,11 +126,40 @@ func (bs *BaseService) Stop() bool {
 }
 
 // Implements Service
+// NOTE: Do not put anything in here,
+// that way users don't need to call BaseService.OnStop()
 func (bs *BaseService) OnStop() {}
+
+// Implements Service
+func (bs *BaseService) Reset() (bool, error) {
+	if atomic.CompareAndSwapUint32(&bs.stopped, 1, 0) {
+		// whether or not we've started, we can reset
+		atomic.CompareAndSwapUint32(&bs.started, 1, 0)
+
+		return true, bs.impl.OnReset()
+	} else {
+		if bs.log != nil {
+			bs.log.Debug(Fmt("Can't reset %v. Not stopped", bs.name), "impl", bs.impl)
+		}
+		return false, nil
+	}
+	// never happens
+	return false, nil
+}
+
+// Implements Service
+func (bs *BaseService) OnReset() error {
+	PanicSanity("The service cannot be reset")
+	return nil
+}
 
 // Implements Service
 func (bs *BaseService) IsRunning() bool {
 	return atomic.LoadUint32(&bs.started) == 1 && atomic.LoadUint32(&bs.stopped) == 0
+}
+
+func (bs *BaseService) Wait() {
+	<-bs.Quit
 }
 
 // Implements Servce
@@ -133,25 +171,13 @@ func (bs *BaseService) String() string {
 
 type QuitService struct {
 	BaseService
-	Quit chan struct{}
 }
 
 func NewQuitService(log log15.Logger, name string, impl Service) *QuitService {
+	if log != nil {
+		log.Warn("QuitService is deprecated, use BaseService instead")
+	}
 	return &QuitService{
 		BaseService: *NewBaseService(log, name, impl),
-		Quit:        nil,
-	}
-}
-
-// NOTE: when overriding OnStart, must call .QuitService.OnStart().
-func (qs *QuitService) OnStart() error {
-	qs.Quit = make(chan struct{})
-	return nil
-}
-
-// NOTE: when overriding OnStop, must call .QuitService.OnStop().
-func (qs *QuitService) OnStop() {
-	if qs.Quit != nil {
-		close(qs.Quit)
 	}
 }

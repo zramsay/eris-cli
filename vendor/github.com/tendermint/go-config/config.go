@@ -2,6 +2,7 @@ package config
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -25,6 +26,7 @@ type Config interface {
 }
 
 type MapConfig struct {
+	mtx      sync.Mutex
 	required map[string]struct{} // blows up if trying to use before setting.
 	data     map[string]interface{}
 }
@@ -50,6 +52,8 @@ func NewMapConfig(data map[string]interface{}) *MapConfig {
 }
 
 func (cfg *MapConfig) Get(key string) interface{} {
+	cfg.mtx.Lock()
+	defer cfg.mtx.Unlock()
 	if _, ok := cfg.required[key]; ok {
 		PanicSanity(Fmt("config key %v is required but was not set.", key))
 	}
@@ -94,8 +98,15 @@ func (cfg *MapConfig) GetConfig(key string) Config {
 }
 func (cfg *MapConfig) GetStringSlice(key string) []string { return cfg.Get(key).([]string) }
 func (cfg *MapConfig) GetTime(key string) time.Time       { return cfg.Get(key).(time.Time) }
-func (cfg *MapConfig) IsSet(key string) bool              { _, ok := cfg.data[key]; return ok }
+func (cfg *MapConfig) IsSet(key string) bool {
+	cfg.mtx.Lock()
+	defer cfg.mtx.Unlock()
+	_, ok := cfg.data[key]
+	return ok
+}
 func (cfg *MapConfig) Set(key string, value interface{}) {
+	cfg.mtx.Lock()
+	defer cfg.mtx.Unlock()
 	delete(cfg.required, key)
 	cfg.set(key, value)
 }
@@ -115,6 +126,29 @@ func (cfg *MapConfig) set(key string, value interface{}) {
 	cfg.data[key] = value
 }
 
+func (cfg *MapConfig) SetDefault(key string, value interface{}) {
+	cfg.mtx.Lock()
+	delete(cfg.required, key)
+	cfg.mtx.Unlock()
+
+	if cfg.IsSet(key) {
+		return
+	}
+
+	cfg.mtx.Lock()
+	cfg.set(key, value)
+	cfg.mtx.Unlock()
+}
+
+func (cfg *MapConfig) SetRequired(key string) {
+	if cfg.IsSet(key) {
+		return
+	}
+	cfg.mtx.Lock()
+	cfg.required[key] = struct{}{}
+	cfg.mtx.Unlock()
+}
+
 func assertOrNewMap(dataMap map[string]interface{}, key string) map[string]interface{} {
 	m, ok := dataMap[key].(map[string]interface{})
 	if !ok {
@@ -122,18 +156,4 @@ func assertOrNewMap(dataMap map[string]interface{}, key string) map[string]inter
 		dataMap[key] = m
 	}
 	return m
-}
-
-func (cfg *MapConfig) SetDefault(key string, value interface{}) {
-	delete(cfg.required, key)
-	if cfg.IsSet(key) {
-		return
-	}
-	cfg.set(key, value)
-}
-func (cfg *MapConfig) SetRequired(key string) {
-	if cfg.IsSet(key) {
-		return
-	}
-	cfg.required[key] = struct{}{}
 }
