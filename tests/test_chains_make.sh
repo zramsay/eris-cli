@@ -7,6 +7,15 @@ was_running=0
 test_exit=0
 chains_dir=$HOME/.eris/chains
 
+# Use the current built target, if it exists 
+# Otherwise default to system wide executable
+COMMIT_SHA=$(git rev-parse --short --verify HEAD)
+cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
+if ! [ -e $cli_exec ]
+then
+  cli_exec="eris"
+fi
+
 export ERIS_PULL_APPROVE="true"
 export ERIS_MIGRATE_APPROVE="true"
 
@@ -14,13 +23,13 @@ export ERIS_MIGRATE_APPROVE="true"
 # Needed functionality
 
 ensure_running(){
-  if [[ "$(eris services ls -qr | grep $1)" == "$1" ]]
+  if [[ "$($cli_exec services ls -qr | grep $1)" == "$1" ]]
   then
     echo "$1 already started. Not starting."
     was_running=1
   else
     echo "Starting service: $1"
-    eris services start $1 1>/dev/null
+    $cli_exec services start $1 1>/dev/null
     early_exit
     sleep 3 # boot time
   fi
@@ -37,9 +46,9 @@ early_exit(){
   then
     if [ "$ci" = true ]
     then
-      eris services stop keys
+      $cli_exec services stop keys
     else
-      eris services stop -r keys
+      $cli_exec services stop -r keys
     fi
   fi
   exit 1
@@ -64,7 +73,7 @@ test_setup(){
 
 check_test(){
   # check chain is running
-  chain=( $(eris chains ls --quiet --running | grep $uuid) )
+  chain=( $($cli_exec chains ls --quiet --running | grep $uuid) )
   if [ ${#chain[@]} -ne 1 ]
   then
     echo "chain does not appear to be running"
@@ -87,7 +96,7 @@ check_test(){
 
   # check genesis.json
   genOut=$(cat $dir_to_use/genesis.json | sed 's/[[:space:]]//g')
-  genIn=$(eris chains plop $uuid genesis | sed 's/[[:space:]]//g')
+  genIn=$($cli_exec chains plop $uuid genesis | sed 's/[[:space:]]//g')
   if [[ "$genOut" != "$genIn" ]]
   then
     test_exit=1
@@ -109,7 +118,7 @@ check_test(){
 
   # check priv_validator
   privOut=$(cat $dir_to_use/priv_validator.json | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
-  privIn=$(eris data exec $uuid "cat /home/eris/.eris/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
+  privIn=$($cli_exec data exec $uuid "cat /home/eris/.eris/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
   if [[ "$privOut" != "$privIn" ]]
   then
     test_exit=1
@@ -137,7 +146,7 @@ run_test(){
     return 1
   fi
   dir_to_use=$chains_dir/$uuid/$direct
-  eris chains start $uuid --init-dir $uuid/$direct
+  $cli_exec chains start $uuid --init-dir $uuid/$direct
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -149,10 +158,10 @@ run_test(){
   then
     test_exit=1
   fi
-  eris chains stop --force $uuid
+  $cli_exec chains stop --force $uuid
   if [ ! "$ci" = true ]
   then
-    eris chains rm --data $uuid
+    $cli_exec chains rm --data $uuid
   fi
   rm -rf $HOME/.eris/scratch/data/$uuid
   rm -rf $chains_dir/$uuid
@@ -163,7 +172,7 @@ perform_tests(){
   echo "single account-type test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  eris chains make $uuid --account-types=Full:1
+  $cli_exec chains make $uuid --account-types=Full:1
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -174,7 +183,7 @@ perform_tests(){
   echo "more complex flags test"
   uuid=$(get_uuid)
   direct="$uuid"_validator_000
-  eris chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1
+  $cli_exec chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -185,8 +194,8 @@ perform_tests(){
   echo "assume simplechain test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  # eris chains make $uuid --chain-type=simplechain (old, could also be tested)
-  eris chains make $uuid # (new)
+  # $cli_exec chains make $uuid --chain-type=simplechain (old, could also be tested)
+  $cli_exec chains make $uuid # (new)
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -198,7 +207,7 @@ perform_tests(){
   uuid=$(get_uuid)
   direct="$uuid"_test_000
   cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
-  eris chains make $uuid --account-types=Test:1
+  $cli_exec chains make $uuid --account-types=Test:1
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -211,7 +220,7 @@ perform_tests(){
   uuid=$(get_uuid)
   direct="$uuid"_full_000
   cp $repo/tests/cm_test_fixtures/testchain.toml $chains_dir/chain-types/.
-  eris chains make $uuid --chain-type=testchain
+  $cli_exec chains make $uuid --chain-type=testchain
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -223,7 +232,7 @@ perform_tests(){
   echo "export/inspect tars"
   uuid=$(get_uuid)
   direct=""
-  eris chains make $uuid --account-types=Full:2 --tar
+  $cli_exec chains make $uuid --account-types=Full:2 --tar
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -243,7 +252,7 @@ perform_tests(){
   echo "make a known chain using csv test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  eris chains make $uuid --account-types=Full:1
+  $cli_exec chains make $uuid --account-types=Full:1
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -251,7 +260,7 @@ perform_tests(){
   fi
   rm $chains_dir/$uuid/$direct/genesis.json
   prev_dir=`pwd`
-  gen=$(eris chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv)
+  gen=$($cli_exec chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv)
   echo "$gen" > $chains_dir/$uuid/$direct/genesis.json
   run_test
   cd $prev_dir
@@ -268,7 +277,7 @@ test_teardown(){
     echo
     if [ "$was_running" -eq 0 ]
     then
-      eris services stop -rx keys
+      $cli_exec services stop -rx keys
     fi
     echo
   fi
@@ -286,10 +295,12 @@ test_teardown(){
 # Get the things build and dependencies turned on
 
 echo "Hello! I'm the marmot that tests the [eris chains make] command"
+echo
+echo "testing with target $cli_exec"
+echo
 start=`pwd`
 cd $repo
 test_setup
-echo
 
 # ---------------------------------------------------------------------------
 # Go!
