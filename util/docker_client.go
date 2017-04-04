@@ -52,7 +52,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 
 		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
 		if err != nil {
-			log.Debug("Could not connect to Eris Docker Machine")
+			log.Debug("Could not connect to Monax Docker Machine")
 			log.Errorf("Trying %q Docker Machine: %v", "default", err)
 			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
 			if err != nil {
@@ -97,11 +97,11 @@ func CheckDockerClient() error {
 		}
 
 		if _, _, err := getMachineDeets("default"); err == nil {
-			fmt.Println("A Docker Machine VM exists, which Eris can use")
-			fmt.Println("However, our marmots recommend that you have a VM dedicated to Eris dev-ing")
+			fmt.Println("A Docker Machine VM exists, which Monax can use")
+			fmt.Println("However, our marmots recommend that you have a VM dedicated to Monax dev-ing")
 			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
-				log.Debug("The marmots will create an Eris machine")
-				if err := setupErisMachine(driver); err != nil {
+				log.Debug("The marmots will create an Monax machine")
+				if err := setupMonaxMachine(driver); err != nil {
 					return err
 				}
 
@@ -112,15 +112,15 @@ func CheckDockerClient() error {
 					return err
 				}
 			} else {
-				log.Info("No Eris Docker Machine will be created")
+				log.Info("No Monax Docker Machine will be created")
 			}
 
 		} else {
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
 			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
 			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
-				log.Warn("The marmots will create an Eris machine")
-				if err := setupErisMachine(driver); err != nil {
+				log.Warn("The marmots will create an Monax machine")
+				if err := setupMonaxMachine(driver); err != nil {
 					return err
 				}
 
@@ -212,7 +212,7 @@ func DockerAPIVersion() (string, error) {
 }
 
 // IsMinimalDockerClientVersion returns true if the connected Docker client
-// version is at least equal to the mimimal required for Eris.
+// version is at least equal to the mimimal required for Monax.
 func IsMinimalDockerClientVersion() bool {
 	v, err := DockerClientVersion()
 	if err != nil {
@@ -283,42 +283,42 @@ func CompareVersions(version1, version2 string) bool {
 	return true
 }
 
-func setupErisMachine(driver string) error {
+func setupMonaxMachine(driver string) error {
 	cmd := "docker-machine"
 	args := []string{"status", "eris"}
 	if err := exec.Command(cmd, args...).Run(); err == nil {
 		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
-		log.Debug("Eris Docker Machine exists. Starting")
-		return startErisMachine()
+		log.Debug("Monax Docker Machine exists. Starting")
+		return startMonaxMachine()
 	}
-	log.Debug("Eris Docker Machine doesn't exist")
+	log.Debug("Monax Docker Machine doesn't exist")
 
-	return createErisMachine(driver)
+	return createMonaxMachine(driver)
 }
 
-func createErisMachine(driver string) error {
-	log.Warn("Creating the Eris Docker Machine")
+func createMonaxMachine(driver string) error {
+	log.Warn("Creating the Monax Docker Machine")
 	log.Warn("This will take some time, please feel free to go feed your marmot")
 	log.WithField("driver", driver).Debug()
 	cmd := "docker-machine"
 	args := []string{"create", "--driver", driver, "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
-		log.Debugf("There was an error creating the Eris Docker Machine: %v", err)
+		log.Debugf("There was an error creating the Monax Docker Machine: %v", err)
 		return mustInstallError()
 	}
-	log.Debug("Eris Docker Machine created")
+	log.Debug("Monax Docker Machine created")
 
-	return startErisMachine()
+	return startMonaxMachine()
 }
 
-func startErisMachine() error {
-	log.Info("Starting Eris Docker Machine")
+func startMonaxMachine() error {
+	log.Info("Starting Monax Docker Machine")
 	cmd := "docker-machine"
 	args := []string{"start", "eris"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
 	}
-	log.Debug("Eris Docker Machine started")
+	log.Debug("Monax Docker Machine started")
 
 	return nil
 }

@@ -34,7 +34,7 @@ Notes:
 - container paths enter at /home/eris/.eris
 - import host path must be absolute, export host path is indifferent
 
-At Eris, we use this functionality to formulate little JSONs
+At Monax, we use this functionality to formulate little JSONs
 and configs on the host and then "stick them back into the
 containers"`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
@@ -103,7 +103,7 @@ If you want to pass flags into the command that is run in the
 data container, please surround the command you want to pass
 in with double quotes. Use it like this: "ls -la".
 
-Exec instances run as the Eris user.
+Exec instances run as the Monax user.
 
 Exec can also be used as an interactive shell. When put in
 this mode, you can "get inside of" your containers. You will

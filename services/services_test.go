@@ -261,7 +261,7 @@ func TestCatService(t *testing.T) {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if cmp := testutil.FileContents(filepath.Join(config.ErisRoot, "services", "ipfs.toml")); out != cmp {
+	if cmp := testutil.FileContents(filepath.Join(config.MonaxRoot, "services", "ipfs.toml")); out != cmp {
 		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
 	}
 }

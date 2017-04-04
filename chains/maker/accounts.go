@@ -14,12 +14,12 @@ import (
 	ptypes "github.com/monax/eris-db/permission/types"
 )
 
-// ErisDBAccountConstructor contains different views on a single account
+// MonaxDBAccountConstructor contains different views on a single account
 // for the purpose of constructing the configuration, genesis, and private
 // validator file.
 // Note that the generation of key pairs for the private validator is only
 // for development purposes and that under
-type ErisDBAccountConstructor struct {
+type MonaxDBAccountConstructor struct {
 	genesisAccount          *genesis.GenesisAccount          `json:"genesis_account"`
 	genesisValidator        *genesis.GenesisValidator        `json:"genesis_validator"`
 	genesisPrivateValidator *genesis.GenesisPrivateValidator `json:"genesis_private_validator"`
@@ -41,9 +41,9 @@ type ErisDBAccountConstructor struct {
 // configuration, genesis and private validator files (the latter if required - for development purposes)
 // NOTE: [ben] if unsafe is set to true the private keys will be extracted from eris-keys and be written
 // into accounts.json. This will be deprecated in v0.17
-func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAccountType, unsafe bool) ([]*ErisDBAccountConstructor, error) {
+func MakeAccounts(name, chainType string, accountTypes []*definitions.MonaxDBAccountType, unsafe bool) ([]*MonaxDBAccountConstructor, error) {
 
-	accountConstructors := []*ErisDBAccountConstructor{}
+	accountConstructors := []*MonaxDBAccountConstructor{}
 
 	switch chainType {
 	// NOTE: [ben] "mint" is a legacy differentiator that refers to the consensus engine that eris-db uses
@@ -63,7 +63,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 				// and then we should block by default extraction of private validator file.
 				// NOTE: [ben] currently we default to ed25519/SHA512 for PKI and ripemd16
 				// for address calculation.
-				accountConstructor, err := newErisDBAccountConstructor(accountName, "ed25519,ripemd160",
+				accountConstructor, err := newMonaxDBAccountConstructor(accountName, "ed25519,ripemd160",
 					accountType, false, unsafe)
 				if err != nil {
 					return nil, fmt.Errorf("Failed to construct account %s for %s: %v", accountName, name, err)
@@ -81,12 +81,12 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 //-----------------------------------------------------------------------------------------------------
 // helper functions for MakeAccounts
 
-// newErisDBAccountConstructor returns an ErisDBAccountConstructor that has a GenesisAccount
+// newMonaxDBAccountConstructor returns an MonaxDBAccountConstructor that has a GenesisAccount
 // and depending on the AccountType returns a GenesisValidator.  If a private validator file
 // is needed for a validating account, it will pull the private key, unless this is
 // explicitly blocked.
-func newErisDBAccountConstructor(accountName string, keyAddressType string,
-	accountType *definitions.ErisDBAccountType, blockPrivateValidator, unsafe bool) (*ErisDBAccountConstructor, error) {
+func newMonaxDBAccountConstructor(accountName string, keyAddressType string,
+	accountType *definitions.MonaxDBAccountType, blockPrivateValidator, unsafe bool) (*MonaxDBAccountConstructor, error) {
 
 	var err error
 	isValidator := (accountType.DefaultBond > 0 && accountType.DefaultTokens >= accountType.DefaultBond)

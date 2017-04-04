@@ -99,7 +99,7 @@ func Load() (*viper.Viper, error) {
 		return config, err
 	}
 
-	config.AddConfigPath(ErisRoot)
+	config.AddConfigPath(MonaxRoot)
 	config.SetConfigName("eris")
 	if err := config.ReadInConfig(); err != nil {
 		// Do nothing as this is not essential.
@@ -131,7 +131,7 @@ func Save(settings *Settings) error {
 		return fmt.Errorf("cannot save uninitialized settings")
 	}
 
-	writer, err := os.Create(filepath.Join(ErisRoot, "eris.toml"))
+	writer, err := os.Create(filepath.Join(MonaxRoot, "eris.toml"))
 	defer writer.Close()
 	if err != nil {
 		return err

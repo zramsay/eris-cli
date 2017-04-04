@@ -241,8 +241,8 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("unexpectedly data containers are not turned on")
 	}
 
-	if do.Service.WorkDir != path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path)) {
-		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
+	if do.Service.WorkDir != path.Join(config.MonaxContainerRoot, "apps", filepath.Base(do.Path)) {
+		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(config.MonaxContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
 	}
 
 	if do.Service.User != "eris" {

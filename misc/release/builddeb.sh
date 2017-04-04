@@ -28,7 +28,7 @@ pushd ${GOREPO}/cmd/eris
 git fetch origin ${ERIS_BRANCH}
 git checkout ${ERIS_BRANCH}
 echo
-echo ">>> Building the Eris binary"
+echo ">>> Building the Monax binary"
 echo
 go get
 go build -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"

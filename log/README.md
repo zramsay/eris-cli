@@ -1,6 +1,6 @@
-# Eris Logger
+# Monax Logger
 
-Eris logging package is a fork of the [logrus](https://github.com/Sirupsen/logrus) logger with the `ErisFormatter` set by default.
+Monax logging package is a fork of the [logrus](https://github.com/Sirupsen/logrus) logger with the `MonaxFormatter` set by default.
 
 It also avoids logrus' shortcoming of not able to ignore logging levels set by the package's `SetLevel()` function.
 

@@ -105,7 +105,7 @@ func TestExecChain(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = chainName
-	do.Operations.Args = []string{"ls", config.ErisContainerRoot}
+	do.Operations.Args = []string{"ls", config.MonaxContainerRoot}
 	buf, err := ExecChain(do)
 	if err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)

@@ -40,7 +40,7 @@ func TestExportData(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Source = config.ErisContainerRoot
+	do.Source = config.MonaxContainerRoot
 	do.Destination = filepath.Join(config.DataContainersPath, do.Name)
 	if err := ExportData(do); err != nil {
 		log.Error(err)
@@ -168,7 +168,7 @@ func testCreateDataByImport(t *testing.T, name string) {
 	do := definitions.NowDo()
 	do.Name = name
 	do.Source = filepath.Join(config.DataContainersPath, do.Name)
-	do.Destination = config.ErisContainerRoot
+	do.Destination = config.MonaxContainerRoot
 	if err := ImportData(do); err != nil {
 		t.Fatalf("error importing data: %v", err)
 	}

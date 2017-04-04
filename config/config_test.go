@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	configErisDir = filepath.Join(os.TempDir(), "config")
+	configMonaxDir = filepath.Join(os.TempDir(), "config")
 )
 
 func TestMain(m *testing.M) {
@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	}
 	defer os.Setenv("TESTING", savedEnv)
 
-	log.WithField("dir", configErisDir).Info("Using temporary directory for config files")
+	log.WithField("dir", configMonaxDir).Info("Using temporary directory for config files")
 
 	m.Run()
 }
@@ -77,7 +77,7 @@ func TestNewNil(t *testing.T) {
 }
 
 func TestNewDefaultConfig(t *testing.T) {
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
@@ -116,9 +116,9 @@ DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -146,9 +146,9 @@ Verbose = true
 
 func TestNewCustomEmptyConfig(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -193,9 +193,9 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 
 func TestNewCustomBadConfig(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -262,7 +262,7 @@ DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	config, err := Load()
 	if err != nil {
@@ -291,7 +291,7 @@ Verbose = true
 
 func TestLoadEmpty(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	config, err := Load()
 	if err != nil {
@@ -325,7 +325,7 @@ func TestLoadEmpty(t *testing.T) {
 
 func TestLoadBad(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	// With bad config, load defaults.
 	config, err := Load()
@@ -367,9 +367,9 @@ DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	config, err := LoadViper(configErisDir, "eris")
+	config, err := LoadViper(configMonaxDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -396,9 +396,9 @@ Verbose = true
 
 func TestLoadViperEmpty(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	config, err := LoadViper(configErisDir, "eris")
+	config, err := LoadViper(configMonaxDir, "eris")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -425,31 +425,31 @@ func TestLoadViperEmpty(t *testing.T) {
 
 func TestLoadViperBad(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	_, err := LoadViper(configErisDir, "eris")
+	_, err := LoadViper(configMonaxDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperNonExistent1(t *testing.T) {
-	_, err := LoadViper(configErisDir, "eris")
+	_, err := LoadViper(configMonaxDir, "eris")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperNonExistent2(t *testing.T) {
-	_, err := LoadViper(configErisDir, "12345")
+	_, err := LoadViper(configMonaxDir, "12345")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestSave(t *testing.T) {
-	os.MkdirAll(configErisDir, 0755)
-	defer removeErisDir()
+	os.MkdirAll(configMonaxDir, 0755)
+	defer removeMonaxDir()
 
 	settings := &Settings{
 		IpfsHost:       "foo",
@@ -462,7 +462,7 @@ func TestSave(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	filename := filepath.Join(configErisDir, "eris.toml")
+	filename := filepath.Join(configMonaxDir, "eris.toml")
 	expected := `IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
@@ -480,7 +480,7 @@ Verbose = true
 }
 
 func TestSaveNotExistentDir(t *testing.T) {
-	ChangeErisRoot("/non/existent/dir")
+	ChangeMonaxRoot("/non/existent/dir")
 	_, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -505,16 +505,16 @@ func TestSaveNil(t *testing.T) {
 }
 
 func placeSettings(definition string) {
-	os.MkdirAll(configErisDir, 0755)
-	fakeDefinitionFile(configErisDir, "eris", definition)
+	os.MkdirAll(configMonaxDir, 0755)
+	fakeDefinitionFile(configMonaxDir, "eris", definition)
 }
 
-func removeErisDir() {
-	// Move out of configErisDir before deleting it.
-	parentPath := filepath.Join(configErisDir, "..")
+func removeMonaxDir() {
+	// Move out of configMonaxDir before deleting it.
+	parentPath := filepath.Join(configMonaxDir, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(configErisDir); err != nil {
+	if err := os.RemoveAll(configMonaxDir); err != nil {
 		panic(err)
 	}
 }

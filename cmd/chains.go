@@ -59,7 +59,7 @@ var chainsMake = &cobra.Command{
 	Short: "create necessary files for your chain",
 	Long: `create necessary files for your chain
 
-Make is an opinionated gateway to the basic types of chains which most Eris users
+Make is an opinionated gateway to the basic types of chains which most Monax users
 will make most of the time. Make is also a command line wizard in which
 you will let the marmots know how you would like your genesis created.
 
@@ -117,7 +117,7 @@ var chainsCheckout = &cobra.Command{
 	Short: "check out a chain",
 	Long: `check out a chain
 
-Checkout is a convenience feature. For any Eris command which accepts a
+Checkout is a convenience feature. For any Monax command which accepts a
 --chain or $chain variable, the checked out chain can replace manually
 passing in a --chain flag. If a --chain is passed to any command accepting
 --chain, the --chain which is passed will overwrite any checked out chain.

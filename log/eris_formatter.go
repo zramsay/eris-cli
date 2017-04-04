@@ -7,8 +7,8 @@ import (
 	"sort"
 )
 
-// ErisFormatter is a custom logger implementation.
-type ErisFormatter struct {
+// MonaxFormatter is a custom logger implementation.
+type MonaxFormatter struct {
 	// Set to true to ignore TTY checks for color highlights.
 	Color bool
 
@@ -36,7 +36,7 @@ var (
 
 // Format implements the logger.Formatter interface. It returns a formatted
 // log line as a slice of bytes.
-func (f ErisFormatter) Format(entry *Entry) (out []byte, err error) {
+func (f MonaxFormatter) Format(entry *Entry) (out []byte, err error) {
 	// Check if output is necessary.
 	if !f.IgnoreLevel && entry.Level > GetLevel() {
 		return []byte{}, nil
@@ -84,7 +84,7 @@ func (f ErisFormatter) Format(entry *Entry) (out []byte, err error) {
 
 // Highlight emphasizes a tag and a comment. It returns the highlighted
 // text along with an offset where to place it on screen.
-func (f ErisFormatter) Highlight(tag, comment string) (adjustedOffset int, text string) {
+func (f MonaxFormatter) Highlight(tag, comment string) (adjustedOffset int, text string) {
 	tagDecorated := tag
 	commentDecorated := comment
 

@@ -110,7 +110,7 @@ func TestMigrationMoveFile(t *testing.T) {
 }
 
 func testsInit() error {
-	config.ChangeErisRoot(erisDir)
+	config.ChangeMonaxRoot(erisDir)
 
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	var err error

@@ -20,8 +20,8 @@
 
 # Docker installed locally
 # Docker-Machine installed locally (if using remote boxes)
-# eris' test_machines image (if testing against eris' test boxes)
-# Eris installed locally
+# monax's test_machines image (if testing against monax's test boxes)
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -104,7 +104,7 @@ setup() {
   fi
 
   echo
-  echo "Checking the Eris <-> Docker Connection"
+  echo "Checking the Monax <-> Docker Connection"
   echo
   eris version
   if [ $? -ne 0 ]

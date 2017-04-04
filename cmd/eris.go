@@ -21,10 +21,10 @@ const dVerMin = version.DOCKER_VER_MIN
 const dmVerMin = version.DM_VER_MIN
 
 // Defining the root command
-var ErisCmd = &cobra.Command{
+var MonaxCmd = &cobra.Command{
 	Use:   "eris COMMAND [FLAG ...]",
 	Short: "The Ecosystem Application Platform",
-	Long: `Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
+	Long: `Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
 Made with <3 by Monax Industries.
 
@@ -53,14 +53,14 @@ Complete documentation is available at https://monax.io/docs
 			return
 		}
 
-		if !util.DoesDirExist(config.ErisRoot) && cmd.Use != "init" {
-			log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
+		if !util.DoesDirExist(config.MonaxRoot) && cmd.Use != "init" {
+			log.Warn("Monax root directory doesn't exist. The marmots will initialize it for you")
 			do := definitions.NowDo()
 			do.Yes = true
 			do.Pull = false
 			do.Quiet = true
 			if err := initialize.Initialize(do); err != nil {
-				log.Errorf("Error: couldn't initialize the Eris root directory: %v", err)
+				log.Errorf("Error: couldn't initialize the Monax root directory: %v", err)
 			}
 
 			if err := config.Save(&config.Global.Settings); err != nil {
@@ -77,16 +77,16 @@ Complete documentation is available at https://monax.io/docs
 		}
 		marmot := "Come back after you have upgraded and the marmots will be happy to service your blockchain management needs"
 		if !util.CompareVersions(dockerVersion, dVerMin) {
-			util.IfExit(fmt.Errorf("Eris requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
+			util.IfExit(fmt.Errorf("Monax requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
 		log.AddHook(util.CrashReportHook(dockerVersion))
 
 		// Compare `docker-machine` versions but don't fail if not installed.
 		dmVersion, err := util.DockerMachineVersion()
 		if err != nil {
-			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Eris, we strongly recommend it be installed for maximum blockchain awesomeness")
+			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Monax, we strongly recommend it be installed for maximum blockchain awesomeness")
 		} else if !util.CompareVersions(dmVersion, dmVerMin) {
-			util.IfExit(fmt.Errorf("Eris requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
+			util.IfExit(fmt.Errorf("Monax requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
 		}
 	},
 
@@ -104,39 +104,39 @@ func Execute() {
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
-	util.IfExit(ErisCmd.Execute())
+	util.IfExit(MonaxCmd.Execute())
 }
 
 // Define the commands
 func AddCommands() {
 	buildServicesCommand()
-	ErisCmd.AddCommand(Services)
+	MonaxCmd.AddCommand(Services)
 	buildChainsCommand()
-	ErisCmd.AddCommand(Chains)
+	MonaxCmd.AddCommand(Chains)
 	buildPackagesCommand()
-	ErisCmd.AddCommand(Packages)
+	MonaxCmd.AddCommand(Packages)
 	buildKeysCommand()
-	ErisCmd.AddCommand(Keys)
+	MonaxCmd.AddCommand(Keys)
 	buildFilesCommand()
-	ErisCmd.AddCommand(Files)
+	MonaxCmd.AddCommand(Files)
 	buildDataCommand()
-	ErisCmd.AddCommand(Data)
+	MonaxCmd.AddCommand(Data)
 	buildListCommand()
-	ErisCmd.AddCommand(List)
+	MonaxCmd.AddCommand(List)
 	buildCleanCommand()
-	ErisCmd.AddCommand(Clean)
+	MonaxCmd.AddCommand(Clean)
 	buildInitCommand()
-	ErisCmd.AddCommand(Init)
+	MonaxCmd.AddCommand(Init)
 	buildVerSionCommand()
-	ErisCmd.AddCommand(VerSion)
+	MonaxCmd.AddCommand(VerSion)
 
 	if runtime.GOOS != "windows" {
 		buildManCommand()
-		ErisCmd.AddCommand(ManPage)
+		MonaxCmd.AddCommand(ManPage)
 	}
 
-	ErisCmd.SetHelpCommand(Help)
-	ErisCmd.SetHelpTemplate(helpTemplate)
+	MonaxCmd.SetHelpCommand(Help)
+	MonaxCmd.SetHelpTemplate(helpTemplate)
 }
 
 // Global Do struct
@@ -145,9 +145,9 @@ var do *definitions.Do
 // Flags that are to be used by commands are handled by the Do struct
 // Define the persistent commands (globals)
 func AddGlobalFlags() {
-	ErisCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
-	ErisCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
-	ErisCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
+	MonaxCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
+	MonaxCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
+	MonaxCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
 }
 
 func InitializeConfig() {

@@ -71,7 +71,7 @@ The below guidelines are more observations of how things are done now rather tha
   return fmt.Errorf("I cannot find that service. Please check the service name you sent me")
   return fmt.Errorf("Could not add ssh.exe to PATH: %v", err)
   ```
-* Returned error messages from package level or utility functions which in turn be used by the top level functions should start with a small letter and, if necessary, include the lower level error (separated from the main message via a colon and a space) or use prefabricated errors. The message should be stated from the point of view of the package or library user (Eris developer):
+* Returned error messages from package level or utility functions which in turn be used by the top level functions should start with a small letter and, if necessary, include the lower level error (separated from the main message via a colon and a space) or use prefabricated errors. The message should be stated from the point of view of the package or library user (Monax developer):
 
   ```
   return fmt.Errorf("there is no chain checked out")

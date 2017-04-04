@@ -3,9 +3,9 @@
 %{define} release %{getenv:ERIS_RELEASE}
 %{define} gorepo %{_builddir}/src/github.com/monax/cli
 
-Summary: Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
+Summary: Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
-Name: eris
+Name: monax
 License: GPL-3
 Version: %{version}
 Release: %{release}
@@ -14,7 +14,7 @@ URL: https://monax.io/docs
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
 
 %description
-Eris is an application platform for building, testing, maintaining, and operating
+Monax is an application platform for building, testing, maintaining, and operating
 applications built to run on an ecosystem level. It makes it easy and simple to wrangle the dragons of smart contract blockchains.
 
 %prep

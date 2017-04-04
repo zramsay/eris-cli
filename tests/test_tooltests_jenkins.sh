@@ -10,7 +10,7 @@
 
 # Go installed locally
 # Docker installed locally
-# Eris installed locally
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE

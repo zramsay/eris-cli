@@ -19,7 +19,7 @@ var Services = &cobra.Command{
 	Short: "start, stop, and manage services required for your application",
 	Long: `start, stop, and manage services required for your application
 
-Eris services are "things that you turn on or off". They are meant to be long
+Monax services are "things that you turn on or off". They are meant to be long
 running microservices on which your application relies. They can be public
 blockchains, services your application needs, workers, bridges to other data
 or process management systems, or pretty much any process that has a docker
@@ -94,7 +94,7 @@ var servicesEdit = &cobra.Command{
 Edit will utilize your default editor. (See also the ERIS environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
-command will only operate on *service configuration file* which tell Eris
+command will only operate on *service configuration file* which tell Monax
 how to start and stop a specific service.
 
 How that service is used for a specific project is handled from project
@@ -220,7 +220,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(config.ErisRoot)))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(config.MonaxRoot)))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")

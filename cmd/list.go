@@ -10,7 +10,7 @@ import (
 var List = &cobra.Command{
 	Use:   "ls",
 	Short: "list all the things eris knows about",
-	Long: `list all Eris service, chain, and data containers
+	Long: `list all Monax service, chain, and data containers
 
 The default output shows containers in three sections. The -a flag
 adds a few additional informational columns for each container.

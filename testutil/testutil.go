@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	TmpErisRoot = filepath.Join(os.TempDir(), "eris")
+	TmpMonaxRoot = filepath.Join(os.TempDir(), "eris")
 
 	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
@@ -49,8 +49,8 @@ type Pull struct {
 //      (unspecified Services means all services, not none).
 //
 func Init(args ...interface{}) (err error) {
-	config.ChangeErisRoot(TmpErisRoot)
-	config.InitErisDir()
+	config.ChangeMonaxRoot(TmpMonaxRoot)
+	config.InitMonaxDir()
 
 	config.Global, err = config.New(os.Stdout, os.Stderr)
 	if err != nil {
@@ -83,7 +83,7 @@ func Init(args ...interface{}) (err error) {
 	os.Setenv("ERIS_PULL_APPROVE", "true")
 
 	if err := initialize.Initialize(do); err != nil {
-		IfExit(fmt.Errorf("Could not initialize Eris root: %v", err))
+		IfExit(fmt.Errorf("Could not initialize Monax root: %v", err))
 	}
 
 	log.Info("Test init completed. Starting main test sequence now")
@@ -170,7 +170,7 @@ func RemoveContainer(name, t string) error {
 	return nil
 }
 
-// Remove everything Eris.
+// Remove everything Monax.
 func RemoveAllContainers() error {
 	toClean := map[string]bool{
 		"yes":        true,
@@ -194,12 +194,12 @@ func Links(name, t string) []string {
 	return container.HostConfig.Links
 }
 
-// Write a fake service definition file in a tmpDir Eris home directory.
+// Write a fake service definition file in a tmpDir Monax home directory.
 func FakeServiceDefinition(name, definition string) error {
 	return FakeDefinitionFile(config.ServicesPath, name, definition)
 }
 
-// Write a fake definition file in a tmpDir Eris home directory.
+// Write a fake definition file in a tmpDir Monax home directory.
 func FakeDefinitionFile(tmpDir, name, definition string) error {
 	if !util.DoesDirExist(tmpDir) {
 		if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -244,14 +244,14 @@ func FileContents(filename string) string {
 	return string(content)
 }
 
-// TearDown removes all Eris containers and temporary Eris root
+// TearDown removes all Monax containers and temporary Monax root
 // directory on exit.
 func TearDown() error {
-	// Move out of ErisDir before deleting it.
-	parentPath := filepath.Join(TmpErisRoot, "..")
+	// Move out of MonaxDir before deleting it.
+	parentPath := filepath.Join(TmpMonaxRoot, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(TmpErisRoot); err != nil {
+	if err := os.RemoveAll(TmpMonaxRoot); err != nil {
 		return err
 	}
 	return nil

@@ -75,7 +75,7 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 	return startChain(do, true)
 }
 
-// InspectChain is Eris' version of [docker inspect]. It returns
+// InspectChain is Monax' version of [docker inspect]. It returns
 // an error.
 //
 //  do.Name            - name of the chain to inspect (required)
@@ -162,7 +162,7 @@ func CatChain(do *definitions.Do) error {
 	if do.Name == "" {
 		return fmt.Errorf("a chain name is required")
 	}
-	rootDir := path.Join(config.ErisContainerRoot, "chains", do.Name)
+	rootDir := path.Join(config.MonaxContainerRoot, "chains", do.Name)
 
 	doCat := definitions.NowDo()
 	doCat.Name = do.Name
@@ -364,7 +364,7 @@ func setupChain(do *definitions.Do) (err error) {
 	}
 
 	containerName := util.ChainContainerName(do.Name)
-	containerDst := path.Join(config.ErisContainerRoot, "chains", do.Name)
+	containerDst := path.Join(config.MonaxContainerRoot, "chains", do.Name)
 	hostSrc := do.Path
 
 	chain, err := loaders.LoadChainDefinition(do.Name, filepath.Join(do.Path, "config"))
@@ -410,7 +410,7 @@ func setupChain(do *definitions.Do) (err error) {
 		if err := perform.DockerCreateData(ops); err != nil {
 			return fmt.Errorf("Could not create data container: %v", err)
 		}
-		ops.Args = []string{"mkdir", "-p", path.Join(config.ErisContainerRoot, "chains", do.Name)}
+		ops.Args = []string{"mkdir", "-p", path.Join(config.MonaxContainerRoot, "chains", do.Name)}
 		if _, err := perform.DockerExecData(ops, nil); err != nil {
 			return err
 		}
@@ -448,7 +448,7 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
 	}
 
-	if out, err := services.ExecHandler("keys", []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.ErisContainerRoot, do.Name)}); err != nil {
+	if out, err := services.ExecHandler("keys", []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.MonaxContainerRoot, do.Name)}); err != nil {
 		log.Error(err)
 		do.RmD = true
 		RemoveChain(do)

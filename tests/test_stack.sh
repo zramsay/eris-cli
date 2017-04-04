@@ -3,16 +3,15 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris stack and the connection between eris cli
-# and eris pm. **Generally, it should not be used in isolation.**
+# This script will test the Monax stack. **Generally, it should not be used in isolation.**
 
 # ---------------------------------------------------------------------------
 # REQUIREMENTS
 
 # Docker installed locally
 # Docker-Machine installed locally (if using remote boxes)
-# eris' test_machines image (if testing against eris' test boxes)
-# Eris installed locally
+# monax's test_machines image (if testing against monax's test boxes)
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE

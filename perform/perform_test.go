@@ -520,7 +520,7 @@ func TestExecServiceVolume(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Operations.Volume = config.ErisRoot
+	srv.Operations.Volume = config.MonaxRoot
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
@@ -557,8 +557,8 @@ func TestExecServiceMount(t *testing.T) {
 
 	srv.Operations.Args = strings.Fields("uptime")
 	srv.Service.Volumes = []string{
-		config.ErisRoot + ":" + "/tmp",
-		config.ErisRoot + ":" + "/custom",
+		config.MonaxRoot + ":" + "/tmp",
+		config.MonaxRoot + ":" + "/custom",
 	}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
@@ -612,7 +612,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Service.Volumes = []string{config.ErisRoot + ":"}
+	srv.Service.Volumes = []string{config.MonaxRoot + ":"}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected service container creation to fail")
 	}

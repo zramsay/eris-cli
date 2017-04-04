@@ -1,11 +1,11 @@
 # Introduction
 
 ```
-Eris is an application platform for building, testing, maintaining, and
+Monax is an application platform for building, testing, maintaining, and
 operating applications built to run on an ecosystem level.
 ```
 
-`eris:cli` is a tool which makes it easy for developers to build, test, manage, and operate smart contract applications. **No matter the blockchain**.
+`monax` is a tool which makes it easy for developers to build, test, manage, and operate smart contract applications. **No matter the blockchain**.
 
 [For the motivation behind this tool see this post](https://monax.io/platform/motivation).
 
@@ -27,7 +27,7 @@ Please see our [getting started page](https://monax.io/docs/getting-started) for
 
 # Overview
 
-The `eris` tool is centered around a very few concepts:
+The `monax` tool is centered around a very few concepts:
 
 * `services` — things that you turn on or off
 * `chains` — develop permissioned chains
@@ -102,7 +102,7 @@ eris keys
 
 ## Files
 
-Eris has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host.
+Monax has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host.
 
 To see the various ways in which `eris` can help you with distributed file sharing, please type:
 
@@ -112,7 +112,7 @@ eris files
 
 ## Data
 
-Eris can automagically utilize data containers for you.
+Monax can automagically utilize data containers for you.
 
 If you turn the `data_container` variable to `true` in the service or chain definition file, then `eris` deposit the data utilized by that service or chain into a data container which can be managed separately from the "program" container. The advantage of working with data containers has been dealt with elsewhere (see, Google).
 

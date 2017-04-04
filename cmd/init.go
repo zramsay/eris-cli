@@ -14,7 +14,7 @@ import (
 var Init = &cobra.Command{
 	Use:   "init",
 	Short: "initialize your work space for smart contract glory",
-	Long:  `create the root ` + util.Tilde(config.ErisRoot) + ` directory and associated sub-directories`,
+	Long:  `create the root ` + util.Tilde(config.MonaxRoot) + ` directory and subdirectories.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Router(cmd, args)
 	},

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Eris CLI Github and Linux packages release script.
+# Monax CLI Github and Linux packages release script.
 #
 # Prerequisites:
 #
@@ -284,7 +284,7 @@ release_rpm() {
 
 usage() {
   echo "Usage: release.sh [pre|build|pkgs|rpm|deb|help]"
-  echo "Release Eris CLI to Github. Publish Linux packages to Amazon S3"
+  echo "Release Monax CLI to Github. Publish Linux packages to Amazon S3"
   echo
   echo "   release.sh              release #master"
   echo "   release.sh pre          prerelease #master"

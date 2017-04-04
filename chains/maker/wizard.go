@@ -34,7 +34,7 @@ func ChainsMakePrelimQuestions() map[string]string {
 	return questions
 }
 
-func AccountTypeIntro(account *definitions.ErisDBAccountType) string {
+func AccountTypeIntro(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf(`
 The %s Group.
 
@@ -49,11 +49,11 @@ Who Should Get These?:
 How many keys do you want in the %s Group? (%d) `, account.Name, account.Description, account.TypicalUser, account.Name, account.DefaultNumber)
 }
 
-func AccountTypeTokens(account *definitions.ErisDBAccountType) string {
+func AccountTypeTokens(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf("How many tokens should each key in the %s Group be given? ", account.Name)
 }
 
-func AccountTypeToBond(account *definitions.ErisDBAccountType) string {
+func AccountTypeToBond(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf("This group appears to be a validating group. How many tokens would you like the %s Group to bond?", account.Name)
 }
 

@@ -955,7 +955,7 @@ func configureInteractiveContainer(srv *definitions.Service, ops *definitions.Op
 	// Mount a volume.
 	if ops.Volume != "" {
 		bind := filepath.Join(ops.Volume) + ":" +
-			filepath.Join(config.ErisContainerRoot, filepath.Base(ops.Volume))
+			filepath.Join(config.MonaxContainerRoot, filepath.Base(ops.Volume))
 
 		if opts.HostConfig.Binds == nil {
 			opts.HostConfig.Binds = []string{bind}
@@ -1069,7 +1069,7 @@ func configureVolumesFromContainer(ops *definitions.Operation, service *definiti
 		Config: &docker.Config{
 			Image:           path.Join(version.DefaultRegistry, version.ImageData),
 			User:            "root",
-			WorkingDir:      config.ErisContainerRoot,
+			WorkingDir:      config.MonaxContainerRoot,
 			AttachStdout:    true,
 			AttachStderr:    true,
 			AttachStdin:     true,

@@ -14,20 +14,20 @@ import (
 var (
 	// Convenience directories.
 	GoPath            = os.Getenv("GOPATH")
-	ErisLtd           = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to deprecate
-	ErisGo            = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to keep
-	ErisGH            = "https://github.com/monax/"
-	ErisRoot          = ResolveErisRoot()
-	ErisContainerRoot = "/home/eris/.eris"
+	MonaxLtd           = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to deprecate
+	MonaxGo            = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to keep
+	MonaxGH            = "https://github.com/monax/"
+	MonaxRoot          = ResolveMonaxRoot()
+	MonaxContainerRoot = "/home/eris/.eris"
 
 	// Major directories.
-	AppsPath     = filepath.Join(ErisRoot, "apps")
-	BundlesPath  = filepath.Join(ErisRoot, "bundles")
-	ChainsPath   = filepath.Join(ErisRoot, "chains")
-	KeysPath     = filepath.Join(ErisRoot, "keys")
-	RemotesPath  = filepath.Join(ErisRoot, "remotes")
-	ScratchPath  = filepath.Join(ErisRoot, "scratch")
-	ServicesPath = filepath.Join(ErisRoot, "services")
+	AppsPath     = filepath.Join(MonaxRoot, "apps")
+	BundlesPath  = filepath.Join(MonaxRoot, "bundles")
+	ChainsPath   = filepath.Join(MonaxRoot, "chains")
+	KeysPath     = filepath.Join(MonaxRoot, "keys")
+	RemotesPath  = filepath.Join(MonaxRoot, "remotes")
+	ScratchPath  = filepath.Join(MonaxRoot, "scratch")
+	ServicesPath = filepath.Join(MonaxRoot, "services")
 
 	// Chains directories.
 	HEAD             = filepath.Join(ChainsPath, "HEAD")
@@ -37,7 +37,7 @@ var (
 	// Keys directories.
 	KeysDataPath      = filepath.Join(KeysPath, "data")
 	KeysNamesPath     = filepath.Join(KeysPath, "names")
-	KeysContainerPath = path.Join(ErisContainerRoot, "keys", "data")
+	KeysContainerPath = path.Join(MonaxContainerRoot, "keys", "data")
 
 	// Scratch directories.
 	DataContainersPath   = filepath.Join(ScratchPath, "data")
@@ -64,22 +64,22 @@ func HomeDir() string {
 	}
 }
 
-// ChangeErisRoot points the root of the Eris settings hierarchy
+// ChangeMonaxRoot points the root of the Monax settings hierarchy
 // to the erisDir location.
-func ChangeErisRoot(erisDir string) {
+func ChangeMonaxRoot(erisDir string) {
 	if os.Getenv("TESTING") == "true" {
 		return
 	}
 
-	ErisRoot = erisDir
+	MonaxRoot = erisDir
 
 	// Major directories.
-	AppsPath = filepath.Join(ErisRoot, "apps")     // previously "dapps"
-	ChainsPath = filepath.Join(ErisRoot, "chains") // previously "blockchains"
-	KeysPath = filepath.Join(ErisRoot, "keys")
-	RemotesPath = filepath.Join(ErisRoot, "remotes")
-	ScratchPath = filepath.Join(ErisRoot, "scratch")
-	ServicesPath = filepath.Join(ErisRoot, "services")
+	AppsPath = filepath.Join(MonaxRoot, "apps")     // previously "dapps"
+	ChainsPath = filepath.Join(MonaxRoot, "chains") // previously "blockchains"
+	KeysPath = filepath.Join(MonaxRoot, "keys")
+	RemotesPath = filepath.Join(MonaxRoot, "remotes")
+	ScratchPath = filepath.Join(MonaxRoot, "scratch")
+	ServicesPath = filepath.Join(MonaxRoot, "services")
 
 	// Chains Directories
 	AccountsTypePath = filepath.Join(ChainsPath, "account-types")
@@ -114,7 +114,7 @@ func InitDataDir(Datadir string) error {
 }
 
 // TODO: [csk] give this a default string if folks want it somewhere besides ~/.eris ...?
-func ResolveErisRoot() string {
+func ResolveMonaxRoot() string {
 	var eris string
 	if os.Getenv("ERIS") != "" {
 		eris = os.Getenv("ERIS")
@@ -132,10 +132,10 @@ func ResolveErisRoot() string {
 	return eris
 }
 
-// InitErisDir creates an Eris directory hierarchy under ErisRoot dir.
-func InitErisDir() (err error) {
+// InitMonaxDir creates an Monax directory hierarchy under MonaxRoot dir.
+func InitMonaxDir() (err error) {
 	for _, d := range []string{
-		ErisRoot,
+		MonaxRoot,
 		AppsPath,
 		BundlesPath,
 		ChainsPath,

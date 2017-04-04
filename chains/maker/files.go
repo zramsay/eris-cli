@@ -24,7 +24,7 @@ type accountInfo struct {
 	PrivKey string `mapstructure:"privKey" json:"privKey" yaml:"privKey" toml:"privKey"`
 }
 
-func SaveAccountResults(do *definitions.Do, accounts []*ErisDBAccountConstructor) error {
+func SaveAccountResults(do *definitions.Do, accounts []*MonaxDBAccountConstructor) error {
 	// Log a warning to users for the new behaviour:
 	// if asked to output the accounts with do.Output, and `eris chains make --unsafe` is not
 	// provided with the unsafe flag, then we no longer write the private keys in `accounts.json`
@@ -155,7 +155,7 @@ func WriteConfigurationFile(chainName, accountName, seeds string, chainImageName
 	return writer(configurationFileBytes, chainName, accountName, "config.toml")
 }
 
-func SaveAccountType(thisActT *definitions.ErisDBAccountType) error {
+func SaveAccountType(thisActT *definitions.MonaxDBAccountType) error {
 	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
 	defer writer.Close()
 	if err != nil {

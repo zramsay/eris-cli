@@ -121,7 +121,7 @@ func TestExportKeySingle(t *testing.T) {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
 
-	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
+	keyPath := path.Join(config.MonaxContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
 	catOut, err := services.ExecHandler("keys", []string{"cat", keyPath})
@@ -168,7 +168,7 @@ func TestImportKeySingle(t *testing.T) {
 	keyOnHost := strings.TrimSpace(string(key))
 
 	//rm key that was generated before import
-	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address)
+	keyPath := path.Join(config.MonaxContainerRoot, "keys", "data", address)
 
 	if _, err := services.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
 		t.Fatalf("error exec-ing: %v", err)
@@ -178,7 +178,7 @@ func TestImportKeySingle(t *testing.T) {
 		t.Fatalf("error importing key: %v", err)
 	}
 
-	keyPathCat := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
+	keyPathCat := path.Join(config.MonaxContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
 	catOut, err := services.ExecHandler("keys", []string{"cat", keyPathCat})

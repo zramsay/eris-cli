@@ -34,7 +34,7 @@ func Clean(toClean map[string]bool) error {
 func cleanHandler(toClean map[string]bool) error {
 	if toClean["containers"] {
 		log.Debug("Removing all eris containers")
-		if err := RemoveAllErisContainers(); err != nil {
+		if err := RemoveAllMonaxContainers(); err != nil {
 			return err
 		}
 	}
@@ -54,15 +54,15 @@ func cleanHandler(toClean map[string]bool) error {
 	}
 
 	if toClean["root"] {
-		log.Debug("Removing Eris root directory")
-		if err := os.RemoveAll(config.ErisRoot); err != nil {
+		log.Debug("Removing Monax root directory")
+		if err := os.RemoveAll(config.MonaxRoot); err != nil {
 			return err
 		}
 	}
 
 	if toClean["images"] {
-		log.Debug("Removing all Eris Docker images")
-		if err := RemoveErisImages(); err != nil {
+		log.Debug("Removing all Monax Docker images")
+		if err := RemoveMonaxImages(); err != nil {
 			return err
 		}
 	}
@@ -70,7 +70,7 @@ func cleanHandler(toClean map[string]bool) error {
 }
 
 // stops and removes containers and their volumes
-func RemoveAllErisContainers() error {
+func RemoveAllMonaxContainers() error {
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		return fmt.Errorf("Error listing containers: %v", DockerError(err))
@@ -79,7 +79,7 @@ func RemoveAllErisContainers() error {
 	for _, container := range contns {
 		// [pv]: Make sure legacy data containers are removed as well.
 		// The prefix bit is to be removed in 0.12.
-		if container.Labels[definitions.LabelEris] == "true" ||
+		if container.Labels[definitions.LabelMonax] == "true" ||
 			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "eris_") {
 
 			if err := removeContainer(container.ID); err != nil {
@@ -146,7 +146,7 @@ func cleanScratchData() error {
 	return nil
 }
 
-func RemoveErisImages() error {
+func RemoveMonaxImages() error {
 	images, err := DockerClient.ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
 		return DockerError(err)

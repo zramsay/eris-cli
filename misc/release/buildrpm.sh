@@ -94,7 +94,7 @@ echo ">>> Generating eris.repo template"
 echo
 cat > yum/eris.repo <<EOF
 [eris]
-name=Eris
+name=Monax
 baseurl=https://${AWS_S3_RPM_REPO}/yum/x86_64/
 metadata_expire=1d
 enabled=1
@@ -102,7 +102,7 @@ gpgkey=https://${AWS_S3_RPM_REPO}/yum/RPM-GPG-KEY
 gpgcheck=1
 
 [eris-source]
-name=Eris Source
+name=Monax Source
 baseurl=https://${AWS_S3_RPM_REPO}/yum/source/
 metadata_expire=1d
 enabled=1

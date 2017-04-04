@@ -124,7 +124,7 @@ func ImportData(do *definitions.Do) error {
 		if !exists {
 			return fmt.Errorf("There is no data container for service %q", do.Name)
 		}
-		if err := checkErisContainerRoot(do, "import"); err != nil {
+		if err := checkMonaxContainerRoot(do, "import"); err != nil {
 			return err
 		}
 
@@ -225,7 +225,7 @@ func ExportData(do *definitions.Do) error {
 		defer reader.Close()
 
 		if !do.Operations.SkipCheck { // sometimes you want greater flexibility
-			if err := checkErisContainerRoot(do, "export"); err != nil {
+			if err := checkMonaxContainerRoot(do, "export"); err != nil {
 				return err
 			}
 		}
@@ -323,12 +323,12 @@ func runData(name string, args []string) error {
 	return nil
 }
 
-// check path for config.ErisContainerRoot
+// check path for config.MonaxContainerRoot
 // XXX this is opiniated & we may want to change in future
 // for more flexibility with filesystem of data conts
 // [zr] yes, it is opiniated; do.Operations.SkipCheck will silence it when needed
-func checkErisContainerRoot(do *definitions.Do, typ string) error {
-	r, err := regexp.Compile(config.ErisContainerRoot)
+func checkMonaxContainerRoot(do *definitions.Do, typ string) error {
+	r, err := regexp.Compile(config.MonaxContainerRoot)
 	if err != nil {
 		return err
 	}
@@ -336,14 +336,14 @@ func checkErisContainerRoot(do *definitions.Do, typ string) error {
 	switch typ {
 	case "import":
 		if r.MatchString(do.Destination) != true { //if not there join it
-			do.Destination = path.Join(config.ErisContainerRoot, do.Destination)
+			do.Destination = path.Join(config.MonaxContainerRoot, do.Destination)
 			return nil
 		} else { // matches: do nothing
 			return nil
 		}
 	case "export":
 		if r.MatchString(do.Source) != true {
-			do.Source = path.Join(config.ErisContainerRoot, do.Source)
+			do.Source = path.Join(config.MonaxContainerRoot, do.Source)
 			return nil
 		} else {
 			return nil

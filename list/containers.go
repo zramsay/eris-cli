@@ -102,7 +102,7 @@ func Containers(t, format string, running bool) error {
 	}
 
 	// Collect container information.
-	util.ErisContainers(func(name string, details *util.Details) bool {
+	util.MonaxContainers(func(name string, details *util.Details) bool {
 		if running == true && details.Info.State.Running == false && details.Type != definitions.TypeData {
 			return false
 		}
@@ -260,7 +260,7 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 
 func jsonContainers(t string, running bool) error {
 	// Collect container information.
-	util.ErisContainers(func(name string, details *util.Details) bool {
+	util.MonaxContainers(func(name string, details *util.Details) bool {
 		if t == "all" || t == details.Type {
 			erisContainers = append(erisContainers, details)
 		}

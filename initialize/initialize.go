@@ -20,10 +20,12 @@ import (
 // - Pulls the required docker images
 // - Write the ~/.eris/eris.toml file.
 func Initialize(do *definitions.Do) error {
-
-	// Create the directory structure.
-	newDir, err := checkThenInitErisRoot()
+	newDir, err := checkThenInitMonaxRoot()
 	if err != nil {
+		return err
+	}
+
+	if err := overwriteMonaxToml(); err != nil {
 		return err
 	}
 
@@ -87,10 +89,10 @@ Directory structure initialized:
 Consider running [docker images] to see the images that were added.`)
 
 	log.Warnf(`
-Eris sends crash reports to a remote server in case something goes completely
+Monax sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
-`, "don't send", filepath.Join(config.ErisRoot, "eris.toml"))
+`, "don't send", filepath.Join(config.MonaxRoot, "eris.toml"))
 
 	log.Warn("The marmots have everything set up for you. Type [eris] to get started")
 	return nil
@@ -180,6 +182,7 @@ func checkThenInitErisRoot() (bool, error) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
 		if err := config.InitErisDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
+
 		}
 		newDir = true
 	} else {
@@ -199,7 +202,7 @@ func checkIfCanOverwrite(doYes bool) error {
 	if doYes {
 		return nil
 	}
-	log.WithField("path", config.ErisRoot).Warn("Eris root directory")
+	log.WithField("path", config.MonaxRoot).Warn("Monax root directory")
 	log.WithFields(log.Fields{
 		"services path": config.ServicesPath,
 		"chains path":   config.ChainsPath,

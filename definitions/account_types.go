@@ -1,6 +1,6 @@
 package definitions
 
-type ErisDBAccountType struct {
+type MonaxDBAccountType struct {
 	Name          string         `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
 	Description   string         `mapstructure:"description" json:"description" yaml:"description" toml:"description"`
 	TypicalUser   string         `mapstructure:"typical_user" json:"typical_user" yaml:"typical_user" toml:"typical_user"`
@@ -10,6 +10,6 @@ type ErisDBAccountType struct {
 	Perms         map[string]int `mapstructure:"perms" json:"perms" yaml:"perms" toml:"perms"`
 }
 
-func BlankAccountType() *ErisDBAccountType {
-	return &ErisDBAccountType{}
+func BlankAccountType() *MonaxDBAccountType {
+	return &MonaxDBAccountType{}
 }
