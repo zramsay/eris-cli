@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/chains/maker"
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/keys"
-	"github.com/monax/cli/log"
+	"github.com/eris-ltd/eris/chains/maker"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/keys"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/version"
 )
 
 // TODO [zr] re-write
@@ -40,7 +40,7 @@ func MakeChain(do *definitions.Do) error {
 	// set infos
 	// do.Name; already set
 	// do.Accounts ...?
-	do.ChainImageName = path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)
+	do.ChainImageName = path.Join(version.DefaultRegistry, version.ImageDB)
 	do.ExportedPorts = []string{"1337", "46656", "46657"}
 	do.UseDataContainer = true
 	do.ContainerEntrypoint = ""

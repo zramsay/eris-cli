@@ -6,6 +6,12 @@ title: "Deprecated | Genesis Updating"
 
 ---
 
+## Introduction
+
+<div class="note">
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.
+</div>
+
 All eris:db use a genesis.json to get started. The genesis.json tells eris:db:
 
 * what the initial distribution of tokens is
@@ -32,13 +38,8 @@ How one does this depends on how one started the chain. If one started the chain
 ## Step 3: Turn the New Chain On
 
 ```
-eris chains new idiaminchain
-```
+eris chains start idiaminchain --init-dir ~/.eris/chains/idiaminchain/idiaminchain_full_000
 
-or
-
-```
-eris chains new idiaminchain --dir idiaminchain
 ```
 
 or whatever command you used before. **N.B.**, we used `new` here rather than start. That is because we want to copy the reformulated genesis.json into the data container and ready for the service container to use when it starts again.

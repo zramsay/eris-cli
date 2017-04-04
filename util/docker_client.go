@@ -362,19 +362,16 @@ func checkKeysAndCerts(dPath string) error {
 
 func mustInstallError() error {
 	install := `The marmots cannot connect to Docker. Do you have Docker installed?
-If not, please visit here: https://docs.docker.com/installation/`
+If not, please visit here: https://docs.docker.com/engine/installation/`
 
-	switch runtime.GOOS {
-	case "linux":
+	if runtime.GOOS == "linux" {
 		run := `Do you have Docker running? If not, please type [sudo service docker start].
 Also check that your user is in the "docker" group. If not, you can add it
 using the [sudo usermod -a -G docker $USER] command or rerun as [sudo eris]`
 
-		return fmt.Errorf("%slinux/\n\n%s", install, run)
-	case "darwin":
-		return fmt.Errorf("%smac/", install)
-	case "windows":
-		return fmt.Errorf("%swindows/", install)
+		return fmt.Errorf("%s\n\n%s", install, run)
+	} else {
+		return fmt.Errorf("%s\n\n%s", install, "Note that [eris] does not yet support Docker For Mac/Windows. These platforms require docker-machine.")
 	}
 	return fmt.Errorf(install)
 }

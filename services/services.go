@@ -2,28 +2,19 @@ package services
 
 import (
 	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/data"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/perform"
-	"github.com/monax/cli/util"
-
-	"github.com/BurntSushi/toml"
-	yaml "gopkg.in/yaml.v2"
-)
-
-var (
-	ErrServiceNotRunning = errors.New("The requested service is not running, start it with `eris services start [serviceName]`")
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/initialize"
+	"github.com/eris-ltd/eris/loaders"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/perform"
+	"github.com/eris-ltd/eris/util"
 )
 
 func StartService(do *definitions.Do) (err error) {
@@ -246,7 +237,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 		var err error
 		chainName, err = util.GetHead()
 		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Marmot disapproval face.\nYou tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
+			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
 	s, err := loaders.ChainsAsAService(chainName)
@@ -288,6 +279,7 @@ func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
 }
 
+/*
 func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
@@ -307,88 +299,18 @@ func MakeService(do *definitions.Do) error {
 		"service": srv.Service.Name,
 		"image":   srv.Service.Image,
 	}).Debug("Creating a new service definition file")
-	err = WriteServiceDefinitionFile(srv, filepath.Join(config.ServicesPath, do.Name+".toml"))
-	if err != nil {
-		return err
-	}
+
+	// TODO
+	//if err := initialize.WriteServiceDefinitionFile(do.Name, srv); err != nil {
+	//	return err
+	//}
 	return nil
-}
+}*/
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)
 	log.WithField("=>", servDefFile).Info("Editing service")
 	return config.Editor(servDefFile)
-}
-
-func RenameService(do *definitions.Do) error {
-	log.WithFields(log.Fields{
-		"from": do.Name,
-		"to":   do.NewName,
-	}).Info("Renaming service")
-
-	if do.Name == do.NewName {
-		return fmt.Errorf("Cannot rename to same name")
-	}
-
-	newNameBase := strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-	transformOnly := newNameBase == do.Name
-
-	if parseKnown(do.Name) {
-		serviceDef, err := loaders.LoadServiceDefinition(do.Name)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Debug("Performing container rename")
-			err = perform.DockerRename(serviceDef.Operations, do.NewName)
-			if err != nil {
-				return err
-			}
-		} else {
-			log.Info("Changing service definition file only. Not renaming container")
-		}
-
-		oldFile := FindServiceDefinitionFile(do.Name)
-
-		if filepath.Base(oldFile) == do.NewName {
-			log.Info("Those are the same file. Not renaming")
-			return nil
-		}
-
-		var newFile string
-		if filepath.Ext(do.NewName) == "" {
-			newFile = strings.Replace(oldFile, do.Name, do.NewName, 1)
-		} else {
-			newFile = filepath.Join(config.ServicesPath, do.NewName)
-		}
-
-		serviceDef.Service.Name = strings.Replace(do.NewName, filepath.Ext(do.NewName), "", 1)
-		serviceDef.Name = serviceDef.Service.Name
-		err = WriteServiceDefinitionFile(serviceDef, newFile)
-		if err != nil {
-			return err
-		}
-
-		if !transformOnly {
-			log.WithFields(log.Fields{
-				"from": do.Name,
-				"to":   do.NewName,
-			}).Debug("Performing data container rename")
-			err = data.RenameData(do)
-			if err != nil {
-				return err
-			}
-		}
-
-		os.Remove(oldFile)
-	} else {
-		return fmt.Errorf("I cannot find that service. Please check the service name you sent me.")
-	}
-	return nil
 }
 
 func InspectService(do *definitions.Do) error {
@@ -488,80 +410,6 @@ func CatService(do *definitions.Do) (string, error) {
 
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
 	return perform.DockerInspect(srv, ops, field)
-}
-
-// if given empty string for fileName will use Service
-// Definition Name
-func WriteServiceDefinitionFile(serviceDef *definitions.ServiceDefinition, fileName string) error {
-	// writer := os.Stdout
-
-	if filepath.Ext(fileName) == "" {
-		fileName = serviceDef.Service.Name + ".toml"
-		fileName = filepath.Join(config.ServicesPath, fileName)
-	}
-
-	writer, err := os.Create(fileName)
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-
-	switch filepath.Ext(fileName) {
-	case ".json":
-		mar, err := json.MarshalIndent(serviceDef, "", "  ")
-		if err != nil {
-			return err
-		}
-		mar = append(mar, '\n')
-		writer.Write(mar)
-	case ".yaml":
-		mar, err := yaml.Marshal(serviceDef)
-		if err != nil {
-			return err
-		}
-		mar = append(mar, '\n')
-		writer.Write(mar)
-	default:
-		WriteDefaultServiceTOML(writer, serviceDef)
-	}
-	return nil
-}
-
-func WriteDefaultServiceTOML(writer *os.File, serviceDef *definitions.ServiceDefinition) {
-
-	writer.Write([]byte("# This is a TOML config file.\n# For more information, see https://github.com/toml-lang/toml\n\n"))
-	enc := toml.NewEncoder(writer)
-	enc.Indent = ""
-	writer.Write([]byte("name = \"" + serviceDef.Name + "\"\n\n"))
-	if serviceDef.ServiceID != "" {
-		writer.Write([]byte("service_id = \"" + serviceDef.ServiceID + "\"\n"))
-	}
-	if serviceDef.Chain != "" {
-		writer.Write([]byte("chain = \"" + serviceDef.Chain + "\"\n\n"))
-	}
-
-	writer.Write([]byte("description = \"\"\"\n" + "# describe your service" + "\n\"\"\"\n\n"))
-	writer.Write([]byte("status = \"\"" + " # alpha, beta, ready" + "\n\n"))
-	writer.Write([]byte("[service]\n"))
-	enc.Encode(serviceDef.Service)
-	writer.Write([]byte("\n"))
-	writer.Write([]byte("[dependencies]\n"))
-	if serviceDef.Dependencies != nil {
-		if len(serviceDef.Dependencies.Services) != 0 || len(serviceDef.Dependencies.Chains) != 0 {
-			enc.Encode(serviceDef.Dependencies)
-		}
-	}
-	writer.Write([]byte("\n[maintainer]\n"))
-	enc.Encode(serviceDef.Maintainer)
-	writer.Write([]byte("\n[location]\n"))
-	enc.Encode(serviceDef.Location)
-	writer.Write([]byte("dockerfile = \"\"\n"))
-	writer.Write([]byte("repository = \"\"\n"))
-	writer.Write([]byte("website = \"\"\n"))
-}
-
-func exportFile(servName string) (string, error) {
-	return util.SendToIPFS(FindServiceDefinitionFile(servName), "", "")
 }
 
 func parseKnown(name string) bool {

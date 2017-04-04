@@ -28,7 +28,7 @@ image.`,
 }
 
 func buildServicesCommand() {
-	Services.AddCommand(servicesMake)
+	//Services.AddCommand(servicesMake)
 	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
@@ -38,7 +38,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
-	Services.AddCommand(servicesRename)
 	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
 	Services.AddCommand(servicesCat)
@@ -75,6 +74,7 @@ $ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.
 $ eris services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
 }
 
+/*
 var servicesMake = &cobra.Command{
 	Use:   "make NAME IMAGE",
 	Short: "create a new service",
@@ -85,7 +85,7 @@ docker format of [repository/organization/image].`,
 	Example: "$ eris services make eth eris/eth\n" +
 		"$ eris services make mint tutum.co/tendermint/tendermint",
 	Run: MakeService,
-}
+}*/
 
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
@@ -177,13 +177,6 @@ var servicesStop = &cobra.Command{
 	Short: "stop a running service",
 	Long:  `stop a service which is currently running`,
 	Run:   KillService,
-}
-
-var servicesRename = &cobra.Command{
-	Use:   "rename OLD_NAME NEW_NAME",
-	Short: "rename an installed service",
-	Long:  `rename an installed service`,
-	Run:   RenameService,
 }
 
 var servicesUpdate = &cobra.Command{
@@ -304,24 +297,18 @@ func KillService(cmd *cobra.Command, args []string) {
 	util.IfExit(services.KillService(do))
 }
 
+/*
 func MakeService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = []string{args[1]}
 	util.IfExit(services.MakeService(do))
-}
+}*/
 
 func EditService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	util.IfExit(services.EditService(do))
-}
-
-func RenameService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.NewName = args[1]
-	util.IfExit(services.RenameService(do))
 }
 
 func InspectService(cmd *cobra.Command, args []string) {

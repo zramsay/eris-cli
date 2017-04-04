@@ -250,58 +250,6 @@ func TestMakeService(t *testing.T) {
 
 }
 
-func TestRenameService(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	start(t, "keys", false)
-	if !util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service running")
-	}
-	if !util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container exists")
-	}
-
-	do := definitions.NowDo()
-	do.Name = "keys"
-	do.NewName = "syek"
-	if err := RenameService(do); err != nil {
-		t.Fatalf("expected service to be renamed, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service not running")
-	}
-	if util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container doesn't exist")
-	}
-	if !util.Running(definitions.TypeService, "syek") {
-		t.Fatalf("expecting syek service running")
-	}
-	if !util.Exists(definitions.TypeData, "syek") {
-		t.Fatalf("expecting keys data container exists")
-	}
-
-	do = definitions.NowDo()
-	do.Name = "syek"
-	do.NewName = "keys"
-	if err := RenameService(do); err != nil {
-		t.Fatalf("expected service to be renamed back, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, "syek") {
-		t.Fatalf("expecting syek service not running")
-	}
-	if util.Exists(definitions.TypeData, "syek") {
-		t.Fatalf("expecting syek data container doesn't exist")
-	}
-	if !util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service running")
-	}
-	if !util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container exists")
-	}
-}
-
 func TestCatService(t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = servName

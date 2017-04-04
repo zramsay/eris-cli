@@ -38,7 +38,6 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	Chains.AddCommand(chainsNew)
 	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsCurrent)
@@ -159,18 +158,6 @@ To "uncheckout" a chain use [eris chains checkout] without arguments.`,
 	Run: CurrentChain,
 }
 
-var chainsNew = &cobra.Command{
-	Use:   "new NAME",
-	Short: "initialize a new chain",
-	Long: `initialize a new chain
-
-This command has been replaced by [eris chains start --init-dir].
-
-Please update any scripts that rely on [eris chains new].`,
-	Deprecated: "it has been replaced by [eris chains start NAME --init-dir]",
-	Run:        StartChain,
-}
-
 var chainsStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start an existing chain or initialize a new one",
@@ -289,13 +276,6 @@ func addChainsFlags() {
 	// the development and poc phase, but must be deprecated even in that
 	// case.
 	chainsMake.PersistentFlags().BoolVarP(&do.Unsafe, "unsafe", "", false, "require explicit confirmation to write private keys from eris-keys to host during make in accounts.json")
-
-	chainsNew.PersistentFlags().StringVarP(&do.Path, "dir", "", "", "a directory whose contents should be copied into the chain's main dir")
-	buildFlag(chainsNew, do, "publish", "chain")
-	buildFlag(chainsNew, do, "ports", "chain")
-	buildFlag(chainsNew, do, "env", "chain")
-	buildFlag(chainsNew, do, "links", "chain")
-	chainsNew.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")

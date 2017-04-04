@@ -149,30 +149,30 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 
 func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {
 	var err error
-	accountT.Number, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.Number, reader)
-	log.WithField("=>", accountT.Number).Debug("What the marmots heard")
+	accountT.DefaultNumber, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.DefaultNumber, reader)
+	log.WithField("=>", accountT.DefaultNumber).Debug("What the marmots heard")
 	if err != nil {
 		return err
 	}
 
-	if tokenIze && accountT.Number > 0 {
-		accountT.Tokens, err = util.GetIntResponse(AccountTypeTokens(accountT), accountT.Tokens, reader)
-		log.WithField("=>", accountT.Tokens).Debug("What the marmots heard")
+	if tokenIze && accountT.DefaultNumber > 0 {
+		accountT.DefaultTokens, err = util.GetIntResponse(AccountTypeTokens(accountT), accountT.DefaultTokens, reader)
+		log.WithField("=>", accountT.DefaultTokens).Debug("What the marmots heard")
 		if err != nil {
 			return err
 		}
 	}
 
-	if accountT.Perms["bond"] == 1 && accountT.Number > 0 {
-		accountT.ToBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.ToBond, reader)
-		log.WithField("=>", accountT.ToBond).Debug("What the marmots heard")
+	if accountT.Perms["bond"] == 1 && accountT.DefaultNumber > 0 {
+		accountT.DefaultBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.DefaultBond, reader)
+		log.WithField("=>", accountT.DefaultBond).Debug("What the marmots heard")
 		if err != nil {
 			return err
 		}
 	} else {
-		log.Info("Setting accountType.ToBond to 0")
+		log.Info("Setting accountType.DefaultBond to 0")
 		log.WithField("=>", accountT.Name).Debug("No bond permissions")
-		accountT.ToBond = 0
+		accountT.DefaultBond = 0
 	}
 
 	return nil
@@ -184,17 +184,17 @@ func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator in
 	thisActT.Name = fmt.Sprintf("%s_%02d", "manual", iterator)
 	iterator++
 
-	thisActT.Number, err = util.GetIntResponse(AccountTypeManualIntro(), 1, reader)
+	thisActT.DefaultNumber, err = util.GetIntResponse(AccountTypeManualIntro(), 1, reader)
 	if err != nil {
 		return nil, err
 	}
 
-	thisActT.Tokens, err = util.GetIntResponse(AccountTypeManualTokens(), 0, reader)
+	thisActT.DefaultTokens, err = util.GetIntResponse(AccountTypeManualTokens(), 0, reader)
 	if err != nil {
 		return nil, err
 	}
 
-	thisActT.ToBond, err = util.GetIntResponse(AccountTypeManualToBond(), 0, reader)
+	thisActT.DefaultBond, err = util.GetIntResponse(AccountTypeManualToBond(), 0, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -259,15 +259,15 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
 				var err error
-				thisActT.Number, err = strconv.Atoi(num)
+				thisActT.DefaultNumber, err = strconv.Atoi(num)
 				if err != nil {
 					return err
 				}
-				thisActT.Tokens, err = strconv.Atoi(tokens)
+				thisActT.DefaultTokens, err = strconv.Atoi(tokens)
 				if err != nil {
 					return err
 				}
-				thisActT.ToBond, err = strconv.Atoi(toBond)
+				thisActT.DefaultBond, err = strconv.Atoi(toBond)
 				if err != nil {
 					return err
 				}
@@ -283,9 +283,9 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 				thisActT.Perms = permsPrime
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
-					"tokens": thisActT.Tokens,
-					"toBond": thisActT.ToBond,
+					"number": thisActT.DefaultNumber,
+					"tokens": thisActT.DefaultTokens,
+					"toBond": thisActT.DefaultBond,
 					"perms":  thisActT.Perms,
 				}).Debug("Setting Account Type Number")
 			}
@@ -317,10 +317,10 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
-				thisActT.Number = num
+				thisActT.DefaultNumber = num
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
+					"number": thisActT.DefaultNumber,
 				}).Debug("Setting Account Type Number")
 			}
 		}
@@ -347,10 +347,10 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 			// seems to lower case this for some odd reason.
 			// TODO: see if burntsushi's toml renderer will handle this better in the future
 			if thisActT.Name == strings.Title(act) {
-				thisActT.Number = num
+				thisActT.DefaultNumber = num
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
+					"number": thisActT.DefaultNumber,
 				}).Debug("Setting Account Type Number")
 			}
 		}
@@ -360,6 +360,6 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 
 func clearDefaultNumbers(accountT []*definitions.ErisDBAccountType) {
 	for _, acctT := range accountT {
-		acctT.Number = 0
+		acctT.DefaultNumber = 0
 	}
 }

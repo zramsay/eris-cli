@@ -8,6 +8,10 @@ title: "Deprecated | How To Make A Service"
 
 ## Introduction
 
+<div class="note">
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about Docker and Eris later.
 
 ## Copy Over Your Previous `idi` Application
@@ -132,16 +136,16 @@ eris chains ls
 
 If your simplechain is running, then you're chain is on, please skip to the last step in this `Quick Test` section.
 
-If your simplechain is present but not running, then just start it with:
+If your simplechain is present but not running, then start it with:
 
 ```bash
 eris chains start simplechain
 ```
 
-If your simplechain is not present, then just start it with:
+If your simplechain is not present, then start it with:
 
 ```bash
-eris chains new simplechain --dir simplechain
+eris chains start simplechain --init-dir ~/.eris/chains/simplechain/simplechain_full_000
 ```
 
 As usual, `eris` is a quiet tool. Let's make sure our chain is running:

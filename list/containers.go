@@ -20,8 +20,8 @@ import (
 
 const (
 	// `eris ls` format.
-	standardTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER"
-	standardTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}"
+	standardTmplHeader = "{{toupper .}}\tON\tVERSION"
+	standardTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{img .Info.Config.Image}}"
 
 	// `eris ls -a` format.
 	extendedTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER\tIMAGE\tCOMMAND\tPORTS"
@@ -71,6 +71,16 @@ var (
 		// Pretty-format Docker ports.
 		"ports": func(container *docker.Container) string {
 			return util.FormulatePortsOutput(container)
+		},
+		"img": func(image string) string {
+			tag := strings.Split(image, ":")
+			if len(tag) == 2 {
+				return tag[1]
+			} else if len(tag) == 1 {
+				return "latest"
+			} else {
+				return "unknown"
+			}
 		},
 	}
 )

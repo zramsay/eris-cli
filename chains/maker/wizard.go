@@ -46,7 +46,7 @@ Who Should Get These?:
 
 %s
 
-How many keys do you want in the %s Group? (%d) `, account.Name, account.Definition, account.TypicalUser, account.Name, account.Number)
+How many keys do you want in the %s Group? (%d) `, account.Name, account.Description, account.TypicalUser, account.Name, account.DefaultNumber)
 }
 
 func AccountTypeTokens(account *definitions.ErisDBAccountType) string {

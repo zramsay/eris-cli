@@ -15,10 +15,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/eris-ltd/eris/config"
+	"github.com/eris-ltd/eris/definitions"
+	"github.com/eris-ltd/eris/log"
+	"github.com/eris-ltd/eris/util"
+	"github.com/eris-ltd/eris/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
@@ -1066,7 +1067,7 @@ func configureVolumesFromContainer(ops *definitions.Operation, service *definiti
 	opts := docker.CreateContainerOptions{
 		Name: util.UniqueName("interactive"),
 		Config: &docker.Config{
-			Image:           path.Join(config.Global.DefaultRegistry, config.Global.ImageData),
+			Image:           path.Join(version.DefaultRegistry, version.ImageData),
 			User:            "root",
 			WorkingDir:      config.ErisContainerRoot,
 			AttachStdout:    true,
@@ -1112,7 +1113,7 @@ func configureDataContainer(srv *definitions.Service, ops *definitions.Operation
 	//   that base image will not be present. in such cases use
 	//   the base eris data container.
 	if srv.Image == "" {
-		srv.Image = path.Join(config.Global.DefaultRegistry, config.Global.ImageData)
+		srv.Image = path.Join(version.DefaultRegistry, version.ImageData)
 	}
 
 	// Manipulate labels locally.

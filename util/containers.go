@@ -374,7 +374,7 @@ func PullImage(image string, writer io.Writer) error {
 	r, w := io.Pipe()
 	opts := docker.PullImageOptions{
 		Repository:    image,
-		Registry:      config.Global.DefaultRegistry,
+		Registry:      version.DefaultRegistry,
 		Tag:           tag,
 		OutputStream:  w,
 		RawJSONStream: true,
