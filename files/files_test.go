@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	erisDir      = filepath.Join(os.TempDir(), "eris")
-	newDir       = filepath.Join(erisDir, "addRecursively")
+	monaxDir      = filepath.Join(os.TempDir(), "monax")
+	newDir       = filepath.Join(monaxDir, "addRecursively")
 	fileInNewDir = filepath.Join(newDir, "recurse.toml")
 	content      = "test contents"
-	filename     = filepath.Join(erisDir, "test-file.toml")
+	filename     = filepath.Join(monaxDir, "test-file.toml")
 	port_to_use  = "8080"
 )
 
@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestPutFiles(t *testing.T) {
-	testutil.FakeDefinitionFile(erisDir, "test-file", content)
+	testutil.FakeDefinitionFile(monaxDir, "test-file", content)
 
 	do := definitions.NowDo()
 	do.Name = filename
@@ -90,7 +90,7 @@ func TestPutFiles(t *testing.T) {
 func TestGetFiles(t *testing.T) {
 	var (
 		hash     = "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
-		fileName = filepath.Join(erisDir, "tset file.toml")
+		fileName = filepath.Join(monaxDir, "tset file.toml")
 	)
 
 	do := definitions.NowDo()
@@ -151,7 +151,7 @@ func testGetDirectoryFromIPFS(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Hash = hash
-	do.Path = erisDir
+	do.Path = monaxDir
 
 	passed := false
 	for i := 0; i < 10; i++ { //usually needs 3-4

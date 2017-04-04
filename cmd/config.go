@@ -9,11 +9,11 @@ var Config = &cobra.Command{
 	Short: "manage configuration settings",
 	Long: `display and manage configuration settings for various components of Monax and for the platform itself
 
-The [eris config] command is only for configuring Monax:
+The [monax config] command is only for configuring Monax:
 it will not work to configure any of the blockchains, services
 or projects which are managed by Monax. To configure blockchains 
-use [eris chains config]; to configure services use [eris services config]; 
-to configure projects use [eris projects config] command.`,
+use [monax chains config]; to configure services use [monax services config]; 
+to configure projects use [monax projects config] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -29,9 +29,9 @@ var configSet = &cobra.Command{
 	Use:   "set KEY:VALUE",
 	Short: "set a config value",
 	Long: `set a config value
-NOTE: the [eris config set] command only operates on the settings 
-for the eris CLI. To set the config for a blockchain use [eris chains config]
-command, and to set the config for a service use [eris services config] 
+NOTE: the [monax config set] command only operates on the settings 
+for the monax CLI. To set the config for a blockchain use [monax chains config]
+command, and to set the config for a service use [monax services config] 
 command.`,
 	Run: func(cmd *cobra.Command, args []string) {},
 }

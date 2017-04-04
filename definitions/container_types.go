@@ -1,7 +1,7 @@
 package definitions
 
 const (
-	Namespace = "eris"
+	Namespace = "monax"
 
 	LabelMonax      = Namespace + ":" + "ERIS"
 	LabelShortName = Namespace + ":" + "NAME"

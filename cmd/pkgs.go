@@ -34,7 +34,7 @@ var packagesDo = &cobra.Command{
 	Short: "deploy or test a package of smart contracts to a chain",
 	Long: `deploy or test a package of smart contracts to a chain
 
-[eris pkgs do] will perform the required functionality included
+[monax pkgs do] will perform the required functionality included
 in a package definition file`,
 	Run: PackagesDo,
 }

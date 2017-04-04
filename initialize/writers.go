@@ -53,7 +53,7 @@ func WriteServiceDefinitionFile(name string, serviceDefinition *definitions.Serv
 	return nil
 }
 
-func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.ErisDBAccountType) error {
+func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.MonaxDBAccountType) error {
 
 	var buffer bytes.Buffer
 

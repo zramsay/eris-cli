@@ -14,29 +14,25 @@ import (
 	"github.com/monax/cli/version"
 )
 
-// The entrypoint for [eris init]
+// The entrypoint for [monax init]
 // - Is required to be run after every version upgrade
 // - Writes some default service & chain definition files
 // - Pulls the required docker images
-// - Write the ~/.eris/eris.toml file.
+// - Write the ~/.monax/monax.toml file.
 func Initialize(do *definitions.Do) error {
 	newDir, err := checkThenInitMonaxRoot()
 	if err != nil {
 		return err
 	}
 
-	if err := overwriteMonaxToml(); err != nil {
-		return err
-	}
-
-	// If this is the first installation of eris, skip these checks.
+	// If this is the first installation of monax, skip these checks.
 	if !newDir {
 
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
 			return err
 		}
 
-		// Write the ~/.eris/eris.toml file.
+		// Write the ~/.monax/monax.toml file.
 		if err := config.Save(&config.Global.Settings); err != nil {
 			return err
 		}
@@ -63,8 +59,8 @@ func Initialize(do *definitions.Do) error {
 	log.Warn(`
 Directory structure initialized:
 
-+-- .eris/
-¦   +-- eris.toml
++-- .monax/
+¦   +-- monax.toml
 ¦   +-- apps/
 ¦   +-- bundles/
 ¦   +-- chains/
@@ -92,9 +88,9 @@ Consider running [docker images] to see the images that were added.`)
 Monax sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
-`, "don't send", filepath.Join(config.MonaxRoot, "eris.toml"))
+`, "don't send", filepath.Join(config.MonaxRoot, "monax.toml"))
 
-	log.Warn("The marmots have everything set up for you. Type [eris] to get started")
+	log.Warn("The marmots have everything set up for you. Type [monax] to get started")
 	return nil
 }
 
@@ -166,7 +162,7 @@ func pullDefaultImages(images []string) error {
 			if err == util.ErrImagePullTimeout {
 				return fmt.Errorf(`
 It looks like marmots are taking too long to download the necessary images...
-Please, try restarting the [eris init] command one more time now or a bit later.
+Please, try restarting the [monax init] command one more time now or a bit later.
 This is likely a network performance issue with our Docker hosting provider`)
 			}
 			return err
@@ -175,13 +171,13 @@ This is likely a network performance issue with our Docker hosting provider`)
 	return nil
 }
 
-func checkThenInitErisRoot() (bool, error) {
+func checkThenInitMonaxRoot() (bool, error) {
 	var newDir bool
 
-	if !util.DoesDirExist(config.ErisRoot) || !util.DoesDirExist(config.ServicesPath) {
+	if !util.DoesDirExist(config.MonaxRoot) || !util.DoesDirExist(config.ServicesPath) {
 		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
-		if err := config.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
+		if err := config.InitMonaxDir(); err != nil {
+			return true, fmt.Errorf("Could not initialize Monax root directory: %v", err)
 
 		}
 		newDir = true

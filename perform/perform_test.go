@@ -1698,7 +1698,7 @@ func testLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(bufErr.String(), "Starting eris-keys") {
+	if !strings.Contains(bufErr.String(), "Starting monax-keys") {
 		t.Fatalf("expected certain log entries, got %q", bufErr.String())
 	}
 }
@@ -1966,7 +1966,7 @@ func TestInspectField(t *testing.T) {
 		t.Fatalf("expected inspect to succeed, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "/home/eris") {
+	if !strings.Contains(buf.String(), "/home/monax") {
 		t.Fatalf("expect a certain value, got %q", buf.String())
 	}
 }
@@ -1998,7 +1998,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 		t.Fatalf("expected inspect to succeed, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "/home/eris") {
+	if !strings.Contains(buf.String(), "/home/monax") {
 		t.Fatalf("expect a certain value, got %q", buf.String())
 	}
 }

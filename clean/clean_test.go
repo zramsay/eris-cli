@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 func TestRemoveAllMonaxContainers(t *testing.T) {
 	defer util.RemoveAllMonaxContainers()
 
-	// Start a bunch of eris containers.
+	// Start a bunch of monax containers.
 	testStartService("ipfs", t)
 	testStartService("keys", t)
 
@@ -53,12 +53,12 @@ func TestRemoveAllMonaxContainers(t *testing.T) {
 	testCreateDataContainer("filthy-data1", t)
 
 	// Start some non-Monax containers.
-	notMonax0 := testCreateNotMonax("not_eris0", t)
-	notMonax1 := testCreateNotMonax("not_eris1", t)
+	notMonax0 := testCreateNotMonax("not_monax0", t)
+	notMonax1 := testCreateNotMonax("not_monax1", t)
 
 	testutil.IfExit(util.RemoveAllMonaxContainers())
 
-	// Check that both not_eris still exist and no Monax containers exist.
+	// Check that both not_monax still exist and no Monax containers exist.
 	testCheckSimple(notMonax0, t)
 	testCheckSimple(notMonax1, t)
 

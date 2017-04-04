@@ -112,7 +112,7 @@ func TestExecChain(t *testing.T) {
 	}
 
 	if dir := "chains"; !strings.Contains(buf.String(), dir) {
-		t.Fatalf("expected to find %q dir in eris root", dir)
+		t.Fatalf("expected to find %q dir in monax root", dir)
 	}
 }
 
@@ -181,7 +181,7 @@ func TestChainsNewDirGenesis(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chain)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/chains/%s/genesis.json", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, chain) {
 		t.Fatalf("expected chain_id to be equal to chain name in genesis file, got %v", out)
 	}
@@ -194,14 +194,14 @@ func TestChainsNewConfig(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/chains/%s/config.toml", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, "moniker") {
 		t.Fatalf("expected the config file to contain an expected string, got %v", out)
 	}
 }
 
 // chains start (--init-dir) should import the priv_validator.json (available in mint form)
-// into eris-keys (available in eris form) so it can be used by the rest
+// into monax-keys (available in monax form) so it can be used by the rest
 // of the platform
 func TestChainsNewKeysImported(t *testing.T) {
 	defer testutil.RemoveAllContainers()
@@ -214,14 +214,14 @@ func TestChainsNewKeysImported(t *testing.T) {
 		t.Fatalf("expecting chain running")
 	}
 
-	keysOut, err := services.ExecHandler("keys", []string{"ls", "/home/eris/.eris/keys/data"})
+	keysOut, err := services.ExecHandler("keys", []string{"ls", "/home/monax/.monax/keys/data"})
 	if err != nil {
 		t.Fatalf("expecting to list keys, got %v", err)
 	}
 
 	keysOutString0 := strings.Fields(strings.TrimSpace(keysOut.String()))[0]
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", keysOutString0, keysOutString0)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/keys/data/%s/%s", keysOutString0, keysOutString0)}
 
 	keysOut1, err := services.ExecHandler("keys", args)
 	if err != nil {

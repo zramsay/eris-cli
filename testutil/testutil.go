@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	TmpMonaxRoot = filepath.Join(os.TempDir(), "eris")
+	TmpMonaxRoot = filepath.Join(os.TempDir(), "monax")
 
 	ErrContainerExistMismatch = errors.New("container existence status check mismatch")
 	ErrContainerRunMismatch   = errors.New("container run status check mismatch")
@@ -57,7 +57,7 @@ func Init(args ...interface{}) (err error) {
 		IfExit(fmt.Errorf("Could not set global config"))
 	}
 
-	util.DockerConnect(false, "eris")
+	util.DockerConnect(false, "monax")
 
 	// Just connect.
 	if len(args) == 0 {

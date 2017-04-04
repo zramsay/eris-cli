@@ -9,18 +9,18 @@ import (
 func ChainsMakeWelcome() string {
 	return `Welcome! I'm the marmot that helps you make your chain.
 
-eris chains is your gateway to permissioned, smart contract compatible chains.
+monax chains is your gateway to permissioned, smart contract compatible chains.
 There is a bit of complexity around getting these chains set up. It is my
 marmot-y task to make this as easy as we can.
 
-First we will run through the eris chains typical account types and I'll ask
+First we will run through the monax chains typical account types and I'll ask
 you how many of each account type you would like.
 
 After that you will have an opportunity to create your own account types and
 add those groupings into the genesis.json.
 
 Remember, I'm only useful when you are making a new chain. After your chain
-is established then you can modify the permissions using other eris tooling.
+is established then you can modify the permissions using other monax tooling.
 
 Are you ready to make your own chain (y/n)? `
 }
@@ -69,7 +69,7 @@ Who Should Get These?:
 
 Don't ask us, you are the one that wanted "manual" :-)
 
-For more on eris chains permissions see here:
+For more on monax chains permissions see here:
 
 https://monax.io/platform/db
 

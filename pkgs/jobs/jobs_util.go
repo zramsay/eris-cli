@@ -18,7 +18,7 @@ func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, er
 	do.Package.Account = account.Address
 	log.WithField("=>", do.Package.Account).Info("Setting Account")
 
-	// Set the public key from eris-keys
+	// Set the public key from monax-keys
 	keyClient, err := keys.InitKeyClient()
 	if err != nil {
 		return util.KeysErrorHandler(do, err)

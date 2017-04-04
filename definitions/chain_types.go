@@ -7,7 +7,7 @@ type ChainType struct {
 
 	// currently unused
 	ConsensusEngine    map[string]string `mapstructure:"tendermint" json:"tendermint" yaml:"tendermint" toml:"tendermint"`
-	ApplicationManager map[string]string `mapstructure:"erismint" json:"erismint" yaml:"erismint" toml:"erismint"`
+	ApplicationManager map[string]string `mapstructure:"monaxmint" json:"monaxmint" yaml:"monaxmint" toml:"monaxmint"`
 	Messenger          map[string]string `mapstructure:"servers" json:"servers" yaml:"servers" toml:"servers"`
 }
 

@@ -369,7 +369,7 @@ Verbose = true
 `)
 	defer removeMonaxDir()
 
-	config, err := LoadViper(configMonaxDir, "eris")
+	config, err := LoadViper(configMonaxDir, "monax")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -398,7 +398,7 @@ func TestLoadViperEmpty(t *testing.T) {
 	placeSettings(``)
 	defer removeMonaxDir()
 
-	config, err := LoadViper(configMonaxDir, "eris")
+	config, err := LoadViper(configMonaxDir, "monax")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -427,14 +427,14 @@ func TestLoadViperBad(t *testing.T) {
 	placeSettings(`*`)
 	defer removeMonaxDir()
 
-	_, err := LoadViper(configMonaxDir, "eris")
+	_, err := LoadViper(configMonaxDir, "monax")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperNonExistent1(t *testing.T) {
-	_, err := LoadViper(configMonaxDir, "eris")
+	_, err := LoadViper(configMonaxDir, "monax")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
@@ -462,7 +462,7 @@ func TestSave(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	filename := filepath.Join(configMonaxDir, "eris.toml")
+	filename := filepath.Join(configMonaxDir, "monax.toml")
 	expected := `IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
@@ -506,7 +506,7 @@ func TestSaveNil(t *testing.T) {
 
 func placeSettings(definition string) {
 	os.MkdirAll(configMonaxDir, 0755)
-	fakeDefinitionFile(configMonaxDir, "eris", definition)
+	fakeDefinitionFile(configMonaxDir, "monax", definition)
 }
 
 func removeMonaxDir() {

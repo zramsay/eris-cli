@@ -22,7 +22,7 @@ const dmVerMin = version.DM_VER_MIN
 
 // Defining the root command
 var MonaxCmd = &cobra.Command{
-	Use:   "eris COMMAND [FLAG ...]",
+	Use:   "monax COMMAND [FLAG ...]",
 	Short: "The Ecosystem Application Platform",
 	Long: `Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
@@ -147,7 +147,7 @@ var do *definitions.Do
 func AddGlobalFlags() {
 	MonaxCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	MonaxCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
-	MonaxCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "eris", "machine name for docker-machine that is running VM")
+	MonaxCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "monax", "machine name for docker-machine that is running VM")
 }
 
 func InitializeConfig() {

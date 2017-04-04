@@ -93,7 +93,7 @@ Validator = 2000
 
 [servers]
 
-[erismint]
+[monaxmint]
 
 [tendermint]`
 

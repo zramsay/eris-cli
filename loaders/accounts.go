@@ -50,16 +50,16 @@ func LoadAccountType(fileName string) (*definitions.MonaxDBAccountType, error) {
 // returns a list of filenames which are the account_types files
 // these *should be* absolute paths, but this is not a contract
 // with calling functions.
-func AccountTypes(erisPath string) ([]string, error) {
-	haveTyps, err := filepath.Glob(filepath.Join(erisPath, "*.toml"))
+func AccountTypes(monaxPath string) ([]string, error) {
+	haveTyps, err := filepath.Glob(filepath.Join(monaxPath, "*.toml"))
 	if err != nil {
 		return []string{}, err
 	}
 	return haveTyps, nil
 }
 
-func AccountTypesNames(erisPath string, withExt bool) ([]string, error) {
-	files, err := AccountTypes(erisPath)
+func AccountTypesNames(monaxPath string, withExt bool) ([]string, error) {
+	files, err := AccountTypes(monaxPath)
 	if err != nil {
 		return []string{}, err
 	}

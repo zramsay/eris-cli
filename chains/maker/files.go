@@ -17,7 +17,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// XXX: this is temporary until eris-keys.js is more tightly integrated with eris-contracts.js
+// XXX: this is temporary until monax-keys.js is more tightly integrated with monax-contracts.js
 type accountInfo struct {
 	Address string `mapstructure:"address" json:"address" yaml:"address" toml:"address"`
 	PubKey  string `mapstructure:"pubKey" json:"pubKey" yaml:"pubKey" toml:"pubKey"`
@@ -26,7 +26,7 @@ type accountInfo struct {
 
 func SaveAccountResults(do *definitions.Do, accounts []*MonaxDBAccountConstructor) error {
 	// Log a warning to users for the new behaviour:
-	// if asked to output the accounts with do.Output, and `eris chains make --unsafe` is not
+	// if asked to output the accounts with do.Output, and `monax chains make --unsafe` is not
 	// provided with the unsafe flag, then we no longer write the private keys in `accounts.json`
 	if !do.Unsafe {
 		log.Warn("The marmots care about your safety and no longer export the generated private keys onto your local host. " +

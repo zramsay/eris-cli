@@ -60,7 +60,7 @@ func TestExecData(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
+	do.Operations.Args = []string{"mv", "/home/monax/.monax/test", "/home/monax/.monax/tset"}
 	do.Operations.Interactive = false
 
 	log.WithFields(log.Fields{

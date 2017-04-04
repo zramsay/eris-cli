@@ -162,11 +162,11 @@ func DataContainerName(name string) string {
 func MonaxContainers(filter func(name string, details *Details) bool, running bool) []string {
 	log.WithField("running", running).Info("Discovering Monax containers")
 
-	var erisContainers []string
+	var monaxContainers []string
 
 	containers, err := DockerClient.ListContainers(docker.ListContainersOptions{All: !running})
 	if err != nil {
-		return erisContainers
+		return monaxContainers
 	}
 
 	for _, c := range containers {
@@ -194,7 +194,7 @@ func MonaxContainers(filter func(name string, details *Details) bool, running bo
 			continue
 		}
 
-		erisContainers = append(erisContainers, name)
+		monaxContainers = append(monaxContainers, name)
 	}
 
 	// Initialized cache means that it contains information
@@ -202,7 +202,7 @@ func MonaxContainers(filter func(name string, details *Details) bool, running bo
 	if running == false {
 		containerCache.initialized = true
 	}
-	return erisContainers
+	return monaxContainers
 }
 
 // MonaxContainersByType generates a list of container details for a given
@@ -213,11 +213,11 @@ func MonaxContainersByType(t string, running bool) []*Details {
 		"type":    t,
 	}).Info("Discovering Monax containers")
 
-	var erisContainers []*Details
+	var monaxContainers []*Details
 
 	containers, err := DockerClient.ListContainers(docker.ListContainersOptions{All: !running})
 	if err != nil {
-		return erisContainers
+		return monaxContainers
 	}
 
 	for _, c := range containers {
@@ -244,10 +244,10 @@ func MonaxContainersByType(t string, running bool) []*Details {
 			Type:      details.Labels[definitions.LabelType],
 		}] = name
 
-		erisContainers = append(erisContainers, details)
+		monaxContainers = append(monaxContainers, details)
 	}
 
-	return erisContainers
+	return monaxContainers
 }
 
 // IsService returns true if the service container specified by its short name
@@ -386,7 +386,7 @@ func PullImage(image string, writer io.Writer) error {
 
 	timeoutDuration, err := time.ParseDuration(config.Global.ImagesPullTimeout)
 	if err != nil {
-		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.Global.ImagesPullTimeout)
+		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in monax.toml. Aborting`, config.Global.ImagesPullTimeout)
 	}
 
 	ch := make(chan error)

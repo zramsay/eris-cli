@@ -33,13 +33,13 @@ type MonaxDBAccountConstructor struct {
 	// temporarily preserve the behaviour that the private keys of a *development*
 	// chain can be written to the host
 	// NOTE: [ben] because this is bad practice, it now requires explicit
-	// flag `eris chains make --unsafe` (unsafe bool in signatures below)
+	// flag `monax chains make --unsafe` (unsafe bool in signatures below)
 	untypedPrivateKeyBytes []byte
 }
 
 // MakeAccounts specifies the chaintype and chain name and creates the constructors for generating
 // configuration, genesis and private validator files (the latter if required - for development purposes)
-// NOTE: [ben] if unsafe is set to true the private keys will be extracted from eris-keys and be written
+// NOTE: [ben] if unsafe is set to true the private keys will be extracted from monax-keys and be written
 // into accounts.json. This will be deprecated in v0.17
 func MakeAccounts(name, chainType string, accountTypes []*definitions.MonaxDBAccountType, unsafe bool) ([]*MonaxDBAccountConstructor, error) {
 
@@ -90,7 +90,7 @@ func newMonaxDBAccountConstructor(accountName string, keyAddressType string,
 
 	var err error
 	isValidator := (accountType.DefaultBond > 0 && accountType.DefaultTokens >= accountType.DefaultBond)
-	accountConstructor := &ErisDBAccountConstructor{}
+	accountConstructor := &MonaxDBAccountConstructor{}
 	var genesisPrivateValidator *genesis.GenesisPrivateValidator
 	permissions := &ptypes.AccountPermissions{}
 	// TODO: expose roles
@@ -111,7 +111,7 @@ func newMonaxDBAccountConstructor(accountName string, keyAddressType string,
 
 		// NOTE: [ben] these auxiliary fields in the constructor are to be deprecated
 		// but introduced to support current unsafe behaviour where all private keys
-		// are extracted from eris-keys
+		// are extracted from monax-keys
 		accountConstructor.untypedPublicKeyBytes = make([]byte, len(publicKeyBytes))
 		copy(accountConstructor.untypedPublicKeyBytes[:], publicKeyBytes[:])
 		// tendermint/go-crypto typebyte for ed25519
@@ -130,7 +130,7 @@ func newMonaxDBAccountConstructor(accountName string, keyAddressType string,
 			}
 		}
 	default:
-		// the other code paths in eris-keys are currently not tested for;
+		// the other code paths in monax-keys are currently not tested for;
 		return nil, fmt.Errorf("Currently only supported ed265519/ripemd160: unknown key type (%s)",
 			keyAddressType)
 	}
@@ -175,7 +175,7 @@ func newMonaxDBAccountConstructor(accountName string, keyAddressType string,
 }
 
 //----------------------------------------------------------------------------------------------------
-// helper functions with eris-keys
+// helper functions with monax-keys
 
 // generateAddressAndKey returns an address, public key and if requested the JSON bytes of a
 // private validator structure.
@@ -201,7 +201,7 @@ func generateAddressAndKey(keyAddressType string, blockPrivateValidator bool) (a
 				log.Error(string(privateValidatorJson))
 				return
 			}
-			// TODO: [ben] this is a hack, because the response from eris keys has a wrongly recoded
+			// TODO: [ben] this is a hack, because the response from monax keys has a wrongly recoded
 			// address that is provided as the original input; as we look to deprecate priv_validator
 			// on v0.17 this can simply be patched for now.
 			genesisPrivateValidator.Address = fmt.Sprintf("%X", address)
@@ -213,11 +213,11 @@ func generateAddressAndKey(keyAddressType string, blockPrivateValidator bool) (a
 	return
 }
 
-// ugh. TODO: further clean up eris-keys.
+// ugh. TODO: further clean up monax-keys.
 func makeKey(keyType string, blockPrivateValidator bool) (address string, publicKey string, privateValidatorJson []byte, err error) {
 	log.WithFields(log.Fields{
 		"type": keyType,
-	}).Debug("Sending Call to eris-keys server")
+	}).Debug("Sending Call to monax-keys server")
 
 	keyClient, err := keys.InitKeyClient()
 	if err != nil {

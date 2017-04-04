@@ -22,7 +22,7 @@ type Job struct {
 	Deploy *Deploy `mapstructure:"deploy" json:"deploy" yaml:"deploy" toml:"deploy"`
 	// Send tokens from one account to another
 	Send *Send `mapstructure:"send" json:"send" yaml:"send" toml:"send"`
-	// Utilize eris:db's native name registry to register a name
+	// Utilize monax:db's native name registry to register a name
 	RegisterName *RegisterName `mapstructure:"register" json:"register" yaml:"register" toml:"register"`
 	// Sends a transaction which will update the permissions of an account. Must be sent from an account which
 	// has root permissions on the blockchain (as set by either the genesis.json or in a subsequence transaction)
@@ -33,7 +33,7 @@ type Job struct {
 	Unbond *Unbond `mapstructure:"unbond" json:"unbond" yaml:"unbond" toml:"unbond"`
 	// Sends a rebond transaction
 	Rebond *Rebond `mapstructure:"rebond" json:"rebond" yaml:"rebond" toml:"rebond"`
-	// Sends a transaction to a contract. Will utilize eris-abi under the hood to perform all of the heavy lifting
+	// Sends a transaction to a contract. Will utilize monax-abi under the hood to perform all of the heavy lifting
 	Call *Call `mapstructure:"call" json:"call" yaml:"call" toml:"call"`
 	// Wrapper for mintdump dump. WIP
 	DumpState *DumpState `mapstructure:"dump-state" json:"dump-state" yaml:"dump-state" toml:"dump-state"`
@@ -43,7 +43,7 @@ type Job struct {
 	QueryContract *QueryContract `mapstructure:"query-contract" json:"query-contract" yaml:"query-contract" toml:"query-contract"`
 	// Queries information from an account.
 	QueryAccount *QueryAccount `mapstructure:"query-account" json:"query-account" yaml:"query-account" toml:"query-account"`
-	// Queries information about a name registered with eris:db's native name registry
+	// Queries information about a name registered with monax:db's native name registry
 	QueryName *QueryName `mapstructure:"query-name" json:"query-name" yaml:"query-name" toml:"query-name"`
 	// Queries information about the validator set
 	QueryVals *QueryVals `mapstructure:"query-vals" json:"query-vals" yaml:"query-vals" toml:"query-vals"`

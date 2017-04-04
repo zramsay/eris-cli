@@ -20,18 +20,18 @@ var Data = &cobra.Command{
 	Long: `the data subcommand is used to import, and export
 data into containers for use by your application
 
-The [eris data import] and [eris data export] commands should be
+The [monax data import] and [monax data export] commands should be
 thought of from the point of view of the container.
 
-The [eris data import] command sends a directory *as is* from
+The [monax data import] command sends a directory *as is* from
 SRC on the host to an existing DEST inside of the data container.
 
-The [eris data export] command performs this process in the reverse.
+The [monax data export] command performs this process in the reverse.
 It sucks out whatever is in the SRC directory in the data container
 and sticks it back into a DEST directory on the host.
 
 Notes:
-- container paths enter at /home/eris/.eris
+- container paths enter at /home/monax/.monax
 - import host path must be absolute, export host path is indifferent
 
 At Monax, we use this functionality to formulate little JSONs
@@ -56,7 +56,7 @@ var dataImport = &cobra.Command{
 	Short: "import from a host folder to a named data container's directory",
 	Long: `import from a host folder to a named data container's directory
 Requires src and dest for each host and container, respectively.
-Container path enters at /home/eris/.eris and destination directory
+Container path enters at /home/monax/.monax and destination directory
 will be created in container if it does not exist.
 
 Command will also create a new data container if data container
@@ -69,13 +69,13 @@ var dataExport = &cobra.Command{
 	Short: "export a named data container's directory to a host directory",
 	Long: `export a named data container's directory to a host directory
 Requires src and dest for each container and host, respectively.
-Container path enters at /home/eris/.eris`,
+Container path enters at /home/monax/.monax`,
 	Run: ExportData,
 }
 
 var dataList = &cobra.Command{
 	Use:   "ls",
-	Short: "list the data containers eris manages for you",
+	Short: "list the data containers monax manages for you",
 	Long: `list data containers.
 
 The --json flag dumps the container or known files information
@@ -83,11 +83,11 @@ in the JSON format.
 
 The -f flag specifies an alternate format for the list, using the syntax
 of Go text templates. See the more detailed description in the help
-output for the [eris ls] command.`,
+output for the [monax ls] command.`,
 	Run: ListData,
-	Example: `$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{index .Labels "eris:SERVICE"}}' -- show data container image and owner service name
-$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}' -- show data container volumes and mounts
-$ eris data ls -f '{{.ShortName}}\t{{.Info.Config.Env}}' -- container environment`,
+	Example: `$ monax data ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{index .Labels "monax:SERVICE"}}' -- show data container image and owner service name
+$ monax data ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}' -- show data container volumes and mounts
+$ monax data ls -f '{{.ShortName}}\t{{.Info.Config.Env}}' -- container environment`,
 }
 
 var dataExec = &cobra.Command{
@@ -109,9 +109,9 @@ Exec can also be used as an interactive shell. When put in
 this mode, you can "get inside of" your containers. You will
 have root access to a throwaway container which has the volumes
 of the data container mounted to it.`,
-	Example: `$ eris data exec name ls /home/eris/.eris -- will list the eris dir
-$ eris data exec name "ls -la /home/eris/.eris" -- will pass flags to the ls command
-$ eris data exec --interactive name -- will start interactive console`,
+	Example: `$ monax data exec name ls /home/monax/.monax -- will list the monax dir
+$ monax data exec name "ls -la /home/monax/.monax" -- will pass flags to the ls command
+$ monax data exec --interactive name -- will start interactive console`,
 	Run: ExecData,
 }
 

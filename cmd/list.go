@@ -9,7 +9,7 @@ import (
 
 var List = &cobra.Command{
 	Use:   "ls",
-	Short: "list all the things eris knows about",
+	Short: "list all the things monax knows about",
 	Long: `list all Monax service, chain, and data containers
 
 The default output shows containers in three sections. The -a flag
@@ -35,11 +35,11 @@ The struct being passed to the template is:
   }
 
 The full list of available fields can be observed by issuing
-the [eris ls --json] command.
+the [monax ls --json] command.
 
-The default [eris ls] output is equivalent to this custom format:
+The default [monax ls] output is equivalent to this custom format:
 
-  {{.ShortName}}\t{{asterisk .Info.State.Running}}\t
+  {{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t
   {{short .Info.ID}}\t{{short (dependent .ShortName)}}
 
 The are a few helper functions available to prefix the fields with:
@@ -48,12 +48,12 @@ The are a few helper functions available to prefix the fields with:
   toupper     make the value upper case
   ports       prettify exposed container ports (used as {{ports .Info}})
   short       shorten the container ID (or any other value) to 10 symbols
-  asterisk    show the '*' symbol if the value is true, '-' otherwise
+  astmonaxk    show the '*' symbol if the value is true, '-' otherwise
   dependent   find a dependent data container for the given service or chain
 `,
-	Example: `$ eris ls -rf '{{.ShortName}}, {{.Type}}, {{ports .Info}}'
-$ eris ls  -f '{{.ShortName}}\t{{.Type}}\t{{.Info.NetworkSettings.IPAddress}}'
-$ eris ls  -f '{{.ShortName}}\t{{.Info.Config.Env}}'`,
+	Example: `$ monax ls -rf '{{.ShortName}}, {{.Type}}, {{ports .Info}}'
+$ monax ls  -f '{{.ShortName}}\t{{.Type}}\t{{.Info.NetworkSettings.IPAddress}}'
+$ monax ls  -f '{{.ShortName}}\t{{.Info.Config.Env}}'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ListAll()
 	},

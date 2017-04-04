@@ -18,7 +18,7 @@ var (
 	MonaxGo            = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to keep
 	MonaxGH            = "https://github.com/monax/"
 	MonaxRoot          = ResolveMonaxRoot()
-	MonaxContainerRoot = "/home/eris/.eris"
+	MonaxContainerRoot = "/home/monax/.monax"
 
 	// Major directories.
 	AppsPath     = filepath.Join(MonaxRoot, "apps")
@@ -47,7 +47,7 @@ var (
 	SerpScratchPath      = filepath.Join(LanguagesScratchPath, "ser")
 )
 
-// DirsToMigrate is used by the `eris init` command to check
+// DirsToMigrate is used by the `monax init` command to check
 // if old dirs exist to migrate them.
 var DirsToMigrate = map[string]string{}
 
@@ -65,13 +65,13 @@ func HomeDir() string {
 }
 
 // ChangeMonaxRoot points the root of the Monax settings hierarchy
-// to the erisDir location.
-func ChangeMonaxRoot(erisDir string) {
+// to the monaxDir location.
+func ChangeMonaxRoot(monaxDir string) {
 	if os.Getenv("TESTING") == "true" {
 		return
 	}
 
-	MonaxRoot = erisDir
+	MonaxRoot = monaxDir
 
 	// Major directories.
 	AppsPath = filepath.Join(MonaxRoot, "apps")     // previously "dapps"
@@ -90,9 +90,9 @@ func ChangeMonaxRoot(erisDir string) {
 	KeysDataPath = filepath.Join(KeysPath, "data")
 	KeysNamesPath = filepath.Join(KeysPath, "names")
 
-	// Scratch Directories (basically eris' cache) (globally coordinated)
+	// Scratch Directories (basically monax' cache) (globally coordinated)
 	DataContainersPath = filepath.Join(ScratchPath, "data")
-	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.eris/languages"
+	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.monax/languages"
 }
 
 func AbsolutePath(Datadir string, filename string) string {
@@ -113,23 +113,23 @@ func InitDataDir(Datadir string) error {
 	return nil
 }
 
-// TODO: [csk] give this a default string if folks want it somewhere besides ~/.eris ...?
+// TODO: [csk] give this a default string if folks want it somewhere besides ~/.monax ...?
 func ResolveMonaxRoot() string {
-	var eris string
+	var monax string
 	if os.Getenv("ERIS") != "" {
-		eris = os.Getenv("ERIS")
+		monax = os.Getenv("ERIS")
 	} else {
 		if runtime.GOOS == "windows" {
 			home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 			if home == "" {
 				home = os.Getenv("USERPROFILE")
 			}
-			eris = filepath.Join(home, ".eris")
+			monax = filepath.Join(home, ".monax")
 		} else {
-			eris = filepath.Join(HomeDir(), ".eris")
+			monax = filepath.Join(HomeDir(), ".monax")
 		}
 	}
-	return eris
+	return monax
 }
 
 // InitMonaxDir creates an Monax directory hierarchy under MonaxRoot dir.
@@ -187,7 +187,7 @@ func Copy(src, dst string) error {
 		return err
 	}
 	if f.IsDir() {
-		tmpDir, err := ioutil.TempDir(os.TempDir(), "eris_copy")
+		tmpDir, err := ioutil.TempDir(os.TempDir(), "monax_copy")
 		if err != nil {
 			return err
 		}

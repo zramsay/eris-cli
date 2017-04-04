@@ -275,7 +275,7 @@ image          = "test image"
 
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
-		// [pv]: not "test image", but erisdb image. A bug?
+		// [pv]: not "test image", but monaxdb image. A bug?
 		{`Service.Image`, s.Service.Image, path.Join(version.DefaultRegistry, version.ImageDB)},
 		{`Service.Environment`, s.Service.Environment, []string{chainID, chainName}},
 	} {
@@ -313,7 +313,7 @@ func TestLoadPackageSimple(t *testing.T) {
 		name = "test"
 
 		definition = `
-[eris]
+[monax]
 name       = "` + name + `"
 package_id = "` + name + `"
 chain_name = "test chain"
@@ -348,7 +348,7 @@ func TestLoadPackageDirectoryAndSpacesInAName(t *testing.T) {
 		definition = `
 name       = "` + name + `"
 
-[eris]
+[monax]
 name       = "` + name + `"
 package_id = "` + name + `"
 chain_name = "test chain"
@@ -401,7 +401,7 @@ func TestLoadPackageNotFound2(t *testing.T) {
 	}
 
 	for _, entry := range []ab{
-		{`Name`, d.Name, "eris"},
+		{`Name`, d.Name, "monax"},
 		{`PackageID`, d.PackageID, ""},
 		{`ChainName`, d.ChainName, ""},
 	} {
@@ -424,7 +424,7 @@ func TestLoadPackageNotFound3(t *testing.T) {
 	}
 
 	for _, entry := range []ab{
-		{`Name`, d.Name, "eris"},
+		{`Name`, d.Name, "monax"},
 		{`PackageID`, d.PackageID, ""},
 		{`ChainName`, d.ChainName, name},
 	} {
@@ -439,7 +439,7 @@ func TestLoadPackageBadFormat(t *testing.T) {
 		name = "test"
 
 		definition = `
-[eris]
+[monax]
 name       = [ "keys"]
 `
 	)

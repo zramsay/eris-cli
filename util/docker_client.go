@@ -28,7 +28,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 	var dockerCertPath string
 
 	// This means we aren't gonna use docker-machine (kind of).
-	if (machName == "eris" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
+	if (machName == "monax" || machName == "default") && (os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "") {
 		//if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 		endpoint := "unix:///var/run/docker.sock"
 
@@ -50,7 +50,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug("Getting connection details from environment")
 		log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
 
-		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "eris" by default
+		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "monax" by default
 		if err != nil {
 			log.Debug("Could not connect to Monax Docker Machine")
 			log.Errorf("Trying %q Docker Machine: %v", "default", err)
@@ -62,7 +62,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 				if e2 := CheckDockerClient(); e2 != nil {
 					IfExit(DockerError(e2))
 				}
-				dockerHost, dockerCertPath, _ = getMachineDeets("eris")
+				dockerHost, dockerCertPath, _ = getMachineDeets("monax")
 			}
 		}
 
@@ -108,7 +108,7 @@ func CheckDockerClient() error {
 				log.WithField("driver", driver).Info("New Docker Machine created")
 				log.Info("Getting proper environment variables")
 
-				if _, _, err := getMachineDeets("eris"); err != nil {
+				if _, _, err := getMachineDeets("monax"); err != nil {
 					return err
 				}
 			} else {
@@ -117,7 +117,7 @@ func CheckDockerClient() error {
 
 		} else {
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
-			fmt.Println("Our marmots recommend that you have a VM dedicated to eris dev-ing")
+			fmt.Println("Our marmots recommend that you have a VM dedicated to monax dev-ing")
 			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
 				log.Warn("The marmots will create an Monax machine")
 				if err := setupMonaxMachine(driver); err != nil {
@@ -126,7 +126,7 @@ func CheckDockerClient() error {
 
 				log.WithField("driver", driver).Info("New Docker Machine created")
 				log.Info("Getting proper environment variables")
-				if _, _, err := getMachineDeets("eris"); err != nil {
+				if _, _, err := getMachineDeets("monax"); err != nil {
 					return err
 				}
 			}
@@ -145,7 +145,7 @@ func getMachineDeets(machName string) (string, string, error) {
 	noConnectError := fmt.Errorf("Could not evaluate the env vars for the %s docker-machine.\n", machName)
 	dHost, dPath := popHostAndPath()
 
-	if (dHost != "" && dPath != "") && (machName == "eris" || machName == "default") {
+	if (dHost != "" && dPath != "") && (machName == "monax" || machName == "default") {
 		return dHost, dPath, nil
 	}
 
@@ -285,7 +285,7 @@ func CompareVersions(version1, version2 string) bool {
 
 func setupMonaxMachine(driver string) error {
 	cmd := "docker-machine"
-	args := []string{"status", "eris"}
+	args := []string{"status", "monax"}
 	if err := exec.Command(cmd, args...).Run(); err == nil {
 		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
 		log.Debug("Monax Docker Machine exists. Starting")
@@ -301,7 +301,7 @@ func createMonaxMachine(driver string) error {
 	log.Warn("This will take some time, please feel free to go feed your marmot")
 	log.WithField("driver", driver).Debug()
 	cmd := "docker-machine"
-	args := []string{"create", "--driver", driver, "eris"}
+	args := []string{"create", "--driver", driver, "monax"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		log.Debugf("There was an error creating the Monax Docker Machine: %v", err)
 		return mustInstallError()
@@ -314,7 +314,7 @@ func createMonaxMachine(driver string) error {
 func startMonaxMachine() error {
 	log.Info("Starting Monax Docker Machine")
 	cmd := "docker-machine"
-	args := []string{"start", "eris"}
+	args := []string{"start", "monax"}
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
 	}
@@ -367,11 +367,11 @@ If not, please visit here: https://docs.docker.com/engine/installation/`
 	if runtime.GOOS == "linux" {
 		run := `Do you have Docker running? If not, please type [sudo service docker start].
 Also check that your user is in the "docker" group. If not, you can add it
-using the [sudo usermod -a -G docker $USER] command or rerun as [sudo eris]`
+using the [sudo usermod -a -G docker $USER] command or rerun as [sudo monax]`
 
 		return fmt.Errorf("%s\n\n%s", install, run)
 	} else {
-		return fmt.Errorf("%s\n\n%s", install, "Note that [eris] does not yet support Docker For Mac/Windows. These platforms require docker-machine.")
+		return fmt.Errorf("%s\n\n%s", install, "Note that [monax] does not yet support Docker For Mac/Windows. These platforms require docker-machine.")
 	}
 	return fmt.Errorf(install)
 }

@@ -19,8 +19,8 @@ var ServiceDefinitions = []string{
 	"compilers",
 	"ipfs",
 	"keys",
-	// used by [eris chains start myChain --logrotate]
-	// but its docker image is not pulled on [eris init]
+	// used by [monax chains start myChain --logrotate]
+	// but its docker image is not pulled on [monax init]
 	"logrotate",
 }
 
@@ -122,7 +122,7 @@ Validator = {{index .AccountTypes "Validator"}}
 
 [servers]
 
-[erismint]
+[monaxmint]
 
 [tendermint]`
 
@@ -139,7 +139,7 @@ func defaultServices(service string) *definitions.ServiceDefinition {
 		serviceDefinition.Name = "keys"
 		serviceDefinition.Description = `Eris keys is meant for quick prototyping. You must replace it with a hardened key signing daemon to use in production. Eris does not intend to harden this for production, but rather will keep it as a rapid prototyping server.
 
-This service is usually linked to a chain and/or an application. Its functionality is wrapped by [eris keys].`
+This service is usually linked to a chain and/or an application. Its functionality is wrapped by [monax keys].`
 		serviceDefinition.Status = "unfit for production"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageKeys)
 		serviceDefinition.Service.AutoData = true
@@ -151,7 +151,7 @@ This service is usually linked to a chain and/or an application. Its functionali
 		serviceDefinition.Name = "compilers"
 		serviceDefinition.Description = `Monax's Solidity Compiler Server.
 
-This eris service compiles smart contract languages.`
+This monax service compiles smart contract languages.`
 		serviceDefinition.Status = "beta"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
 		serviceDefinition.Service.AutoData = true
@@ -166,7 +166,7 @@ This eris service compiles smart contract languages.`
 		serviceDefinition.Name = "ipfs"
 		serviceDefinition.Description = `IPFS is The Permanent Web: A new peer-to-peer hypermedia protocol. IPFS uses content-based addressing versus http's location-based addressing.
 
-This eris service is all but essential as part of the eris tool. The [eris files] relies upon this running service.`
+This monax service is all but essential as part of the monax tool. The [monax files] relies upon this running service.`
 		serviceDefinition.Status = "alpha"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageIPFS)
 		serviceDefinition.Service.AutoData = true
@@ -179,7 +179,7 @@ This eris service is all but essential as part of the eris tool. The [eris files
 		serviceDefinition.Name = "logrotate"
 		serviceDefinition.Description = `Truncates docker container logs when the grow in size.
 
-This eris service can also be run by adding the [--logrotate] flag on [eris chains start]
+This monax service can also be run by adding the [--logrotate] flag on [monax chains start]
 
 It is essential for long-running chain nodes.
 
@@ -197,7 +197,7 @@ Alternatively, use logspout to pipe logs to a service of you choosing"`
 
 }
 
-func defaultAccountTypes(accountType string) *definitions.ErisDBAccountType {
+func defaultAccountTypes(accountType string) *definitions.MonaxDBAccountType {
 	accountTypeDefinition := definitions.BlankAccountType()
 
 	switch accountType {

@@ -173,7 +173,7 @@ func CatChain(do *definitions.Do) error {
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
 	case "config":
 		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// TODO re-implement with eris-client ... mintinfo was remove from container (and write tests for these cmds)
+	// TODO re-implement with monax-client ... mintinfo was remove from container (and write tests for these cmds)
 	// case "status":
 	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
 	// case "validators":
@@ -279,7 +279,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 			"interactive": chain.Operations.Interactive,
 		}).Debug()
 
-		// This override is necessary because erisdb uses an entryPoint and
+		// This override is necessary because monaxdb uses an entryPoint and
 		// the perform package will respect the images entryPoint if it
 		// exists.
 		chain.Service.EntryPoint = do.Service.EntryPoint
@@ -294,7 +294,7 @@ func startChain(do *definitions.Do, exec bool) (buf *bytes.Buffer, err error) {
 		if !do.Operations.SkipLink {
 			// Check the chain is running.
 			if !util.IsChain(chain.Name, true) {
-				return nil, fmt.Errorf("chain %v has failed to start. You may want to check the [eris chains logs %[1]s] command output", chain.Name)
+				return nil, fmt.Errorf("chain %v has failed to start. You may want to check the [monax chains logs %[1]s] command output", chain.Name)
 			}
 
 			chain.Service.Links = append(chain.Service.Links, fmt.Sprintf("%s:%s", util.ContainerName("chain", chain.Name), "chain"))
@@ -355,7 +355,7 @@ func bootDependencies(chain *definitions.ChainDefinition, do *definitions.Do) er
 	return nil
 }
 
-// setupChain is invoked on [eris chains start CHAIN_NAME] command and
+// setupChain is invoked on [monax chains start CHAIN_NAME] command and
 // creates chain and (if they're missing) keys containers.
 func setupChain(do *definitions.Do) (err error) {
 	// do.Name is mandatory.
@@ -434,7 +434,7 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import data: %v", err)
 	}
 
-	// mintkey has been removed from the erisdb image. this functionality
+	// mintkey has been removed from the monaxdb image. this functionality
 	// needs to be wholesale refactored. For now we'll just run the keys
 	// service (where mintkey is....)
 
@@ -448,11 +448,11 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
 	}
 
-	if out, err := services.ExecHandler("keys", []string{"mintkey", "eris", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.MonaxContainerRoot, do.Name)}); err != nil {
+	if out, err := services.ExecHandler("keys", []string{"mintkey", "monax", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.MonaxContainerRoot, do.Name)}); err != nil {
 		log.Error(err)
 		do.RmD = true
 		RemoveChain(do)
-		return fmt.Errorf("Failed to transliterate [priv_validator.json] to eris-key: %v", out)
+		return fmt.Errorf("Failed to transliterate [priv_validator.json] to monax-key: %v", out)
 	}
 
 	log.WithFields(log.Fields{
@@ -491,7 +491,7 @@ func resolveChainsPath(chainName, pathGiven string) (string, error) {
 	// No "config.toml" in a dir.
 	if util.DoesDirExist(pathGiven) {
 		log.WithField("=>", pathGiven).Info("Failed to find config.toml in [--init-dir]")
-		return "", fmt.Errorf("Missing config.toml in %v. Try [eris chains make] first", pathGiven)
+		return "", fmt.Errorf("Missing config.toml in %v. Try [monax chains make] first", pathGiven)
 	}
 
 	log.WithField("=>", pathGiven).Info("Failed to find [--init-dir]")

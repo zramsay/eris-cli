@@ -19,7 +19,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	DockerConnect(false, "eris")
+	DockerConnect(false, "monax")
 
 	// Pull the necessary image.
 	PullImage(path.Join(version.DefaultRegistry, version.ImageKeys), os.Stdout)

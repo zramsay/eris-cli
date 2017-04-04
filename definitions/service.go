@@ -5,7 +5,7 @@ type Service struct {
 	Name string `json:"name" yaml:"name" toml:"name"`
 	// docker image used by the service
 	Image string `json:"image,omitempty" yaml:"image,omitempty" toml:"image,omitempty"`
-	// whether eris should automagically handle a data container for this service
+	// whether monax should automagically handle a data container for this service
 	AutoData bool `json:"data_container" yaml:"data_container" toml:"data_container"`
 	// restart policy: "always" or "max:<#attempts>"
 	Restart string `json:",omitempty" yaml:",omitempty" toml:",omitempty"`
@@ -48,7 +48,7 @@ type Service struct {
 	// maps directly to docker mem_limit
 	MemLimit int64 `mapstructure:"mem_limit" json:"memory,omitempty,omitzero" yaml:"memory,omitempty" toml:"memory,omitempty,omitzero"`
 
-	// an env variable to set for when we are running `eris exec` so we can find the main container
+	// an env variable to set for when we are running `monax exec` so we can find the main container
 	ExecHost string `mapstructure:"exec_host" json:"exec_host,omitempty,omitzero" yaml:"exec_host,omitempty" toml:"exec_host,omitempty,omitzero"`
 }
 

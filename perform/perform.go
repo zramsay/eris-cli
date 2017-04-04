@@ -1111,7 +1111,7 @@ func configureDataContainer(srv *definitions.Service, ops *definitions.Operation
 	// by default data containers will rely on the image used by
 	//   the base service. sometimes, tho, especially for testing
 	//   that base image will not be present. in such cases use
-	//   the base eris data container.
+	//   the base monax data container.
 	if srv.Image == "" {
 		srv.Image = path.Join(version.DefaultRegistry, version.ImageData)
 	}

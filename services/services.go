@@ -237,7 +237,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 		var err error
 		chainName, err = util.GetHead()
 		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
+			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [monax chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
 	s, err := loaders.ChainsAsAService(chainName)

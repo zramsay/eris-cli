@@ -27,7 +27,7 @@ func IPFSBaseGatewayUrl(gateway, port string) string {
 	if port == "" {
 		port = IpfsPort
 	}
-	if gateway == "eris" {
+	if gateway == "monax" {
 		return fmt.Sprintf("%s:%s%s", SexyUrl(), port, "/ipfs/")
 	} else if gateway != "" {
 		return fmt.Sprintf("%s:%s%s", gateway, port, "/ipfs/")
@@ -233,8 +233,8 @@ func DownloadFromUrlToFile(url, fileName, dirName string) error {
 	//deal with ipfs' error ungracefully. maybe we want to maintain our own fork?
 	//or could run `cache` under the hood, so user doesn't even see error (although we probably shouldn't pin by default)
 	if string(checkBody) == "Path Resolve error: context deadline exceeded" {
-		//this won't work unless we `eris files cache --csv (which will be especially needed to deal with this error)
-		return fmt.Errorf("A timeout occured while trying to reach IPFS. Run `eris files cache [hash], wait 5-10 seconds, then run `eris files [cmd] [hash]`")
+		//this won't work unless we `monax files cache --csv (which will be especially needed to deal with this error)
+		return fmt.Errorf("A timeout occured while trying to reach IPFS. Run `monax files cache [hash], wait 5-10 seconds, then run `monax files [cmd] [hash]`")
 	}
 
 	return nil
@@ -276,7 +276,7 @@ func PinToIPFS(fileHash string) (string, error) {
 	if err = json.Unmarshal(body, &p); err != nil || len(p.Pinned) == 0 {
 		//XXX hacky
 		if fmt.Sprintf("%v", err) == "invalid character 'p' looking for beginning of value" {
-			return "", fmt.Errorf("The file has already been pinned recusively (probably from ipfs add or eris files put). It is only possible to cache a file you don't already have. see issue #133 for more information")
+			return "", fmt.Errorf("The file has already been pinned recusively (probably from ipfs add or monax files put). It is only possible to cache a file you don't already have. see issue #133 for more information")
 		}
 		return "", fmt.Errorf("unexpected error unmarshalling json: %v", err)
 	}
@@ -379,7 +379,7 @@ func PostAPICall(url, fileHash string) ([]byte, error) {
 	}
 	//XXX hacky: would need to fix ipfs error msgs
 	if string(body) == "Path Resolve error: context deadline exceeded" && string(body) == "context deadline exceeded" {
-		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `[eris files cache HASH]`, wait 5-10 seconds, then run `[eris files COMMAND HASH]`")
+		return []byte(""), fmt.Errorf("A timeout occured while trying to reach IPFS. Run `[monax files cache HASH]`, wait 5-10 seconds, then run `[monax files COMMAND HASH]`")
 	}
 	return body, nil
 }
