@@ -216,6 +216,7 @@ func TestRmService(t *testing.T) {
 	}
 }
 
+/*
 func TestMakeService(t *testing.T) {
 	defer testutil.RemoveAllContainers()
 
@@ -248,7 +249,7 @@ func TestMakeService(t *testing.T) {
 		t.Fatalf("expecting dependent data container not existing")
 	}
 
-}
+}*/
 
 func TestCatService(t *testing.T) {
 	do := definitions.NowDo()

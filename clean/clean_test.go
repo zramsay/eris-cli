@@ -17,6 +17,7 @@ import (
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -129,7 +130,7 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 }
 
 func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)); err != nil {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(version.DefaultRegistry, version.ImageKeys)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 

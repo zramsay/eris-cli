@@ -22,7 +22,7 @@ func init() {
 	DockerConnect(false, "eris")
 
 	// Pull the necessary image.
-	PullImage(path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys), os.Stdout)
+	PullImage(path.Join(version.DefaultRegistry, version.ImageKeys), os.Stdout)
 }
 
 func TestUniqueName(t *testing.T) {

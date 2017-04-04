@@ -13,6 +13,7 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 type ab struct {
@@ -275,7 +276,7 @@ image          = "test image"
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
 		// [pv]: not "test image", but erisdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)},
+		{`Service.Image`, s.Service.Image, path.Join(version.DefaultRegistry, version.ImageDB)},
 		{`Service.Environment`, s.Service.Environment, []string{chainID, chainName}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {

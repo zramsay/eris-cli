@@ -15,6 +15,7 @@ import (
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 var chainName = "test-chain"
@@ -288,7 +289,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -313,7 +314,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -335,7 +336,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := testutil.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -361,7 +362,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = false
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -410,7 +411,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -459,7 +460,7 @@ chain = "`+chain+`:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -507,7 +508,7 @@ chain = "blah-blah:blah"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -541,7 +542,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -554,7 +555,7 @@ chain = "$chain:sham"
 
 [service]
 name = "sham"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a sham service definition: %v", err)

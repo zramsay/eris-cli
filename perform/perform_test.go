@@ -14,6 +14,7 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 func TestMain(m *testing.M) {
@@ -371,7 +372,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "always"
@@ -417,7 +418,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 restart = "max:99"
@@ -463,7 +464,7 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 exec_host = "ERIS_KEYS_HOST"
 `); err != nil {
@@ -2193,7 +2194,7 @@ func TestBuildSimple(t *testing.T) {
 		image = "test-image-1"
 	)
 
-	dockerfile := `FROM ` + path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)
+	dockerfile := `FROM ` + path.Join(version.DefaultRegistry, version.ImageKeys)
 
 	if err := DockerBuild(image, dockerfile); err != nil {
 		t.Fatalf("expected image to be built, got %v", err)
