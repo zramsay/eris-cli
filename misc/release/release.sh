@@ -151,7 +151,7 @@ token_check() {
 }
 
 cross_compile() {
-  pushd ${REPO}/cmd/eris
+  pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"

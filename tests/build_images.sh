@@ -2,7 +2,7 @@
 # ----------------------------------------------------------
 # PURPOSE
 
-# This is the build script for eris data image.i
+# This is the build script for monax base image.
 
 # ----------------------------------------------------------
 # REQUIREMENTS
@@ -12,7 +12,7 @@
 # ----------------------------------------------------------
 # USAGE
 
-# build_data_image.sh
+# build_base_image.sh
 
 # ----------------------------------------------------------
 # Set defaults
@@ -23,26 +23,25 @@ then
 else
   repo=$GOPATH/src/github.com/monax/cli
 fi
-branch=${CIRCLE_BRANCH:=master}
-branch=${branch/-/_}
-testimage=${testimage:="quay.io/eris/data"}
 
 release_min=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
 release_maj=$(echo $release_min | cut -d . -f 1-2)
 
 # ---------------------------------------------------------------------------
 # Go!
-cd $repo/tests
-mkdir data
-cd data
+for name in "base" "build" "data"
+do
+  image=quay.io/monax/$name
+  build_dir=$repo/tests/$name
 
-cp $repo/docker/x86/data/Dockerfile .
+  mkdir -p $build_dir
+  cd $build_dir
 
-if [[ "$branch" = "master" || "$branch" = "develop" ]]
-then
-  docker build -t $testimage:latest .
-  docker tag $testimage:latest $testimage:$release_maj
-  docker tag $testimage:latest $testimage:$release_min
-else
-  docker build -t $testimage:$release_min .
-fi
+  cp $repo/docker/x86/$name/Dockerfile .
+  echo
+  echo "Building: $image:$release_maj"
+  echo
+  docker build -t $image:$release_maj .
+
+  rm -rf $build_dir
+done

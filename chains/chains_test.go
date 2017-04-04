@@ -201,7 +201,7 @@ func TestChainsNewConfig(t *testing.T) {
 }
 
 // chains start (--init-dir) should import the priv_validator.json (available in mint form)
-// into monax-keys (available in monax form) so it can be used by the rest
+// into eris-keys (available in monax form) so it can be used by the rest
 // of the platform
 func TestChainsNewKeysImported(t *testing.T) {
 	defer testutil.RemoveAllContainers()

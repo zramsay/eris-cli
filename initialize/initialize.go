@@ -69,7 +69,6 @@ Directory structure initialized:
 ¦   +-- keys/
 ¦       +-- data/
 ¦       +-- names/
-¦   +-- remotes/
 ¦   +-- scratch/
 ¦       +-- data/
 ¦       +-- languages/
@@ -126,7 +125,7 @@ func pullDefaultImages(images []string) error {
 		images = []string{
 			"data",
 			"keys",
-			"ipfs",
+			// "ipfs",
 			"db",
 			"compilers",
 		}
@@ -135,9 +134,9 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data":      version.ImageData,
-		"keys":      version.ImageKeys,
-		"ipfs":      version.ImageIPFS,
+		"data": version.ImageData,
+		"keys": version.ImageKeys,
+		// "ipfs":      version.ImageIPFS, // [CSK no need to pull this by default]
 		"db":        version.ImageDB,
 		"compilers": version.ImageCompilers,
 	}

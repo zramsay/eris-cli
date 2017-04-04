@@ -109,7 +109,7 @@ func (keys *KeyClient) GenerateKey(save, quiet bool, keyType, password string) (
 	if password != "" {
 		return "", fmt.Errorf("Password currently unimplemented. Marmots are confused at how you got here.")
 	}
-	buf, err = services.ExecHandler("keys", []string{"monax-keys", "gen", "--type", keyType, "--no-pass"})
+	buf, err = services.ExecHandler("keys", []string{"eris-keys", "gen", "--type", keyType, "--no-pass"})
 	if err != nil {
 		return "", err
 	}
@@ -217,13 +217,13 @@ func (keys *KeyClient) PubKey(address, name string) (string, error) {
 	var err error
 	if address != "" && name == "" {
 		addr := strings.TrimSpace(address)
-		buf, err = services.ExecHandler("keys", []string{"monax-keys", "pub", "--addr", addr})
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "pub", "--addr", addr})
 		if err != nil {
 			return "", err
 		}
 	} else if address == "" && name != "" {
 		name := strings.TrimSpace(name)
-		buf, err = services.ExecHandler("keys", []string{"monax-keys", "pub", "--name", name})
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "pub", "--name", name})
 		if err != nil {
 			return "", err
 		}
@@ -234,7 +234,7 @@ func (keys *KeyClient) PubKey(address, name string) (string, error) {
 	return strings.TrimSpace(buf.String()), nil
 }
 
-// Keyclient converts a monax-keys key to priv-validator.json
+// Keyclient converts a eris-keys key to priv-validator.json
 // params:
 // address - address of the key to convert
 // name - name of the key to convert
@@ -247,13 +247,13 @@ func (keys *KeyClient) Convert(address, name string) ([]byte, error) {
 	var err error
 	if address != "" && name == "" {
 		addr := strings.TrimSpace(address)
-		buf, err = services.ExecHandler("keys", []string{"monax-keys", "convert", "--addr", addr})
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "convert", "--addr", addr})
 		if err != nil {
 			return nil, err
 		}
 	} else if address == "" && name != "" {
 		name := strings.TrimSpace(name)
-		buf, err = services.ExecHandler("keys", []string{"monax-keys", "convert", "--name", name})
+		buf, err = services.ExecHandler("keys", []string{"eris-keys", "convert", "--name", name})
 		if err != nil {
 			return nil, err
 		}

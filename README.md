@@ -15,7 +15,7 @@ operating applications built to run on an ecosystem level.
 * Install Go.
 
 ```
-go get github.com/monax/cli/cmd/eris
+go get github.com/monax/cli/cmd/monax
 eris init
 ```
 
@@ -137,7 +137,6 @@ Created by `eris init` in $HOME directory:
 │   ├── keys/
 │       ├── data/
 │       ├── names/
-│   ├── remotes/
 │   ├── scratch/
 │       ├── data/
 │       ├── languages/
