@@ -52,7 +52,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.ErisDBAcco
 	case "mint":
 		for _, accountType := range accountTypes {
 			log.WithField("type", accountType.Name).Info("Making Account Type")
-			for i := 0; i < accountType.Number; i++ {
+			for i := 0; i < accountType.DefaultNumber; i++ {
 				// account names are formatted <ChainName_AccountTypeName_nnn>
 				accountName := strings.ToLower(fmt.Sprintf(
 					"%s_%s_%03d", name, accountType.Name, i))
@@ -89,7 +89,7 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 	accountType *definitions.ErisDBAccountType, blockPrivateValidator, unsafe bool) (*ErisDBAccountConstructor, error) {
 
 	var err error
-	isValidator := (accountType.ToBond > 0 && accountType.Tokens >= accountType.ToBond)
+	isValidator := (accountType.DefaultBond > 0 && accountType.DefaultTokens >= accountType.DefaultBond)
 	accountConstructor := &ErisDBAccountConstructor{}
 	var genesisPrivateValidator *genesis.GenesisPrivateValidator
 	permissions := &ptypes.AccountPermissions{}
@@ -139,7 +139,7 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 		// Genesis address
 		address,
 		// Genesis amount
-		int64(accountType.Tokens),
+		int64(accountType.DefaultTokens),
 		// Genesis name
 		accountName,
 		// Genesis permissions
@@ -149,13 +149,13 @@ func newErisDBAccountConstructor(accountName string, keyAddressType string,
 	if isValidator {
 		accountConstructor.genesisValidator, err = genesis.NewGenesisValidator(
 			// Genesis validator amount
-			int64(accountType.Tokens),
+			int64(accountType.DefaultTokens),
 			// Genesis validator name
 			accountName,
 			// Genesis validator unbond to address
 			address,
 			// Genesis validator bond amount
-			int64(accountType.ToBond),
+			int64(accountType.DefaultBond),
 			// Genesis validator public key type string
 			// Currently only ed22519 is exposed through the tooling
 			"ed25519",

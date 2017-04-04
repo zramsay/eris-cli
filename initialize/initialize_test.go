@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
 )
 
 const serviceToNeverUseToml = `# This is a TOML config file.

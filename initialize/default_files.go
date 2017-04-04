@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/version"
 )
 
 const tomlHeader = `# This is a TOML config file.

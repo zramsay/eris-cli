@@ -3,11 +3,12 @@ package initialize
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"text/template"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
 )
 
 var serviceDefinitionTemplate *template.Template
@@ -46,7 +47,7 @@ func WriteServiceDefinitionFile(name string, serviceDefinition *definitions.Serv
 	file := filepath.Join(config.ServicesPath, fmt.Sprintf("%s.toml", name))
 
 	// Write the file.
-	if err := config.WriteFile(buffer.String(), file); err != nil {
+	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
 		return err
 	}
 	return nil
@@ -64,7 +65,7 @@ func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.
 
 	file := filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", name))
 
-	if err := config.WriteFile(buffer.String(), file); err != nil {
+	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
 		return err
 	}
 	return nil
@@ -82,7 +83,7 @@ func writeChainTypeDefinitionFile(name string, chainDefinition *definitions.Chai
 
 	file := filepath.Join(config.ChainTypePath, fmt.Sprintf("%s.toml", name))
 
-	if err := config.WriteFile(buffer.String(), file); err != nil {
+	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
 		return err
 	}
 	return nil
