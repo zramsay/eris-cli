@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images: []string{"data", "db", "keys", "ipfs"},
+		Images: []string{"data", "db", "keys"},
 	}))
 
 	exitCode := m.Run()

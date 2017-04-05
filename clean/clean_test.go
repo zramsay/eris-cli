@@ -30,8 +30,8 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"keys", "ipfs", "data", "db"},
-		Services: []string{"keys", "ipfs"},
+		Images:   []string{"keys", "data", "db"},
+		Services: []string{"keys"},
 	}))
 
 	exitCode := m.Run()

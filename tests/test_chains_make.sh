@@ -146,7 +146,7 @@ run_test(){
     return 1
   fi
   dir_to_use=$chains_dir/$uuid/$direct
-  $cli_exec chains start $uuid --init-dir $uuid/$direct --debug
+  $cli_exec chains start $uuid --init-dir $uuid/$direct
   if [ $? -ne 0 ]
   then
     test_exit=1
