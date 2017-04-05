@@ -168,7 +168,7 @@ This monax service compiles smart contract languages.`
 
 This monax service is all but essential as part of the monax tool. The [monax files] relies upon this running service.`
 		serviceDefinition.Status = "alpha"
-		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageIPFS)
+		serviceDefinition.Service.Image = path.Join(version.ImageIPFS) // we use the default docker hub registry
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
 		serviceDefinition.Service.ExecHost = "ERIS_IPFS_HOST"

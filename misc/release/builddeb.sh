@@ -24,7 +24,7 @@ gpg --import linux-private-key.asc
 
 export GOREPO=${GOPATH}/src/github.com/monax/cli
 git clone https://github.com/monax/cli ${GOREPO}
-pushd ${GOREPO}/cmd/eris
+pushd ${GOREPO}/cmd/monax
 git fetch origin ${ERIS_BRANCH}
 git checkout ${ERIS_BRANCH}
 echo
@@ -38,8 +38,8 @@ echo
 echo ">>> Building the Debian package (#${ERIS_BRANCH})"
 echo
 mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/usr/share/man/man1 deb/DEBIAN
-cp ${GOREPO}/cmd/eris/eris deb/usr/bin
-${GOREPO}/cmd/eris/eris man --dump > deb/usr/share/man/man1/eris.1
+cp ${GOREPO}/cmd/monax/eris deb/usr/bin
+${GOREPO}/cmd/monax/eris man --dump > deb/usr/share/man/man1/eris.1
 cat > deb/DEBIAN/control <<EOF
 Package: eris
 Version: ${ERIS_VERSION}-${ERIS_RELEASE}
@@ -50,7 +50,7 @@ Homepage: https://monax.io/docs
 Maintainer: Monax Industries <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
-Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications. 
+Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications.
 EOF
 cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
 cat > deb/usr/share/doc/eris/copyright <<EOF

@@ -13,7 +13,7 @@ import (
 
 var (
 	// Convenience directories.
-	GoPath            = os.Getenv("GOPATH")
+	GoPath             = os.Getenv("GOPATH")
 	MonaxLtd           = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to deprecate
 	MonaxGo            = filepath.Join(GoPath, "src", "github.com", "monax") // CSK: to keep
 	MonaxGH            = "https://github.com/monax/"
@@ -25,7 +25,6 @@ var (
 	BundlesPath  = filepath.Join(MonaxRoot, "bundles")
 	ChainsPath   = filepath.Join(MonaxRoot, "chains")
 	KeysPath     = filepath.Join(MonaxRoot, "keys")
-	RemotesPath  = filepath.Join(MonaxRoot, "remotes")
 	ScratchPath  = filepath.Join(MonaxRoot, "scratch")
 	ServicesPath = filepath.Join(MonaxRoot, "services")
 
@@ -77,7 +76,6 @@ func ChangeMonaxRoot(monaxDir string) {
 	AppsPath = filepath.Join(MonaxRoot, "apps")     // previously "dapps"
 	ChainsPath = filepath.Join(MonaxRoot, "chains") // previously "blockchains"
 	KeysPath = filepath.Join(MonaxRoot, "keys")
-	RemotesPath = filepath.Join(MonaxRoot, "remotes")
 	ScratchPath = filepath.Join(MonaxRoot, "scratch")
 	ServicesPath = filepath.Join(MonaxRoot, "services")
 
@@ -144,7 +142,6 @@ func InitMonaxDir() (err error) {
 		KeysPath,
 		KeysDataPath,
 		KeysNamesPath,
-		RemotesPath,
 		ScratchPath,
 		DataContainersPath,
 		LanguagesScratchPath,

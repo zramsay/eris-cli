@@ -7,7 +7,7 @@ was_running=0
 test_exit=0
 chains_dir=$HOME/.eris/chains
 
-# Use the current built target, if it exists 
+# Use the current built target, if it exists
 # Otherwise default to system wide executable
 COMMIT_SHA=$(git rev-parse --short --verify HEAD)
 cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
@@ -146,7 +146,7 @@ run_test(){
     return 1
   fi
   dir_to_use=$chains_dir/$uuid/$direct
-  $cli_exec chains start $uuid --init-dir $uuid/$direct
+  $cli_exec chains start $uuid --init-dir $uuid/$direct --debug
   if [ $? -ne 0 ]
   then
     test_exit=1

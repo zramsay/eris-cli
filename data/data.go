@@ -164,7 +164,7 @@ func ImportData(do *definitions.Do) error {
 
 		//required b/c `docker cp` (UploadToContainer) goes in as root
 		// and monax images have the `monax` user by default
-		if err := runData(containerName, []string{"chown", "--recursive", "monax", do.Destination}); err != nil {
+		if err := runData(containerName, []string{"chown", "-R", "monax", do.Destination}); err != nil {
 			return util.DockerError(err)
 		}
 

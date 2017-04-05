@@ -29,7 +29,7 @@ popd
 
 %build
 pushd %{gorepo}
-GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/cli/cmd/eris
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/cli/cmd/monax
 popd
 
 %install

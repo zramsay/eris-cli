@@ -10,9 +10,9 @@ var (
 	DefaultRegistry = "quay.io"
 	BackupRegistry  = ""
 
-	ImageData      = fmt.Sprintf("monax/data:%s", VERSION)
-	ImageKeys      = fmt.Sprintf("monax/keys:%s", VERSION)
+	ImageData      = fmt.Sprintf("monax/data:%s", VERSION_MAJOR)
+	ImageKeys      = fmt.Sprintf("monax/keys:%s", VERSION_MAJOR)
 	ImageDB        = fmt.Sprintf("monax/db:%s", VERSION)
-	ImageIPFS      = "monax/ipfs"
+	ImageIPFS      = "ipfs/go-ipfs"
 	ImageCompilers = fmt.Sprintf("monax/compilers:%s", VERSION)
 )

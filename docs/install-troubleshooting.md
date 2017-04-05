@@ -23,7 +23,7 @@ Never fear, the marmots are here. See [Section 1 of our docker-machine tutorial]
 If you get a "eris: command not found" error then (if you built it from source) you need to make sure that your `$GOBIN` variable value is in your `$PATH` (see [Getting Started](/docs/getting-started/) and then do:
 
 ```irc
-cd $GOPATH/src/github.com/monax/cli/cmd/eris
+cd $GOPATH/src/github.com/monax/cli/cmd/monax
 go install
 cd ~1
 eris init

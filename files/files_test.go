@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	monaxDir      = filepath.Join(os.TempDir(), "monax")
+	monaxDir     = filepath.Join(os.TempDir(), "monax")
 	newDir       = filepath.Join(monaxDir, "addRecursively")
 	fileInNewDir = filepath.Join(newDir, "recurse.toml")
 	content      = "test contents"
