@@ -174,7 +174,7 @@ func checkThenInitMonaxRoot() (bool, error) {
 	var newDir bool
 
 	if !util.DoesDirExist(config.MonaxRoot) || !util.DoesDirExist(config.ServicesPath) {
-		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
+		log.Warn("Monax root directory doesn't exist. The marmots will initialize it for you")
 		if err := config.InitMonaxDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Monax root directory: %v", err)
 

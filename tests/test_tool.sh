@@ -77,8 +77,8 @@ connect(){
 setup() {
   if [[ "$machine" == eris-test-win* ]]
   then
-    mkdir $HOME/.eris
-    touch $HOME/.eris/eris.toml
+    mkdir $HOME/.monax
+    touch $HOME/.monax/eris.toml
   fi
 
   echo "Checking the Host <-> Docker Connection"

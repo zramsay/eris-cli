@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 There are three steps to making a permissioned chain with known keys:
@@ -42,7 +42,7 @@ To learn about advanced chain making and account types, [see here](/docs/chain-m
 
 Everyone who interacts with an eris chain will need to have a properly formated keypair. To make a keypair we will use `eris keys`.
 
-`eris keys` usually operates as a signing daemon, but when we use eris keys to *create* key pairs what we are doing effectively is writing files. As is usual with the eris tooling, `eris keys` is opinionated and will work by default against the following directory: `~/.eris/keys/data`. When a key pair is created, that key pair will get written into that directory.
+`eris keys` usually operates as a signing daemon, but when we use eris keys to *create* key pairs what we are doing effectively is writing files. As is usual with the eris tooling, `eris keys` is opinionated and will work by default against the following directory: `~/.monax/keys/data`. When a key pair is created, that key pair will get written into that directory.
 
 These files will be written to a file system located inside the eris keys data container. As we go through this tutorial we will explain a bit about what that means. When we are using containers, these containers are not built to *hold* data, but rather are built to hold what is needed to run processes. But, if we're making keypairs, then we definitely want to *keep* these.
 
@@ -95,7 +95,7 @@ This will create one key for you. The output here should look something like thi
 Saving key to host      49CA2456F65B524BDEF50217AE539B8E10B37421
 ```
 
-The `--save` flag exported your key, which will be in the directory at `~/.eris/keys/data/49CA2456F65B524BDEF50217AE539B8E10B37421/`. If omitted, you key will remain in the container and you can use `eris keys export 49CA2456F65B524BDEF50217AE539B8E10B37421` to save it to host afterwards.
+The `--save` flag exported your key, which will be in the directory at `~/.monax/keys/data/49CA2456F65B524BDEF50217AE539B8E10B37421/`. If omitted, you key will remain in the container and you can use `eris keys export 49CA2456F65B524BDEF50217AE539B8E10B37421` to save it to host afterwards.
 
 To see the keys which eris-keys generated both *inside* the container type and available on your host machine type:
 
@@ -127,7 +127,7 @@ Before we begin, let's walk through the various files which are needed to run a 
 2. the chain configuration file for Monax chains is called `config.toml`; see Step 3 for more information.
 3. the keypair used by tendermint for signing blocks is the `priv_validator.json`.
 
-All three files are usually located in the `~/.eris/chains/<your_chain>/<an_account>` directory after running `eris chains make`
+All three files are usually located in the `~/.monax/chains/<your_chain>/<an_account>` directory after running `eris chains make`
 
 The `genesis.json` is the primary file which tells eris chains how to instantiate a particular chain. It provides the "genesis" state of the chain including the accounts, permissions, and validators which will be used at the beginning of the chain. These can always be updated over the life of the chain of course, but the `genesis.json` provides the starting point.
 
@@ -176,9 +176,9 @@ At this point, each user should have, on their own machine:
 For the next step, we are assuming that each user has the files in a directory like so:
 
 ```bash
-~/.eris/chains/myCustomChain/admin_alice
-~/.eris/chains/myCustomChain/validator_bob
-~/.eris/chains/myCustomChain/validator_charlie
+~/.monax/chains/myCustomChain/admin_alice
+~/.monax/chains/myCustomChain/validator_bob
+~/.monax/chains/myCustomChain/validator_charlie
 ```
 
 on their respective machines.
@@ -188,9 +188,9 @@ on their respective machines.
 Given the directory structure above and a chain name of myCustomChain, each user runs:
 
 ```bash
-eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/admin_alice
-eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/validator_bob
-eris chains start myCustomChain --init-dir ~/.eris/chain/myCustomChain/validator_charlie
+eris chains start myCustomChain --init-dir ~/.monax/chain/myCustomChain/admin_alice
+eris chains start myCustomChain --init-dir ~/.monax/chain/myCustomChain/validator_bob
+eris chains start myCustomChain --init-dir ~/.monax/chain/myCustomChain/validator_charlie
 ```
 
 in that order (well, as long as `admin_alice` is run first). What will happen is that once `admin_alice` is up and running, each `validator_`, will, when started, "dial-in" to connect to `admin_alice`.

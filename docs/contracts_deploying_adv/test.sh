@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-chains_dir=$HOME/.eris/chains
+chains_dir=$HOME/.monax/chains
 chain_name=advchain2
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000

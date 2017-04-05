@@ -75,7 +75,7 @@ https://monax.io/platform/db
 
 or
 
-https://github.com/monax/eris-db
+https://github.com/monax/burrow
 
 How many keys do you want in *this* manual group? (You can make more than one manual group)`
 }

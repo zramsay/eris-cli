@@ -114,8 +114,8 @@ func InitDataDir(Datadir string) error {
 // TODO: [csk] give this a default string if folks want it somewhere besides ~/.monax ...?
 func ResolveMonaxRoot() string {
 	var monax string
-	if os.Getenv("ERIS") != "" {
-		monax = os.Getenv("ERIS")
+	if os.Getenv("MONAX") != "" {
+		monax = os.Getenv("MONAX")
 	} else {
 		if runtime.GOOS == "windows" {
 			home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")

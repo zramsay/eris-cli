@@ -102,7 +102,7 @@ func initializeCache() {
 	}
 
 	for _, c := range containers {
-		// A container belongs to Monax if it has the "ERIS" label.
+		// A container belongs to Monax if it has the "MONAX" label.
 		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}
@@ -175,7 +175,7 @@ func MonaxContainers(filter func(name string, details *Details) bool, running bo
 			continue
 		}
 
-		// A container belongs to Monax if it has the "ERIS" label.
+		// A container belongs to Monax if it has the "MONAX" label.
 		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}
@@ -226,7 +226,7 @@ func MonaxContainersByType(t string, running bool) []*Details {
 			continue
 		}
 
-		// A container belongs to Monax if it has the "ERIS" label.
+		// A container belongs to Monax if it has the "MONAX" label.
 		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}

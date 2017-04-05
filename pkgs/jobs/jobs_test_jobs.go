@@ -10,8 +10,8 @@ import (
 	"github.com/monax/cli/pkgs/abi"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/eris-db/client"
-	"github.com/monax/eris-db/logging/loggers"
+	"github.com/monax/burrow/client"
+	"github.com/monax/burrow/logging/loggers"
 )
 
 func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (string, []*definitions.Variable, error) {
@@ -56,7 +56,7 @@ func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (str
 	}
 
 	// Call the client
-	nodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	nodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	result, _, err := nodeClient.QueryContract(fromAddrBytes, toAddrBytes, dataBytes)
 	if err != nil {
 		return "", make([]*definitions.Variable, 0), err

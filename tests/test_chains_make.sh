@@ -5,7 +5,7 @@
 repo=`pwd`
 was_running=0
 test_exit=0
-chains_dir=$HOME/.eris/chains
+chains_dir=$HOME/.monax/chains
 
 # Use the current built target, if it exists
 # Otherwise default to system wide executable
@@ -118,7 +118,7 @@ check_test(){
 
   # check priv_validator
   privOut=$(cat $dir_to_use/priv_validator.json | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
-  privIn=$($cli_exec data exec $uuid "cat /home/eris/.eris/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
+  privIn=$($cli_exec data exec $uuid "cat /home/eris/.monax/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
   if [[ "$privOut" != "$privIn" ]]
   then
     test_exit=1
@@ -163,7 +163,7 @@ run_test(){
   then
     $cli_exec chains rm --data $uuid
   fi
-  rm -rf $HOME/.eris/scratch/data/$uuid
+  rm -rf $HOME/.monax/scratch/data/$uuid
   rm -rf $chains_dir/$uuid
 }
 

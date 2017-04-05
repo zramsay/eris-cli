@@ -11,8 +11,8 @@ import (
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/log"
 
-	configurationFile "github.com/monax/eris-db/config"
-	"github.com/monax/eris-db/genesis"
+	configurationFile "github.com/monax/burrow/config"
+	"github.com/monax/burrow/genesis"
 
 	"github.com/BurntSushi/toml"
 )

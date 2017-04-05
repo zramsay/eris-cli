@@ -137,7 +137,7 @@ func defaultServices(service string) *definitions.ServiceDefinition {
 	case "keys":
 
 		serviceDefinition.Name = "keys"
-		serviceDefinition.Description = `Eris keys is meant for quick prototyping. You must replace it with a hardened key signing daemon to use in production. Eris does not intend to harden this for production, but rather will keep it as a rapid prototyping server.
+		serviceDefinition.Description = `Monax keys is meant for quick prototyping. You must replace it with a hardened key signing daemon to use in production. Monax does not intend to harden this for production, but rather will keep it as a rapid prototyping server.
 
 This service is usually linked to a chain and/or an application. Its functionality is wrapped by [monax keys].`
 		serviceDefinition.Status = "unfit for production"

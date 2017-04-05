@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 ## Introduction
@@ -34,7 +34,7 @@ To design our chain we need to, first, consider, *who* will get *what* permissio
 
 For the purposes of this tutorial, we will have (1) administrator, (7) validators, (3) developers, and (20) participants. This will require a total of 31 keys, and all of their specifics to be generated and added to the genesis block.
 
-If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/monax/eris-db/blob/master/README.md).
+If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/monax/burrow/blob/master/README.md).
 
 ## Step 1. Make the Necessary Files
 
@@ -43,7 +43,7 @@ If you have run through the chain making tool (`eris chains make myChain` with t
 Let's first take a closer look at our account types:
 
 ```bash
-cd ~/.eris/chains/account-types
+cd ~/.monax/chains/account-types
 ls
 ```
 
@@ -85,7 +85,7 @@ addRole = 1
 rmRole = 1
 ```
 
-Where a field is `1` eris chain maker will turn that permission for the account type `on`; and where it is `0` eris chain maker will turn that permission for the account type `off`. To adjust the permissions for a default account type then edit any of the `~/.eris/chains/account-types/*.toml` files as you wish. After that, whenever you run the eris chain maker it will respect the changes to any of the fields.
+Where a field is `1` eris chain maker will turn that permission for the account type `on`; and where it is `0` eris chain maker will turn that permission for the account type `off`. To adjust the permissions for a default account type then edit any of the `~/.monax/chains/account-types/*.toml` files as you wish. After that, whenever you run the eris chain maker it will respect the changes to any of the fields.
 
 You can also simply add new account types, which is what we're going to do next. Let's make a copy of the `developer.toml` file and edit it.
 
@@ -93,7 +93,7 @@ You can also simply add new account types, which is what we're going to do next.
 cp developer.toml adv_chain_developer.toml
 ```
 
-Open `~/.eris/chains/account-types/adv_chain_developer.toml` in your favorite text editor. Make the following changes:
+Open `~/.monax/chains/account-types/adv_chain_developer.toml` in your favorite text editor. Make the following changes:
 
 ```toml
 name = "AdvDeveloper"
@@ -111,7 +111,7 @@ At this point once we're happy with the account types for our chain (feel free t
 Now we are goint to take a look at `eris`'s chain types feature.
 
 ```bash
-cd ~/.eris/chains/chain-types
+cd ~/.monax/chains/chain-types
 ls
 ```
 
@@ -169,7 +169,7 @@ You can see that we have zeroed out `Full` (which is a root + validator account 
 Now. After that quick tour we are ready to make the chain.
 
 ```bash
-cd ~/.eris/chains
+cd ~/.monax/chains
 eris chains make advchain --chain-type advchain
 ```
 
@@ -179,7 +179,7 @@ If it paused for a little while then returned you to your terminal that means it
 ls
 ```
 
-In your `~/.eris/chains` directory you should now have an `advchain` directory. Let's move into that directory.
+In your `~/.monax/chains` directory you should now have an `advchain` directory. Let's move into that directory.
 
 ```bash
 cd advchain
@@ -314,7 +314,7 @@ There is also a genesis.json file that is within the directory. Finally, there i
 
 This directory contains the **minimum** necessary files to start a chain. As we will see soon, there is one file which is lacking to fully run *this* chain.
 
-**N.B.** You will want to export your keys onto the host at this point so that you have them backed up. Run `eris keys export --all` and you'll see the keys on your host by running `eris keys ls` or looking in `~/.eris/keys/data`. 
+**N.B.** You will want to export your keys onto the host at this point so that you have them backed up. Run `eris keys export --all` and you'll see the keys on your host by running `eris keys ls` or looking in `~/.monax/keys/data`. 
 
 ## Step 2. Instantiate the Blockchain
 
@@ -323,7 +323,7 @@ With all the files made for us by the eris chain maker out we're ready to rock a
 Let's start the chain and use our root credentials!
 
 ```bash
-eris chains start advchain --init-dir ~/.eris/chains/advchain/advchain_root_000
+eris chains start advchain --init-dir ~/.monax/chains/advchain/advchain_root_000
 ```
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, blockchain. Except for one thing. This particular chain won't run out of the box though. Why? Because you'll need to deploy the validators and connect them to one another.

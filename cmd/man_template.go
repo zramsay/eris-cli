@@ -16,7 +16,7 @@ import (
 
 const manPrologue = `.Dd {{date "January 2, 2006"}}
 .Os
-.Dt ERIS 1
+.Dt MONAX 1
 .Sh NAME
 .Nm monax
 .Nd {{.Short}}
@@ -85,7 +85,7 @@ const manEnvironment = `.Sh ENVIRONMENT
 .Nm
 uses the following environment variables:
 .Bl -tag -width "MONAX_PULL_APPROVE"
-.It Ev ERIS
+.It Ev MONAX
 .Nm
 home directory. Supersedes the default
 .Pa $HOME/.monax

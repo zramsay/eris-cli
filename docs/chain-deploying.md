@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 ## Introduction
@@ -62,7 +62,7 @@ What's this 46656 port? That's tendermint's p2p port that allows the nodes to fi
 
 The `--seeds-ip` flag was introduced in version 0.16.0 and will fill the `seeds` field in **each** `config.toml`, rather than the previously required manual entry method. Another new feature is that the `moniker` field will now take on the account name such that each `config.toml` now has a unique moniker.
 
-We created a handful of directories within `~/.eris/chains/multichain`. Feel free to take a peek or head over to the [chain making tutorial](/docs/chain-making) for a comprehensive explanation of these files.
+We created a handful of directories within `~/.monax/chains/multichain`. Feel free to take a peek or head over to the [chain making tutorial](/docs/chain-making) for a comprehensive explanation of these files.
 
 For this tutorial, we'll be copying the raw directories as-is, however, note that the `eris chains make` command can be run with either the `--tar` or `--zip` flag as required for your scripting purposes.
 
@@ -71,10 +71,10 @@ For this tutorial, we'll be copying the raw directories as-is, however, note tha
 The following describes which directories are required for each cloud machine:
 
 ```
-CL0: ~/.eris/chain/multichain/multichain_full_000
-CL1: ~/.eris/chain/multichain/multichain_validator_000
-CL2: ~/.eris/chain/multichain/multichain_validator_001
-CL3: ~/.eris/chain/multichain/multichain_validator_002
+CL0: ~/.monax/chain/multichain/multichain_full_000
+CL1: ~/.monax/chain/multichain/multichain_validator_000
+CL2: ~/.monax/chain/multichain/multichain_validator_001
+CL3: ~/.monax/chain/multichain/multichain_validator_002
 ```
 
 Using `scp` or your preferred method, ensure each directory is on each machine.
@@ -86,25 +86,25 @@ You'll have to `ssh` into each machine:
 On `CL0`, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.eris/chains/multichain_full_000 --logrotate
+eris chains start multichain --init-dir ~/.monax/chains/multichain_full_000 --logrotate
 ```
 
 On CL1, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.eris/chains/multichain_validator_000 --logrotate
+eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_000 --logrotate
 ```
 
 On CL2, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.eris/chains/multichain_validator_001 --logrotate
+eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_001 --logrotate
 ```
 
 On CL3, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.eris/chains/multichain_validator_002 --logrotate
+eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_002 --logrotate
 ```
 
 And voila! You multi-node, permissioned chain is started!
@@ -128,7 +128,7 @@ In this file you'll edit the following line:
 command = "syslog://logs2.papertrailapp.com:XXXX"
 ```
 
-You can use any of the services logspout provides. Or if you use PaperTrail, then just update with your subdomain and/or port. You will need to edit the `logspout.toml` file in each node that you are running either via adding a `--machine` flag on the edit logspout service command above or by `scp`'ing a locally created file into each node's `~/.eris/services/` folder.
+You can use any of the services logspout provides. Or if you use PaperTrail, then just update with your subdomain and/or port. You will need to edit the `logspout.toml` file in each node that you are running either via adding a `--machine` flag on the edit logspout service command above or by `scp`'ing a locally created file into each node's `~/.monax/services/` folder.
 
 That's it, we added all that functionality to our system with that little command! Optionally, you can use watchtower to automatically pull in the latest updates for your chain -> [^2]
 

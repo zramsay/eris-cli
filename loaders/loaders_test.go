@@ -70,7 +70,7 @@ services       = [ "keys" ]
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -103,7 +103,7 @@ func TestLoadChainDefinitionWithoutPath(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -138,7 +138,7 @@ func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -173,7 +173,7 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -217,7 +217,7 @@ ports          = [ "4321" ]
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -269,7 +269,7 @@ image          = "test image"
 		{`SrvContainerName`, s.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, s.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, s.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, s.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, s.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, s.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -297,7 +297,7 @@ func TestLoadDataDefinition(t *testing.T) {
 		{`SrvContainerName`, d.SrvContainerName, util.DataContainerName(name)},
 		{`DataContainerName`, d.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Labels[definitions.LabelType], definitions.TypeData},
 	} {
@@ -488,7 +488,7 @@ repository = "https://example.com"
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
@@ -530,7 +530,7 @@ image = "test image"
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName("test image")},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName("test image")},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
@@ -602,7 +602,7 @@ func TestMockServiceDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
