@@ -19,7 +19,7 @@ menu:
 
 ### Variables Specification
 
-Variables can be used for nearly every eris jobs field (largely with the exception of nonce and wait).
+Variables can be used for nearly every jobs field (largely with the exception of nonce and wait).
 
 [Read the Variables Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/variable_specification)
 
@@ -39,7 +39,7 @@ Jobs are defined in **job definition files**.
 
 Action definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-Examples of eris job definition files are available in the jobs_fixtures directory.
+Examples of job definition files are available in the jobs_fixtures directory.
 
 [Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/jobs_specification)
 

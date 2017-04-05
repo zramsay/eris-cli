@@ -8,10 +8,10 @@ title: "Tutorials | Solidity 2: An Action-Driven Architecture"
 ## Solidity Series
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
-This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
+This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
@@ -96,7 +96,7 @@ contract ActionManager {
 
 **Important**
 
-Since we must allow generic arguments, we must pass something into the action that can stand for any number of arguments of any type - like an `Object` in java, an `interface{}` in Go, or a `*void` in C. This is not fully supported in Solidity, but the first thing that that will be useful in this case is probably going to be byte arrays - which is basically how this worked in LLL. Byte arrays are fully generic, so what we'd do here (for now) is to use a javascript library (such as `eris-contracts`) which makes it very simple to convert arguments into properly formatted call-data.
+Since we must allow generic arguments, we must pass something into the action that can stand for any number of arguments of any type - like an `Object` in java, an `interface{}` in Go, or a `*void` in C. This is not fully supported in Solidity, but the first thing that that will be useful in this case is probably going to be byte arrays - which is basically how this worked in LLL. Byte arrays are fully generic, so what we'd do here (for now) is to use a javascript library (such as `legacy-contracts`) which makes it very simple to convert arguments into properly formatted call-data.
 
 **Controller and database**
 

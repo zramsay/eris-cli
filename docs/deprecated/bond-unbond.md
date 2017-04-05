@@ -9,12 +9,12 @@ title: "Deprecated | Bonding/Unbonding"
 ## Introduction
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 The concept of bonding/unbonding validators here refers to validators which are voluntarily adding (bonding) or removing (unbonding) themselves. New validators (not included in the genesis file) first require tokens on the chain to post a bond with. Future tutorials will cover slashing/removing unwelcome/byzantine validators.
 
-For this example, we'll be using a [simplechain](/docs/getting-started), which has a single Full Account (see: `cat ~/.monax/chains/account-types/full.toml` for more information). One another host, a new account will be created and connect to the running chain. Once our Full Account sends this new account some tokens, the new account will be in a position to post a bond and begin validating. Eventually, this validator can unbond if they so choose.
+For this example, we'll be using a [simplechain](/docs/getting-started), which has a single Full Account (see: `cat ~/.eris/chains/account-types/full.toml` for more information). One another host, a new account will be created and connect to the running chain. Once our Full Account sends this new account some tokens, the new account will be in a position to post a bond and begin validating. Eventually, this validator can unbond if they so choose.
 
 Let's get started!
 
@@ -31,7 +31,7 @@ eris init --yes --machine bonding
 The chain is made locally but `new`d (started) on the recently created `docker-machine`.
 ```bash
 eris chains make bonding
-eris chains start bonding --init-dir ~/.monax/chains/bonding/bonding_full_000 --machine bonding
+eris chains start bonding --init-dir ~/.eris/chains/bonding/bonding_full_000 --machine bonding
 ```
 
 Now grab the `docker-machine ip bonding` and go to `ip:46657` in your browser. You should see the exposed endpoints. Try also `eris chains ls --machine bonding`.
@@ -39,15 +39,15 @@ Now grab the `docker-machine ip bonding` and go to `ip:46657` in your browser. Y
 #### Generate a new key locally
 ```bash
 addr=$(eris keys gen)
-rm ~/.monax/chains/bonding/priv_validator.json
-eris keys convert $addr > ~/.monax/chains/bonding/priv_validator.json
-cp ~/.monax/chains/default/config.toml ~/.monax/chains/bonding
+rm ~/.eris/chains/bonding/priv_validator.json
+eris keys convert $addr > ~/.eris/chains/bonding/priv_validator.json
+cp ~/.eris/chains/default/config.toml ~/.eris/chains/bonding
 ```
 First we updated the `priv_validator.json` with the new address then we dropped in the `config.toml`. Open the latter and edit the line `seeds = ip:46656` where `ip` is the output of `docker-machine ip bonding`. Your local node needs to know this for the peers to connect.
 
 #### Connect the new peer node
 ```bash
-eris chains start bonding --init-dir ~/.monax/chains/bonding/bonding_full_000 --machine bonding
+eris chains start bonding --init-dir ~/.eris/chains/bonding/bonding_full_000 --machine bonding
 ```
 The new peer will dial the seed and connect to it. Go back to the browser and see the `/net_info` endpoint; the new peer should be there. Note: it will take this peer some time to catchup on blocks. There should still only be one account at `/list_accounts` currently.
 
@@ -87,8 +87,8 @@ and start it up again (# Get the chain sorted, above).
 
 #### Send tokens
 ```bash
-cd ~/.monax/apps
-mkdir send bond
+cd ~/.eris/apps
+mkdir send
 cd send
 ```
 Now, create an `epm.yaml` that looks like:
@@ -136,6 +136,7 @@ If everything went well, you'll see `Assertion Succeeded` and there will be an `
 #### Send bond tx
 
 ```bash
+mkdir ../send
 cd ../send
 ```
 Create another `epm.yaml` that looks like:

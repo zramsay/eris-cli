@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+   <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 ## Introduction
@@ -31,9 +31,9 @@ Previously, the recommended way of creating a multi-node chain was with docker-m
 We are going to take these steps in order to get the chain setup:
 
 1. Create four cloud machines and get their public IP addresses
-2. Make the required files for the chain using `eris`
+2. Make the required files for the chain using `monax`
 3. Copy the appropriate files to each cloud machine
-4. Start the node on each machine using `eris`
+4. Start the node on each machine using `monax`
 5. Start additional services to ensure chain longevity
 6. Inspect the health of our chain
 
@@ -48,14 +48,14 @@ CL2: 276.37.22.79
 CL3: 48.413.82.16
 ```
 
-In this case, the IP addresses are fake so take note your own. You'll need to [install eris](/docs/getting-started) and run `eris init` on each machine. Ensure `ssh` is enable on all machines.
+In this case, the IP addresses are fake so take note your own. You'll need to [install monax](/docs/getting-started) and run `monax init` on each machine. Ensure `ssh` is enable on all machines.
 
 ## Step 2: Make the chain
 
 We'll use `CL0` as our "peer seargent major", so ssh yourself in. For simplicty, we'll use one Full account and three Validator accounts:
 
 ```bash
-eris chains make multichain --account-types=Full:1,Validator:3 --seeds-ip=159.134.23.97:46656,55.276.44.31:46656,276.37.22.79:46656,48.413.82.16:46656
+monax chains make multichain --account-types=Full:1,Validator:3 --seeds-ip=159.134.23.97:46656,55.276.44.31:46656,276.37.22.79:46656,48.413.82.16:46656
 ```
 
 What's this 46656 port? That's tendermint's p2p port that allows the nodes to find each other. For more information on ports, see below -> [^1]
@@ -64,7 +64,7 @@ The `--seeds-ip` flag was introduced in version 0.16.0 and will fill the `seeds`
 
 We created a handful of directories within `~/.monax/chains/multichain`. Feel free to take a peek or head over to the [chain making tutorial](/docs/chain-making) for a comprehensive explanation of these files.
 
-For this tutorial, we'll be copying the raw directories as-is, however, note that the `eris chains make` command can be run with either the `--tar` or `--zip` flag as required for your scripting purposes.
+For this tutorial, we'll be copying the raw directories as-is, however, note that the `monax chains make` command can be run with either the `--tar` or `--zip` flag as required for your scripting purposes.
 
 ## Step 3: Copy the files around
 
@@ -86,32 +86,32 @@ You'll have to `ssh` into each machine:
 On `CL0`, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.monax/chains/multichain_full_000 --logrotate
+monax chains start multichain --init-dir ~/.monax/chains/multichain_full_000 --logrotate
 ```
 
 On CL1, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_000 --logrotate
+monax chains start multichain --init-dir ~/.monax/chains/multichain_validator_000 --logrotate
 ```
 
 On CL2, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_001 --logrotate
+monax chains start multichain --init-dir ~/.monax/chains/multichain_validator_001 --logrotate
 ```
 
 On CL3, run:
 
 ```bash
-eris chains start multichain --init-dir ~/.monax/chains/multichain_validator_002 --logrotate
+monax chains start multichain --init-dir ~/.monax/chains/multichain_validator_002 --logrotate
 ```
 
 And voila! You multi-node, permissioned chain is started!
 
 ### Step 5: Start some services
 
-We're now going to start a few services which help us manage cloud instances. You'll notice we used the `--logrotate` flag when starting the chains. This service is **absolutely essential** when working with cloud boxes. We have had **dozens** of cloud nodes overfill on us due to logs overloading the allocated storage space on the node. To overcome this, we use a [logs rotator service](https://github.com/tutumcloud/logrotate) which discards the old logs. If you forgot to use the flag, don't fret! `eris services start logrotate` will get you squared away.
+We're now going to start a few services which help us manage cloud instances. You'll notice we used the `--logrotate` flag when starting the chains. This service is **absolutely essential** when working with cloud boxes. We have had **dozens** of cloud nodes overfill on us due to logs overloading the allocated storage space on the node. To overcome this, we use a [logs rotator service](https://github.com/tutumcloud/logrotate) which discards the old logs. If you forgot to use the flag, don't fret! `monax services start logrotate` will get you squared away.
 
 To couterbalance the discarded logs we also will be starting a `logspout` service. This service will "spout" our logs to a logs "collector" service. To provide this service we use PapertrailApp, but [you could use others](https://github.com/gliderlabs/logspout).
 
@@ -119,7 +119,7 @@ To couterbalance the discarded logs we also will be starting a `logspout` servic
 But first we need to make a simple change to one file. Let's edit the logspout service.
 
 ```bash
-eris services edit logspout
+monax services edit logspout
 ```
 
 In this file you'll edit the following line:
@@ -139,19 +139,19 @@ That's it, we added all that functionality to our system with that little comman
 Check that it is running:
 
 ```bash
-eris chains ls
+monax chains ls
 ```
 
 And see what its doing:
 
 ```bash
-eris chains logs advchain -f
+monax chains logs advchain -f
 ```
 
 (`ctrl+c` to exit the logs following.) You can also pull the logs for one of the validators
 
 ```bash
-eris chains logs advchain -f
+monax chains logs advchain -f
 ```
 
 

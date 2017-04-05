@@ -9,7 +9,7 @@ title: "Deprecated | Exporting Your Keys"
 ## Introduction
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 Unless you have a different configuration than our standard, admittedly opinionated, pathway then you will be running the eris-keys signing server inside of a container. This means that you need to be able to import and export your keys. This tutorial covers the existing `eris keys` commands and working with keys vis-a-vis containers on the eris platform.
@@ -48,7 +48,7 @@ Exporting your key to the host is quite easy:
 eris keys export ADDR
 ```
 
-What this does is take the contents (a key) from `/home/eris/.monax/keys/data/ADDR` in the container and copies it to `~/.monax/keys/data/ADDR`. This is the simplest way to backup your key to the default keys path. Check that it is there with:
+What this does is take the contents (a key) from `/home/eris/.eris/keys/data/ADDR` in the container and copies it to `~/.eris/keys/data/ADDR`. This is the simplest way to backup your key to the default keys path. Check that it is there with:
 
 ```bash
 eris keys ls --host
@@ -56,12 +56,12 @@ eris keys ls --host
 or
 
 ```bash
-ls ~/.monax/keys/data
+ls ~/.eris/keys/data
 ```
 That's it. Now it's in the right position on your host. Opptionally, to export all keys from the keys container you can use the data command:
 
 ```bash
-eris data export keys /home/eris/.monax/keys/data ~/.monax/keys
+eris data export keys /home/eris/.eris/keys/data ~/.eris/keys
 ```
 
 To import a key we do the reverse.
@@ -72,7 +72,7 @@ To import a key we do the reverse.
 eris keys import ADDR
 ```
 
-This command will take `~/.monax/keys/data/ADDR` from the host and copy it to `/home/eris/.monax/keys/data/ADDR` in an existing container. It is useful to "loading" backed-up keys into a container that will be used in deployement. Note: `--all` can be used here as well.
+This command will take `~/.eris/keys/data/ADDR` from the host and copy it to `/home/eris/.eris/keys/data/ADDR` in an existing container. It is useful to "loading" backed-up keys into a container that will be used in deployement. Note: `--all` can be used here as well.
 
 ### Get pubkey
 
@@ -97,9 +97,9 @@ All the above commands wrap either `eris services exec keys "CMD"` or `eris data
 
 ```bash
 eris services exec keys "eris-keys gen --no-pass"
-eris services exec keys "ls /home/eris/.monax/keys/data"
-eris data export keys /home/eris/.monax/keys/data/ADDR ~/.monax/keys/data/ADDR
-eris data import keys ~/.monax/keys/data/ADDR /home/eris/.monax/keys/data/ADDR
+eris services exec keys "ls /home/eris/.eris/keys/data"
+eris data export keys /home/eris/.eris/keys/data/ADDR ~/.eris/keys/data/ADDR
+eris data import keys ~/.eris/keys/data/ADDR /home/eris/.eris/keys/data/ADDR
 eris services exec keys "eris-keys pub --addr ADDR"
 eris services exec keys "mintkey mint ADDR"
 ```

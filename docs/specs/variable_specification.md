@@ -9,12 +9,12 @@ title: "Specifications | Variables Specification"
 ## Variables Specification
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
-Variables can be used for nearly every eris [jobs](/docs/specs/jobs_specification) field (largely with the exception of nonce and wait).
+Variables can be used for nearly every monax [jobs](/docs/specs/jobs_specification) field (largely with the exception of nonce and wait).
 
-eris:jobs variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
+Jobs variables will always begin with a dollar sign `$`. This is what will trigger the variable expansion.
 
 Variables come in the following types:
 
@@ -29,7 +29,7 @@ Variables come in the following types:
 
 The result of every job is set as a variable with the `JobName` as the key and the `JobResult` as the value. The `JobResult` for transaction jobs is the transaction hash. The `JobResult`  for contract deployments is the address of the contract. The `JobResult` for queries and calls is the return value from the blockchain or the query.
 
-The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from eris-client's tooling.
+The `JobResults` which are able to be retrieved from query functions will vary and depend largely on the fields which are returnable from monax-client's tooling.
 
 ### Set Variables
 
@@ -59,11 +59,11 @@ The following are reserved variables:
 
 ### Fallback Function
 
-In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See `tests/jobs_fixture/app37` in the `eris` repository.
+In order to test your fallback function in your contract using the call job, simply put the name of your function as "()" and the fallback function will be called. See `tests/jobs_fixture/app37` in the `monax` repository.
 
 ### Tuples and Returns
 
-eris:jobs can now effectively handle multiple return values for all static types such as
+Jobs can now effectively handle multiple return values for all static types such as
 
 * `address` `int` `uint` `bool` `bytes(1-32)`
 
@@ -87,7 +87,7 @@ Hold with us while the marmots get those in control :)
 
 ### Array Packing and Returns
 
-eris:jobs can now handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/monax/cli/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
+Jobs can handle packing and returning of arrays with some caveats. In order to pack an array value in, you must declare it inside square brackets. For an example, see [app31](https://github.com/monax/cli/blob/master/tests/jobs_fixtures/app31-memory_and_storage_arrays_dynamic_forms_static_types/epm.yaml). Until then, you can declare arrays for most static types such as:
 
 *  `int` `uint` `bool` `bytes(1-32)`
 

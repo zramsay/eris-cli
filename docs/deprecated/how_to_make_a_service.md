@@ -9,7 +9,7 @@ title: "Deprecated | How To Make A Service"
 ## Introduction
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about Docker and Eris later.
@@ -17,9 +17,9 @@ We are going to change the old idi contract so that it does a few things for us,
 ## Copy Over Your Previous `idi` Application
 
 ```bash
-cd ~/.monax/apps # or, wherever you made the idi app
+cd ~/.eris/apps # or, wherever you made the idi app
 cp -r idi idi-service # or whatever you would like to call it
-cd ~/.monax/apps/idi-service
+cd ~/.eris/apps/idi-service
 ```
 
 That will give us a new base application. Now this tutorial will assume that your simple chain is still around and that all of the key and capabilities based permission is all well and good. It will also assume that your contracts are running on the chain. If you have followed the previous tutorials and are coming back to this later with no docker containers or anything (but you have all of the old files on your hard drive) that is a-OK. With `eris` we can get you back up and running in no time.
@@ -145,7 +145,7 @@ eris chains start simplechain
 If your simplechain is not present, then start it with:
 
 ```bash
-eris chains start simplechain --init-dir ~/.monax/chains/simplechain/simplechain_full_000
+eris chains start simplechain --init-dir ~/.eris/chains/simplechain/simplechain_full_000
 ```
 
 As usual, `eris` is a quiet tool. Let's make sure our chain is running:
@@ -205,7 +205,7 @@ export IDI_PORT=1111
 Docker. People love it or they hate. We think it has its place in the future of distributed systems and the marmots love it! Let's see how easy it is to build a Dockerfile. First do this in your command line:
 
 ```bash
-cd ~/.monax/apps/idi-service
+cd ~/.eris/apps/idi-service
 touch Dockerfile
 ```
 
@@ -319,7 +319,7 @@ $> idis_app@0.0.1 start /usr/src/app
 
 ### Add a Dependency to the Service Definition File
 
-To edit a service definition file we can either open `~/.monax/services/idi.toml` in our favorite text editor, of if you have an `EDITOR` variable set in for your shell, then just use:
+To edit a service definition file we can either open `~/.eris/services/idi.toml` in our favorite text editor, of if you have an `EDITOR` variable set in for your shell, then just use:
 
 ```bash
 eris services edit idi
@@ -508,8 +508,8 @@ eris services export idi
 In the output of the `export` command is a hash field. The whole output may look something like this:
 
 ```irc
-POSTing file to IPFS. File =>   /home/coda/.monax/services/idi.toml
-Uploading =>                    /home/coda/.monax/services/idi.toml:http://0.0.0.0:8080/ipfs/
+POSTing file to IPFS. File =>   /home/coda/.eris/services/idi.toml
+Uploading =>                    /home/coda/.eris/services/idi.toml:http://0.0.0.0:8080/ipfs/
                                          hash=QmUxawH7yTQxPh4HZLSC1FsWGYy3XhJaBrhshZd78HWgkX
 ```
 
@@ -530,8 +530,8 @@ Congratulations, you've just made your very own smart contract backed service ru
     * What are your addresses (`cat $chain_dir/addrX`)?
     * Are those addresses known to eris keys (`eris actions do keys list`)?
     * Are those addresses in the genesis block (`eris chains cat simplechain genesis`)?
-    * What account does your `epm.yaml` use (`cat ~/.monax/apps/idi/epm.yaml`)?
-    * What account does your `account.json` use (`cat ~/.monax/apps/idi-service/account.json`)?
+    * What account does your `epm.yaml` use (`cat ~/.eris/apps/idi/epm.yaml`)?
+    * What account does your `account.json` use (`cat ~/.eris/apps/idi-service/account.json`)?
 
     If you have been following this tutorial sequence so far, that checklist should ferret out your problem (or you can find where to find the fix!).
 

@@ -8,10 +8,10 @@ title: "Tutorials | Solidity 1: The Five Types Model"
 ## Solidity Series
 
 <div class="note">
-    <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+    <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
-This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
+This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
@@ -27,7 +27,7 @@ This tutorial is part of our Solidity tutorial series:
 
 This is an introduction to systems of smart contracts. The purpose of these documents is to teach methods of writing large, scalable smart contract back-ends for ecosystem applications. The reader should be familiar with the basics of smart contract writing, and they should know what accounts, contracts and transactions are, and how to work with them. A good introduction to smart contract development (and a must-read) from the official Solidity site (the language this tutorial is written in) can be found [here](http://solidity.readthedocs.io/en/latest/introduction-to-smart-contracts.html).
 
-On top of this, we would also recommend checking out the [Ethereum wiki](https://github.com/ethereum/wiki/wiki). It has links to the above mentioned docs, and a lot of other information as well, such as the [contract ABI](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI) and the [natspec (for documentation)](https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format). To discuss Eris-specific implementations, the Eris Industries team can be reached on [#erisindustries](irc://freenode.net/#erisindustries) on Freenode or [our own support forum](https://support.monax.io)
+On top of this, we would also recommend checking out the [Ethereum wiki](https://github.com/ethereum/wiki/wiki). It has links to the above mentioned docs, and a lot of other information as well, such as the [contract ABI](https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI) and the [natspec (for documentation)](https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format). To discuss Monax-specific implementations, the team can be found in [The Marmot Den](https://slack.monax.io)
 
 About trust: The systems we study here are designed to be modular, i.e. parts of the code can be replaced during runtime, which in turn makes them inherently trust-ful. Someone must be allowed to make these updates. It is important to know this. If you want to learn how to write small trust-less, automated systems this is not really the place (although many of the principles are the same in both types of systems).
 

@@ -15,7 +15,7 @@
   * upload files to Amazon S3
 - [ ] version bump develop
 - [ ] update the `brew` formula (happens semi-automatically when new release is tagged)
-- [ ] update the `choco` formula (modify version in `misc/chocolatey/eris.nuspec` then run `choco push .` after getting an API key from their site)
+- [ ] update the `choco` formula (modify version in `misc/chocolatey/monax.nuspec` then run `choco push .` after getting an API key from their site)
 
 
 # keys

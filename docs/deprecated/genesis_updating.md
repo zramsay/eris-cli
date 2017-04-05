@@ -9,7 +9,7 @@ title: "Deprecated | Genesis Updating"
 ## Introduction
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.
 </div>
 
 All eris:db use a genesis.json to get started. The genesis.json tells eris:db:
@@ -33,12 +33,12 @@ Note, that we used the `-x` flag here (or, if you prefer the longhand `--data`).
 
 ## Step 2: Edit the genesis.json
 
-How one does this depends on how one started the chain. If one started the chain by only using the default genesis.json, which happens when one does not do `eris chains start XXXXX --dir YYYYYYY` but rather does `eris chains start XXXXXXX` (without the `--dir`) flag, then you should edit the following file: `~/.monax/chains/default/genesis.json`. If one started the chain with the `--dir` flag, then you would edit the `genesis.json` in the directory.
+How one does this depends on how one started the chain. If one started the chain by only using the default genesis.json, which happens when one does not do `eris chains start XXXXX --init-dir YYYYYYY` but rather does `eris chains start XXXXXXX` (without the `--dir`) flag, then you should edit the following file: `~/.eris/chains/default/genesis.json`. If one started the chain with the `--dir` flag, then you would edit the `genesis.json` in the directory.
 
 ## Step 3: Turn the New Chain On
 
 ```
-eris chains start idiaminchain --init-dir ~/.monax/chains/idiaminchain/idiaminchain_full_000
+eris chains start idiaminchain --init-dir ~/.eris/chains/idiaminchain/idiaminchain_full_000
 
 ```
 
