@@ -80,7 +80,7 @@ func Init(args ...interface{}) (err error) {
 		do.Pull = true
 	}
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if err := initialize.Initialize(do); err != nil {
 		IfExit(fmt.Errorf("Could not initialize Monax root: %v", err))

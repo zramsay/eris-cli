@@ -705,7 +705,7 @@ func pullImage(name string, writer io.Writer) error {
 		RawJSONStream: true,
 	}
 
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" {
 		opts.OutputStream = ioutil.Discard
 	}
 
@@ -735,7 +735,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		if err == docker.ErrNoSuchImage {
-			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
+			if os.Getenv("MONAX_PULL_APPROVE") != "true" {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image not found locally")
 				if util.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == util.Yes {
 					log.Debug("User assented to pull")

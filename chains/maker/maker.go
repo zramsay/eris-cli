@@ -12,7 +12,7 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/eris-db/genesis"
+	"github.com/monax/burrow/genesis"
 )
 
 var (

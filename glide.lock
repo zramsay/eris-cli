@@ -63,7 +63,7 @@ imports:
   - definitions
   - perform
   - util
-- name: github.com/monax/eris-db
+- name: github.com/monax/burrow
   version: 40d6b9fd39c133981fc9f1f7b9a02f562f879980
   subpackages:
   - account

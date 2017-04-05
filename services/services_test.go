@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	}))
 
 	// Prevent CLI from starting IPFS.
-	os.Setenv("ERIS_SKIP_ENSURE", "true")
+	os.Setenv("MONAX_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 	testutil.IfExit(testutil.TearDown())

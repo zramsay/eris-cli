@@ -174,7 +174,7 @@ func checkThenInitMonaxRoot() (bool, error) {
 	var newDir bool
 
 	if !util.DoesDirExist(config.MonaxRoot) || !util.DoesDirExist(config.ServicesPath) {
-		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
+		log.Warn("Monax root directory doesn't exist. The marmots will initialize it for you")
 		if err := config.InitMonaxDir(); err != nil {
 			return true, fmt.Errorf("Could not initialize Monax root directory: %v", err)
 
@@ -213,7 +213,7 @@ func checkIfCanOverwrite(doYes bool) error {
 }
 
 func getTheImages(do *definitions.Do) error {
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" || do.Yes {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" || do.Yes {
 		if err := pullDefaultImages(do.ImagesSlice); err != nil {
 			return err
 		}
@@ -226,7 +226,7 @@ handle the download. For a remote Docker server this should only take a few
 minutes but can sometimes take 10 or more. These times can double or triple
 on local host machines. If you already have the images, they'll be updated.
 `)
-		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
+		log.WithField("MONAX_PULL_APPROVE", "true").Warn("Skip confirmation with")
 		log.Warn()
 
 		if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {

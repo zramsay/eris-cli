@@ -91,7 +91,7 @@ var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "edit a service",
 	Long: `edit a service definition file which is kept in ` + util.Tilde(config.ServicesPath) + `.
-Edit will utilize your default editor. (See also the ERIS environment variable.)
+Edit will utilize your default editor. (See also the MONAX environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
 command will only operate on *service configuration file* which tell Monax

@@ -10,11 +10,11 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/eris-db/client"
-	"github.com/monax/eris-db/client/rpc"
-	"github.com/monax/eris-db/keys"
-	"github.com/monax/eris-db/logging/loggers"
-	"github.com/monax/eris-db/txs"
+	"github.com/monax/burrow/client"
+	"github.com/monax/burrow/client/rpc"
+	"github.com/monax/burrow/keys"
+	"github.com/monax/burrow/logging/loggers"
+	"github.com/monax/burrow/txs"
 )
 
 func SendJob(send *definitions.Send, do *definitions.Do) (string, error) {
@@ -41,8 +41,8 @@ func SendJob(send *definitions.Send, do *definitions.Do) (string, error) {
 		"amount":      send.Amount,
 	}).Info("Sending Transaction")
 
-	monaxNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	monaxKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	tx, err := rpc.Send(monaxNodeClient, monaxKeyClient, do.PublicKey, send.Source, send.Destination, send.Amount, send.Nonce)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -154,8 +154,8 @@ func registerNameTx(name *definitions.RegisterName, do *definitions.Do) (string,
 		"amount": name.Amount,
 	}).Info("NameReg Transaction")
 
-	monaxNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	monaxKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	tx, err := rpc.Name(monaxNodeClient, monaxKeyClient, do.PublicKey, name.Source, name.Amount, name.Nonce, name.Fee, name.Name, name.Data)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -209,8 +209,8 @@ func PermissionJob(perm *definitions.Permission, do *definitions.Do) (string, er
 	//arg := fmt.Sprintf("%s:%s", args[0], args[1])
 	//log.WithField(perm.Action, arg).Info("Setting Permissions")
 
-	monaxNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	monaxKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	tx, err := rpc.Permissions(monaxNodeClient, monaxKeyClient, do.PublicKey, perm.Source, perm.Nonce, perm.Action, args)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -243,8 +243,8 @@ func BondJob(bond *definitions.Bond, do *definitions.Do) (string, error) {
 		"amount":     bond.Amount,
 	}).Infof("Bond Transaction")
 
-	monaxNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	monaxKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	tx, err := rpc.Bond(monaxNodeClient, monaxKeyClient, do.PublicKey, bond.Account, bond.Amount, bond.Nonce)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
@@ -335,8 +335,8 @@ func RebondJob(rebond *definitions.Rebond, do *definitions.Do) (string, error) {
 func txFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	var result string
 
-	monaxNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	monaxKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	res, err := rpc.SignAndBroadcast(do.ChainID, monaxNodeClient, monaxKeyClient, tx.(txs.Tx), true, true, true)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)

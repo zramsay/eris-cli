@@ -48,8 +48,8 @@ declare -a checks
 
 cd $repo
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
+export MONAX_MIGRATE_APPROVE="true"
 
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
@@ -77,8 +77,8 @@ connect(){
 setup() {
   if [[ "$machine" == eris-test-win* ]]
   then
-    mkdir $HOME/.eris
-    touch $HOME/.eris/eris.toml
+    mkdir $HOME/.monax
+    touch $HOME/.monax/eris.toml
   fi
 
   echo "Checking the Host <-> Docker Connection"

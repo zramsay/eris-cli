@@ -384,7 +384,7 @@ func setupChain(do *definitions.Do) (err error) {
 		fmt.Sprintf("CHAIN_ID=%s", chain.Name),
 		// [zr] replacement for CHAIN_ID is CHAIN_NAME
 		fmt.Sprintf("CHAIN_NAME=%s", chain.Name),
-		fmt.Sprintf("ERIS_DB_WORKDIR=%s", containerDst),
+		fmt.Sprintf("MONAX_DB_WORKDIR=%s", containerDst),
 		fmt.Sprintf("CONTAINER_NAME=%s", containerName),
 	}
 	envVars = append(envVars, do.Env...)

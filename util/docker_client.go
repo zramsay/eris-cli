@@ -399,8 +399,8 @@ func setIPFSHostViaDockerHost(dockerHost string) {
 	}
 	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
 
-	log.WithField("url", dockerIP).Debug("Setting ERIS_IPFS_HOST")
-	os.Setenv("ERIS_IPFS_HOST", dockerIP)
+	log.WithField("url", dockerIP).Debug("Setting MONAX_IPFS_HOST")
+	os.Setenv("MONAX_IPFS_HOST", dockerIP)
 }
 
 func DockerError(err error) error {

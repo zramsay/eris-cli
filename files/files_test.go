@@ -30,9 +30,9 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	// Prevent CLI from starting IPFS.
-	os.Setenv("ERIS_SKIP_ENSURE", "true")
+	os.Setenv("MONAX_SKIP_ENSURE", "true")
 
-	if port := os.Getenv("ERIS_CLI_TESTS_PORT"); port != "" {
+	if port := os.Getenv("MONAX_CLI_TESTS_PORT"); port != "" {
 		port_to_use = port
 	}
 
@@ -55,7 +55,7 @@ func TestPutFiles(t *testing.T) {
 	hash := "QmcJdniiSKMp5az3fJvkbJTANd7bFtDoUkov3a8pkByWkv"
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	os.Setenv("MONAX_IPFS_HOST", "http://127.0.0.1")
 	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
 	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,
@@ -99,7 +99,7 @@ func TestGetFiles(t *testing.T) {
 	do.IpfsPort = port_to_use
 
 	// Fake IPFS server.
-	os.Setenv("ERIS_IPFS_HOST", "http://127.0.0.1")
+	os.Setenv("MONAX_IPFS_HOST", "http://127.0.0.1")
 	ipfs := testutil.NewServer(fmt.Sprintf("127.0.0.1:%s", port_to_use))
 	ipfs.SetResponse(testutil.ServerResponse{
 		Code: http.StatusOK,

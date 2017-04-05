@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 Eris is the ecosystem application platform built by `Monax`.
@@ -190,7 +190,7 @@ If you want to create your blockchain it is two commands:
 
 ```bash
 eris chains make test_chain
-eris chains start test_chain --init-dir ~/.eris/chain/test_chain/test_chain_full_000
+eris chains start test_chain --init-dir ~/.monax/chain/test_chain/test_chain_full_000
 ```
 
 That `test_chain` can be whatever name you would like it to be. These two commands will create a permissioned, smart contract enabled blockchain suitable for testing.
@@ -253,13 +253,13 @@ This will drop you into an interactive, command line wizard. Follow the text and
 Once the wizard exits let's take a look at what was created:
 
 ```bash
-ls ~/.eris/chains/toRemoveLater
+ls ~/.monax/chains/toRemoveLater
 ```
 
 You should see three `*.csv` files and a bunch of directories. Let's look in one of those directories:
 
 ```bash
-ls ~/.eris/chains/toRemoveLater/toremovelater_full_000
+ls ~/.monax/chains/toRemoveLater/toremovelater_full_000
 ```
 
 In that directory you should see a `genesis.json`, a `priv_validator.json` and a `config.toml`. The marmots call these a "bundle" as generally they are what is needed to get a chain going.
@@ -267,9 +267,9 @@ In that directory you should see a `genesis.json`, a `priv_validator.json` and a
 What about those `csv` files? There should be three of them. Let's take a look:
 
 ```bash
-cat ~/.eris/chains/toRemoveLater/accounts.csv
-cat ~/.eris/chains/toRemoveLater/validators.csv
-cat ~/.eris/chains/toRemoveLater/addresses.csv
+cat ~/.monax/chains/toRemoveLater/accounts.csv
+cat ~/.monax/chains/toRemoveLater/validators.csv
+cat ~/.monax/chains/toRemoveLater/addresses.csv
 ```
 
 The first two files can be used later to create a new genesis.json if the actual json gets lost. One of the things about this tooling is that it **creates** the keys for you. That is helpful in some circumstances. For production/consortium chains this is not appropriate. See the [known chain making tutorial](/docs/known-chain-making) for more info.
@@ -287,7 +287,7 @@ eris clean -yx
 Per the above and after our review of the account types, we know we want to have two Root account types and one Full account type for our new chain. So let's get to business.
 
 ```bash
-chain_dir=$HOME/.eris/chains/firstchain
+chain_dir=$HOME/.monax/chains/firstchain
 chain_dir_this=$chain_dir/firstchain_full_000
 ```
 
@@ -374,7 +374,7 @@ We are going to use a very simple `get` / `set` contract which sets a variable a
 The first thing we're going to do is to add a very simple contract.
 
 ```bash
-cd ~/.eris/apps
+cd ~/.monax/apps
 mkdir idi
 cd idi
 ```
@@ -455,7 +455,7 @@ eris chains start firstchain
 
 or create a new chain if firstchain no longer exists.
 
-Now, we are ready to deploy this world changing contract. Make sure you are in the `~/.eris/apps/idi` folder, or wherever you saved your `epm.yaml`. Note that this is a very common pattern in simple contract testing and development; namely to (1) deploy a contract; (2) send it some transactions (or `call`s); (3) query some results from the contract (or `query-contract`s); and (4) assert a result. As you get moving with contract development you will likely find yourself doing this a lot.
+Now, we are ready to deploy this world changing contract. Make sure you are in the `~/.monax/apps/idi` folder, or wherever you saved your `epm.yaml`. Note that this is a very common pattern in simple contract testing and development; namely to (1) deploy a contract; (2) send it some transactions (or `call`s); (3) query some results from the contract (or `query-contract`s); and (4) assert a result. As you get moving with contract development you will likely find yourself doing this a lot.
 
 ```bash
 addr=$(cat $chain_dir/addresses.csv | grep firstchain_full_000 | cut -d ',' -f 1)
@@ -570,7 +570,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 [^2]: If you get an error which looks something like this:
 
     ```irc
-    open /home/eris/.eris/keys/data/1040E6521541DAB4E7EE57F21226DD17CE9F0FB7/1040E6521541DAB4E7EE57F21226DD17CE9F0FB7: no such file or directory
+    open /home/eris/.monax/keys/data/1040E6521541DAB4E7EE57F21226DD17CE9F0FB7/1040E6521541DAB4E7EE57F21226DD17CE9F0FB7: no such file or directory
     Container 74a9dbf3d72a2f67e2280bc792e30c7b37fa57e3d04aeb348222f72448bdc84a exited with status 1
     ```
 
@@ -601,7 +601,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip eris` if on OSX or Windows. See our [docker-machine tutorial](/docs/deprecated/using-docker-machine-with-eris) for more information.
 
-[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/monax/eris-db) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
+[^4]: If the account you are trying to use has not been registered in the `genesis.json` (or, latterly, has not been given the appropriate [permissions](https://github.com/monax/burrow) via permission transactions) and been given the appropriate permissions, then it will not be able to perform the actions it needs to in order to deploy and test the contract. You'll want to make a new chain with the appropriate account types.
 
     Once you have the following sorted:
 
@@ -671,7 +671,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 [^9]: If you get an error which looks like this:
 
     ```irc
-    > bufferutil@1.2.1 install /root/.eris/apps/idi/node_modules/bufferutil
+    > bufferutil@1.2.1 install /root/.monax/apps/idi/node_modules/bufferutil
     > node-gyp rebuild
 
     gyp ERR! build error
@@ -703,7 +703,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
 
     ```irc
     Error callback from sendTransaction
-    /home/ubuntu/.eris/apps/idi/app.js:29
+    /home/ubuntu/.monax/apps/idi/app.js:29
         if (error) { throw error }
                            ^
     Error: Error: socket hang up
@@ -713,11 +713,11 @@ Congratulations, you've just made your very own smart contract backed applicatio
         at Socket.EventEmitter.emit (events.js:117:20)
         at _stream_readable.js:920:16
         at process._tickCallback (node.js:415:13)
-        at httpRequest.onreadystatechange (/home/ubuntu/.eris/apps/idi/node_modules/eris-db/lib/rpc/http.js:101:26)
-        at dispatchEvent (/home/ubuntu/.eris/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:572:25)
-        at setState (/home/ubuntu/.eris/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:591:14)
-        at handleError (/home/ubuntu/.eris/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:516:5)
-        at ClientRequest.errorHandler (/home/ubuntu/.eris/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:443:14)
+        at httpRequest.onreadystatechange (/home/ubuntu/.monax/apps/idi/node_modules/eris-db/lib/rpc/http.js:101:26)
+        at dispatchEvent (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:572:25)
+        at setState (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:591:14)
+        at handleError (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:516:5)
+        at ClientRequest.errorHandler (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:443:14)
         at ClientRequest.EventEmitter.emit (events.js:95:17)
         at Socket.socketOnEnd [as onend] (http.js:1568:9)
         at Socket.g (events.js:180:16)

@@ -16,7 +16,7 @@ import (
 
 const manPrologue = `.Dd {{date "January 2, 2006"}}
 .Os
-.Dt ERIS 1
+.Dt MONAX 1
 .Sh NAME
 .Nm monax
 .Nd {{.Short}}
@@ -84,13 +84,13 @@ values, if meaningful, are provided in square brackets.
 const manEnvironment = `.Sh ENVIRONMENT
 .Nm
 uses the following environment variables:
-.Bl -tag -width "ERIS_PULL_APPROVE"
-.It Ev ERIS
+.Bl -tag -width "MONAX_PULL_APPROVE"
+.It Ev MONAX
 .Nm
 home directory. Supersedes the default
 .Pa $HOME/.monax
 path.
-.It Ev ERIS_PULL_APPROVE
+.It Ev MONAX_PULL_APPROVE
 If set, answers
 .Em yes
 to the confirmation of whether to pull a Docker image,

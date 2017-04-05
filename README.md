@@ -58,7 +58,7 @@ Services are "things that you turn on or off". Examples of services include:
 * BigchainDB service
 * ZCash node
 
-Services work from a base of **service definition files**. These files are held on the host in the following location: `~/.eris/services`. Service definition files tell `eris` how a docker container should be started. The specification for service definition files is located [here](https://monax.io/docs/specs/services_specification).
+Services work from a base of **service definition files**. These files are held on the host in the following location: `~/.monax/services`. Service definition files tell `eris` how a docker container should be started. The specification for service definition files is located [here](https://monax.io/docs/specs/services_specification).
 
 To see the various ways in which `eris` can interact with services, please type:
 
@@ -127,7 +127,7 @@ eris data
 Created by `eris init` in $HOME directory:
 
 ```
-├── .eris/
+├── .monax/
 │   ├── eris.toml
 │   ├── apps/
 │   ├── bundles/

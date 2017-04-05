@@ -9,7 +9,7 @@ title: "Deprecated | Chain Maintaining"
 ## Introduction
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
 </div>
 
 In general what is going to happen here is that we are going to establish what we at Eris call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.
@@ -44,7 +44,7 @@ chain_name="maintainchain"
 val_num=3
 driver=virtualbox
 # it can be annoying when working in bulk to manually approve each pull
-export ERIS_PULL_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
 # we'll make enough validator machines to match our $val_num validators on the chain
 for i in `seq 0 $(expr $val_num - 1)`
 do
@@ -60,9 +60,9 @@ do
   fi
   # perform an ugly text transform to get the configs sorted
   # note: seeds can be set in [chains make]
- cat ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml | \
+ cat ~/.monax/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml | \
     sed -e 's/seeds.*$/seeds = "'"$peer_server_ip"':46656"/g' | \
-    > ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml
+    > ~/.monax/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml
   # start the chain on this machine with a logs rotator on (a good practice for validator nodes)
   eris chains start $chain_name --init-dir $chain_name/"$chain_name"_validator_00"$i" --machine "$machine_base-$i" --logrotate
 done
@@ -86,9 +86,9 @@ The next step is to boot the chain locally and to make sure it is making blocks.
 
 ```bash
 # copy over config and get our "local" node (which will utilize the root key) booted
-cat ~/.eris/chains/$chain_name/"$chain_name"_validator_000/config.toml | \
+cat ~/.monax/chains/$chain_name/"$chain_name"_validator_000/config.toml | \
   sed -e 's/moniker.*$/moniker = "imma_b_da_root"/g' \
-  > ~/.eris/chains/$chain_name/"$chain_name"_root_000/config.toml
+  > ~/.monax/chains/$chain_name/"$chain_name"_root_000/config.toml
 eris chains start $chain_name--init-dir $chain_name/"$chain_name"_root_000
 sleep 10 # let it boot before we check the logs
 eris chains logs "$chain_name"
@@ -135,7 +135,7 @@ echo $new_addr
 OK, we have generated a key and saved it as a bash variable so we don't have to type it in the future. We need to get one more piece of information, namely the address of the root key.
 
 ```bash
-root_addr=$(cat ~/.eris/chains/$chain_name/addresses.csv | grep "root_000" | cut -d ',' -f 1)
+root_addr=$(cat ~/.monax/chains/$chain_name/addresses.csv | grep "root_000" | cut -d ',' -f 1)
 echo $root_addr
 ```
 

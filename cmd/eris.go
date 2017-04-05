@@ -159,8 +159,8 @@ func InitializeConfig() {
 
 	do = definitions.NowDo()
 
-	if os.Getenv("ERIS_CLI_WRITER") != "" {
-		stdout, err = os.Open(os.Getenv("ERIS_CLI_WRITER"))
+	if os.Getenv("MONAX_CLI_WRITER") != "" {
+		stdout, err = os.Open(os.Getenv("MONAX_CLI_WRITER"))
 		if err != nil {
 			log.Errorf("Could not open: %v", err)
 			return
@@ -169,8 +169,8 @@ func InitializeConfig() {
 		stdout = os.Stdout
 	}
 
-	if os.Getenv("ERIS_CLI_ERROR_WRITER") != "" {
-		stderr, err = os.Open(os.Getenv("ERIS_CLI_ERROR_WRITER"))
+	if os.Getenv("MONAX_CLI_ERROR_WRITER") != "" {
+		stderr, err = os.Open(os.Getenv("MONAX_CLI_ERROR_WRITER"))
 		if err != nil {
 			log.Errorf("Could not open: %v", err)
 			return

@@ -1,6 +1,6 @@
 %{define} home %{getenv:HOME}
-%{define} version %{getenv:ERIS_VERSION}
-%{define} release %{getenv:ERIS_RELEASE}
+%{define} version %{getenv:MONAX_VERSION}
+%{define} release %{getenv:MONAX_RELEASE}
 %{define} gorepo %{_builddir}/src/github.com/monax/cli
 
 Summary: Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
@@ -23,8 +23,8 @@ mkdir -p %{gorepo}
 git clone https://github.com/monax/cli %{gorepo}
 
 pushd %{gorepo}
-git fetch origin ${ERIS_BRANCH}
-git checkout ${ERIS_BRANCH}
+git fetch origin ${MONAX_BRANCH}
+git checkout ${MONAX_BRANCH}
 popd
 
 %build
