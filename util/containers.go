@@ -380,7 +380,7 @@ func PullImage(image string, writer io.Writer) error {
 		RawJSONStream: true,
 	}
 
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" {
 		opts.OutputStream = ioutil.Discard
 	}
 

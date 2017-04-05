@@ -144,7 +144,7 @@ This service is usually linked to a chain and/or an application. Its functionali
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageKeys)
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4767:4767"`} // XXX these exposed ports are a gaping security flaw
-		serviceDefinition.Service.ExecHost = "ERIS_KEYS_HOST"
+		serviceDefinition.Service.ExecHost = "MONAX_KEYS_HOST"
 
 	case "compilers":
 
@@ -159,7 +159,7 @@ This monax service compiles smart contract languages.`
 
 	case "ipfs":
 
-		port_to_use := os.Getenv("ERIS_CLI_TESTS_PORT")
+		port_to_use := os.Getenv("MONAX_CLI_TESTS_PORT")
 		if port_to_use == "" {
 			port_to_use = "8080"
 		}
@@ -171,7 +171,7 @@ This monax service is all but essential as part of the monax tool. The [monax fi
 		serviceDefinition.Service.Image = path.Join(version.ImageIPFS) // we use the default docker hub registry
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
-		serviceDefinition.Service.ExecHost = "ERIS_IPFS_HOST"
+		serviceDefinition.Service.ExecHost = "MONAX_IPFS_HOST"
 		serviceDefinition.Service.User = `"root"`
 
 	case "logrotate":

@@ -47,11 +47,11 @@ func SexyUrl() string {
 
 func IPFSUrl() string {
 	var host string
-	if os.Getenv("ERIS_CLI_CONTAINER") == "true" {
+	if os.Getenv("MONAX_CLI_CONTAINER") == "true" {
 		host = "http://ipfs"
 	} else {
-		if os.Getenv("ERIS_IPFS_HOST") != "" {
-			host = os.Getenv("ERIS_IPFS_HOST")
+		if os.Getenv("MONAX_IPFS_HOST") != "" {
+			host = os.Getenv("MONAX_IPFS_HOST")
 		} else {
 			host = IpfsHost
 		}

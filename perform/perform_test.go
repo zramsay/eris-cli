@@ -374,7 +374,7 @@ name = "`+name+`"
 name = "`+name+`"
 image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 restart = "always"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -420,7 +420,7 @@ name = "`+name+`"
 name = "`+name+`"
 image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 restart = "max:99"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -466,7 +466,7 @@ name = "`+name+`"
 name = "`+name+`"
 image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -1464,7 +1464,7 @@ func TestRebuildPullDisallow(t *testing.T) {
 
 	testutil.RemoveImage(name)
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1502,7 +1502,7 @@ func TestRebuildPull(t *testing.T) {
 
 	testutil.RemoveImage(name)
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1538,7 +1538,7 @@ func TestRebuildPullRepeat(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1573,7 +1573,7 @@ func TestPullSimple(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	testutil.RemoveImage(name)
 
@@ -1610,7 +1610,7 @@ func TestPullRepeat(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")

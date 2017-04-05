@@ -76,9 +76,9 @@
 #
 REPO=${GOPATH}/src/github.com/monax/cli
 BUILD_DIR=${REPO}/builds
-ERIS_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
+MONAX_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
 LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
-ERIS_RELEASE=1
+MONAX_RELEASE=1
 
 # NOTE: Set these up before continuing:
 export GITHUB_TOKEN=
@@ -103,11 +103,11 @@ pre_check() {
   echo "OK. Moving on then"
   echo ""
   echo ""
-  if ! echo ${LATEST_TAG}|grep ${ERIS_VERSION}
+  if ! echo ${LATEST_TAG}|grep ${MONAX_VERSION}
   then
     echo "Something isn't right. The last tagged version does not match the version to be released"
     echo "Last tagged: ${LATEST_TAG}"
-    echo "This version: ${ERIS_VERSION}"
+    echo "This version: ${MONAX_VERSION}"
     exit 1
   fi
 }
@@ -156,12 +156,12 @@ cross_compile() {
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_386
-  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_linux_amd64
-  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_386
-  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_darwin_amd64
-  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_386.exe
-  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${ERIS_VERSION}_windows_amd64.exe
+  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_386
+  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_amd64
+  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_386
+  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_amd64
+  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_386.exe
+  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_amd64.exe
   echo "Cross compile completed"
   echo ""
   echo ""
@@ -219,20 +219,20 @@ release_deb() {
 
   if [ ! -z "$@" ]
   then
-    ERIS_RELEASE="$@"
+    MONAX_RELEASE="$@"
   fi
 
   # reprepro(1) doesn't allow '-' in version numbers (that is '-rc1', etc).
   # Debian versions are not SemVer compatible.
-  ERIS_DEB_VERSION=${ERIS_VERSION//-/}
+  MONAX_DEB_VERSION=${MONAX_VERSION//-/}
 
   docker rm -f builddeb 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-deb -t builddeb ${REPO}/misc/release \
   && docker run \
     -t \
     --name builddeb \
-    -e ERIS_VERSION=${ERIS_DEB_VERSION} \
-    -e ERIS_RELEASE=${ERIS_RELEASE} \
+    -e MONAX_VERSION=${MONAX_DEB_VERSION} \
+    -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
@@ -242,7 +242,7 @@ release_deb() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     builddeb "$@" \
-  && docker cp builddeb:/root/eris_${ERIS_DEB_VERSION}-${ERIS_RELEASE}_amd64.deb ${BUILD_DIR} \
+  && docker cp builddeb:/root/eris_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
   && docker rm -f builddeb
   echo "Finished releasing Debian packages"
 }
@@ -254,20 +254,20 @@ release_rpm() {
 
   if [ ! -z "$@" ]
   then
-    ERIS_RELEASE="$@"
+    MONAX_RELEASE="$@"
   fi
 
   # rpmbuild(1) doesn't allow '-' in version numbers (that is '-rc1', etc).
   # RPM versions are not SemVer compatible.
-  ERIS_RPM_VERSION=${ERIS_VERSION//-/_}
+  MONAX_RPM_VERSION=${MONAX_VERSION//-/_}
 
   docker rm -f buildrpm 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-rpm -t buildrpm ${REPO}/misc/release \
   && docker run \
     -t \
     --name buildrpm \
-    -e ERIS_VERSION=${ERIS_RPM_VERSION} \
-    -e ERIS_RELEASE=${ERIS_RELEASE} \
+    -e MONAX_VERSION=${MONAX_RPM_VERSION} \
+    -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
@@ -277,7 +277,7 @@ release_rpm() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-${ERIS_RPM_VERSION}-${ERIS_RELEASE}.x86_64.rpm ${BUILD_DIR} \
+  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
   echo "Finished releasing RPM packages"
 }

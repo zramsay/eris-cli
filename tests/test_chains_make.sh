@@ -16,8 +16,8 @@ then
   cli_exec="eris"
 fi
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
+export MONAX_MIGRATE_APPROVE="true"
 
 # ---------------------------------------------------------------------------
 # Needed functionality

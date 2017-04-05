@@ -253,7 +253,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 
 // Checks that a service is running and starts it if it isn't.
 func EnsureRunning(do *definitions.Do) error {
-	if os.Getenv("ERIS_SKIP_ENSURE") != "" {
+	if os.Getenv("MONAX_SKIP_ENSURE") != "" {
 		return nil
 	}
 

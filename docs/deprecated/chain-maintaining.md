@@ -44,7 +44,7 @@ chain_name="maintainchain"
 val_num=3
 driver=virtualbox
 # it can be annoying when working in bulk to manually approve each pull
-export ERIS_PULL_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
 # we'll make enough validator machines to match our $val_num validators on the chain
 for i in `seq 0 $(expr $val_num - 1)`
 do

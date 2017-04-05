@@ -3,17 +3,17 @@
 echo
 echo ">>> Sanity checks"
 echo
-if [ -z "${ERIS_VERSION}" -o -z "${ERIS_RELEASE}" ]
+if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" ]
 then
-    echo "The ERIS_VERSION or ERIS_RELEASE environment variables are not set, aborting"
+    echo "The MONAX_VERSION or MONAX_RELEASE environment variables are not set, aborting"
     echo
     echo "Please start this container from the 'release.sh' script"
     exit 1
 fi
 
-export ERIS_BRANCH=master
+export MONAX_BRANCH=master
 if [ ! -z "$1" ]; then
-  export ERIS_BRANCH="$1"
+  export MONAX_BRANCH="$1"
 fi
 
 echo
@@ -28,7 +28,7 @@ interact
 EOF
 
 echo
-echo ">>> Building and signing the RPM package (#${ERIS_BRANCH})"
+echo ">>> Building and signing the RPM package (#${MONAX_BRANCH})"
 echo
 rpmdev-setuptree
 
@@ -65,10 +65,10 @@ EOF
 s3cmd put rpmbuild/RPMS/x86_64/* s3://${AWS_S3_RPM_FILES}
 s3cmd put rpmbuild/SRPMS/* s3://${AWS_S3_RPM_FILES}
 
-if [ "$ERIS_BRANCH" != "master" ]
+if [ "$MONAX_BRANCH" != "master" ]
 then
    echo
-   echo ">>> Not recreating a repo for #${ERIS_BRANCH} branch"
+   echo ">>> Not recreating a repo for #${MONAX_BRANCH} branch"
    echo
    exit 0
 fi
