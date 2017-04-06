@@ -63,10 +63,6 @@ Complete documentation is available at https://monax.io/docs
 				log.Errorf("Error: couldn't initialize the Monax root directory: %v", err)
 			}
 
-			if err := config.Save(&config.Global.Settings); err != nil {
-				log.Error(err)
-			}
-
 			log.Warn()
 		}
 
