@@ -2055,44 +2055,6 @@ func TestRenameSimple(t *testing.T) {
 	}
 }
 
-func TestRenameService(t *testing.T) {
-	const (
-		name    = "compilers"
-		newName = "newname"
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't exist")
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting service container running")
-	}
-
-	if err := DockerRename(srv.Operations, newName); err != nil {
-		t.Fatalf("expected container renamed, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting old service container not running")
-	}
-
-	if !util.Running(definitions.TypeService, newName) {
-		t.Fatalf("expecting new service container running")
-	}
-}
-
 func TestRenameEmptyName(t *testing.T) {
 	const (
 		name    = "compilers"
