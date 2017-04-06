@@ -1698,7 +1698,7 @@ func testLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(bufErr.String(), "Starting eris-keys") {
+	if !strings.Contains(bufErr.String(), "Starting monax-keys") {
 		t.Fatalf("expected certain log entries, got %q", bufErr.String())
 	}
 }

@@ -8,7 +8,7 @@ package definitions
 
 type Account struct {
 	// (Required) address of the account which should be used as the default (if source) is
-	// not given for future transactions. Will make sure the eris-keys has the public key
+	// not given for future transactions. Will make sure the monax-keys has the public key
 	// for the account. Generally account should be the first job called unless it is used
 	// via a flag or environment variables to establish what default to use.
 	Address string `mapstructure:"address" json:"address" yaml:"address" toml:"address"`
@@ -28,20 +28,20 @@ type SetJob struct {
 
 type Send struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) address of the account to send the tokens
 	Destination string `mapstructure:"destination" json:"destination" yaml:"destination" toml:"destination"`
 	// (Required) amount of tokens to send from the `source` to the `destination`
 	Amount string `mapstructure:"amount" json:"amount" yaml:"amount" toml:"amount"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 }
 
 type RegisterName struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) name which will be registered
 	Name string `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
@@ -53,14 +53,14 @@ type RegisterName struct {
 	Amount string `mapstructure:"amount" json:"amount" yaml:"amount" toml:"amount"`
 	// (Optional) validators' fee
 	Fee string `mapstructure:"fee" json:"fee" yaml:"fee" toml:"fee"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 }
 
 type Permission struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) actions must be in the set ["set_base", "unset_base", "set_global", "add_role" "rm_role"]
 	Action string `mapstructure:"action" json:"action" yaml:"action" toml:"action"`
@@ -73,7 +73,7 @@ type Permission struct {
 	Target string `mapstructure:"target" json:"target" yaml:"target" toml:"target"`
 	// (Required, if add_role or rm_role action selected) the role which should be given to the account
 	Role string `mapstructure:"role" json:"role" yaml:"role" toml:"role"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 }
@@ -85,7 +85,7 @@ type Bond struct {
 	Account string `mapstructure:"account" json:"account" yaml:"account" toml:"account"`
 	// (Required) amount of tokens which will be bonded
 	Amount string `mapstructure:"amount" json:"amount" yaml:"amount" toml:"amount"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 }
@@ -121,7 +121,7 @@ type Variable struct {
 
 type Deploy struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) the filepath to the contract file. this should be relative to the current path **or**
 	// relative to the contracts path established via the --contracts-path flag or the $EPM_CONTRACTS_PATH
@@ -151,7 +151,7 @@ type Deploy struct {
 	// (Optional) after compiling the contract save the binary in filename.bin in same directory
 	// where the *.sol or *.se file is located. This will speed up subsequent installs
 	SaveBinary bool `mapstructure:"save" json:"save" yaml:"save" toml:"save"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 	// (Optional) todo
@@ -160,7 +160,7 @@ type Deploy struct {
 
 type Call struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) address of the contract which should be called
 	Destination string `mapstructure:"destination" json:"destination" yaml:"destination" toml:"destination"`
@@ -175,7 +175,7 @@ type Call struct {
 	Fee string `mapstructure:"fee" json:"fee" yaml:"fee" toml:"fee"`
 	// (Optional) amount of gas which should be sent along with the call transaction
 	Gas string `mapstructure:"gas" json:"gas" yaml:"gas" toml:"gas"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" json:"nonce" yaml:"nonce" toml:"nonce"`
 	// (Optional) location of the abi file to use (can be relative path or in abi path)
@@ -217,7 +217,7 @@ type RestoreState struct {
 // aka. Simulated Call.
 type QueryContract struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" json:"source" yaml:"source" toml:"source"`
 	// (Required) address of the contract which should be called
 	Destination string `mapstructure:"destination" json:"destination" yaml:"destination" toml:"destination"`

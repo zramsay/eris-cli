@@ -272,10 +272,10 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
 	// NOTE: [ben] the unsafe flag is introduced to start pushing out bad
 	// practices from the tooling with regards to extracting private keys
-	// from eris-keys.  Extracting the private keys can be convenient for
+	// from monax-keys.  Extracting the private keys can be convenient for
 	// the development and poc phase, but must be deprecated even in that
 	// case.
-	chainsMake.PersistentFlags().BoolVarP(&do.Unsafe, "unsafe", "", false, "require explicit confirmation to write private keys from eris-keys to host during make in accounts.json")
+	chainsMake.PersistentFlags().BoolVarP(&do.Unsafe, "unsafe", "", false, "require explicit confirmation to write private keys from monax-keys to host during make in accounts.json")
 
 	buildFlag(chainsStart, do, "init-dir", "chain")
 	buildFlag(chainsStart, do, "publish", "chain")

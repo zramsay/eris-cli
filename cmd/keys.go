@@ -15,10 +15,10 @@ var Keys = &cobra.Command{
 	Use:   "keys",
 	Short: "do specific tasks with keys",
 	Long: `the keys subcommand is an opiniated wrapper around
-[eris-keys] and requires a keys container to be running
+[monax-keys] and requires a keys container to be running
 
 It is for development only. Advanced functionality is available via
-the [monax services exec keys "eris-keys CMD"] command.`,
+the [monax services exec keys "monax-keys CMD"] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 

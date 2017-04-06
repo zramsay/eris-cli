@@ -17,7 +17,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// XXX: this is temporary until eris-keys.js is more tightly integrated with monax-contracts.js
+// XXX: this is temporary until legacy-keys.js is more tightly integrated with legacy-contracts.js
 type accountInfo struct {
 	Address string `mapstructure:"address" json:"address" yaml:"address" toml:"address"`
 	PubKey  string `mapstructure:"pubKey" json:"pubKey" yaml:"pubKey" toml:"pubKey"`
