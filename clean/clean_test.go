@@ -43,7 +43,6 @@ func TestRemoveAllMonaxContainers(t *testing.T) {
 	defer util.RemoveAllMonaxContainers()
 
 	// Start a bunch of monax containers.
-	testStartService("ipfs", t)
 	testStartService("keys", t)
 
 	testStartChain("dirty-chain0", t)

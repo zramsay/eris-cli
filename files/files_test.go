@@ -1,6 +1,7 @@
 package files
 
 import (
+/*
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,8 +14,10 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
+*/
 )
 
+/*
 var (
 	monaxDir     = filepath.Join(os.TempDir(), "monax")
 	newDir       = filepath.Join(monaxDir, "addRecursively")
@@ -230,4 +233,4 @@ func testKillIPFS(t *testing.T) {
 	if err := services.KillService(do); err != nil {
 		t.Fatalf("expected service to be stopped, got %v", err)
 	}
-}
+}*/

@@ -21,7 +21,6 @@ const serviceToNeverUseToml = `# This is a TOML config file.
 
 name = "tester"
 
-<<<<<<< 1532da97f5e2e4415646944be0855f38470feff4
 description = """
 This is for testing only.
 """
