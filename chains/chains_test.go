@@ -289,7 +289,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -314,7 +314,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -336,7 +336,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := testutil.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
-image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -411,7 +411,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(version.DefaultRegistry, version.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)

@@ -16,7 +16,7 @@ import (
 	"github.com/monax/cli/version"
 )
 
-const servName = "ipfs"
+const servName = "keys"
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.WarnLevel)
@@ -24,8 +24,8 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"data", "db", "keys", "ipfs"},
-		Services: []string{"do_not_use", "keys", "ipfs"},
+		Images:   []string{"data", "db", "keys"},
+		Services: []string{"keys"},
 	}))
 
 	// Prevent CLI from starting IPFS.
@@ -261,7 +261,7 @@ func TestCatService(t *testing.T) {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if cmp := testutil.FileContents(filepath.Join(config.MonaxRoot, "services", "ipfs.toml")); out != cmp {
+	if cmp := testutil.FileContents(filepath.Join(config.MonaxRoot, "services", "keys.toml")); out != cmp {
 		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
 	}
 }
