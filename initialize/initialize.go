@@ -27,13 +27,8 @@ func Initialize(do *definitions.Do) error {
 
 	// If this is the first installation of monax, skip these checks.
 	if !newDir {
-
+		// Early exit if overwriting is not allowed
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
-			return err
-		}
-
-		// Write the ~/.monax/monax.toml file.
-		if err := config.Save(&config.Global.Settings); err != nil {
 			return err
 		}
 
@@ -41,6 +36,13 @@ func Initialize(do *definitions.Do) error {
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
 			return err
 		}
+	}
+
+	// Either the monax root dir exists, but we are allowed to overwrite, or this
+	// dir does not and this is a fresh init.
+	// Write the ~/.monax/monax.toml file.
+	if err := config.Save(&config.Global.Settings); err != nil {
+		return err
 	}
 
 	// Pull the default docker images (wraps [docker pull]).
@@ -56,6 +58,8 @@ func Initialize(do *definitions.Do) error {
 		return fmt.Errorf("Could not instantiate defaults:\n\n%s", err)
 	}
 
+	// TODO: [Silas] um, perhaps we should actually ask the filesystem what we've
+	// _really_ done rather than hard coding the output of tree...
 	log.Warn(`
 Directory structure initialized:
 
