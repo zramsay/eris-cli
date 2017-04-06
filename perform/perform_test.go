@@ -829,6 +829,10 @@ func TestExecServiceNonInteractive(t *testing.T) {
 	}
 }
 
+// TODO fix!
+// this test (last 3 lines) does *not* fail when it should
+// see following two tests
+/*
 func TestExecServiceAfterRunService(t *testing.T) {
 	const (
 		name = "compilers"
@@ -854,7 +858,7 @@ func TestExecServiceAfterRunService(t *testing.T) {
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure due to unpublished ports, got %v", err)
 	}
-}
+}*/
 
 func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 	const (
