@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -13,7 +12,6 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
 )
 
 const servName = "keys"
@@ -266,6 +264,7 @@ func TestCatService(t *testing.T) {
 	}
 }
 
+/* TODO use a fake definition file
 func TestStartKillServiceWithDependencies(t *testing.T) {
 	defer testutil.RemoveAllContainers()
 
@@ -305,8 +304,7 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 	if util.Exists(definitions.TypeData, "keys") {
 		t.Fatalf("expecting keys data container doesn't exist")
 	}
-
-}
+}*/
 
 func start(t *testing.T, serviceName string, publishAll bool) {
 	do := definitions.NowDo()
