@@ -199,7 +199,7 @@ func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator i
 		return nil, err
 	}
 
-	thisActT.Perms = make(map[string]int)
+	thisActT.Perms = make(map[string]int64)
 	for _, perm := range AccountTypeManualPerms() {
 		thisActT.Perms[perm], err = util.GetIntResponse(AccountTypeManualPermsQuestion(perm), 0, reader)
 	}
@@ -259,21 +259,21 @@ func assembleTypesCSV(accountT []*definitions.MonaxDBAccountType, do *definition
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
 				var err error
-				thisActT.DefaultNumber, err = strconv.Atoi(num)
+				thisActT.DefaultNumber, err = strconv.ParseInt(num, 10, 64)
 				if err != nil {
 					return err
 				}
-				thisActT.DefaultTokens, err = strconv.Atoi(tokens)
+				thisActT.DefaultTokens, err = strconv.ParseInt(tokens, 10, 64)
 				if err != nil {
 					return err
 				}
-				thisActT.DefaultBond, err = strconv.Atoi(toBond)
+				thisActT.DefaultBond, err = strconv.ParseInt(toBond, 10, 64)
 				if err != nil {
 					return err
 				}
-				permsPrime := make(map[string]int)
+				permsPrime := make(map[string]int64)
 				for i := 0; i < len(perms); i++ {
-					p, err := strconv.Atoi(perms[i+1])
+					p, err := strconv.ParseInt(perms[i+1], 10, 64)
 					if err != nil {
 						return err
 					}
@@ -306,10 +306,10 @@ func assembleTypesFlags(accountT []*definitions.MonaxDBAccountType, do *definiti
 
 			// If the number of account types is missing,
 			// assuming 1.
-			num int = 1
+			num int64 = 1
 		)
 		if len(tmp) > 1 {
-			num, err = strconv.Atoi(tmp[1])
+			num, err = strconv.ParseInt(tmp[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -347,7 +347,7 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.MonaxDBAccountType, do
 			// seems to lower case this for some odd reason.
 			// TODO: see if burntsushi's toml renderer will handle this better in the future
 			if thisActT.Name == strings.Title(act) {
-				thisActT.DefaultNumber = num
+				thisActT.DefaultNumber = int64(num)
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
 					"number": thisActT.DefaultNumber,
