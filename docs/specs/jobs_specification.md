@@ -16,9 +16,9 @@ The goal of jobs is to enable automation of contractual steps and defining "use"
 
 When combined with a package manager to install and resolve dependencies, one can create scripts on top of their smart contracts to coordinate and calculate how certain contracts will interact with each other and evaluate how they will interact through development externalities in real time. Utilizing the monax `job runner` one can make smart contracts as easy as shell scripting.
 
-Examples of monax job definition files are available in the [jobs_fixtures](github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
+Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
 
-Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using the job runner' [variable specification](github.com/monax/cli/tree/master/docs/specs/variable_specification).
+Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using the job runner' [variable specification](docs/specs/variable_specification).
 
 By default, `monax pkgs do` will perform the entire sequence of jobs which has been outlined in a given jobs file.
 
@@ -277,7 +277,7 @@ Ex.
 
 Asserts can be used to compare two "things". These "things" may be the result of two jobs or the result against one job against a baseline. (Indeed, it could be the comparison of two baselines but that wouldn't really get folks anywhere).
 
-[Read the Assert Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](github.com/monax/cli/tree/master/)
+[Read the Assert Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/asserts_specification)
 
 ### Utility Jobs
 
@@ -319,4 +319,4 @@ jobs:
 ### Extension/Creating your own Job - Coming soon!
 
 
-## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](github.com/monax/cli/tree/master/)
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](docs/specs)

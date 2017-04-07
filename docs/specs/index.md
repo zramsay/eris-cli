@@ -24,7 +24,7 @@ Services are defined in **service definition files**. These reside on the host i
 
 Service definition files are formatted using `toml`.
 
-[Read the Services Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](github.com/monax/cli/tree/master/docs/specs/services_specification)
+[Read the Services Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/services_specification)
 
 
 ### Jobs Specification
@@ -35,13 +35,13 @@ Jobs are defined in **job definition files**.
 
 Job definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-Examples of monax job definition files are available in the [jobs_fixtures](github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
+Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
 
-[Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](github.com/monax/cli/tree/master/docs/specs/jobs_specification)
+[Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/jobs_specification)
 
 
 
-## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](github.com/monax/cli/tree/master/docs/)
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](docs/)
 
 
 
