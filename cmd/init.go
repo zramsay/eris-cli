@@ -3,20 +3,18 @@ package commands
 import (
 	"os"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/initialize"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/initialize"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )
 
-// flags to add: --no-clone
 var Init = &cobra.Command{
 	Use:   "init",
 	Short: "initialize your work space for smart contract glory",
-	Long: `create the Eris root ` + util.Tilde(config.ErisRoot) + ` directory with services subdirectories
-and clone github.com/eris-ltd/eris-services into them.`,
+	Long:  `create the root ` + util.Tilde(config.MonaxRoot) + ` directory and subdirectories.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		Router(cmd, args)
 	},

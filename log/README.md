@@ -1,13 +1,13 @@
-# Eris Logger
+# Monax Logger
 
-Eris logging package is a fork of the [logrus](https://github.com/Sirupsen/logrus) logger with the `ErisFormatter` set by default.
+Monax logging package is a fork of the [logrus](https://github.com/Sirupsen/logrus) logger with the `MonaxFormatter` set by default.
 
 It also avoids logrus' shortcoming of not able to ignore logging levels set by the package's `SetLevel()` function.
 
 ## Generic Initialization
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import "github.com/monax/cli/log"
 
 log.SetLevel(log.WarnLevel)
 if do.Verbose {
@@ -21,7 +21,7 @@ if do.Verbose {
 ## Initialization for Tests
 
 ```
-import log "github.com/eris-ltd/eris-logger"
+import log "github.com/monax/cli/log"
 
 log.SetLevel(log.ErrorLevel)
 // log.SetLevel(log.InfoLevel)
@@ -79,4 +79,4 @@ log.WithField("=>", servName).Info("Checking number of containers for")
 
 ## Recommended Style
 
-See the [CONTRIBUTING](https://github.com/eris-ltd/eris-cli/blob/master/.github/CONTRIBUTING.md#errors-and-log-messages-style) document.
+See the [CONTRIBUTING](https://github.com/monax/cli/blob/master/.github/CONTRIBUTING.md#errors-and-log-messages-style) document.

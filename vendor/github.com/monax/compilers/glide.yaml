@@ -1,0 +1,8 @@
+package: github.com/monax/compilers
+import:
+- package: github.com/monax/cli
+  version: 53bb3fd3d414f36d080d5b98741802117ff5cdf5
+  subpackages:
+  - config
+  - log
+- package: github.com/spf13/cobra

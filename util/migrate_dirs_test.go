@@ -8,20 +8,20 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/log"
 )
 
-var erisDir string = filepath.Join(os.TempDir(), "eris")
+var monaxDir string = filepath.Join(os.TempDir(), "monax")
 
 //old
-var blockchains string = filepath.Join(erisDir, "blockchains")
-var dapps string = filepath.Join(erisDir, "dapps")
+var blockchains string = filepath.Join(monaxDir, "blockchains")
+var dapps string = filepath.Join(monaxDir, "dapps")
 var depDirs = []string{blockchains, dapps}
 
 //new
-var chains string = filepath.Join(erisDir, "chains")
-var apps string = filepath.Join(erisDir, "apps")
+var chains string = filepath.Join(monaxDir, "chains")
+var apps string = filepath.Join(monaxDir, "apps")
 var newDirs = []string{chains, apps}
 
 func TestMain(m *testing.M) {
@@ -110,7 +110,7 @@ func TestMigrationMoveFile(t *testing.T) {
 }
 
 func testsInit() error {
-	config.ChangeErisRoot(erisDir)
+	config.ChangeMonaxRoot(monaxDir)
 
 	// TODO: make a reader/pipe so we can see what is written from tests.
 	var err error
@@ -119,7 +119,7 @@ func testsInit() error {
 		ifExit(err)
 	}
 
-	if err := os.Mkdir(erisDir, 0777); err != nil {
+	if err := os.Mkdir(monaxDir, 0777); err != nil {
 		if runtime.GOOS != "windows" {
 			// windows returns an error here
 			ifExit(err)
@@ -163,7 +163,7 @@ func testsRemoveDirs(depDirs, newDirs []string) {
 }
 
 func testsTearDown() error {
-	if e := os.RemoveAll(erisDir); e != nil {
+	if e := os.RemoveAll(monaxDir); e != nil {
 		return e
 	}
 

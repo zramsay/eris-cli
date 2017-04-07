@@ -5,17 +5,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/testutil"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
 )
 
 var dataName string = "dataTest1"
 var newName string = "dataTest2"
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.WarnLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
@@ -40,7 +40,7 @@ func TestExportData(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Source = config.ErisContainerRoot
+	do.Source = config.MonaxContainerRoot
 	do.Destination = filepath.Join(config.DataContainersPath, do.Name)
 	if err := ExportData(do); err != nil {
 		log.Error(err)
@@ -60,7 +60,7 @@ func TestExecData(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = dataName
-	do.Operations.Args = []string{"mv", "/home/eris/.eris/test", "/home/eris/.eris/tset"}
+	do.Operations.Args = []string{"mv", "/home/monax/.monax/test", "/home/monax/.monax/tset"}
 	do.Operations.Interactive = false
 
 	log.WithFields(log.Fields{
@@ -168,7 +168,7 @@ func testCreateDataByImport(t *testing.T, name string) {
 	do := definitions.NowDo()
 	do.Name = name
 	do.Source = filepath.Join(config.DataContainersPath, do.Name)
-	do.Destination = config.ErisContainerRoot
+	do.Destination = config.MonaxContainerRoot
 	if err := ImportData(do); err != nil {
 		t.Fatalf("error importing data: %v", err)
 	}

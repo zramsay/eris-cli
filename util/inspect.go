@@ -7,8 +7,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/log"
 
 	docker "github.com/fsouza/go-dockerclient"
 
@@ -119,9 +119,7 @@ func printLine(container *docker.Container, existing bool) ([]string, error) {
 	details := ContainerDetails(n)
 
 	parts := []string{details.ShortName, "", running, details.FullName, FormulatePortsOutput(container)}
-	if err := CheckParts(parts); err != nil {
-		return []string{}, err
-	}
+
 	return parts, nil
 }
 
@@ -173,7 +171,7 @@ func printReport(container interface{}, field string) error {
 }
 
 func probablyHasDataContainer(container *docker.Container) bool {
-	eFolder := container.Volumes["/home/eris/.eris"]
+	eFolder := container.Volumes["/home/monax/.monax"]
 	if eFolder != "" {
 		if strings.Contains(eFolder, "_data") {
 			return true
@@ -218,12 +216,4 @@ func writeTemplate(container interface{}, toParse string) error {
 
 func startsUp(field string) bool {
 	return unicode.IsUpper([]rune(field)[0])
-}
-
-// a checker for building tables cf. listing funcs
-func CheckParts(parts []string) error {
-	if len(parts) != 5 {
-		return fmt.Errorf("part length !=5")
-	}
-	return nil
 }

@@ -2,7 +2,7 @@ package definitions
 
 type PackageDefinition struct {
 	Name    string   `json:"name" yaml:"name" toml:"name"`
-	Package *Package `mapstructure:"eris" json:"eris" yaml:"eris" toml:"eris"`
+	Package *Package `mapstructure:"monax" json:"monax" yaml:"monax" toml:"monax"`
 }
 
 type Package struct {
@@ -29,6 +29,11 @@ type Package struct {
 	Operations        *Operation
 	SkipContractsPath bool
 	SkipABIPath       bool
+
+	// from epm
+	Account   string
+	Jobs      []*Jobs
+	Libraries map[string]string
 }
 
 func BlankPackageDefinition() *PackageDefinition {

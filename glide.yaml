@@ -1,0 +1,52 @@
+package: github.com/monax/cli
+import:
+- package: github.com/BurntSushi/toml
+  version: v0.2.0
+- package: github.com/bugsnag/bugsnag-go
+  version: v1.1.1
+- package: github.com/docker/docker
+  version: v1.13.0
+  subpackages:
+  - pkg/archive
+  - pkg/jsonmessage
+  - pkg/term
+- package: github.com/ethereum/go-ethereum
+  version: master
+  subpackages:
+  - accounts/abi
+  - common
+- package: github.com/fsouza/go-dockerclient
+- package: github.com/kr/text
+  subpackages:
+  - colwriter
+- package: github.com/oleiade/reflections
+  version: v1.0.0
+- package: github.com/pborman/uuid
+  version: v1.0
+- package: github.com/serenize/snaker
+- package: github.com/spf13/cobra
+- package: github.com/spf13/pflag
+- package: github.com/spf13/viper
+- package: github.com/tcnksm/go-gitconfig
+  version: v0.1.2
+- package: golang.org/x/sys
+  subpackages:
+  - unix
+- package: gopkg.in/yaml.v2
+- package: github.com/monax/compilers
+  version: develop
+  subpackages:
+  - perform
+- package: github.com/monax/burrow
+  subpackages:
+  - client
+  - client/rpc
+  - logging/loggers
+  - genesis
+  - txs
+  - keys
+testImport:
+- package: github.com/stretchr/testify
+  version: v1.1.4
+  subpackages:
+  - assert

@@ -8,11 +8,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 type ab struct {
@@ -69,7 +70,7 @@ services       = [ "keys" ]
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -102,7 +103,7 @@ func TestLoadChainDefinitionWithoutPath(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -137,7 +138,7 @@ func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -172,7 +173,7 @@ func TestLoadChainDefinitionEmptyDefaultAndDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -216,7 +217,7 @@ ports          = [ "4321" ]
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
@@ -268,14 +269,14 @@ image          = "test image"
 		{`SrvContainerName`, s.Operations.SrvContainerName, util.ChainContainerName(name)},
 		{`DataContainerName`, s.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, s.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, s.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, s.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, s.Operations.Labels[definitions.LabelType], definitions.TypeChain},
 
 		{`Service.Name`, s.Service.Name, name},
 		{`Service.AutoData`, s.Service.AutoData, true},
-		// [pv]: not "test image", but erisdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(config.Global.DefaultRegistry, config.Global.ImageDB)},
+		// [pv]: not "test image", but monaxdb image. A bug?
+		{`Service.Image`, s.Service.Image, path.Join(version.DefaultRegistry, version.ImageDB)},
 		{`Service.Environment`, s.Service.Environment, []string{chainID, chainName}},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
@@ -296,7 +297,7 @@ func TestLoadDataDefinition(t *testing.T) {
 		{`SrvContainerName`, d.SrvContainerName, util.DataContainerName(name)},
 		{`DataContainerName`, d.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Labels[definitions.LabelType], definitions.TypeData},
 	} {
@@ -306,12 +307,13 @@ func TestLoadDataDefinition(t *testing.T) {
 	}
 }
 
+/* TODO: [RJ] - https://github.com/monax/cli/issues/1173
 func TestLoadPackageSimple(t *testing.T) {
 	const (
 		name = "test"
 
 		definition = `
-[eris]
+[monax]
 name       = "` + name + `"
 package_id = "` + name + `"
 chain_name = "test chain"
@@ -319,11 +321,11 @@ chain_id   = "test id"
 `
 	)
 
-	if err := testutil.FakeDefinitionFile(config.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadPackage(config.ErisRoot, name)
+	d, err := LoadPackage(name)
 	if err != nil {
 		t.Fatalf("expected to load definition file, got %v", err)
 	}
@@ -346,7 +348,7 @@ func TestLoadPackageDirectoryAndSpacesInAName(t *testing.T) {
 		definition = `
 name       = "` + name + `"
 
-[eris]
+[monax]
 name       = "` + name + `"
 package_id = "` + name + `"
 chain_name = "test chain"
@@ -354,11 +356,11 @@ chain_id   = "test id"
 `
 	)
 
-	if err := testutil.FakeDefinitionFile(config.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	d, err := LoadPackage(filepath.Join(config.ErisRoot, "package.toml"), name)
+	d, err := LoadPackage(name)
 	if err != nil {
 		t.Fatalf("expected to load definition file, got %v", err)
 	}
@@ -379,9 +381,9 @@ func TestLoadPackageNotFound1(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(config.ErisRoot, "package.toml"))
+	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
 
-	if _, err := LoadPackage("/non/existent/path", name); err == nil {
+	if _, err := LoadPackage(name); err == nil {
 		t.Fatalf("expected definition fail to load")
 	}
 }
@@ -391,15 +393,15 @@ func TestLoadPackageNotFound2(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(config.ErisRoot, "package.toml"))
+	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
 
-	d, err := LoadPackage(config.ErisRoot, "")
+	d, err := LoadPackage("")
 	if err != nil {
 		t.Fatalf("expected definition to load default, got %v", err)
 	}
 
 	for _, entry := range []ab{
-		{`Name`, d.Name, "eris"},
+		{`Name`, d.Name, "monax"},
 		{`PackageID`, d.PackageID, ""},
 		{`ChainName`, d.ChainName, ""},
 	} {
@@ -414,15 +416,15 @@ func TestLoadPackageNotFound3(t *testing.T) {
 		name = "test"
 	)
 
-	os.Remove(filepath.Join(config.ErisRoot, "package.toml"))
+	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
 
-	d, err := LoadPackage(config.ErisRoot, name)
+	d, err := LoadPackage(name)
 	if err != nil {
 		t.Fatalf("expected definition to load default, got %v", err)
 	}
 
 	for _, entry := range []ab{
-		{`Name`, d.Name, "eris"},
+		{`Name`, d.Name, "monax"},
 		{`PackageID`, d.PackageID, ""},
 		{`ChainName`, d.ChainName, name},
 	} {
@@ -437,19 +439,20 @@ func TestLoadPackageBadFormat(t *testing.T) {
 		name = "test"
 
 		definition = `
-[eris]
+[monax]
 name       = [ "keys"]
 `
 	)
 
-	if err := testutil.FakeDefinitionFile(config.ErisRoot, "package", definition); err != nil {
+	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
 		t.Fatalf("cannot place a definition file")
 	}
 
-	if _, err := LoadPackage(config.ErisRoot, name); err == nil {
+	if _, err := LoadPackage(name); err == nil {
 		t.Fatalf("expected definition fail to load")
 	}
 }
+*/
 
 func TestLoadServiceDefinitionSimple(t *testing.T) {
 	const (
@@ -485,7 +488,7 @@ repository = "https://example.com"
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
@@ -527,7 +530,7 @@ image = "test image"
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName("test image")},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName("test image")},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 
@@ -599,7 +602,7 @@ func TestMockServiceDefinition(t *testing.T) {
 		{`SrvContainerName`, d.Operations.SrvContainerName, util.ServiceContainerName(name)},
 		{`DataContainerName`, d.Operations.DataContainerName, util.DataContainerName(name)},
 
-		{`Labels["ERIS"]`, d.Operations.Labels[definitions.LabelEris], "true"},
+		{`Labels["MONAX"]`, d.Operations.Labels[definitions.LabelMonax], "true"},
 		{`Labels["NAME"]`, d.Operations.Labels[definitions.LabelShortName], name},
 		{`Labels["TYPE"]`, d.Operations.Labels[definitions.LabelType], definitions.TypeService},
 

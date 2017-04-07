@@ -1,0 +1,8 @@
+{
+  "name": "idis_app",
+  "version": "0.0.1",
+  "dependencies": {
+    "legacy-contracts": "^0.16.0",
+    "prompt": "*"
+  }
+}

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/files"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/files"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )
@@ -20,13 +20,13 @@ files to and from IPFS for use on the host machine
 These commands are provided in addition to the various
 functionality which is included throughout the tool, such as
 services import or services export which operate more
-precisely. The eris files command is used as a general wrapper
-around an IPFS gateway which would be running as eris services ipfs.
+precisely. The monax files command is used as a general wrapper
+around an IPFS gateway which would be running as monax services ipfs.
 
 At times, due to the manner in which IPFS boots files commands
-will fail. If you get errors when running eris files commands
-then please run [eris services start ipfs] give that a second
-or two to boot and then retry the eris files command which failed.`,
+will fail. If you get errors when running monax files commands
+then please run [monax services start ipfs] give that a second
+or two to boot and then retry the monax files command which failed.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -90,7 +90,7 @@ var filesCached = &cobra.Command{
 func addFilesFlags() {
 	filesImport.Flags().StringVarP(&do.Path, "output", "o", "", "specify a path/name to output the file/directory. this flag is required")
 
-	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"eris\" for our gateway, or use your own with \"http://yourhost\"")
+	filesExport.Flags().StringVarP(&do.Gateway, "gateway", "", "", "specify a hosted gateway. default is IPFS' gateway; type \"monax\" for our gateway, or use your own with \"http://yourhost\"")
 
 	filesCached.Flags().BoolVarP(&do.Rm, "rma", "", false, "remove all cached files")
 	filesCached.Flags().StringVarP(&do.Hash, "rm", "", "", "remove a cached file by hash")

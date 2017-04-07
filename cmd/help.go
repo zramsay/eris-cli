@@ -29,7 +29,7 @@ var Help = &cobra.Command{
 	Use:   "help COMMAND",
 	Short: "Help about a command",
 	Long: `Provide help for any command in the application.
-Type eris help COMMAND for full details.`,
+Type monax help COMMAND for full details.`,
 	PersistentPreRun:  func(cmd *cobra.Command, args []string) {},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 

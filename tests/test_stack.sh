@@ -3,16 +3,15 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris stack and the connection between eris cli
-# and eris pm. **Generally, it should not be used in isolation.**
+# This script will test the Monax stack. **Generally, it should not be used in isolation.**
 
 # ---------------------------------------------------------------------------
 # REQUIREMENTS
 
 # Docker installed locally
 # Docker-Machine installed locally (if using remote boxes)
-# eris' test_machines image (if testing against eris' test boxes)
-# Eris installed locally
+# monax's test_machines image (if testing against monax's test boxes)
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -24,13 +23,10 @@
 
 # Where are the Things
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/monax/cli
 repo=$GOPATH/src/$base
-if [ "$CIRCLE_BRANCH" ] # TODO add windows/osx
-then
-  repo=${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
-  ci=true
-elif [ "$TRAVIS_BRANCH" ]
+fail="false"
+if [ "$TRAVIS_BRANCH" ]
 then
   ci=true
   osx=true
@@ -38,29 +34,17 @@ elif [ "$APPVEYOR_REPO_BRANCH" ]
 then
   ci=true
   win=true
-else
-  ci=false
 fi
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
+export MONAX_MIGRATE_APPROVE="true"
 export SKIP_BUILD="true"
-
-ecm=eris-cm
-ecm_repo=https://github.com/eris-ltd/$ecm.git
-ecm_dir=$repo/../$ecm
-ecm_branch=${ECM_BRANCH:=master}
-
-epm=eris-pm
-epm_repo=https://github.com/eris-ltd/$epm.git
-epm_dir=$repo/../$epm
-epm_branch=${EPM_BRANCH:=master}
 
 # ----------------------------------------------------------------------------
 # Utility functions
 
 check_and_exit() {
-  if [ $test_exit -ne 0 ]
+  if [ $fail -ne "false" ]
   then
     cd $start
     exit $test_exit
@@ -68,52 +52,21 @@ check_and_exit() {
 }
 
 # ----------------------------------------------------------------------------
-# Get ECM
+# Run [eris packages do] tests
 
-echo
-if [ -d "$ecm_dir" ]; then
-  echo "eris-cm present on host; not cloning"
-  cd $ecm_dir
-else
-  echo -e "Cloning eris-cm to:\t\t$ecm_dir:$ecm_branch"
-  git clone $ecm_repo $ecm_dir &>/dev/null
-  cd $ecm_dir 1>/dev/null
-  git checkout origin/$ecm_branch &>/dev/null
-fi
-echo
-
-# ----------------------------------------------------------------------------
-# Run ECM tests
-
-tests/test.sh
-test_exit=$?
-check_and_exit
+time tests/test_jobs.sh
+if [ $? -ne 0 ]; then fail="true"; fi
 cd $start
 
 # ----------------------------------------------------------------------------
-# Get EPM
+# Run [eris chains make] tests
 
-echo
-if [ -d "$epm_dir" ]; then
-  echo "eris-pm present on host; not cloning"
-  cd $epm_dir
-else
-  echo -e "Cloning eris-pm to:\t\t$epm_dir:$epm_branch"
-  git clone $epm_repo $epm_dir &>/dev/null
-  cd $epm_dir 1>/dev/null
-  git checkout origin/$epm_branch &>/dev/null
-fi
-echo
-
-# ----------------------------------------------------------------------------
-# Run EPM tests
-
-tests/test.sh
-test_exit=$?
-check_and_exit
+time tests/test_chains_make.sh
+if [ $? -ne 0 ]; then fail="true"; fi
 cd $start
 
 # ----------------------------------------------------------------------------
 # Cleanup
 cd $start
+check_and_exit
 exit $test_exit

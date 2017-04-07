@@ -1,49 +1,60 @@
-version: 1.0.{build}-{branch}
-clone_folder: C:\src\github.com\eris-ltd\eris-cli
+version: "{build}-{branch}"
+os: Visual Studio 2015
+# Source Config
+clone_folder: C:\gopath\src\github.com\monax\cli
 
 environment:
-  TEST_ON_WINDOWS: "true"
-  GOPATH: C:\
-  GOBIN: C:\bin
-  GO15VENDOREXPERIMENT: 1
-  PATH: '%PATH%;C:\bin'
-  MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
-  SKIP_STACK: "true" # remove later when stack tests work on windows.
-  DOCKER_VERSION: 1.10.0
-  DOCKER_MACHINE_VERSION: 0.4.1
-  AWS_ACCESS_KEY_ID:
-    secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
-  AWS_SECRET_ACCESS_KEY:
-    secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
-  AWS_DEFAULT_REGION: eu-west-1
-  AWS_VPC_ID:
-    secure: Lo717dojMJUNytpQPZWwyw==
-  AWS_SECURITY_GROUP:
-    secure: Jie7WuAzjiHVp7tX8MfaSQ==
-  ECM_BRANCH: develop
-  EPM_BRANCH: develop
+  global:
+    TEST_ON_WINDOWS: "true"
+    GOPATH: C:\gopath
+    GOBIN: C:\gopath\bin
+    CC: gcc.exe
+    PATH: '%PATH%;C:\gopath\bin;C:\msys64\mingw64\bin\;C:\Program Files (x86)\NSIS\;'
+    MSYS2_ARCH: x86_64
+    MSYS2_BITS: 64
+    MSYSTEM: MINGW64
+  matrix:
+  - DOCKER_MACHINE: "true"
+    MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+    DOCKER_VERSION: 1.10.0
+    DOCKER_MACHINE_VERSION: 0.4.1
+    AWS_ACCESS_KEY_ID:
+      secure: qHdpZ2qgqg7LcbD1GJJ5JHPZJ1Bn0dQ8LoXgZpKrXBQ=
+    AWS_SECRET_ACCESS_KEY:
+      secure: SM1ZHeoInEuFq7Crxwsvq+9ukaCpR4lFBoPGRMTUIOOPmzCwOU6nTqO+NFW1DnQO
+    AWS_DEFAULT_REGION: eu-west-1
+    AWS_VPC_ID:
+      secure: Lo717dojMJUNytpQPZWwyw==
+    AWS_SECURITY_GROUP:
+      secure: Jie7WuAzjiHVp7tX8MfaSQ==
+  - allow_failures:
+    DOCKER_NATIVE: "true"
+
+
+
+install:
+  - gcc --version
+  - choco upgrade golang
+  - cinst cygwin
+  - cinst jq
+  - ps: >-
+      If ($env:DOCKER_MACHINE -eq "true") {
+        cinst docker --version $env:DOCKER_VERSION; cinst docker-machine --version $env:DOCKER_MACHINE_VERSION
+      } Else {
+        cinst docker-for-windows
+      }
 
 build_script:
 - cmd: >-
 
-    choco install -yr cygwin > nul
+    cd c:\gopath\src\github.com\monax\cli
 
-    choco install -yr jq
-
-    choco install -yr docker -version %DOCKER_VERSION%
-
-    choco install -yr docker-machine -version %DOCKER_MACHINE_VERSION%
-
-    cd c:\src\github.com\eris-ltd\eris-cli\cmd\eris
-
-    go get
-
-    go install
+    go install .\cmd\eris
 
 after_test:
-  - bash c:\src\github.com\eris-ltd\eris-cli\tests\dm_cleanup.sh
+  - bash c:\gopath\src\github.com\monax\cli\tests\dm_cleanup.sh
 
 test_script:
 - cmd: >-
 
-    bash c:\src\github.com\eris-ltd\eris-cli\tests\test.sh
+    bash c:\gopath\src\github.com\monax\cli\tests\test.sh

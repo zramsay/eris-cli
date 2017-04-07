@@ -11,29 +11,29 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/util"
 
-	"github.com/eris-ltd/eris-cli/log"
 	docker "github.com/fsouza/go-dockerclient"
+	"github.com/monax/cli/log"
 )
 
 const (
-	// `eris ls` format.
-	standardTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER"
-	standardTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}"
+	// `monax ls` format.
+	standardTmplHeader = "{{toupper .}}\tON\tVERSION"
+	standardTmpl       = "{{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t{{img .Info.Config.Image}}"
 
-	// `eris ls -a` format.
+	// `monax ls -a` format.
 	extendedTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER\tIMAGE\tCOMMAND\tPORTS"
-	extendedTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}\t{{.Info.Config.Image}}\t{{.Info.Config.Cmd}}\t{{ports .Info}}"
+	extendedTmpl       = "{{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}\t{{.Info.Config.Image}}\t{{.Info.Config.Cmd}}\t{{ports .Info}}"
 
 	// Data section.
 	dataTmplHeader = "{{toupper .}}\tON\tCONTAINER ID"
-	dataTmpl       = "{{.ShortName}}\t{{asterisk .Info.State.Running}}\t{{short .Info.ID}}"
+	dataTmpl       = "{{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t{{short .Info.ID}}"
 )
 
 var (
-	erisContainers = []*util.Details{}
+	monaxContainers = []*util.Details{}
 
 	// Template helpers to manipulate raw field values in the output.
 	helpers = map[string]interface{}{
@@ -44,7 +44,7 @@ var (
 			return strconv.Quote(word)
 		},
 		// Show a '*' symbol if a container is running.
-		"asterisk": func(running bool) string {
+		"astmonaxk": func(running bool) string {
 			if running {
 				return "*"
 			}
@@ -61,7 +61,7 @@ var (
 		// Show a dependent data container name if it exists
 		// for the given short name of a service or a chain.
 		"dependent": func(name string) string {
-			for _, container := range erisContainers {
+			for _, container := range monaxContainers {
 				if container.ShortName == name && container.Type == definitions.TypeData {
 					return container.Info.ID
 				}
@@ -71,6 +71,16 @@ var (
 		// Pretty-format Docker ports.
 		"ports": func(container *docker.Container) string {
 			return util.FormulatePortsOutput(container)
+		},
+		"img": func(image string) string {
+			tag := strings.Split(image, ":")
+			if len(tag) == 2 {
+				return tag[1]
+			} else if len(tag) == 1 {
+				return "latest"
+			} else {
+				return "unknown"
+			}
 		},
 	}
 )
@@ -92,11 +102,11 @@ func Containers(t, format string, running bool) error {
 	}
 
 	// Collect container information.
-	util.ErisContainers(func(name string, details *util.Details) bool {
+	util.MonaxContainers(func(name string, details *util.Details) bool {
 		if running == true && details.Info.State.Running == false && details.Type != definitions.TypeData {
 			return false
 		}
-		erisContainers = append(erisContainers, details)
+		monaxContainers = append(monaxContainers, details)
 		return true
 	}, false)
 
@@ -179,7 +189,7 @@ func Containers(t, format string, running bool) error {
 }
 
 func isOrphanDataContainers() bool {
-	for _, container := range erisContainers {
+	for _, container := range monaxContainers {
 		if container.Type == definitions.TypeData {
 			if isMasterContainer(container.ShortName) {
 				continue
@@ -220,13 +230,13 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 		return fmt.Errorf("Listing template error: %v", err)
 	}
 
-	for _, container := range erisContainers {
+	for _, container := range monaxContainers {
 		// Show containers for this section type.
 		if container.Type != t {
 			continue
 		}
 
-		// Display only orphaned data containers in `eris ls` or `eris ls -a` mode.
+		// Display only orphaned data containers in `monax ls` or `monax ls -a` mode.
 		if truncate {
 			if isMasterContainer(container.ShortName) {
 				continue
@@ -250,14 +260,14 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 
 func jsonContainers(t string, running bool) error {
 	// Collect container information.
-	util.ErisContainers(func(name string, details *util.Details) bool {
+	util.MonaxContainers(func(name string, details *util.Details) bool {
 		if t == "all" || t == details.Type {
-			erisContainers = append(erisContainers, details)
+			monaxContainers = append(monaxContainers, details)
 		}
 		return true
 	}, running)
 
-	b, err := json.Marshal(erisContainers)
+	b, err := json.Marshal(monaxContainers)
 	if err != nil {
 		return err
 	}

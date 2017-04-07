@@ -4,12 +4,9 @@
 
 # This script will setup docker.
 
-# **NOTE** -- This script is used by Eris to provision test box backends which
+# **NOTE** -- This script is used by Monax to provision test box backends which
 # we need to be on a specific version of docker. It will likely be unuseful to
 # you.
-
-# If you are looking for a quick and easy way to set up eris on a cloud machin
-# please see https://github.com/eris-ltd/common/cloud/chains/setup/setup.sh
 
 # If $DOCKER_VERSION is set then the host will use that.
 
@@ -79,7 +76,7 @@ echo "Privileges confirmed."
 
 if [ -z "$DOCKER_VERSION" ]
 then
-  echo "You do not have the \$DOCKER_VERSION set. Trying via hostname (an Eris paradigm)."
+  echo "You do not have the \$DOCKER_VERSION set. Trying via hostname (a Monax paradigm)."
   export DOCKER_VERSION=$(hostname | cut -d'-' -f4)
   if [[ "$DOCKER_VERSION" == `hostname` ]]
   then
@@ -135,4 +132,3 @@ echo
 echo "All set"
 echo
 echo
-docker version

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
+	"github.com/monax/cli/config"
 
 	"github.com/spf13/viper"
 )

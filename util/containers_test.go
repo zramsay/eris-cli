@@ -5,9 +5,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -19,10 +19,10 @@ func init() {
 		os.Exit(1)
 	}
 
-	DockerConnect(false, "eris")
+	DockerConnect(false, "monax")
 
 	// Pull the necessary image.
-	PullImage(path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys), os.Stdout)
+	PullImage(path.Join(version.DefaultRegistry, version.ImageKeys), os.Stdout)
 }
 
 func TestUniqueName(t *testing.T) {
@@ -69,7 +69,7 @@ func TestContainerNameDifferentType(t *testing.T) {
 
 func TestContainerDetailsSimple(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "a"
 
@@ -89,7 +89,7 @@ func TestContainerDetailsSimple(t *testing.T) {
 
 func TestContainerDetailsRunning(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "b"
 
@@ -174,7 +174,7 @@ func TestContainerLookupWithContainerName(t *testing.T) {
 
 func TestContainerLookupWithoutContainerName(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "a"
 
@@ -194,9 +194,9 @@ func TestContainerLookupWithoutContainerName(t *testing.T) {
 	}
 }
 
-func TestErisContainersExisting(t *testing.T) {
+func TestMonaxContainersExisting(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "a"
 
@@ -204,7 +204,7 @@ func TestErisContainersExisting(t *testing.T) {
 	create(definitions.TypeService, name)
 	start(ContainerName(definitions.TypeService, name))
 
-	containers := ErisContainers(func(name string, details *Details) bool { return true }, false)
+	containers := MonaxContainers(func(name string, details *Details) bool { return true }, false)
 
 	if len(containers) != 2 {
 		t.Fatalf("expecting to find 2 existing containers")
@@ -215,9 +215,9 @@ func TestErisContainersExisting(t *testing.T) {
 	}
 }
 
-func TestErisContainersRunning(t *testing.T) {
+func TestMonaxContainersRunning(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "a"
 
@@ -225,7 +225,7 @@ func TestErisContainersRunning(t *testing.T) {
 	create(definitions.TypeService, name)
 	start(ContainerName(definitions.TypeService, name))
 
-	containers := ErisContainers(func(name string, details *Details) bool { return true }, true)
+	containers := MonaxContainers(func(name string, details *Details) bool { return true }, true)
 
 	if len(containers) != 1 {
 		t.Fatalf("expecting to find 1 running containers")
@@ -236,9 +236,9 @@ func TestErisContainersRunning(t *testing.T) {
 	}
 }
 
-func TestErisContainersByType(t *testing.T) {
+func TestMonaxContainersByType(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	create(definitions.TypeData, "a")
 	create(definitions.TypeService, "a")
@@ -250,27 +250,27 @@ func TestErisContainersByType(t *testing.T) {
 	start(ContainerName(definitions.TypeService, "c"))
 	start(ContainerName(definitions.TypeChain, "b"))
 
-	if data1 := ErisContainersByType(definitions.TypeData, false); len(data1) != 1 {
+	if data1 := MonaxContainersByType(definitions.TypeData, false); len(data1) != 1 {
 		t.Fatalf("expecting to find 1 data container, got %v", len(data1))
 	}
 
-	if data2 := ErisContainersByType(definitions.TypeData, true); len(data2) != 0 {
+	if data2 := MonaxContainersByType(definitions.TypeData, true); len(data2) != 0 {
 		t.Fatalf("expecting to find 0 running data container, got %v", len(data2))
 	}
 
-	if service1 := ErisContainersByType(definitions.TypeService, false); len(service1) != 3 {
+	if service1 := MonaxContainersByType(definitions.TypeService, false); len(service1) != 3 {
 		t.Fatalf("expecting to find 3 service containers, got %v", len(service1))
 	}
 
-	if service2 := ErisContainersByType(definitions.TypeService, true); len(service2) != 2 {
+	if service2 := MonaxContainersByType(definitions.TypeService, true); len(service2) != 2 {
 		t.Fatalf("expecting to find 2 running service containers, got %v", len(service2))
 	}
 
-	if chain1 := ErisContainersByType(definitions.TypeChain, false); len(chain1) != 2 {
+	if chain1 := MonaxContainersByType(definitions.TypeChain, false); len(chain1) != 2 {
 		t.Fatalf("expecting to find 2 chain containers, got %v", len(chain1))
 	}
 
-	if chain2 := ErisContainersByType(definitions.TypeChain, true); len(chain2) != 1 {
+	if chain2 := MonaxContainersByType(definitions.TypeChain, true); len(chain2) != 1 {
 		t.Fatalf("expecting to find 1 running chain containers, got %v", len(chain2))
 	}
 
@@ -278,7 +278,7 @@ func TestErisContainersByType(t *testing.T) {
 
 func TestFindContainer(t *testing.T) {
 	defer invalidateCache()
-	defer RemoveAllErisContainers()
+	defer RemoveAllMonaxContainers()
 
 	const name = "a"
 
@@ -311,7 +311,7 @@ func invalidateCache() {
 
 func create(t, name string) error {
 	labels := make(map[string]string)
-	labels[definitions.LabelEris] = "true"
+	labels[definitions.LabelMonax] = "true"
 	labels[definitions.LabelShortName] = name
 	labels[definitions.LabelType] = t
 

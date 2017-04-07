@@ -10,7 +10,7 @@
 
 # Go installed locally
 # Docker installed locally
-# Eris installed locally
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -37,19 +37,13 @@ tests() {
   run_test chains
   run_test keys
   run_test pkgs
-  run_test agent
-
-  # run_test remotes
-  # run_test apps
-  # run_test update
-
   run_test clean
 }
 
 # ---------------------------------------------------------------------------
 # Local test utility functions
 run_test() {
-  go test -cover ./$1/... && passed $1
+  go test -cover -timeout 20m ./$1/... && passed $1
   if [ $? -ne 0 ]; then test_exit=1; fi
 }
 
@@ -61,9 +55,9 @@ checks() {
     echo "Cannot run without CLI_REPO being set"
     exit 1
   fi
-  if [ "$ERIS_CLI_TESTS_PORT" = "" ]
+  if [ "$MONAX_CLI_TESTS_PORT" = "" ]
   then
-    echo "Cannot run without ERIS_CLI_TESTS_PORT being set"
+    echo "Cannot run without MONAX_CLI_TESTS_PORT being set"
     exit 1
   fi
 }
@@ -82,9 +76,9 @@ enviro() {
   echo
   docker version
   echo
-  eris clean --yes --containers --images --scratch
+  eris clean --yes --containers --images --scratch --dir
   eris version
-  eris init --yes --testing
+  eris init --yes
 }
 
 passed() {

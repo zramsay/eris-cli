@@ -9,18 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
-var (
-	erisDir   = filepath.Join(os.TempDir(), "eris")
-	chainName = "test-chain"
-)
+var chainName = "test-chain"
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.ErrorLevel)
@@ -28,7 +26,7 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images: []string{"data", "cm", "db", "keys", "ipfs"},
+		Images: []string{"data", "db", "keys"},
 	}))
 
 	exitCode := m.Run()
@@ -107,14 +105,14 @@ func TestExecChain(t *testing.T) {
 
 	do := definitions.NowDo()
 	do.Name = chainName
-	do.Operations.Args = []string{"ls", config.ErisContainerRoot}
+	do.Operations.Args = []string{"ls", config.MonaxContainerRoot}
 	buf, err := ExecChain(do)
 	if err != nil {
 		t.Fatalf("expected chain to execute, got %v", err)
 	}
 
 	if dir := "chains"; !strings.Contains(buf.String(), dir) {
-		t.Fatalf("expected to find %q dir in eris root", dir)
+		t.Fatalf("expected to find %q dir in monax root", dir)
 	}
 }
 
@@ -183,7 +181,7 @@ func TestChainsNewDirGenesis(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/genesis.json", chain)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/chains/%s/genesis.json", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, chain) {
 		t.Fatalf("expected chain_id to be equal to chain name in genesis file, got %v", out)
 	}
@@ -196,14 +194,14 @@ func TestChainsNewConfig(t *testing.T) {
 	create(t, chain)
 	defer kill(t, chain)
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/chains/%s/config.toml", chain)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/chains/%s/config.toml", chain)}
 	if out := exec(t, chain, args); !strings.Contains(out, "moniker") {
 		t.Fatalf("expected the config file to contain an expected string, got %v", out)
 	}
 }
 
-// chains new should import the priv_validator.json (available in mint form)
-// into eris-keys (available in eris form) so it can be used by the rest
+// chains start (--init-dir) should import the priv_validator.json (available in mint form)
+// into monax-keys (available in monax form) so it can be used by the rest
 // of the platform
 func TestChainsNewKeysImported(t *testing.T) {
 	defer testutil.RemoveAllContainers()
@@ -216,14 +214,14 @@ func TestChainsNewKeysImported(t *testing.T) {
 		t.Fatalf("expecting chain running")
 	}
 
-	keysOut, err := services.ExecHandler("keys", []string{"ls", "/home/eris/.eris/keys/data"})
+	keysOut, err := services.ExecHandler("keys", []string{"ls", "/home/monax/.monax/keys/data"})
 	if err != nil {
 		t.Fatalf("expecting to list keys, got %v", err)
 	}
 
 	keysOutString0 := strings.Fields(strings.TrimSpace(keysOut.String()))[0]
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/keys/data/%s/%s", keysOutString0, keysOutString0)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/keys/data/%s/%s", keysOutString0, keysOutString0)}
 
 	keysOut1, err := services.ExecHandler("keys", args)
 	if err != nil {
@@ -291,7 +289,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -316,7 +314,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -338,7 +336,7 @@ func TestServiceLinkBadChainWithoutChainInDefinition(t *testing.T) {
 	if err := testutil.FakeServiceDefinition("fake", `
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -364,7 +362,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = false
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -413,7 +411,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageIPFS)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -462,7 +460,7 @@ chain = "`+chain+`:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -510,7 +508,7 @@ chain = "blah-blah:blah"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -544,7 +542,7 @@ chain = "$chain:fake"
 
 [service]
 name = "fake"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 
 [dependencies]
 services = [ "sham" ]
@@ -557,7 +555,7 @@ chain = "$chain:sham"
 
 [service]
 name = "sham"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
 `); err != nil {
 		t.Fatalf("can't create a sham service definition: %v", err)
@@ -641,7 +639,7 @@ func create(t *testing.T, chain string) {
 	do := definitions.NowDo()
 	do.Name = chain
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(config.ChainsPath, chain) // --init-dir
+	do.Path = filepath.Join(config.ChainsPath, chain, fmt.Sprintf("%s_full_000", chain)) // --init-dir
 	if err := StartChain(do); err != nil {
 		t.Fatalf("expected a new chain to be created, got %v", err)
 	}

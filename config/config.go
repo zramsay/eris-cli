@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/monax/cli/version"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
@@ -27,7 +27,7 @@ type Config struct {
 	Settings
 }
 
-// Settings describes settings loadable from "eris.toml"
+// Settings describes settings loadable from "monax.toml"
 // definition file.
 type Settings struct {
 	IpfsHost          string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
@@ -39,22 +39,10 @@ type Settings struct {
 	CrashReport       string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
 	ImagesPullTimeout string `json:"ImagesPullTimeout,omitempty" yaml:"ImagesPullTimeout,omitempty" toml:"ImagesPullTimeout,omitempty"`
 	Verbose           bool
-
-	// Image defaults.
-	DefaultRegistry string `json:"DefaultRegistry,omitempty" yaml:"DefaultRegistry,omitempty" toml:"DefaultRegistry,omitempty"`
-	BackupRegistry  string `json:"BackupRegistry,omitempty" yaml:"BackupRegistry,omitempty" toml:"BackupRegistry,omitempty"`
-
-	ImageData      string `json:"ImageData,omitempty" yaml:"ImageData,omitempty" toml:"ImageData,omitempty"`
-	ImageKeys      string `json:"ImageKeys,omitempty" yaml:"ImageKeys,omitempty" toml:"ImageKeys,omitempty"`
-	ImageDB        string `json:"ImageDB,omitempty" yaml:"ImageDB,omitempty" toml:"ImageDB,omitempty"`
-	ImagePM        string `json:"ImagePM,omitempty" yaml:"ImagePM,omitempty" toml:"ImagePM,omitempty"`
-	ImageCM        string `json:"ImageCM,omitempty" yaml:"ImageCM,omitempty" toml:"ImageCM,omitempty"`
-	ImageIPFS      string `json:"ImageIPFS,omitempty" yaml:"ImageIPFS,omitempty" toml:"ImageIPFS,omitempty"`
-	ImageCompilers string `json:"ImageCompilers,omitempty" yaml:"ImageCompilers,omitempty" toml:"ImageCompilers,omitempty"`
 }
 
 // New initializes the global configuration with default settings
-// or settings loaded from the "eris.toml" default location.
+// or settings loaded from the "monax.toml" default location.
 // New also initialize default writer and errorWriter streams.
 // Viper or unmarshalling errors are returned on error.
 func New(writer, errorWriter io.Writer) (*Config, error) {
@@ -80,13 +68,6 @@ func New(writer, errorWriter io.Writer) (*Config, error) {
 // LoadViper reads the definition file pointed to by
 // the definitionPath path and definitionName filename.
 func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
-	var errKnown string
-	switch definitionPath {
-	case ServicesPath:
-		errKnown = fmt.Sprintf(`
-
-List available definitions with the [eris %s ls --known] command`, filepath.Base(definitionPath))
-	}
 
 	// Don't use ReadInConfig() for checking file existence because
 	// is error is too murky (e.g.:it doesn't say "file not found").
@@ -94,15 +75,18 @@ List available definitions with the [eris %s ls --known] command`, filepath.Base
 	// Don't use os.Stat() for checking file existence because there might
 	// be a selection of supported definition files, e.g.: keys.toml,
 	// keys.json, keys.yaml, etc.
+
 	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
-		return nil, fmt.Errorf("Unable to find the %q definition: %v%s", definitionName, os.ErrNotExist, errKnown)
+		errKnown := fmt.Sprintf("List available definitions with the [monax %s ls --known] command", filepath.Base(definitionPath))
+		return nil, fmt.Errorf("Unable to find the %q definition: %v\n\n%s", definitionName, os.ErrNotExist, errKnown)
 	}
 
 	conf := viper.New()
 	conf.AddConfigPath(definitionPath)
 	conf.SetConfigName(definitionName)
 	if err := conf.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("Unable to load the %q definition: %v%s", definitionName, err, errKnown)
+		// [zr] this error to deduplicate with loaders/services.go:66 in #468
+		return nil, fmt.Errorf("Formatting error with your %q definition:\n\n%v", definitionName, err)
 	}
 
 	return conf, nil
@@ -115,8 +99,8 @@ func Load() (*viper.Viper, error) {
 		return config, err
 	}
 
-	config.AddConfigPath(ErisRoot)
-	config.SetConfigName("eris")
+	config.AddConfigPath(MonaxRoot)
+	config.SetConfigName("monax")
 	if err := config.ReadInConfig(); err != nil {
 		// Do nothing as this is not essential.
 	}
@@ -137,28 +121,17 @@ func SetDefaults() (*viper.Viper, error) {
 	config.SetDefault("CompilersHost", "https://compilers.monax.io")
 	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(version.VERSION, "-")[0], ".", "", -1))
 
-	// Image defaults.
-	config.SetDefault("DefaultRegistry", version.DefaultRegistry)
-	config.SetDefault("BackupRegistry", version.BackupRegistry)
-	config.SetDefault("ImageData", version.ImageData)
-	config.SetDefault("ImageKeys", version.ImageKeys)
-	config.SetDefault("ImageDB", version.ImageDB)
-	config.SetDefault("ImagePM", version.ImagePM)
-	config.SetDefault("ImageCM", version.ImageCM)
-	config.SetDefault("ImageIPFS", version.ImageIPFS)
-	config.SetDefault("ImageCompilers", version.ImageCompilers)
-
 	return config, nil
 }
 
-// Save writes the "eris.toml" definition file at the default
+// Save writes the "monax.toml" definition file at the default
 // location populated by settings.
 func Save(settings *Settings) error {
 	if settings == nil {
 		return fmt.Errorf("cannot save uninitialized settings")
 	}
 
-	writer, err := os.Create(filepath.Join(ErisRoot, "eris.toml"))
+	writer, err := os.Create(filepath.Join(MonaxRoot, "monax.toml"))
 	defer writer.Close()
 	if err != nil {
 		return err

@@ -4,7 +4,7 @@ import (
 	"runtime/debug"
 )
 
-// Stub is a void implementation of the CrashReporter and Eris logger Hook interfaces.
+// Stub is a void implementation of the CrashReporter and Monax logger Hook interfaces.
 type Stub struct{}
 
 // NewStubReporter returns a new Stub implementation.

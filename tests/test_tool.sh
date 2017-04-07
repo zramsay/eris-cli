@@ -20,8 +20,8 @@
 
 # Docker installed locally
 # Docker-Machine installed locally (if using remote boxes)
-# eris' test_machines image (if testing against eris' test boxes)
-# Eris installed locally
+# monax's test_machines image (if testing against monax's test boxes)
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -32,30 +32,35 @@
 # Defaults
 
 start=`pwd`
-base=github.com/eris-ltd/eris-cli
+base=github.com/monax/cli
 repo=$GOPATH/src/$base
+
+source $repo/tests/machines/docker_machine.sh
 
 # If an arg is passed to the script we will assume that only local
 #   tests will be ran.
-if [ $1 ]
-then
-  machine="eris-test-local"
-else
-  machine=$MACHINE_NAME
-fi
+
+machine="$MACHINE_NAME"
+
 
 start=`pwd`
 declare -a checks
 
 cd $repo
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
+export MONAX_MIGRATE_APPROVE="true"
 
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
 
-announce() {
+announceNative() {
+  echo
+  echo "Testing against native docker"
+  echo
+}
+
+announceMachine() {
   echo
   echo "Testing against"
   echo -e "\tMachine name:\t$machine"
@@ -70,10 +75,10 @@ connect(){
 }
 
 setup() {
-  if [[ "$machine" == eris-test-win* ]]
+  if [[ "$machine" == monax-test-win* ]]
   then
-    mkdir $HOME/.eris
-    touch $HOME/.eris/eris.toml
+    mkdir $HOME/.monax
+    touch $HOME/.monax/monax.toml
   fi
 
   echo "Checking the Host <-> Docker Connection"
@@ -99,9 +104,9 @@ setup() {
   fi
 
   echo
-  echo "Checking the Eris <-> Docker Connection"
+  echo "Checking the Monax <-> Docker Connection"
   echo
-  eris version
+  monax version
   if [ $? -ne 0 ]
   then
     flame_out
@@ -109,45 +114,8 @@ setup() {
 }
 
 packagesToTest() {
-  if [[ "$SKIP_PACKAGES" != "true" ]]
-  then
-    go test ./initialize/... && passed Initialize
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./util/... && passed Util
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./config/... && passed Config
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./loaders/... && passed Loaders
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./perform/... && passed Perform
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./data/... && passed Data
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./files/... && passed Files
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./services/... && passed Services
-    if [ $? -ne 0 ]; then return 1; fi
-    go test -timeout=900s ./chains/... && passed Chains
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./keys/... && passed Keys
-    if [ $? -ne 0 ]; then return 1; fi
-    go test ./pkgs/... && passed Packages
-    if [ $? -ne 0 ]; then return 1; fi
-    # go test ./remotes/... && passed Remotes
-    # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./apps/... && passed Apps
-    # if [ $? -ne 0 ]; then return 1; fi
-    # go test ./agent/... && passed Agent
-    # XXX the agent test catches epm's error by running through a deploy
-    # if [ $? -ne 0 ]; then return 1; fi
-    go test ./clean/... && passed Clean
-    if [ $? -ne 0 ]; then return 1; fi
-  fi
-  # The appveyor.yml and circle.yml currently use SKIP_PACKAGES and 
-  # SKIP_STACK to parallelize Go and stack tests; otherwise this is 
-  # here for faster test runs when needed.
-  # Set either variable in your shell before calling `tests/test.sh` 
-  # or `tests/test_tool.sh`
+  fail="false"
+  
   if [[ "$SKIP_STACK" != "true" ]]
   then
     echo "Running Stack Tests"
@@ -157,6 +125,43 @@ packagesToTest() {
       $HOME/test_stack.sh && passed Stack
     else
       tests/test_stack.sh && passed Stack
+    fi
+    if [ $? -ne 0 ]; then fail="true"; fi
+  fi
+
+  if [[ "$SKIP_PACKAGES" != "true" ]]
+  then
+    go test ./initialize/... -v && passed Initialize
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./util/... -v && passed Util
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./config/... -v && passed Config
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./loaders/... -v && passed Loaders
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./perform/... -v -timeout 20m && passed Perform
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./data/... -v && passed Data
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./files/... -v && passed Files
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./services/... -v && passed Services
+    if [ $? -ne 0 ]; then fail="true"; fi
+    #this is put here because otherwise Travis stalls out because output
+    #is very slow to come up.
+    sleeper &
+    go test ./chains/... -v -timeout 20m && passed Chains
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./keys/... -v && passed Keys
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./pkgs/... -v && passed Packages
+    if [ $? -ne 0 ]; then fail="true"; fi
+    go test ./clean/... -v && passed Clean
+    if [ $? -ne 0 ]; then fail="true"; fi
+
+    if [ $fail = "true" ]
+    then
+      return 1
     fi
   fi
 }
@@ -212,27 +217,28 @@ flame_out() {
 # ---------------------------------------------------------------------------
 # Go!
 echo "Hello! The marmots will begin testing now."
-if [[ "$machine" == "eris-test-local" ]]
+
+monax clean --yes --containers --images --scratch
+monax version
+monax init --yes --testing
+
+if [[ "$DOCKER_MACHINE" = true ]]
 then
-  announce
-else
-  announce
+  announceMachine
   connect
   setup
+else
+  announceNative
 fi
 passed Setup
 
-if [[ $machine == "eris-test-local" ]]
+if [[ -z "$1" ]]
 then
-  if [[ $1 == "local" ]]
-  then
-    packagesToTest
-  else
-    go test ./$1/... && passed $1
-  fi
-else
   packagesToTest
+else
+  go test ./$1/... && passed $1
 fi
+
 test_exit=$?
 
 # ---------------------------------------------------------------------------

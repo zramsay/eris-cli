@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )
@@ -12,8 +12,8 @@ var quiet bool
 
 var VerSion = &cobra.Command{
 	Use:   "version",
-	Short: "display Eris version",
-	Long:  `display current installed version of Eris`,
+	Short: "display Monax version",
+	Long:  `display current installed version of Monax`,
 	Run:   DisplayVersion,
 }
 
@@ -34,7 +34,7 @@ func DisplayVersion(cmd *cobra.Command, args []string) {
 	}
 
 	if !quiet {
-		fmt.Println("Eris CLI Version: " + versionMessage)
+		fmt.Println("Monax CLI Version: " + versionMessage)
 	} else {
 		fmt.Println(versionMessage)
 	}

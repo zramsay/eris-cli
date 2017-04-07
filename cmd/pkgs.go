@@ -5,12 +5,13 @@ package commands
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/pkgs"
-	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/monax/cli/pkgs"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )
@@ -33,32 +34,29 @@ var packagesDo = &cobra.Command{
 	Short: "deploy or test a package of smart contracts to a chain",
 	Long: `deploy or test a package of smart contracts to a chain
 
-[eris pkgs do] will perform the required functionality included
+[monax pkgs do] will perform the required functionality included
 in a package definition file`,
 	Run: PackagesDo,
 }
 
 func addPackagesFlags() {
-	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain to be used for deployment")
-	packagesDo.Flags().StringSliceVarP(&do.ServicesSlice, "services", "s", []string{}, "comma separated list of services to start")
-	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
-	packagesDo.Flags().BoolVarP(&do.Rm, "rm", "r", true, "remove containers after stopping")
-	packagesDo.Flags().BoolVarP(&do.RmD, "rm-data", "x", true, "remove artifacts from host")
-	packagesDo.Flags().StringVarP(&do.CSV, "output", "o", "", "results output type")
-	packagesDo.Flags().StringVarP(&do.EPMConfigFile, "file", "f", "./epm.yaml", "path to package file which Eris PM should use")
-	packagesDo.Flags().StringSliceVarP(&do.ConfigOpts, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the epm file is ran (and after default address")
-	packagesDo.Flags().BoolVarP(&do.OutputTable, "summary", "u", true, "output a table summarizing epm jobs")
-	packagesDo.Flags().StringVarP(&do.PackagePath, "contracts-path", "p", "./contracts", "path to the contracts Eris PM should use")
-	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "b", "./abi", "path to the abi directory Eris PM should use when saving ABIs after the compile process")
+	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
+	// TODO links keys
+	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
+	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")              //what's this actually used for?
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which should be used [csv,json]") // [zr] this is not well tested!
+	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which jobs should use")
+	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
+	packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
+	packagesDo.Flags().StringVarP(&do.BinPath, "bin-path", "", "./bin", "path to the bin directory jobs should use when saving binaries after the compile process")
+	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "", "./abi", "path to the abi directory jobs should use when saving ABIs after the compile process")
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
-	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Eris PM should use")
+	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Monax jobs should use")
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
-	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "w", "1234", "default fee to use")
-	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "y", "9999", "default amount to use")
-	packagesDo.Flags().StringVarP(&do.ChainPort, "chain-port", "", "46657", "chain rpc port")
-	packagesDo.Flags().StringVarP(&do.KeysPort, "keys-port", "", "4767", "port for keys server")
+	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
+	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
 	packagesDo.Flags().BoolVarP(&do.Overwrite, "overwrite", "t", true, "overwrite jobs of the same name")
-	packagesDo.Flags().BoolVarP(&do.LocalCompiler, "local-compiler", "z", false, "use a local compiler service; overwrites anything added to compilers flag")
+	packagesDo.Flags().BoolVarP(&do.RemoteCompiler, "remote-compiler", "r", false, "use a remote compiler; if set uses the url specified with the compiler flag.")
 }
 
 func PackagesDo(cmd *cobra.Command, args []string) {
@@ -74,6 +72,7 @@ func PackagesDo(cmd *cobra.Command, args []string) {
 	if do.DefaultAddr == "" { // note that this is not strictly necessary since the addr can be set in the epm.yaml.
 		util.IfExit(fmt.Errorf("please provide the address to deploy from with --address"))
 	}
+
 	util.IfExit(pkgs.RunPackage(do))
 }
 
@@ -83,4 +82,20 @@ func formCompilers() string {
 	min, _ := strconv.Atoi(verSplit[1])
 	pat, _ := strconv.Atoi(verSplit[2])
 	return fmt.Sprintf("https://compilers.monax.io:1%01d%02d%01d", maj, min, pat)
+}
+
+func defaultSigner() string {
+	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		ip, err := util.DockerWindowsAndMacIP(do)
+		util.IfExit(err)
+		return fmt.Sprintf("http://%v:4767", ip)
+	} else {
+		util.DockerConnect(false, "monax")
+		keysName := util.ServiceContainerName("keys")
+		cont, err := util.DockerClient.InspectContainer(keysName)
+		if err != nil {
+			return fmt.Sprintf("error will be caught by cli failing: %v", util.DockerError(err))
+		}
+		return fmt.Sprintf("http://%s:4767", cont.NetworkSettings.IPAddress)
+	}
 }

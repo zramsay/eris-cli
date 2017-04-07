@@ -3,23 +3,23 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
-    <id>eris</id>
-    <title>Eris</title>
-    <version>0.11.4</version>
+    <id>monex</id>
+    <title>Monax</title>
+    <version>0.16.0</version>
     <authors>The marmots</authors>
     <owners>support@monax.io</owners>
     <summary>Ecosystem application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level</summary>
     <description>Ecosystem application platform CLI
     </description>
     <projectUrl>https://monax.io</projectUrl>
-    <packageSourceUrl>https://github.com/eris-ltd/eris-cli</packageSourceUrl>
-    <projectSourceUrl>https://github.com/eris-ltd/eris-cli</projectSourceUrl>
-    <docsUrl>https://monax.io/docs/documentation/</docsUrl>
+    <packageSourceUrl>https://github.com/monax/cli</packageSourceUrl>
+    <projectSourceUrl>https://github.com/monax/cli</projectSourceUrl>
+    <docsUrl>https://monax.io/docs/</docsUrl>
     <mailingListUrl>https://support.monax.io/helpdesk</mailingListUrl>
-    <bugTrackerUrl>https://github.com/eris-ltd/eris-cli/issues</bugTrackerUrl>
-    <tags>eris monax admin docker blockchains</tags>
+    <bugTrackerUrl>https://github.com/monax/cli/issues</bugTrackerUrl>
+    <tags>monax admin docker blockchains</tags>
     <copyright>2016 (c) Monax Industries</copyright>
-    <licenseUrl>https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md</licenseUrl>
+    <licenseUrl>https://github.com/monax/cli/blob/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
       <dependency id="docker" />

@@ -3,33 +3,31 @@ package services
 import (
 	"bytes"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
-	"github.com/eris-ltd/eris-cli/version"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
 )
 
-const servName = "ipfs"
+const servName = "keys"
 
 func TestMain(m *testing.M) {
-	log.SetLevel(log.ErrorLevel)
+	log.SetLevel(log.WarnLevel)
 	// log.SetLevel(log.InfoLevel)
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"data", "db", "keys", "ipfs"},
-		Services: []string{"do_not_use", "keys", "ipfs"},
+		Images:   []string{"data", "db", "keys"},
+		Services: []string{"keys"},
 	}))
 
 	// Prevent CLI from starting IPFS.
-	os.Setenv("ERIS_SKIP_ENSURE", "true")
+	os.Setenv("MONAX_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 	testutil.IfExit(testutil.TearDown())
@@ -216,6 +214,7 @@ func TestRmService(t *testing.T) {
 	}
 }
 
+/*
 func TestMakeService(t *testing.T) {
 	defer testutil.RemoveAllContainers()
 
@@ -248,59 +247,7 @@ func TestMakeService(t *testing.T) {
 		t.Fatalf("expecting dependent data container not existing")
 	}
 
-}
-
-func TestRenameService(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	start(t, "keys", false)
-	if !util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service running")
-	}
-	if !util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container exists")
-	}
-
-	do := definitions.NowDo()
-	do.Name = "keys"
-	do.NewName = "syek"
-	if err := RenameService(do); err != nil {
-		t.Fatalf("expected service to be renamed, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service not running")
-	}
-	if util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container doesn't exist")
-	}
-	if !util.Running(definitions.TypeService, "syek") {
-		t.Fatalf("expecting syek service running")
-	}
-	if !util.Exists(definitions.TypeData, "syek") {
-		t.Fatalf("expecting keys data container exists")
-	}
-
-	do = definitions.NowDo()
-	do.Name = "syek"
-	do.NewName = "keys"
-	if err := RenameService(do); err != nil {
-		t.Fatalf("expected service to be renamed back, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, "syek") {
-		t.Fatalf("expecting syek service not running")
-	}
-	if util.Exists(definitions.TypeData, "syek") {
-		t.Fatalf("expecting syek data container doesn't exist")
-	}
-	if !util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service running")
-	}
-	if !util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container exists")
-	}
-}
+}*/
 
 func TestCatService(t *testing.T) {
 	do := definitions.NowDo()
@@ -312,11 +259,12 @@ func TestCatService(t *testing.T) {
 		t.Fatalf("expected cat to succeed, got %v", err)
 	}
 
-	if cmp := testutil.FileContents(filepath.Join(config.ErisRoot, "services", "ipfs.toml")); out != cmp {
+	if cmp := testutil.FileContents(filepath.Join(config.MonaxRoot, "services", "keys.toml")); out != cmp {
 		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
 	}
 }
 
+/* TODO use a fake definition file
 func TestStartKillServiceWithDependencies(t *testing.T) {
 	defer testutil.RemoveAllContainers()
 
@@ -356,8 +304,7 @@ func TestStartKillServiceWithDependencies(t *testing.T) {
 	if util.Exists(definitions.TypeData, "keys") {
 		t.Fatalf("expecting keys data container doesn't exist")
 	}
-
-}
+}*/
 
 func start(t *testing.T, serviceName string, publishAll bool) {
 	do := definitions.NowDo()

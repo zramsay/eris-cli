@@ -2,25 +2,19 @@
 
 $packageName= 'eris'
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url        = ''
-$url64      = 'https://github.com/eris-ltd/eris-cli/releases/download/v0.11.4/eris_0.11.4_windows_amd64.zip'
+$url64      = 'https://github.com/monax/cli/releases/download/v0.12.0/eris_0.12.0_windows_amd64.exe'
 
 $packageArgs = @{
   packageName   = $packageName
-  unzipLocation = $toolsDir
-  fileType      = 'EXE'
-  url           = $url
+  fileFullPath  = "$toolsDir\$packageName.exe"
   url64bit      = $url64
 
-  silentArgs    = "/qn /norestart /l*v `"$env:TEMP\chocolatey\$($packageName)\$($packageName).MsiInstall.log`""
   validExitCodes= @(0, 3010, 1641)
 
   softwareName  = 'eris*'
-  checksum      = ''
-  checksumType  = 'md5'
-  checksum64    = 'da4a4ec13af25cb5c3e6bf60b1127918'
+  checksum64    = '95f144d7c736697bec406177190880ba'
   checksumType64= 'md5'
 }
 
 
-Install-ChocolateyZipPackage @packageArgs
+Get-ChocolateyWebFile @packageArgs

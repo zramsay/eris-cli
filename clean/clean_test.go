@@ -1,21 +1,23 @@
 package clean
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris-cli/chains"
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/data"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/loaders"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/perform"
-	"github.com/eris-ltd/eris-cli/services"
-	"github.com/eris-ltd/eris-cli/testutil"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/chains"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/data"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/perform"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -28,8 +30,8 @@ func TestMain(m *testing.M) {
 	// log.SetLevel(log.DebugLevel)
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
-		Images:   []string{"keys", "ipfs", "data", "db", "cm"},
-		Services: []string{"keys", "ipfs"},
+		Images:   []string{"keys", "data", "db"},
+		Services: []string{"keys"},
 	}))
 
 	exitCode := m.Run()
@@ -37,11 +39,10 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func TestRemoveAllErisContainers(t *testing.T) {
-	defer util.RemoveAllErisContainers()
+func TestRemoveAllMonaxContainers(t *testing.T) {
+	defer util.RemoveAllMonaxContainers()
 
-	// Start a bunch of eris containers.
-	testStartService("ipfs", t)
+	// Start a bunch of monax containers.
 	testStartService("keys", t)
 
 	testStartChain("dirty-chain0", t)
@@ -50,26 +51,26 @@ func TestRemoveAllErisContainers(t *testing.T) {
 	testCreateDataContainer("filthy-data0", t)
 	testCreateDataContainer("filthy-data1", t)
 
-	// Start some non-Eris containers.
-	notEris0 := testCreateNotEris("not_eris0", t)
-	notEris1 := testCreateNotEris("not_eris1", t)
+	// Start some non-Monax containers.
+	notMonax0 := testCreateNotMonax("not_monax0", t)
+	notMonax1 := testCreateNotMonax("not_monax1", t)
 
-	testutil.IfExit(util.RemoveAllErisContainers())
+	testutil.IfExit(util.RemoveAllMonaxContainers())
 
-	// Check that both not_eris still exist and no Eris containers exist.
-	testCheckSimple(notEris0, t)
-	testCheckSimple(notEris1, t)
+	// Check that both not_monax still exist and no Monax containers exist.
+	testCheckSimple(notMonax0, t)
+	testCheckSimple(notMonax1, t)
 
 	// Remove what's left.
-	testRemoveNotEris(notEris0, t)
-	testRemoveNotEris(notEris1, t)
+	testRemoveNotMonax(notMonax0, t)
+	testRemoveNotMonax(notMonax1, t)
 
 	// Remove custom built image.
-	testRemoveNotErisImage(t)
+	testRemoveNotMonaxImage(t)
 }
 
 func TestCleanLatentChainDatas(t *testing.T) {
-	defer util.RemoveAllErisContainers()
+	defer util.RemoveAllMonaxContainers()
 
 	// create a couple chains
 	chain0 := "clean-me-0"
@@ -127,8 +128,8 @@ func testCheckChainDirsExist(chains []string, yes bool, t *testing.T) {
 	}
 }
 
-func testCreateNotEris(name string, t *testing.T) string {
-	if err := perform.DockerBuild(customImage, "FROM "+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)); err != nil {
+func testCreateNotMonax(name string, t *testing.T) string {
+	if err := perform.DockerBuild(customImage, "FROM "+path.Join(version.DefaultRegistry, version.ImageKeys)); err != nil {
 		t.Fatalf("expected to build a custom image, got %v", err)
 	}
 
@@ -155,7 +156,7 @@ func testCreateNotEris(name string, t *testing.T) string {
 	return newCont.ID
 }
 
-func testRemoveNotEris(contID string, t *testing.T) {
+func testRemoveNotMonax(contID string, t *testing.T) {
 	rmOpts := docker.RemoveContainerOptions{
 		ID:            contID,
 		RemoveVolumes: true,
@@ -166,7 +167,7 @@ func testRemoveNotEris(contID string, t *testing.T) {
 	}
 }
 
-func testRemoveNotErisImage(t *testing.T) {
+func testRemoveNotMonaxImage(t *testing.T) {
 	if err := perform.DockerRemoveImage(customImage, true); err != nil {
 		t.Fatalf("expected custom image to be removed, got %v", err)
 	}
@@ -178,23 +179,23 @@ func testCheckSimple(newContID string, t *testing.T) {
 		t.Fatalf("error listing containers: %v", err)
 	}
 
-	// If any Eris containers exist, fail.
-	util.ErisContainers(func(name string, details *util.Details) bool {
-		t.Fatalf("expected no Eris containers running")
+	// If any Monax containers exist, fail.
+	util.MonaxContainers(func(name string, details *util.Details) bool {
+		t.Fatalf("expected no Monax containers running")
 		return true
 	}, false)
 
-	var notEris bool
+	var notMonax bool
 	for _, container := range contns {
 		if container.ID == newContID {
-			notEris = true
+			notMonax = true
 			break
 		} else {
-			notEris = false
+			notMonax = false
 		}
 	}
 
-	if !notEris {
+	if !notMonax {
 		t.Fatalf("expected running container, did not find %s", newContID)
 	}
 }
@@ -222,7 +223,7 @@ func testStartChain(chainName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = chainName
 	do.Operations.PublishAllPorts = true
-	do.Path = filepath.Join(config.ChainsPath, chainName)
+	do.Path = filepath.Join(config.ChainsPath, chainName, fmt.Sprintf("%s_full_000", chainName)) // --init-dir
 	if err := chains.StartChain(do); err != nil {
 		t.Fatalf("starting chain %v failed: %v", chainName, err)
 	}
@@ -243,7 +244,7 @@ func testCreateDataContainer(dataName string, t *testing.T) {
 	do := definitions.NowDo()
 	do.Name = dataName
 	do.Source = filepath.Join(config.DataContainersPath, do.Name)
-	do.Destination = config.ErisContainerRoot
+	do.Destination = config.MonaxContainerRoot
 	if err := data.ImportData(do); err != nil {
 		t.Fatalf("error importing data: %v", err)
 	}

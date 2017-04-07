@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris-cli/config"
-	"github.com/eris-ltd/eris-cli/definitions"
-	"github.com/eris-ltd/eris-cli/log"
-	"github.com/eris-ltd/eris-cli/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/viper"
 )
@@ -61,10 +61,9 @@ func MockServiceDefinition(servName string) *definitions.ServiceDefinition {
 // MarshalServiceDefinition converts a Viper configuration structure to a
 // service definition one; it can return marshalling errors.
 func MarshalServiceDefinition(serviceConf *viper.Viper, srv *definitions.ServiceDefinition) error {
-	err := serviceConf.Unmarshal(srv)
-	if err != nil {
-		// Vipers error messages are atrocious.
-		return fmt.Errorf("Sorry, the marmots could not figure that service definition out.\nPlease check for known services with [eris services ls --known] and retry.\n")
+	if err := serviceConf.Unmarshal(srv); err != nil {
+		// [zr] this error to deduplicate with config/config.go:103 in #468
+		return fmt.Errorf("Formatting error with your definition file:\n\n%v", err)
 	}
 
 	// toml bools don't really marshal well
