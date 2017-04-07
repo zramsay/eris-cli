@@ -75,10 +75,10 @@ connect(){
 }
 
 setup() {
-  if [[ "$machine" == eris-test-win* ]]
+  if [[ "$machine" == monax-test-win* ]]
   then
     mkdir $HOME/.monax
-    touch $HOME/.monax/eris.toml
+    touch $HOME/.monax/monax.toml
   fi
 
   echo "Checking the Host <-> Docker Connection"
@@ -106,7 +106,7 @@ setup() {
   echo
   echo "Checking the Monax <-> Docker Connection"
   echo
-  eris version
+  monax version
   if [ $? -ne 0 ]
   then
     flame_out
@@ -218,9 +218,9 @@ flame_out() {
 # Go!
 echo "Hello! The marmots will begin testing now."
 
-eris clean --yes --containers --images --scratch
-eris version
-eris init --yes --testing
+monax clean --yes --containers --images --scratch
+monax version
+monax init --yes --testing
 
 if [[ "$DOCKER_MACHINE" = true ]]
 then

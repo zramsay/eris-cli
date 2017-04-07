@@ -78,7 +78,7 @@ function create_machine() {
     AWS_SSH_USER=""
     if [ "$win" = true ] || [ "$osx" = true ]
     then 
-      docker-machine --debug create                                 \
+      docker-machine create                                 \
         --driver amazonec2                                  \
         --amazonec2-access-key      "$AWS_ACCESS_KEY_ID"    \
         --amazonec2-secret-key      "$AWS_SECRET_ACCESS_KEY"\
@@ -140,7 +140,7 @@ function start_machine() {
   sleeper &
   ticker=$!
   cd $repo/tests/machines
-  docker-machine --debug start "$MACHINE_NAME"
+  docker-machine start "$MACHINE_NAME"
   #pass in local env vars
   eval "$(docker-machine env $MACHINE_NAME)"
   
