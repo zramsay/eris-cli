@@ -9,11 +9,11 @@ import (
 	bugsnag "github.com/bugsnag/bugsnag-go"
 )
 
-// APIKey can be overridden with the ERIS_BUGSNAG_TOKEN
+// APIKey can be overridden with the MONAX_BUGSNAG_TOKEN
 // environment variable.
 var APIKey = "1b9565bb7a4f8fd6dc446f2efd238fa3"
 
-// Bugsnag implements the CrashReporter and the Eris logger Hook interfaces.
+// Bugsnag implements the CrashReporter and the Monax logger Hook interfaces.
 type Bugsnag struct {
 	config map[string]string
 
@@ -23,8 +23,8 @@ type Bugsnag struct {
 // NewBugsnagReporter configures the Bugsnag library and sets up a logger
 // for collecting logging messages.
 func NewBugsnagReporter(config map[string]string) Bugsnag {
-	if os.Getenv("ERIS_BUGSNAG_TOKEN") != "" {
-		APIKey = os.Getenv("ERIS_BUGSNAG_TOKEN")
+	if os.Getenv("MONAX_BUGSNAG_TOKEN") != "" {
+		APIKey = os.Getenv("MONAX_BUGSNAG_TOKEN")
 	}
 
 	bugsnag.Configure(bugsnag.Configuration{
@@ -35,7 +35,7 @@ func NewBugsnagReporter(config map[string]string) Bugsnag {
 		// Bugsnag tries to say something itself occasionally.
 		Logger: &Logger{
 			Out:       os.Stdout,
-			Formatter: ErisFormatter{},
+			Formatter: MonaxFormatter{},
 			Level:     DebugLevel,
 		},
 		// Using our own panic recover.
@@ -45,7 +45,7 @@ func NewBugsnagReporter(config map[string]string) Bugsnag {
 	return Bugsnag{
 		remoteLogger: &Logger{
 			Out:       new(bytes.Buffer),
-			Formatter: ErisFormatter{IgnoreLevel: true},
+			Formatter: MonaxFormatter{IgnoreLevel: true},
 			Level:     DebugLevel,
 		},
 		config: config,

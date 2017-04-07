@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/monax/cli/config"
@@ -15,46 +14,57 @@ import (
 	"github.com/monax/cli/version"
 )
 
+// The entrypoint for [monax init]
+// - Is required to be run after every version upgrade
+// - Writes some default service & chain definition files
+// - Pulls the required docker images
+// - Write the ~/.monax/monax.toml file.
 func Initialize(do *definitions.Do) error {
-	newDir, err := checkThenInitErisRoot(do.Quiet)
+	newDir, err := checkThenInitMonaxRoot()
 	if err != nil {
 		return err
 	}
 
-	if err := overwriteErisToml(); err != nil {
-		return err
-	}
-
+	// If this is the first installation of monax, skip these checks.
 	if !newDir {
+		// Early exit if overwriting is not allowed
 		if err := checkIfCanOverwrite(do.Yes); err != nil {
-			return nil
+			return err
 		}
 
 		log.Info("Checking if migration is required")
 		if err := checkIfMigrationRequired(do.Yes); err != nil {
-			return nil
-		}
-
-	}
-
-	if do.Pull {
-		if err := GetTheImages(do); err != nil {
 			return err
 		}
 	}
 
-	// Service definition defaults.
-	log.Warn("Initializing default service definition files")
-	if err := InitDefaults(do, newDir); err != nil {
-		return fmt.Errorf("Error:\tcould not instantiate default services.\n%s\n", err)
+	// Either the monax root dir exists, but we are allowed to overwrite, or this
+	// dir does not and this is a fresh init.
+	// Write the ~/.monax/monax.toml file.
+	if err := config.Save(&config.Global.Settings); err != nil {
+		return err
 	}
 
-	if !do.Quiet {
-		log.Warn(`
+	// Pull the default docker images (wraps [docker pull]).
+	// Can and will overwrite versions. Not usually a problem.
+	if do.Pull {
+		if err := getTheImages(do); err != nil {
+			return err
+		}
+	}
+
+	// Write the default files to services/ and chains/account-&-chain-types/ subdirectories.
+	if err := initDefaultFiles(); err != nil {
+		return fmt.Errorf("Could not instantiate defaults:\n\n%s", err)
+	}
+
+	// TODO: [Silas] um, perhaps we should actually ask the filesystem what we've
+	// _really_ done rather than hard coding the output of tree...
+	log.Warn(`
 Directory structure initialized:
 
-+-- .eris/
-¦   +-- eris.toml
++-- .monax/
+¦   +-- monax.toml
 ¦   +-- apps/
 ¦   +-- bundles/
 ¦   +-- chains/
@@ -63,7 +73,6 @@ Directory structure initialized:
 ¦   +-- keys/
 ¦       +-- data/
 ¦       +-- names/
-¦   +-- remotes/
 ¦   +-- scratch/
 ¦       +-- data/
 ¦       +-- languages/
@@ -71,109 +80,46 @@ Directory structure initialized:
 ¦       +-- ser/
 ¦       +-- sol/
 ¦   +-- services/
-¦       +-- global/
-¦       +-- btcd.toml
-¦       +-- ipfs.toml
 ¦       +-- keys.toml
-
-Several more services were also added; see them with:
-[eris services ls --known]
+¦       +-- ipfs.toml
+¦       +-- compilers.toml
+¦       +-- logrotate.toml
 
 Consider running [docker images] to see the images that were added.`)
 
-		log.Warnf(`
-Eris sends crash reports to a remote server in case something goes completely
+	log.Warnf(`
+Monax sends crash reports to a remote server in case something goes completely
 wrong. You may disable this feature by adding the CrashReport = %q
 line to the %s definition file.
-`, "don't send", filepath.Join(config.ErisRoot, "eris.toml"))
+`, "don't send", filepath.Join(config.MonaxRoot, "monax.toml"))
 
-		log.Warn("The marmots have everything set up for you. Type [eris] to get started")
-	}
+	log.Warn("The marmots have everything set up for you. Type [monax] to get started")
 	return nil
 }
 
-func InitDefaults(do *definitions.Do, newDir bool) error {
-	var srvPath string
+func initDefaultFiles() error {
 
-	srvPath = config.ServicesPath
-
-	if err := dropServiceDefaults(srvPath, do.ServicesSlice); err != nil {
-		return err
-	}
-
-	if err := dropAccountAndChainTypeDefaults(); err != nil {
-		return err
-	}
-
-	log.WithField("root", config.ErisRoot).Warn("Initialized Eris root directory")
-
-	return nil
-}
-
-func dropServiceDefaults(dir string, services []string) error {
-	if len(services) == 0 {
-		services = version.SERVICE_DEFINITIONS
-	}
-
-	for _, service := range services {
-		var err error
-
-		switch service {
-		case "keys":
-			err = writeDefaultFile(config.ServicesPath, "keys.toml", defServiceKeys)
-		case "ipfs":
-			err = writeDefaultFile(config.ServicesPath, "ipfs.toml", defServiceIPFS)
-		case "compilers":
-			err = writeDefaultFile(config.ServicesPath, "compilers.toml", defServiceCompilers)
-		default:
-			err = drops([]string{service}, "services", dir)
-		}
-		if err != nil {
-			return fmt.Errorf("Cannot add default %s: %v", service, err)
+	for _, serviceName := range ServiceDefinitions {
+		serviceDefinition := defaultServices(serviceName)
+		if err := WriteServiceDefinitionFile(serviceName, serviceDefinition); err != nil {
+			return err
 		}
 	}
 
-	return nil
-}
-
-func dropAccountAndChainTypeDefaults() error {
-	// chain-types
-	if err := writeDefaultFile(config.ChainTypePath, "simplechain.toml", defaultSimpleChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "adminchain.toml", defaultAdminChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "demochain.toml", defaultDemoChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "gochain.toml", defaultGoChainType); err != nil {
-		return err
-	}
-	if err := writeDefaultFile(config.ChainTypePath, "sprawlchain.toml", defaultSprawlChainType); err != nil {
-		return err
+	for _, accountType := range AccountTypeDefinitions {
+		accountDefinition := defaultAccountTypes(accountType)
+		if err := writeAccountTypeDefinitionFile(accountType, accountDefinition); err != nil {
+			return err
+		}
 	}
 
-	// account-types
-	if err := writeDefaultFile(config.AccountsTypePath, "developer.toml", defaultDeveloperAccountType); err != nil {
-		return err
+	for _, chainType := range ChainTypeDefinitions {
+		chainDefinition := defaultChainTypes(chainType)
+		if err := writeChainTypeDefinitionFile(chainType, chainDefinition); err != nil {
+			return err
+		}
 	}
 
-	if err := writeDefaultFile(config.AccountsTypePath, "full.toml", defaultFullAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "participant.toml", defaultParticipantAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "root.toml", defaultRootAccountType); err != nil {
-		return err
-	}
-
-	if err := writeDefaultFile(config.AccountsTypePath, "validator.toml", defaultValidatorAccountType); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -183,7 +129,7 @@ func pullDefaultImages(images []string) error {
 		images = []string{
 			"data",
 			"keys",
-			"ipfs",
+			// "ipfs",
 			"db",
 			"compilers",
 		}
@@ -192,26 +138,26 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data":      config.Global.ImageData,
-		"keys":      config.Global.ImageKeys,
-		"ipfs":      config.Global.ImageIPFS,
-		"db":        config.Global.ImageDB,
-		"compilers": config.Global.ImageCompilers,
+		"data": version.ImageData,
+		"keys": version.ImageKeys,
+		// "ipfs":      version.ImageIPFS, // [CSK no need to pull this by default]
+		"db":        version.ImageDB,
+		"compilers": version.ImageCompilers,
 	}
 
 	for i, image := range images {
 		images[i] = versionedImageNames[image]
 
 		// Attach default registry prefix.
-		if !strings.HasPrefix(images[i], config.Global.DefaultRegistry) {
-			images[i] = path.Join(config.Global.DefaultRegistry, images[i])
+		if !strings.HasPrefix(images[i], version.DefaultRegistry) {
+			images[i] = path.Join(version.DefaultRegistry, images[i])
 		}
 	}
 
 	// Spacer.
 	log.Warn()
 
-	log.Warn("Pulling default Docker images from " + config.Global.DefaultRegistry)
+	log.Warn("Pulling default Docker images from " + version.DefaultRegistry)
 	for i, image := range images {
 		log.WithField("image", image).Warnf("Pulling image %d out of %d", i+1, len(images))
 
@@ -219,7 +165,7 @@ func pullDefaultImages(images []string) error {
 			if err == util.ErrImagePullTimeout {
 				return fmt.Errorf(`
 It looks like marmots are taking too long to download the necessary images...
-Please, try restarting the [eris init] command one more time now or a bit later.
+Please, try restarting the [monax init] command one more time now or a bit later.
 This is likely a network performance issue with our Docker hosting provider`)
 			}
 			return err
@@ -228,63 +174,14 @@ This is likely a network performance issue with our Docker hosting provider`)
 	return nil
 }
 
-func drops(files []string, typ, dir string) error {
-	//to get from github
-	var repo string
-	if typ == "services" {
-		repo = "eris-services"
-	} else if typ == "chains" {
-		repo = "eris-chains"
-	}
-	// on different arch
-	archPrefix := ""
-	if runtime.GOARCH == "arm" {
-		archPrefix = "arm/"
-	}
-
-	if !util.DoesDirExist(dir) {
-		if err := os.MkdirAll(dir, 0777); err != nil {
-			return err
-		}
-	}
-
-	for _, file := range files {
-		log.WithField(file, dir).Debug("Getting file from GitHub, dropping into")
-		if err := util.GetFromGithub("monax", repo, "master", archPrefix+file+".toml", dir, file+".toml"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// TODO [zr] use templates
-func writeDefaultFile(savePath, fileName string, toWrite func() string) error {
-	if err := os.MkdirAll(savePath, 0777); err != nil {
-		return err
-	}
-	pth := filepath.Join(savePath, fileName)
-	writer, err := os.Create(pth)
-	defer writer.Close()
-	if err != nil {
-		return err
-	}
-	writer.Write([]byte(toWrite()))
-	return nil
-}
-
-func checkThenInitErisRoot(force bool) (bool, error) {
+func checkThenInitMonaxRoot() (bool, error) {
 	var newDir bool
-	if force {
-		log.Info("Force initializing Eris root directory")
-		if err := config.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
-		}
-		return true, nil
-	}
-	if !util.DoesDirExist(config.ErisRoot) || !util.DoesDirExist(config.ServicesPath) {
-		log.Warn("Eris root directory doesn't exist. The marmots will initialize it for you")
-		if err := config.InitErisDir(); err != nil {
-			return true, fmt.Errorf("Could not initialize Eris root directory: %v", err)
+
+	if !util.DoesDirExist(config.MonaxRoot) || !util.DoesDirExist(config.ServicesPath) {
+		log.Warn("Monax root directory doesn't exist. The marmots will initialize it for you")
+		if err := config.InitMonaxDir(); err != nil {
+			return true, fmt.Errorf("Could not initialize Monax root directory: %v", err)
+
 		}
 		newDir = true
 	} else {
@@ -300,12 +197,11 @@ func checkIfMigrationRequired(doYes bool) error {
 	return nil
 }
 
-//func askToPull removed since it's basically a duplicate of this
 func checkIfCanOverwrite(doYes bool) error {
 	if doYes {
 		return nil
 	}
-	log.WithField("path", config.ErisRoot).Warn("Eris root directory")
+	log.WithField("path", config.MonaxRoot).Warn("Monax root directory")
 	log.WithFields(log.Fields{
 		"services path": config.ServicesPath,
 		"chains path":   config.ChainsPath,
@@ -320,21 +216,21 @@ func checkIfCanOverwrite(doYes bool) error {
 	return nil
 }
 
-func GetTheImages(do *definitions.Do) error {
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" || do.Yes {
+func getTheImages(do *definitions.Do) error {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" || do.Yes {
 		if err := pullDefaultImages(do.ImagesSlice); err != nil {
 			return err
 		}
 		log.Warn("Successfully pulled default images")
 	} else {
 		log.Warn(`
-WARNING: Approximately 1 gigabyte of Docker images are about to be pulled
+WARNING: Approximately 400 mb of Docker images are about to be pulled
 onto your host machine. Please ensure that you have sufficient bandwidth to
 handle the download. For a remote Docker server this should only take a few
 minutes but can sometimes take 10 or more. These times can double or triple
 on local host machines. If you already have the images, they'll be updated.
 `)
-		log.WithField("ERIS_PULL_APPROVE", "true").Warn("Skip confirmation with")
+		log.WithField("MONAX_PULL_APPROVE", "true").Warn("Skip confirmation with")
 		log.Warn()
 
 		if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
@@ -343,25 +239,6 @@ on local host machines. If you already have the images, they'll be updated.
 			}
 			log.Warn("Successfully pulled default images")
 		}
-	}
-	return nil
-}
-
-func overwriteErisToml() error {
-	config.Global.DefaultRegistry = version.DefaultRegistry
-	config.Global.BackupRegistry = version.BackupRegistry
-	config.Global.ImageData = version.ImageData
-	config.Global.ImageKeys = version.ImageKeys
-	config.Global.ImageDB = version.ImageDB
-	config.Global.ImageIPFS = version.ImageIPFS
-
-	// Ensure the directory the file being saved to exists.
-	if err := os.MkdirAll(config.ErisRoot, 0755); err != nil {
-		return err
-	}
-
-	if err := config.Save(&config.Global.Settings); err != nil {
-		return err
 	}
 	return nil
 }

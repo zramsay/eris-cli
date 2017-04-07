@@ -1,11 +1,11 @@
 %{define} home %{getenv:HOME}
-%{define} version %{getenv:ERIS_VERSION}
-%{define} release %{getenv:ERIS_RELEASE}
+%{define} version %{getenv:MONAX_VERSION}
+%{define} release %{getenv:MONAX_RELEASE}
 %{define} gorepo %{_builddir}/src/github.com/monax/cli
 
-Summary: Eris is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
+Summary: Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
-Name: eris
+Name: monax
 License: GPL-3
 Version: %{version}
 Release: %{release}
@@ -14,7 +14,7 @@ URL: https://monax.io/docs
 BuildRoot: buildroot-%{name}-%{version}-%{release}.%{_arch}
 
 %description
-Eris is an application platform for building, testing, maintaining, and operating
+Monax is an application platform for building, testing, maintaining, and operating
 applications built to run on an ecosystem level. It makes it easy and simple to wrangle the dragons of smart contract blockchains.
 
 %prep
@@ -23,13 +23,13 @@ mkdir -p %{gorepo}
 git clone https://github.com/monax/cli %{gorepo}
 
 pushd %{gorepo}
-git fetch origin ${ERIS_BRANCH}
-git checkout ${ERIS_BRANCH}
+git fetch origin ${MONAX_BRANCH}
+git checkout ${MONAX_BRANCH}
 popd
 
 %build
 pushd %{gorepo}
-GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/cli/cmd/eris
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/cli/cmd/monax
 popd
 
 %install

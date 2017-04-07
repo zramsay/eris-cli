@@ -15,10 +15,10 @@ var Keys = &cobra.Command{
 	Use:   "keys",
 	Short: "do specific tasks with keys",
 	Long: `the keys subcommand is an opiniated wrapper around
-[eris-keys] and requires a keys container to be running
+[monax-keys] and requires a keys container to be running
 
 It is for development only. Advanced functionality is available via
-the [eris services exec keys "eris-keys CMD"] command.`,
+the [monax services exec keys "monax-keys CMD"] command.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -36,7 +36,7 @@ var keysGen = &cobra.Command{
 	Long: `generates an unsafe key in the keys container
 
 Key is created in keys data container and can be exported to host
-by using the [--save] flag or by running [eris keys export ADDR].`,
+by using the [--save] flag or by running [monax keys export ADDR].`,
 	Run: GenerateKey,
 }
 
@@ -45,7 +45,7 @@ var keysExport = &cobra.Command{
 	Short: "export a key from container to host",
 	Long: `export a key from container to host
 
-Takes a key from /home/eris/.eris/keys/data/ADDR/ADDR in the keys container
+Takes a key from /home/monax/.monax/keys/data/ADDR/ADDR in the keys container
 and copies it to ` + util.Tilde(filepath.Join(config.KeysDataPath, "ADDR", "ADDR")) + ` on the host.`,
 	Run: ExportKey,
 }
@@ -56,7 +56,7 @@ var keysImport = &cobra.Command{
 	Long: `import a key to container from host
 
 Takes a key from ` + util.Tilde(filepath.Join(config.KeysDataPath, "ADDR", "ADDR")) + `
-on the host and copies it to /home/eris/.eris/keys/data/ADDR/ADDR
+on the host and copies it to /home/monax/.monax/keys/data/ADDR/ADDR
 in the keys container.`,
 	Run: ImportKey,
 }
@@ -68,7 +68,7 @@ var keysList = &cobra.Command{
 
 Specify location with flags --host or ---container.
 
-Latter flag is equivalent to: [eris services exec keys "ls /home/eris/.eris/keys/data"]`,
+Latter flag is equivalent to: [monax services exec keys "ls /home/monax/.monax/keys/data"]`,
 	Run: ListKeys,
 }
 
@@ -84,7 +84,7 @@ func addKeysFlags() {
 	keysImport.Flags().BoolVarP(&do.All, "all", "", false, "import all keys. do not provide any arguments")
 
 	keysList.Flags().BoolVarP(&do.Host, "host", "", false, "list keys on host in "+util.Tilde(config.KeysDataPath))
-	keysList.Flags().BoolVarP(&do.Container, "container", "", false, "list keys in container in /home/eris/.eris/keys/data")
+	keysList.Flags().BoolVarP(&do.Container, "container", "", false, "list keys in container in /home/monax/.monax/keys/data")
 
 }
 

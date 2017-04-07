@@ -241,12 +241,12 @@ func TestLinkingToServicesAndChains(t *testing.T) {
 		t.Fatalf("unexpectedly data containers are not turned on")
 	}
 
-	if do.Service.WorkDir != path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path)) {
-		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(config.ErisContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
+	if do.Service.WorkDir != path.Join(config.MonaxContainerRoot, "apps", filepath.Base(do.Path)) {
+		t.Fatalf("wrong working directory, expected %s, got %s", path.Join(config.MonaxContainerRoot, "apps", filepath.Base(do.Path)), do.Service.WorkDir)
 	}
 
-	if do.Service.User != "eris" {
-		t.Fatalf("wrong user for the containers, expected %s, got %s", "eris", do.Service.User)
+	if do.Service.User != "monax" {
+		t.Fatalf("wrong user for the containers, expected %s, got %s", "monax", do.Service.User)
 	}
 
 	if err := checkLinks(do); err != nil {
@@ -312,7 +312,7 @@ func TestImportEPMYamlInMainDir(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.yaml", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.yaml, expected %s, got %v", contents, out)
 	}
@@ -370,7 +370,7 @@ func TestImportEPMYamlNotInContractDir(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.yaml", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.yaml, expected %s, got %v", contents, out)
 	}
@@ -426,7 +426,7 @@ func TestImportMainDirRel(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.yaml", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.yaml, expected %s, got %v", contents, out)
 	}
@@ -467,7 +467,7 @@ func TestImportMainDirAsFile(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.yaml", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.yaml", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.yaml, expected %s, got %v", contents, out)
 	}
@@ -520,7 +520,7 @@ func TestImportContractDirRel(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/contracts/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -578,7 +578,7 @@ func TestImportContractDirAbs(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/contracts/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -636,7 +636,7 @@ func TestImportContractDirAsFile(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/contracts/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/contracts/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -695,7 +695,7 @@ func TestImportABIDirRel(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/abi/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -753,7 +753,7 @@ func TestImportABIDirAbs(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/abi/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -811,7 +811,7 @@ func TestImportABIDirAsFile(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/abi/fakeContract", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/abi/fakeContract", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting fakeContract, expected %s, got %v", contents, out)
 	}
@@ -860,7 +860,7 @@ func TestExportEPMOutputsInMainDir(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.csv", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.csv", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.csv, expected %s, got %v", contents, out)
 	}
@@ -919,7 +919,7 @@ func TestExportEPMOutputsNotInMainDir(t *testing.T) {
 		t.Fatalf("unexpected error received on data import: %v", err)
 	}
 
-	args := []string{"cat", fmt.Sprintf("/home/eris/.eris/apps/%s/epm.csv", dirName)}
+	args := []string{"cat", fmt.Sprintf("/home/monax/.monax/apps/%s/epm.csv", dirName)}
 	if out := exec(t, name, args); !strings.Contains(out, contents) {
 		t.Fatalf("unexpected error in getting epm.csv, expected %s, got %v", contents, out)
 	}
@@ -968,10 +968,10 @@ func goodPkgContents() string {
   "name": "idis_app",
   "version": "0.0.1",
   "dependencies": {
-    "eris-contracts": "^0.13.1",
+    "monax-contracts": "^0.13.1",
     "prompt": "*"
   },
-  "eris": {
+  "monax": {
 		"package_id": "XXXXX",
 		"chain_name": "simplechain",
 		"chain_id": "YYYYYY",
@@ -1018,10 +1018,10 @@ func badPkgContents() string {
   "name": "idis_app",
   "version": "0.0.1",
   "dependencies": {
-    "eris-contracts": "^0.13.1",
+    "monax-contracts": "^0.13.1",
     "prompt": "*"
   }
-  "eris": {
+  "monax": {
 		"package_id": "XXXXX"
 		"environment": "ASDF=1234"
 		"chain_name": "simplechain"

@@ -8,6 +8,10 @@ title: "Deprecated | Chain Maintaining"
 
 ## Introduction
 
+<div class="note">
+  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 In general what is going to happen here is that we are going to establish what we at Eris call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.
 
 In addition to the one "peer sergeant major" we will also deploy six "peer sergeants" who will be cloud based validator nodes.
@@ -40,7 +44,7 @@ chain_name="maintainchain"
 val_num=3
 driver=virtualbox
 # it can be annoying when working in bulk to manually approve each pull
-export ERIS_PULL_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
 # we'll make enough validator machines to match our $val_num validators on the chain
 for i in `seq 0 $(expr $val_num - 1)`
 do
@@ -55,12 +59,12 @@ do
     peer_server_ip=$(docker-machine ip "$machine_base"-$(expr $i - 1))
   fi
   # perform an ugly text transform to get the configs sorted
-  cat ~/.eris/chains/default/config.toml | \
+  # note: seeds can be set in [chains make]
+ cat ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml | \
     sed -e 's/seeds.*$/seeds = "'"$peer_server_ip"':46656"/g' | \
-    sed -e 's/moniker.*$/moniker = "'"$machine_base-$i"'"/g' | \
     > ~/.eris/chains/$chain_name/"$chain_name"_validator_00"$i"/config.toml
   # start the chain on this machine with a logs rotator on (a good practice for validator nodes)
-  eris chains new --dir $chain_name/"$chain_name"_validator_00"$i" --machine "$machine_base-$i" --logrotate $chain_name
+  eris chains start $chain_name --init-dir $chain_name/"$chain_name"_validator_00"$i" --machine "$machine_base-$i" --logrotate
 done
 ```
 
@@ -70,7 +74,7 @@ done
 
 **Temporary Hack**
 
-That `cat | sed` sequence is ugly, we know. In upcoming releases we'll be addressing some of the friction here with our `eris remotes` command which will have more network level cognizance.
+That `cat | sed` sequence is ugly, we know. We'll be updating the tutorials to reflect the addition of the [--seeds-ip] flag for the [eris chains make] command.
 
 **End Temporary Hack**
 
@@ -85,7 +89,7 @@ The next step is to boot the chain locally and to make sure it is making blocks.
 cat ~/.eris/chains/$chain_name/"$chain_name"_validator_000/config.toml | \
   sed -e 's/moniker.*$/moniker = "imma_b_da_root"/g' \
   > ~/.eris/chains/$chain_name/"$chain_name"_root_000/config.toml
-eris chains new --dir $chain_name/"$chain_name"_root_000 $chain_name
+eris chains start $chain_name--init-dir $chain_name/"$chain_name"_root_000
 sleep 10 # let it boot before we check the logs
 eris chains logs "$chain_name"
 ```

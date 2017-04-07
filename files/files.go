@@ -83,7 +83,7 @@ func PutFiles(do *definitions.Do) (string, error) {
 func exportDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	// path to dir on host
 	do.Source = do.Name
-	do.Destination = filepath.Join(config.ErisContainerRoot, "scratch", "data", do.Source)
+	do.Destination = filepath.Join(config.MonaxContainerRoot, "scratch", "data", do.Source)
 	do.Name = "ipfs"
 
 	do.Operations.Args = nil
@@ -138,7 +138,7 @@ func importDirectory(do *definitions.Do) (*bytes.Buffer, error) {
 	}
 
 	do.Destination = do.Path
-	do.Source = path.Join(config.ErisContainerRoot, hash)
+	do.Source = path.Join(config.MonaxContainerRoot, hash)
 	do.Operations.Args = nil
 	do.Operations.PublishAllPorts = false
 	if err := data.ExportData(do); err != nil {

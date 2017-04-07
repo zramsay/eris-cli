@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// This is a fake server implementation to test Eris command line tools
+// This is a fake server implementation to test Monax command line tools
 // hitting proper API endpoints.
 
 const closeTimeout = time.Millisecond * 100

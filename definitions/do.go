@@ -71,7 +71,7 @@ type Do struct {
 	ConfigOpts     []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes   []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	// for [eris pkgs do]
+	// for [monax pkgs do]
 	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`

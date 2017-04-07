@@ -6,12 +6,12 @@ import (
 
 	"github.com/monax/cli/log"
 
-	"github.com/monax/eris-db/genesis"
+	"github.com/monax/burrow/genesis"
 )
 
-// MakeErisDBNode writes the chain name folder with a folder for every account.
+// MakeMonaxDBNode writes the chain name folder with a folder for every account.
 // In each folder is the genesis file and the configuration file written
-func MakeErisDBNodes(chainName string, seeds []string, accounts []*ErisDBAccountConstructor, chainImageName string,
+func MakeMonaxDBNodes(chainName string, seeds []string, accounts []*MonaxDBAccountConstructor, chainImageName string,
 	useDataContainer bool, exportedPorts []string, containerEntrypoint string) error {
 	var genesisAccounts []*genesis.GenesisAccount
 	var genesisValidators []*genesis.GenesisValidator

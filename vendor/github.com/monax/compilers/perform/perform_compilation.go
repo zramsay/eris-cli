@@ -101,7 +101,7 @@ func RequestBinaryLinkage(url string, file string, libraries string) (*BinaryRes
 
 //todo: Might also need to add in a map of library names to addrs
 func RequestCompile(url string, file string, optimize bool, libraries string) (*Response, error) {
-	config.InitErisDir()
+	config.InitMonaxDir()
 	request, err := CreateRequest(file, libraries, optimize)
 	if err != nil {
 		return nil, err

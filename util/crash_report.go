@@ -16,8 +16,8 @@ type CrashReport interface {
 }
 
 // CrashReportHook sets up a remote logging implementation (depending on
-// the 'CrashReport' value in the `eris.toml` configuration file) and returns
-// a hook for the Eris logging library.
+// the 'CrashReport' value in the `monax.toml` configuration file) and returns
+// a hook for the Monax logging library.
 func CrashReportHook(dockerVersion string) log.Hook {
 	switch config.Global.CrashReport {
 	case "bugsnag":

@@ -10,6 +10,10 @@ menu:
 
 ---
 
+<div class="note">
+   <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 ## Introduction
 
 There are typically two steps to making a permissioned blockchain (for less advanced users we say there are three but really there are two):
@@ -25,21 +29,21 @@ To design our chain we need to, first, consider, *who* will get *what* permissio
 
 * Administrators (these would be developers who had **full** control over the chain, but will **not** be validators on the chain);
 * Validators (these will be set up as cloud instances and they will **only** be given validation permissions);
-* Developers (who will have **partial** access to the more advanced featurs of the chain, such as the ability to update eris:db's name registry and also create contracts on the chain); and
+* Developers (who will have **partial** access to the more advanced featurs of the chain, such as the ability to update burrow's name registry and also create contracts on the chain); and
 * Participants (these will have permissions to do most of the stuff necessary on the chain from a common participants point of view; they'll be able to send tokens and call contracts).
 
 For the purposes of this tutorial, we will have (1) administrator, (7) validators, (3) developers, and (20) participants. This will require a total of 31 keys, and all of their specifics to be generated and added to the genesis block.
 
-If you would like to understand all of the permissions which an `eris:db` smart contract network is capable of providing, [please see its documentation](https://github.com/monax/eris-db/blob/master/README.md).
+If you would like to understand all of the permissions which a `burrow` smart contract network is capable of providing, [please see its documentation](https://github.com/monax/burrow/blob/master/README.md).
 
 ## Step 1. Make the Necessary Files
 
-If you have run through the chain making tool (`eris chains make myChain` with the `--wizard` flag) then you will have been introduced to the idea of account-types. In eris, we are not restrictive about what account-types you can use. We expose a wide variety of permissions which you can utilize to add a network level permissioning system to your network of `eris:db` clients (see links above). This adds a large amount of complexity to the equation, however, and to simplify the use of permissions, we utilize a layer of abstraction which are `account types`. These account types are simply bundles of permissions and tokens which the `eris chains make` command uses to package up our files for us.
+If you have run through the chain making tool (`monax chains make myChain` with the `--wizard` flag) then you will have been introduced to the idea of account-types. In `monax`, we are not restrictive about what account-types you can use. We expose a wide variety of permissions which you can utilize to add a network level permissioning system to your network of `burrow` clients (see links above). This adds a large amount of complexity to the equation, however, and to simplify the use of permissions, we utilize a layer of abstraction which are `account types`. These account types are simply bundles of permissions and tokens which the `monax chains make` command uses to package up our files for us.
 
 Let's first take a closer look at our account types:
 
 ```bash
-cd ~/.eris/chains/account-types
+cd ~/.monax/chains/account-types
 ls
 ```
 
@@ -49,7 +53,7 @@ In this directory you will find a few `*.toml` files. These files each represent
 cat root.toml
 ```
 
-At the top of the file you will see the description of the account type and other narrative stuff which is consumed by the chain making wizard that is utilized by `eris chains make anotherChain --wizard`.
+At the top of the file you will see the description of the account type and other narrative stuff which is consumed by the chain making wizard that is utilized by `monax chains make anotherChain --wizard`.
 
 After the description sections you'll see the following lines:
 
@@ -59,7 +63,7 @@ default_tokens = 9999999999
 default_bond = 0
 ```
 
-The first line `default_number` tells the eris chain maker by default how many of the `root` accounts to make. The `default_tokens` tells the eris chain maker how many tokens to give each key which is generated and given to this account type. The `default_bond` tells the eris chain maker by default how many tokens should be bonded by the key which is generated and given to this account type. When `default_bond` is zero, the eris chain maker will not add the account type's key(s) to the genesis.json as validators.
+The first line `default_number` tells the monax chain maker by default how many of the `root` accounts to make. The `default_tokens` tells the monax chain maker how many tokens to give each key which is generated and given to this account type. The `default_bond` tells the monax chain maker by default how many tokens should be bonded by the key which is generated and given to this account type. When `default_bond` is zero, the monax chain maker will not add the account type's key(s) to the genesis.json as validators.
 
 The third section of the toml file is the permissions table. This section looks something like this:
 
@@ -81,7 +85,7 @@ addRole = 1
 rmRole = 1
 ```
 
-Where a field is `1` eris chain maker will turn that permission for the account type `on`; and where it is `0` eris chain maker will turn that permission for the account type `off`. To adjust the permissions for a default account type then edit any of the `~/.eris/chains/account-types/*.toml` files as you wish. After that, whenever you run the eris chain maker it will respect the changes to any of the fields.
+Where a field is `1`, the monax chain maker will turn that permission for the account type `on`; and where it is `0`, the monax chain maker will turn that permission for the account type `off`. To adjust the permissions for a default account type then edit any of the `~/.monax/chains/account-types/*.toml` files as you wish. After that, whenever you run the monax chain maker it will respect the changes to any of the fields.
 
 You can also simply add new account types, which is what we're going to do next. Let's make a copy of the `developer.toml` file and edit it.
 
@@ -89,7 +93,7 @@ You can also simply add new account types, which is what we're going to do next.
 cp developer.toml adv_chain_developer.toml
 ```
 
-Open `~/.eris/chains/account-types/adv_chain_developer.toml` in your favorite text editor. Make the following changes:
+Open `~/.monax/chains/account-types/adv_chain_developer.toml` in your favorite text editor. Make the following changes:
 
 ```toml
 name = "AdvDeveloper"
@@ -104,10 +108,10 @@ What did those changes do? Well the first change should be obvious. For the seco
 
 At this point once we're happy with the account types for our chain (feel free to look around at the other account types files if you like; but we're just going to use the defaults for the rest of this tutorial), then we can move on to the next step in the process.
 
-Now we are goint to take a look at `eris`'s chain types feature.
+Now we are goint to take a look at `monax`'s chain types feature.
 
 ```bash
-cd ~/.eris/chains/chain-types
+cd ~/.monax/chains/chain-types
 ls
 ```
 
@@ -117,7 +121,7 @@ In this directory is our chain types. Let's take a look at what a chain types fi
 cat simplechain.toml
 ```
 
-Similarly to account types files, the chain types files start with some lines describing the chain type. Then there is a table for the account types (as well as some tables `eris chains` will be utilizing in future versions) which look like this:
+Similarly to account types files, the chain types files start with some lines describing the chain type. Then there is a table for the account types (as well as some tables `monax chains` will be utilizing in future versions) which look like this:
 
 ```toml
 [account_types]
@@ -128,7 +132,7 @@ Root = 0
 Validator = 0
 ```
 
-That table tells the eris chain maker that when the `--chain-type` flag is utilized how many of each of the account types to make. So let's make a copy of this file and add our own chain type.
+That table tells the monax chain maker that when the `--chain-type` flag is utilized how many of each of the account types to make. So let's make a copy of this file and add our own chain type.
 
 ```bash
 cp simplechain.toml advchain.toml
@@ -165,8 +169,8 @@ You can see that we have zeroed out `Full` (which is a root + validator account 
 Now. After that quick tour we are ready to make the chain.
 
 ```bash
-cd ~/.eris/chains
-eris chains make advchain --chain-type advchain
+cd ~/.monax/chains
+monax chains make advchain --chain-type advchain
 ```
 
 If it paused for a little while then returned you to your terminal that means it was successful. Let's check with:
@@ -175,7 +179,7 @@ If it paused for a little while then returned you to your terminal that means it
 ls
 ```
 
-In your `~/.eris/chains` directory you should now have an `advchain` directory. Let's move into that directory.
+In your `~/.monax/chains` directory you should now have an `advchain` directory. Let's move into that directory.
 
 ```bash
 cd advchain
@@ -243,7 +247,7 @@ A343EBBED1AA05AAB2FD2C3D377FF1A4F0986ECB364D3542050216BD72042311,9999999999,advc
 D1B95DC7AC13786DABE6BE2F6F5217A4276EDE942AC7EA6853DBA5A11E15641C,9999999999,advchain_validator_006,32,16383
 ```
 
-These are the accounts that will get made on the chain. This csv can later be utilized by `eris chains make --known` to remake a genesis.json if needed. The form of this csv is:
+These are the accounts that will get made on the chain. This csv can later be utilized by `monax chains make --known` to remake a genesis.json if needed. The form of this csv is:
 
 ```csv
 publicKey,tokens,name,permission,setBase
@@ -259,7 +263,7 @@ Next let's look at the accounts.json
 cat accounts.json
 ```
 
-This file is useful for testing integration with `eris-contracts.js`. Getting `eris-contracts.js` fully integrated into `eris-keys` is on our roadmap for future releases but at this time it is still needed. As of the 0.16.0 release, this file will **not** have the required `privKey` field for `eris-contracts.js`. You'll need to add the `--unsafe` flag to `eris chains make`.
+This file is useful for testing integration with `legacy-contracts.js`. Getting `legacy-contracts.js` fully integrated into `monax-keys` is on our roadmap for future releases but at this time it is still needed. As of the 0.16.0 release, this file will **not** have the required `privKey` field for `legacy-contracts.js`. You'll need to add the `--unsafe` flag to `monax chains make`.
 
 **End Temporary Hack**
 
@@ -269,7 +273,7 @@ Now let's look at the addresses.json
 cat addresses.csv
 ```
 
-This file should be self-explanatory. It simply includes the `address` (which is a hashed version of the public key) and the `name`. This file is useful when combining eris chain maker with the package manager (`eris pkgs`) and for scripting interactions over a given chain.
+This file should be self-explanatory. It simply includes the `address` (which is a hashed version of the public key) and the `name`. This file is useful when combining monax chain maker with the package manager (`monax pkgs`) and for scripting interactions over a given chain.
 
 Finally, let's look at the validators.csv
 
@@ -277,7 +281,7 @@ Finally, let's look at the validators.csv
 cat validators.csv
 ```
 
-As with the accounts.csv, this is a file which can later be fed into `eris chains make --known` for recreation of the genesis.json. The file looks similar, but distinct from the accounts.json
+As with the accounts.csv, this is a file which can later be fed into `monax chains make --known` for recreation of the genesis.json. The file looks similar, but distinct from the accounts.json
 
 ```csv
 A343EBBED1AA05AAB2FD2C3D377FF1A4F0986ECB364D3542050216BD72042311,9999999998,advchain_validator_000,32,16383
@@ -304,22 +308,22 @@ cd advchain_root_000
 ls
 ```
 
-In this directory you should see a `priv_validator.json`. This is the key that will be used by the eris:db client. (Note, we are working on moving signing completely out of eris:db and completely into eris-keys but this work is not yet finished.)
+In this directory you should see a `priv_validator.json`. This is the key that will be used by the burrow client. (Note, we are working on moving signing completely out of burrow and completely into monax-keys but this work is not yet finished.)
 
-There is also a genesis.json file that is within the directory. Finally, there is a `config.toml` which, for any multi-node chain will need the `seeds` field filled in. Note that `eris chains make` has `--seeds-ip` field to fill the `seeds` field out automatically.
+There is also a genesis.json file that is within the directory. Finally, there is a `config.toml` which, for any multi-node chain will need the `seeds` field filled in. Note that `monax chains make` has `--seeds-ip` field to fill the `seeds` field out automatically.
 
 This directory contains the **minimum** necessary files to start a chain. As we will see soon, there is one file which is lacking to fully run *this* chain.
 
-**N.B.** You will want to export your keys onto the host at this point so that you have them backed up. Run `eris keys export --all` and you'll see the keys on your host by running `eris keys ls` or looking in `~/.eris/keys/data`. 
+**N.B.** You will want to export your keys onto the host at this point so that you have them backed up. Run `monax keys export --all` and you'll see the keys on your host by running `monax keys ls` or looking in `~/.monax/keys/data`. 
 
 ## Step 2. Instantiate the Blockchain
 
-With all the files made for us by the eris chain maker out we're ready to rock and roll.
+With all the files made for us by the monax chain maker out we're ready to rock and roll.
 
 Let's start the chain and use our root credentials!
 
 ```bash
-eris chains start advchain --init-dir ~/.eris/chains/advchain/advchain_root_000
+monax chains start advchain --init-dir ~/.monax/chains/advchain/advchain_root_000
 ```
 
 Boom. You're all set with your custom built, permissioned, smart contract-ified, blockchain. Except for one thing. This particular chain won't run out of the box though. Why? Because you'll need to deploy the validators and connect them to one another.
@@ -327,14 +331,14 @@ Boom. You're all set with your custom built, permissioned, smart contract-ified,
 Let's take a look at the chain for a minute:
 
 ```bash
-eris chains logs advchain -f
+monax chains logs advchain -f
 ```
 
 That command will `follow` the logs. To stop following the logs use `ctrl+c`. As you will see, nothing appears to be happening here. This is a feature not a bug.
 
 ### A Bit About Validators
 
-eris:db utilizes the tendermint consensus engine under the hood (on our roadmap is to be able to provide eris:db's comprehensive RPC and application manager portion over various consensus engines.
+Burrow uses the tendermint consensus engine under the hood (on our roadmap is to be able to provide burrow's comprehensive RPC and application manager portion over various consensus engines.
 
 The tendermint consensus engine requires that >2/3 (not >=2/3 !!) of the bonded stake is present in a round of voting in order to add a block to the chain. When we only started one node on this chain, and very much unlike proof of work consensus engines, the chain will not progress by itself. This is because there was only one node on the network and it doesn't actually have any bonded stake. Remember we started the `advchain_root_000` node, which according to the genesis.json and validators.csv file has bonded no stake.
 

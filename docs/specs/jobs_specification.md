@@ -8,17 +8,21 @@ title: "Specifications | Jobs Specification"
 
 ## Jobs Specification
 
+<div class="note">
+	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+</div>
+
 Jobs are defined in **job definition files**.
 
 Action definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-Examples of eris job definition files are available in the [jobs_fixtures directory](https://github.com/monax/cli/tree/master/tests/jobs_fixtures).
+Examples of job definition files are available in the [jobs_fixtures directory](https://github.com/monax/cli/tree/master/tests/jobs_fixtures).
 
-Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using eris:jobs' [variable specification](/docs/specs/variable_specification).
+Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using jobs' [variable specification](/docs/specs/variable_specification).
 
 ## Job Types
 
-Jobs are performed as sequentially based on the order they are given in the jobs definition file. By default eris:jobs will perform the entire sequence of jobs which has been outlined in a given jobs file.
+Jobs are performed as sequentially based on the order they are given in the jobs definition file. By default, `monax pkgs do` will perform the entire sequence of jobs which has been outlined in a given jobs file.
 
 Job categories are categorize into:
 
@@ -33,7 +37,7 @@ For each job which is specified, EPM will parse the following information:
 
 {{ insert_definition "package.go" "Jobs" }}
 
-Each job must then specify one **and only one** key which will determine the `type` of job which eris:jobs should run. It is not invalid to add additional jobs, but only one of the jobs will be ran by eris:jobs. The jobs and their purposes are outlined in the Job struct.
+Each job must then specify one **and only one** key which will determine the `type` of job which `monax pkgs do` should run. It is not invalid to add additional jobs, but only one of the jobs will be ran by `monax pkgs do`. The jobs and their purposes are outlined in the Job struct.
 
 {{ insert_definition "package.go" "Job" }}
 
@@ -105,11 +109,11 @@ The call job will parse the following information:
 
 ### Test Jobs
 
-Test jobs exposed through eris:jobs are available in the following job types:
+Test jobs exposed through `monax pkgs do` are available in the following job types:
 
 * [query-account](#queryaccount-jobs): get information about an account on the blockchain
 * [query-contract](#querycontract-jobs): perform a simulated call against a specific contract (usually used to trigger accessor functions which retrieve information from a return variable of a contract's function)
-* [query-name](#queryname-jobs): get information about a registered name using eris:db's name registry functionaltiy
+* [query-name](#queryname-jobs): get information about a registered name using burrow's name registry functionality
 * [query-vals](#queryvals-jobs): get information about the validator set
 * [assert](#assert-jobs): assert a relationship between a key and a value (useful for testing purposes to make sure everything deployed properly and/or is working as it should)
 

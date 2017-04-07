@@ -124,7 +124,7 @@ func ImportData(do *definitions.Do) error {
 		if !exists {
 			return fmt.Errorf("There is no data container for service %q", do.Name)
 		}
-		if err := checkErisContainerRoot(do, "import"); err != nil {
+		if err := checkMonaxContainerRoot(do, "import"); err != nil {
 			return err
 		}
 
@@ -163,8 +163,8 @@ func ImportData(do *definitions.Do) error {
 		}
 
 		//required b/c `docker cp` (UploadToContainer) goes in as root
-		// and eris images have the `eris` user by default
-		if err := runData(containerName, []string{"chown", "--recursive", "eris", do.Destination}); err != nil {
+		// and monax images have the `monax` user by default
+		if err := runData(containerName, []string{"chown", "-R", "monax", do.Destination}); err != nil {
 			return util.DockerError(err)
 		}
 
@@ -191,7 +191,7 @@ func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Can't find that data container. Please check with [eris data ls]")
+		return nil, fmt.Errorf("Can't find that data container. Please check with [monax data ls]")
 	}
 	return buf, nil
 }
@@ -225,7 +225,7 @@ func ExportData(do *definitions.Do) error {
 		defer reader.Close()
 
 		if !do.Operations.SkipCheck { // sometimes you want greater flexibility
-			if err := checkErisContainerRoot(do, "export"); err != nil {
+			if err := checkMonaxContainerRoot(do, "export"); err != nil {
 				return err
 			}
 		}
@@ -247,9 +247,9 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 
-		// now if docker dumps to exportPath/.eris we should remove
-		// move everything from .eris to exportPath
-		if err := MoveOutOfDirAndRmDir(filepath.Join(exportPath, ".eris"), exportPath); err != nil {
+		// now if docker dumps to exportPath/.monax we should remove
+		// move everything from .monax to exportPath
+		if err := MoveOutOfDirAndRmDir(filepath.Join(exportPath, ".monax"), exportPath); err != nil {
 			return err
 		}
 
@@ -264,7 +264,7 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check with [eris data ls]")
+		return fmt.Errorf("I cannot find that data container. Please check with [monax data ls]")
 	}
 	return nil
 }
@@ -323,12 +323,12 @@ func runData(name string, args []string) error {
 	return nil
 }
 
-// check path for config.ErisContainerRoot
+// check path for config.MonaxContainerRoot
 // XXX this is opiniated & we may want to change in future
 // for more flexibility with filesystem of data conts
 // [zr] yes, it is opiniated; do.Operations.SkipCheck will silence it when needed
-func checkErisContainerRoot(do *definitions.Do, typ string) error {
-	r, err := regexp.Compile(config.ErisContainerRoot)
+func checkMonaxContainerRoot(do *definitions.Do, typ string) error {
+	r, err := regexp.Compile(config.MonaxContainerRoot)
 	if err != nil {
 		return err
 	}
@@ -336,14 +336,14 @@ func checkErisContainerRoot(do *definitions.Do, typ string) error {
 	switch typ {
 	case "import":
 		if r.MatchString(do.Destination) != true { //if not there join it
-			do.Destination = path.Join(config.ErisContainerRoot, do.Destination)
+			do.Destination = path.Join(config.MonaxContainerRoot, do.Destination)
 			return nil
 		} else { // matches: do nothing
 			return nil
 		}
 	case "export":
 		if r.MatchString(do.Source) != true {
-			do.Source = path.Join(config.ErisContainerRoot, do.Source)
+			do.Source = path.Join(config.MonaxContainerRoot, do.Source)
 			return nil
 		} else {
 			return nil

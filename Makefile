@@ -24,7 +24,7 @@ greet:
 ### Formatting, linting and vetting
 
 # check the code for style standards; currently enforces go formatting.
-# display output first, then check for success	
+# display output first, then check for success
 .PHONY: check
 check:
 	@echo "Checking code for formatting style compliance."
@@ -60,7 +60,7 @@ build:	check build_cli
 # build eris
 .PHONY: build_cli
 build_cli:
-	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/eris
+	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/monax
 
 ### Testing github.com/monax/cli
 

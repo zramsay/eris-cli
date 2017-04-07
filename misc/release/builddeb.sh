@@ -3,17 +3,17 @@
 echo
 echo ">>> Sanity checks"
 echo
-if [ -z "${ERIS_VERSION}" -o -z "${ERIS_RELEASE}" ]
+if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" ]
 then
-    echo "The ERIS_VERSION or ERIS_RELEASE environment variables are not set, aborting"
+    echo "The MONAX_VERSION or MONAX_RELEASE environment variables are not set, aborting"
     echo
     echo "Please start this container from the 'release.sh' script"
     exit 1
 fi
 
-export ERIS_BRANCH=master
+export MONAX_BRANCH=master
 if [ ! -z "$1" ]; then
-  ERIS_BRANCH="$1"
+  MONAX_BRANCH="$1"
 fi
 
 echo
@@ -24,25 +24,25 @@ gpg --import linux-private-key.asc
 
 export GOREPO=${GOPATH}/src/github.com/monax/cli
 git clone https://github.com/monax/cli ${GOREPO}
-pushd ${GOREPO}/cmd/eris
-git fetch origin ${ERIS_BRANCH}
-git checkout ${ERIS_BRANCH}
+pushd ${GOREPO}/cmd/monax
+git fetch origin ${MONAX_BRANCH}
+git checkout ${MONAX_BRANCH}
 echo
-echo ">>> Building the Eris binary"
+echo ">>> Building the Monax binary"
 echo
 go get
 go build -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 popd
 
 echo
-echo ">>> Building the Debian package (#${ERIS_BRANCH})"
+echo ">>> Building the Debian package (#${MONAX_BRANCH})"
 echo
 mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/usr/share/man/man1 deb/DEBIAN
-cp ${GOREPO}/cmd/eris/eris deb/usr/bin
-${GOREPO}/cmd/eris/eris man --dump > deb/usr/share/man/man1/eris.1
+cp ${GOREPO}/cmd/monax/eris deb/usr/bin
+${GOREPO}/cmd/monax/eris man --dump > deb/usr/share/man/man1/eris.1
 cat > deb/DEBIAN/control <<EOF
 Package: eris
-Version: ${ERIS_VERSION}-${ERIS_RELEASE}
+Version: ${MONAX_VERSION}-${MONAX_RELEASE}
 Section: devel
 Architecture: amd64
 Priority: standard
@@ -50,7 +50,7 @@ Homepage: https://monax.io/docs
 Maintainer: Monax Industries <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
-Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications. 
+Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications.
 EOF
 cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
 cat > deb/usr/share/doc/eris/copyright <<EOF
@@ -59,7 +59,7 @@ Copyright: $(date +%Y) Monax Industries  <support@monax.io>
 License: GPL-3
 EOF
 dpkg-deb --build deb
-PACKAGE=eris_${ERIS_VERSION}-${ERIS_RELEASE}_amd64.deb
+PACKAGE=eris_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
 
 echo
@@ -72,10 +72,10 @@ secret_key = ${AWS_SECRET_ACCESS_KEY}
 EOF
 s3cmd put ${PACKAGE} s3://${AWS_S3_DEB_FILES}
 
-if [ "$ERIS_BRANCH" != "master" ]
+if [ "$MONAX_BRANCH" != "master" ]
 then
    echo
-   echo ">>> Not recreating a repo for #${ERIS_BRANCH} branch"
+   echo ">>> Not recreating a repo for #${MONAX_BRANCH} branch"
    echo
    exit 0
 fi

@@ -2,7 +2,7 @@ pragma solidity >=0.0.0;
 
 /**
 * Interface for managing Secure Native authorizations.
-* @dev This interface describes the functions exposed by the SNative permissions layer in the Monax blockchain (ErisDB).
+* @dev This interface describes the functions exposed by the SNative permissions layer in the Monax blockchain (Burrow).
 * @dev These functions can be accessed as if this contract were deployed at the address 0x0000000000000000005065726d697373696f6e73
 */
 contract Permissions {
@@ -66,7 +66,7 @@ contract Permissions {
 
 
 contract permSNative {
-  // github.com/monax/eris-db/permission/types/snatives.go#L17
+  // github.com/monax/burrow/permission/types/snatives.go#L17
   Permissions perm = Permissions(address(sha3("Permissions")));
 
   function hasBase(address addr, uint64 permFlag) constant returns (uint64) {

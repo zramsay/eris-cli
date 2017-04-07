@@ -30,8 +30,8 @@ Welcome to the Monax Documentation homepage. Here you'll find everything needed 
 
 ### Other repositories and documentation
 
-* For details on permissioning, secure natives, and the eris-db API, see the [eris-db repository](https://github.com/monax/eris-db)
-* For information about the javascript libraries, see the [eris-contracts.js](https://github.com/monax/eris-contracts.js), [eris-db.js](https://github.com/monax/eris-db.js), and [eris-keys.js](https://github.com/monax/eris-keys.js) repositories.
+* For details on permissioning, secure natives, and the burrow API, see the [burrow repository](https://github.com/monax/burrow)
+* For information about the javascript libraries, see the [legacy-contracts.js](https://github.com/monax/legacy-contracts.js), [legacy-db.js](https://github.com/monax/monax-db.js), and [monax-keys.js](https://github.com/monax/monax-keys.js) repositories.
 
 ### Deprecated
 

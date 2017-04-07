@@ -23,6 +23,6 @@ This is a consolidation release that merges in two repositories (eris-cm & eris-
 - variable names for the account-type permissions have been harmonized. [#1234](https://github.com/monax/cli/pull/1234)
 
 #### Other repositories
-- see [here](https://github.com/monax/eris-db/blob/v0.16.0/CHANGELOG.md) for the `eris-db` changelog.
+- see [here](https://github.com/monax/burrow/blob/v0.16.0/CHANGELOG.md) for the `eris-db` changelog.
 - see [this PR](https://github.com/monax/compilers/pull/121) for the compilers changelog.
 - no changes were made to `eris-keys`. 

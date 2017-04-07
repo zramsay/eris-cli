@@ -16,7 +16,7 @@ type Logger struct {
 	// service, log to StatsD or dump the core on fatal errors.
 	Hooks LevelHooks
 	// All log entries pass through the formatter before logged to Out.
-	// The default formmatter is the ErisFormatter. You can easily implement your
+	// The default formmatter is the MonaxFormatter. You can easily implement your
 	// own that implements the `Formatter` interface, see the `README` or included
 	// formatters for examples.
 	Formatter Formatter
@@ -43,7 +43,7 @@ type Logger struct {
 func New() *Logger {
 	return &Logger{
 		Out:       os.Stderr,
-		Formatter: &ErisFormatter{Color: true},
+		Formatter: &MonaxFormatter{Color: true},
 		Hooks:     make(LevelHooks),
 		Level:     InfoLevel,
 	}

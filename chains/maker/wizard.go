@@ -9,18 +9,18 @@ import (
 func ChainsMakeWelcome() string {
 	return `Welcome! I'm the marmot that helps you make your chain.
 
-eris chains is your gateway to permissioned, smart contract compatible chains.
+monax chains is your gateway to permissioned, smart contract compatible chains.
 There is a bit of complexity around getting these chains set up. It is my
 marmot-y task to make this as easy as we can.
 
-First we will run through the eris chains typical account types and I'll ask
+First we will run through the monax chains typical account types and I'll ask
 you how many of each account type you would like.
 
 After that you will have an opportunity to create your own account types and
 add those groupings into the genesis.json.
 
 Remember, I'm only useful when you are making a new chain. After your chain
-is established then you can modify the permissions using other eris tooling.
+is established then you can modify the permissions using other monax tooling.
 
 Are you ready to make your own chain (y/n)? `
 }
@@ -34,7 +34,7 @@ func ChainsMakePrelimQuestions() map[string]string {
 	return questions
 }
 
-func AccountTypeIntro(account *definitions.ErisDBAccountType) string {
+func AccountTypeIntro(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf(`
 The %s Group.
 
@@ -46,14 +46,14 @@ Who Should Get These?:
 
 %s
 
-How many keys do you want in the %s Group? (%d) `, account.Name, account.Definition, account.TypicalUser, account.Name, account.Number)
+How many keys do you want in the %s Group? (%d) `, account.Name, account.Description, account.TypicalUser, account.Name, account.DefaultNumber)
 }
 
-func AccountTypeTokens(account *definitions.ErisDBAccountType) string {
+func AccountTypeTokens(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf("How many tokens should each key in the %s Group be given? ", account.Name)
 }
 
-func AccountTypeToBond(account *definitions.ErisDBAccountType) string {
+func AccountTypeToBond(account *definitions.MonaxDBAccountType) string {
 	return fmt.Sprintf("This group appears to be a validating group. How many tokens would you like the %s Group to bond?", account.Name)
 }
 
@@ -69,13 +69,13 @@ Who Should Get These?:
 
 Don't ask us, you are the one that wanted "manual" :-)
 
-For more on eris chains permissions see here:
+For more on monax chains permissions see here:
 
 https://monax.io/platform/db
 
 or
 
-https://github.com/monax/eris-db
+https://github.com/monax/burrow
 
 How many keys do you want in *this* manual group? (You can make more than one manual group)`
 }

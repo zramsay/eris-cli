@@ -171,7 +171,7 @@ func printReport(container interface{}, field string) error {
 }
 
 func probablyHasDataContainer(container *docker.Container) bool {
-	eFolder := container.Volumes["/home/eris/.eris"]
+	eFolder := container.Volumes["/home/monax/.monax"]
 	if eFolder != "" {
 		if strings.Contains(eFolder, "_data") {
 			return true

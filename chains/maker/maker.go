@@ -12,7 +12,7 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/eris-db/genesis"
+	"github.com/monax/burrow/genesis"
 )
 
 var (
@@ -123,7 +123,7 @@ func makeRaw(do *definitions.Do, typ string) error {
 	return maker(do, "mint", accountTypes)
 }
 
-func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.ErisDBAccountType) error {
+func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.MonaxDBAccountType) error {
 	var err error
 	// make the accountConstructor slice bases on the accountTypes
 	accounts, err := MakeAccounts(do.Name, consensusType, accountTypes, do.Unsafe)
@@ -132,7 +132,7 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	}
 
 	// use the accountConstructors to write the necessary files (config, genesis and private validator) per node
-	if err = MakeErisDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
+	if err = MakeMonaxDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
 		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
 		return err
 	}
@@ -147,54 +147,54 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	return nil
 }
 
-func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {
+func assembleTypesWizard(accountT *definitions.MonaxDBAccountType, tokenIze bool) error {
 	var err error
-	accountT.Number, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.Number, reader)
-	log.WithField("=>", accountT.Number).Debug("What the marmots heard")
+	accountT.DefaultNumber, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.DefaultNumber, reader)
+	log.WithField("=>", accountT.DefaultNumber).Debug("What the marmots heard")
 	if err != nil {
 		return err
 	}
 
-	if tokenIze && accountT.Number > 0 {
-		accountT.Tokens, err = util.GetIntResponse(AccountTypeTokens(accountT), accountT.Tokens, reader)
-		log.WithField("=>", accountT.Tokens).Debug("What the marmots heard")
+	if tokenIze && accountT.DefaultNumber > 0 {
+		accountT.DefaultTokens, err = util.GetIntResponse(AccountTypeTokens(accountT), accountT.DefaultTokens, reader)
+		log.WithField("=>", accountT.DefaultTokens).Debug("What the marmots heard")
 		if err != nil {
 			return err
 		}
 	}
 
-	if accountT.Perms["bond"] == 1 && accountT.Number > 0 {
-		accountT.ToBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.ToBond, reader)
-		log.WithField("=>", accountT.ToBond).Debug("What the marmots heard")
+	if accountT.Perms["bond"] == 1 && accountT.DefaultNumber > 0 {
+		accountT.DefaultBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.DefaultBond, reader)
+		log.WithField("=>", accountT.DefaultBond).Debug("What the marmots heard")
 		if err != nil {
 			return err
 		}
 	} else {
-		log.Info("Setting accountType.ToBond to 0")
+		log.Info("Setting accountType.DefaultBond to 0")
 		log.WithField("=>", accountT.Name).Debug("No bond permissions")
-		accountT.ToBond = 0
+		accountT.DefaultBond = 0
 	}
 
 	return nil
 }
 
-func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator int) ([]*definitions.ErisDBAccountType, error) {
+func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator int) ([]*definitions.MonaxDBAccountType, error) {
 	var err error
-	thisActT := &definitions.ErisDBAccountType{}
+	thisActT := &definitions.MonaxDBAccountType{}
 	thisActT.Name = fmt.Sprintf("%s_%02d", "manual", iterator)
 	iterator++
 
-	thisActT.Number, err = util.GetIntResponse(AccountTypeManualIntro(), 1, reader)
+	thisActT.DefaultNumber, err = util.GetIntResponse(AccountTypeManualIntro(), 1, reader)
 	if err != nil {
 		return nil, err
 	}
 
-	thisActT.Tokens, err = util.GetIntResponse(AccountTypeManualTokens(), 0, reader)
+	thisActT.DefaultTokens, err = util.GetIntResponse(AccountTypeManualTokens(), 0, reader)
 	if err != nil {
 		return nil, err
 	}
 
-	thisActT.ToBond, err = util.GetIntResponse(AccountTypeManualToBond(), 0, reader)
+	thisActT.DefaultBond, err = util.GetIntResponse(AccountTypeManualToBond(), 0, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +223,7 @@ func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator in
 	return accountT, nil
 }
 
-func assembleTypesRaw(accountT []*definitions.ErisDBAccountType, do *definitions.Do, typ string) error {
+func assembleTypesRaw(accountT []*definitions.MonaxDBAccountType, do *definitions.Do, typ string) error {
 	// TODO
 	switch typ {
 	case "accounttype":
@@ -236,7 +236,7 @@ func assembleTypesRaw(accountT []*definitions.ErisDBAccountType, do *definitions
 	return nil
 }
 
-func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesCSV(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	csvfile, err := os.Open(do.CSV)
@@ -259,15 +259,15 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
 				var err error
-				thisActT.Number, err = strconv.Atoi(num)
+				thisActT.DefaultNumber, err = strconv.Atoi(num)
 				if err != nil {
 					return err
 				}
-				thisActT.Tokens, err = strconv.Atoi(tokens)
+				thisActT.DefaultTokens, err = strconv.Atoi(tokens)
 				if err != nil {
 					return err
 				}
-				thisActT.ToBond, err = strconv.Atoi(toBond)
+				thisActT.DefaultBond, err = strconv.Atoi(toBond)
 				if err != nil {
 					return err
 				}
@@ -283,9 +283,9 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 				thisActT.Perms = permsPrime
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
-					"tokens": thisActT.Tokens,
-					"toBond": thisActT.ToBond,
+					"number": thisActT.DefaultNumber,
+					"tokens": thisActT.DefaultTokens,
+					"toBond": thisActT.DefaultBond,
 					"perms":  thisActT.Perms,
 				}).Debug("Setting Account Type Number")
 			}
@@ -294,7 +294,7 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 	return nil
 }
 
-func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesFlags(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	for _, acctT := range do.AccountTypes {
@@ -317,10 +317,10 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
-				thisActT.Number = num
+				thisActT.DefaultNumber = num
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
+					"number": thisActT.DefaultNumber,
 				}).Debug("Setting Account Type Number")
 			}
 		}
@@ -328,7 +328,7 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 	return nil
 }
 
-func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesChainsTypesDefs(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	chainTypeAccounts, err := loaders.LoadChainTypes(do.ChainType)
@@ -347,10 +347,10 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 			// seems to lower case this for some odd reason.
 			// TODO: see if burntsushi's toml renderer will handle this better in the future
 			if thisActT.Name == strings.Title(act) {
-				thisActT.Number = num
+				thisActT.DefaultNumber = num
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
-					"number": thisActT.Number,
+					"number": thisActT.DefaultNumber,
 				}).Debug("Setting Account Type Number")
 			}
 		}
@@ -358,8 +358,8 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 	return nil
 }
 
-func clearDefaultNumbers(accountT []*definitions.ErisDBAccountType) {
+func clearDefaultNumbers(accountT []*definitions.MonaxDBAccountType) {
 	for _, acctT := range accountT {
-		acctT.Number = 0
+		acctT.DefaultNumber = 0
 	}
 }

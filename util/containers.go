@@ -102,8 +102,8 @@ func initializeCache() {
 	}
 
 	for _, c := range containers {
-		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[definitions.LabelEris]; !ok {
+		// A container belongs to Monax if it has the "MONAX" label.
+		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}
 
@@ -124,7 +124,7 @@ func initializeCache() {
 
 // ContainerDetails uses Docker inspect API call to retrieve useful
 // information about the container. The Docker information is enriched
-// with Eris container short name and type, as well as with Eris labels.
+// with Monax container short name and type, as well as with Monax labels.
 func ContainerDetails(name string) *Details {
 	info, err := DockerClient.InspectContainer(name)
 	if err != nil {
@@ -157,16 +157,16 @@ func DataContainerName(name string) string {
 	return ContainerName(definitions.TypeData, name)
 }
 
-// ErisContainers returns a list of full container names matching the filter
+// MonaxContainers returns a list of full container names matching the filter
 // criteria filter, applied to container names and details.
-func ErisContainers(filter func(name string, details *Details) bool, running bool) []string {
-	log.WithField("running", running).Info("Discovering Eris containers")
+func MonaxContainers(filter func(name string, details *Details) bool, running bool) []string {
+	log.WithField("running", running).Info("Discovering Monax containers")
 
-	var erisContainers []string
+	var monaxContainers []string
 
 	containers, err := DockerClient.ListContainers(docker.ListContainersOptions{All: !running})
 	if err != nil {
-		return erisContainers
+		return monaxContainers
 	}
 
 	for _, c := range containers {
@@ -175,8 +175,8 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 			continue
 		}
 
-		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[definitions.LabelEris]; !ok {
+		// A container belongs to Monax if it has the "MONAX" label.
+		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}
 
@@ -194,7 +194,7 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 			continue
 		}
 
-		erisContainers = append(erisContainers, name)
+		monaxContainers = append(monaxContainers, name)
 	}
 
 	// Initialized cache means that it contains information
@@ -202,22 +202,22 @@ func ErisContainers(filter func(name string, details *Details) bool, running boo
 	if running == false {
 		containerCache.initialized = true
 	}
-	return erisContainers
+	return monaxContainers
 }
 
-// ErisContainersByType generates a list of container details for a given
+// MonaxContainersByType generates a list of container details for a given
 // container type and status: running (running=true) or existing (running=false).
-func ErisContainersByType(t string, running bool) []*Details {
+func MonaxContainersByType(t string, running bool) []*Details {
 	log.WithFields(log.Fields{
 		"running": running,
 		"type":    t,
-	}).Info("Discovering Eris containers")
+	}).Info("Discovering Monax containers")
 
-	var erisContainers []*Details
+	var monaxContainers []*Details
 
 	containers, err := DockerClient.ListContainers(docker.ListContainersOptions{All: !running})
 	if err != nil {
-		return erisContainers
+		return monaxContainers
 	}
 
 	for _, c := range containers {
@@ -226,8 +226,8 @@ func ErisContainersByType(t string, running bool) []*Details {
 			continue
 		}
 
-		// A container belongs to Eris if it has the "ERIS" label.
-		if _, ok := c.Labels[definitions.LabelEris]; !ok {
+		// A container belongs to Monax if it has the "MONAX" label.
+		if _, ok := c.Labels[definitions.LabelMonax]; !ok {
 			continue
 		}
 
@@ -244,10 +244,10 @@ func ErisContainersByType(t string, running bool) []*Details {
 			Type:      details.Labels[definitions.LabelType],
 		}] = name
 
-		erisContainers = append(erisContainers, details)
+		monaxContainers = append(monaxContainers, details)
 	}
 
-	return erisContainers
+	return monaxContainers
 }
 
 // IsService returns true if the service container specified by its short name
@@ -333,7 +333,7 @@ func Labels(name string, ops *definitions.Operation) map[string]string {
 		labels = make(map[string]string)
 	}
 
-	labels[definitions.LabelEris] = "true"
+	labels[definitions.LabelMonax] = "true"
 	labels[definitions.LabelShortName] = name
 	labels[definitions.LabelType] = ops.ContainerType
 
@@ -374,19 +374,19 @@ func PullImage(image string, writer io.Writer) error {
 	r, w := io.Pipe()
 	opts := docker.PullImageOptions{
 		Repository:    image,
-		Registry:      config.Global.DefaultRegistry,
+		Registry:      version.DefaultRegistry,
 		Tag:           tag,
 		OutputStream:  w,
 		RawJSONStream: true,
 	}
 
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" {
 		opts.OutputStream = ioutil.Discard
 	}
 
 	timeoutDuration, err := time.ParseDuration(config.Global.ImagesPullTimeout)
 	if err != nil {
-		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in eris.toml. Aborting`, config.Global.ImagesPullTimeout)
+		return fmt.Errorf(`Cannot read the ImagesPullTimeout=%q value in monax.toml. Aborting`, config.Global.ImagesPullTimeout)
 	}
 
 	ch := make(chan error)

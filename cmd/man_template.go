@@ -16,9 +16,9 @@ import (
 
 const manPrologue = `.Dd {{date "January 2, 2006"}}
 .Os
-.Dt ERIS 1
+.Dt MONAX 1
 .Sh NAME
-.Nm eris
+.Nm monax
 .Nd {{.Short}}
 .Sh SYNOPSIS
 .Nm
@@ -31,9 +31,9 @@ const manMidsection = `
 {{define "commands"}}.Sh COMMANDS
 .Bd -filled
 To list available commands, ether run
-.Cm eris
+.Cm monax
 with no parameters or run
-.Cm eris help .
+.Cm monax help .
 .Ed
 {{range .Commands}}.Pp
 {{template "command prologue" .}}{{end}}{{end}}
@@ -84,20 +84,20 @@ values, if meaningful, are provided in square brackets.
 const manEnvironment = `.Sh ENVIRONMENT
 .Nm
 uses the following environment variables:
-.Bl -tag -width "ERIS_PULL_APPROVE"
-.It Ev ERIS
+.Bl -tag -width "MONAX_PULL_APPROVE"
+.It Ev MONAX
 .Nm
 home directory. Supersedes the default
-.Pa $HOME/.eris
+.Pa $HOME/.monax
 path.
-.It Ev ERIS_PULL_APPROVE
+.It Ev MONAX_PULL_APPROVE
 If set, answers
 .Em yes
 to the confirmation of whether to pull a Docker image,
 potentially a long-running operation. Used, for example, by
-.Cm eris services start
+.Cm monax services start
 and
-.Cm eris chains exec
+.Cm monax chains exec
 commands.
 .It Ev DOCKER_HOST
 Docker service host, which
@@ -110,13 +110,13 @@ command or similar.
 .It Ev GOPATH
 .Xr go 1
 source and binary packages path. Used by the
-.Cm eris update
+.Cm monax update
 self-update command.
 .It Ev EDITOR
 Default interactive text editor. Used by the
-.Cm eris services edit
+.Cm monax services edit
 and
-.Cm eris chains edit
+.Cm monax chains edit
 commands. If not set, the
 .Xr vim 1
 editor is used by default.
@@ -155,11 +155,11 @@ var manHelpers = map[string]interface{}{
 
 		// Some Ad-hoc formatting:
 
-		// Reformat example description (as in "$ eris command -- description").
+		// Reformat example description (as in "$ monax command -- description").
 		text = strings.Replace(text, " -- ", "\n.D1 ", -1)
 
-		// Highlight "[eris command ...]".
-		text = regexp.MustCompile(`\[(eris\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
+		// Highlight "[monax command ...]".
+		text = regexp.MustCompile(`\[(monax\ [^]]+)\]([.,;:]?)[[:space:]]*`).ReplaceAllString(text, "\n.Cm $1 $2\n")
 
 		// Highlight "NOTE:".
 		text = regexp.MustCompile(`(NOTE):[[:space:]]*`).ReplaceAllString(text, "\n.Em $1  :\n")

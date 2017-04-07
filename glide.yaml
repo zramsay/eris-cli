@@ -37,7 +37,7 @@ import:
   version: develop
   subpackages:
   - perform
-- package: github.com/monax/eris-db
+- package: github.com/monax/burrow
   subpackages:
   - client
   - client/rpc

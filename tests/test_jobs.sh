@@ -2,13 +2,13 @@
 # ----------------------------------------------------------
 # PURPOSE
 
-# This is the test manager for eris jobs. It will run the testing
-# sequence for eris jobs referencing test fixtures in this tests directory.
+# This is the test manager for monax jobs. It will run the testing
+# sequence for monax jobs referencing test fixtures in this tests directory.
 
 # ----------------------------------------------------------
 # REQUIREMENTS
 
-# eris installed locally
+# monax installed locally
 
 # ----------------------------------------------------------
 # USAGE
@@ -33,18 +33,18 @@ COMMIT_SHA=$(git rev-parse --short --verify HEAD)
 cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
 if ! [ -e $cli_exec ]
 then
-  cli_exec="eris"
+  cli_exec="monax"
 fi
 
 was_running=0
 test_exit=0
-chains_dir=$HOME/.eris/chains
-name_base="eris-jobs-tests"
+chains_dir=$HOME/.monax/chains
+name_base="monax-jobs-tests"
 chain_name=$name_base-$uuid
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
 chain_dir=$chains_dir/$chain_name
-repo=`pwd` #eris
+repo=`pwd` #monax
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +169,7 @@ test_teardown(){
     # $cli_exec chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload
     # $cli_exec chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' > error.log # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload dump to a file
     $cli_exec chains rm --data $chain_name 1>/dev/null
-    rm -rf $HOME/.eris/scratch/data/$name_base-*
+    rm -rf $HOME/.monax/scratch/data/$name_base-*
     rm -rf $chain_dir
   else
     $cli_exec chains stop -f $chain_name 1>/dev/null

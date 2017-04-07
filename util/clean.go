@@ -33,8 +33,8 @@ func Clean(toClean map[string]bool) error {
 
 func cleanHandler(toClean map[string]bool) error {
 	if toClean["containers"] {
-		log.Debug("Removing all eris containers")
-		if err := RemoveAllErisContainers(); err != nil {
+		log.Debug("Removing all monax containers")
+		if err := RemoveAllMonaxContainers(); err != nil {
 			return err
 		}
 	}
@@ -54,15 +54,15 @@ func cleanHandler(toClean map[string]bool) error {
 	}
 
 	if toClean["root"] {
-		log.Debug("Removing Eris root directory")
-		if err := os.RemoveAll(config.ErisRoot); err != nil {
+		log.Debug("Removing Monax root directory")
+		if err := os.RemoveAll(config.MonaxRoot); err != nil {
 			return err
 		}
 	}
 
 	if toClean["images"] {
-		log.Debug("Removing all Eris Docker images")
-		if err := RemoveErisImages(); err != nil {
+		log.Debug("Removing all Monax Docker images")
+		if err := RemoveMonaxImages(); err != nil {
 			return err
 		}
 	}
@@ -70,7 +70,7 @@ func cleanHandler(toClean map[string]bool) error {
 }
 
 // stops and removes containers and their volumes
-func RemoveAllErisContainers() error {
+func RemoveAllMonaxContainers() error {
 	contns, err := DockerClient.ListContainers(docker.ListContainersOptions{All: true})
 	if err != nil {
 		return fmt.Errorf("Error listing containers: %v", DockerError(err))
@@ -79,8 +79,8 @@ func RemoveAllErisContainers() error {
 	for _, container := range contns {
 		// [pv]: Make sure legacy data containers are removed as well.
 		// The prefix bit is to be removed in 0.12.
-		if container.Labels[definitions.LabelEris] == "true" ||
-			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "eris_") {
+		if container.Labels[definitions.LabelMonax] == "true" ||
+			strings.HasPrefix(strings.TrimLeft(container.Names[0], "/"), "monax_") {
 
 			if err := removeContainer(container.ID); err != nil {
 				return fmt.Errorf("Error removing container: %v", DockerError(err))
@@ -111,7 +111,7 @@ func removeContainer(containerID string) error {
 }
 
 func cleanLatentChainData() error {
-	// get everything in ~/.eris/chains
+	// get everything in ~/.monax/chains
 	files, err := ioutil.ReadDir(config.ChainsPath)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func cleanScratchData() error {
 	return nil
 }
 
-func RemoveErisImages() error {
+func RemoveMonaxImages() error {
 	images, err := DockerClient.ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
 		return DockerError(err)
@@ -157,7 +157,7 @@ func RemoveErisImages() error {
 			continue
 		}
 
-		if !strings.Contains(i.RepoTags[0], "eris/") {
+		if !strings.Contains(i.RepoTags[0], "monax/") {
 			continue
 		}
 		log.WithFields(log.Fields{
@@ -174,9 +174,9 @@ func RemoveErisImages() error {
 func canWeRemove(toClean map[string]bool) bool {
 	var toWarn = map[string]string{
 		"containers": "all",
-		"chains":     fmt.Sprintf("%s/.eris/chains", config.HomeDir()),
-		"scratch":    fmt.Sprintf("%s/.eris/scratch/data", config.HomeDir()),
-		"root":       fmt.Sprintf("%s/.eris", config.HomeDir()),
+		"chains":     fmt.Sprintf("%s/.monax/chains", config.HomeDir()),
+		"scratch":    fmt.Sprintf("%s/.monax/scratch/data", config.HomeDir()),
+		"root":       fmt.Sprintf("%s/.monax", config.HomeDir()),
 		"images":     "all",
 	}
 

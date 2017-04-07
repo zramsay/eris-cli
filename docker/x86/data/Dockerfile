@@ -1,4 +1,5 @@
-FROM quay.io/eris/base:alpine
-MAINTAINER Monax Industries <support@monax.io>
-WORKDIR /home/$USER/.eris
-VOLUME /home/$USER/.eris
+FROM quay.io/monax/base:0.16
+MAINTAINER Monax | Platform | Tools <support@monax.io>
+
+WORKDIR $MONAX_PATH
+VOLUME $MONAX_PATH

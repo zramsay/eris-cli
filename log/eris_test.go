@@ -32,7 +32,7 @@ func LogAndAssertText(t *testing.T, log func(*Logger), assertions func(fields ma
 
 	logger := New()
 	logger.Out = &buffer
-	logger.Formatter = &ErisFormatter{}
+	logger.Formatter = &MonaxFormatter{}
 
 	log(logger)
 
