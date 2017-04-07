@@ -86,7 +86,9 @@ func formCompilers() string {
 
 func defaultSigner() string {
 	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		return "http://0.0.0.0:4767"
+		ip, err := util.DockerWindowsAndMacIP(do)
+		util.IfExit(err)
+		return fmt.Sprintf("http://%v:4767", ip)
 	} else {
 		util.DockerConnect(false, "monax")
 		keysName := util.ServiceContainerName("keys")
