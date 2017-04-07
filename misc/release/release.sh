@@ -11,6 +11,11 @@
 #     and GITHUB_TOKEN environment variable set
 #    (with release permissions for github.com/monax/cli).
 #
+#  2.a `xgo` installed for cross-compilation:
+#
+#   docker pull karalabe/xgo-1.7
+#   go get github.com/karalabe/xgo
+#
 #  3. GPG release signing private key in `misc/release/linux-private-key.asc` file:
 #
 #    $ gpg2 --export-secret-keys -a KEYID > linux-private-key.asc
@@ -153,8 +158,6 @@ token_check() {
 cross_compile() {
   pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
-  docker pull karalabe/xgo-1.7
-  go get github.com/karalabe/xgo
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
