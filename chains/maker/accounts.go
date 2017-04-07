@@ -46,7 +46,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.MonaxDBAcc
 	accountConstructors := []*MonaxDBAccountConstructor{}
 
 	switch chainType {
-	// NOTE: [ben] "mint" is a legacy differentiator that refers to the consensus engine that eris-db uses
+	// NOTE: [ben] "mint" is a legacy differentiator that refers to the consensus engine that burrow uses
 	// and currently Tendermint is the only consensus engine (chain) that is supported.  As such the variable
 	// "chainType" can be misleading.
 	case "mint":
