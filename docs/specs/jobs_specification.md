@@ -9,7 +9,7 @@ title: "Specifications | Jobs Specification"
 ## Jobs Specification
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
 The goal of jobs is to enable automation of contractual steps and defining "use" for a package of smart contracts. While one might deploy utility contracts that can be shared broadly and used by many a developer, jobs allows one to execute a package of contracts as it was intended and purposed to do and allows this execution to be replicated on thousands of chains, thus enabling what we call "dual integration" so that smart contracts can then be potentially represented as real life contracts. Rather than creating an entire web app, one can also simply test all of their smart contracts through a yaml config file in the form of the `epm.yaml` file. This enables quick deployment and testing of smart contract functionality. 
@@ -18,7 +18,7 @@ When combined with a package manager to install and resolve dependencies, one ca
 
 Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
 
-Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using the job runner' [variable specification](docs/specs/variable_specification).
+Each job will perform its required action and then it will save the result of its job in a variable which can be utilized by jobs later in the sequence using the job runner' [variable specification](/docs/specs/variable_specification).
 
 By default, `monax pkgs do` will perform the entire sequence of jobs which has been outlined in a given jobs file.
 
@@ -277,7 +277,7 @@ Ex.
 
 Asserts can be used to compare two "things". These "things" may be the result of two jobs or the result against one job against a baseline. (Indeed, it could be the comparison of two baselines but that wouldn't really get folks anywhere).
 
-[Read the Assert Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/asserts_specification)
+[Read the Assert Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/asserts_specification)
 
 ### Utility Jobs
 
@@ -319,4 +319,4 @@ jobs:
 ### Extension/Creating your own Job - Coming soon!
 
 
-## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](docs/specs)
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Specifications](/docs/specs)
