@@ -81,7 +81,7 @@ LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort |
 MONAX_RELEASE=1
 
 # NOTE: Set these up before continuing:
-export GITHUB_TOKEN=
+export GITHUB_TOKEN=""
 export AWS_ACCESS_KEY=
 export AWS_SECRET_ACCESS_KEY=
 
@@ -156,12 +156,12 @@ cross_compile() {
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_386
-  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_amd64
-  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_386
-  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_amd64
-  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_386.exe
-  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_amd64.exe
+  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_linux_386
+  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_linux_amd64
+  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_darwin_386
+  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_darwin_amd64
+  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_windows_386.exe
+  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/monax_${MONAX_VERSION}_windows_amd64.exe
   echo "Cross compile completed"
   echo ""
   echo ""
@@ -242,7 +242,7 @@ release_deb() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     builddeb "$@" \
-  && docker cp builddeb:/root/eris_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
+  && docker cp builddeb:/root/monax_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
   && docker rm -f builddeb
   echo "Finished releasing Debian packages"
 }
@@ -277,7 +277,7 @@ release_rpm() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
+  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/monax-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
   echo "Finished releasing RPM packages"
 }
@@ -323,11 +323,11 @@ main() {
     ;;
   *)
     pre_check "$@"
-    keys_check "$@"
+    #keys_check "$@"
     token_check "$@"
     cross_compile "$@"
-    release_deb "$@"
-    release_rpm "$@"
+    #release_deb "$@"
+    #release_rpm "$@"
     prepare_gh "$@"
     release_gh "$@"
   esac
