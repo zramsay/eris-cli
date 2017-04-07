@@ -11,12 +11,12 @@ menu:
 ---
 
 <div class="note">
-   <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
-Eris is the ecosystem application platform built by `Monax`.
+`monax` is the CLI ecosystem application platform built by Monax.
 
-There are four steps need to get moving with Eris:
+There are four steps need to get moving with Monax:
 
 1. **Install** the platform.
 2. **Roll** the blockchain base for your ecosystem application.
@@ -56,9 +56,9 @@ Make sure that everything is set up with Docker by running (you shouldn't see an
 docker version
 ```
 
-**Note** you will need to make sure that you perform the above command for the *user* which will be running Eris.
+**Note** you will need to make sure that you perform the above command for the *user* which will be running Monax.
 
-If you've also chosen to install Docker Machine, please follow [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) instructions to install Docker Machine and [these](https://www.virtualbox.org/wiki/Linux_Downloads) to install VirtualBox; then create an Eris virtual machine and run the (`eval`) command:
+If you've also chosen to install Docker Machine, please follow [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) instructions to install Docker Machine and [these](https://www.virtualbox.org/wiki/Linux_Downloads) to install VirtualBox; then create an Monax virtual machine and run the (`eval`) command:
 
 ```bash
 docker-machine create -d virtualbox monax
@@ -108,7 +108,7 @@ We **highly recommend** that you utilize [Homebrew](https://brew.sh) to install 
 {{< data_coding brew >}}
 ```
 
-If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/monax/cli/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
+If you are not a `brew` user then please install Docker, Docker machine, and VirtualBox by installing [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Monax binary from the [Release](https://github.com/monax/cli/releases) page. Make sure you put the binary under one of the paths in your `$PATH` variable and it has executable permissions:
 
 ```bash
 curl -L https://github.com/monax/cli/releases/download/v0.16.0/monax_0.16.0_darwin_amd64 > monax
@@ -117,7 +117,7 @@ chmod +x monax
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.
 
-If you have chosen not to use Docker Toolbox at all, you need to create an Eris virtual machine and run the (`eval`) command:
+If you have chosen not to use Docker Toolbox at all, you need to create an Monax virtual machine and run the (`eval`) command:
 
 ```bash
 docker-machine create -d virtualbox monax
@@ -142,14 +142,14 @@ We **highly recommend** that you utilize [Chocolatey](https://chocolatey.org) to
 {{< data_coding choco >}}
 ```
 
-If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Eris binary from the [Release](https://github.com/monax/cli/releases) page.
+If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Monax binary from the [Release](https://github.com/monax/cli/releases) page.
 Make sure you put the binary under one of the paths in your `%PATH%` variable.
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.
 
 (You'll want to run `monax` commands either from `git bash` or from the `Docker Quickstart Terminal`, a part of Docker Toolbox. If you prefer to use the `cmd` as your shell, you still can: every command should work as expected, though all the tutorials will assume that you are using the `Docker Quickstart Terminal` and are structured to support **only** that environment.)
 
-If you have chosen not to use Docker Toolbox at all and use `cmd` as your shell, you need to create an Eris virtual machine:
+If you have chosen not to use Docker Toolbox at all and use `cmd` as your shell, you need to create an Monax virtual machine:
 
 ```bash
 docker-machine create -d virtualbox monax

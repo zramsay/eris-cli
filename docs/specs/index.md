@@ -14,7 +14,7 @@ menu:
 ## Specifications
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.monax</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
 
@@ -24,7 +24,7 @@ Services are defined in **service definition files**. These reside on the host i
 
 Service definition files are formatted using `toml`.
 
-[Read the Services Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/services_specification)
+[Read the Services Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/services_specification)
 
 
 ### Jobs Specification
@@ -37,11 +37,11 @@ Job definition files are formatted in `yaml` and default file is `epm.yaml`.
 
 Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
 
-[Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](docs/specs/jobs_specification)
+[Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/jobs_specification)
 
 
 
-## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](docs/)
+## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)
 
 
 
