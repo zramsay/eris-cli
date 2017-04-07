@@ -153,15 +153,13 @@ token_check() {
 cross_compile() {
   pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
+  docker pull karalabe/xgo-1.7
+  go get github.com/karalabe/xgo
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-  GOOS=linux   GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_386
-  GOOS=linux   GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_linux_amd64
-  GOOS=darwin  GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_386
-  GOOS=darwin  GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_darwin_amd64
-  GOOS=windows GOARCH=386    go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_386.exe
-  GOOS=windows GOARCH=amd64  go build -ldflags "${LDFLAGS}" -o ${BUILD_DIR}/eris_${MONAX_VERSION}_windows_amd64.exe
+
+  xgo -go 1.7 -branch master --targets=linux/amd64,linux/386,darwin/amd64,darwin/386,windows/amd64,windows/386 -dest ${BUILD_DIR}/ -out monax_${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
   echo "Cross compile completed"
   echo ""
   echo ""
@@ -242,7 +240,7 @@ release_deb() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     builddeb "$@" \
-  && docker cp builddeb:/root/eris_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
+  && docker cp builddeb:/root/monax_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
   && docker rm -f builddeb
   echo "Finished releasing Debian packages"
 }
@@ -277,7 +275,7 @@ release_rpm() {
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/eris-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
+  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/monax-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
   echo "Finished releasing RPM packages"
 }
