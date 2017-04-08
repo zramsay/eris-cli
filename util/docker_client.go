@@ -76,8 +76,6 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
 		}
 		log.Debug("Successfully connected to Docker daemon")
-
-		setIPFSHostViaDockerHost(dockerHost)
 	}
 }
 
@@ -386,22 +384,6 @@ func prepWin() error {
 		return err
 	}
 	return nil
-}
-
-func setIPFSHostViaDockerHost(dockerHost string) {
-	u, err := url.Parse(dockerHost)
-	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not parse the URL for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
-	}
-	dIP, _, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		IfExit(fmt.Errorf("The marmots could not split the host and port for the DockerHost to populate the IPFS Host.\nPlease check that your docker-machine VM is running with [docker-machine ls]\nError:\t%v\n", err))
-
-	}
-	dockerIP := fmt.Sprintf("%s%s", "http://", dIP)
-
-	log.WithField("url", dockerIP).Debug("Setting MONAX_IPFS_HOST")
-	os.Setenv("MONAX_IPFS_HOST", dockerIP)
 }
 
 func DockerError(err error) error {

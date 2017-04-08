@@ -41,7 +41,6 @@ type Do struct {
 	ChainType      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	GenesisFile    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Hash           string   `mapstructure:"," json:"," yaml:"," toml:","`
-	Gateway        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	MachineName    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Name           string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Image          string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -54,7 +53,6 @@ type Do struct {
 	EPMConfigFile  string   `mapstructure:"," json:"," yaml:"," toml:","`
 	KeysPort       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
-	IpfsPort       string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PackagePath    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	BinPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
