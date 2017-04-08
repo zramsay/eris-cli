@@ -2,13 +2,13 @@
 # ----------------------------------------------------------
 # PURPOSE
 
-# This is the test manager for eris jobs. It will run the testing
-# sequence for eris jobs referencing test fixtures in this tests directory.
+# This is the test manager for monax jobs. It will run the testing
+# sequence for monax jobs referencing test fixtures in this tests directory.
 
 # ----------------------------------------------------------
 # REQUIREMENTS
 
-# eris installed locally
+# monax installed locally
 
 # ----------------------------------------------------------
 # USAGE
@@ -27,28 +27,37 @@ else
   uuid="62d1486f0fe5"
 fi
 
+# Use the current built target, if it exists 
+# Otherwise default to system wide executable
+COMMIT_SHA=$(git rev-parse --short --verify HEAD)
+cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
+if ! [ -e $cli_exec ]
+then
+  cli_exec="monax"
+fi
+
 was_running=0
 test_exit=0
-chains_dir=$HOME/.eris/chains
-name_base="eris-jobs-tests"
+chains_dir=$HOME/.monax/chains
+name_base="monax-jobs-tests"
 chain_name=$name_base-$uuid
 name_full="$chain_name"_full_000
 name_part="$chain_name"_participant_000
 chain_dir=$chains_dir/$chain_name
-repo=`pwd` #eris
+repo=`pwd` #monax
 
 
 # ---------------------------------------------------------------------------
 # Needed functionality
 
 ensure_running(){
-  if [[ "$(eris services ls -qr | grep $1)" == "$1" ]]
+  if [[ "$($cli_exec services ls -qr | grep $1)" == "$1" ]]
   then
     echo "$1 already started. Not starting."
     was_running=1
   else
     echo "Starting service: $1"
-    eris services start $1 1>/dev/null
+    $cli_exec services start $1 1>/dev/null
     early_exit
     sleep 3 # boot time
   fi
@@ -65,9 +74,9 @@ early_exit(){
   then
     if [ "$ci" = true ]
     then
-      eris services stop keys
+      $cli_exec services stop keys
     else
-      eris services stop -rx keys
+      $cli_exec services stop -rx keys
     fi
   fi
   exit 1
@@ -78,17 +87,17 @@ test_setup(){
   ensure_running keys
 
   # make a chain
-  eris clean -y
-  eris chains make --account-types=Full:1,Participant:1 $chain_name #1>/dev/null
+  $cli_exec clean -y
+  $cli_exec chains make --account-types=Full:1,Participant:1 $chain_name #1>/dev/null
   key1_addr=$(cat $chain_dir/addresses.csv | grep $name_full | cut -d ',' -f 1)
   key2_addr=$(cat $chain_dir/addresses.csv | grep $name_part | cut -d ',' -f 1)
   key2_pub=$(cat $chain_dir/accounts.csv | grep $name_part | cut -d ',' -f 1)
   echo -e "Default Key =>\t\t\t\t$key1_addr"
   echo -e "Backup Key =>\t\t\t\t$key2_addr"
-  eris chains start $chain_name --init-dir $chain_dir/$name_full 1>/dev/null
+  $cli_exec chains start $chain_name --init-dir $chain_dir/$name_full 1>/dev/null
   sleep 5 # boot time
-  chain_ip=$(eris chains inspect $chain_name NetworkSettings.IPAddress)
-  keys_ip=$(eris services inspect keys NetworkSettings.IPAddress)
+  chain_ip=$($cli_exec chains inspect $chain_name NetworkSettings.IPAddress)
+  keys_ip=$($cli_exec services inspect keys NetworkSettings.IPAddress)
   echo -e "Chain at =>\t\t\t\t$chain_ip"
   echo -e "Keys at =>\t\t\t\t$keys_ip"
   echo "Setup complete"
@@ -101,7 +110,7 @@ goto_base(){
 run_test(){
   # Run the jobs test
   echo ""
-  echo -e "Testing eris jobs using fixture =>\t$1"
+  echo -e "Testing $cli_exec jobs using fixture =>\t$1"
   goto_base
   cd $1
   if [ -z "$ci" ]
@@ -109,12 +118,12 @@ run_test(){
     echo
     cat readme.md
     echo
-    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub" #--debug
+    $cli_exec pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub" #--debug
   else
     echo
     cat readme.md
     echo
-    eris pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub"
+    $cli_exec pkgs do --chain "$chain_name" --address "$key1_addr" --set "addr1=$key1_addr" --set "addr2=$key2_addr" --set "addr2_pub=$key2_pub"
   fi
   test_exit=$?
 
@@ -152,18 +161,18 @@ test_teardown(){
     echo ""
     if [ "$was_running" -eq 0 ]
     then
-      eris services stop -rx keys
+      $cli_exec services stop -rx keys
     fi
-    eris chains stop --force $chain_name 1>/dev/null
-    # eris chains logs $chain_name -t 200 # uncomment me to dump recent VM/Chain logs
-    # eris chains logs $chain_name -t all # uncomment me to dump all VM/Chain logs
-    # eris chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload
-    # eris chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' > error.log # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload dump to a file
-    eris chains rm --data $chain_name 1>/dev/null
-    rm -rf $HOME/.eris/scratch/data/$name_base-*
+    $cli_exec chains stop --force $chain_name 1>/dev/null
+    # $cli_exec chains logs $chain_name -t 200 # uncomment me to dump recent VM/Chain logs
+    # $cli_exec chains logs $chain_name -t all # uncomment me to dump all VM/Chain logs
+    # $cli_exec chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload
+    # $cli_exec chains logs $chain_name -t all | grep 'CALLDATALOAD\|Calling' > error.log # uncomment me to dump all VM/Chain logs and parse for Calls/Calldataload dump to a file
+    $cli_exec chains rm --data $chain_name 1>/dev/null
+    rm -rf $HOME/.monax/scratch/data/$name_base-*
     rm -rf $chain_dir
   else
-    eris chains stop -f $chain_name 1>/dev/null
+    $cli_exec chains stop -f $chain_name 1>/dev/null
   fi
   echo ""
   if [ "$test_exit" -eq 0 ]
@@ -180,7 +189,9 @@ test_teardown(){
 # Setup
 
 
-echo "Hello! I'm the marmot that tests the eris jobs tooling."
+echo "Hello! I'm the marmot that tests the $cli_exec jobs tooling."
+echo
+echo "testing with target $cli_exec"
 echo
 start=`pwd`
 test_setup

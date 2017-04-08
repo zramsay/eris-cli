@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 )
 
 func MintChainErrorHandler(do *definitions.Do, err error) (string, error) {
@@ -17,15 +17,15 @@ func MintChainErrorHandler(do *definitions.Do, err error) (string, error) {
 	}).Error("")
 
 	return "", fmt.Errorf(`
-There has been an error talking to your eris chain.
+There has been an error talking to your monax chain.
 
 %v
 
 Debugging this error is tricky, but don't worry the marmot recovery checklist is...
   * is the %s account right?
-  * is the account you want to use in your keys service: eris keys ls ?
-  * is the account you want to use in your genesis.json: eris chains cat %s genesis ?
-  * is your chain making blocks: eris chains logs -f %s ?
+  * is the account you want to use in your keys service: monax keys ls ?
+  * is the account you want to use in your genesis.json: monax chains cat %s genesis ?
+  * is your chain making blocks: monax chains logs -f %s ?
   * do you have permissions to do what you're trying to do on the chain?
 `, err, do.Package.Account, do.ChainID, do.ChainID)
 }
@@ -35,19 +35,19 @@ func KeysErrorHandler(do *definitions.Do, err error) (string, error) {
 		"defAddr": do.Package.Account,
 	}).Error("")
 
-	r := regexp.MustCompile(fmt.Sprintf("open /home/eris/.eris/keys/data/%s/%s: no such file or directory", do.Package.Account, do.Package.Account))
+	r := regexp.MustCompile(fmt.Sprintf("open /home/monax/.monax/keys/data/%s/%s: no such file or directory", do.Package.Account, do.Package.Account))
 	if r.MatchString(fmt.Sprintf("%v", err)) {
 		return "", fmt.Errorf(`
 Unfortunately the marmots could not find the key you are trying to use in the keys service.
 
 There are two ways to fix this.
-  1. Import your keys from your host: eris keys import %s
+  1. Import your keys from your host: monax keys import %s
   2. Import your keys from your chain:
 
-eris chains exec %s "mintkey eris chains/%s/priv_validator.json" && \
-eris services exec keys "chown eris:eris -R /home/eris"
+monax chains exec %s "mintkey monax chains/%s/priv_validator.json" && \
+monax services exec keys "chown monax:monax -R /home/monax"
 
-Now, run  eris keys ls  to check that the keys are available. If they are not there
+Now, run  monax keys ls  to check that the keys are available. If they are not there
 then change the account. Once you have verified that the keys for account
 
 %s
@@ -57,13 +57,13 @@ are in the keys service, then rerun me.
 	}
 
 	return "", fmt.Errorf(`
-There has been an error talking to your eris keys service.
+There has been an error talking to your monax keys service.
 
 %v
 
 Debugging this error is tricky, but don't worry the marmot recovery checklist is...
   * is your %s account right?
-  * is the key for %s in your keys service: eris keys ls ?
+  * is the key for %s in your keys service: monax keys ls ?
 `, err, do.Package.Account, do.Package.Account)
 }
 

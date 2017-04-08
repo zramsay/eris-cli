@@ -1,0 +1,70 @@
+hash: 31f40518b48716d20ef74e9f7a251c033a824cd144b3839c2eb68130bfa88689
+updated: 2017-03-30T18:12:13.95001621+01:00
+imports:
+- name: github.com/bugsnag/bugsnag-go
+  version: 0e0aea7fe7d3fa47be41fc8a0e3a92d9668a9020
+  subpackages:
+  - errors
+- name: github.com/bugsnag/panicwrap
+  version: aa7703c9414b36d4e9b2e42e6c704d0bfae7db64
+- name: github.com/BurntSushi/toml
+  version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
+- name: github.com/fsnotify/fsnotify
+  version: a904159b9206978bb6d53fcc7a769e5cd726c737
+- name: github.com/hashicorp/hcl
+  version: db4f0768927a665a06c32855186e1bc762bcc8f5
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/kardianos/osext
+  version: c2c54e542fb797ad986b31721e1baedf214ca413
+- name: github.com/magiconair/properties
+  version: b3b15ef068fd0b17ddf408a23669f20811d194d2
+- name: github.com/mitchellh/mapstructure
+  version: db1efb556f84b25a0a13a04aad883943538ad2e0
+- name: github.com/monax/cli
+  version: 53bb3fd3d414f36d080d5b98741802117ff5cdf5
+  subpackages:
+  - config
+  - log
+  - version
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: a1f048ba24490f9b0674a67e1ce995d685cddf4a
+- name: github.com/spf13/afero
+  version: 72b31426848c6ef12a7a8e216708cb0d1530f074
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: d1139bab1c07d5ad390a65e7305876b3c1a8370b
+- name: github.com/spf13/cobra
+  version: c29ece4386f74084680e5e6d02d7b943ae630f63
+- name: github.com/spf13/jwalterweatherman
+  version: fa7ca7e836cf3a8bb4ebf799f472c12d7e903d66
+- name: github.com/spf13/pflag
+  version: a9a634f3de0a7529baded7ad6b0c7467d5c6eca7
+- name: github.com/spf13/viper
+  version: 7538d73b4eb9511d85a9f1dfef202eeb8ac260f4
+- name: github.com/tcnksm/go-gitconfig
+  version: d154598bacbf4501c095a309753c5d4af66caa81
+- name: golang.org/x/sys
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: ece019dcfd29abcf65d0d1dfe145e8faad097640
+  subpackages:
+  - transform
+  - unicode/norm
+- name: gopkg.in/yaml.v2
+  version: 4c78c975fe7c825c6d1466c42be594d1d6f3aba6
+testImports: []

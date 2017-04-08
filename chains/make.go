@@ -5,15 +5,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/chains/maker"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/keys"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/chains/maker"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/keys"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/version"
 )
 
 // TODO [zr] re-write
-// MakeChain runs the `eris-cm make` command in a Docker container.
+// MakeChain runs the `monax-cm make` command in a Docker container.
 // It returns an error. Note that if do.Known, do.AccountTypes
 // or do.ChainType are not set the command will run via interactive
 // shell.
@@ -23,8 +23,8 @@ import (
 //  do.Output  	     - outputs the jobs_output.yaml  (default true) XXX [zr] we can probably eliminate?
 //  do.ChainMakeVals - csv file to use for validators (optional)
 //  do.ChainMakeActs - csv file to use for accounts (optional)
-//  do.AccountTypes  - use eris-cm make account-types paradigm (example: Root:1,Participants:25,...) (optional)
-//  do.ChainType     - use eris-cm make chain-types paradigm (example: simplechain) (optional)
+//  do.AccountTypes  - use monax-cm make account-types paradigm (example: Root:1,Participants:25,...) (optional)
+//  do.ChainType     - use monax-cm make chain-types paradigm (example: simplechain) (optional)
 //  do.Tarball       - instead of outputing raw files in directories, output packages of tarbals (optional)
 //  do.ZipFile       - similar to do.Tarball except uses zipfiles (optional)
 //  do.Verbose       - verbose output (optional)
@@ -35,7 +35,7 @@ func MakeChain(do *definitions.Do) error {
 	keys.InitKeyClient()
 
 	// announce.
-	log.Info("Hello! I'm the marmot who makes eris chains.")
+	log.Info("Hello! I'm the marmot who makes monax chains.")
 
 	// set infos
 	// do.Name; already set

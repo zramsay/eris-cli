@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/pkgs"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/pkgs"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )
@@ -34,7 +34,7 @@ var packagesDo = &cobra.Command{
 	Short: "deploy or test a package of smart contracts to a chain",
 	Long: `deploy or test a package of smart contracts to a chain
 
-[eris pkgs do] will perform the required functionality included
+[monax pkgs do] will perform the required functionality included
 in a package definition file`,
 	Run: PackagesDo,
 }
@@ -43,7 +43,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
 	// TODO links keys
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
-	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)") //what's this actually used for?
+	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")              //what's this actually used for?
 	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which should be used [csv,json]") // [zr] this is not well tested!
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which jobs should use")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
@@ -51,7 +51,7 @@ func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.BinPath, "bin-path", "", "./bin", "path to the bin directory jobs should use when saving binaries after the compile process")
 	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "", "./abi", "path to the abi directory jobs should use when saving ABIs after the compile process")
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
-	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Eris jobs should use")
+	packagesDo.Flags().StringVarP(&do.Compiler, "compiler", "l", formCompilers(), "IP:PORT of compiler which Monax jobs should use")
 	packagesDo.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	packagesDo.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
 	packagesDo.Flags().StringVarP(&do.DefaultAmount, "amount", "u", "9999", "default amount to use")
@@ -86,8 +86,16 @@ func formCompilers() string {
 
 func defaultSigner() string {
 	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		return "http://0.0.0.0:4767"
+		ip, err := util.DockerWindowsAndMacIP(do)
+		util.IfExit(err)
+		return fmt.Sprintf("http://%v:4767", ip)
 	} else {
-		return "http://172.17.0.2:4767"
+		util.DockerConnect(false, "monax")
+		keysName := util.ServiceContainerName("keys")
+		cont, err := util.DockerClient.InspectContainer(keysName)
+		if err != nil {
+			return fmt.Sprintf("error will be caught by cli failing: %v", util.DockerError(err))
+		}
+		return fmt.Sprintf("http://%s:4767", cont.NetworkSettings.IPAddress)
 	}
 }

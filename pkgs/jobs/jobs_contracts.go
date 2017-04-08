@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/pkgs/abi"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/pkgs/abi"
+	"github.com/monax/cli/util"
 
-	compilers "github.com/eris-ltd/eris-compilers/perform"
+	compilers "github.com/monax/compilers/perform"
 
-	"github.com/eris-ltd/eris-db/client"
-	"github.com/eris-ltd/eris-db/client/rpc"
-	"github.com/eris-ltd/eris-db/keys"
-	"github.com/eris-ltd/eris-db/logging/loggers"
-	"github.com/eris-ltd/eris-db/txs"
+	"github.com/monax/burrow/client"
+	"github.com/monax/burrow/client/rpc"
+	"github.com/monax/burrow/keys"
+	"github.com/monax/burrow/logging/loggers"
+	"github.com/monax/burrow/txs"
 )
 
 func PackageDeployJob(pkgDeploy *definitions.PackageDeploy, do *definitions.Do) (string, error) {
@@ -253,9 +253,9 @@ func deployRaw(do *definitions.Do, deploy *definitions.Deploy, contractName, con
 		"code":   contractCode,
 	}).Info()
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
-	tx, err := rpc.Call(erisNodeClient, erisKeyClient, do.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	tx, err := rpc.Call(monaxNodeClient, monaxKeyClient, do.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
 	if err != nil {
 		return &txs.CallTx{}, fmt.Errorf("Error deploying contract %s: %v", contractName, err)
 	}
@@ -319,9 +319,9 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 		"data":        callData,
 	}).Info("Calling")
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
-	tx, err := rpc.Call(erisNodeClient, erisKeyClient, do.PublicKey, call.Source, call.Destination, call.Amount, call.Nonce, call.Gas, call.Fee, callData)
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	tx, err := rpc.Call(monaxNodeClient, monaxKeyClient, do.PublicKey, call.Source, call.Destination, call.Amount, call.Nonce, call.Gas, call.Fee, callData)
 	if err != nil {
 		return "", make([]*definitions.Variable, 0), err
 	}
@@ -333,7 +333,7 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 
 	// Sign, broadcast, display
 
-	res, err := rpc.SignAndBroadcast(do.ChainID, erisNodeClient, erisKeyClient, tx, true, true, true)
+	res, err := rpc.SignAndBroadcast(do.ChainID, monaxNodeClient, monaxKeyClient, tx, true, true, true)
 	if err != nil {
 		var str, err = util.MintChainErrorHandler(do, err)
 		return str, make([]*definitions.Variable, 0), err
@@ -376,9 +376,9 @@ func CallJob(call *definitions.Call, do *definitions.Do) (string, []*definitions
 func deployFinalize(do *definitions.Do, tx interface{}) (string, error) {
 	var result string
 
-	erisNodeClient := client.NewErisNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
-	erisKeyClient := keys.NewErisKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
-	res, err := rpc.SignAndBroadcast(do.ChainID, erisNodeClient, erisKeyClient, tx.(txs.Tx), true, true, true)
+	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
+	monaxKeyClient := keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
+	res, err := rpc.SignAndBroadcast(do.ChainID, monaxNodeClient, monaxKeyClient, tx.(txs.Tx), true, true, true)
 	if err != nil {
 		return util.MintChainErrorHandler(do, err)
 	}

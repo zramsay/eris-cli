@@ -5,11 +5,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/list"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/list"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +19,7 @@ var Services = &cobra.Command{
 	Short: "start, stop, and manage services required for your application",
 	Long: `start, stop, and manage services required for your application
 
-Eris services are "things that you turn on or off". They are meant to be long
+Monax services are "things that you turn on or off". They are meant to be long
 running microservices on which your application relies. They can be public
 blockchains, services your application needs, workers, bridges to other data
 or process management systems, or pretty much any process that has a docker
@@ -28,7 +28,7 @@ image.`,
 }
 
 func buildServicesCommand() {
-	Services.AddCommand(servicesMake)
+	//Services.AddCommand(servicesMake)
 	Services.AddCommand(servicesList)
 	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
@@ -58,7 +58,7 @@ The -q flag is equivalent to the '{{.ShortName}}' format.
 
 The -f flag specifies an alternate format for the list, using the syntax
 of Go text templates. See the more detailed description in the help
-output for the [eris ls] command. The struct passed to the Go template
+output for the [monax ls] command. The struct passed to the Go template
 for the -k flag is this
 
   type Definition struct {
@@ -68,12 +68,13 @@ for the -k flag is this
 
 The -k flag displays the known definition files.`,
 	Run: ListServices,
-	Example: `$ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Cmd}}\t{{.Info.Config.Entrypoint}}'
-$ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
-$ eris services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}'
-$ eris services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
+	Example: `$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Cmd}}\t{{.Info.Config.Entrypoint}}'
+$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
+$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}'
+$ monax services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
 }
 
+/*
 var servicesMake = &cobra.Command{
 	Use:   "make NAME IMAGE",
 	Short: "create a new service",
@@ -81,19 +82,19 @@ var servicesMake = &cobra.Command{
 
 Command must be given a NAME and a container IMAGE using the standard
 docker format of [repository/organization/image].`,
-	Example: "$ eris services make eth eris/eth\n" +
-		"$ eris services make mint tutum.co/tendermint/tendermint",
+	Example: "$ monax services make eth monax/eth\n" +
+		"$ monax services make mint tutum.co/tendermint/tendermint",
 	Run: MakeService,
-}
+}*/
 
 var servicesEdit = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "edit a service",
 	Long: `edit a service definition file which is kept in ` + util.Tilde(config.ServicesPath) + `.
-Edit will utilize your default editor. (See also the ERIS environment variable.)
+Edit will utilize your default editor. (See also the MONAX environment variable.)
 
 NOTE: Do not use this command for configuring a *specific* service. This
-command will only operate on *service configuration file* which tell Eris
+command will only operate on *service configuration file* which tell Monax
 how to start and stop a specific service.
 
 How that service is used for a specific project is handled from project
@@ -105,23 +106,23 @@ var servicesStart = &cobra.Command{
 	Use:   "start NAME",
 	Short: "start a service",
 	Long: `start a service according to the service definition file which
-eris stores in the ` + util.Tilde(config.ServicesPath) + `directory
+monax stores in the ` + util.Tilde(config.ServicesPath) + `directory
 
-The [eris services start NAME] command by default will put the
+The [monax services start NAME] command by default will put the
 service into the background so its logs will not be viewable
 from the command line.
 
-To stop the service use:      [eris services stop NAME].
-To view a service's logs use: [eris services logs NAME].
+To stop the service use:      [monax services stop NAME].
+To view a service's logs use: [monax services logs NAME].
 
 You can redefine service ports accessible over the network with
 the --ports flag.
 `,
 	Run: StartService,
 
-	Example: `$ eris services start ipfs --ports 17000 -- map the first port from the definition file to the host port 17000
-$ eris services start ipfs --ports 17000,18000- -- redefine the first and the second port mappings and autoincrement the rest
-$ eris services start ipfs --ports 50000:5001 -- redefine the specific port mapping (published host port:exposed container port)`,
+	Example: `$ monax services start ipfs --ports 17000 -- map the first port from the definition file to the host port 17000
+$ monax services start ipfs --ports 17000,18000- -- redefine the first and the second port mappings and autoincrement the rest
+$ monax services start ipfs --ports 50000:5001 -- redefine the specific port mapping (published host port:exposed container port)`,
 }
 
 var servicesInspect = &cobra.Command{
@@ -132,9 +133,9 @@ var servicesInspect = &cobra.Command{
 Information available to the inspect command is provided by the Docker API.
 For more information about return values, see:
 https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `$ eris services inspect ipfs -- will display the entire information about ipfs containers
-$ eris services inspect ipfs name -- will display the name in machine readable format
-$ eris services inspect ipfs host_config.binds -- will display only that value`,
+	Example: `$ monax services inspect ipfs -- will display the entire information about ipfs containers
+$ monax services inspect ipfs name -- will display the name in machine readable format
+$ monax services inspect ipfs host_config.binds -- will display only that value`,
 	Run: InspectService,
 }
 
@@ -151,9 +152,9 @@ var servicesPorts = &cobra.Command{
 	Short: "print port mappings",
 	Long: `print port mappings
 
-The [eris services ports] command displays published service ports.`,
-	Example: `$ eris services ports ipfs -- will display all IPFS ports
-$ eris services ports ipfs 4001 5001 -- will display specific IPFS ports`,
+The [monax services ports] command displays published service ports.`,
+	Example: `$ monax services ports ipfs -- will display all IPFS ports
+$ monax services ports ipfs 4001 5001 -- will display specific IPFS ports`,
 	Run: PortsService,
 }
 
@@ -219,7 +220,7 @@ func addServicesFlags() {
 
 	buildFlag(servicesExec, do, "env", "service")
 	buildFlag(servicesExec, do, "links", "service")
-	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(config.ErisRoot)))
+	servicesExec.Flags().StringVarP(&do.Operations.Volume, "volume", "", "", fmt.Sprintf("mount a DIR or a VOLUME to a %v/DIR inside a container", util.Tilde(config.MonaxRoot)))
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
@@ -296,12 +297,13 @@ func KillService(cmd *cobra.Command, args []string) {
 	util.IfExit(services.KillService(do))
 }
 
+/*
 func MakeService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(2, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = []string{args[1]}
 	util.IfExit(services.MakeService(do))
-}
+}*/
 
 func EditService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))

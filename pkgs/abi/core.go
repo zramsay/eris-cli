@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
 	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 )
 
 func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do *definitions.Do) ([]byte, error) {

@@ -9,7 +9,7 @@ title: "Deprecated | Getting Started With Cloud Instances"
 ## Introduction
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
 This tutorial will cover the first step when seeking to install Eris on cloud providers. Covered in this tutorial are the following cloud providers:
@@ -143,14 +143,14 @@ Strictly speaking, we do not really need eris installed on the remote boxes. The
 
 Since this is a tutorial, we want to cover how easy it is to install eris on cloud providers.
 
-What we are going to do is to pipe a shell file into a shell. Some folks get freaked out about this, and if you are of that calibre then you can accomplish what this script will do in any event! The script we will be using is [available here](https://github.com/eris-ltd/common/blob/master/cloud/setup/setup.sh). It is eris' cloud setup script. The script assumes that docker is installed. If you have provisioned a box via a web interface or otherwise and docker is not installed, you can set an environment variable and the script will automtically install Docker for you.
+What we are going to do is to pipe a shell file into a shell. Some folks get freaked out about this, and if you are of that calibre then you can accomplish what this script will do in any event! The script we will be using is [available here](https://github.com/monax/common/blob/master/cloud/setup/setup.sh). It is eris' cloud setup script. The script assumes that docker is installed. If you have provisioned a box via a web interface or otherwise and docker is not installed, you can set an environment variable and the script will automtically install Docker for you.
 
 Since we provisioned these instances using docker-machine we do not need to do that.
 
 ```bash
 for i in `seq 0 6`
 do
-  docker-machine ssh "my-advchain-val-00$i" "curl -sSL --ssl-req https://raw.githubusercontent.com/eris-ltd/common/master/cloud/setup/setup.sh | sudo bash"
+  docker-machine ssh "my-advchain-val-00$i" "curl -sSL --ssl-req https://raw.githubusercontent.com/monax/common/master/cloud/setup/setup.sh | sudo bash"
 done
 ```
 
@@ -164,7 +164,7 @@ Sometimes when using extremely small cloud instances eris has trouble building. 
 
 ```irc
 Building eris.
-# github.com/monax/cli/tree/master/cmd/eris
+# github.com/monax/cli/cmd/monax
 /usr/local/go/pkg/tool/linux_amd64/link: running gcc failed: fork/exec /usr/bin/gcc: cannot allocate memory
 ```
 

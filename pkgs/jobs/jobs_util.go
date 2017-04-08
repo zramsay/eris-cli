@@ -1,10 +1,10 @@
 package jobs
 
 import (
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/keys"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/keys"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {
@@ -18,7 +18,7 @@ func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, er
 	do.Package.Account = account.Address
 	log.WithField("=>", do.Package.Account).Info("Setting Account")
 
-	// Set the public key from eris-keys
+	// Set the public key from monax-keys
 	keyClient, err := keys.InitKeyClient()
 	if err != nil {
 		return util.KeysErrorHandler(do, err)

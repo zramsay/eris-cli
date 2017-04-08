@@ -15,11 +15,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
@@ -705,7 +705,7 @@ func pullImage(name string, writer io.Writer) error {
 		RawJSONStream: true,
 	}
 
-	if os.Getenv("ERIS_PULL_APPROVE") == "true" {
+	if os.Getenv("MONAX_PULL_APPROVE") == "true" {
 		opts.OutputStream = ioutil.Discard
 	}
 
@@ -735,7 +735,7 @@ func createContainer(opts docker.CreateContainerOptions) (*docker.Container, err
 	dockerContainer, err := util.DockerClient.CreateContainer(opts)
 	if err != nil {
 		if err == docker.ErrNoSuchImage {
-			if os.Getenv("ERIS_PULL_APPROVE") != "true" {
+			if os.Getenv("MONAX_PULL_APPROVE") != "true" {
 				log.WithField("image", opts.Config.Image).Warn("The Docker image not found locally")
 				if util.QueryYesOrNo("Would you like the marmots to pull it from the repository?") == util.Yes {
 					log.Debug("User assented to pull")
@@ -955,7 +955,7 @@ func configureInteractiveContainer(srv *definitions.Service, ops *definitions.Op
 	// Mount a volume.
 	if ops.Volume != "" {
 		bind := filepath.Join(ops.Volume) + ":" +
-			filepath.Join(config.ErisContainerRoot, filepath.Base(ops.Volume))
+			filepath.Join(config.MonaxContainerRoot, filepath.Base(ops.Volume))
 
 		if opts.HostConfig.Binds == nil {
 			opts.HostConfig.Binds = []string{bind}
@@ -1069,7 +1069,7 @@ func configureVolumesFromContainer(ops *definitions.Operation, service *definiti
 		Config: &docker.Config{
 			Image:           path.Join(version.DefaultRegistry, version.ImageData),
 			User:            "root",
-			WorkingDir:      config.ErisContainerRoot,
+			WorkingDir:      config.MonaxContainerRoot,
 			AttachStdout:    true,
 			AttachStderr:    true,
 			AttachStdin:     true,
@@ -1111,7 +1111,7 @@ func configureDataContainer(srv *definitions.Service, ops *definitions.Operation
 	// by default data containers will rely on the image used by
 	//   the base service. sometimes, tho, especially for testing
 	//   that base image will not be present. in such cases use
-	//   the base eris data container.
+	//   the base monax data container.
 	if srv.Image == "" {
 		srv.Image = path.Join(version.DefaultRegistry, version.ImageData)
 	}

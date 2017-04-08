@@ -5,15 +5,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 
 	"github.com/spf13/viper"
 )
 
-func LoadAccountTypes() ([]*definitions.ErisDBAccountType, error) {
-	loadedAccounts := []*definitions.ErisDBAccountType{}
+func LoadAccountTypes() ([]*definitions.MonaxDBAccountType, error) {
+	loadedAccounts := []*definitions.MonaxDBAccountType{}
 	accounts, err := AccountTypes(config.AccountsTypePath)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func LoadAccountTypes() ([]*definitions.ErisDBAccountType, error) {
 	return loadedAccounts, nil
 }
 
-func LoadAccountType(fileName string) (*definitions.ErisDBAccountType, error) {
+func LoadAccountType(fileName string) (*definitions.MonaxDBAccountType, error) {
 	log.WithField("=>", fileName).Debug("Loading Account Type")
 	var accountType = viper.New()
 	typ := definitions.BlankAccountType()
@@ -50,16 +50,16 @@ func LoadAccountType(fileName string) (*definitions.ErisDBAccountType, error) {
 // returns a list of filenames which are the account_types files
 // these *should be* absolute paths, but this is not a contract
 // with calling functions.
-func AccountTypes(erisPath string) ([]string, error) {
-	haveTyps, err := filepath.Glob(filepath.Join(erisPath, "*.toml"))
+func AccountTypes(monaxPath string) ([]string, error) {
+	haveTyps, err := filepath.Glob(filepath.Join(monaxPath, "*.toml"))
 	if err != nil {
 		return []string{}, err
 	}
 	return haveTyps, nil
 }
 
-func AccountTypesNames(erisPath string, withExt bool) ([]string, error) {
-	files, err := AccountTypes(erisPath)
+func AccountTypesNames(monaxPath string, withExt bool) ([]string, error) {
+	files, err := AccountTypes(monaxPath)
 	if err != nil {
 		return []string{}, err
 	}

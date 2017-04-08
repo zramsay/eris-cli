@@ -8,10 +8,10 @@ title: "Tutorials | Solidity 3: Solidity Language Features"
 ## Solidity Series
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
-This sequence of tutorials assumes that you have an understanding of the `eris` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
+This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
 
 This tutorial is part of our Solidity tutorial series:
 
@@ -235,7 +235,7 @@ contract ABankUser is BankUser {
 }
 ```
 
-What will happen here is that every time a `ABankUser` contract is executed, and the `complain` method is run, it will generate an event which can be read from the log. When using a client library like [Eris Contracts](https://www.npmjs.com/package/eris-contracts), you can set up a listener for this particular event. It is very simple. Assume that the contract for a particular `ABankUser` is named `bankUser123`. To generate a filter for that event we would simply do this:
+What will happen here is that every time a `ABankUser` contract is executed, and the `complain` method is run, it will generate an event which can be read from the log. When using a client library like [Monax Contracts](https://www.npmjs.com/package/eris-contracts), you can set up a listener for this particular event. It is very simple. Assume that the contract for a particular `ABankUser` is named `bankUser123`. To generate a filter for that event we would simply do this:
 
 ```javascript
 var filter = bankUser123.Complain();

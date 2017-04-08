@@ -8,12 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/testutil"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 func TestMain(m *testing.M) {
@@ -371,9 +372,9 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 restart = "always"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -417,9 +418,9 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 restart = "max:99"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
@@ -463,9 +464,9 @@ name = "`+name+`"
 
 [service]
 name = "`+name+`"
-image = "`+path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)+`"
+image = "`+path.Join(version.DefaultRegistry, version.ImageKeys)+`"
 data_container = true
-exec_host = "ERIS_KEYS_HOST"
+exec_host = "MONAX_KEYS_HOST"
 `); err != nil {
 		t.Fatalf("can't create a fake service definition: %v", err)
 	}
@@ -519,7 +520,7 @@ func TestExecServiceVolume(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Operations.Volume = config.ErisRoot
+	srv.Operations.Volume = config.MonaxRoot
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
 	}
@@ -556,8 +557,8 @@ func TestExecServiceMount(t *testing.T) {
 
 	srv.Operations.Args = strings.Fields("uptime")
 	srv.Service.Volumes = []string{
-		config.ErisRoot + ":" + "/tmp",
-		config.ErisRoot + ":" + "/custom",
+		config.MonaxRoot + ":" + "/tmp",
+		config.MonaxRoot + ":" + "/custom",
 	}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err != nil {
 		t.Fatalf("expected service container created, got %v", err)
@@ -611,7 +612,7 @@ func TestExecServiceBadMount2(t *testing.T) {
 	}
 
 	srv.Operations.Args = strings.Fields("uptime")
-	srv.Service.Volumes = []string{config.ErisRoot + ":"}
+	srv.Service.Volumes = []string{config.MonaxRoot + ":"}
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected service container creation to fail")
 	}
@@ -828,6 +829,10 @@ func TestExecServiceNonInteractive(t *testing.T) {
 	}
 }
 
+// TODO fix!
+// this test (last 3 lines) does *not* fail when it should
+// see following two tests
+/*
 func TestExecServiceAfterRunService(t *testing.T) {
 	const (
 		name = "compilers"
@@ -853,7 +858,7 @@ func TestExecServiceAfterRunService(t *testing.T) {
 	if _, err := DockerExecService(srv.Service, srv.Operations); err == nil {
 		t.Fatalf("expected failure due to unpublished ports, got %v", err)
 	}
-}
+}*/
 
 func TestExecServiceAfterRunServiceWithPublishedPorts1(t *testing.T) {
 	const (
@@ -1463,7 +1468,7 @@ func TestRebuildPullDisallow(t *testing.T) {
 
 	testutil.RemoveImage(name)
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1501,7 +1506,7 @@ func TestRebuildPull(t *testing.T) {
 
 	testutil.RemoveImage(name)
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1537,7 +1542,7 @@ func TestRebuildPullRepeat(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1572,7 +1577,7 @@ func TestPullSimple(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	testutil.RemoveImage(name)
 
@@ -1609,7 +1614,7 @@ func TestPullRepeat(t *testing.T) {
 
 	defer testutil.RemoveAllContainers()
 
-	os.Setenv("ERIS_PULL_APPROVE", "true")
+	os.Setenv("MONAX_PULL_APPROVE", "true")
 
 	if util.Exists(definitions.TypeService, name) {
 		t.Fatalf("expecting service container doesn't exist")
@@ -1657,7 +1662,7 @@ func TestPullBadName(t *testing.T) {
 }
 
 // TODO: [ben] issue-1262: perform/TestLogsSimple fails
-// https://github.com/eris-ltd/eris/issues/1262
+// https://github.com/monax/cli/issues/1262
 func testLogsSimple(t *testing.T) {
 	const (
 		//name = "ipfs"
@@ -1697,7 +1702,7 @@ func testLogsSimple(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(bufErr.String(), "Starting eris-keys") {
+	if !strings.Contains(bufErr.String(), "Starting monax-keys") {
 		t.Fatalf("expected certain log entries, got %q", bufErr.String())
 	}
 }
@@ -1965,7 +1970,7 @@ func TestInspectField(t *testing.T) {
 		t.Fatalf("expected inspect to succeed, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "/home/eris") {
+	if !strings.Contains(buf.String(), "/home/monax") {
 		t.Fatalf("expect a certain value, got %q", buf.String())
 	}
 }
@@ -1997,7 +2002,7 @@ func TestInspectStoppedContainer(t *testing.T) {
 		t.Fatalf("expected inspect to succeed, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "/home/eris") {
+	if !strings.Contains(buf.String(), "/home/monax") {
 		t.Fatalf("expect a certain value, got %q", buf.String())
 	}
 }
@@ -2051,44 +2056,6 @@ func TestRenameSimple(t *testing.T) {
 
 	if !util.Exists(definitions.TypeData, newName) {
 		t.Fatalf("expecting renamed data container exists")
-	}
-}
-
-func TestRenameService(t *testing.T) {
-	const (
-		name    = "compilers"
-		newName = "newname"
-	)
-
-	defer testutil.RemoveAllContainers()
-
-	if util.Exists(definitions.TypeService, name) {
-		t.Fatalf("expecting service container doesn't exist")
-	}
-
-	srv, err := loaders.LoadServiceDefinition(name)
-	if err != nil {
-		t.Fatalf("could not load service definition %v", err)
-	}
-
-	if err := DockerRunService(srv.Service, srv.Operations); err != nil {
-		t.Fatalf("expected service container created, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting service container running")
-	}
-
-	if err := DockerRename(srv.Operations, newName); err != nil {
-		t.Fatalf("expected container renamed, got %v", err)
-	}
-
-	if util.Running(definitions.TypeService, name) {
-		t.Fatalf("expecting old service container not running")
-	}
-
-	if !util.Running(definitions.TypeService, newName) {
-		t.Fatalf("expecting new service container running")
 	}
 }
 
@@ -2193,7 +2160,7 @@ func TestBuildSimple(t *testing.T) {
 		image = "test-image-1"
 	)
 
-	dockerfile := `FROM ` + path.Join(config.Global.DefaultRegistry, config.Global.ImageKeys)
+	dockerfile := `FROM ` + path.Join(version.DefaultRegistry, version.ImageKeys)
 
 	if err := DockerBuild(image, dockerfile); err != nil {
 		t.Fatalf("expected image to be built, got %v", err)

@@ -9,10 +9,10 @@ title: "Deprecated | Chain Maintaining"
 ## Introduction
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
-In general what is going to happen here is that we are going to establish what we at Eris call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.
+In general what is going to happen here is that we are going to establish what we at Monax call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.
 
 In addition to the one "peer sergeant major" we will also deploy six "peer sergeants" who will be cloud based validator nodes.
 
@@ -44,7 +44,7 @@ chain_name="maintainchain"
 val_num=3
 driver=virtualbox
 # it can be annoying when working in bulk to manually approve each pull
-export ERIS_PULL_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
 # we'll make enough validator machines to match our $val_num validators on the chain
 for i in `seq 0 $(expr $val_num - 1)`
 do

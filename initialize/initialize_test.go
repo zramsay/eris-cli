@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
 )
 
 const serviceToNeverUseToml = `# This is a TOML config file.
@@ -92,7 +92,7 @@ Validator = 2000
 
 [servers]
 
-[erismint]
+[monaxmint]
 
 [tendermint]`
 
@@ -139,7 +139,7 @@ func TestWriteAccountTypeDefinitionFile(t *testing.T) {
 	accountDefinition.DefaultNumber = 4
 	accountDefinition.DefaultTokens = 1234
 	accountDefinition.DefaultBond = 0
-	accountDefinition.Perms = map[string]int{
+	accountDefinition.Perms = map[string]int64{
 		"root":            0,
 		"send":            0,
 		"call":            0,
@@ -179,7 +179,7 @@ func TestWriteChainTypeDefinitionFile(t *testing.T) {
 	chainTypeDefinition := definitions.BlankChainType()
 	chainTypeDefinition.Name = "tester"
 	chainTypeDefinition.Description = "This is a description."
-	chainTypeDefinition.AccountTypes = map[string]int{
+	chainTypeDefinition.AccountTypes = map[string]int64{
 		"Full":        7,
 		"Developer":   8,
 		"Participant": 9,

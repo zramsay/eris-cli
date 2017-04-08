@@ -17,7 +17,7 @@ import (
 var ManPage = &cobra.Command{
 	Use:   "man",
 	Short: "display a man page",
-	Long:  `display the Eris man page`,
+	Long:  `display the Monax man page`,
 	Run: func(cmd *cobra.Command, args []string) {
 		man := new(bytes.Buffer)
 
@@ -41,15 +41,15 @@ func GenerateManPage(man *bytes.Buffer) {
 }
 
 func generatePrologue(man *bytes.Buffer) {
-	template.Must(template.New("prologue").Funcs(manHelpers).Parse(manPrologue)).Execute(man, ErisCmd)
+	template.Must(template.New("prologue").Funcs(manHelpers).Parse(manPrologue)).Execute(man, MonaxCmd)
 }
 
 func generateCommands(man *bytes.Buffer) {
-	template.Must(template.New("commands").Funcs(manHelpers).Parse(manMidsection)).ExecuteTemplate(man, "commands", ErisCmd)
+	template.Must(template.New("commands").Funcs(manHelpers).Parse(manMidsection)).ExecuteTemplate(man, "commands", MonaxCmd)
 }
 
 func generateGlobalFlags(man *bytes.Buffer) {
-	template.Must(template.New("global flags").Funcs(manHelpers).Parse(manMidsection)).ExecuteTemplate(man, "global flags", ErisCmd)
+	template.Must(template.New("global flags").Funcs(manHelpers).Parse(manMidsection)).ExecuteTemplate(man, "global flags", MonaxCmd)
 }
 
 func generateEnvironment(man *bytes.Buffer) {
@@ -57,7 +57,7 @@ func generateEnvironment(man *bytes.Buffer) {
 }
 
 func generateEpilogue(man *bytes.Buffer) {
-	template.Must(template.New("epilogue").Funcs(manHelpers).Parse(manEpilogue)).Execute(man, ErisCmd)
+	template.Must(template.New("epilogue").Funcs(manHelpers).Parse(manEpilogue)).Execute(man, MonaxCmd)
 }
 
 // DisplayManPage runs the groff(1) formatter on a buffer

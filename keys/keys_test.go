@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/services"
-	"github.com/eris-ltd/eris/testutil"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/services"
+	"github.com/monax/cli/testutil"
+	"github.com/monax/cli/util"
 )
 
 func TestMain(m *testing.M) {
@@ -121,7 +121,7 @@ func TestExportKeySingle(t *testing.T) {
 		t.Fatalf("Unexpected error in key generation: %v", err)
 	}
 
-	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
+	keyPath := path.Join(config.MonaxContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
 	catOut, err := services.ExecHandler("keys", []string{"cat", keyPath})
@@ -168,7 +168,7 @@ func TestImportKeySingle(t *testing.T) {
 	keyOnHost := strings.TrimSpace(string(key))
 
 	//rm key that was generated before import
-	keyPath := path.Join(config.ErisContainerRoot, "keys", "data", address)
+	keyPath := path.Join(config.MonaxContainerRoot, "keys", "data", address)
 
 	if _, err := services.ExecHandler("keys", []string{"rm", "-rf", keyPath}); err != nil {
 		t.Fatalf("error exec-ing: %v", err)
@@ -178,7 +178,7 @@ func TestImportKeySingle(t *testing.T) {
 		t.Fatalf("error importing key: %v", err)
 	}
 
-	keyPathCat := path.Join(config.ErisContainerRoot, "keys", "data", address, address)
+	keyPathCat := path.Join(config.MonaxContainerRoot, "keys", "data", address, address)
 
 	//cat container contents of new key
 	catOut, err := services.ExecHandler("keys", []string{"cat", keyPathCat})

@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/util"
 
-	"github.com/eris-ltd/eris-db/genesis"
+	"github.com/monax/burrow/genesis"
 )
 
 var (
@@ -123,7 +123,7 @@ func makeRaw(do *definitions.Do, typ string) error {
 	return maker(do, "mint", accountTypes)
 }
 
-func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.ErisDBAccountType) error {
+func maker(do *definitions.Do, consensusType string, accountTypes []*definitions.MonaxDBAccountType) error {
 	var err error
 	// make the accountConstructor slice bases on the accountTypes
 	accounts, err := MakeAccounts(do.Name, consensusType, accountTypes, do.Unsafe)
@@ -132,7 +132,7 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	}
 
 	// use the accountConstructors to write the necessary files (config, genesis and private validator) per node
-	if err = MakeErisDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
+	if err = MakeMonaxDBNodes(do.Name, do.SeedsIP, accounts, do.ChainImageName,
 		do.UseDataContainer, do.ExportedPorts, do.ContainerEntrypoint); err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	return nil
 }
 
-func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool) error {
+func assembleTypesWizard(accountT *definitions.MonaxDBAccountType, tokenIze bool) error {
 	var err error
 	accountT.DefaultNumber, err = util.GetIntResponse(AccountTypeIntro(accountT), accountT.DefaultNumber, reader)
 	log.WithField("=>", accountT.DefaultNumber).Debug("What the marmots heard")
@@ -178,9 +178,9 @@ func assembleTypesWizard(accountT *definitions.ErisDBAccountType, tokenIze bool)
 	return nil
 }
 
-func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator int) ([]*definitions.ErisDBAccountType, error) {
+func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator int) ([]*definitions.MonaxDBAccountType, error) {
 	var err error
-	thisActT := &definitions.ErisDBAccountType{}
+	thisActT := &definitions.MonaxDBAccountType{}
 	thisActT.Name = fmt.Sprintf("%s_%02d", "manual", iterator)
 	iterator++
 
@@ -199,7 +199,7 @@ func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator in
 		return nil, err
 	}
 
-	thisActT.Perms = make(map[string]int)
+	thisActT.Perms = make(map[string]int64)
 	for _, perm := range AccountTypeManualPerms() {
 		thisActT.Perms[perm], err = util.GetIntResponse(AccountTypeManualPermsQuestion(perm), 0, reader)
 	}
@@ -223,7 +223,7 @@ func addManualAccountType(accountT []*definitions.ErisDBAccountType, iterator in
 	return accountT, nil
 }
 
-func assembleTypesRaw(accountT []*definitions.ErisDBAccountType, do *definitions.Do, typ string) error {
+func assembleTypesRaw(accountT []*definitions.MonaxDBAccountType, do *definitions.Do, typ string) error {
 	// TODO
 	switch typ {
 	case "accounttype":
@@ -236,7 +236,7 @@ func assembleTypesRaw(accountT []*definitions.ErisDBAccountType, do *definitions
 	return nil
 }
 
-func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesCSV(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	csvfile, err := os.Open(do.CSV)
@@ -259,21 +259,21 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 		for _, thisActT := range accountT {
 			if thisActT.Name == act {
 				var err error
-				thisActT.DefaultNumber, err = strconv.Atoi(num)
+				thisActT.DefaultNumber, err = strconv.ParseInt(num, 10, 64)
 				if err != nil {
 					return err
 				}
-				thisActT.DefaultTokens, err = strconv.Atoi(tokens)
+				thisActT.DefaultTokens, err = strconv.ParseInt(tokens, 10, 64)
 				if err != nil {
 					return err
 				}
-				thisActT.DefaultBond, err = strconv.Atoi(toBond)
+				thisActT.DefaultBond, err = strconv.ParseInt(toBond, 10, 64)
 				if err != nil {
 					return err
 				}
-				permsPrime := make(map[string]int)
+				permsPrime := make(map[string]int64)
 				for i := 0; i < len(perms); i++ {
-					p, err := strconv.Atoi(perms[i+1])
+					p, err := strconv.ParseInt(perms[i+1], 10, 64)
 					if err != nil {
 						return err
 					}
@@ -294,7 +294,7 @@ func assembleTypesCSV(accountT []*definitions.ErisDBAccountType, do *definitions
 	return nil
 }
 
-func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesFlags(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	for _, acctT := range do.AccountTypes {
@@ -306,10 +306,10 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 
 			// If the number of account types is missing,
 			// assuming 1.
-			num int = 1
+			num int64 = 1
 		)
 		if len(tmp) > 1 {
-			num, err = strconv.Atoi(tmp[1])
+			num, err = strconv.ParseInt(tmp[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -328,7 +328,7 @@ func assembleTypesFlags(accountT []*definitions.ErisDBAccountType, do *definitio
 	return nil
 }
 
-func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do *definitions.Do) error {
+func assembleTypesChainsTypesDefs(accountT []*definitions.MonaxDBAccountType, do *definitions.Do) error {
 	clearDefaultNumbers(accountT)
 
 	chainTypeAccounts, err := loaders.LoadChainTypes(do.ChainType)
@@ -347,7 +347,7 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 			// seems to lower case this for some odd reason.
 			// TODO: see if burntsushi's toml renderer will handle this better in the future
 			if thisActT.Name == strings.Title(act) {
-				thisActT.DefaultNumber = num
+				thisActT.DefaultNumber = int64(num)
 				log.WithFields(log.Fields{
 					"name":   thisActT.Name,
 					"number": thisActT.DefaultNumber,
@@ -358,7 +358,7 @@ func assembleTypesChainsTypesDefs(accountT []*definitions.ErisDBAccountType, do 
 	return nil
 }
 
-func clearDefaultNumbers(accountT []*definitions.ErisDBAccountType) {
+func clearDefaultNumbers(accountT []*definitions.MonaxDBAccountType) {
 	for _, acctT := range accountT {
 		acctT.DefaultNumber = 0
 	}

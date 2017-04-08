@@ -10,7 +10,7 @@
 
 # Go installed locally
 # Docker installed locally
-# Eris installed locally
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -55,9 +55,9 @@ checks() {
     echo "Cannot run without CLI_REPO being set"
     exit 1
   fi
-  if [ "$ERIS_CLI_TESTS_PORT" = "" ]
+  if [ "$MONAX_CLI_TESTS_PORT" = "" ]
   then
-    echo "Cannot run without ERIS_CLI_TESTS_PORT being set"
+    echo "Cannot run without MONAX_CLI_TESTS_PORT being set"
     exit 1
   fi
 }

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/version"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
@@ -27,7 +27,7 @@ type Config struct {
 	Settings
 }
 
-// Settings describes settings loadable from "eris.toml"
+// Settings describes settings loadable from "monax.toml"
 // definition file.
 type Settings struct {
 	IpfsHost          string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
@@ -42,7 +42,7 @@ type Settings struct {
 }
 
 // New initializes the global configuration with default settings
-// or settings loaded from the "eris.toml" default location.
+// or settings loaded from the "monax.toml" default location.
 // New also initialize default writer and errorWriter streams.
 // Viper or unmarshalling errors are returned on error.
 func New(writer, errorWriter io.Writer) (*Config, error) {
@@ -77,7 +77,7 @@ func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	// keys.json, keys.yaml, etc.
 
 	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
-		errKnown := fmt.Sprintf("List available definitions with the [eris %s ls --known] command", filepath.Base(definitionPath))
+		errKnown := fmt.Sprintf("List available definitions with the [monax %s ls --known] command", filepath.Base(definitionPath))
 		return nil, fmt.Errorf("Unable to find the %q definition: %v\n\n%s", definitionName, os.ErrNotExist, errKnown)
 	}
 
@@ -99,8 +99,8 @@ func Load() (*viper.Viper, error) {
 		return config, err
 	}
 
-	config.AddConfigPath(ErisRoot)
-	config.SetConfigName("eris")
+	config.AddConfigPath(MonaxRoot)
+	config.SetConfigName("monax")
 	if err := config.ReadInConfig(); err != nil {
 		// Do nothing as this is not essential.
 	}
@@ -124,14 +124,14 @@ func SetDefaults() (*viper.Viper, error) {
 	return config, nil
 }
 
-// Save writes the "eris.toml" definition file at the default
+// Save writes the "monax.toml" definition file at the default
 // location populated by settings.
 func Save(settings *Settings) error {
 	if settings == nil {
 		return fmt.Errorf("cannot save uninitialized settings")
 	}
 
-	writer, err := os.Create(filepath.Join(ErisRoot, "eris.toml"))
+	writer, err := os.Create(filepath.Join(MonaxRoot, "monax.toml"))
 	defer writer.Close()
 	if err != nil {
 		return err

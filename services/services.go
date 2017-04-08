@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/initialize"
-	"github.com/eris-ltd/eris/loaders"
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/perform"
-	"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	//"github.com/monax/cli/initialize"
+	"github.com/monax/cli/loaders"
+	"github.com/monax/cli/log"
+	"github.com/monax/cli/perform"
+	"github.com/monax/cli/util"
 )
 
 func StartService(do *definitions.Do) (err error) {
@@ -237,7 +237,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 		var err error
 		chainName, err = util.GetHead()
 		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [eris chains checkout CHAINNAME] *or* with a --chain flag.\n")
+			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [monax chains checkout CHAINNAME] *or* with a --chain flag.\n")
 		}
 	}
 	s, err := loaders.ChainsAsAService(chainName)
@@ -253,7 +253,7 @@ func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.
 
 // Checks that a service is running and starts it if it isn't.
 func EnsureRunning(do *definitions.Do) error {
-	if os.Getenv("ERIS_SKIP_ENSURE") != "" {
+	if os.Getenv("MONAX_SKIP_ENSURE") != "" {
 		return nil
 	}
 
@@ -279,6 +279,7 @@ func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
 }
 
+/*
 func MakeService(do *definitions.Do) error {
 	srv := definitions.BlankServiceDefinition()
 	srv.Name = do.Name
@@ -299,11 +300,12 @@ func MakeService(do *definitions.Do) error {
 		"image":   srv.Service.Image,
 	}).Debug("Creating a new service definition file")
 
-	if err := initialize.WriteServiceDefinitionFile(do.Name, srv); err != nil {
-		return err
-	}
+	// TODO
+	//if err := initialize.WriteServiceDefinitionFile(do.Name, srv); err != nil {
+	//	return err
+	//}
 	return nil
-}
+}*/
 
 func EditService(do *definitions.Do) error {
 	servDefFile := FindServiceDefinitionFile(do.Name)

@@ -20,8 +20,8 @@
 
 # Docker installed locally
 # Docker-Machine installed locally (if using remote boxes)
-# eris' test_machines image (if testing against eris' test boxes)
-# Eris installed locally
+# monax's test_machines image (if testing against monax's test boxes)
+# Monax installed locally
 
 # ---------------------------------------------------------------------------
 # USAGE
@@ -32,7 +32,7 @@
 # Defaults
 
 start=`pwd`
-base=github.com/eris-ltd/eris
+base=github.com/monax/cli
 repo=$GOPATH/src/$base
 
 source $repo/tests/machines/docker_machine.sh
@@ -48,8 +48,8 @@ declare -a checks
 
 cd $repo
 
-export ERIS_PULL_APPROVE="true"
-export ERIS_MIGRATE_APPROVE="true"
+export MONAX_PULL_APPROVE="true"
+export MONAX_MIGRATE_APPROVE="true"
 
 # ---------------------------------------------------------------------------
 # Define the tests and passed functions
@@ -75,10 +75,10 @@ connect(){
 }
 
 setup() {
-  if [[ "$machine" == eris-test-win* ]]
+  if [[ "$machine" == monax-test-win* ]]
   then
-    mkdir $HOME/.eris
-    touch $HOME/.eris/eris.toml
+    mkdir $HOME/.monax
+    touch $HOME/.monax/monax.toml
   fi
 
   echo "Checking the Host <-> Docker Connection"
@@ -104,9 +104,9 @@ setup() {
   fi
 
   echo
-  echo "Checking the Eris <-> Docker Connection"
+  echo "Checking the Monax <-> Docker Connection"
   echo
-  eris version
+  monax version
   if [ $? -ne 0 ]
   then
     flame_out
@@ -217,6 +217,11 @@ flame_out() {
 # ---------------------------------------------------------------------------
 # Go!
 echo "Hello! The marmots will begin testing now."
+
+monax clean --yes --containers --images --scratch
+monax version
+monax init --yes --testing
+
 if [[ "$DOCKER_MACHINE" = true ]]
 then
   announceMachine

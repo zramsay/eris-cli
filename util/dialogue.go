@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/log"
 )
 
 func GetStringResponse(question string, defaultAnswer string, reader *os.File) (string, error) {
@@ -21,7 +21,7 @@ func GetStringResponse(question string, defaultAnswer string, reader *os.File) (
 	return text, nil
 }
 
-func GetIntResponse(question string, defaultAnswer int, reader *os.File) (int, error) {
+func GetIntResponse(question string, defaultAnswer int64, reader *os.File) (int64, error) {
 	readr := bufio.NewReader(reader)
 	log.Warn(question)
 
@@ -36,7 +36,7 @@ func GetIntResponse(question string, defaultAnswer int, reader *os.File) (int, e
 		return 0, nil
 	}
 
-	return int(result), nil
+	return result, nil
 }
 
 // displays the question, scans for the response, if the response is an empty

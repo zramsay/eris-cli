@@ -7,12 +7,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/eris-ltd/eris/log"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/log"
 )
 
 var (
-	configErisDir = filepath.Join(os.TempDir(), "config")
+	configMonaxDir = filepath.Join(os.TempDir(), "config")
 )
 
 func TestMain(m *testing.M) {
@@ -27,7 +26,7 @@ func TestMain(m *testing.M) {
 	}
 	defer os.Setenv("TESTING", savedEnv)
 
-	log.WithField("dir", configErisDir).Info("Using temporary directory for config files")
+	log.WithField("dir", configMonaxDir).Info("Using temporary directory for config files")
 
 	m.Run()
 }
@@ -78,7 +77,7 @@ func TestNewNil(t *testing.T) {
 }
 
 func TestNewDefaultConfig(t *testing.T) {
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
@@ -98,10 +97,6 @@ func TestNewDefaultConfig(t *testing.T) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
-	if def, returned := defaults.Get("ImageKeys"), cli.ImageKeys; reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-
 	log.WithFields(log.Fields{
 		"ipfshost":       cli.IpfsHost,
 		"compilers host": cli.CompilersHost,
@@ -109,7 +104,6 @@ func TestNewDefaultConfig(t *testing.T) {
 		"cert path":      cli.DockerCertPath,
 		"crash report":   cli.CrashReport,
 		"verbose":        cli.Verbose,
-		"image keys":     cli.ImageKeys,
 	}).Info("Checking defaults")
 }
 
@@ -121,12 +115,10 @@ DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ImageKeys = "crypto"
-ImageDB = "erisdb"
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -150,19 +142,13 @@ ImageDB = "erisdb"
 	if custom, returned := true, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := "crypto", cli.ImageKeys; custom != returned {
-		t.Fatalf("expected %q, got %q", custom, returned)
-	}
-	if custom, returned := "erisdb", cli.ImageDB; custom != returned {
-		t.Fatalf("expected %q, got %q", custom, returned)
-	}
 }
 
 func TestNewCustomEmptyConfig(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -180,8 +166,6 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 		"cert path":      cli.DockerCertPath,
 		"crash report":   cli.CrashReport,
 		"verbose":        cli.Verbose,
-		"keys image":     cli.ImageKeys,
-		"db image":       cli.ImageDB,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
@@ -205,19 +189,13 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if custom, returned := version.ImageKeys, cli.ImageKeys; custom != returned {
-		t.Fatalf("expected %v, got %v", custom, returned)
-	}
-	if custom, returned := version.ImageDB, cli.ImageDB; custom != returned {
-		t.Fatalf("expected %v, got %v", custom, returned)
-	}
 }
 
 func TestNewCustomBadConfig(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	ChangeErisRoot(configErisDir)
+	ChangeMonaxRoot(configMonaxDir)
 	cli, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -230,8 +208,6 @@ func TestNewCustomBadConfig(t *testing.T) {
 		"cert path":      cli.DockerCertPath,
 		"crash report":   cli.CrashReport,
 		"verbose":        cli.Verbose,
-		"keys image":     cli.ImageKeys,
-		"db image":       cli.ImageDB,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
@@ -260,12 +236,6 @@ func TestNewCustomBadConfig(t *testing.T) {
 	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
-	if def, returned := defaults.Get("ImageKeys"), cli.ImageKeys; reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-	if def, returned := defaults.Get("ImageDB"), cli.ImageDB; reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 }
 
 func TestSetDefaults(t *testing.T) {
@@ -281,10 +251,6 @@ func TestSetDefaults(t *testing.T) {
 	if _, ok := defaults.Get("CompilersHost").(string); !ok {
 		t.Fatalf("expected CompilersHost values set")
 	}
-
-	if _, ok := defaults.Get("ImageKeys").(string); !ok {
-		t.Fatalf("expected ImageKeys value set")
-	}
 }
 
 func TestLoad(t *testing.T) {
@@ -295,10 +261,8 @@ DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ImageKeys = "crypto"
-ImageDB = "erisdb"
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	config, err := Load()
 	if err != nil {
@@ -323,17 +287,11 @@ ImageDB = "erisdb"
 	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "crypto", config.Get("ImageKeys"); reflect.DeepEqual(expected, returned) != true {
-		t.Fatalf("expected %v, got %v", expected, returned)
-	}
-	if expected, returned := "erisdb", config.Get("ImageDB"); reflect.DeepEqual(expected, returned) != true {
-		t.Fatalf("expected %v, got %v", expected, returned)
-	}
 }
 
 func TestLoadEmpty(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	config, err := Load()
 	if err != nil {
@@ -363,17 +321,11 @@ func TestLoadEmpty(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := defaults.Get("ImageKeys"), config.Get("ImageKeys"); reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-	if def, returned := defaults.Get("ImageDB"), config.Get("ImageDB"); reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 }
 
 func TestLoadBad(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
 	// With bad config, load defaults.
 	config, err := Load()
@@ -404,12 +356,6 @@ func TestLoadBad(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := defaults.Get("ImageKeys"), config.Get("ImageKeys"); reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-	if def, returned := defaults.Get("ImageDB"), config.Get("ImageDB"); reflect.DeepEqual(returned, def) != true {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 }
 
 func TestLoadViper(t *testing.T) {
@@ -420,12 +366,10 @@ DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
 Verbose = true
-ImageKeys = "crypto"
-ImageDB = "erisdb"
 `)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	config, err := LoadViper(configErisDir, "eris")
+	config, err := LoadViper(configMonaxDir, "monax")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -448,19 +392,13 @@ ImageDB = "erisdb"
 	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
-	if expected, returned := "crypto", config.Get("ImageKeys"); reflect.DeepEqual(expected, returned) != true {
-		t.Fatalf("expected %v, got %v", expected, returned)
-	}
-	if expected, returned := "erisdb", config.Get("ImageDB"); reflect.DeepEqual(expected, returned) != true {
-		t.Fatalf("expected %v, got %v", expected, returned)
-	}
 }
 
 func TestLoadViperEmpty(t *testing.T) {
 	placeSettings(``)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	config, err := LoadViper(configErisDir, "eris")
+	config, err := LoadViper(configMonaxDir, "monax")
 	if err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}
@@ -483,41 +421,35 @@ func TestLoadViperEmpty(t *testing.T) {
 	if returned := config.Get("Verbose"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if returned := config.Get("ImageKeys"); returned != nil {
-		t.Fatalf("expected nil, got %q", returned)
-	}
-	if returned := config.Get("ImageDB"); returned != nil {
-		t.Fatalf("expected nil, got %q", returned)
-	}
 }
 
 func TestLoadViperBad(t *testing.T) {
 	placeSettings(`*`)
-	defer removeErisDir()
+	defer removeMonaxDir()
 
-	_, err := LoadViper(configErisDir, "eris")
+	_, err := LoadViper(configMonaxDir, "monax")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperNonExistent1(t *testing.T) {
-	_, err := LoadViper(configErisDir, "eris")
+	_, err := LoadViper(configMonaxDir, "monax")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestLoadViperNonExistent2(t *testing.T) {
-	_, err := LoadViper(configErisDir, "12345")
+	_, err := LoadViper(configMonaxDir, "12345")
 	if err == nil {
 		t.Fatalf("expected failure, got nil")
 	}
 }
 
 func TestSave(t *testing.T) {
-	os.MkdirAll(configErisDir, 0755)
-	defer removeErisDir()
+	os.MkdirAll(configMonaxDir, 0755)
+	defer removeMonaxDir()
 
 	settings := &Settings{
 		IpfsHost:       "foo",
@@ -530,7 +462,7 @@ func TestSave(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	filename := filepath.Join(configErisDir, "eris.toml")
+	filename := filepath.Join(configMonaxDir, "monax.toml")
 	expected := `IpfsHost = "foo"
 CompilersHost = "bar"
 DockerHost = "baz"
@@ -548,7 +480,7 @@ Verbose = true
 }
 
 func TestSaveNotExistentDir(t *testing.T) {
-	ChangeErisRoot("/non/existent/dir")
+	ChangeMonaxRoot("/non/existent/dir")
 	_, err := New(os.Stderr, os.Stdout)
 	if err != nil {
 		t.Fatalf("expected success, got error %v", err)
@@ -560,8 +492,6 @@ func TestSaveNotExistentDir(t *testing.T) {
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
-		ImageKeys:      "crypto",
-		ImageDB:        "erisdb",
 	}
 	if err := Save(settings); err == nil {
 		t.Fatal("expected failure, got nil")
@@ -575,16 +505,16 @@ func TestSaveNil(t *testing.T) {
 }
 
 func placeSettings(definition string) {
-	os.MkdirAll(configErisDir, 0755)
-	fakeDefinitionFile(configErisDir, "eris", definition)
+	os.MkdirAll(configMonaxDir, 0755)
+	fakeDefinitionFile(configMonaxDir, "monax", definition)
 }
 
-func removeErisDir() {
-	// Move out of configErisDir before deleting it.
-	parentPath := filepath.Join(configErisDir, "..")
+func removeMonaxDir() {
+	// Move out of configMonaxDir before deleting it.
+	parentPath := filepath.Join(configMonaxDir, "..")
 	os.Chdir(parentPath)
 
-	if err := os.RemoveAll(configErisDir); err != nil {
+	if err := os.RemoveAll(configMonaxDir); err != nil {
 		panic(err)
 	}
 }

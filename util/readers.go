@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/log"
 
-	"github.com/eris-ltd/eris-db/client/rpc"
+	"github.com/monax/burrow/client/rpc"
 )
 
 // This is a closer function which is called by most of the tx_run functions

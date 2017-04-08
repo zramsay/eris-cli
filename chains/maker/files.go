@@ -7,26 +7,26 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eris-ltd/eris/config"
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/log"
+	"github.com/monax/cli/config"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/log"
 
-	configurationFile "github.com/eris-ltd/eris-db/config"
-	"github.com/eris-ltd/eris-db/genesis"
+	configurationFile "github.com/monax/burrow/config"
+	"github.com/monax/burrow/genesis"
 
 	"github.com/BurntSushi/toml"
 )
 
-// XXX: this is temporary until eris-keys.js is more tightly integrated with eris-contracts.js
+// XXX: this is temporary until legacy-keys.js is more tightly integrated with legacy-contracts.js
 type accountInfo struct {
 	Address string `mapstructure:"address" json:"address" yaml:"address" toml:"address"`
 	PubKey  string `mapstructure:"pubKey" json:"pubKey" yaml:"pubKey" toml:"pubKey"`
 	PrivKey string `mapstructure:"privKey" json:"privKey" yaml:"privKey" toml:"privKey"`
 }
 
-func SaveAccountResults(do *definitions.Do, accounts []*ErisDBAccountConstructor) error {
+func SaveAccountResults(do *definitions.Do, accounts []*MonaxDBAccountConstructor) error {
 	// Log a warning to users for the new behaviour:
-	// if asked to output the accounts with do.Output, and `eris chains make --unsafe` is not
+	// if asked to output the accounts with do.Output, and `monax chains make --unsafe` is not
 	// provided with the unsafe flag, then we no longer write the private keys in `accounts.json`
 	if !do.Unsafe {
 		log.Warn("The marmots care about your safety and no longer export the generated private keys onto your local host. " +
@@ -155,7 +155,7 @@ func WriteConfigurationFile(chainName, accountName, seeds string, chainImageName
 	return writer(configurationFileBytes, chainName, accountName, "config.toml")
 }
 
-func SaveAccountType(thisActT *definitions.ErisDBAccountType) error {
+func SaveAccountType(thisActT *definitions.MonaxDBAccountType) error {
 	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
 	defer writer.Close()
 	if err != nil {

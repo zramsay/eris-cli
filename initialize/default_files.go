@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/eris-ltd/eris/definitions"
-	"github.com/eris-ltd/eris/version"
+	"github.com/monax/cli/definitions"
+	"github.com/monax/cli/version"
 )
 
 const tomlHeader = `# This is a TOML config file.
@@ -19,8 +19,8 @@ var ServiceDefinitions = []string{
 	"compilers",
 	"ipfs",
 	"keys",
-	// used by [eris chains start myChain --logrotate]
-	// but its docker image is not pulled on [eris init]
+	// used by [monax chains start myChain --logrotate]
+	// but its docker image is not pulled on [monax init]
 	"logrotate",
 }
 
@@ -122,7 +122,7 @@ Validator = {{index .AccountTypes "Validator"}}
 
 [servers]
 
-[erismint]
+[monaxmint]
 
 [tendermint]`
 
@@ -137,21 +137,21 @@ func defaultServices(service string) *definitions.ServiceDefinition {
 	case "keys":
 
 		serviceDefinition.Name = "keys"
-		serviceDefinition.Description = `Eris keys is meant for quick prototyping. You must replace it with a hardened key signing daemon to use in production. Eris does not intend to harden this for production, but rather will keep it as a rapid prototyping server.
+		serviceDefinition.Description = `Monax keys is meant for quick prototyping. You must replace it with a hardened key signing daemon to use in production. Monax does not intend to harden this for production, but rather will keep it as a rapid prototyping server.
 
-This service is usually linked to a chain and/or an application. Its functionality is wrapped by [eris keys].`
+This service is usually linked to a chain and/or an application. Its functionality is wrapped by [monax keys].`
 		serviceDefinition.Status = "unfit for production"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageKeys)
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4767:4767"`} // XXX these exposed ports are a gaping security flaw
-		serviceDefinition.Service.ExecHost = "ERIS_KEYS_HOST"
+		serviceDefinition.Service.ExecHost = "MONAX_KEYS_HOST"
 
 	case "compilers":
 
 		serviceDefinition.Name = "compilers"
 		serviceDefinition.Description = `Monax's Solidity Compiler Server.
 
-This eris service compiles smart contract languages.`
+This monax service compiles smart contract languages.`
 		serviceDefinition.Status = "beta"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
 		serviceDefinition.Service.AutoData = true
@@ -159,19 +159,19 @@ This eris service compiles smart contract languages.`
 
 	case "ipfs":
 
-		port_to_use := os.Getenv("ERIS_CLI_TESTS_PORT")
+		port_to_use := os.Getenv("MONAX_CLI_TESTS_PORT")
 		if port_to_use == "" {
 			port_to_use = "8080"
 		}
 		serviceDefinition.Name = "ipfs"
 		serviceDefinition.Description = `IPFS is The Permanent Web: A new peer-to-peer hypermedia protocol. IPFS uses content-based addressing versus http's location-based addressing.
 
-This eris service is all but essential as part of the eris tool. The [eris files] relies upon this running service.`
+This monax service is all but essential as part of the monax tool. The [monax files] relies upon this running service.`
 		serviceDefinition.Status = "alpha"
-		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageIPFS)
+		serviceDefinition.Service.Image = path.Join(version.ImageIPFS) // we use the default docker hub registry
 		serviceDefinition.Service.AutoData = true
 		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
-		serviceDefinition.Service.ExecHost = "ERIS_IPFS_HOST"
+		serviceDefinition.Service.ExecHost = "MONAX_IPFS_HOST"
 		serviceDefinition.Service.User = `"root"`
 
 	case "logrotate":
@@ -179,7 +179,7 @@ This eris service is all but essential as part of the eris tool. The [eris files
 		serviceDefinition.Name = "logrotate"
 		serviceDefinition.Description = `Truncates docker container logs when the grow in size.
 
-This eris service can also be run by adding the [--logrotate] flag on [eris chains start]
+This monax service can also be run by adding the [--logrotate] flag on [monax chains start]
 
 It is essential for long-running chain nodes.
 
@@ -197,7 +197,7 @@ Alternatively, use logspout to pipe logs to a service of you choosing"`
 
 }
 
-func defaultAccountTypes(accountType string) *definitions.ErisDBAccountType {
+func defaultAccountTypes(accountType string) *definitions.MonaxDBAccountType {
 	accountTypeDefinition := definitions.BlankAccountType()
 
 	switch accountType {
@@ -213,7 +213,7 @@ Usually this group will have the most number of keys of all of the groups.`
 		accountTypeDefinition.DefaultNumber = 25
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int{
+		accountTypeDefinition.Perms = map[string]int64{
 			"root":            0,
 			"send":            1,
 			"call":            1,
@@ -243,7 +243,7 @@ within this group, although that design is up to you.`
 		accountTypeDefinition.DefaultNumber = 6
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int{
+		accountTypeDefinition.Perms = map[string]int64{
 			"root":            0,
 			"send":            1,
 			"call":            1,
@@ -275,7 +275,7 @@ in the system.`
 		accountTypeDefinition.DefaultNumber = 7
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 9999999998
-		accountTypeDefinition.Perms = map[string]int{
+		accountTypeDefinition.Perms = map[string]int64{
 			"root":            0,
 			"send":            0,
 			"call":            0,
@@ -306,7 +306,7 @@ If you are making a more complex chain, don't use this account type.`
 		accountTypeDefinition.DefaultNumber = 1
 		accountTypeDefinition.DefaultTokens = 99999999999999
 		accountTypeDefinition.DefaultBond = 9999999999
-		accountTypeDefinition.Perms = map[string]int{
+		accountTypeDefinition.Perms = map[string]int64{
 			"root":            1,
 			"send":            1,
 			"call":            1,
@@ -338,7 +338,7 @@ similar to a network administrator in other data management situations.`
 		accountTypeDefinition.DefaultNumber = 3
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int{
+		accountTypeDefinition.Perms = map[string]int64{
 			"root":            1,
 			"send":            1,
 			"call":            1,
@@ -370,7 +370,7 @@ func defaultChainTypes(chainType string) *definitions.ChainType {
 
 		chainTypeDefinition.Name = "simplechain"
 		chainTypeDefinition.Description = `A simple chain type will build a single node chain. This chain type is usefulfor quick and easy prototyping. It should not be used for anything more than the most simple prototyping as it only has one node and the keys to that node could get lost or compromised and the chain would thereafter become useless.`
-		chainTypeDefinition.AccountTypes = map[string]int{
+		chainTypeDefinition.AccountTypes = map[string]int64{
 			"Full":        1,
 			"Developer":   0,
 			"Participant": 0,
@@ -382,7 +382,7 @@ func defaultChainTypes(chainType string) *definitions.ChainType {
 
 		chainTypeDefinition.Name = "sprawlchain"
 		chainTypeDefinition.Description = `A sprawlchain type has a little bit of everything. Modify as necessary for your ecosystem application. Will tolerate three nodes down. As with other chains, Validator accounts ought to go on the cloud. No Full accounts are provided since these are prefered for quick development only.`
-		chainTypeDefinition.AccountTypes = map[string]int{
+		chainTypeDefinition.AccountTypes = map[string]int64{
 			"Full":        0,
 			"Developer":   10,
 			"Participant": 20,
@@ -394,7 +394,7 @@ func defaultChainTypes(chainType string) *definitions.ChainType {
 
 		chainTypeDefinition.Name = "adminchain"
 		chainTypeDefinition.Description = `An adminchain type has settings for prototyping a larger chain from a sysadmin point of view. With four Validator and three Full account_types, at minimum of five nodes must be up for consensus to happen. This account combination is what we use to test long running chains on our CI system.`
-		chainTypeDefinition.AccountTypes = map[string]int{
+		chainTypeDefinition.AccountTypes = map[string]int64{
 			"Full":        3,
 			"Developer":   1,
 			"Participant": 1,
@@ -406,7 +406,7 @@ func defaultChainTypes(chainType string) *definitions.ChainType {
 
 		chainTypeDefinition.Name = "demochain"
 		chainTypeDefinition.Description = `A demo chain is useful for setting up proof of concept demonstration chains. It is a quick and easy way to have multi-validator, multi-developer, multi-participant chains set up for your application. This chain will tolerate 2 validators becoming byzantine or going off-line while still moving forward. You should utilize 7 different cloud instances and deploy one of the validator chain directories to each.`
-		chainTypeDefinition.AccountTypes = map[string]int{
+		chainTypeDefinition.AccountTypes = map[string]int64{
 			"Full":        0,
 			"Developer":   5,
 			"Participant": 20,
@@ -418,7 +418,7 @@ func defaultChainTypes(chainType string) *definitions.ChainType {
 
 		chainTypeDefinition.Name = "gochain"
 		chainTypeDefinition.Description = `A gochain type will build a three node chain. It is a quick and easy way to get started with a multi-validator chain. The Full account_type includes validator and deploy permissions, allowing for experimentation with setting up a chain and halting it by taking down a single node. This Full account should be deployed on your local machine and cloud nodes should have only Validator accounts. Use for prototyping only.`
-		chainTypeDefinition.AccountTypes = map[string]int{
+		chainTypeDefinition.AccountTypes = map[string]int64{
 			"Full":        1,
 			"Developer":   0,
 			"Participant": 0,

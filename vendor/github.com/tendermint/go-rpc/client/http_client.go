@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	. "github.com/tendermint/go-common"
@@ -119,7 +121,7 @@ func (c *ClientURI) call(method string, params map[string]interface{}, result in
 	if err != nil {
 		return nil, err
 	}
-	log.Info(Fmt("URI request to %v (%v): %v", c.address, method, values))
+	// log.Info(Fmt("URI request to %v (%v): %v", c.address, method, values))
 	resp, err := c.client.PostForm(c.address+"/"+method, values)
 	if err != nil {
 		return nil, err
@@ -138,19 +140,23 @@ func unmarshalResponseBytes(responseBytes []byte, result interface{}) (interface
 	// read response
 	// if rpc/core/types is imported, the result will unmarshal
 	// into the correct type
+	// log.Notice("response", "response", string(responseBytes))
 	var err error
 	response := &rpctypes.RPCResponse{}
 	err = json.Unmarshal(responseBytes, response)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(Fmt("Error unmarshalling rpc response: %v", err))
 	}
 	errorStr := response.Error
 	if errorStr != "" {
-		return nil, errors.New(errorStr)
+		return nil, errors.New(Fmt("Response error: %v", errorStr))
 	}
 	// unmarshal the RawMessage into the result
 	result = wire.ReadJSONPtr(result, *response.Result, &err)
-	return result, err
+	if err != nil {
+		return nil, errors.New(Fmt("Error unmarshalling rpc response result: %v", err))
+	}
+	return result, nil
 }
 
 func argsToURLValues(args map[string]interface{}) (url.Values, error) {
@@ -172,6 +178,14 @@ func argsToJson(args map[string]interface{}) error {
 	var n int
 	var err error
 	for k, v := range args {
+		// Convert byte slices to "0x"-prefixed hex
+		byteSlice, isByteSlice := reflect.ValueOf(v).Interface().([]byte)
+		if isByteSlice {
+			args[k] = fmt.Sprintf("0x%X", byteSlice)
+			continue
+		}
+
+		// Pass everything else to go-wire
 		buf := new(bytes.Buffer)
 		wire.WriteJSON(v, buf, &n, &err)
 		if err != nil {
