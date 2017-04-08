@@ -115,8 +115,6 @@ func AddCommands() {
 	MonaxCmd.AddCommand(Keys)
 	buildFilesCommand()
 	MonaxCmd.AddCommand(Files)
-	buildDataCommand()
-	MonaxCmd.AddCommand(Data)
 	buildListCommand()
 	MonaxCmd.AddCommand(List)
 	buildCleanCommand()

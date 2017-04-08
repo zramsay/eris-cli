@@ -20,44 +20,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-func RenameData(do *definitions.Do) error {
-	log.WithFields(log.Fields{
-		"from": do.Name,
-		"to":   do.NewName,
-	}).Info("Renaming data container")
-
-	if util.IsData(do.Name) {
-		ops := loaders.LoadDataDefinition(do.Name)
-		util.Merge(ops, do.Operations)
-
-		err := perform.DockerRename(ops, do.NewName)
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me")
-	}
-	return nil
-}
-
-func InspectData(do *definitions.Do) error {
-	if util.IsData(do.Name) {
-		log.WithField("=>", do.Name).Info("Inspecting data container")
-
-		srv := definitions.BlankServiceDefinition()
-		srv.Operations.SrvContainerName = util.ContainerName(definitions.TypeData, do.Name)
-
-		err := perform.DockerInspect(srv.Service, srv.Operations, do.Operations.Args[0])
-		if err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("I cannot find that data container. Please check the data container name you sent me")
-	}
-	return nil
-}
-
-// TODO: skip errors flag
+// used by tests; could be refactored/deprecated
 func RmData(do *definitions.Do) (err error) {
 	if len(do.Operations.Args) == 0 {
 		do.Operations.Args = []string{do.Name}
