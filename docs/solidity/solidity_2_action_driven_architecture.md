@@ -8,7 +8,7 @@ title: "Tutorials | Solidity 2: An Action-Driven Architecture"
 ## Solidity Series
 
 <div class="note">
-  <em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
 This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
@@ -776,7 +776,7 @@ function getAllElements(){
 }
 ```
 
-Note that accessing the element data by index is a bit ugly. Personally I use the json ABI to generate objects of the returned data with the proper names etc., using something like this (which will also be in Eris js):
+Note that accessing the element data by index is a bit ugly. Personally I use the json ABI to generate objects of the returned data with the proper names etc., using something like this (which will also be in Monax.js):
 
 ```javascript
 // fName = function name.

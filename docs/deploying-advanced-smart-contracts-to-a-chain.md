@@ -13,7 +13,7 @@ menu:
 ## Introduction
 
 <div class="note">
-	<em>Note: As of 2017, our product has been renamed from Eris to Monax. This documentation refers to an earlier version of the software prior to this name change (<= 0.16). Later versions of this documentation (=> 0.17) will change the <code>eris</code> command and <code>~/.eris</code> directory to <code>monax</code> and <code>~/.monax</code> respectively.</em>
+{{ data_sites rename_docs }}
 </div>
 
 For this tutorial, we are going to work with multiple contracts. All the base contract does is get and sets a value, but we'll add some layers to the contract which will satisfy common patterns smart contract writers adopt.
@@ -54,7 +54,7 @@ So let's go through them one by one and explain what each of these jobs are doin
 
 #### Job 1: Deploy Job
 
-This job will compile the `GSFactory.sol` contracts using Eris' compiler service (or run your own locally; which will be covered later in this tutorial). But which contract(s) will get deployed even though they both are in the contract? When we have more than one contract in a file, we tell the package manager which one it should deploy with the `instance` field.
+This job will compile the `GSFactory.sol` contracts using the compiler service (or run your own locally; which will be covered later in this tutorial). But which contract(s) will get deployed even though they both are in the contract? When we have more than one contract in a file, we tell the package manager which one it should deploy with the `instance` field.
 
 Here we are asking the package manager to deploy `all` of the contracts so that we will have an ABI for the `GSContract` address. This is something important to understand about Factory contracts. Namely that at some point you will have to deploy a "fake" contract to your chain so that the ABI for it is properly saved to the ABI folder.
 

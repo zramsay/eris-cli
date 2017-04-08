@@ -52,7 +52,7 @@ func MakeAccounts(name, chainType string, accountTypes []*definitions.MonaxDBAcc
 	case "mint":
 		for _, accountType := range accountTypes {
 			log.WithField("type", accountType.Name).Info("Making Account Type")
-			for i := 0; i < accountType.DefaultNumber; i++ {
+			for i := int64(0); i < accountType.DefaultNumber; i++ {
 				// account names are formatted <ChainName_AccountTypeName_nnn>
 				accountName := strings.ToLower(fmt.Sprintf(
 					"%s_%s_%03d", name, accountType.Name, i))
