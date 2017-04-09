@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 ## Introduction
