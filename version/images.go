@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	DB_VERSION        = "0.16.2"
-	KEYS_VERSION      = "0.16.0"
-	COMPILERS_VERSION = "0.16.0"
+	DB_VERSION        = "0.17.0"
+	KEYS_VERSION      = "0.17.0"
+	COMPILERS_VERSION = "0.17.0"
 )
 
 var (
