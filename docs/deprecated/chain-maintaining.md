@@ -9,7 +9,7 @@ title: "Deprecated | Chain Maintaining"
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 In general what is going to happen here is that we are going to establish what we at Monax call a "peer sergeant major" node who is responsible for being the easy connection point for any nodes which need to connect into the system. While we understand that decentralized purists will not like the single point of failure, at this point it is the most viable way to orchestrate a blockchain network.

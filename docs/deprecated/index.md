@@ -20,7 +20,6 @@ menu:
 * [Getting Started With Cloud Instances](/docs/deprecated/getting_started_with_cloud_instances/)
 * [How To Make A Service](/docs/deprecated/how_to_make_a_service/)
 * [Install Eris blockchain tools on IoT (ARM) devices](/docs/deprecated/install-arm/)
-* [Motivation](/docs/deprecated/motivation/)
 * [Using Docker Machine With Eris](/docs/deprecated/using_docker_machine_with_eris/)
 
 

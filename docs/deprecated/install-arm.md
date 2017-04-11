@@ -9,7 +9,7 @@ aliases:
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 This tutorial uses Raspberry Pi 3 as referenced IoT device to demonstrate how to install eris blockchain tools on IoT devices.

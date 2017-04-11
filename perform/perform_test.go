@@ -1665,7 +1665,6 @@ func TestPullBadName(t *testing.T) {
 // https://github.com/monax/cli/issues/1262
 func testLogsSimple(t *testing.T) {
 	const (
-		//name = "ipfs"
 		name = "compilers"
 		tail = "100"
 	)
@@ -1685,8 +1684,7 @@ func testLogsSimple(t *testing.T) {
 		t.Fatalf("expected service container created, got %v", err)
 	}
 
-	// XXX [zr] stopping the ipfs service then checking its logs can
-	// lead to an IPFS panic; this test fails if using keys rather than IPFS
+	// this test fails if using keys rather than IPFS
 	// except if using the ErrorWriter instead
 	if err := DockerStop(srv.Service, srv.Operations, 5); err != nil {
 		t.Fatalf("expected service container to stop, got %v", err)
@@ -1776,7 +1774,7 @@ func TestLogsFollow(t *testing.T) {
 
 /*func TestLogsTail(t *testing.T) {
 	const (
-		name = "ipfs"
+		name = "keys"
 		tail = "100"
 	)
 
@@ -1806,7 +1804,7 @@ func TestLogsFollow(t *testing.T) {
 		t.Fatalf("expected logs pulled, got %v", err)
 	}
 
-	if !strings.Contains(buf.String(), "Starting IPFS") {
+	if !strings.Contains(buf.String(), "Starting monax-keys") {
 		t.Fatalf("expected certain log entries, got %q", buf.String())
 	}
 }*/

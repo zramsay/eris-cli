@@ -46,8 +46,6 @@ Complete documentation is available at https://monax.io/docs
 		}
 
 		util.DockerConnect(do.Verbose, do.MachineName)
-		util.IpfsHost = config.Global.IpfsHost
-		util.IpfsPort = config.Global.IpfsPort
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return
@@ -113,8 +111,6 @@ func AddCommands() {
 	MonaxCmd.AddCommand(Packages)
 	buildKeysCommand()
 	MonaxCmd.AddCommand(Keys)
-	buildFilesCommand()
-	MonaxCmd.AddCommand(Files)
 	buildListCommand()
 	MonaxCmd.AddCommand(List)
 	buildCleanCommand()

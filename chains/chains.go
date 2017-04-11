@@ -497,9 +497,3 @@ func resolveChainsPath(chainName, pathGiven string) (string, error) {
 	log.WithField("=>", pathGiven).Info("Failed to find [--init-dir]")
 	return "", fmt.Errorf("Directory given on [--init-dir] could not be determined")
 }
-
-func exportFile(chainName string) (string, error) {
-	fileName := util.GetFileByNameAndType("chains", chainName)
-
-	return util.SendToIPFS(fileName, "", "")
-}

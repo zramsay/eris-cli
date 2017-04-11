@@ -81,7 +81,6 @@ Directory structure initialized:
 ¦       +-- sol/
 ¦   +-- services/
 ¦       +-- keys.toml
-¦       +-- ipfs.toml
 ¦       +-- compilers.toml
 ¦       +-- logrotate.toml
 
@@ -129,7 +128,6 @@ func pullDefaultImages(images []string) error {
 		images = []string{
 			"data",
 			"keys",
-			// "ipfs",
 			"db",
 			"compilers",
 		}
@@ -138,9 +136,8 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data": version.ImageData,
-		"keys": version.ImageKeys,
-		// "ipfs":      version.ImageIPFS, // [CSK no need to pull this by default]
+		"data":      version.ImageData,
+		"keys":      version.ImageKeys,
 		"db":        version.ImageDB,
 		"compilers": version.ImageCompilers,
 	}
