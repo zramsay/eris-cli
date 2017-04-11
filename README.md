@@ -33,7 +33,6 @@ The `monax` tool is centered around a very few concepts:
 * `chains` — develop permissioned chains
 * `pkgs` — our smart contract tool chain
 * `keys` — wrapping of our key management tooling
-* `files` — working the IPFS "permanent web"
 * `data` — take the pain out of data persistence on docker
 
 These concepts provide the core functionality of what we think a true smart contract application platform requires.
@@ -100,16 +99,6 @@ To see the various ways in which `monax` can help you manage your various key pa
 monax keys
 ```
 
-## Files
-
-Monax has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host.
-
-To see the various ways in which `monax` can help you with distributed file sharing, please type:
-
-```
-monax files
-```
-
 ## Data
 
 Monax can automagically utilize data containers for you.
@@ -144,7 +133,6 @@ Created by `monax init` in $HOME directory:
 │       ├── ser/
 │       ├── sol/
 │   ├── services/
-│       ├── ipfs.toml
 │       ├── keys.toml
 ```
 

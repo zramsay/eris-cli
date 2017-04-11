@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 
 	testutil.IfExit(testutil.Init(testutil.Pull{
 		Images:   []string{"data", "db", "keys", "compilers"},
-		Services: []string{"keys", "ipfs", "compilers"},
+		Services: []string{"keys", "compilers"},
 	}))
 
 	exitCode := m.Run()
@@ -980,7 +980,7 @@ func goodPkgContents() string {
 			"ASDF": "1234"
 		},
 		"dependencies": {
-			"services": ["keys", "ipfs"]
+			"services": ["keys"]
 		}
   }
 }

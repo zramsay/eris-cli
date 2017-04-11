@@ -2,7 +2,6 @@ package initialize
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/monax/cli/definitions"
@@ -17,7 +16,6 @@ const tomlHeader = `# This is a TOML config file.
 
 var ServiceDefinitions = []string{
 	"compilers",
-	"ipfs",
 	"keys",
 	// used by [monax chains start myChain --logrotate]
 	// but its docker image is not pulled on [monax init]
@@ -156,23 +154,6 @@ This monax service compiles smart contract languages.`
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
 		serviceDefinition.Service.AutoData = true
 		//serviceDefinition.Service.Ports = []string{`"9090:9090"`}
-
-	case "ipfs":
-
-		port_to_use := os.Getenv("MONAX_CLI_TESTS_PORT")
-		if port_to_use == "" {
-			port_to_use = "8080"
-		}
-		serviceDefinition.Name = "ipfs"
-		serviceDefinition.Description = `IPFS is The Permanent Web: A new peer-to-peer hypermedia protocol. IPFS uses content-based addressing versus http's location-based addressing.
-
-This monax service is all but essential as part of the monax tool. The [monax files] relies upon this running service.`
-		serviceDefinition.Status = "alpha"
-		serviceDefinition.Service.Image = path.Join(version.ImageIPFS) // we use the default docker hub registry
-		serviceDefinition.Service.AutoData = true
-		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
-		serviceDefinition.Service.ExecHost = "MONAX_IPFS_HOST"
-		serviceDefinition.Service.User = `"root"`
 
 	case "logrotate":
 
