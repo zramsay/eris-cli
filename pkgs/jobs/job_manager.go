@@ -1,14 +1,146 @@
 package jobs
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
+
+	"github.com/monax/burrow/client"
+	"github.com/monax/burrow/keys"
 )
 
+type Jobs struct {
+	Account       string
+	NodeClient    client.NodeClient
+	KeyClient     keys.KeyClient
+	ChainID       string
+	PublicKey     string
+	DefaultAddr   string
+	DefaultAmount string
+	DefaultGas    string
+	DefaultFee    string
+	DefaultOutput string
+	DefaultSets   []string
+	Overwrite     bool
+	Jobs          []*Job `mapstructure:"jobs" yaml:"jobs"`
+	JobMap        map[string]*JobResults
+}
+
+func EmptyJobs() *Jobs {
+	return &Jobs{}
+}
+
+func (jobs *Jobs) RunJobs() error {
+	var jobNames []string
+	if len(jobs.DefaultSets) >= 1 {
+		jobs.defaultSetJobs()
+	}
+	if jobs.DefaultAddr != "" {
+		jobs.defaultAddrJob()
+	}
+	for _, job := range jobs.Jobs {
+		found, overwrite, at := checkForDuplicateQueryOverwrite(job.Name, jobNames, jobs.Overwrite)
+		if found && !overwrite {
+			continue
+		} else if found && overwrite {
+			//overwrite the name
+			jobs.JobMap[jobNames[at]] = &JobResults{}
+			jobNames = append(jobNames[:at], jobNames[at+1:]...)
+		}
+
+		jobNames = append(jobNames, job.Name)
+		job.swapLegacyJob()
+		results, err := job.beginJob(jobs)
+		if err != nil {
+			return err
+		}
+		jobs.JobMap[job.Name] = results
+	}
+	return nil
+}
+
+func (jobs *Jobs) defaultAddrJob() {
+	oldJobs := jobs.Jobs
+
+	newJob := []*Job{
+		{
+			Name: "defaultAddr",
+			Account: &Account{
+				Address: jobs.DefaultAddr,
+			},
+		},
+	}
+
+	jobs.Jobs = append(newJob, oldJobs...)
+}
+
+func (jobs *Jobs) defaultSetJobs() {
+	oldJobs := jobs.Jobs
+
+	newJobs := []*Job{}
+
+	for _, setr := range jobs.DefaultSets {
+		blowdUp := strings.Split(setr, "=")
+		if blowdUp[0] != "" {
+			newJobs = append(newJobs, &Job{
+				Name: blowdUp[0],
+				Set: &Set{
+					Value: blowdUp[1],
+				},
+			})
+		}
+	}
+
+	jobs.Jobs = append(newJobs, oldJobs...)
+}
+
+func checkForDuplicateQueryOverwrite(name string, jobNames []string, defaultOverwrite bool) (bool, bool, int) {
+	var dup bool = false
+	var index int = -1
+	for i, checkForDup := range jobNames {
+		if checkForDup == name {
+			dup = true
+			index = i
+			break
+		}
+	}
+	if dup {
+		if defaultOverwrite {
+			log.WithField("Overwriting job name", name)
+		} else {
+			overwriteWarning := "You are about to overwrite a previous job name, continue?"
+			if util.QueryYesOrNo(overwriteWarning, []int{}...) == util.No {
+				return true, false, index
+			}
+			return true, true, index
+		}
+	}
+	return dup, defaultOverwrite, index
+}
+
+/*func (jobs *Jobs) postProcess() error {
+	switch defaultOutput {
+	case "csv":
+		log.Info("Writing [epm.csv] to current directory")
+		for _, job := range jobs {
+			if err := WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
+				return err
+			}
+		}
+	case "json":
+		log.Info("Writing [jobs_output.json] to current directory")
+		results := make(map[string]string)
+		for _, job := range do.Package.Jobs {
+			results[job.JobName] = job.JobResult
+		}
+		return WriteJobResultJSON(results)
+	}
+
+	return nil
+}*/
+
+/* [rj] commenting out for the sake of unit testing loading
 func RunJobs(do *definitions.Do) error {
 	var err error
 	var dup bool = false
@@ -126,62 +258,4 @@ func announce(job, typ string) {
 	log.Warn("\n*****Executing Job*****\n")
 	log.WithField("=>", job).Warn("Job Name")
 	log.WithField("=>", typ).Info("Type")
-}
-
-func defaultAddrJob(do *definitions.Do) {
-	oldJobs := do.Package.Jobs
-
-	newJob := &definitions.Jobs{
-		JobName: "defaultAddr",
-		Job: &definitions.Job{
-			Account: &definitions.Account{
-				Address: do.DefaultAddr,
-			},
-		},
-	}
-
-	do.Package.Jobs = append([]*definitions.Jobs{newJob}, oldJobs...)
-}
-
-func defaultSetJobs(do *definitions.Do) {
-	oldJobs := do.Package.Jobs
-
-	newJobs := []*definitions.Jobs{}
-
-	for _, setr := range do.DefaultSets {
-		blowdUp := strings.Split(setr, "=")
-		if blowdUp[0] != "" {
-			newJobs = append(newJobs, &definitions.Jobs{
-				JobName: blowdUp[0],
-				Job: &definitions.Job{
-					Set: &definitions.SetJob{
-						Value: blowdUp[1],
-					},
-				},
-			})
-		}
-	}
-
-	do.Package.Jobs = append(newJobs, oldJobs...)
-}
-
-func postProcess(do *definitions.Do) error {
-	switch do.DefaultOutput {
-	case "csv":
-		log.Info("Writing [epm.csv] to current directory")
-		for _, job := range do.Package.Jobs {
-			if err := WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
-				return err
-			}
-		}
-	case "json":
-		log.Info("Writing [jobs_output.json] to current directory")
-		results := make(map[string]string)
-		for _, job := range do.Package.Jobs {
-			results[job.JobName] = job.JobResult
-		}
-		return WriteJobResultJSON(results)
-	}
-
-	return nil
-}
+}*/
