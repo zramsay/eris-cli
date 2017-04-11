@@ -2,6 +2,7 @@ package loaders
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -307,33 +308,35 @@ func TestLoadDataDefinition(t *testing.T) {
 	}
 }
 
-/* TODO: [RJ] - https://github.com/monax/cli/issues/1173
-func TestLoadPackageSimple(t *testing.T) {
+func TestLoadUtilJobsSimple(t *testing.T) {
 	const (
-		name = "test"
-
-		definition = `
-[monax]
-name       = "` + name + `"
-package_id = "` + name + `"
-chain_name = "test chain"
-chain_id   = "test id"
+		filename = "./epm.yaml"
+		jobs     = `
+jobs:
+- name: setStorageBase
+  set:
+    val: 5
+- name: setAccount
+  account:
+    address: 1234567890
 `
 	)
-
-	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
-		t.Fatalf("cannot place a definition file")
-	}
-
-	d, err := LoadPackage(name)
+	err := ioutil.WriteFile(filename, []byte(jobs), 0644)
+	defer os.Remove(filename)
 	if err != nil {
-		t.Fatalf("expected to load definition file, got %v", err)
+		t.Fatalf("cannot write config file %v", err)
 	}
-
+	do := definitions.NowDo()
+	do.YAMLPath = filename
+	output, err := LoadJobs(do)
+	if err != nil {
+		t.Fatalf("could not load jobs: %v", err)
+	}
 	for _, entry := range []ab{
-		{`Name`, d.Name, name},
-		{`PackageID`, d.PackageID, name},
-		{`ChainName`, d.ChainName, "test chain"},
+		{`SetName`, output.Jobs[0].Name, "setStorageBase"},
+		{`SetVal`, output.Jobs[0].Set.Value, 5},
+		{`AccountName`, output.Jobs[1].Name, "setAccount"},
+		{`AccountVal`, output.Jobs[1].Account.Address, "1234567890"},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
@@ -341,34 +344,65 @@ chain_id   = "test id"
 	}
 }
 
-func TestLoadPackageDirectoryAndSpacesInAName(t *testing.T) {
+func TestLoadContractJobsSimple(t *testing.T) {
 	const (
-		name = "test test"
-
-		definition = `
-name       = "` + name + `"
-
-[monax]
-name       = "` + name + `"
-package_id = "` + name + `"
-chain_name = "test chain"
-chain_id   = "test id"
+		filename = "./epm.yaml"
+		jobs     = `
+jobs:
+- name: deploySomething
+  deploy:
+    source: 1234567890
+    contract: storage.sol
+    instance: C
+    libraries: ["someLib:0x1234567890","anotherLib:0x1234567890"]
+    data: [1, 2, 3]
+    amount: 1
+    fee: 1
+    gas: 1
+    nonce: 2
+- name: callSomething
+  call:
+    source: 1234567890
+    destination: $deploySomething
+    function: someFunc
+    data: [1, 2, 3]
+    amount: 1
+    fee: 1
+    gas: 1
+    nonce: 2
 `
 	)
-
-	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
-		t.Fatalf("cannot place a definition file")
-	}
-
-	d, err := LoadPackage(name)
+	err := ioutil.WriteFile(filename, []byte(jobs), 0644)
+	defer os.Remove(filename)
 	if err != nil {
-		t.Fatalf("expected to load definition file, got %v", err)
+		t.Fatalf("cannot write config file %v", err)
 	}
-
+	do := definitions.NowDo()
+	do.YAMLPath = filename
+	output, err := LoadJobs(do)
+	if err != nil {
+		t.Fatalf("could not load jobs: %v", err)
+	}
 	for _, entry := range []ab{
-		{`Name`, d.Name, "test_test"},
-		{`PackageID`, d.PackageID, name},
-		{`ChainName`, d.ChainName, "test chain"},
+		{`DeployName`, output.Jobs[0].Name, "deploySomething"},
+		{`DeploySource`, output.Jobs[0].Deploy.Source, "1234567890"},
+		{`DeployContract`, output.Jobs[0].Deploy.Contract, "storage.sol"},
+		{`DeployInstance`, output.Jobs[0].Deploy.Instance, "C"},
+		{`DeployLibs`, output.Jobs[0].Deploy.Libraries, []string{"someLib:0x1234567890", "anotherLib:0x1234567890"}},
+		{`DeployData`, output.Jobs[0].Deploy.Data, []interface{}{1, 2, 3}},
+		{`DeployAmount`, output.Jobs[0].Deploy.Amount, "1"},
+		{`DeployFee`, output.Jobs[0].Deploy.Fee, "1"},
+		{`DeployGas`, output.Jobs[0].Deploy.Gas, "1"},
+		{`DeployNonce`, output.Jobs[0].Deploy.Nonce, "2"},
+		{`CallName`, output.Jobs[1].Name, "callSomething"},
+		{`CallSource`, output.Jobs[1].Call.Source, "1234567890"},
+		{`CallDestination`, output.Jobs[1].Call.Destination, "$deploySomething"},
+		{`CallFunction`, output.Jobs[1].Call.Function, "someFunc"},
+		{`CallData`, output.Jobs[1].Call.Data, []interface{}{1, 2, 3}},
+		{`CallAmount`, output.Jobs[1].Call.Amount, "1"},
+		{`CallFee`, output.Jobs[1].Call.Fee, "1"},
+		{`CallGas`, output.Jobs[1].Call.Gas, "1"},
+		{`CallNonce`, output.Jobs[1].Call.Nonce, "2"},
 	} {
 		if !reflect.DeepEqual(entry.a, entry.b) {
 			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
@@ -376,83 +410,166 @@ chain_id   = "test id"
 	}
 }
 
-func TestLoadPackageNotFound1(t *testing.T) {
+func TestLoadTestJobsSimple(t *testing.T) {
 	const (
-		name = "test"
-	)
-
-	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
-
-	if _, err := LoadPackage(name); err == nil {
-		t.Fatalf("expected definition fail to load")
-	}
-}
-
-func TestLoadPackageNotFound2(t *testing.T) {
-	const (
-		name = "test"
-	)
-
-	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
-
-	d, err := LoadPackage("")
-	if err != nil {
-		t.Fatalf("expected definition to load default, got %v", err)
-	}
-
-	for _, entry := range []ab{
-		{`Name`, d.Name, "monax"},
-		{`PackageID`, d.PackageID, ""},
-		{`ChainName`, d.ChainName, ""},
-	} {
-		if !reflect.DeepEqual(entry.a, entry.b) {
-			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
-		}
-	}
-}
-
-func TestLoadPackageNotFound3(t *testing.T) {
-	const (
-		name = "test"
-	)
-
-	os.Remove(filepath.Join(config.MonaxRoot, "package.toml"))
-
-	d, err := LoadPackage(name)
-	if err != nil {
-		t.Fatalf("expected definition to load default, got %v", err)
-	}
-
-	for _, entry := range []ab{
-		{`Name`, d.Name, "monax"},
-		{`PackageID`, d.PackageID, ""},
-		{`ChainName`, d.ChainName, name},
-	} {
-		if !reflect.DeepEqual(entry.a, entry.b) {
-			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
-		}
-	}
-}
-
-func TestLoadPackageBadFormat(t *testing.T) {
-	const (
-		name = "test"
-
-		definition = `
-[monax]
-name       = [ "keys"]
+		filename = "./epm.yaml"
+		jobs     = `
+jobs:
+- name: querySomething
+  query-contract:
+    source: 1234567890
+    destination: $deploySomething
+    function: someFunc
+    data: [1, 2, 3]
+- name: queryAnAccount
+  query-account:
+    account: 1234567890
+    field: permissions.base
+- name: queryAName
+  query-name:
+    name: fred
+    field: data
+- name: queryValidators
+  query-vals:
+    field: bonded_validators
+- name: assertSomething
+  assert:
+    key: someVal
+    relation: eq 
+    val: anotherVal
 `
 	)
-
-	if err := testutil.FakeDefinitionFile(config.MonaxRoot, "package", definition); err != nil {
-		t.Fatalf("cannot place a definition file")
+	err := ioutil.WriteFile(filename, []byte(jobs), 0644)
+	defer os.Remove(filename)
+	if err != nil {
+		t.Fatalf("cannot write config file %v", err)
 	}
-
-	if _, err := LoadPackage(name); err == nil {
-		t.Fatalf("expected definition fail to load")
+	do := definitions.NowDo()
+	do.YAMLPath = filename
+	output, err := LoadJobs(do)
+	if err != nil {
+		t.Fatalf("could not load jobs: %v", err)
+	}
+	for _, entry := range []ab{
+		{`QueryContractName`, output.Jobs[0].Name, "querySomething"},
+		{`QueryContractSource`, output.Jobs[0].QueryContract.Source, "1234567890"},
+		{`QueryContractDestination`, output.Jobs[0].QueryContract.Destination, "$deploySomething"},
+		{`QueryContractFunction`, output.Jobs[0].QueryContract.Function, "someFunc"},
+		{`QueryContractData`, output.Jobs[0].QueryContract.Data, []interface{}{1, 2, 3}},
+		{`QueryAccountName`, output.Jobs[1].Name, "queryAnAccount"},
+		{`QueryAccountAccount`, output.Jobs[1].QueryAccount.Account, "1234567890"},
+		{`QueryAccountField`, output.Jobs[1].QueryAccount.Field, "permissions.base"},
+		{`QueryNameJobName`, output.Jobs[2].Name, "queryAName"},
+		{`QueryNameName`, output.Jobs[2].QueryName.Name, "fred"},
+		{`QueryNameField`, output.Jobs[2].QueryName.Field, "data"},
+		{`QueryValsName`, output.Jobs[3].Name, "queryValidators"},
+		{`QueryValsField`, output.Jobs[3].QueryVals.Field, "bonded_validators"},
+		{`AssertName`, output.Jobs[4].Name, "assertSomething"},
+		{`AssertSource`, output.Jobs[4].Assert.Key, "someVal"},
+		{`AssertDestination`, output.Jobs[4].Assert.Relation, "eq"},
+		{`AssertFunction`, output.Jobs[4].Assert.Value, "anotherVal"},
+	} {
+		if !reflect.DeepEqual(entry.a, entry.b) {
+			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
+		}
 	}
 }
-*/
+
+func TestLoadTransactJobsSimple(t *testing.T) {
+	const (
+		filename = "./epm.yaml"
+		jobs     = `
+jobs:
+- name: sendSomething
+  send:
+    source: 1234567890
+    destination: $deploySomething
+    amount: 1
+    nonce: 3
+- name: regName
+  register:
+    source: 1234567890
+    name: fred
+    data: someData
+    data_file: something.csv
+    amount: 1
+    fee: 2
+    nonce: 3
+- name: updatePerms
+  permission:
+    source: 1234567890
+    action: set_base
+    permission: call
+    value: "true"
+    target: 1234567890
+    role: 1234
+    nonce: 3
+- name: bondVal
+  bond:
+    pub_key: 1234567890
+    account: 1234567890
+    amount: 1
+    nonce: 3
+- name: unbondVal
+  unbond:
+    account: 1234567890
+    height: $block
+- name: rebondVal
+  rebond:
+    account: 1234567890
+    height: $block
+`
+	)
+	err := ioutil.WriteFile(filename, []byte(jobs), 0644)
+	defer os.Remove(filename)
+	if err != nil {
+		t.Fatalf("cannot write config file %v", err)
+	}
+	do := definitions.NowDo()
+	do.YAMLPath = filename
+	output, err := LoadJobs(do)
+	if err != nil {
+		t.Fatalf("could not load jobs: %v", err)
+	}
+	for _, entry := range []ab{
+		{`SendName`, output.Jobs[0].Name, "sendSomething"},
+		{`SendSource`, output.Jobs[0].Send.Source, "1234567890"},
+		{`SendDestination`, output.Jobs[0].Send.Destination, "$deploySomething"},
+		{`SendAmount`, output.Jobs[0].Send.Amount, "1"},
+		{`SendNonce`, output.Jobs[0].Send.Nonce, "3"},
+		{`RegisterNameJobName`, output.Jobs[1].Name, "regName"},
+		{`RegisterNameName`, output.Jobs[1].RegisterName.Name, "fred"},
+		{`RegisterNameSource`, output.Jobs[1].RegisterName.Source, "1234567890"},
+		{`RegisterNameData`, output.Jobs[1].RegisterName.Data, "someData"},
+		{`RegisterNameDataFile`, output.Jobs[1].RegisterName.DataFile, "something.csv"},
+		{`RegisterNameAmount`, output.Jobs[1].RegisterName.Amount, "1"},
+		{`RegisterNameFee`, output.Jobs[1].RegisterName.Fee, "2"},
+		{`RegisterNameNonce`, output.Jobs[1].RegisterName.Nonce, "3"},
+		{`PermissionName`, output.Jobs[2].Name, "updatePerms"},
+		{`PermissionAction`, output.Jobs[2].Permission.Action, "set_base"},
+		{`PermissionSource`, output.Jobs[2].Permission.Source, "1234567890"},
+		{`PermissionPermissionFlag`, output.Jobs[2].Permission.PermissionFlag, "call"},
+		{`PermissionValue`, output.Jobs[2].Permission.Value, "true"},
+		{`PermissionTarget`, output.Jobs[2].Permission.Target, "1234567890"},
+		{`PermissionRole`, output.Jobs[2].Permission.Role, "1234"},
+		{`PermissionNonce`, output.Jobs[2].Permission.Nonce, "3"},
+		{`BondName`, output.Jobs[3].Name, "bondVal"},
+		{`BondPubKey`, output.Jobs[3].Bond.PublicKey, "1234567890"},
+		{`BondAccount`, output.Jobs[3].Bond.Account, "1234567890"},
+		{`BondNonce`, output.Jobs[3].Bond.Nonce, "3"},
+		{`BondAmount`, output.Jobs[3].Bond.Amount, "1"},
+		{`UnbondName`, output.Jobs[4].Name, "unbondVal"},
+		{`UnbondHeight`, output.Jobs[4].Unbond.Height, "$block"},
+		{`UnbondAccount`, output.Jobs[4].Unbond.Account, "1234567890"},
+		{`RebondName`, output.Jobs[5].Name, "rebondVal"},
+		{`RebondHeight`, output.Jobs[5].Rebond.Height, "$block"},
+		{`RebondAccount`, output.Jobs[5].Rebond.Account, "1234567890"},
+	} {
+		if !reflect.DeepEqual(entry.a, entry.b) {
+			t.Fatalf("definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
+		}
+	}
+}
 
 func TestLoadServiceDefinitionSimple(t *testing.T) {
 	const (
