@@ -111,8 +111,6 @@ func AddCommands() {
 	MonaxCmd.AddCommand(Packages)
 	buildKeysCommand()
 	MonaxCmd.AddCommand(Keys)
-	buildDataCommand()
-	MonaxCmd.AddCommand(Data)
 	buildListCommand()
 	MonaxCmd.AddCommand(List)
 	buildCleanCommand()
