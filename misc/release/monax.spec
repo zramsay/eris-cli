@@ -35,8 +35,8 @@ popd
 %install
 rm -rf ${RPM_BUILD_ROOT}
 mkdir -p ${RPM_BUILD_ROOT}/%{_bindir} ${RPM_BUILD_ROOT}/%{_mandir}/man1
-install %{_builddir}/eris ${RPM_BUILD_ROOT}/%{_bindir}
-%{_builddir}/eris man --dump > ${RPM_BUILD_ROOT}/%{_mandir}/man1/eris.1
+install %{_builddir}/monax ${RPM_BUILD_ROOT}/%{_bindir}
+%{_builddir}/monax man --dump > ${RPM_BUILD_ROOT}/%{_mandir}/man1/monax.1
 cp %{gorepo}/README.md %{_builddir}/README
 cp %{gorepo}/LICENSE.md %{_builddir}/COPYING
 

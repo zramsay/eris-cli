@@ -37,11 +37,11 @@ popd
 echo
 echo ">>> Building the Debian package (#${MONAX_BRANCH})"
 echo
-mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/usr/share/man/man1 deb/DEBIAN
-cp ${GOREPO}/cmd/monax/eris deb/usr/bin
-${GOREPO}/cmd/monax/eris man --dump > deb/usr/share/man/man1/eris.1
+mkdir -p deb/usr/bin deb/usr/share/doc/monax deb/usr/share/man/man1 deb/DEBIAN
+cp ${GOREPO}/cmd/monax/monax deb/usr/bin
+${GOREPO}/cmd/monax/monax man --dump > deb/usr/share/man/man1/monax.1
 cat > deb/DEBIAN/control <<EOF
-Package: eris
+Package: monax
 Version: ${MONAX_VERSION}-${MONAX_RELEASE}
 Section: devel
 Architecture: amd64
@@ -52,14 +52,14 @@ Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
 Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications.
 EOF
-cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
-cat > deb/usr/share/doc/eris/copyright <<EOF
+cp ${GOREPO}/README.md deb/usr/share/doc/monax/README
+cat > deb/usr/share/doc/monax/copyright <<EOF
 Files: *
 Copyright: $(date +%Y) Monax Industries  <support@monax.io>
 License: GPL-3
 EOF
 dpkg-deb --build deb
-PACKAGE=eris_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
+PACKAGE=monax_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
 
 echo
@@ -83,19 +83,19 @@ fi
 echo
 echo ">>> Creating an APT repository"
 echo
-mkdir -p eris/conf
-gpg --armor --export "${KEY_NAME}" > eris/APT-GPG-KEY
+mkdir -p monax/conf
+gpg --armor --export "${KEY_NAME}" > monax/APT-GPG-KEY
 
-cat > eris/conf/options <<EOF
+cat > monax/conf/options <<EOF
 verbose
-basedir /root/eris
+basedir /root/monax
 ask-passphrase
 EOF
 
 DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial"
 for distro in ${DISTROS}
 do
-  cat >> eris/conf/distributions <<EOF
+  cat >> monax/conf/distributions <<EOF
 Origin: Monax Industries <support@monax.io>
 Codename: ${distro}
 Components: main
@@ -112,7 +112,7 @@ do
   echo
   expect <<-EOF
     set timeout 5
-    spawn reprepro -Vb eris includedeb ${distro} ${PACKAGE}
+    spawn reprepro -Vb monax includedeb ${distro} ${PACKAGE}
     expect {
             timeout                    { send_error "Failed to submit password"; exit 1 }
             "Please enter passphrase:" { send -- "${KEY_PASSWORD}\r";
@@ -128,15 +128,15 @@ done
 echo
 echo ">>> After adding we have the following"
 echo
-reprepro -b eris ls eris
+reprepro -b monax ls monax
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-s3cmd sync eris/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/db s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/dists s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/pool s3://${AWS_S3_DEB_REPO}
+s3cmd sync monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
+s3cmd sync monax/db s3://${AWS_S3_DEB_REPO}
+s3cmd sync monax/dists s3://${AWS_S3_DEB_REPO}
+s3cmd sync monax/pool s3://${AWS_S3_DEB_REPO}
 
 echo
 echo ">>> Installation instructions"
@@ -145,5 +145,5 @@ echo "  \$ sudo add-apt-repository http://${AWS_S3_DEB_REPO}"
 echo "  \$ curl -L http://${AWS_S3_DEB_REPO}/APT-GPG-KEY | sudo apt-key add -"
 echo
 echo "  \$ sudo apt-get update"
-echo "  \$ sudo apt-get install eris"
+echo "  \$ sudo apt-get install monax"
 echo

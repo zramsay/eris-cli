@@ -41,7 +41,7 @@ EOF
 
 expect <<EOF
 set timeout 300
-spawn rpmbuild -ba --sign rpmbuild/SPECS/eris.spec
+spawn rpmbuild -ba --sign rpmbuild/SPECS/monax.spec
 expect {
     timeout              { send_error "Failed to submit password"; exit 1 }
     "Enter pass phrase:" { send -- "${KEY_PASSWORD}\r";
@@ -90,10 +90,10 @@ rpm --import yum/RPM-GPG-KEY
 rpm --checksig yum/x86_64/*rpm yum/source/*rpm
 
 echo
-echo ">>> Generating eris.repo template"
+echo ">>> Generating monax.repo template"
 echo
-cat > yum/eris.repo <<EOF
-[eris]
+cat > yum/monax.repo <<EOF
+[monax]
 name=Monax
 baseurl=https://${AWS_S3_RPM_REPO}/yum/x86_64/
 metadata_expire=1d
@@ -101,7 +101,7 @@ enabled=1
 gpgkey=https://${AWS_S3_RPM_REPO}/yum/RPM-GPG-KEY
 gpgcheck=1
 
-[eris-source]
+[monax-source]
 name=Monax Source
 baseurl=https://${AWS_S3_RPM_REPO}/yum/source/
 metadata_expire=1d
@@ -118,8 +118,8 @@ s3cmd sync yum s3://${AWS_S3_RPM_REPO}
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo curl -L https://${AWS_S3_RPM_REPO}/yum/eris.repo >/etc/yum.repos.d/eris.repo"
+echo "  \$ sudo curl -L https://${AWS_S3_RPM_REPO}/yum/monax.repo >/etc/yum.repos.d/monax.repo"
 echo
 echo "  \$ sudo yum update"
-echo "  \$ sudo yum install eris"
+echo "  \$ sudo yum install monax"
 echo

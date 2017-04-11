@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference = 'Stop';
 
-$packageName = 'eris'
-$softwareName = 'eris*'
+$packageName = 'monax'
+$softwareName = 'monax*'
 $installerType = 'EXE'
 
 $silentArgs = '/qn /norestart'

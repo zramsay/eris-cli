@@ -1,8 +1,8 @@
 ﻿$ErrorActionPreference = 'Stop';
 
-$packageName= 'eris'
+$packageName= 'monax'
 $toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
-$url64      = 'https://github.com/monax/cli/releases/download/v0.12.0/eris_0.12.0_windows_amd64.exe'
+$url64      = 'https://github.com/monax/cli/releases/download/v0.12.0/monax_0.12.0_windows_amd64.exe'
 
 $packageArgs = @{
   packageName   = $packageName
@@ -11,7 +11,7 @@ $packageArgs = @{
 
   validExitCodes= @(0, 3010, 1641)
 
-  softwareName  = 'eris*'
+  softwareName  = 'monax*'
   checksum64    = '95f144d7c736697bec406177190880ba'
   checksumType64= 'md5'
 }
