@@ -15,7 +15,7 @@ const tomlHeader = `# This is a TOML config file.
 // ------------------ services ------------------
 
 var ServiceDefinitions = []string{
-	"compilers",
+	"solc",
 	"keys",
 	// used by [monax chains start myChain --logrotate]
 	// but its docker image is not pulled on [monax init]
@@ -144,16 +144,14 @@ This service is usually linked to a chain and/or an application. Its functionali
 		serviceDefinition.Service.Ports = []string{`"4767:4767"`} // XXX these exposed ports are a gaping security flaw
 		serviceDefinition.Service.ExecHost = "MONAX_KEYS_HOST"
 
-	case "compilers":
+	case "solc":
 
 		serviceDefinition.Name = "compilers"
-		serviceDefinition.Description = `Monax's Solidity Compiler Server.
-
-This monax service compiles smart contract languages.`
+		serviceDefinition.Description = `Ethereum Solidity Compiler`
 		serviceDefinition.Status = "beta"
-		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
-		serviceDefinition.Service.AutoData = true
-		serviceDefinition.Service.Ports = []string{`"9090:9090"`}
+		serviceDefinition.Service.Image = path.Join(version.BackupRegistry, version.ImageSolc)
+		// [rj] - todo: We need to make volume usage more easily configurable in a redo of the services
+		// serviceDefinition.Service.Volumes = []string{`""`}
 
 	case "logrotate":
 

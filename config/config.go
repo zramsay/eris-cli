@@ -6,9 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/monax/cli/version"
+	//"github.com/monax/cli/version"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/viper"
@@ -30,8 +29,6 @@ type Config struct {
 // Settings describes settings loadable from "monax.toml"
 // definition file.
 type Settings struct {
-	CompilersHost     string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
-	CompilersPort     string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
 	DockerHost        string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
 	DockerCertPath    string `json:"DockerCertPath,omitempty" yaml:"DockerCertPath,omitempty" toml:"DockerCertPath,omitempty"`
 	CrashReport       string `json:"CrashReport,omitempty" yaml:"CrashReport,omitempty" toml:"CrashReport,omitempty"`
@@ -112,10 +109,6 @@ func SetDefaults() (*viper.Viper, error) {
 
 	config.SetDefault("CrashReport", "bugsnag")
 	config.SetDefault("ImagesPullTimeout", "15m")
-
-	// Compiler defaults.
-	config.SetDefault("CompilersHost", "https://compilers.monax.io")
-	config.SetDefault("CompilersPort", "1"+strings.Replace(strings.Split(version.VERSION, "-")[0], ".", "", -1))
 
 	return config, nil
 }
