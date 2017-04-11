@@ -9,7 +9,7 @@ title: "Specifications | Services Specification"
 ## Services Specification
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 Services are defined in **service definition files**. These reside on the host in `~/.monax/services`.

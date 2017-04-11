@@ -8,7 +8,7 @@ title: "Tutorials | Solidity 3: Solidity Language Features"
 ## Solidity Series
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).

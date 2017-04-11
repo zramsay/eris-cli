@@ -9,7 +9,7 @@ title: "Specifications | Jobs Specification"
 ## Jobs Specification
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 The goal of jobs is to enable automation of contractual steps and defining "use" for a package of smart contracts. While one might deploy utility contracts that can be shared broadly and used by many a developer, jobs allows one to execute a package of contracts as it was intended and purposed to do and allows this execution to be replicated on thousands of chains, thus enabling what we call "dual integration" so that smart contracts can then be potentially represented as real life contracts. Rather than creating an entire web app, one can also simply test all of their smart contracts through a yaml config file in the form of the `epm.yaml` file. This enables quick deployment and testing of smart contract functionality. 

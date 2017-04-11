@@ -9,7 +9,7 @@ title: "Deprecated | Getting Started With Cloud Instances"
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 This tutorial will cover the first step when seeking to install Eris on cloud providers. Covered in this tutorial are the following cloud providers:

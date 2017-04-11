@@ -9,7 +9,7 @@ title: "Specifications | Assert Jobs Specification"
 ## Assert Jobs Specification
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 Asserts can be used to compare two "things". These "things" may be the result of two jobs or the result against one job against a baseline. (Indeed, it could be the comparison of two baselines but that wouldn't really get folks anywhere).

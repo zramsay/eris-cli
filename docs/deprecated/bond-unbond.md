@@ -9,7 +9,7 @@ title: "Deprecated | Bonding/Unbonding"
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 The concept of bonding/unbonding validators here refers to validators which are voluntarily adding (bonding) or removing (unbonding) themselves. New validators (not included in the genesis file) first require tokens on the chain to post a bond with. Future tutorials will cover slashing/removing unwelcome/byzantine validators.

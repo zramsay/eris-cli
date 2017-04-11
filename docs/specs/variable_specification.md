@@ -9,7 +9,7 @@ title: "Specifications | Variables Specification"
 ## Variables Specification
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 Variables can be used for nearly every monax [jobs](/docs/specs/jobs_specification) field (largely with the exception of nonce and wait).
