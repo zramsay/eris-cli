@@ -82,17 +82,17 @@ default_bond = {{ .DefaultBond}}
 root = {{index .Perms "root"}}
 send = {{index .Perms "send"}}
 call = {{index .Perms "call"}}
-create_contract = {{index .Perms "create_contract"}}
-create_account = {{index .Perms "create_account"}}
+createContract = {{index .Perms "createContract"}}
+createAccount = {{index .Perms "createAccount"}}
 bond = {{index .Perms "bond"}}
 name = {{index .Perms "name"}}
-has_base = {{index .Perms "has_base"}}
-set_base = {{index .Perms "set_base"}}
-unset_base = {{index .Perms "unset_base"}}
-set_global = {{index .Perms "set_global"}}
-has_role = {{index .Perms "has_role"}}
-add_role = {{index .Perms "add_role"}}
-rm_role = {{index .Perms "rm_role"}}`
+hasBase = {{index .Perms "hasBase"}}
+setBase = {{index .Perms "setBase"}}
+unsetBase = {{index .Perms "unsetBase"}}
+setGlobal = {{index .Perms "setGlobal"}}
+hasRole = {{index .Perms "hasRole"}}
+addRole = {{index .Perms "addRole"}}
+rmRole = {{index .Perms "rmRole"}}`
 
 // ------------------ chain types ------------------
 
@@ -195,20 +195,20 @@ Usually this group will have the most number of keys of all of the groups.`
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 1
 		accountTypeDefinition.Perms = map[string]bool{
-			"root":            false,
-			"send":            true,
-			"call":            true,
-			"create_contract": false,
-			"create_account":  false,
-			"bond":            false,
-			"name":            true,
-			"has_base":        false,
-			"set_base":        false,
-			"unset_base":      false,
-			"set_global":      false,
-			"has_role":        true,
-			"add_role":        false,
-			"rm_role":         false,
+			"root":           false,
+			"send":           true,
+			"call":           true,
+			"createContract": false,
+			"createAccount":  false,
+			"bond":           false,
+			"name":           true,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        true,
+			"addRole":        false,
+			"rmRole":         false,
 		}
 
 	case "developer":
@@ -225,20 +225,20 @@ within this group, although that design is up to you.`
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
 		accountTypeDefinition.Perms = map[string]bool{
-			"root":            false,
-			"send":            true,
-			"call":            true,
-			"create_contract": true,
-			"create_account":  true,
-			"bond":            false,
-			"name":            true,
-			"has_base":        false,
-			"set_base":        false,
-			"unset_base":      false,
-			"set_global":      false,
-			"has_role":        true,
-			"add_role":        true,
-			"rm_role":         true,
+			"root":           false,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           false,
+			"name":           true,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	case "validator":
@@ -257,20 +257,20 @@ in the system.`
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 9999999998
 		accountTypeDefinition.Perms = map[string]bool{
-			"root":            false,
-			"send":            false,
-			"call":            false,
-			"create_contract": false,
-			"create_account":  false,
-			"bond":            true,
-			"name":            false,
-			"has_base":        false,
-			"set_base":        false,
-			"unset_base":      false,
-			"set_global":      false,
-			"has_role":        false,
-			"add_role":        false,
-			"rm_role":         false,
+			"root":           false,
+			"send":           false,
+			"call":           false,
+			"createContract": false,
+			"createAccount":  false,
+			"bond":           true,
+			"name":           false,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        false,
+			"addRole":        false,
+			"rmRole":         false,
 		}
 
 	case "full":
@@ -288,20 +288,20 @@ If you are making a more complex chain, don't use this account type.`
 		accountTypeDefinition.DefaultTokens = 99999999999999
 		accountTypeDefinition.DefaultBond = 9999999999
 		accountTypeDefinition.Perms = map[string]bool{
-			"root":            true,
-			"send":            true,
-			"call":            true,
-			"create_contract": true,
-			"create_account":  true,
-			"bond":            true,
-			"name":            true,
-			"has_base":        true,
-			"set_base":        true,
-			"unset_base":      true,
-			"set_global":      true,
-			"has_role":        true,
-			"add_role":        true,
-			"rm_role":         true,
+			"root":           true,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           true,
+			"name":           true,
+			"hasBase":        true,
+			"setBase":        true,
+			"unsetBase":      true,
+			"setGlobal":      true,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	case "root":
@@ -320,20 +320,20 @@ similar to a network administrator in other data management situations.`
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
 		accountTypeDefinition.Perms = map[string]bool{
-			"root":            true,
-			"send":            true,
-			"call":            true,
-			"create_contract": true,
-			"create_account":  true,
-			"bond":            true,
-			"name":            true,
-			"has_base":        true,
-			"set_base":        true,
-			"unset_base":      true,
-			"set_global":      true,
-			"has_role":        true,
-			"add_role":        true,
-			"rm_role":         true,
+			"root":           true,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           true,
+			"name":           true,
+			"hasBase":        true,
+			"setBase":        true,
+			"unsetBase":      true,
+			"setGlobal":      true,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	default:

@@ -15,27 +15,38 @@ dependencies:
 test:
   override:
     - ./tests/build_tool.sh
-    - "docker run -w /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tests/ quay.io/eris/compilers:build go test ./ -test.v 2>/dev/null"
+    - "docker run -w /go/src/github.com/monax/compilers/tests/ quay.io/monax/compilers:build go test ./... -v"
 
 deployment:
   master:
     branch: master
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
-      - ./tests/build_tool.sh
-      - "docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
-      - docker push quay.io/eris/compilers
+      # build docker image and tag the image with ':latest'
+      # builds on master are considered immutable so we do not push the version
+      # tag to allow for hotfixes
+      - ./tests/build_tool.sh latest
+      - docker push quay.io/monax/compilers
   release-0.16:
     branch: release-0.16
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      # build docker image and tag the image with the version
       - ./tests/build_tool.sh
-      - "docker rmi quay.io/eris/compilers:latest && docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
-      - docker push quay.io/eris/compilers
+      - docker push quay.io/monax/compilers
   develop:
     branch: develop
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      # build docker image and tag the image with the version
       - ./tests/build_tool.sh
-      - "docker rmi quay.io/eris/compilers:latest && docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
-      - docker push quay.io/eris/compilers
+      - docker push quay.io/monax/compilers
+  tagged-releases:
+    tag: /v[0-9]+(\.[0-9]+)*/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      # build docker image and tag the image with the version;
+      # once the commit is tagged the docker image for this version tag is
+      # considered immutable.
+      - tests/build_tool.sh
+      - docker push quay.io/monax/compilers

@@ -1,7 +1,8 @@
 package: github.com/monax/compilers
 import:
 - package: github.com/monax/cli
-  version: 53bb3fd3d414f36d080d5b98741802117ff5cdf5
+  # resolve circular dependency by locking the version on release v0.16
+  version: 8d230e98b1eacdd6f75ce322016bb530985d9f4f
   subpackages:
   - config
   - log

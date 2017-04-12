@@ -1,4 +1,4 @@
-FROM quay.io/eris/build
+FROM quay.io/monax/build:0.16
 MAINTAINER Monax <support@monax.io>
 
 # build customizations start here
@@ -35,8 +35,8 @@ RUN git checkout v$SOLC_VERSION \
   && install -s test/soltest /usr/local/bin
 # build customizations end here
 
-# Install eris-compilers, a go app that serves compilation results
-ENV TARGET eris-compilers
+# Install monax-compilers, a go app that serves compilation results
+ENV TARGET compilers
 ENV REPO $GOPATH/src/github.com/monax/compilers
 
 ADD ./glide.yaml $REPO/

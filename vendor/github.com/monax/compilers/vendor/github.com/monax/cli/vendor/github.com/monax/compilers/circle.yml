@@ -1,0 +1,41 @@
+machine:
+  post:
+    - git config --global user.email "billings@monax.io"
+    - git config --global user.name "Billings the Bot"
+    - rm -rf ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - mkdir -p ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}
+    - cp -r ${HOME}/${CIRCLE_PROJECT_REPONAME} ${GOPATH%%:*}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
+
+dependencies:
+  override:
+    - sudo curl -L -o /usr/bin/docker http://s3-external-1.amazonaws.com/circle-downloads/docker-$DOCKER_VERSION-circleci; chmod 0755 /usr/bin/docker; true
+    - sudo service docker start
+    - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+
+test:
+  override:
+    - ./tests/build_tool.sh
+    - "docker run -w /go/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tests/ quay.io/eris/compilers:build go test ./ -test.v 2>/dev/null"
+
+deployment:
+  master:
+    branch: master
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - ./tests/build_tool.sh
+      - "docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
+      - docker push quay.io/eris/compilers
+  release-0.16:
+    branch: release-0.16
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - ./tests/build_tool.sh
+      - "docker rmi quay.io/eris/compilers:latest && docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
+      - docker push quay.io/eris/compilers
+  develop:
+    branch: develop
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+      - ./tests/build_tool.sh
+      - "docker rmi quay.io/eris/compilers:latest && docker tag quay.io/eris/compilers:build throw:build && docker rmi quay.io/eris/compilers:build"
+      - docker push quay.io/eris/compilers
