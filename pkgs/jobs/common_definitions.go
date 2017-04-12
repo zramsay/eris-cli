@@ -13,7 +13,7 @@ type JobsRunner interface {
 }
 
 type Type struct {
-	StringResult string
+	StringResult string `mapstructure:"result" json:"result"`
 	ActualResult interface{}
 }
 

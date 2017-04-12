@@ -3,6 +3,7 @@ package jobs
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"reflect"
 
 	"github.com/monax/cli/compilers"
@@ -99,7 +100,7 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 
 type Deploy struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" yaml:"source"`
 	// (Required) the filepath to the contract file. this should be relative to the current path **or**
 	// relative to the contracts path established via the --contracts-path flag or the $EPM_CONTRACTS_PATH
@@ -130,10 +131,12 @@ type Deploy struct {
 	// (Optional) after compiling the contract save the binary in filename.bin in same directory
 	// where the *.sol or *.se file is located. This will speed up subsequent installs
 	SaveBinary bool `mapstructure:"save" yaml:"save"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
-	Nonce    string `mapstructure:"nonce" yaml:"nonce"`
-	Compiler *Compile
+	Nonce          string `mapstructure:"nonce" yaml:"nonce"`
+	DeployBinary   bool
+	DeployBinSuite bool
+	Compiler       *Compile
 }
 
 func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
@@ -177,35 +180,44 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 
-	if deploy.CompilerStub != nil {
-		compiler, err := preProcessPluginJob(deploy.CompilerStub, jobs)
-		if err != nil {
-			return err
-		}
-		switch compiler := compiler.(type) {
-		case *Compile:
-			compiler.Files = append(compiler.Files, deploy.Contract)
-			switch compilerType := compiler.Compiler.(type) {
-			case compilers.SolcTemplate:
-				compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
-				compiler.Compiler = compilerType
-			default:
-				return fmt.Errorf("Could not find compiler to use")
-			}
-			deploy.Compiler = compiler
-		default:
-			return fmt.Errorf("Invalid preprocessing of compiler")
-		}
-
+	// skip compile jobs if the contract we're attempting to deploy resides in the form of a binary,
+	// if the special bin folder is specified then we
+	// otherwise go and figure out the compilation either via a compile job or spin one up if one isn't specified
+	if deploy.Contract == jobs.BinPath {
+		deploy.DeployBinSuite = true
+	} else if filepath.Ext(deploy.Contract) != ".bin" {
+		deploy.DeployBinary = true
 	} else {
-		compiler := &Compile{}
-		compiler.Compiler = compilers.SolcTemplate{
-			CombinedOutput: []string{"bin", "abi"},
-			Libraries:      deploy.Libraries,
+		if deploy.CompilerStub != nil {
+			compiler, err := preProcessPluginJob(deploy.CompilerStub, jobs)
+			if err != nil {
+				return err
+			}
+			switch compiler := compiler.(type) {
+			case *Compile:
+				compiler.Files = append(compiler.Files, deploy.Contract)
+				switch compilerType := compiler.Compiler.(type) {
+				case compilers.SolcTemplate:
+					compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
+					compiler.Compiler = compilerType
+				default:
+					return fmt.Errorf("Could not find compiler to use")
+				}
+				deploy.Compiler = compiler
+			default:
+				return fmt.Errorf("Invalid preprocessing of compiler")
+			}
+
+		} else {
+			compiler := &Compile{}
+			compiler.Compiler = compilers.SolcTemplate{
+				CombinedOutput: []string{"bin", "abi"},
+				Libraries:      deploy.Libraries,
+			}
+			compiler.Files = []string{deploy.Contract}
+			compiler.Version = "stable"
+			deploy.Compiler = compiler
 		}
-		compiler.Files = []string{deploy.Contract}
-		compiler.Version = "stable"
-		deploy.Compiler = compiler
 	}
 
 	return nil
@@ -241,13 +253,13 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 
 type Call struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
-	// public key for the account must be available to eris-keys)
+	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" yaml:"source"`
 	// (Required) address of the contract which should be called
 	Destination string `mapstructure:"destination" yaml:"destination"`
 	// (Required unless testing fallback function) function inside the contract to be called
 	Function string `mapstructure:"function" yaml:"function"`
-	// (Optional) data which should be called. will use the eris-abi tooling under the hood to formalize the
+	// (Optional) data which should be called. will use the abi tooling under the hood to formalize the
 	// transaction
 	Data []interface{} `mapstructure:"data" yaml:"data"`
 	// (Optional) amount of tokens to send to the contract
@@ -256,7 +268,7 @@ type Call struct {
 	Fee string `mapstructure:"fee" yaml:"fee"`
 	// (Optional) amount of gas which should be sent along with the call transaction
 	Gas string `mapstructure:"gas" yaml:"gas"`
-	// (Optional, advanced only) nonce to use when eris-keys signs the transaction (do not use unless you
+	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" yaml:"nonce"`
 	// (Optional) location of the abi file to use (can be relative path or in abi path)

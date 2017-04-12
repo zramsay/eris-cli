@@ -22,6 +22,9 @@ type Jobs struct {
 	DefaultFee    string
 	DefaultOutput string
 	DefaultSets   []string
+	BinPath       string
+	AbiPath       string
+	ContractPath  string
 	Overwrite     bool
 	Jobs          []*Job `mapstructure:"jobs" yaml:"jobs"`
 	JobMap        map[string]*JobResults
