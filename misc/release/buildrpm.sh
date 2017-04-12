@@ -53,18 +53,6 @@ wait
 exit 0
 EOF
 
-echo
-echo ">>> Copying RPM packages to Amazon S3"
-echo
-# mkdir -p /root/.aws
-# cat > /root/.aws/credentials <<EOF
-# [default]
-# access_key = ${AWS_ACCESS_KEY}
-# secret_key = ${AWS_SECRET_ACCESS_KEY}
-# EOF
-aws s3 sync rpmbuild/RPMS/x86_64 s3://${AWS_S3_RPM_FILES}
-aws s3 sync rpmbuild/SRPMS s3://${AWS_S3_RPM_FILES}
-
 if [ "$MONAX_BRANCH" != "master" ]
 then
    echo
@@ -95,30 +83,30 @@ echo
 cat > yum/monax.repo <<EOF
 [monax]
 name=Monax
-baseurl=https://yum.monax.io/yum/x86_64/
+baseurl=https://${AWS_S3_RPM_URL}/yum/x86_64/
 metadata_expire=1d
 enabled=1
-gpgkey=https://yum.monax.io/yum/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_RPM_URL}/yum/RPM-GPG-KEY
 gpgcheck=1
 
 [monax-source]
 name=Monax Source
-baseurl=https://yum.monax.io/yum/source/
+baseurl=https://${AWS_S3_RPM_URL}/yum/source/
 metadata_expire=1d
 enabled=1
-gpgkey=https://yum.monax.io/yum/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_RPM_URL}/yum/RPM-GPG-KEY
 gpgcheck=1
 EOF
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 sync yum s3://${AWS_S3_RPM_REPO}
+aws s3 sync yum s3://${AWS_S3_RPM_REPO}/yum
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo curl -L https://yum.monax.io/yum/monax.repo >/etc/yum.repos.d/monax.repo"
+echo "  \$ sudo curl -L https://${AWS_S3_RPM_URL}/yum/monax.repo >/etc/yum.repos.d/monax.repo"
 echo
 echo "  \$ sudo yum update"
 echo "  \$ sudo yum install monax"

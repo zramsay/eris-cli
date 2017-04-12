@@ -62,16 +62,6 @@ dpkg-deb --build deb
 PACKAGE=monax_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
 
-echo
-echo ">>> Copying Debian packages to Amazon S3"
-echo
-cat > ${HOME}/.s3cfg <<EOF
-[default]
-access_key = ${AWS_ACCESS_KEY}
-secret_key = ${AWS_SECRET_ACCESS_KEY}
-EOF
-aws s3 cp ${PACKAGE} s3://${AWS_S3_DEB_FILES}
-
 if [ "$MONAX_BRANCH" != "master" ]
 then
    echo
@@ -133,16 +123,16 @@ reprepro -b monax ls monax
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 sync monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
-aws s3 sync monax/db s3://${AWS_S3_DEB_REPO}
-aws s3 sync monax/dists s3://${AWS_S3_DEB_REPO}
-aws s3 sync monax/pool s3://${AWS_S3_DEB_REPO}
+aws s3 cp monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
+aws s3 sync monax/db s3://${AWS_S3_DEB_REPO}/db
+aws s3 sync monax/dists s3://${AWS_S3_DEB_REPO}/dists
+aws s3 sync monax/pool s3://${AWS_S3_DEB_REPO}/pool
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo add-apt-repository http://${AWS_S3_DEB_REPO}"
-echo "  \$ curl -L http://${AWS_S3_DEB_REPO}/APT-GPG-KEY | sudo apt-key add -"
+echo "  \$ sudo add-apt-repository https://${AWS_S3_DEB_URL}"
+echo "  \$ curl -L https://${AWS_S3_DEB_URL}/APT-GPG-KEY | sudo apt-key add -"
 echo
 echo "  \$ sudo apt-get update"
 echo "  \$ sudo apt-get install monax"

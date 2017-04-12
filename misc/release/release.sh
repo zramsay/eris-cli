@@ -37,47 +37,7 @@
 #    AWS_ACCESS_KEY=*****
 #    AWS_SECRET_ACCESS_KEY=*****
 #
-#  8. Environment variables pointing to four S3 buckets with public access policy:
-#
-#    Use bucket names only, without s3:// prefix or s3.amazonaws.com paths.
-#
-#    AWS_S3_RPM_REPO              -- YUM master repository bucket
-#    AWS_S3_RPM_FILES             -- RPM downloadable packages bucket
-#    AWS_S3_DEB_REP               -- APT master repository bucket
-#    AWS_S3_DEB_FILES             -- Debian downloadable packages bucket
-#
-#      Copy pastable sample for public access policy:
-#
-#         {
-#           "Version": "2012-10-17",
-#           "Statement": [
-#             {
-#               "Sid": "Stmt1405592139000",
-#               "Effect": "Allow",
-#               "Principal": "*",
-#               "Action": [
-#                 "s3:DeleteObject",
-#                 "s3:GetObject",
-#                 "s3:ListBucket",
-#                 "s3:PutObject",
-#                 "s3:PutObjectAcl"
-#               ],
-#               "Resource": [
-#                 "arn:aws:s3:::examplebucket/*",
-#                 "arn:aws:s3:::examplebucket"
-#               ]
-#             },
-#             {
-#               "Sid": "2",
-#               "Effect": "Allow",
-#               "Principal": {
-#                 "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity EOCE76PZY29V8"
-#               },
-#               "Action": "s3:GetObject",
-#               "Resource": "arn:aws:s3:::apt.monax.io/*"
-#             }
-#           ]
-#         }
+#  8. Environment variables pointing to s3 buckets
 #
 REPO=${GOPATH}/src/github.com/monax/cli
 BUILD_DIR=${REPO}/builds
@@ -91,12 +51,11 @@ MONAX_RELEASE=1
 # export AWS_SECRET_ACCESS_KEY=
 
 export AWS_S3_RPM_REPO=io.monax.yum
-export AWS_S3_RPM_FILES=io.monax.yum-rpm
+export AWS_S3_RPM_URL=yum.monax.io
 export AWS_S3_DEB_REPO=io.monax.apt
-export AWS_S3_DEB_FILES=io.monax.apt-rpm
+export AWS_S3_DEB_URL=apt.monax.io
 
-
-export KEY_NAME="Monax Industries (PACKAGES SIGNING KEY) <support@monax.io>"
+export KEY_NAME="Monax (PACKAGES SIGNING KEY) <ops@monax.io>"
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {
@@ -133,11 +92,6 @@ keys_check() {
   if [ ! -r ${REPO}/misc/release/linux-private-key.asc -o ! -r ${REPO}/misc/release/linux-public-key.asc ]
   then
     echo "GPG key file(s) linux-private-key.asc or linux-public-key.asc are missing"
-    exit 1
-  fi
-  if [ -z "${AWS_S3_RPM_FILES}" -o -z "${AWS_S3_DEB_FILES}" ]
-  then
-    echo "Amazon S3 buckets have to be set to proceed"
     exit 1
   fi
 }
@@ -246,12 +200,11 @@ release_deb() {
     -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_DEFAULT_REGION=eu-central-1 \
-    -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
-    -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
     -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
-    -e AWS_S3_DEB_FILES=${AWS_S3_DEB_FILES} \
+    -e AWS_S3_DEB_URL=${AWS_S3_DEB_URL} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     builddeb "$@" \
   && docker cp builddeb:/root/monax_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
   && docker rm -f builddeb
@@ -283,11 +236,10 @@ release_rpm() {
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_DEFAULT_REGION=eu-central-1 \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
-    -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
-    -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
-    -e AWS_S3_DEB_FILES=${AWS_S3_DEB_FILES} \
+    -e AWS_S3_RPM_URL=${AWS_S3_RPM_URL} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     buildrpm "$@" \
   && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/monax-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
   && docker rm -f buildrpm
