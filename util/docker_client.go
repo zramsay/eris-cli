@@ -23,7 +23,11 @@ import (
 // Docker Client initialization
 var DockerClient *docker.Client
 
-func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
+// XXX [zr] machName should be default always and ultimately we should remove
+// and force users to run eval if not using DFM/DFW
+// TODO: return an error...?
+// and refator this function generally
+func DockerConnect(verbose bool, machName string) {
 	var err error
 	var dockerHost string
 	var dockerCertPath string
@@ -51,20 +55,10 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug("Getting connection details from environment")
 		log.WithField("machine", machName).Debug("Getting connection details from Docker Machine")
 
-		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "monax" by default
+		dockerHost, dockerCertPath, err = getMachineDeets(machName) // machName is "default" (or eval was used)
 		if err != nil {
-			log.Debug("Could not connect to Monax Docker Machine")
-			log.Errorf("Trying %q Docker Machine: %v", "default", err)
-			dockerHost, dockerCertPath, err = getMachineDeets("default") // during toolbox setup this is the machine that is created
-			if err != nil {
-				log.Debugf("Could not connect to %q Docker Machine", "default")
-				log.Debugf("Error: %v", err)
-				log.Debug("Trying to set up new machine")
-				if e2 := CheckDockerClient(); e2 != nil {
-					IfExit(DockerError(e2))
-				}
-				dockerHost, dockerCertPath, _ = getMachineDeets("monax")
-			}
+			log.Debug("Could not connect to Docker Machine")
+			IfExit(mustInstallError())
 		}
 
 		log.WithFields(log.Fields{
@@ -73,7 +67,7 @@ func DockerConnect(verbose bool, machName string) { // TODO: return an error...?
 		}).Debug()
 
 		if err := connectDockerTLS(dockerHost, dockerCertPath); err != nil {
-			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS.\nERROR =>\t\t\t%v\n", err))
+			IfExit(fmt.Errorf("Error connecting to Docker Backend via TLS:\nError:%v\n", err))
 		}
 		log.Debug("Successfully connected to Docker daemon")
 	}
