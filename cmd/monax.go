@@ -44,7 +44,7 @@ Complete documentation is available at https://monax.io/docs
 			return
 		}
 
-		util.DockerConnect(do.Verbose, do.MachineName)
+		util.DockerConnect(do.Verbose, "default") // see note at the function
 
 		if os.Getenv("TEST_ON_WINDOWS") == "true" || os.Getenv("TEST_ON_MACOSX") == "true" {
 			return
@@ -120,7 +120,6 @@ var do *definitions.Do
 func AddGlobalFlags() {
 	MonaxCmd.PersistentFlags().BoolVarP(&do.Verbose, "verbose", "v", false, "verbose output")
 	MonaxCmd.PersistentFlags().BoolVarP(&do.Debug, "debug", "d", false, "debug level output")
-	MonaxCmd.PersistentFlags().StringVarP(&do.MachineName, "machine", "m", "monax", "machine name for docker-machine that is running VM")
 }
 
 func InitializeConfig() {

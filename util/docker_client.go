@@ -87,53 +87,16 @@ func CheckDockerClient() error {
 	dockerHost, dockerCertPath := popHostAndPath()
 
 	if dockerCertPath == "" || dockerHost == "" {
-		driver := "virtualbox"
-
-		if runtime.GOOS == "windows" {
-			if err := prepWin(); err != nil {
-				return fmt.Errorf("Could not add ssh.exe to PATH.\nError:%v\n", err)
-			}
-		}
-
+		// TODO [zr] there is probably nicer login we can go with generally
 		if _, _, err := getMachineDeets("default"); err == nil {
-			fmt.Println("A Docker Machine VM exists, which Monax can use")
-			fmt.Println("However, our marmots recommend that you have a VM dedicated to Monax dev-ing")
-			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
-				log.Debug("The marmots will create an Monax machine")
-				if err := setupMonaxMachine(driver); err != nil {
-					return err
-				}
-
-				log.WithField("driver", driver).Info("New Docker Machine created")
-				log.Info("Getting proper environment variables")
-
-				if _, _, err := getMachineDeets("monax"); err != nil {
-					return err
-				}
-			} else {
-				log.Info("No Monax Docker Machine will be created")
-			}
-
+			fmt.Println("A Docker Machine VM named 'default' exists, which Monax can use")
+			fmt.Println("Please run [eval $(docker-machine env default)] to get sorted")
 		} else {
 			fmt.Println("The marmots could not find a Docker Machine VM they could connect to")
-			fmt.Println("Our marmots recommend that you have a VM dedicated to monax dev-ing")
-			if QueryYesOrNo("Would you like the marmots to create a machine for you?") == Yes {
-				log.Warn("The marmots will create an Monax machine")
-				if err := setupMonaxMachine(driver); err != nil {
-					return err
-				}
-
-				log.WithField("driver", driver).Info("New Docker Machine created")
-				log.Info("Getting proper environment variables")
-				if _, _, err := getMachineDeets("monax"); err != nil {
-					return err
-				}
-			}
-
+			fmt.Println("Please set one up (see https://monax.io/docs/getting-started)")
 		}
 	}
 
-	log.Info("Docker client connected")
 	return nil
 }
 
@@ -282,46 +245,6 @@ func CompareVersions(version1, version2 string) bool {
 	return true
 }
 
-func setupMonaxMachine(driver string) error {
-	cmd := "docker-machine"
-	args := []string{"status", "monax"}
-	if err := exec.Command(cmd, args...).Run(); err == nil {
-		// if err == nil this means the machine is created. if err != nil that means machine doesn't exist.
-		log.Debug("Monax Docker Machine exists. Starting")
-		return startMonaxMachine()
-	}
-	log.Debug("Monax Docker Machine doesn't exist")
-
-	return createMonaxMachine(driver)
-}
-
-func createMonaxMachine(driver string) error {
-	log.Warn("Creating the Monax Docker Machine")
-	log.Warn("This will take some time, please feel free to go feed your marmot")
-	log.WithField("driver", driver).Debug()
-	cmd := "docker-machine"
-	args := []string{"create", "--driver", driver, "monax"}
-	if err := exec.Command(cmd, args...).Run(); err != nil {
-		log.Debugf("There was an error creating the Monax Docker Machine: %v", err)
-		return mustInstallError()
-	}
-	log.Debug("Monax Docker Machine created")
-
-	return startMonaxMachine()
-}
-
-func startMonaxMachine() error {
-	log.Info("Starting Monax Docker Machine")
-	cmd := "docker-machine"
-	args := []string{"start", "monax"}
-	if err := exec.Command(cmd, args...).Run(); err != nil {
-		return fmt.Errorf("There was an error starting the newly created docker-machine.\nError:\t%v\n", err)
-	}
-	log.Debug("Monax Docker Machine started")
-
-	return nil
-}
-
 func connectDockerTLS(dockerHost, dockerCertPath string) error {
 	var err error
 
@@ -375,15 +298,6 @@ using the [sudo usermod -a -G docker $USER] command or rerun as [sudo monax]`
 	return fmt.Errorf(install)
 }
 
-// need to add ssh.exe to PATH, it resides in GIT dir.
-// see: https://docs.docker.com/installation/windows/#from-your-shell
-func prepWin() error {
-	// note this is for running from cmd.exe ... watch out for powershell....
-	cmd := exec.Command("set", `PATH=%PATH%;"c:\Program Files (x86)\Git\bin"`)
-	err := cmd.Run()
-	return err
-}
-
 func DockerError(err error) error {
 	if _, ok := err.(*docker.Error); ok {
 		return fmt.Errorf("Docker: %v", err.(*docker.Error).Message)
@@ -396,7 +310,7 @@ func DockerWindowsAndMacIP(do *definitions.Do) (string, error) {
 		if os.Getenv("DOCKER_HOST") == "" && os.Getenv("DOCKER_CERT_PATH") == "" {
 			return "127.0.0.1", nil
 		} else {
-			cmd := exec.Command("docker-machine", "ip", do.MachineName)
+			cmd := exec.Command("docker-machine", "ip", "default")
 			if out, err := cmd.CombinedOutput(); err != nil {
 				return "", fmt.Errorf("%v", DockerError(err))
 			} else {
