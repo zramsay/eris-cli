@@ -193,22 +193,22 @@ privileges should be given these keys.
 Usually this group will have the most number of keys of all of the groups.`
 		accountTypeDefinition.DefaultNumber = 25
 		accountTypeDefinition.DefaultTokens = 9999999999
-		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            1,
-			"call":            1,
-			"create_contract": 0,
-			"create_account":  0,
-			"bond":            0,
-			"name":            1,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        1,
-			"add_role":        0,
-			"rm_role":         0,
+		accountTypeDefinition.DefaultBond = 1
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":            false,
+			"send":            true,
+			"call":            true,
+			"create_contract": false,
+			"create_account":  false,
+			"bond":            false,
+			"name":            true,
+			"has_base":        false,
+			"set_base":        false,
+			"unset_base":      false,
+			"set_global":      false,
+			"has_role":        true,
+			"add_role":        false,
+			"rm_role":         false,
 		}
 
 	case "developer":
@@ -224,21 +224,21 @@ within this group, although that design is up to you.`
 		accountTypeDefinition.DefaultNumber = 6
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            0,
-			"name":            1,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":            false,
+			"send":            true,
+			"call":            true,
+			"create_contract": true,
+			"create_account":  true,
+			"bond":            false,
+			"name":            true,
+			"has_base":        false,
+			"set_base":        false,
+			"unset_base":      false,
+			"set_global":      false,
+			"has_role":        true,
+			"add_role":        true,
+			"rm_role":         true,
 		}
 
 	case "validator":
@@ -256,21 +256,21 @@ in the system.`
 		accountTypeDefinition.DefaultNumber = 7
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 9999999998
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            0,
-			"call":            0,
-			"create_contract": 0,
-			"create_account":  0,
-			"bond":            1,
-			"name":            0,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        0,
-			"add_role":        0,
-			"rm_role":         0,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":            false,
+			"send":            false,
+			"call":            false,
+			"create_contract": false,
+			"create_account":  false,
+			"bond":            true,
+			"name":            false,
+			"has_base":        false,
+			"set_base":        false,
+			"unset_base":      false,
+			"set_global":      false,
+			"has_role":        false,
+			"add_role":        false,
+			"rm_role":         false,
 		}
 
 	case "full":
@@ -287,21 +287,21 @@ If you are making a more complex chain, don't use this account type.`
 		accountTypeDefinition.DefaultNumber = 1
 		accountTypeDefinition.DefaultTokens = 99999999999999
 		accountTypeDefinition.DefaultBond = 9999999999
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            1,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            1,
-			"name":            1,
-			"has_base":        1,
-			"set_base":        1,
-			"unset_base":      1,
-			"set_global":      1,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":            true,
+			"send":            true,
+			"call":            true,
+			"create_contract": true,
+			"create_account":  true,
+			"bond":            true,
+			"name":            true,
+			"has_base":        true,
+			"set_base":        true,
+			"unset_base":      true,
+			"set_global":      true,
+			"has_role":        true,
+			"add_role":        true,
+			"rm_role":         true,
 		}
 
 	case "root":
@@ -319,21 +319,21 @@ similar to a network administrator in other data management situations.`
 		accountTypeDefinition.DefaultNumber = 3
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            1,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            1,
-			"name":            1,
-			"has_base":        1,
-			"set_base":        1,
-			"unset_base":      1,
-			"set_global":      1,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":            true,
+			"send":            true,
+			"call":            true,
+			"create_contract": true,
+			"create_account":  true,
+			"bond":            true,
+			"name":            true,
+			"has_base":        true,
+			"set_base":        true,
+			"unset_base":      true,
+			"set_global":      true,
+			"has_role":        true,
+			"add_role":        true,
+			"rm_role":         true,
 		}
 
 	default:

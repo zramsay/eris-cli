@@ -10,8 +10,8 @@ import (
 	"github.com/monax/cli/pkgs/abi"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/burrow/client"
-	"github.com/monax/burrow/logging/loggers"
+	"github.com/hyperledger/burrow/client"
+	"github.com/hyperledger/burrow/logging/loggers"
 )
 
 func QueryContractJob(query *definitions.QueryContract, do *definitions.Do) (string, []*definitions.Variable, error) {

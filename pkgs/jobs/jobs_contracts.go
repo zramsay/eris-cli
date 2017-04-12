@@ -15,11 +15,11 @@ import (
 
 	compilers "github.com/monax/compilers/perform"
 
-	"github.com/monax/burrow/client"
-	"github.com/monax/burrow/client/rpc"
-	"github.com/monax/burrow/keys"
-	"github.com/monax/burrow/logging/loggers"
-	"github.com/monax/burrow/txs"
+	"github.com/hyperledger/burrow/client"
+	"github.com/hyperledger/burrow/client/rpc"
+	"github.com/hyperledger/burrow/keys"
+	"github.com/hyperledger/burrow/logging/loggers"
+	"github.com/hyperledger/burrow/txs"
 )
 
 func PackageDeployJob(pkgDeploy *definitions.PackageDeploy, do *definitions.Do) (string, error) {
