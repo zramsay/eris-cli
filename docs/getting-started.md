@@ -136,13 +136,7 @@ monax init
 
 ### Windows
 
-We **highly recommend** that you utilize [Chocolatey](https://chocolatey.org) to install `monax`. Docker,  Docker Machine, VirtualBox, and `monax` binary will be properly installed with:
-
-```bash
-{{< data_coding choco >}}
-```
-
-If you are not a `choco` user then please install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Monax binary from the [Release](https://github.com/monax/cli/releases) page.
+Install Docker, Docker Machine, and VirtualBox by downloading the [Docker Toolbox](https://www.docker.com/products/docker-toolbox) and Monax binary from the [Release](https://github.com/monax/cli/releases) page.
 Make sure you put the binary under one of the paths in your `%PATH%` variable.
 
 If you don't want to utilize Docker Toolbox, you can install those manually: follow [these](https://docs.docker.com/installation/) instructions to install Docker, [these](https://docs.docker.com/machine/install-machine/#installing-machine-directly) to install Docker Machine, and [these](https://www.virtualbox.org/wiki/Downloads) to install VirtualBox.
