@@ -59,20 +59,20 @@ default_tokens = 1234
 default_bond = 0
 
 [perms]
-root = 0
-send = 0
-call = 0
-create_contract = 0
-create_account = 0
-bond = 0
-name = 0
-has_base = 1
-set_base = 1
-unset_base = 1
-set_global = 1
-has_role = 1
-add_role = 1
-rm_role = 1`
+root = false
+send = false
+call = false
+createContract = false
+createAccount = false
+bond = false
+name = false
+hasBase = true
+setBase = true
+unsetBase = true
+setGlobal = true
+hasRole = true
+addRole = true
+rmRole = true`
 
 const chainTypeToNeverUseToml = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
@@ -139,21 +139,21 @@ func TestWriteAccountTypeDefinitionFile(t *testing.T) {
 	accountDefinition.DefaultNumber = 4
 	accountDefinition.DefaultTokens = 1234
 	accountDefinition.DefaultBond = 0
-	accountDefinition.Perms = map[string]int64{
-		"root":            0,
-		"send":            0,
-		"call":            0,
-		"create_contract": 0,
-		"create_account":  0,
-		"bond":            0,
-		"name":            0,
-		"has_base":        1,
-		"set_base":        1,
-		"unset_base":      1,
-		"set_global":      1,
-		"has_role":        1,
-		"add_role":        1,
-		"rm_role":         1,
+	accountDefinition.Perms = map[string]bool{
+		"root":           false,
+		"send":           false,
+		"call":           false,
+		"createContract": false,
+		"createAccount":  false,
+		"bond":           false,
+		"name":           false,
+		"hasBase":        true,
+		"setBase":        true,
+		"unsetBase":      true,
+		"setGlobal":      true,
+		"hasRole":        true,
+		"addRole":        true,
+		"rmRole":         true,
 	}
 
 	if err := writeAccountTypeDefinitionFile(accountTypeName, accountDefinition); err != nil {
