@@ -70,7 +70,7 @@ cat > ${HOME}/.s3cfg <<EOF
 access_key = ${AWS_ACCESS_KEY}
 secret_key = ${AWS_SECRET_ACCESS_KEY}
 EOF
-s3cmd put ${PACKAGE} s3://${AWS_S3_DEB_FILES}
+aws s3 cp ${PACKAGE} s3://${AWS_S3_DEB_FILES}
 
 if [ "$MONAX_BRANCH" != "master" ]
 then
@@ -133,10 +133,10 @@ reprepro -b monax ls monax
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-s3cmd sync monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
-s3cmd sync monax/db s3://${AWS_S3_DEB_REPO}
-s3cmd sync monax/dists s3://${AWS_S3_DEB_REPO}
-s3cmd sync monax/pool s3://${AWS_S3_DEB_REPO}
+aws s3 sync monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
+aws s3 sync monax/db s3://${AWS_S3_DEB_REPO}
+aws s3 sync monax/dists s3://${AWS_S3_DEB_REPO}
+aws s3 sync monax/pool s3://${AWS_S3_DEB_REPO}
 
 echo
 echo ">>> Installation instructions"

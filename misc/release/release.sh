@@ -86,14 +86,14 @@ LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort |
 MONAX_RELEASE=1
 
 # NOTE: Set these up before continuing:
-export GITHUB_TOKEN=
-export AWS_ACCESS_KEY=
-export AWS_SECRET_ACCESS_KEY=
+# export GITHUB_TOKEN=
+# export AWS_ACCESS_KEY=
+# export AWS_SECRET_ACCESS_KEY=
 
 export AWS_S3_RPM_REPO=io.monax.yum
-export AWS_S3_RPM_FILES=io.monax.io-rpm
+export AWS_S3_RPM_FILES=io.monax.yum-rpm
 export AWS_S3_DEB_REPO=io.monax.apt
-export AWS_S3_DEB_FILES=io.monax.apt-deb
+export AWS_S3_DEB_FILES=io.monax.apt-rpm
 
 
 export KEY_NAME="Monax Industries (PACKAGES SIGNING KEY) <support@monax.io>"
@@ -146,7 +146,7 @@ token_check() {
   if ! type "github-release" 2>/dev/null
   then
     echo "You have to install github-release tool first"
-    echo "Try 'go get github.com/aktau/github-release'"
+    echo "Try 'go get -u github.com/aktau/github-release'"
     exit 1
   fi
 
@@ -158,6 +158,13 @@ token_check() {
 }
 
 cross_compile() {
+  if ! type "xgo" 2>/dev/null
+  then
+    echo "You have to install xgo tool first"
+    echo "Try 'go get -u github.com/karalabe/xgo'"
+    exit 1
+  fi
+
   pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
 
@@ -236,8 +243,9 @@ release_deb() {
     --name builddeb \
     -e MONAX_VERSION=${MONAX_DEB_VERSION} \
     -e MONAX_RELEASE=${MONAX_RELEASE} \
-    -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
+    -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    -e AWS_DEFAULT_REGION=eu-central-1 \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
     -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
     -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
@@ -271,8 +279,9 @@ release_rpm() {
     --name buildrpm \
     -e MONAX_VERSION=${MONAX_RPM_VERSION} \
     -e MONAX_RELEASE=${MONAX_RELEASE} \
-    -e AWS_ACCESS_KEY=${AWS_ACCESS_KEY} \
+    -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    -e AWS_DEFAULT_REGION=eu-central-1 \
     -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
     -e AWS_S3_RPM_FILES=${AWS_S3_RPM_FILES} \
     -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
