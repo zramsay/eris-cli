@@ -58,13 +58,13 @@ imports:
 - name: github.com/ebuchman/fail-test
   version: c1eddaa09da2b4017351245b0d43234955276798
 - name: github.com/monax/compilers
-  version: fc3199e9f4a8d049bb8199fed47790be3c54df73
+  version: c189917c032877a9bfab845697121050656fef5d
   subpackages:
   - definitions
   - perform
   - util
-- name: github.com/monax/burrow
-  version: 40d6b9fd39c133981fc9f1f7b9a02f562f879980
+- name: github.com/hyperledger/burrow
+  version: 73a741d14207a59d875eabc9151c01651bc647ce
   subpackages:
   - account
   - client
@@ -87,12 +87,12 @@ imports:
   - util/slice
   - word256
 - name: github.com/ethereum/go-ethereum
-  version: bdef758d5c6d397584d0c35e53d6f6c318e61351
+  version: 5e29f4be935ff227bbf07a0c6e80e8809f5e0202
   subpackages:
   - accounts/abi
   - common
-  - common/math
   - common/hexutil
+  - common/math
   - crypto
   - crypto/ecies
   - crypto/secp256k1
