@@ -12,24 +12,25 @@ import (
 	"github.com/monax/cli/version"
 )
 
-// TODO [zr] re-write
-// MakeChain runs the `monax-cm make` command in a Docker container.
+// MakeChain runs the chain maker
 // It returns an error. Note that if do.Known, do.AccountTypes
 // or do.ChainType are not set the command will run via interactive
 // shell.
 //
 //  do.Name          - name of the chain to be created (required)
-//  do.Known         - will use the mintgen tool to parse csv's and create a genesis.json (requires do.ChainMakeVals and do.ChainMakeActs) (optional)
-//  do.Output  	     - outputs the jobs_output.yaml  (default true) XXX [zr] we can probably eliminate?
+//  do.Known         - will parse csv's and create a genesis.json (requires do.ChainMakeVals and do.ChainMakeActs) (optional)
+//  do.Output  	     - takes various options for the type of output wanted (tar/zip)
 //  do.ChainMakeVals - csv file to use for validators (optional)
 //  do.ChainMakeActs - csv file to use for accounts (optional)
-//  do.AccountTypes  - use monax-cm make account-types paradigm (example: Root:1,Participants:25,...) (optional)
-//  do.ChainType     - use monax-cm make chain-types paradigm (example: simplechain) (optional)
-//  do.Tarball       - instead of outputing raw files in directories, output packages of tarbals (optional)
-//  do.ZipFile       - similar to do.Tarball except uses zipfiles (optional)
+//  do.AccountTypes  - use the account-types paradigm (example: Root:1,Participants:25,...) (optional)
+//  do.ChainType     - use the chain-types paradigm (example: sprawlchain) (optional)
 //  do.Verbose       - verbose output (optional)
 //  do.Debug         - debug output (optional)
 //
+
+// remove!
+//  do.Tarball       - instead of outputing raw files in directories, output packages of tarbals (optional)
+//  do.ZipFile       - similar to do.Tarball except uses zipfiles (optional)
 func MakeChain(do *definitions.Do) error {
 
 	keys.InitKeyClient()
