@@ -9,8 +9,10 @@ var Compilers = &cobra.Command{
 	Short: "manage smart contract languages and versions",
 	Long: `the compilers subcommand is a manager of different 
 	smart contract development languages and their different versions.
-	For now we only provide support for solidity but it's very easy to 
-	contribute your own smart contracting language into here. Send the marmots a PR!`,
+	For now the marmots only provide support for solidity but it's very easy to 
+	contribute your own smart contracting language into here.
+
+	Send the marmots a PR! (github.com/monax/cli/compilers)`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -22,7 +24,7 @@ func buildCompilersCommand() {
 }
 
 var compilersUse = &cobra.Command{
-	Use:   "use LANG VER",
+	Use:   "use LANGUAGE VERSION",
 	Short: "use a specific version of a compiler",
 	Long: `assigns the default compiler to a specific language and version. 
 Must already have the language and version to use`,
@@ -30,7 +32,7 @@ Must already have the language and version to use`,
 }
 
 var compilersInstall = &cobra.Command{
-	Use:   "install LANG VER",
+	Use:   "install LANGUAGE:VERSION",
 	Short: "install a compiler with a specific version",
 	Long:  `pulls a docker image of a compiler with a specific tag for that version`,
 	Run:   InstallCompiler,
