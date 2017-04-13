@@ -96,7 +96,7 @@ We have RPM support for most current versions of Fedora, CentOS, and RHEL:
 Alternatively, you can download a release binary for the latest [Release](https://github.com/monax/cli/releases). Make sure you put the binary under one of the paths in the `$PATH` variable and that it has executable permissions:
 
 ```bash
-curl -L https://github.com/monax/cli/releases/download/v0.16.0/monax_0.16.0_linux_amd64 > monax
+curl -L https://github.com/monax/cli/releases/download/v0.16.0/monax_0.16.0-linux-amd64 > monax
 chmod +x monax
 ```
 
@@ -146,14 +146,14 @@ If you don't want to utilize Docker Toolbox, you can install those manually: fol
 If you have chosen not to use Docker Toolbox at all and use `cmd` as your shell, you need to create an Monax virtual machine:
 
 ```bash
-docker-machine create -d virtualbox monax
+docker-machine create -d virtualbox default
 ```
 
 and create a script `setenv.bat` with these contents to be run before your every session with Monax:
 ```cmd
 @echo off
 
-FOR /f "tokens=*" %%i IN ('"docker-machine.exe" env monax') DO %%i
+FOR /f "tokens=*" %%i IN ('"docker-machine.exe" env default') DO %%i
 ```
 
 **Note** -- At this time Docker for Windows (DFW), which is still in beta, is not currently supported.
@@ -184,7 +184,7 @@ If you want to create your blockchain it is two commands:
 
 ```bash
 monax chains make test_chain
-monax chains start test_chain --init-dir ~/.monax/chain/test_chain/test_chain_full_000
+monax chains start test_chain --init-dir ~/.monax/chains/test_chain/test_chain_full_000
 ```
 
 That `test_chain` can be whatever name you would like it to be. These two commands will create a permissioned, smart contract enabled blockchain suitable for testing.
@@ -317,7 +317,7 @@ monax chains ls
 You'll see something like:
 
 ```bash
-CHAIN        ON     VERSION 
+CHAIN        ON     VERSION
 firstchain   *      0.16.0
 ```
 
@@ -375,7 +375,7 @@ cd idi
 
 Now you'll make a file in this directory. Let's assume that is called `idi.sol` and has the following contents
 
-{{ insert_file "/docs/contracts_simple_idi/idi.sol" }}
+{{< insert_contents 1 "/docs/contracts_simple_idi/idi.sol" >}}
 
 What does this contract do? Well, it isn't very interesting, we know. It merely `gets` and `sets` a value which is an unsigned integer type.
 
@@ -383,7 +383,7 @@ What does this contract do? Well, it isn't very interesting, we know. It merely 
 
 Next we need to make an `epm.yaml` and make it look something like this:
 
-{{ insert_file "/docs/contracts_simple_idi/epm.yaml" }}
+{{< insert_contents 2 "/docs/contracts_simple_idi/epm.yaml" >}}
 
 Now, what does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `monax pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file. So let's go through them one by one and explain what each of these jobs are doing. For more on using various jobs [please see the jobs specification](/docs/specs/jobs_specification).
 
@@ -393,7 +393,7 @@ The `set` job simply sets a variable. The package manager includes a naive key v
 
 #### Job 2: Deploy Job
 
-This job will compile and deploy the `idi.sol` contract using the local compiler service. 
+This job will compile and deploy the `idi.sol` contract using the local compiler service.
 
 #### Job 3: Call Job
 
@@ -436,7 +436,7 @@ If it's on, you'll see:
 
 ```
 CHAIN        ON    VERSION
-firstchain  *      0.16.0 
+firstchain  *      0.16.0
 ```
 
 Whereas if it has been stopped, the `ON` field will have `-` rather than `*`. The same logic applies to services.
@@ -489,7 +489,7 @@ What we are going to make is a very simple application which tells the user what
 
 As with all node.js applications, we will start by making a package.json. This should be made in the same folder as your `epm.yaml`. We will keep the `package.json` very simple.
 
-{{ insert_file "/docs/contracts_simple_idi/package.json" }}
+{{< insert_contents 3 "/docs/contracts_simple_idi/package.json" >}}
 
 Once you have saved your `package.json` then you will run (from the same directory) this command:
 
@@ -505,7 +505,7 @@ For trouble shooting information regarding Step 4.1 please see our guide -> [^7]
 
 Once we have that set up, then we'll make an `app.js` file and we'll add the following contents into it:
 
-{{ insert_file "/docs/contracts_simple_idi/app.js" }}
+{{< insert_contents 4 "/docs/contracts_simple_idi/app.js" >}}
 
 **N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script. See our [docker-machine tutorial](../deprecated/using_docker_machine_with_eris/) for more information.
 
@@ -527,7 +527,7 @@ var contractData = require('./jobs_output.json');
 
 But we've only worked with an `epm.yaml`, not an `jobs_output.json`. So what is the `jobs_output.json`? That file is an artifact of the `monax pkgs do` process. If you look at the `jobs_output.json` file it should look something like this:
 
-{{ insert_file "/docs/contracts_simple_idi/sample_jobs_output.json" }}
+{{< insert_contents 5 "/docs/contracts_simple_idi/sample_jobs_output.json" >}}
 
 The json file is the result of each of the jobs. What we really need from this file is the contracts address that was deployed (the key to the `deployStorageK` field) so that the app.js script knows what contract on the chain it should be "talking" to.
 
