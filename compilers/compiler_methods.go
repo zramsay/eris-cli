@@ -31,7 +31,7 @@ func List(image string) ([]string, error) {
 // A fine grained means to go and execute our compiler command via docker
 // This could absolutely use refactoring to be more aware of what the user wants
 // via the service definition file
-func executeCompilerCommand(image string, command []string) ([]byte, error) {
+func ExecuteCompilerCommand(image string, command []string) ([]byte, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err

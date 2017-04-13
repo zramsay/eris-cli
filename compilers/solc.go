@@ -60,7 +60,6 @@ type SolcTemplate struct {
 func (s *SolcTemplate) Compile(files []string, version string) (Return, error) {
 	solcExecute := []string{"solc"}
 	solReturn := &SolcReturn{}
-	//[RJ]: hard coded for now, should be more dynamic in future.
 	image := "ethereum/solc:" + version
 
 	//check files for .bin extension for linking addresses
@@ -74,7 +73,7 @@ func (s *SolcTemplate) Compile(files []string, version string) (Return, error) {
 	if len(binFiles) > 0 {
 		solcExecute = append(solcExecute, append([]string{"--link", "--libraries", strings.Join(s.Libraries, ",")}, binFiles...)...)
 		log.Warn(solcExecute)
-		output, err := executeCompilerCommand(image, solcExecute)
+		output, err := ExecuteCompilerCommand(image, solcExecute)
 		//Parse output into a return
 		if err != nil {
 			if err.Error() != "Compiler error." {
@@ -117,7 +116,7 @@ func (s *SolcTemplate) Compile(files []string, version string) (Return, error) {
 	solcExecute = append(solcExecute, solFiles...)
 	//Execute command
 	log.Warn(solcExecute)
-	output, err := executeCompilerCommand(image, solcExecute)
+	output, err := ExecuteCompilerCommand(image, solcExecute)
 	//Parse output into a return
 	if err != nil {
 		if err.Error() != "Compiler error." {
