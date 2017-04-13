@@ -33,7 +33,6 @@ The `monax` tool is centered around a very few concepts:
 * `chains` — develop permissioned chains
 * `pkgs` — our smart contract tool chain
 * `keys` — wrapping of our key management tooling
-* `data` — take the pain out of data persistence on docker
 
 These concepts provide the core functionality of what we think a true smart contract application platform requires.
 
@@ -97,18 +96,6 @@ To see the various ways in which `monax` can help you manage your various key pa
 
 ```
 monax keys
-```
-
-## Data
-
-Monax can automagically utilize data containers for you.
-
-If you turn the `data_container` variable to `true` in the service or chain definition file, then `monax` deposit the data utilized by that service or chain into a data container which can be managed separately from the "program" container. The advantage of working with data containers has been dealt with elsewhere (see, Google).
-
-To see the various ways in which `monax` can help you manage your data containers, please type:
-
-```
-monax data
 ```
 
 ## Directory Structure

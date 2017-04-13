@@ -154,7 +154,7 @@ func ExecData(do *definitions.Do) (buf *bytes.Buffer, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Can't find that data container. Please check with [monax data ls]")
+		return nil, fmt.Errorf("That data container does not exist")
 	}
 	return buf, nil
 }
@@ -227,7 +227,7 @@ func ExportData(do *definitions.Do) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("I cannot find that data container. Please check with [monax data ls]")
+		return fmt.Errorf("That data container does not exist")
 	}
 	return nil
 }
