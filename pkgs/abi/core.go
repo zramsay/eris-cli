@@ -8,11 +8,13 @@ import (
 	"strconv"
 	"strings"
 
-	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
+
+	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/math"
 )
 
 func ReadAbiFormulateCall(abiLocation string, funcName string, args []string, do *definitions.Do) ([]byte, error) {
@@ -423,14 +425,14 @@ func getStringValue(value interface{}, typ ethAbi.Type) (string, error) {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return common.S256(value.(*big.Int)).String(), nil
+				return math.S256(value.(*big.Int)).String(), nil
 			}
 		case ethAbi.UintTy:
 			switch typ.Size {
 			case 8, 16, 32, 64:
 				return fmt.Sprintf("%v", value), nil
 			default:
-				return common.U256(value.(*big.Int)).String(), nil
+				return math.U256(value.(*big.Int)).String(), nil
 			}
 		case ethAbi.BoolTy:
 			return strconv.FormatBool(value.(bool)), nil

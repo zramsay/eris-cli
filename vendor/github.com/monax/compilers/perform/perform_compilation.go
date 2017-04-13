@@ -169,7 +169,7 @@ func compile(req *definitions.Request) *Response {
 		log.WithField("Filepath of include: ", file.Name()).Debug("To Cache")
 	}
 
-	libsFile, err := util.CreateTemporaryFile("eris-libs", []byte(req.Libraries))
+	libsFile, err := util.CreateTemporaryFile("monax-libs", []byte(req.Libraries))
 	if err != nil {
 		return compilerResponse("", "", "", "", "", err)
 	}

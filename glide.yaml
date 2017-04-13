@@ -37,7 +37,8 @@ import:
   version: develop
   subpackages:
   - perform
-- package: github.com/monax/burrow
+- package: github.com/hyperledger/burrow
+  version: develop
   subpackages:
   - client
   - client/rpc

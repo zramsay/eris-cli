@@ -12,8 +12,8 @@ import (
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/client"
-	"github.com/monax/burrow/logging/loggers"
+	"github.com/hyperledger/burrow/client"
+	"github.com/hyperledger/burrow/logging/loggers"
 )
 
 // Maximum entries in the HEAD file

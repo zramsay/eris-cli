@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+
 	"github.com/monax/compilers/definitions"
 )
 

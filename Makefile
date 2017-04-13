@@ -68,7 +68,7 @@ build_cli:
 .PHONY: test_unit
 test_unit:
 	# run go tests sequentially for the different packages
-	@go test ${PACKAGES_NOVENDOR} -p 1
+	@go test ${PACKAGES_NOVENDOR} -p 1 -v
 
 # test user stories for chains
 .PHONY: test_chains_make
