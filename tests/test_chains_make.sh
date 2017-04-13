@@ -13,7 +13,7 @@ COMMIT_SHA=$(git rev-parse --short --verify HEAD)
 cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
 if ! [ -e $cli_exec ]
 then
-  cli_exec="eris"
+  cli_exec="monax"
 fi
 
 export MONAX_PULL_APPROVE="true"
@@ -118,7 +118,7 @@ check_test(){
 
   # check priv_validator
   privOut=$(cat $dir_to_use/priv_validator.json | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
-  privIn=$($cli_exec data exec $uuid "cat /home/eris/.monax/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
+  privIn=$($cli_exec chains exec $uuid "cat /home/monax/.monax/chains/$uuid/priv_validator.json" | tr '\n' ' ' | sed 's/[[:space:]]//g' | set 's/(,\"last_height\":[^0-9]+,\"last_round\":[^0-9]+,\"last_step\":[^0-9]+//g' )
   if [[ "$privOut" != "$privIn" ]]
   then
     test_exit=1
