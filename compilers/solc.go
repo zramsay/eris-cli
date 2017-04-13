@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris/log"
-	//"github.com/eris-ltd/eris/util"
+	"github.com/monax/cli/log"
+	//"github.com/monax/cli/util"
 )
 
-//The following represents solidity outputs
+//The following represents solidity outputs from the compiler that we're interested in
 type SolcReturn struct {
 	Warning   string
 	Error     error
@@ -20,8 +20,9 @@ type SolcReturn struct {
 	Contracts map[string]*SolcItems `json:"contracts"`
 }
 
+//The key return items to enable unmarshalling from the returns from the compiler
 type SolcItems struct {
-	//Note: There will be more fields than this in the final version, this is just a base
+	//Note: There will be more fields than this in future versions, this is just a base set of requirements
 	Bin string `json:"bin"`
 	Abi string `json:"abi"`
 }
@@ -55,9 +56,10 @@ type SolcTemplate struct {
 	Exec string `mapstructure:"exec" yaml:"exec"`
 }
 
-func (s SolcTemplate) Compile(files []string, version string) (Return, error) {
+// Compiles a series of files using the solidity compiler
+func (s *SolcTemplate) Compile(files []string, version string) (Return, error) {
 	solcExecute := []string{"solc"}
-	solReturn := SolcReturn{}
+	solReturn := &SolcReturn{}
 	//[RJ]: hard coded for now, should be more dynamic in future.
 	image := "ethereum/solc:" + version
 
@@ -79,7 +81,7 @@ func (s SolcTemplate) Compile(files []string, version string) (Return, error) {
 				return Return{}, err
 			}
 			solReturn.Error = errors.New(strings.TrimSpace(string(output)))
-			return Return{solReturn}, nil
+			return Return{*solReturn}, nil
 		}
 
 		if len(solFiles) == 0 {
@@ -122,7 +124,7 @@ func (s SolcTemplate) Compile(files []string, version string) (Return, error) {
 			return Return{}, err
 		}
 		solReturn.Error = errors.New(strings.TrimSpace(string(output)))
-		return Return{solReturn}, nil
+		return Return{*solReturn}, nil
 	}
 	trimmedOutput := strings.TrimSpace(string(output))
 	jsonBeginsCertainly := strings.Index(trimmedOutput, `{"contracts":`)
@@ -137,9 +139,10 @@ func (s SolcTemplate) Compile(files []string, version string) (Return, error) {
 		return Return{}, err
 	}
 
-	return Return{solReturn}, nil
+	return Return{*solReturn}, nil
 }
 
+// A utility function to sort .sol and .bin files into separate slices
 func (s *SolcTemplate) sortFiles(files []string) ([]string, []string, error) {
 	var solFiles []string
 	var binFiles []string

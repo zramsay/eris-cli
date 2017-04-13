@@ -11,6 +11,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+// In future versions should allow us to easily install a language and a version accompanied with it
 func Install(language, version string) error {
 	return util.DockerClient.PullImage(
 		docker.PullImageOptions{
@@ -22,13 +23,14 @@ func Install(language, version string) error {
 	)
 }
 
+// In future versions should allow us to list all the compiler images in our current possession
 func List(image string) ([]string, error) {
 	return []string{}, nil
 }
 
-//if we want to we can move this into perform, just that for now I would like to have
-//more fine grained control over the process and perform is unfortunately something of
-//a clusterfuck to wade through atm.
+// A fine grained means to go and execute our compiler command via docker
+// This could absolutely use refactoring to be more aware of what the user wants
+// via the service definition file
 func executeCompilerCommand(image string, command []string) ([]byte, error) {
 	pwd, err := os.Getwd()
 	if err != nil {

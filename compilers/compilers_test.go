@@ -8,6 +8,7 @@ import (
 
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 func TestMain(m *testing.M) {
@@ -36,7 +37,7 @@ func TestSolcCompilerNormal(t *testing.T) {
 		CombinedOutput: []string{"bin", "abi"},
 	}
 
-	solReturn, err := template.Compile([]string{"simpleContract.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"simpleContract.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +65,7 @@ func TestSolcCompilerError(t *testing.T) {
 		CombinedOutput: []string{"bin", "abi"},
 	}
 
-	solReturn, err := template.Compile([]string{"faultyContract.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"faultyContract.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +91,7 @@ func TestSolcCompilerWarning(t *testing.T) {
 		CombinedOutput: []string{"bin", "abi"},
 	}
 
-	solReturn, err := template.Compile([]string{"simpleContract.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"simpleContract.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +147,7 @@ contract C {
 		CombinedOutput: []string{"bin"},
 	}
 
-	solReturn, err := template.Compile([]string{"simpleLibrary.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"simpleLibrary.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,14 +156,20 @@ contract C {
 		t.Fatalf("Expected no errors or warnings and expected contract items. Got %v for errors, %v for warnings, and %v for contract items", solReturn.Error, solReturn.Warning, solReturn.Contracts)
 	}
 	// note: When solc upgrades to 0.4.10, will need to add "simpleLibrary.sol:" to beginning of this string
-	template.Libraries = []string{"Set:0x692a70d2e424a56d2c6c27aa97d1a86395877b3a"}
+	template.Libraries = []string{"simpleLibrary.sol:Set:0x692a70d2e424a56d2c6c27aa97d1a86395877b3a"}
 	binFile, err := os.Create("C.bin")
 	defer os.Remove("C.bin")
 	if err != nil {
 		t.Fatal(err)
 	}
-	binFile.WriteString(solReturn.Contracts["C"].Bin)
-	_, err = template.Compile([]string{"./C.bin"}, "stable")
+	for name, obj := range solReturn.Contracts {
+		log.WithFields(log.Fields{
+			"name": name,
+			"bin":  obj.Bin,
+		}).Warn("coming out")
+	}
+	binFile.WriteString(solReturn.Contracts["simpleLibrary.sol:C"].Bin)
+	_, err = template.Compile([]string{"./C.bin"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +230,7 @@ contract C {
 		CombinedOutput: []string{"bin"},
 	}
 
-	solReturn, err := template.Compile([]string{"simpleLibrary.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"simpleLibrary.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,15 +239,15 @@ contract C {
 		t.Fatalf("Expected no errors or warnings and expected contract items. Got %v for errors, %v for warnings, and %v for contract items", solReturn.Error, solReturn.Warning, solReturn.Contracts)
 	}
 	// note: When solc upgrades to 0.4.10, will need to add "simpleLibrary.sol:" to beginning of this string
-	template.Libraries = []string{"Set:0x692a70d2e424a56d2c6c27aa97d1a86395877b3a"}
+	template.Libraries = []string{"simpleLibrary.sol:Set:0x692a70d2e424a56d2c6c27aa97d1a86395877b3a"}
 	binFile, err := os.Create("C.bin")
 	defer os.Remove("C.bin")
 	if err != nil {
 		t.Fatal(err)
 	}
-	binFile.WriteString(solReturn.Contracts["C"].Bin)
+	binFile.WriteString(solReturn.Contracts["simpleLibrary.sol:C"].Bin)
 
-	solOutput, err := template.Compile([]string{"./C.bin", "simpleLibrary.sol"}, "stable")
+	solOutput, err := template.Compile([]string{"./C.bin", "simpleLibrary.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -315,7 +322,7 @@ contract C {
 		CombinedOutput: []string{"bin", "abi"},
 	}
 
-	solReturn, err := template.Compile([]string{"C.sol"}, "stable")
+	solReturn, err := template.Compile([]string{"C.sol"}, version.SOLC_VERSION)
 	if err != nil {
 		t.Fatal(err)
 	}
