@@ -1,6 +1,7 @@
 package chains
 
 import (
+	"fmt"
 	"path"
 	"strconv"
 	"strings"
@@ -52,14 +53,19 @@ func MakeChain(do *definitions.Do) error {
 	}
 
 	// cm currently is not opinionated about its writers.
-	if do.Tarball {
+	switch do.Output {
+	case "tar":
 		if err := maker.Tarball(do); err != nil {
 			return err
 		}
-	} else if do.ZipFile {
+	case "zip":
 		if err := maker.Zip(do); err != nil {
 			return err
 		}
+	case "kubernetes":
+		return fmt.Errorf("Not yet implemented, see issue #1272")
+	default:
+		return fmt.Errorf("Output must be one of [tar,zip,kubernetes]")
 	}
 
 	// put at end so users see it after any verbose/debug logs
