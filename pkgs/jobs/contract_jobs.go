@@ -28,7 +28,7 @@ type Compile struct {
 	// One of the following fields is required.
 
 	// Solidity Compiler
-	Solc compilers.SolcTemplate `mapstructure:"solc" yaml:"solc"`
+	Solc *compilers.SolcTemplate `mapstructure:"solc" yaml:"solc"`
 	//Use defaults
 	UseDefault bool
 }
@@ -61,7 +61,7 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 	}
 
 	switch compile.Compiler.(type) {
-	case compilers.SolcTemplate:
+	case *compilers.SolcTemplate:
 
 		if compileReturn.Warning != "" {
 			log.Warn(compileReturn.Warning)
@@ -199,7 +199,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 			case *Compile:
 				compiler.Files = append(compiler.Files, deploy.Contract)
 				switch compilerType := compiler.Compiler.(type) {
-				case compilers.SolcTemplate:
+				case *compilers.SolcTemplate:
 					compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
 					compiler.Compiler = compilerType
 				default:
@@ -212,7 +212,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 
 		} else {
 			compiler := &Compile{}
-			compiler.Compiler = compilers.SolcTemplate{
+			compiler.Compiler = &compilers.SolcTemplate{
 				CombinedOutput: []string{"bin", "abi"},
 				Libraries:      deploy.Libraries,
 			}
@@ -226,30 +226,37 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 }
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
-	switch deploy.Compiler.Compiler.(type) {
-	case compilers.SolcTemplate:
-		results, err := deploy.Compiler.Execute(jobs)
-		if err != nil {
-			return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
-		}
+	if deploy.DeployBinary {
 
-		if deploy.Instance == "all" || deploy.Instance == "" {
-			log.Info("Deploying all contracts")
-			for name, contract := range results.NamedResults {
-				log.Warn("Deploying contract: ", name, contract)
+	} else if deploy.DeployBinSuite {
 
+	} else {
+
+		switch deploy.Compiler.Compiler.(type) {
+		case *compilers.SolcTemplate:
+			results, err := deploy.Compiler.Execute(jobs)
+			if err != nil {
+				return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
 			}
-		} else {
-			if object, ok := results.NamedResults[deploy.Instance]; ok {
-				log.Warn(object)
+
+			if deploy.Instance == "all" || deploy.Instance == "" {
+				log.Info("Deploying all contracts")
+				for name, contract := range results.NamedResults {
+					log.Warn("Deploying contract: ", name, contract)
+
+				}
 			} else {
-				return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
+				if object, ok := results.NamedResults[deploy.Instance]; ok {
+					log.Warn(object)
+				} else {
+					return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
+				}
 			}
-		}
-		return &JobResults{}, fmt.Errorf("placeholder...to be gotten rid of")
+			return &JobResults{}, fmt.Errorf("placeholder...to be gotten rid of")
 
-	default:
-		return &JobResults{}, fmt.Errorf("Invalid compiler used in execution process")
+		default:
+			return &JobResults{}, fmt.Errorf("Invalid compiler used in execution process")
+		}
 	}
 }
 

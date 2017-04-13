@@ -27,7 +27,7 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 	jobset.KeyClient = keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
 	jobset.PublicKey = do.PublicKey
 	jobset.DefaultAddr = do.DefaultAddr
-	jobset.DefaultOutput = do.DefaultOutput
+	jobset.OutputFormat = do.DefaultOutput
 	jobset.DefaultSets = do.DefaultSets
 	jobset.Overwrite = do.Overwrite
 	jobset.DefaultAmount = do.DefaultAmount

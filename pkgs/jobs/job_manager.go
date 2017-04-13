@@ -10,30 +10,41 @@ import (
 	"github.com/monax/burrow/keys"
 )
 
+// This is the jobset, the manager of all the job runners. It holds onto essential information for interacting
+// with the chain that is passed to it from the initial Do struct from the CLI during the loading stage in
+// the loaders package (See LoadJobs method). The main purpose of it is to maintain the ordering of job execution,
+// and maintain awareness of the jobs that have been run and the results of those job runs.
 type Jobs struct {
-	Account       string
-	NodeClient    client.NodeClient
-	KeyClient     keys.KeyClient
-	ChainID       string
-	PublicKey     string
-	DefaultAddr   string
-	DefaultAmount string
-	DefaultGas    string
-	DefaultFee    string
-	DefaultOutput string
-	DefaultSets   []string
-	BinPath       string
-	AbiPath       string
-	ContractPath  string
-	Overwrite     bool
-	Jobs          []*Job `mapstructure:"jobs" yaml:"jobs"`
-	JobMap        map[string]*JobResults
+	// Chain and key specific variables
+	Account       string            `json:"-"`
+	NodeClient    client.NodeClient `json:"-"`
+	KeyClient     keys.KeyClient    `json:"-"`
+	ChainID       string            `json:"chain_ID"`
+	PublicKey     string            `json:"-"`
+	DefaultAddr   string            `json:"-"`
+	DefaultAmount string            `json:"-"`
+	DefaultGas    string            `json:"-"`
+	DefaultFee    string            `json:"-"`
+	// UI specific variables
+	OutputFormat string   `json:"-"`
+	DefaultSets  []string `json:"-"`
+	Overwrite    bool     `json:"-"`
+	//Path variables
+	BinPath      string `json:"-"`
+	AbiPath      string `json:"-"`
+	ContractPath string `json:"-"`
+	//Job variables
+	Jobs   []*Job                 `mapstructure:"jobs" yaml:"jobs" json:"-"`
+	JobMap map[string]*JobResults `json:"output"`
 }
 
+// Returns an initialized empty jobset
 func EmptyJobs() *Jobs {
 	return &Jobs{}
 }
 
+// The main function out of the jobset, runs the jobs from the jobs config file in a sequential order
+// checks for overwriting of the results of an old jobset if there is a repeat
 func (jobs *Jobs) RunJobs() error {
 	var jobNames []string
 	if len(jobs.DefaultSets) >= 1 {
@@ -43,6 +54,7 @@ func (jobs *Jobs) RunJobs() error {
 		jobs.defaultAddrJob()
 	}
 	for _, job := range jobs.Jobs {
+		// handle duplicate job names. Request user input for permission to overwrite.
 		found, overwrite, at := checkForDuplicateQueryOverwrite(job.Name, jobNames, jobs.Overwrite)
 		if found && !overwrite {
 			continue
@@ -60,9 +72,17 @@ func (jobs *Jobs) RunJobs() error {
 		}
 		jobs.JobMap[job.Name] = results
 	}
+
+	var fileOutput []byte
+	if output == "csv" {
+
+	} else {
+		fileOutput, err := json.Marshall(jobs)
+	}
 	return nil
 }
 
+// The default address to work from with future jobs. Placed at the beginning of the jobset.
 func (jobs *Jobs) defaultAddrJob() {
 	oldJobs := jobs.Jobs
 
@@ -96,6 +116,10 @@ func (jobs *Jobs) defaultSetJobs() {
 	}
 
 	jobs.Jobs = append(newJobs, oldJobs...)
+}
+
+func (jobs *Jobs) marshalJSON() ([]byte, error) {
+
 }
 
 func checkForDuplicateQueryOverwrite(name string, jobNames []string, defaultOverwrite bool) (bool, bool, int) {

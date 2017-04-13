@@ -12,19 +12,9 @@ type JobsRunner interface {
 	Execute(*Jobs) (*JobResults, error)
 }
 
-type Type struct {
-	StringResult string `mapstructure:"result" json:"result"`
-	ActualResult interface{}
-}
-
-type JobResults struct {
-	FullResult   Type
-	NamedResults map[string]Type
-}
-
 type Job struct {
 	// Name of the job
-	Name string `mapstructure:"name" yaml:"name"`
+	Name string `mapstructure:"name" yaml:"name" json:"name"`
 	///
 	/// UTILITY JOBS
 	///
@@ -118,6 +108,27 @@ func (job *Job) beginJob(jobs *Jobs) (*JobResults, error) {
 		return &JobResults{}, err
 	}
 	return results, nil
+}
+
+func (job *Job) MarshalJSON() ([]byte, error) {
+	type Alias Job
+	return json.Marshal(&struct {
+		LastSeen int64 `json:"lastSeen"`
+		*Alias
+	}{
+		LastSeen: u.LastSeen.Unix(),
+		Alias:    (*Alias)(job),
+	})
+}
+
+type Type struct {
+	StringResult string `mapstructure:"result" json:"result"`
+	ActualResult interface{}
+}
+
+type JobResults struct {
+	FullResult   Type            `mapstructure:"full_result" json:"full_result"`
+	NamedResults map[string]Type `mapstructure:"named_results" json:"named_results"`
 }
 
 type LegacyJob struct {

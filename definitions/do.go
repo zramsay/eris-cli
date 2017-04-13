@@ -69,7 +69,7 @@ type Do struct {
 	ConfigOpts     []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes   []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	// for [monax pkgs do]
+	// for [monax run]
 	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
