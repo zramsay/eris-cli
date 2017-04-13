@@ -3,17 +3,12 @@
 echo
 echo ">>> Sanity checks"
 echo
-if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" ]
+if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" -o -z "${MONAX_BRANCH}" ]
 then
-    echo "The MONAX_VERSION or MONAX_RELEASE environment variables are not set, aborting"
+    echo "The MONAX_VERSION, MONAX_RELEASE or MONAX_BRANCH environment variables are not set, aborting"
     echo
     echo "Please start this container from the 'release.sh' script"
     exit 1
-fi
-
-export MONAX_BRANCH=master
-if [ ! -z "$1" ]; then
-  export MONAX_BRANCH="$1"
 fi
 
 echo
@@ -53,14 +48,6 @@ wait
 exit 0
 EOF
 
-if [ "$MONAX_BRANCH" != "master" ]
-then
-   echo
-   echo ">>> Not recreating a repo for #${MONAX_BRANCH} branch"
-   echo
-   exit 0
-fi
-
 echo
 echo ">>> Creating repos"
 echo
@@ -83,30 +70,30 @@ echo
 cat > yum/monax.repo <<EOF
 [monax]
 name=Monax
-baseurl=https://${AWS_S3_RPM_URL}/yum/x86_64/
+baseurl=https://${AWS_S3_PKGS_URL}/yum/x86_64/
 metadata_expire=1d
 enabled=1
-gpgkey=https://${AWS_S3_RPM_URL}/yum/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_PKGS_URL}/yum/RPM-GPG-KEY
 gpgcheck=1
 
 [monax-source]
 name=Monax Source
-baseurl=https://${AWS_S3_RPM_URL}/yum/source/
+baseurl=https://${AWS_S3_PKGS_URL}/yum/source/
 metadata_expire=1d
 enabled=1
-gpgkey=https://${AWS_S3_RPM_URL}/yum/RPM-GPG-KEY
+gpgkey=https://${AWS_S3_PKGS_URL}/yum/RPM-GPG-KEY
 gpgcheck=1
 EOF
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 sync yum s3://${AWS_S3_RPM_REPO}/yum
+aws s3 sync yum s3://${AWS_S3_PKGS_BUCKET}/yum/
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo curl -L https://${AWS_S3_RPM_URL}/yum/monax.repo >/etc/yum.repos.d/monax.repo"
+echo "  \$ sudo curl -L https://${AWS_S3_PKGS_URL}/yum/monax.repo >/etc/yum.repos.d/monax.repo"
 echo
 echo "  \$ sudo yum update"
 echo "  \$ sudo yum install monax"

@@ -26,7 +26,7 @@
 #
 #  5. GPG release signing key name in KEY_NAME variable:
 #
-#    KEY_NAME="Monax Industries <support@monax.io>"
+#    KEY_NAME="Monax <ops@monax.io>"
 #
 #  6. GPG release signing key password in KEY_PASSWORD variable:
 #
@@ -41,21 +41,23 @@
 #
 REPO=${GOPATH}/src/github.com/monax/cli
 BUILD_DIR=${REPO}/builds
-MONAX_VERSION=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
+vers=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
+MONAX_VERSION=${MONAX_VERSION:-$vers}
+MONAX_VERSION_MINOR=$(grep -w VERSION version/version.go | cut -d \  -f 4 | tr -d '"' | cut -d . -f 1,2)
 LATEST_TAG=$(git tag | xargs -I@ git log --format=format:"%ai @%n" -1 @ | sort | awk '{print $4}' | tail -n 1 | cut -c 2-)
-MONAX_RELEASE=1
+MONAX_RELEASE=${MONAX_RELEASE:-1}
+MONAX_BRANCH=${MONAX_BRANCH:-release-$MONAX_VERSION_MINOR}
 
 # NOTE: Set these up before continuing:
 # export GITHUB_TOKEN=
 # export AWS_ACCESS_KEY=
 # export AWS_SECRET_ACCESS_KEY=
 
-export AWS_S3_RPM_REPO=io.monax.yum
-export AWS_S3_RPM_URL=yum.monax.io
-export AWS_S3_DEB_REPO=io.monax.apt
-export AWS_S3_DEB_URL=apt.monax.io
-
+export AWS_S3_PKGS_BUCKET=code.monax.io/pkgs
+export AWS_S3_PKGS_URL=pkgs.monax.io
+export AWS_S3_RPM_URL=${AWS_S3_PKGS_URL}/yum
 export KEY_NAME="Monax (PACKAGES SIGNING KEY) <ops@monax.io>"
+
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {
@@ -69,6 +71,7 @@ pre_check() {
   echo "OK. Moving on then"
   echo ""
   echo ""
+  # todo remove this
   if ! echo ${LATEST_TAG}|grep ${MONAX_VERSION}
   then
     echo "Something isn't right. The last tagged version does not match the version to be released"
@@ -124,16 +127,34 @@ cross_compile() {
 
   LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-
-  xgo -go 1.7 -branch master --targets=linux/amd64,linux/386,darwin/amd64,darwin/386,windows/amd64,windows/386 -dest ${BUILD_DIR}/ -out monax_${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
+  xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
+  # todo add build number
+  aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG
   echo "Cross compile completed"
   echo ""
   echo ""
   popd
 }
 
-prepare_gh() {
+release_binaries() {
+  echo "Uploading binaries & Informing Github"
   DESCRIPTION="$(git show v${LATEST_TAG})"
+  desc=$(echo -e "\n\n### To Download a Binary:\n\n")
+  desc+=$(echo -e "\n* apt-get\n\n\`\`\`bash\nsudo add-apt-repository https://${AWS_S3_PKGS_URL}/apt && \\ \n  curl -L https://${AWS_S3_PKGS_URL}/apt/APT-GPG-KEY | sudo apt-key add - && \\ \n  sudo apt-get update && sudo apt-get install monax\n\`\`\`")
+  desc+=$(echo -e "\n* yum\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/yum/monax.repo >/etc/yum.repos.d/monax.repo && \\ \n  sudo yum update && sudo yum install monax\n\`\`\`")
+
+  pushd ${BUILD_DIR}
+  for file in *
+  do
+    echo "Uploading: ${file}"
+    aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file}
+    desc+=$(echo -e "\n* ${file}\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/dl/${file} >/usr/local/bin/monax\n\`\`\`")
+  done
+  popd
+  DESCRIPTION+=${desc}
+  echo "Uploading completed"
+  echo ""
+  echo ""
 
   if [[ "$1" == "pre" ]]
   then
@@ -151,27 +172,17 @@ prepare_gh() {
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
+    if [ "$?" -ne 0 ]
+    then
+      github-release edit \
+        --user monax \
+        --repo cli \
+        --tag v${LATEST_TAG} \
+        --name "Release of Version: ${LATEST_TAG}" \
+        --description "${DESCRIPTION}"
+    fi
   fi
   echo "Finished sending release info to Github"
-  echo ""
-  echo ""
-}
-
-release_gh() {
-  echo "Uploading binaries to Github"
-  pushd ${BUILD_DIR}
-  for file in *
-  do
-    echo "Uploading: ${file}"
-    github-release upload \
-      --user monax \
-      --repo cli \
-      --tag v${LATEST_TAG} \
-      --name ${file} \
-      --file ${file}
-  done
-  popd
-  echo "Uploading completed"
   echo ""
   echo ""
 }
@@ -190,24 +201,23 @@ release_deb() {
   # Debian versions are not SemVer compatible.
   MONAX_DEB_VERSION=${MONAX_VERSION//-/}
 
-  docker rm -f builddeb 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-deb -t builddeb ${REPO}/misc/release \
   && docker run \
     -t \
+    --rm \
     --name builddeb \
+    -e MONAX_BRANCH=${MONAX_BRANCH} \
     -e MONAX_VERSION=${MONAX_DEB_VERSION} \
     -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_DEFAULT_REGION=eu-central-1 \
-    -e AWS_S3_DEB_REPO=${AWS_S3_DEB_REPO} \
-    -e AWS_S3_DEB_URL=${AWS_S3_DEB_URL} \
+    -e AWS_S3_PKGS_BUCKET=${AWS_S3_PKGS_BUCKET} \
+    -e AWS_S3_PKGS_URL=${AWS_S3_PKGS_URL} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    builddeb "$@" \
-  && docker cp builddeb:/root/monax_${MONAX_DEB_VERSION}-${MONAX_RELEASE}_amd64.deb ${BUILD_DIR} \
-  && docker rm -f builddeb
+    builddeb "$@"
   echo "Finished releasing Debian packages"
 }
 
@@ -225,25 +235,28 @@ release_rpm() {
   # RPM versions are not SemVer compatible.
   MONAX_RPM_VERSION=${MONAX_VERSION//-/_}
 
-  docker rm -f buildrpm 2>&1 >/dev/null
   docker build -f ${REPO}/misc/release/Dockerfile-rpm -t buildrpm ${REPO}/misc/release \
   && docker run \
     -t \
+    --rm \
     --name buildrpm \
+    -e MONAX_BRANCH=${MONAX_BRANCH} \
     -e MONAX_VERSION=${MONAX_RPM_VERSION} \
     -e MONAX_RELEASE=${MONAX_RELEASE} \
     -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY} \
     -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     -e AWS_DEFAULT_REGION=eu-central-1 \
-    -e AWS_S3_RPM_REPO=${AWS_S3_RPM_REPO} \
-    -e AWS_S3_RPM_URL=${AWS_S3_RPM_URL} \
+    -e AWS_S3_PKGS_BUCKET=${AWS_S3_PKGS_BUCKET} \
+    -e AWS_S3_PKGS_URL=${AWS_S3_PKGS_URL} \
     -e KEY_NAME="${KEY_NAME}" \
     -e KEY_PASSWORD="${KEY_PASSWORD}" \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    buildrpm "$@" \
-  && docker cp buildrpm:/root/rpmbuild/RPMS/x86_64/monax-${MONAX_RPM_VERSION}-${MONAX_RELEASE}.x86_64.rpm ${BUILD_DIR} \
-  && docker rm -f buildrpm
+    buildrpm "$@"
   echo "Finished releasing RPM packages"
+}
+
+cleanup() {
+  sudo rm -rf ${BUILD_DIR}
 }
 
 usage() {
@@ -292,8 +305,8 @@ main() {
     cross_compile "$@"
     release_deb "$@"
     release_rpm "$@"
-    prepare_gh "$@"
-    release_gh "$@"
+    release_binaries "$@"
+    cleanup "$@"
   esac
   return $?
 }

@@ -3,17 +3,12 @@
 echo
 echo ">>> Sanity checks"
 echo
-if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" ]
+if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" -o -z "${MONAX_BRANCH}" ]
 then
-    echo "The MONAX_VERSION or MONAX_RELEASE environment variables are not set, aborting"
+    echo "The MONAX_VERSION, MONAX_RELEASE or MONAX_BRANCH environment variables are not set, aborting"
     echo
     echo "Please start this container from the 'release.sh' script"
     exit 1
-fi
-
-export MONAX_BRANCH=master
-if [ ! -z "$1" ]; then
-  MONAX_BRANCH="$1"
 fi
 
 echo
@@ -47,7 +42,7 @@ Section: devel
 Architecture: amd64
 Priority: standard
 Homepage: https://monax.io/docs
-Maintainer: Monax Industries <support@monax.io>
+Maintainer: Monax <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
 Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications.
@@ -55,28 +50,21 @@ EOF
 cp ${GOREPO}/README.md deb/usr/share/doc/monax/README
 cat > deb/usr/share/doc/monax/copyright <<EOF
 Files: *
-Copyright: $(date +%Y) Monax Industries  <support@monax.io>
+Copyright: $(date +%Y) Monax <support@monax.io>
 License: GPL-3
 EOF
 dpkg-deb --build deb
 PACKAGE=monax_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
-
-if [ "$MONAX_BRANCH" != "master" ]
-then
-   echo
-   echo ">>> Not recreating a repo for #${MONAX_BRANCH} branch"
-   echo
-   exit 0
-fi
+aws s3 cp ${PACKAGE} s3://${AWS_S3_PKGS_BUCKET}/dl/${PACKAGE}
 
 echo
 echo ">>> Creating an APT repository"
 echo
-mkdir -p monax/conf
-gpg --armor --export "${KEY_NAME}" > monax/APT-GPG-KEY
+mkdir -p apt/conf
+gpg --armor --export "${KEY_NAME}" > apt/APT-GPG-KEY
 
-cat > monax/conf/options <<EOF
+cat > apt/conf/options <<EOF
 verbose
 basedir /root/monax
 ask-passphrase
@@ -85,8 +73,8 @@ EOF
 DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial"
 for distro in ${DISTROS}
 do
-  cat >> monax/conf/distributions <<EOF
-Origin: Monax Industries <support@monax.io>
+  cat >> apt/conf/distributions <<EOF
+Origin: Monax <support@monax.io>
 Codename: ${distro}
 Components: main
 Architectures: i386 amd64
@@ -102,7 +90,7 @@ do
   echo
   expect <<-EOF
     set timeout 5
-    spawn reprepro -Vb monax includedeb ${distro} ${PACKAGE}
+    spawn reprepro -Vb apt includedeb ${distro} ${PACKAGE}
     expect {
             timeout                    { send_error "Failed to submit password"; exit 1 }
             "Please enter passphrase:" { send -- "${KEY_PASSWORD}\r";
@@ -118,21 +106,18 @@ done
 echo
 echo ">>> After adding we have the following"
 echo
-reprepro -b monax ls monax
+reprepro -b apt ls monax
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 cp monax/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
-aws s3 sync monax/db s3://${AWS_S3_DEB_REPO}/db
-aws s3 sync monax/dists s3://${AWS_S3_DEB_REPO}/dists
-aws s3 sync monax/pool s3://${AWS_S3_DEB_REPO}/pool
+aws s3 sync apt s3://${AWS_S3_PKGS_BUCKET}/apt/
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo add-apt-repository https://${AWS_S3_DEB_URL}"
-echo "  \$ curl -L https://${AWS_S3_DEB_URL}/APT-GPG-KEY | sudo apt-key add -"
+echo "  \$ sudo add-apt-repository https://${AWS_S3_PKGS_URL}/apt"
+echo "  \$ curl -L https://${AWS_S3_PKGS_URL}/apt/APT-GPG-KEY | sudo apt-key add -"
 echo
 echo "  \$ sudo apt-get update"
 echo "  \$ sudo apt-get install monax"
