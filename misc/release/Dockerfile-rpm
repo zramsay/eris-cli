@@ -2,8 +2,6 @@ FROM centos:6
 
 MAINTAINER Monax Industries <support@monax.io>
 
-COPY s3tools.repo /etc/yum.repos.d
-
 RUN yum -y update \
     && yum -y install sudo \
                       git \
@@ -15,8 +13,12 @@ RUN yum -y update \
                       rpm-sign \
                       rpmdevtools \
                       createrepo \
-                      s3cmd \
+                      python-setuptools \
+                      python-setuptools-devel \
+    && easy_install pip \
     && yum -y clean all
+
+RUN pip install awscli
 
 ENV GOLANG_VERSION 1.6
 ENV GOROOT /usr/local/go
@@ -33,7 +35,7 @@ WORKDIR /root
 
 COPY linux-private-key.asc /root
 COPY linux-public-key.asc /root
-COPY eris.spec /root/rpmbuild/SPECS/
+COPY monax.spec /root/rpmbuild/SPECS/
 COPY buildrpm.sh   /root/
 
 ENTRYPOINT ["/root/buildrpm.sh"]
