@@ -51,10 +51,10 @@ type Job struct {
 	// Sends a transaction which will update the permissions of an account. Must be sent from an account which
 	// has root permissions on the blockchain (as set by either the genesis.json or in a subsequence transaction)
 	Permission *Permission `mapstructure:"permission" yaml:"permission"`
-	// Sends a "simulated call" to a contract. Predominantly used for accessor functions ("Getters" within contracts)
 	///
 	/// TESTING JOBS
 	///
+	// Sends a "simulated call" to a contract. Predominantly used for accessor functions ("Getters" within contracts)
 	QueryContract *QueryContract `mapstructure:"query-contract" yaml:"query-contract"`
 	// Queries information from an account.
 	QueryAccount *QueryAccount `mapstructure:"query-account" yaml:"query-account"`
@@ -147,10 +147,10 @@ type LegacyJob struct {
 	// Sends a transaction which will update the permissions of an account. Must be sent from an account which
 	// has root permissions on the blockchain (as set by either the genesis.json or in a subsequence transaction)
 	Permission *Permission `mapstructure:"permission" yaml:"permission"`
-	// Sends a "simulated call" to a contract. Predominantly used for accessor functions ("Getters" within contracts)
 	///
 	/// TESTING JOBS
 	///
+	// Sends a "simulated call" to a contract. Predominantly used for accessor functions ("Getters" within contracts)
 	QueryContract *QueryContract `mapstructure:"query-contract" yaml:"query-contract"`
 	// Queries information from an account.
 	QueryAccount *QueryAccount `mapstructure:"query-account" yaml:"query-account"`

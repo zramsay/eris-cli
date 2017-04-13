@@ -164,11 +164,13 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 	deploy.Amount = useDefault(deploy.Amount, jobs.DefaultAmount)
+
 	deploy.Fee, _, err = preProcessString(deploy.Fee, jobs)
 	if err != nil {
 		return err
 	}
 	deploy.Fee = useDefault(deploy.Fee, jobs.DefaultFee)
+
 	deploy.Gas, _, err = preProcessString(deploy.Gas, jobs)
 	if err != nil {
 		return err
