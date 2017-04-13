@@ -79,7 +79,6 @@ type Do struct {
 	ChainURL      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultOutput string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultSets   []string `mapstructure:"," json:"," yaml:"," toml:","`
-	Package       *Package
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`
