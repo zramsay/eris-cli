@@ -28,7 +28,7 @@ vendors:
 - path: github.com/ebuchman/fail-test
   rev: c1eddaa09da2b4017351245b0d43234955276798
 - path: github.com/ethereum/go-ethereum
-  rev: bdef758d5c6d397584d0c35e53d6f6c318e61351
+  rev: 5e29f4be935ff227bbf07a0c6e80e8809f5e0202
 - path: github.com/fsnotify/fsnotify
   rev: a904159b9206978bb6d53fcc7a769e5cd726c737
 - path: github.com/fsouza/go-dockerclient
@@ -49,6 +49,8 @@ vendors:
   rev: ad28ea4487f05916463e2423a55166280e8254b5
 - path: github.com/hashicorp/hcl
   rev: db4f0768927a665a06c32855186e1bc762bcc8f5
+- path: github.com/hyperledger/burrow
+  rev: 73a741d14207a59d875eabc9151c01651bc647ce
 - path: github.com/inconshreveable/mousetrap
   rev: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - path: github.com/kardianos/osext
@@ -66,9 +68,7 @@ vendors:
 - path: github.com/mitchellh/mapstructure
   rev: db1efb556f84b25a0a13a04aad883943538ad2e0
 - path: github.com/monax/compilers
-  rev: fc3199e9f4a8d049bb8199fed47790be3c54df73
-- path: github.com/monax/burrow
-  rev: 40d6b9fd39c133981fc9f1f7b9a02f562f879980
+  rev: c189917c032877a9bfab845697121050656fef5d
 - path: github.com/oleiade/reflections
   rev: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
 - path: github.com/opencontainers/runc
