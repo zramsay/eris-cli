@@ -8,8 +8,8 @@ import (
 
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/client/rpc"
-	"github.com/monax/burrow/txs"
+	"github.com/hyperledger/burrow/client/rpc"
+	"github.com/hyperledger/burrow/txs"
 )
 
 //preprocesses an interface type into a type type
@@ -44,6 +44,7 @@ func preProcessInterface(toProcess interface{}, jobs *Jobs) (Type, error) {
 	}
 }
 
+// preprocesses a string for $ references that indicate a job result and returns them if found
 func preProcessString(key string, jobs *Jobs) (string, interface{}, error) {
 	unfound := "Could not find results for job %v"
 
@@ -73,6 +74,7 @@ func preProcessString(key string, jobs *Jobs) (string, interface{}, error) {
 	}
 }
 
+// preprocesses for a job itself that has already been run.
 func preProcessPluginJob(plugin interface{}, jobs *Jobs) (JobsRunner, error) {
 	unfound := "Cannot deduce valid plugin type from %v"
 	switch plugin := plugin.(type) {
@@ -98,8 +100,8 @@ func useDefault(thisOne, defaultOne string) string {
 	return thisOne
 }
 
-// This is a closer function which is called by most of the tx_run functions
-func txFinalize(tx txs.Tx, jobs *Jobs) (*JobResults, error) {
+// This is a utility function for signing, broadcasting and gathering a return,
+func txFinalize(tx txs.Tx, jobs *Jobs, request TxResult) (*JobResults, error) {
 	result, err := rpc.SignAndBroadcast(jobs.ChainID, jobs.NodeClient, jobs.KeyClient, tx, true, true, true)
 	if err != nil {
 		return MintChainErrorHandler(jobs, err)
@@ -118,18 +120,28 @@ func txFinalize(tx txs.Tx, jobs *Jobs) (*JobResults, error) {
 	if result.Address != nil {
 		log.WithField("=>", addr).Warn("Address")
 		log.WithField("=>", hash).Info("Transaction Hash")
-	} else {
-		log.WithField("=>", hash).Warn("Transaction Hash")
-		log.WithField("=>", blkHash).Debug("Block Hash")
-		if len(result.Return) != 0 {
-			if ret != "" {
-				log.WithField("=>", ret).Warn("Return Value")
-			} else {
-				log.Debug("No return.")
-			}
-			log.WithField("=>", result.Exception).Debug("Exception")
+	}
+	log.WithField("=>", hash).Warn("Transaction Hash")
+	log.WithField("=>", blkHash).Debug("Block Hash")
+	if len(result.Return) != 0 {
+		if ret != "" {
+			log.WithField("=>", ret).Warn("Return Value")
+		} else {
+			log.Debug("No return.")
 		}
+		log.WithField("=>", result.Exception).Debug("Exception")
 	}
 
-	return &JobResults{Type{hash, result.Hash}, nil}, nil
+	switch request {
+	case TxHash:
+		return &JobResults{Type{hash, result.Hash}, nil}, nil
+	case Address:
+		return &JobResults{Type{addr, result.Address}, nil}, nil
+	case Return:
+		return &JobResults{Type{ret, result.Return}, nil}, nil
+	case BlockHash:
+		return &JobResults{Type{blkHash, result.BlockHash}, nil}, nil
+	default:
+		return &JobResults{Type{ret, result.Exception}, nil}, fmt.Errorf(result.Exception)
+	}
 }

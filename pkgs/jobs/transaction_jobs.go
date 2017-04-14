@@ -8,7 +8,7 @@ import (
 
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/client/rpc"
+	"github.com/hyperledger/burrow/client/rpc"
 )
 
 // ------------------------------------------------------------------------
@@ -79,7 +79,7 @@ func (send *Send) Execute(jobs *Jobs) (*JobResults, error) {
 	}
 
 	// Sign, broadcast, display
-	return txFinalize(tx, jobs)
+	return txFinalize(tx, jobs, TxHash)
 }
 
 type RegisterName struct {
@@ -198,7 +198,7 @@ func (name *RegisterName) Execute(jobs *Jobs) (*JobResults, error) {
 				return nil, err
 			}
 
-			resp, err := txFinalize(tx, jobs)
+			resp, err := txFinalize(tx, jobs, TxHash)
 			if err != nil {
 				return nil, err
 			}
@@ -226,7 +226,7 @@ func (name *RegisterName) Execute(jobs *Jobs) (*JobResults, error) {
 		}
 		// Sign, broadcast, display
 
-		res, err := txFinalize(tx, jobs)
+		res, err := txFinalize(tx, jobs, TxHash)
 		swapKeyIn()
 		return res, err
 	default:
@@ -321,7 +321,7 @@ func (perm *Permission) Execute(jobs *Jobs) (*JobResults, error) {
 	}
 
 	// Sign, broadcast, display
-	return txFinalize(tx, jobs)
+	return txFinalize(tx, jobs, TxHash)
 }
 
 type Bond struct {

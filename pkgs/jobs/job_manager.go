@@ -1,13 +1,14 @@
 package jobs
 
 import (
+	//"encoding/json"
 	"strings"
 
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/burrow/client"
-	"github.com/monax/burrow/keys"
+	"github.com/hyperledger/burrow/client"
+	"github.com/hyperledger/burrow/keys"
 )
 
 // This is the jobset, the manager of all the job runners. It holds onto essential information for interacting
@@ -34,8 +35,9 @@ type Jobs struct {
 	AbiPath      string `json:"-"`
 	ContractPath string `json:"-"`
 	//Job variables
-	Jobs   []*Job                 `mapstructure:"jobs" yaml:"jobs" json:"-"`
-	JobMap map[string]*JobResults `json:"output"`
+	Jobs       []*Job                 `mapstructure:"jobs" yaml:"jobs" json:"-"`
+	JobMap     map[string]*JobResults `json:"output"`
+	jobCounter int
 }
 
 // Returns an initialized empty jobset
@@ -53,7 +55,14 @@ func (jobs *Jobs) RunJobs() error {
 	if jobs.DefaultAddr != "" {
 		jobs.defaultAddrJob()
 	}
-	for _, job := range jobs.Jobs {
+	/*var fileOutput []byte
+	if output == "csv" {
+
+	} else {
+		fileOutput, err := json.Marshall(jobs)
+	}*/
+	for i, job := range jobs.Jobs {
+		jobs.jobCounter = i
 		// handle duplicate job names. Request user input for permission to overwrite.
 		found, overwrite, at := checkForDuplicateQueryOverwrite(job.Name, jobNames, jobs.Overwrite)
 		if found && !overwrite {
@@ -73,12 +82,6 @@ func (jobs *Jobs) RunJobs() error {
 		jobs.JobMap[job.Name] = results
 	}
 
-	var fileOutput []byte
-	if output == "csv" {
-
-	} else {
-		fileOutput, err := json.Marshall(jobs)
-	}
 	return nil
 }
 
@@ -118,10 +121,13 @@ func (jobs *Jobs) defaultSetJobs() {
 	jobs.Jobs = append(newJobs, oldJobs...)
 }
 
-func (jobs *Jobs) marshalJSON() ([]byte, error) {
+/*func (jobs *Jobs) marshalJSON() ([]byte, error) {
 
-}
+}*/
 
+// this needs to change so that it isn't within the loop of the job functions and is rather gathered on a first round loop
+// whereby the duplicate names are picked up and asked about prior to execution of the loop. This might make for a weird UI
+// but there will be definite performance increases.
 func checkForDuplicateQueryOverwrite(name string, jobNames []string, defaultOverwrite bool) (bool, bool, int) {
 	var dup bool = false
 	var index int = -1
@@ -146,11 +152,17 @@ func checkForDuplicateQueryOverwrite(name string, jobNames []string, defaultOver
 	return dup, defaultOverwrite, index
 }
 
-/*func (jobs *Jobs) postProcess() error {
-	switch defaultOutput {
+// This function handles post processing whereby the results are recorded.
+// Post processing should be handled by taking in an error, if the error is nil and the current
+// job counter == length of the contracts, then everything went off smoothly, record the entire job
+// results based on the format that was requested. Otherwise there will
+// be an error returned via this method, formatted and detailed, that will be returned but not
+// before recording all of the job outputs up to this point.
+/*func (jobs *Jobs) postProcess(makeOrBreak error) error {
+	switch jobs.OutputFormat {
 	case "csv":
 		log.Info("Writing [epm.csv] to current directory")
-		for _, job := range jobs {
+		for _, job := range jobs.Jobs {
 			if err := WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
 				return err
 			}

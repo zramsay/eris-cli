@@ -8,9 +8,9 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/pkgs/jobs"
 
-	"github.com/monax/burrow/client"
-	"github.com/monax/burrow/keys"
-	"github.com/monax/burrow/logging/loggers"
+	"github.com/hyperledger/burrow/client"
+	"github.com/hyperledger/burrow/keys"
+	"github.com/hyperledger/burrow/logging/loggers"
 
 	"github.com/spf13/viper"
 )
@@ -45,7 +45,7 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 	// setup file
 	abs, err := filepath.Abs(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("Sorry, the marmots were unable to find the absolute path to the eris jobs file.")
+		return nil, fmt.Errorf("Sorry, the marmots were unable to find the absolute path to the monax jobs file.")
 	}
 
 	path := filepath.Dir(abs)
@@ -55,7 +55,7 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 	log.WithFields(log.Fields{
 		"path": path,
 		"name": bName,
-	}).Debug("Loading eris-pm file")
+	}).Debug("Loading jobs file")
 
 	loadJobs.AddConfigPath(path)
 	loadJobs.SetConfigName(bName)
@@ -71,7 +71,7 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 	// marshall file
 	if err := loadJobs.Unmarshal(jobset); err != nil {
 		return nil, fmt.Errorf(`Sorry, the marmots could not figure that job runner file out. 
-			Please check that your epm.yaml is properly formatted: %v`, err)
+			Please check that your jobs config is properly formatted: %v`, err)
 	}
 
 	return jobset, nil

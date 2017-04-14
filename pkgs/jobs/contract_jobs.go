@@ -119,8 +119,9 @@ type Deploy struct {
 	// (Optional) list of Name:Address separated by commas of libraries (see solc --help)
 	Libraries []string `mapstructure:"libraries" yaml:"libraries"`
 	// (Optional) additional arguments to send along with the contract code
-	Data         []interface{} `mapstructure:"data" yaml:"data"`
-	CompilerStub interface{}   `mapstructure:"compiler" yaml:"compiler"`
+	Data []interface{} `mapstructure:"data" yaml:"data"`
+	// (Optional) a job plugin for a compile job
+	CompilerStub interface{} `mapstructure:"compiler" yaml:"compiler"`
 	// (Optional) amount of tokens to send to the contract which will (after deployment) reside in the
 	// contract's account
 	Amount string `mapstructure:"amount" yaml:"amount"`
@@ -190,36 +191,43 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 	} else if filepath.Ext(deploy.Contract) != ".bin" {
 		deploy.DeployBinary = true
 	} else {
-		if deploy.CompilerStub != nil {
-			compiler, err := preProcessPluginJob(deploy.CompilerStub, jobs)
-			if err != nil {
-				return err
-			}
-			switch compiler := compiler.(type) {
-			case *Compile:
-				compiler.Files = append(compiler.Files, deploy.Contract)
-				switch compilerType := compiler.Compiler.(type) {
-				case *compilers.SolcTemplate:
-					compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
-					compiler.Compiler = compilerType
-				default:
-					return fmt.Errorf("Could not find compiler to use")
-				}
-				deploy.Compiler = compiler
-			default:
-				return fmt.Errorf("Invalid preprocessing of compiler")
-			}
+		return deploy.selectCompiler(jobs)
+	}
 
-		} else {
-			compiler := &Compile{}
-			compiler.Compiler = &compilers.SolcTemplate{
-				CombinedOutput: []string{"bin", "abi"},
-				Libraries:      deploy.Libraries,
-			}
-			compiler.Files = []string{deploy.Contract}
-			compiler.Version = "stable"
-			deploy.Compiler = compiler
+	return nil
+}
+
+// defines rules of compiler selection for a deploy job
+func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
+	if deploy.CompilerStub != nil {
+		compiler, err := preProcessPluginJob(deploy.CompilerStub, jobs)
+		if err != nil {
+			return err
 		}
+		switch compiler := compiler.(type) {
+		case *Compile:
+			compiler.Files = append(compiler.Files, deploy.Contract)
+			switch compilerType := compiler.Compiler.(type) {
+			case *compilers.SolcTemplate:
+				compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
+				compiler.Compiler = compilerType
+			default:
+				return fmt.Errorf("Could not find compiler to use")
+			}
+			deploy.Compiler = compiler
+		default:
+			return fmt.Errorf("Invalid preprocessing of compiler")
+		}
+
+	} else {
+		compiler := &Compile{}
+		compiler.Compiler = &compilers.SolcTemplate{
+			CombinedOutput: []string{"bin", "abi"},
+			Libraries:      deploy.Libraries,
+		}
+		compiler.Files = []string{deploy.Contract}
+		compiler.Version = "stable"
+		deploy.Compiler = compiler
 	}
 
 	return nil
@@ -227,13 +235,14 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 	if deploy.DeployBinary {
-
+		// deploy single binary file
 	} else if deploy.DeployBinSuite {
-
+		// deploy suite of binaries
 	} else {
-
+		// switch context of the compiler
 		switch deploy.Compiler.Compiler.(type) {
 		case *compilers.SolcTemplate:
+			// execute compilation
 			results, err := deploy.Compiler.Execute(jobs)
 			if err != nil {
 				return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
@@ -247,7 +256,7 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				}
 			} else {
 				if object, ok := results.NamedResults[deploy.Instance]; ok {
-					log.Warn(object)
+					log.WithField("=>", deploy.Instance).Warn("Deploying single contract")
 				} else {
 					return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
 				}
@@ -259,6 +268,8 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 		}
 	}
 }
+
+//func (deploy *Deploy) deployAllContracts(compilerObjects *JobResults)
 
 type Call struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
@@ -285,10 +296,8 @@ type Call struct {
 	// and the address where the contract was deployed to
 	ABI string `mapstructure:"abi" yaml:"abi"`
 	// (Optional) by default the call job will "store" the return from the contract as the
-	// result of the job. If you would like to store the transaction hash instead of the
-	// return from the call job as the result of the call job then select "tx" on the save
-	// variable. Anything other than "tx" in this field will use the default.
-	Save string `mapstructure:"save" yaml:"save"`
+	// result of the job.
+	Save string `mapstructure:"tx-return" yaml:"tx-return"`
 }
 
 func (call *Call) PreProcess(jobs *Jobs) (err error) {
@@ -335,3 +344,9 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 	}
 	return nil
 }
+
+// To build:
+// DeployPackage job
+// CompilePackage job
+// InstallPackage job
+// ProcessManifest job

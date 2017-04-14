@@ -110,17 +110,6 @@ func (job *Job) beginJob(jobs *Jobs) (*JobResults, error) {
 	return results, nil
 }
 
-func (job *Job) MarshalJSON() ([]byte, error) {
-	type Alias Job
-	return json.Marshal(&struct {
-		LastSeen int64 `json:"lastSeen"`
-		*Alias
-	}{
-		LastSeen: u.LastSeen.Unix(),
-		Alias:    (*Alias)(job),
-	})
-}
-
 type Type struct {
 	StringResult string `mapstructure:"result" json:"result"`
 	ActualResult interface{}
@@ -130,6 +119,17 @@ type JobResults struct {
 	FullResult   Type            `mapstructure:"full_result" json:"full_result"`
 	NamedResults map[string]Type `mapstructure:"named_results" json:"named_results"`
 }
+
+// Used in contract and transaction jobs, denotes what to request for the jobResult after a transaction
+// Is signed and broadcast
+type TxResult byte
+
+const (
+	TxHash TxResult = iota
+	Address
+	Return
+	BlockHash
+)
 
 type LegacyJob struct {
 	///
