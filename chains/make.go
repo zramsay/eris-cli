@@ -65,7 +65,7 @@ func MakeChain(do *definitions.Do) error {
 	case "kubernetes":
 		return fmt.Errorf("Not yet implemented, see issue #1272")
 	default:
-		return fmt.Errorf("Output must be one of [tar,zip,kubernetes]")
+		log.Debug("Output option left blank, generating plain directories only")
 	}
 
 	// put at end so users see it after any verbose/debug logs

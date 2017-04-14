@@ -232,7 +232,7 @@ perform_tests(){
   echo "export/inspect tars"
   uuid=$(get_uuid)
   direct=""
-  $cli_exec chains make $uuid --account-types=Full:2 --tar
+  $cli_exec chains make $uuid --account-types=Full:2 --output tar
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -294,7 +294,7 @@ test_teardown(){
 # ---------------------------------------------------------------------------
 # Get the things build and dependencies turned on
 
-echo "Hello! I'm the marmot that tests the [eris chains make] command"
+echo "Hello! I'm the marmot that tests the [monax chains make] command"
 echo
 echo "testing with target $cli_exec"
 echo
