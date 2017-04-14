@@ -3,13 +3,13 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris. If it is given the "local" argument, then
+# This script will test the monax. If it is given the "local" argument, then
 # it will run against the local docker backend. If it is not given the local
 # argument then it will run against a series of docker backends defined in
 # arrays at the top of the script.
 #
 # What this script will do is first it will define what should be run, then
-# it will make sure that it has access to the eris' test machine definition
+# it will make sure that it has access to the monax' test machine definition
 # image files necessary to connect into the backends. Then it will run the
 # test_tool and test_stack scripts against a set of backends. That set will
 # either be a random element of a given array for a major docker version, or
@@ -49,7 +49,7 @@ BRANCH=${BRANCH/\//_}
 
 # Define now the tool tests within the Docker container will be booted from docker run
 entrypoint="$GOPATH/src/github.com/monax/cli/tests/test_tool.sh"
-testuser=eris
+testuser=monax
 remotesocket=2376
 hostsocket=6732
 dm_path=".docker/machine"
@@ -69,7 +69,7 @@ setup_tests() {
   echo
   if [ $linux ]
   then
-    build_eris $BRANCH &
+    build_monax $BRANCH &
     build_result=$!
   else
     echo "Skipping docker build."
@@ -103,7 +103,7 @@ cleanup_tests(){
 
 # ---------------------------------------------------------------------------
 # Get the things build and dependencies turned on
-echo "Hello! I'm the testing suite for eris."
+echo "Hello! I'm the testing suite for monax."
 
 if [ "$DOCKER_MACHINE" = true ]
 then
