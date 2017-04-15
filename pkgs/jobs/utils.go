@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/monax/cli/log"
+	"github.com/monax/cli/pkgs/abi"
 
 	"github.com/hyperledger/burrow/client/rpc"
 	"github.com/hyperledger/burrow/txs"
+	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 //preprocesses an interface type into a type type
@@ -144,4 +146,8 @@ func txFinalize(tx txs.Tx, jobs *Jobs, request TxResult) (*JobResults, error) {
 	default:
 		return &JobResults{Type{ret, result.Exception}, nil}, fmt.Errorf(result.Exception)
 	}
+}
+
+func formatAbiInputs(abi string, inputs interface{}...) (ethAbi.ABI, []byte, error) {
+	
 }

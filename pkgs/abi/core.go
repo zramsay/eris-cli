@@ -460,7 +460,7 @@ func MakeAbi(abiData string) (ABI, error) {
 	return abiSpec, nil
 }
 
-func ConvertSlice(from []interface{}, to Type) (interface{}, err error){
+func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, err error){
 	if !to.IsSlice {
 		return nil, fmt.Errorf("Attempting to convert to non slice type")
 	} else if to.SliceSize != -1 && len(from) != to.SliceSize {
@@ -475,12 +475,12 @@ func ConvertSlice(from []interface{}, to Type) (interface{}, err error){
 	return from, nil
 }
 
-func ConvertToPackingType(from interface{}, to Type) (interface{}, error) {
+func ConvertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error) {
 	if to.IsSlice || to.IsArray && to.T != BytesTy && to.T != FixedBytesTy {
 		if typ, ok := from.([]interface{}); !ok {
 			return nil, fmt.Errorf("Unexpected non slice type during type conversion, please reformat your run file to use an array/slice.")
 		} else {
-			return ConvertSlice(typ, to)
+			return convertSlice(typ, to)
 		}
 	} else {
 		switch to.T {

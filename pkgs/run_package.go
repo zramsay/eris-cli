@@ -39,6 +39,17 @@ func RunPackage(do *definitions.Do) error {
 		defer os.Chdir(pwd)
 	}
 
+	if _, err := os.Stat(do.ABIPath); os.IsNotExist(err) {
+		if err := os.Mkdir(do.ABIPath, 0775); err != nil {
+			return "", err
+		}
+	}
+	if _, err := os.Stat(do.BinPath); os.IsNotExist(err) {
+		if err := os.Mkdir(do.BinPath, 0775); err != nil {
+			return "", err
+		}
+	}
+
 	return loadedJobs.RunJobs()
 }
 

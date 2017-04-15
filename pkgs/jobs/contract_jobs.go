@@ -3,20 +3,20 @@ package jobs
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"reflect"
 
 	"github.com/monax/cli/compilers"
 	"github.com/monax/cli/log"
+	"github.com/monax/cli/version"
+
+	"github.com/hyperledger/burrow/client/rpc"
 )
 
 // ------------------------------------------------------------------------
 // Contracts Jobs
 // ------------------------------------------------------------------------
-
-type PackageDeploy struct {
-	// TODO
-}
 
 type Compile struct {
 	// embedded interface to allow us to access the Compile function regardless of which language is chosen. This gets set in the preprocessing stage.
@@ -83,6 +83,15 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 			if err != nil {
 				return &JobResults{}, err
 			}
+			// while we're here, let's write these abis and bins to their directories
+			if err := ioutil.WriteFile(filepath.Join(jobs.AbiPath, objectName+".abi"), []byte(result.Abi), 0664); err != nil {
+				return err
+			}
+
+			if err := ioutil.WriteFile(filepath.Join(jobs.BinPath, objectName+".bin"), []byte(result.Bin), 0664); err != nil {
+				return err
+			}
+
 			namedResults[objectName] = Type{string(stringResult), result}
 		}
 
@@ -122,6 +131,10 @@ type Deploy struct {
 	Data []interface{} `mapstructure:"data" yaml:"data"`
 	// (Optional) a job plugin for a compile job
 	CompilerStub interface{} `mapstructure:"compiler" yaml:"compiler"`
+	// (Optional) location of the abi file to use (will search relative to abi path)
+	// deployed contracts save ABI artifacts in the abi folder as *both* the name of the contract
+	// and the address where the contract was deployed to
+	ABI string `mapstructure:"abi" yaml:"abi"`
 	// (Optional) amount of tokens to send to the contract which will (after deployment) reside in the
 	// contract's account
 	Amount string `mapstructure:"amount" yaml:"amount"`
@@ -135,9 +148,9 @@ type Deploy struct {
 	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce          string `mapstructure:"nonce" yaml:"nonce"`
-	DeployBinary   bool
-	DeployBinSuite bool
-	Compiler       *Compile
+	deployBinary   bool
+	deployBinSuite bool
+	compiler       *Compile
 }
 
 func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
@@ -183,18 +196,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 
-	// skip compile jobs if the contract we're attempting to deploy resides in the form of a binary,
-	// if the special bin folder is specified then we
-	// otherwise go and figure out the compilation either via a compile job or spin one up if one isn't specified
-	if deploy.Contract == jobs.BinPath {
-		deploy.DeployBinSuite = true
-	} else if filepath.Ext(deploy.Contract) != ".bin" {
-		deploy.DeployBinary = true
-	} else {
-		return deploy.selectCompiler(jobs)
-	}
-
-	return nil
+	return deploy.selectCompiler(jobs)
 }
 
 // defines rules of compiler selection for a deploy job
@@ -206,7 +208,9 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 		}
 		switch compiler := compiler.(type) {
 		case *Compile:
+
 			compiler.Files = append(compiler.Files, deploy.Contract)
+
 			switch compilerType := compiler.Compiler.(type) {
 			case *compilers.SolcTemplate:
 				compilerType.Libraries = append(compilerType.Libraries, deploy.Libraries...)
@@ -214,7 +218,9 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 			default:
 				return fmt.Errorf("Could not find compiler to use")
 			}
+
 			deploy.Compiler = compiler
+
 		default:
 			return fmt.Errorf("Invalid preprocessing of compiler")
 		}
@@ -226,7 +232,7 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 			Libraries:      deploy.Libraries,
 		}
 		compiler.Files = []string{deploy.Contract}
-		compiler.Version = "stable"
+		compiler.Version = version.SOLC_VERSION
 		deploy.Compiler = compiler
 	}
 
@@ -234,42 +240,56 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 }
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
-	if deploy.DeployBinary {
-		// deploy single binary file
-	} else if deploy.DeployBinSuite {
-		// deploy suite of binaries
-	} else {
-		// switch context of the compiler
-		switch deploy.Compiler.Compiler.(type) {
-		case *compilers.SolcTemplate:
-			// execute compilation
-			results, err := deploy.Compiler.Execute(jobs)
-			if err != nil {
-				return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
-			}
-
-			if deploy.Instance == "all" || deploy.Instance == "" {
-				log.Info("Deploying all contracts")
-				for name, contract := range results.NamedResults {
-					log.Warn("Deploying contract: ", name, contract)
-
-				}
-			} else {
-				if object, ok := results.NamedResults[deploy.Instance]; ok {
-					log.WithField("=>", deploy.Instance).Warn("Deploying single contract")
-				} else {
-					return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
-				}
-			}
-			return &JobResults{}, fmt.Errorf("placeholder...to be gotten rid of")
-
-		default:
-			return &JobResults{}, fmt.Errorf("Invalid compiler used in execution process")
+	call := func(contractCode string) (*txs.CallTx, error) {
+		tx, err := rpc.Call(jobs.NodeClient, jobs.KeyClient, jobs.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
+		if err != nil {
+			return &txs.CallTx{}, err
 		}
 	}
-}
 
-//func (deploy *Deploy) deployAllContracts(compilerObjects *JobResults)
+	// switch context of the compiler
+	switch deploy.Compiler.Compiler.(type) {
+	case *compilers.SolcTemplate:
+		// execute compilation
+		results, err := deploy.Compiler.Execute(jobs)
+		if err != nil {
+			return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
+		}
+
+		if deploy.Instance == "all" || deploy.Instance == "" {
+			log.Info("Deploying all contracts")
+			var baseResult Type
+			for name, contract := range results.NamedResults {
+				if contract.(compilers.SolcItems).Bin == "" {
+					continue
+				}
+				log.Warn("Deploying contract: ", name, contract)
+				// create ABI
+				// format data
+				// append to binary
+				// call to deploy binary
+				if strings.ToLower(name) == strings.ToLower(strings.TrimSuffix(filepath.Base(deploy.Contract), filepath.Ext(filepath.Base(deploy.Contract)))) {
+					baseResult = Type{StringResult: result, ActualResult: result}
+				}
+			}
+		} else {
+			if object, ok := results.NamedResults[deploy.Instance]; ok {
+				log.WithField("=>", deploy.Instance).Warn("Deploying single contract")
+				// create ABI
+				// format data
+				// append to binary
+				// call to deploy binary
+			} else {
+				return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
+			}
+		}
+		return &JobResults{}, fmt.Errorf("placeholder...to be gotten rid of")
+
+	default:
+		return &JobResults{}, fmt.Errorf("Invalid compiler used in execution process")
+	}
+
+}
 
 type Call struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
@@ -291,7 +311,7 @@ type Call struct {
 	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
 	Nonce string `mapstructure:"nonce" yaml:"nonce"`
-	// (Optional) location of the abi file to use (can be relative path or in abi path)
+	// (Optional) location of the abi file to use (will search relative to abi path)
 	// deployed contracts save ABI artifacts in the abi folder as *both* the name of the contract
 	// and the address where the contract was deployed to
 	ABI string `mapstructure:"abi" yaml:"abi"`
@@ -299,6 +319,9 @@ type Call struct {
 	// result of the job.
 	Save string `mapstructure:"tx-return" yaml:"tx-return"`
 }
+
+// Note: save jobs_output.json as jobs_output_<chain_ID>.json and concatenate outputs if chainID is the same
+// If not, save it to a different file.
 
 func (call *Call) PreProcess(jobs *Jobs) (err error) {
 	call.Source, _, err = preProcessString(call.Source, jobs)
