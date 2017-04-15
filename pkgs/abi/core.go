@@ -26,7 +26,21 @@ func MakeAbi(abiData string) (ethAbi.ABI, error) {
 }
 
 func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs ...interface{}) ([]byte, error) {
-	return nil, nil
+	if func2Pack, ok := reference.Methods[function]; !ok {
+		return nil, fmt.Errorf("Invalid method called for contract, doesn't exist")
+	} else {
+		if len(inputs) != len(func2Pack.Inputs) {
+			return nil, fmt.Errorf("Invalid number of inputs called for this function, expected %v got %v", len(func2Pack.Inputs), len(inputs))
+		}
+		for i, expectedInput := range func2Pack.Inputs {
+			var err error
+			inputs[i], err = convertToPackingType(inputs[i], expectedInput.Type)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return reference.Pack(function, inputs)
+	}
 }
 
 func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {

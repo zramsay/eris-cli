@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -29,7 +31,7 @@ type QueryContract struct {
 	Function string `mapstructure:"function" yaml:"function"`
 	// (Optional) data to be used in the function arguments. Will use the abi tooling under the hood to formalize the
 	// transaction.
-	Data interface{} `mapstructure:"data" yaml:"data"`
+	Data []interface{} `mapstructure:"data" yaml:"data"`
 	// (Optional) location of the abi file to use (can be relative path or in abi path)
 	// deployed contracts save ABI artifacts in the abi folder as *both* the name of the contract
 	// and the address where the contract was deployed to
@@ -49,10 +51,16 @@ func (qContract *QueryContract) PreProcess(jobs *Jobs) (err error) {
 	if err != nil {
 		return err
 	}
-	qContract.Data, err = preProcessInterface(qContract.Data, jobs)
+	for i, data := range qContract.Data {
+		if qContract.Data[i], err = preProcessInterface(data, jobs); err != nil {
+			return err
+		}
+	}
+	buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, qContract.ABI))
 	if err != nil {
 		return err
 	}
+	qContract.ABI = string(buf)
 	return
 }
 

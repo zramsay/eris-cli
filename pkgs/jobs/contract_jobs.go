@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	"github.com/monax/cli/compilers"
 	"github.com/monax/cli/log"
@@ -144,15 +144,11 @@ type Deploy struct {
 	Fee string `mapstructure:"fee" yaml:"fee"`
 	// (Optional) amount of gas which should be sent along with the contract deployment transaction
 	Gas string `mapstructure:"gas" yaml:"gas"`
-	// (Optional) after compiling the contract save the binary in filename.bin in same directory
-	// where the *.sol or *.se file is located. This will speed up subsequent installs
-	SaveBinary bool `mapstructure:"save" yaml:"save"`
 	// (Optional, advanced only) nonce to use when monax-keys signs the transaction (do not use unless you
 	// know what you're doing)
-	Nonce          string `mapstructure:"nonce" yaml:"nonce"`
-	deployBinary   bool
-	deployBinSuite bool
-	compiler       *Compile
+	Nonce string `mapstructure:"nonce" yaml:"nonce"`
+	// our stored compiler after preprocessing
+	compiler *Compile
 }
 
 func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
@@ -164,6 +160,17 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 	if err != nil {
 		return err
 	}
+
+	// first check to see whether or not the contract exists in the pwd
+	if _, err := os.Stat(deploy.Contract); os.IsNotExist(err) {
+		// if it doesn't exist, check in the contract path now
+		contractPathFile := filepath.Join(jobs.ContractPath, deploy.Contract)
+		if _, err = os.Stat(contractPathFile); os.IsNotExist(err) {
+			return err
+		}
+		deploy.Contract = contractPathFile
+	}
+
 	deploy.Instance, _, err = preProcessString(deploy.Instance, jobs)
 	if err != nil {
 		return err
@@ -175,8 +182,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		}
 	}
 
-	// todo: make this work by reading the jobs.AbiPath and concatenating the deploy.ABI on top
-	buf, err := ioutil.ReadFile(deploy.ABI)
+	buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, deploy.ABI))
 	if err != nil {
 		return err
 	}
@@ -249,8 +255,6 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 }
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
-
-	var baseResult Type
 	var namedResults map[string]Type
 	// switch context of the compiler
 	switch deploy.compiler.Compiler.(type) {
@@ -261,13 +265,14 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 			return &JobResults{}, fmt.Errorf("Compile job: %v", err)
 		}
 		// begin deployment
-		if deploy.Instance == "all" || deploy.Instance == "" {
+		if deploy.Instance == "all" || deploy.Instance == "" || filepath.Ext(deploy.Contract) == ".bin" {
 			log.Info("Deploying all contracts")
 			for name, contract := range results.NamedResults {
 				solcItem, ok := contract.ActualResult.(compilers.SolcItems)
 				if !ok {
 					return &JobResults{}, fmt.Errorf("Couldn't get the needed solc items from your compile job, did you remember to include a combined-json field with bin and abi?")
 				}
+				// TODO: Encapsulate the following in a function of some kind and use instead
 				binary := []byte(solcItem.Bin)
 				if binary == nil {
 					continue
@@ -299,31 +304,71 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				if err != nil {
 					return &JobResults{}, err
 				}
-				// store the resulting address of the contract via a mapping of contract name -> address
-				// store the vice versa of the above for easier lookups and to ween out duplicate functions from multiple contracts in a call
-				// store the functions of said contract in a named result (address + function signature)
 
-				result, err := txFinalize(tx, jobs, Return)
+				result, err := txFinalize(tx, jobs, Address)
 				if err != nil {
 					return &JobResults{}, err
 				}
-				// breaking change... if instance isn't specified, then you need to call your destination by the contract name that you're talking to.
-				// we need to demand precision here of users so that they don't screw themselves over.
-
+				// store the resulting address of the contract via a mapping of contract name -> address
+				namedResults[name] = result.FullResult
+				// store the functions of said contract in a named result (address + function signature) in the format name.function->function sig
+				for methodName, method := range contractAbi.Methods {
+					namedResults[name+"."+methodName] = Type{ActualResult: append(result.FullResult.ActualResult.([]byte), method.Id()...), StringResult: string(append(result.FullResult.ActualResult.([]byte), method.Id()...))}
+				}
 			}
+			// breaking change... if instance isn't specified, then you need to call your destination by the contract name that you're talking to.
+			// we need to demand precision here of users so that they don't screw themselves over.
+			return &JobResults{NamedResults: namedResults}, nil
 		} else {
-			if object, ok := results.NamedResults[deploy.Instance]; ok {
+			if solcItem, ok := results.NamedResults[deploy.Instance].ActualResult.(compilers.SolcItems); ok {
 				log.WithField("=>", deploy.Instance).Warn("Deploying single contract")
+				// TODO: Encapsulate the following in a function of some kind and use instead
+				binary := []byte(solcItem.Bin)
+				if binary == nil {
+					return &JobResults{}, nil
+				}
 				// create ABI
+				var abiSource string
+				if deploy.ABI == "" && solcItem.Abi == "" && filepath.Ext(deploy.Contract) != ".bin" {
+					return &JobResults{}, fmt.Errorf("Couldn't get the needed abi from your compile job, can you provide it through the abi field in your deploy job?")
+				} else if deploy.ABI != "" {
+					abiSource = deploy.ABI
+				} else {
+					abiSource = solcItem.Abi
+				}
+				contractAbi, err := abi.MakeAbi(abiSource)
+				if err != nil {
+					return &JobResults{}, err
+				}
+
 				// format data
+				constructorData, err := abi.FormatAndPackInputs(contractAbi, "", deploy.Data)
+				if err != nil {
+					return &JobResults{}, err
+				}
 				// append to binary
+				contractCode := fmt.Sprintf("%X", append(binary, constructorData...))
 				// call to deploy binary
+				tx, err := rpc.Call(jobs.NodeClient, jobs.KeyClient, jobs.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
+				if err != nil {
+					return &JobResults{}, err
+				}
+				result, err := txFinalize(tx, jobs, Address)
+				if err != nil {
+					return &JobResults{}, err
+				}
+				// store the resulting address of the contract via a mapping of contract name -> address
+				namedResults[deploy.Instance] = result.FullResult
+				// store the functions of said contract in a named result (address + function signature) in the format function->function sig
+				for methodName, method := range contractAbi.Methods {
+					namedResults[methodName] = Type{ActualResult: append(result.FullResult.ActualResult.([]byte), method.Id()...), StringResult: string(append(result.FullResult.ActualResult.([]byte), method.Id()...))}
+				}
+				// store the base result
+				return &JobResults{FullResult: result.FullResult, NamedResults: namedResults}, nil
 			} else {
 				return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
 			}
 		}
-		return &JobResults{}, fmt.Errorf("placeholder...to be gotten rid of")
-
 	default:
 		return &JobResults{}, fmt.Errorf("Invalid compiler used in execution process")
 	}
@@ -382,11 +427,11 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 		}
 	}
 
-	buf, err := ioutil.ReadFile(deploy.ABI)
+	buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, call.ABI))
 	if err != nil {
 		return err
 	}
-	deploy.ABI = string(buf)
+	call.ABI = string(buf)
 
 	call.Amount, _, err = preProcessString(call.Amount, jobs)
 	if err != nil {

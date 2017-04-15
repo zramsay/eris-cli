@@ -37,7 +37,7 @@ type Jobs struct {
 	//Job variables
 	Jobs       []*Job                 `mapstructure:"jobs" yaml:"jobs" json:"-"`
 	JobMap     map[string]*JobResults `json:"output"`
-	jobCounter int
+	jobCounter map[int]string
 }
 
 // Returns an initialized empty jobset
@@ -47,7 +47,7 @@ func EmptyJobs() *Jobs {
 
 // The main function out of the jobset, runs the jobs from the jobs config file in a sequential order
 // checks for overwriting of the results of an old jobset if there is a repeat
-func (jobs *Jobs) RunJobs() error {
+func (jobs *Jobs) RunJobs() (err error) {
 	var jobNames []string
 	if len(jobs.DefaultSets) >= 1 {
 		jobs.defaultSetJobs()
@@ -55,14 +55,10 @@ func (jobs *Jobs) RunJobs() error {
 	if jobs.DefaultAddr != "" {
 		jobs.defaultAddrJob()
 	}
-	/*var fileOutput []byte
-	if output == "csv" {
-
-	} else {
-		fileOutput, err := json.Marshall(jobs)
-	}*/
+	/*
+		defer jobs.postProcess(err)
+	*/
 	for i, job := range jobs.Jobs {
-		jobs.jobCounter = i
 		// handle duplicate job names. Request user input for permission to overwrite.
 		found, overwrite, at := checkForDuplicateQueryOverwrite(job.Name, jobNames, jobs.Overwrite)
 		if found && !overwrite {
@@ -72,7 +68,7 @@ func (jobs *Jobs) RunJobs() error {
 			jobs.JobMap[jobNames[at]] = &JobResults{}
 			jobNames = append(jobNames[:at], jobNames[at+1:]...)
 		}
-
+		jobs.jobCounter[i] = job.Name
 		jobNames = append(jobNames, job.Name)
 		job.swapLegacyJob()
 		results, err := job.beginJob(jobs)
@@ -80,6 +76,7 @@ func (jobs *Jobs) RunJobs() error {
 			return err
 		}
 		jobs.JobMap[job.Name] = results
+		// stored for later writing to the jobs_output file
 	}
 
 	return nil

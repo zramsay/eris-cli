@@ -36,6 +36,7 @@ func addRunFlags() {
 	Run.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
 	Run.Flags().StringVarP(&do.BinPath, "bin-path", "", "./bin", "path to the bin directory jobs should use when saving binaries after the compile process")
 	Run.Flags().StringVarP(&do.ABIPath, "abi-path", "", "./abi", "path to the abi directory jobs should use when saving ABIs after the compile process")
+	Run.Flags().StringVarP(&do.OutputPath, "output-path", "", "./outputs", "path to a directory for job_output files.")
 	Run.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
 	Run.Flags().StringVarP(&do.DefaultAddr, "address", "a", "", "default address to use; operates the same way as the [account] job, only before the epm file is ran")
 	Run.Flags().StringVarP(&do.DefaultFee, "fee", "n", "9999", "default fee to use")
