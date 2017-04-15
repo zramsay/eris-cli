@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/monax/cli/compilers"
 	"github.com/monax/cli/log"
+	"github.com/monax/cli/pkgs/abi"
 	"github.com/monax/cli/version"
 
 	"github.com/hyperledger/burrow/client/rpc"
@@ -85,11 +87,11 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 			}
 			// while we're here, let's write these abis and bins to their directories
 			if err := ioutil.WriteFile(filepath.Join(jobs.AbiPath, objectName+".abi"), []byte(result.Abi), 0664); err != nil {
-				return err
+				return &JobResults{}, err
 			}
 
 			if err := ioutil.WriteFile(filepath.Join(jobs.BinPath, objectName+".bin"), []byte(result.Bin), 0664); err != nil {
-				return err
+				return &JobResults{}, err
 			}
 
 			namedResults[objectName] = Type{string(stringResult), result}
@@ -173,6 +175,12 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		}
 	}
 
+	buf, err := ioutil.ReadFile(deploy.ABI)
+	if err != nil {
+		return err
+	}
+	deploy.ABI = string(buf)
+
 	deploy.Amount, _, err = preProcessString(deploy.Amount, jobs)
 	if err != nil {
 		return err
@@ -199,7 +207,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 	return deploy.selectCompiler(jobs)
 }
 
-// defines rules of compiler selection for a deploy job
+// defines rules of a plugin job compiler selection for a deploy job
 func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 	if deploy.CompilerStub != nil {
 		compiler, err := preProcessPluginJob(deploy.CompilerStub, jobs)
@@ -219,7 +227,7 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 				return fmt.Errorf("Could not find compiler to use")
 			}
 
-			deploy.Compiler = compiler
+			deploy.compiler = compiler
 
 		default:
 			return fmt.Errorf("Invalid preprocessing of compiler")
@@ -233,41 +241,68 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 		}
 		compiler.Files = []string{deploy.Contract}
 		compiler.Version = version.SOLC_VERSION
-		deploy.Compiler = compiler
+		deploy.compiler = compiler
 	}
 
 	return nil
 }
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
-	call := func(contractCode string) (*txs.CallTx, error) {
-		tx, err := rpc.Call(jobs.NodeClient, jobs.KeyClient, jobs.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
-		if err != nil {
-			return &txs.CallTx{}, err
-		}
-	}
 
+	var baseResult Type
+	var namedResults map[string]Type
 	// switch context of the compiler
-	switch deploy.Compiler.Compiler.(type) {
+	switch deploy.compiler.Compiler.(type) {
 	case *compilers.SolcTemplate:
 		// execute compilation
-		results, err := deploy.Compiler.Execute(jobs)
+		results, err := deploy.compiler.Execute(jobs)
 		if err != nil {
-			return &JobResults{}, fmt.Errorf("Compiler error: %v", err)
+			return &JobResults{}, fmt.Errorf("Compile job: %v", err)
 		}
-
-		if deploy.Instance == "all" || deploy.Instance == "" {
+		// begin deployment
+		if deploy.Instance == "all" || deploy.Instance == "" && filepath.Ext(deploy.Contract) != ".bin" {
 			log.Info("Deploying all contracts")
-			var baseResult Type
 			for name, contract := range results.NamedResults {
-				if contract.(compilers.SolcItems).Bin == "" {
+				solcItem, ok := contract.ActualResult.(compilers.SolcItems)
+				if !ok {
+					return &JobResults{}, fmt.Errorf("Couldn't get the needed solc items from your compile job, did you remember to include a combined-json field with bin and abi?")
+				}
+				binary := []byte(solcItem.Bin)
+				if binary == nil {
 					continue
 				}
 				log.Warn("Deploying contract: ", name, contract)
 				// create ABI
+				var abiSource string
+				if deploy.ABI == "" && solcItem.Abi == "" {
+					return &JobResults{}, fmt.Errorf("Couldn't get the needed abi from your compile job, can you provide it through the abi field in your deploy job?")
+				} else if deploy.ABI != "" {
+					abiSource = deploy.ABI
+				} else {
+					abiSource = solcItem.Abi
+				}
+				contractAbi, err := abi.MakeAbi(abiSource)
+				if err != nil {
+					return &JobResults{}, err
+				}
+
 				// format data
+				constructorData, err := abi.FormatAndPackInputs(contractAbi, "", deploy.Data)
+				if err != nil {
+					return &JobResults{}, err
+				}
 				// append to binary
+				contractCode := fmt.Sprintf("%X", append(binary, constructorData...))
 				// call to deploy binary
+				tx, err := rpc.Call(jobs.NodeClient, jobs.KeyClient, jobs.PublicKey, deploy.Source, "", deploy.Amount, deploy.Nonce, deploy.Gas, deploy.Fee, contractCode)
+				if err != nil {
+					return &JobResults{}, err
+				}
+				result, err := txFinalize(tx, jobs, Return)
+				if err != nil {
+					return &JobResults{}, err
+				}
+				// [RJ] store results of object with name equivalent to contract file name as the primary return. This is actually still brittle and needs work.
 				if strings.ToLower(name) == strings.ToLower(strings.TrimSuffix(filepath.Base(deploy.Contract), filepath.Ext(filepath.Base(deploy.Contract)))) {
 					baseResult = Type{StringResult: result, ActualResult: result}
 				}

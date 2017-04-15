@@ -7,11 +7,9 @@ import (
 	"strings"
 
 	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/abi"
 
 	"github.com/hyperledger/burrow/client/rpc"
 	"github.com/hyperledger/burrow/txs"
-	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 //preprocesses an interface type into a type type
@@ -114,7 +112,7 @@ func txFinalize(tx txs.Tx, jobs *Jobs, request TxResult) (*JobResults, error) {
 	}
 
 	// Unpack and display for the user.
-	addr := fmt.Sprintf("%X", result.Address)
+	addr := fmt.Sprintf("%X", result.Hash)
 	hash := fmt.Sprintf("%X", result.Hash)
 	blkHash := fmt.Sprintf("%X", result.BlockHash)
 	ret := fmt.Sprintf("%X", result.Return)
@@ -127,7 +125,7 @@ func txFinalize(tx txs.Tx, jobs *Jobs, request TxResult) (*JobResults, error) {
 	log.WithField("=>", blkHash).Debug("Block Hash")
 	if len(result.Return) != 0 {
 		if ret != "" {
-			log.WithField("=>", ret).Warn("Return Value")
+			log.WithField("=>", ret).Info("Return Value")
 		} else {
 			log.Debug("No return.")
 		}
@@ -146,8 +144,4 @@ func txFinalize(tx txs.Tx, jobs *Jobs, request TxResult) (*JobResults, error) {
 	default:
 		return &JobResults{Type{ret, result.Exception}, nil}, fmt.Errorf(result.Exception)
 	}
-}
-
-func formatAbiInputs(abi string, inputs interface{}...) (ethAbi.ABI, []byte, error) {
-	
 }
