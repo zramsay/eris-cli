@@ -7,3 +7,7 @@ type DeployBundle struct {
 type InstallBundle struct {
 	// TODO
 }
+
+type PublishBundle struct {
+	// TODO
+}

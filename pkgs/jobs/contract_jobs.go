@@ -175,6 +175,7 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		}
 	}
 
+	// todo: make this work by reading the jobs.AbiPath and concatenating the deploy.ABI on top
 	buf, err := ioutil.ReadFile(deploy.ABI)
 	if err != nil {
 		return err
@@ -260,7 +261,7 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 			return &JobResults{}, fmt.Errorf("Compile job: %v", err)
 		}
 		// begin deployment
-		if deploy.Instance == "all" || deploy.Instance == "" && filepath.Ext(deploy.Contract) != ".bin" {
+		if deploy.Instance == "all" || deploy.Instance == "" {
 			log.Info("Deploying all contracts")
 			for name, contract := range results.NamedResults {
 				solcItem, ok := contract.ActualResult.(compilers.SolcItems)
@@ -274,7 +275,7 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				log.Warn("Deploying contract: ", name, contract)
 				// create ABI
 				var abiSource string
-				if deploy.ABI == "" && solcItem.Abi == "" {
+				if deploy.ABI == "" && solcItem.Abi == "" && filepath.Ext(deploy.Contract) != ".bin" {
 					return &JobResults{}, fmt.Errorf("Couldn't get the needed abi from your compile job, can you provide it through the abi field in your deploy job?")
 				} else if deploy.ABI != "" {
 					abiSource = deploy.ABI
@@ -298,14 +299,17 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				if err != nil {
 					return &JobResults{}, err
 				}
+				// store the resulting address of the contract via a mapping of contract name -> address
+				// store the vice versa of the above for easier lookups and to ween out duplicate functions from multiple contracts in a call
+				// store the functions of said contract in a named result (address + function signature)
+
 				result, err := txFinalize(tx, jobs, Return)
 				if err != nil {
 					return &JobResults{}, err
 				}
-				// [RJ] store results of object with name equivalent to contract file name as the primary return. This is actually still brittle and needs work.
-				if strings.ToLower(name) == strings.ToLower(strings.TrimSuffix(filepath.Base(deploy.Contract), filepath.Ext(filepath.Base(deploy.Contract)))) {
-					baseResult = Type{StringResult: result, ActualResult: result}
-				}
+				// breaking change... if instance isn't specified, then you need to call your destination by the contract name that you're talking to.
+				// we need to demand precision here of users so that they don't screw themselves over.
+
 			}
 		} else {
 			if object, ok := results.NamedResults[deploy.Instance]; ok {
@@ -330,7 +334,7 @@ type Call struct {
 	// (Optional, if account job or global account set) address of the account from which to send (the
 	// public key for the account must be available to monax-keys)
 	Source string `mapstructure:"source" yaml:"source"`
-	// (Required) address of the contract which should be called
+	// (Required) the contract which should be called
 	Destination string `mapstructure:"destination" yaml:"destination"`
 	// (Required unless testing fallback function) function inside the contract to be called
 	Function string `mapstructure:"function" yaml:"function"`
@@ -371,11 +375,19 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 	if err != nil {
 		return err
 	}
+
 	for i, data := range call.Data {
 		if call.Data[i], err = preProcessInterface(data, jobs); err != nil {
 			return err
 		}
 	}
+
+	buf, err := ioutil.ReadFile(deploy.ABI)
+	if err != nil {
+		return err
+	}
+	deploy.ABI = string(buf)
+
 	call.Amount, _, err = preProcessString(call.Amount, jobs)
 	if err != nil {
 		return err
@@ -402,9 +414,3 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 	}
 	return nil
 }
-
-// To build:
-// DeployPackage job
-// CompilePackage job
-// InstallPackage job
-// ProcessManifest job
