@@ -23,8 +23,12 @@ type SolcReturn struct {
 //The key return items to enable unmarshalling from the returns from the compiler
 type SolcItems struct {
 	//Note: There will be more fields than this in future versions, this is just a base set of requirements
-	Bin string `json:"bin"`
-	Abi string `json:"abi"`
+	Bin     string `json:"bin"`
+	Abi     string `json:"abi"`
+	DevDoc  string `json:"devdoc"`
+	UserDoc string `json:"userdoc"`
+	Opcodes string `json:"opcodes"`
+	Asm     string `json:"asm"`
 }
 
 //This is a template to define our inputs for the compiler image
