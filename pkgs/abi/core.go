@@ -120,6 +120,16 @@ func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error)
 			} else {
 				return common.HexToAddress(typ), nil
 			}
+		case ethAbi.FunctionTy:
+			if typ, ok := from.(string); !ok {
+				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+			} else {
+				if len(typ) != 24 {
+					return nil, fmt.Errorf("Expected function signature to be address + 4 byte function signature. Got %v bytes.", len(typ))
+				} else {
+					return common.Hex2Bytes(typ), nil
+				}
+			}
 		case ethAbi.BytesTy:
 			if typ, ok := from.(string); !ok {
 				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
@@ -132,11 +142,19 @@ func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error)
 	}
 }
 
-func createBlankSlate(reference ethAbi.ABI, function string) {
-
+func CreateBlankSlate(reference ethAbi.ABI, function string) ([]interface{}, ethAbi.Method, error) {
+	if func2Unpack, ok := reference.Methods[function]; !ok {
+		return nil, ethAbi.Method{}, fmt.Errorf("Invalid method called for contract, doesn't exist")
+	} else {
+		var outputs []interface{}
+		for i, output := range func2Unpack.Outputs {
+			outputs[i] = output.Type.Type
+		}
+		return outputs, func2Unpack, nil
+	}
 }
 
-func convertUnpackedToJobTypes(from interface{}, reference ethAbi.Type) (string, interface{}, error) {
+func ConvertUnpackedToJobTypes(from interface{}, reference ethAbi.Type) (string, interface{}, error) {
 	if reference.IsSlice || reference.IsArray && reference.T != ethAbi.FixedBytesTy && reference.T != ethAbi.BytesTy {
 		var normalSliceString = func(i interface{}) string {
 			buf := new(bytes.Buffer)
@@ -147,7 +165,7 @@ func convertUnpackedToJobTypes(from interface{}, reference ethAbi.Type) (string,
 		sliceVal := reflect.ValueOf(from)
 		var stored []interface{}
 		for i := 0; i < sliceVal.Len(); i++ {
-			if _, typ, err := convertUnpackedToJobTypes(sliceVal.Index(i).Interface(), *reference.Elem); err != nil {
+			if _, typ, err := ConvertUnpackedToJobTypes(sliceVal.Index(i).Interface(), *reference.Elem); err != nil {
 				stored = append(stored, typ)
 			} else {
 				return "", nil, fmt.Errorf("Error in converting slice: %v", err)

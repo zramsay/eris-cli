@@ -1,12 +1,15 @@
 package jobs
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/monax/cli/compilers"
 	"github.com/monax/cli/log"
@@ -311,6 +314,8 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				}
 				// store the resulting address of the contract via a mapping of contract name -> address
 				namedResults[name] = result.FullResult
+				// store the abi in a address -> abi mapping
+				jobs.AbiMap[result.FullResult.StringResult] = abiSource
 				// store the functions of said contract in a named result (address + function signature) in the format name.function->function sig
 				for methodName, method := range contractAbi.Methods {
 					namedResults[name+"."+methodName] = Type{ActualResult: append(result.FullResult.ActualResult.([]byte), method.Id()...), StringResult: string(append(result.FullResult.ActualResult.([]byte), method.Id()...))}
@@ -359,6 +364,8 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				}
 				// store the resulting address of the contract via a mapping of contract name -> address
 				namedResults[deploy.Instance] = result.FullResult
+				// store the abi in a address -> abi mapping
+				jobs.AbiMap[result.FullResult.StringResult] = abiSource
 				// store the functions of said contract in a named result (address + function signature) in the format function->function sig
 				for methodName, method := range contractAbi.Methods {
 					namedResults[methodName] = Type{ActualResult: append(result.FullResult.ActualResult.([]byte), method.Id()...), StringResult: string(append(result.FullResult.ActualResult.([]byte), method.Id()...))}
@@ -427,11 +434,13 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 		}
 	}
 
-	buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, call.ABI))
-	if err != nil {
-		return err
+	if call.ABI != "" {
+		buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, call.ABI))
+		if err != nil {
+			return err
+		}
+		call.ABI = string(buf)
 	}
-	call.ABI = string(buf)
 
 	call.Amount, _, err = preProcessString(call.Amount, jobs)
 	if err != nil {
@@ -458,4 +467,73 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 	return nil
+}
+
+func (call *Call) Execute(jobs *Jobs) (*JobResults, error) {
+
+	var namedResults map[string]Type
+	var abiSource string
+	if abi, ok := jobs.AbiMap[call.Destination]; !ok {
+		if call.ABI == "" {
+			return &JobResults{}, fmt.Errorf("Couldn't get the needed abi from your job results, can you provide it through the abi field in your call job?")
+		} else {
+			abiSource = call.ABI
+		}
+	} else if call.ABI != "" {
+		abiSource = call.ABI
+	} else {
+		abiSource = abi
+	}
+
+	contractAbi, err := abi.MakeAbi(abiSource)
+	if err != nil {
+		return &JobResults{}, err
+	}
+
+	if call.Function == "()" {
+		log.Warn("Calling the fallback function")
+	}
+	// format data
+	callData, err := abi.FormatAndPackInputs(contractAbi, call.Function, call.Data)
+	if err != nil {
+		if call.Function == "()" {
+			log.Warn("Calling the fallback function")
+		} else {
+			return &JobResults{}, err
+		}
+	}
+
+	// create call
+	tx, err := rpc.Call(jobs.NodeClient, jobs.KeyClient, jobs.PublicKey, call.Source, call.Destination, call.Amount, call.Nonce, call.Gas, call.Fee, hex.EncodeToString(callData))
+	if err != nil {
+		return &JobResults{}, err
+	}
+	result, err := txFinalize(tx, jobs, Return)
+	if err != nil {
+		return &JobResults{}, err
+	}
+
+	toUnpackInto, method, err := abi.CreateBlankSlate(contractAbi, call.Function)
+	if err != nil {
+		return &JobResults{}, err
+	}
+	err = contractAbi.Unpack(&toUnpackInto, call.Function, result.FullResult.ActualResult.([]byte))
+	if err != nil {
+		return &JobResults{}, err
+	}
+	// get names of the types, get string results, get actual results, return them.
+	fullStringResults := []string{"("}
+	for i, methodOutput := range method.Outputs {
+		strResult, actualResult, err := abi.ConvertUnpackedToJobTypes(toUnpackInto[i], methodOutput.Type)
+		if err != nil {
+			return &JobResults{}, err
+		}
+		fullStringResults = append(fullStringResults, strResult+", ")
+		if methodOutput.Name == "" {
+			methodOutput.Name = strconv.FormatInt(int64(i), 10)
+		}
+		namedResults[methodOutput.Name] = Type{ActualResult: actualResult, StringResult: strResult}
+	}
+	fullStringResults = append(fullStringResults, ")")
+	return &JobResults{FullResult: Type{StringResult: strings.Join(fullStringResults, ""), ActualResult: strings.Join(fullStringResults, "")}, NamedResults: namedResults}, nil
 }

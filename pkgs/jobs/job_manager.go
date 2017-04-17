@@ -38,6 +38,8 @@ type Jobs struct {
 	Jobs       []*Job                 `mapstructure:"jobs" yaml:"jobs" json:"-"`
 	JobMap     map[string]*JobResults `json:"output"`
 	jobCounter map[int]string
+	//abi map
+	AbiMap map[string]string
 }
 
 // Returns an initialized empty jobset

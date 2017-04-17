@@ -55,6 +55,7 @@ type Do struct {
 	ChainPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PackagePath    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	OutputPath     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	BinPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Compiler       string   `mapstructure:"," json:"," yaml:"," toml:","`

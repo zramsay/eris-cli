@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/monax/cli/log"
+	"github.com/monax/cli/pkgs/abi"
 )
 
 // ------------------------------------------------------------------------
@@ -62,6 +63,81 @@ func (qContract *QueryContract) PreProcess(jobs *Jobs) (err error) {
 	}
 	qContract.ABI = string(buf)
 	return
+}
+
+func (qContract *QueryContract) Execute(jobs *Jobs) (*JobResults, error) {
+	var namedResults map[string]Type
+	var abiSource string
+	if abi, ok := jobs.AbiMap[qContract.Destination]; !ok {
+		if qContract.ABI == "" {
+			return &JobResults{}, fmt.Errorf("Couldn't get the needed abi from your job results, can you provide it through the abi field in your query contract job?")
+		} else {
+			abiSource = qContract.ABI
+		}
+	} else if qContract.ABI != "" {
+		abiSource = qContract.ABI
+	} else {
+		abiSource = abi
+	}
+
+	contractAbi, err := abi.MakeAbi(abiSource)
+	if err != nil {
+		return &JobResults{}, err
+	}
+
+	if qContract.Function == "()" {
+		log.Warn("Calling the fallback function")
+	}
+	// format data
+	callData, err := abi.FormatAndPackInputs(contractAbi, qContract.Function, qContract.Data)
+	if err != nil {
+		if qContract.Function == "()" {
+			log.Warn("Calling the fallback function")
+		} else {
+			return &JobResults{}, err
+		}
+	}
+
+	// Set the from and the to
+	fromAddrBytes, err := hex.DecodeString(qContract.Source)
+	if err != nil {
+		return &JobResults{}, err
+	}
+	toAddrBytes, err := hex.DecodeString(qContract.Destination)
+	if err != nil {
+		return &JobResults{}, err
+	}
+
+	// create call
+	result, _, err := jobs.NodeClient.QueryContract(fromAddrBytes, toAddrBytes, callData)
+	if err != nil {
+		return &JobResults{}, err
+	}
+
+	toUnpackInto, method, err := abi.CreateBlankSlate(contractAbi, qContract.Function)
+	if err != nil {
+		return &JobResults{}, err
+	}
+	err = contractAbi.Unpack(&toUnpackInto, qContract.Function, result)
+	if err != nil {
+		return &JobResults{}, err
+	}
+	// get names of the types, get string results, get actual results, return them.
+	fullStringResults := []string{"("}
+	for i, methodOutput := range method.Outputs {
+		strResult, actualResult, err := abi.ConvertUnpackedToJobTypes(toUnpackInto[i], methodOutput.Type)
+		if err != nil {
+			return &JobResults{}, err
+		}
+		fullStringResults = append(fullStringResults, strResult+", ")
+		if methodOutput.Name == "" {
+			methodOutput.Name = strconv.FormatInt(int64(i), 10)
+		}
+		namedResults[methodOutput.Name] = Type{ActualResult: actualResult, StringResult: strResult}
+	}
+	fullStringResults = append(fullStringResults, ")")
+	return &JobResults{FullResult: Type{StringResult: strings.Join(fullStringResults, ""), ActualResult: strings.Join(fullStringResults, "")}, NamedResults: namedResults}, nil
+
 }
 
 type QueryAccount struct {

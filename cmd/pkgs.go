@@ -3,13 +3,6 @@
 package commands
 
 import (
-	"fmt"
-	"os"
-	"runtime"
-
-	"github.com/monax/cli/pkgs"
-	"github.com/monax/cli/util"
-
 	"github.com/spf13/cobra"
 )
 
