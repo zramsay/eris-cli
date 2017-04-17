@@ -1,184 +1,156 @@
 jobs:
 
 - name: deployStorageK
-  job:
-    deploy:
+  deploy:
       contract: storage.sol
 
 - name: setStorageBaseBool
-  job:
-    set:
+  set:
       val: "true"
 
 - name: setStorageBool
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setBool 
       data:
         - $setStorageBaseBool
 
 - name: queryStorageBool
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getBool
 
 - name: assertStorageBool
-  job:
-    assert:
+  assert:
       key: $queryStorageBool
       relation: eq
       val: $setStorageBaseBool
 
 # tests string bools: #71
 - name: setStorageBool2
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setBool2 
       data:
         - true
 
 - name: queryStorageBool2
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getBool2
 
 - name: assertStorageBool2
-  job:
-    assert:
+  assert:
       key: $queryStorageBool2
       relation: eq
       val: "true"
 
 - name: setStorageBaseInt
-  job:
-    set:
+  set:
       val: 50000
 
 - name: setStorageInt
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setInt 
       data:
         - $setStorageBaseInt
 
 - name: queryStorageInt
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getInt
 
 - name: assertStorageInt
-  job:
-    assert:
+  assert:
       key: $queryStorageInt
       relation: eq
       val: $setStorageBaseInt
 
 - name: setStorageBaseUint
-  job:
-    set:
+  set:
       val: 9999999
 
 - name: setStorageUint
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setUint 
       data:
         - $setStorageBaseUint
 
 - name: queryStorageUint
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getUint
 
 - name: assertStorageUint
-  job:
-    assert:
+  assert:
       key: $queryStorageUint
       relation: eq
       val: $setStorageBaseUint
 
 - name: setStorageBaseAddress
-  job:
-    set:
+  set:
       val: "1040E6521541DAB4E7EE57F21226DD17CE9F0FB7"
 
 - name: setStorageAddress
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setAddress 
       data:
         - $setStorageBaseAddress
 
 - name: queryStorageAddress
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getAddress
 
 - name: assertStorageAddress
-  job:
-    assert:
+  assert:
       key: $queryStorageAddress
       relation: eq
       val: $setStorageBaseAddress
 
 - name: setStorageBaseBytes
-  job:
-    set:
+  set:
       val: marmatoshi
 
 - name: setStorageBytes
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setBytes 
       data:
         - $setStorageBaseBytes
 
 - name: queryStorageBytes
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getBytes
 
 - name: assertStorageBytes
-  job:
-    assert:
+  assert:
       key: $queryStorageBytes
       relation: eq
       val: $setStorageBaseBytes
 
 - name: setStorageBaseString
-  job:
-    set:
+  set:
       val: nakaburrow
 
 - name: setStorageString
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setString 
       data:
         - $setStorageBaseString
 
 - name: queryStorageString
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getString
 
 - name: assertStorageString
-  job:
-    assert:
+  assert:
       key: $queryStorageString
       relation: eq
       val: $setStorageBaseString

@@ -1,41 +1,34 @@
 jobs:
 
 - name: setStorageBase
-  job:
-    set:
+  set:
       val: 5
 
 - name: deployBinaryK
-  job:
-    deploy:
+  deploy:
       contract: binary.sol
-      save: true
 
 - name: deployActualBinaryK
-  job:
-    deploy:
+  deploy:
       contract: binary.bin
 
 - name: setStorage
-  job:
-    call:
+  call:
       destination: $deployActualBinaryK
-      abi: binary
+      abi: binary.abi
       function: set
       data:
         - $setStorageBase
 
 - name: queryStorage
-  job:
-    query-contract:
+  query-contract:
       destination: $deployActualBinaryK
       abi: binary
       function: get
 
 
 - name: assertStorage
-  job:
-    assert:
+  assert:
       key: $queryStorage
       relation: eq
       val: $setStorageBase

@@ -1,63 +1,53 @@
 jobs:
 
 - name: MinersFee
-  job:
-    set:
+  set:
       val: 1234
 
 - name: to_save
-  job:
-    set:
+  set:
       val: 5000
 
 - name: nameRegTestDataFile1
-  job:
-    register:
+  register:
       data_file: names1.csv
       amount: $to_save
       fee: $MinersFee
 
 - name: nameRegTestDataFile2
-  job:
-    register:
+  register:
       data_file: ./names2.csv
       fee: $MinersFee
 
 - name: queryReg1
-  job:
-    query-name:
+  query-name:
       name: burrow
       field: data
 
 - name: nameRegAssert1
-  job:
-    assert:
+  assert:
       key: $queryReg1
       relation: eq
       val: marmot_home
 
 - name: queryReg2
-  job:
-    query-name:
+  query-name:
       name: marmots_are_not
       field: data
 
 - name: nameRegAssert2
-  job:
-    assert:
+  assert:
       key: $queryReg2
       relation: eq
       val: rodents
 
 - name: queryReg3
-  job:
-    query-name:
+  query-name:
       name: rodents
       field: data
 
 - name: nameRegAssert3
-  job:
-    assert:
+  assert:
       key: $queryReg3
       relation: eq
       val: marmots_are_not
