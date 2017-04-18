@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -175,18 +174,6 @@ func IsMinimalDockerClientVersion() bool {
 		return false
 	}
 	return CompareVersions(v, version.DOCKER_VER_MIN)
-}
-
-func DockerMachineVersion() (string, error) {
-	out, err := exec.Command("docker-machine", "--version").CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-
-	// docker-machine version 0.7.0, build a650a40
-	//                ^^^^^^^^^^^^^ - submatch 0
-	//                        ^^^^^ - submatch 1
-	return string(regexp.MustCompile(`version (\d+\.\d+\.\d+)`).FindSubmatch(out)[1]), nil
 }
 
 // CompareVersions returns true if the version1 is larger or equal the version2,
