@@ -201,7 +201,6 @@ func checkIfCanOverwrite(doYes bool) error {
 	log.WithField("path", config.MonaxRoot).Warn("Monax root directory")
 	log.WithFields(log.Fields{
 		"services path": config.ServicesPath,
-		"chains path":   config.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
 	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 		log.Debug("Confirmation verified. Proceeding")
