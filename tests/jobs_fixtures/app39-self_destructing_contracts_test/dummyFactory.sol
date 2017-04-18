@@ -9,7 +9,8 @@ contract DummyFactory {
   Dummy _dummy;
 
   // create a new contract, the factory is the owner
-  function createADummy(){
+  function createADummy() {
+    // TODO create a fallback function, else this doesn't compile
     _dummy = (new Dummy).value(msg.value)();
   }
 

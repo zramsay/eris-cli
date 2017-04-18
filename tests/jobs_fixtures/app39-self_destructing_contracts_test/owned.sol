@@ -5,7 +5,7 @@ contract owned {
 
     modifier onlyOwner() {
         if (msg.sender == owner) {
-            _
+            _;
         }
     }
 
