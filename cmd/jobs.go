@@ -65,7 +65,7 @@ func defaultSigner() string {
 	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
 		ip, err := util.DockerWindowsAndMacIP(do)
 		util.IfExit(err)
-		return fmt.Sprintf("tcp://%v:4767", ip)
+		return fmt.Sprintf("http://%v:4767", ip)
 	} else {
 		util.DockerConnect(false, "monax")
 		keysName := util.ServiceContainerName("keys")
@@ -73,6 +73,6 @@ func defaultSigner() string {
 		if err != nil {
 			return fmt.Sprintf("error will be caught by cli failing: %v", util.DockerError(err))
 		}
-		return fmt.Sprintf("tcp://%s:4767", cont.NetworkSettings.IPAddress)
+		return fmt.Sprintf("http://%s:4767", cont.NetworkSettings.IPAddress)
 	}
 }

@@ -60,6 +60,7 @@ func (jobs *Jobs) RunJobs() (err error) {
 	/*
 		defer jobs.postProcess(err)
 	*/
+	jobs.jobCounter = make(map[int]string)
 	for i, job := range jobs.Jobs {
 		// handle duplicate job names. Request user input for permission to overwrite.
 		found, overwrite, at := checkForDuplicateQueryOverwrite(job.Name, jobNames, jobs.Overwrite)

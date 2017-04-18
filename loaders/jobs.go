@@ -22,6 +22,7 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 
 	burrowClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())
 	_, chainID, _, err := burrowClient.ChainId()
+	log.WithField("=>", chainID).Info("Loaded chain ID")
 
 	jobset.NodeClient = burrowClient
 	jobset.KeyClient = keys.NewBurrowKeyClient(do.Signer, loggers.NewNoopInfoTraceLogger())
@@ -34,6 +35,10 @@ func LoadJobs(do *definitions.Do) (*jobs.Jobs, error) {
 	jobset.DefaultFee = do.DefaultFee
 	jobset.DefaultGas = do.DefaultGas
 	jobset.JobMap = make(map[string]*jobs.JobResults)
+	jobset.AbiMap = make(map[string]string)
+	jobset.AbiPath = do.ABIPath
+	jobset.BinPath = do.BinPath
+
 	jobset.ChainID = chainID
 
 	if err != nil {

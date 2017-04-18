@@ -65,7 +65,7 @@ func (set *Set) PreProcess(jobs *Jobs) (err error) {
 }
 
 func (set *Set) Execute(jobs *Jobs) (*JobResults, error) {
-	log.WithField("=>", set.Value).Debug("Setting Value")
+	log.WithField("=>", set.Value.(Type).StringResult).Debug("Setting Value")
 	return &JobResults{
 		FullResult:   set.Value.(Type),
 		NamedResults: nil,

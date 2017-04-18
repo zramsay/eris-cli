@@ -81,7 +81,7 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 			return &JobResults{}, err
 		}
 
-		var namedResults map[string]Type
+		namedResults := make(map[string]Type)
 
 		for objectName, result := range compileReturn.Contracts {
 			stringResult, err := json.Marshal(result)
@@ -90,14 +90,20 @@ func (compile *Compile) Execute(jobs *Jobs) (*JobResults, error) {
 			}
 			// while we're here, let's write these abis and bins to their directories
 			if err := ioutil.WriteFile(filepath.Join(jobs.AbiPath, objectName+".abi"), []byte(result.Abi), 0664); err != nil {
-				return &JobResults{}, err
+				return &JobResults{}, fmt.Errorf("Could not write to file in abi path: %v", err)
 			}
 
 			if err := ioutil.WriteFile(filepath.Join(jobs.BinPath, objectName+".bin"), []byte(result.Bin), 0664); err != nil {
-				return &JobResults{}, err
+				return &JobResults{}, fmt.Errorf("Could not write to file in bin path: %v", err)
 			}
 
-			namedResults[objectName] = Type{string(stringResult), result}
+			log.WithFields(log.Fields{
+				"object name":       objectName,
+				"string result":     string(stringResult),
+				"actual result: %v": result,
+			}).Debug("Compiler Outputs")
+
+			namedResults[objectName] = Type{StringResult: string(stringResult), ActualResult: result}
 		}
 
 		return &JobResults{
@@ -152,6 +158,8 @@ type Deploy struct {
 	Nonce string `mapstructure:"nonce" yaml:"nonce"`
 	// our stored compiler after preprocessing
 	compiler *Compile
+	// our stored compilation results for use after preprocessing
+	compilerResults *JobResults
 }
 
 func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
@@ -164,9 +172,17 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"contract": deploy.Contract,
+		"instance": deploy.Instance,
+	}).Warn("Deploying")
+
 	// first check to see whether or not the contract exists in the pwd
 	if _, err := os.Stat(deploy.Contract); os.IsNotExist(err) {
 		// if it doesn't exist, check in the contract path now
+		pwd, _ := os.Getwd()
+		log.Debug("PWD: ", pwd)
+		log.Debug("deploy contract: ", deploy.Contract)
 		contractPathFile := filepath.Join(jobs.ContractPath, deploy.Contract)
 		if _, err = os.Stat(contractPathFile); os.IsNotExist(err) {
 			return err
@@ -179,17 +195,14 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 
-	for i, data := range deploy.Data {
-		if deploy.Data[i], err = preProcessInterface(data, jobs); err != nil {
-			return err
+	log.Debug("Length of deploy data, ", len(deploy.Data))
+	if len(deploy.Data) != 0 {
+		for i, data := range deploy.Data {
+			if deploy.Data[i], err = preProcessInterface(data, jobs); err != nil {
+				return err
+			}
 		}
 	}
-
-	buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, deploy.ABI))
-	if err != nil {
-		return err
-	}
-	deploy.ABI = string(buf)
 
 	deploy.Amount, _, err = preProcessString(deploy.Amount, jobs)
 	if err != nil {
@@ -214,7 +227,24 @@ func (deploy *Deploy) PreProcess(jobs *Jobs) (err error) {
 		return err
 	}
 
-	return deploy.selectCompiler(jobs)
+	err = deploy.selectCompiler(jobs)
+	if err != nil {
+		return err
+	}
+
+	deploy.compilerResults, err = deploy.compiler.Execute(jobs)
+	if err != nil {
+		return fmt.Errorf("Problem during compilation: %v", err)
+	}
+
+	if deploy.ABI != "" {
+		buf, err := ioutil.ReadFile(filepath.Join(jobs.AbiPath, deploy.ABI))
+		if err != nil {
+			return err
+		}
+		deploy.ABI = string(buf)
+	}
+	return nil
 }
 
 // defines rules of a plugin job compiler selection for a deploy job
@@ -258,20 +288,15 @@ func (deploy *Deploy) selectCompiler(jobs *Jobs) error {
 }
 
 func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
-	var namedResults map[string]Type
+	namedResults := make(map[string]Type)
 	// switch context of the compiler
 	switch deploy.compiler.Compiler.(type) {
 	case *compilers.SolcTemplate:
-		// execute compilation
-		results, err := deploy.compiler.Execute(jobs)
-		if err != nil {
-			return &JobResults{}, fmt.Errorf("Compile job: %v", err)
-		}
 		// begin deployment
 		if deploy.Instance == "all" || deploy.Instance == "" || filepath.Ext(deploy.Contract) == ".bin" {
 			log.Info("Deploying all contracts")
-			for name, contract := range results.NamedResults {
-				solcItem, ok := contract.ActualResult.(compilers.SolcItems)
+			for name, contract := range deploy.compilerResults.NamedResults {
+				solcItem, ok := contract.ActualResult.(*compilers.SolcItems)
 				if !ok {
 					return &JobResults{}, fmt.Errorf("Couldn't get the needed solc items from your compile job, did you remember to include a combined-json field with bin and abi?")
 				}
@@ -325,7 +350,8 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 			// we need to demand precision here of users so that they don't screw themselves over.
 			return &JobResults{NamedResults: namedResults}, nil
 		} else {
-			if solcItem, ok := results.NamedResults[deploy.Instance].ActualResult.(compilers.SolcItems); ok {
+			if result, ok := deploy.compilerResults.NamedResults[deploy.Contract+":"+deploy.Instance]; ok {
+				solcItem := result.ActualResult.(*compilers.SolcItems)
 				log.WithField("=>", deploy.Instance).Warn("Deploying single contract")
 				// TODO: Encapsulate the following in a function of some kind and use instead
 				binary := []byte(solcItem.Bin)
@@ -373,7 +399,7 @@ func (deploy *Deploy) Execute(jobs *Jobs) (*JobResults, error) {
 				// store the base result
 				return &JobResults{FullResult: result.FullResult, NamedResults: namedResults}, nil
 			} else {
-				return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Instance)
+				return &JobResults{}, fmt.Errorf("Could not acquire requested instance named %v", deploy.Contract+":"+deploy.Instance)
 			}
 		}
 	default:
@@ -429,8 +455,10 @@ func (call *Call) PreProcess(jobs *Jobs) (err error) {
 	}
 
 	for i, data := range call.Data {
-		if call.Data[i], err = preProcessInterface(data, jobs); err != nil {
+		if dataType, err := preProcessInterface(data, jobs); err != nil {
 			return err
+		} else {
+			call.Data[i] = dataType.ActualResult
 		}
 	}
 
