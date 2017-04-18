@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/monax/cli/log"
+
 	ethAbi "github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -25,22 +27,33 @@ func MakeAbi(abiData string) (ethAbi.ABI, error) {
 	return abiSpec, nil
 }
 
-func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs ...interface{}) ([]byte, error) {
-	if func2Pack, ok := reference.Methods[function]; !ok {
-		return nil, fmt.Errorf("Invalid method called for contract, doesn't exist")
-	} else {
-		if len(inputs) != len(func2Pack.Inputs) {
-			return nil, fmt.Errorf("Invalid number of inputs called for this function, expected %v got %v", len(func2Pack.Inputs), len(inputs))
+func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs []interface{}) ([]byte, error) {
+	func2Pack, ok := reference.Methods[function]
+	if !ok {
+		if function == "" {
+			func2Pack = reference.Constructor
+		} else {
+			return nil, fmt.Errorf("Invalid method called for contract, doesn't exist")
 		}
-		for i, expectedInput := range func2Pack.Inputs {
-			var err error
-			inputs[i], err = convertToPackingType(inputs[i], expectedInput.Type)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return reference.Pack(function, inputs)
 	}
+
+	log.Debugf("Length of inputs: %v", len(inputs))
+	log.Debugf("Length of requested inputs: %v", len(func2Pack.Inputs))
+	if len(inputs) != len(func2Pack.Inputs) {
+		return nil, fmt.Errorf("Invalid number of inputs called for this function, expected %v got %v", len(func2Pack.Inputs), len(inputs))
+	}
+	if len(inputs) == 0 && len(func2Pack.Inputs) == 0 {
+		return nil, nil
+	}
+	for i, expectedInput := range func2Pack.Inputs {
+		var err error
+		inputs[i], err = convertToPackingType(inputs[i], expectedInput.Type)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return reference.Pack(function, inputs...)
+
 }
 
 func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
@@ -106,6 +119,7 @@ func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error)
 			if typ, ok := from.(bool); !ok {
 				return nil, fmt.Errorf("Unexpected non bool type during type conversion, please reformat your run file to use a bool.")
 			} else {
+				log.Debug("BOOL VALUE: ", from.(bool))
 				return typ, nil
 			}
 		case ethAbi.StringTy:
@@ -136,6 +150,12 @@ func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error)
 			} else {
 				return common.Hex2Bytes(typ), nil
 			}
+		case ethAbi.FixedBytesTy:
+			if typ, ok := from.(string); !ok {
+				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+			} else {
+				return common.RightPadBytes([]byte(typ), to.SliceSize), nil
+			}
 		default:
 			return nil, fmt.Errorf("Invalid type during type conversion.")
 		}
@@ -148,7 +168,7 @@ func CreateBlankSlate(reference ethAbi.ABI, function string) ([]interface{}, eth
 	} else {
 		var outputs []interface{}
 		for i, output := range func2Unpack.Outputs {
-			outputs[i] = output.Type.Type
+			outputs[i] = output.Type
 		}
 		return outputs, func2Unpack, nil
 	}
