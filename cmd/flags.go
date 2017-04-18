@@ -22,6 +22,7 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 		cmd.Flags().BoolVarP(&do.Force, "force", "f", false, "kill the container instantly without waiting to exit") //why do we even have a timeout??
 	case "timeout":
 		cmd.Flags().UintVarP(&do.Timeout, "timeout", "t", 10, "manually set the timeout; overridden by --force")
+	// TODO deduplicate? (notice the false/true)
 	case "volumes":
 		cmd.Flags().BoolVarP(&do.Volumes, "vol", "o", false, "remove volumes")
 	case "rm-volumes":
@@ -39,7 +40,7 @@ func buildFlag(cmd *cobra.Command, do *definitions.Do, flag, typ string) { //doe
 	case "pull":
 		cmd.Flags().BoolVarP(&do.Pull, "pull", "p", false, fmt.Sprintf("pull an updated version of the %s's base service image from docker hub", typ))
 	case "env":
-		cmd.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax") //last digit; 1 or 2?
+		cmd.PersistentFlags().StringSliceVarP(&do.Env, "env", "e", nil, "multiple env vars can be passed using the KEY1=val1,KEY2=val2 syntax")
 	case "links":
 		cmd.PersistentFlags().StringSliceVarP(&do.Links, "links", "l", nil, "multiple containers can be linked can be passed using the KEY1:val1,KEY2:val2 syntax")
 	case "follow":

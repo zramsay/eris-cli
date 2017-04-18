@@ -15,7 +15,7 @@ environment:
     MSYSTEM: MINGW64
   matrix:
   - DOCKER_MACHINE: "true"
-    MACHINE_NAME: 'eris-test-win-%APPVEYOR_BUILD_ID%'
+    MACHINE_NAME: 'monax-test-win-%APPVEYOR_BUILD_ID%'
     DOCKER_VERSION: 1.10.0
     DOCKER_MACHINE_VERSION: 0.4.1
     AWS_ACCESS_KEY_ID:
@@ -49,7 +49,7 @@ build_script:
 
     cd c:\gopath\src\github.com\monax\cli
 
-    go install .\cmd\eris
+    go install .\cmd\monax
 
 after_test:
   - bash c:\gopath\src\github.com\monax\cli\tests\dm_cleanup.sh

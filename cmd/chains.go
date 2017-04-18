@@ -262,9 +262,7 @@ $ monax chains cat simplechain genesis -- display the genesis.json file from the
 func addChainsFlags() {
 	chainsMake.PersistentFlags().StringSliceVarP(&do.AccountTypes, "account-types", "", []string{}, "specify the kind and number of account types. find these in "+util.Tilde(filepath.Join(config.ChainsPath, "account-types"))+"; incompatible with chain-type")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainType, "chain-type", "", "", "specify the type of chain to use. find these in "+util.Tilde(filepath.Join(config.ChainsPath, "chain-types"))+"; incompatible with account-types")
-	chainsMake.PersistentFlags().BoolVarP(&do.Tarball, "tar", "", false, "instead of making directories in "+util.Tilde(config.ChainsPath)+", make tarballs; incompatible with and overrides zip")
-	chainsMake.PersistentFlags().BoolVarP(&do.ZipFile, "zip", "", false, "instead of making directories in "+util.Tilde(config.ChainsPath)+", make zip files")
-	chainsMake.PersistentFlags().BoolVarP(&do.Output, "output", "", true, "should monax-cm provide an output of its job")
+	chainsMake.PersistentFlags().StringVarP(&do.Output, "output", "", "", "output one of 'tar/zip/kubernetes' types")
 	chainsMake.PersistentFlags().BoolVarP(&do.Known, "known", "", false, "use csv for a set of known keys to assemble genesis.json (requires both --accounts and --validators flags)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeActs, "accounts", "", "", "comma separated list of the accounts.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
@@ -282,7 +280,6 @@ func addChainsFlags() {
 	buildFlag(chainsStart, do, "ports", "chain")
 	buildFlag(chainsStart, do, "env", "chain")
 	buildFlag(chainsStart, do, "links", "chain")
-	chainsStart.PersistentFlags().BoolVarP(&do.Force, "force", "f", false, "force reinitialize the chain")
 	chainsStart.PersistentFlags().BoolVarP(&do.Logrotate, "logrotate", "z", false, "turn on logrotate as a dependency to handle long output")
 
 	buildFlag(chainsLogs, do, "follow", "chain")

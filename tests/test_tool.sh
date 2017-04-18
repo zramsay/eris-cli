@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 # PURPOSE
 
-# This script will test the eris tool itself, including its packages, against
+# This script will test the monax tool itself, including its packages, against
 # a given docker backend. If it is started with the "local" argument then
 # it will test against the local docker backend. If it is started with an
 # argument which is not "local" then it will run the package tests for only
@@ -11,7 +11,7 @@
 #
 # Generally, the script will start a given docker-machine backend, make sure
 # that it can connect to that machine properly, then it will pull the required
-# docker images, run the eris package level tests, then run the eris stack
+# docker images, run the monax package level tests, then run the monax stack
 # level tests, finally it will remove all of the docker containers and images
 # so that everything is nice and clean and then shut down the docker-machine.
 

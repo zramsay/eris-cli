@@ -21,7 +21,6 @@ type Do struct {
 	Yes            bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Tarball        bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	ZipFile        bool     `mapstructure:"," json:"," yaml:"," toml:","`
-	Output         bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	OutputTable    bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Overwrite      bool     `mapstructure:"," json:"," yaml:"," toml:","`
 	Dump           bool     `mapstructure:"," json:"," yaml:"," toml:","`
@@ -63,6 +62,7 @@ type Do struct {
 	DefaultAmount  string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeActs  string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ChainMakeVals  string   `mapstructure:"," json:"," yaml:"," toml:","`
+	Output         string   `mapstructure:"," json:"," yaml:"," toml:","`
 	SeedsIP        []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ServicesSlice  []string `mapstructure:"," json:"," yaml:"," toml:","`
 	ImagesSlice    []string `mapstructure:"," json:"," yaml:"," toml:","`

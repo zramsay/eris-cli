@@ -52,14 +52,14 @@ check_and_exit() {
 }
 
 # ----------------------------------------------------------------------------
-# Run [eris packages do] tests
+# Run [monax packages do] tests
 
 time tests/test_jobs.sh
 if [ $? -ne 0 ]; then fail="true"; fi
 cd $start
 
 # ----------------------------------------------------------------------------
-# Run [eris chains make] tests
+# Run [monax chains make] tests
 
 time tests/test_chains_make.sh
 if [ $? -ne 0 ]; then fail="true"; fi

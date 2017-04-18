@@ -28,9 +28,9 @@ function sleeper() {
 }
 
 # ----------------------------------------------------------------------------
-# Build eris in a docker images
+# Build monax in a docker images
 
-# ensure eris image builds; machines built; and machines can be connected to
+# ensure monax image builds; machines built; and machines can be connected to
 function check_build() {
   echo
 

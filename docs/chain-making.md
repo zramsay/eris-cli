@@ -353,7 +353,7 @@ So, instead of talking about validators, let's get this chain "turned on"!
 But before we do that, let's actually remove the chain for now so it doesn't get in our way.
 
 ```bash
-eris chains rm -xfd advchain
+monax chains rm -xfd advchain
 ```
 
 

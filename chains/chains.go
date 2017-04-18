@@ -20,12 +20,13 @@ import (
 
 func StartChain(do *definitions.Do) error {
 	// Start an already set up chain.
-	if util.IsChain(do.Name, false) && util.IsData(do.Name) && !do.Force {
+	if util.IsChain(do.Name, false) && util.IsData(do.Name) {
 		_, err := startChain(do, false)
 		return err
 	}
 
 	// Default [--init-dir] value is chain's root.
+	// [zr] this should not be needed?
 	if do.Path == "" {
 		do.Path = filepath.Join(config.ChainsPath, do.Name)
 	}
@@ -35,15 +36,6 @@ func StartChain(do *definitions.Do) error {
 	do.Path, err = resolveChainsPath(do.Name, do.Path)
 	if err != nil {
 		return err
-	}
-
-	if do.Force {
-		// Chain is reinitialized upon request.
-		log.WithField("=>", do.Name).Debug("Initializing the chain: [--force] flag given")
-	} else {
-		// Chain is broken (either chain or data chain container doesn't exist),
-		// initialize the chain.
-		log.WithField("=>", do.Name).Debug("Initializing the chain: chain or data container doesn't exist")
 	}
 
 	return setupChain(do)

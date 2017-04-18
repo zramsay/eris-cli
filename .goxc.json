@@ -1,5 +1,5 @@
 {
-	"AppName": "eris",
+	"AppName": "monax",
 	"OutPath": "{{.Dest}}{{.PS}}{{.Version}}{{.PS}}{{.Os}}_{{.Arch}}{{.PS}}{{.ExeName}}{{.Ext}}",
 	"Tasks": [
 		"default",

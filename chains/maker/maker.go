@@ -138,10 +138,8 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	}
 
 	// write out the overview files on the host: accounts.csv, validators.csv (and *unsafe* accounts.json)
-	if do.Output {
-		if err = SaveAccountResults(do, accounts); err != nil {
-			return err
-		}
+	if err = SaveAccountResults(do, accounts); err != nil {
+		return err
 	}
 
 	return nil
