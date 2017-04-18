@@ -1,3 +1,5 @@
+pragma solidity >=0.0.0;
+
 import "./mortal.sol";
 
 contract Dummy is mortal {}
