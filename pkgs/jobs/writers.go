@@ -20,7 +20,7 @@ func ClearJobResults() error {
 
 // WriteJobResultCSV takes two strings and writes those to the delineated log
 // file, which is currently epm.log in the same directory as the epm.yaml
-func WriteJobResultCSV(name, result string) error {
+func WriteJobResultCSV(name string, result ...string) error {
 	logFile := setCsvPath()
 
 	var file *os.File
@@ -46,7 +46,7 @@ func WriteJobResultCSV(name, result string) error {
 	return nil
 }
 
-func WriteJobResultJSON(results map[string]string) error {
+func WriteJobResultJSON(results map[string]*JobResults) error {
 	logFile := setJsonPath()
 
 	file, err := os.Create(logFile)

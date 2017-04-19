@@ -2,54 +2,59 @@ package pkgs
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/loaders"
 	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/jobs"
-	"github.com/monax/cli/services"
 	"github.com/monax/cli/util"
 )
 
+// Run a package of smart contracts based on inputs from the CLI
 func RunPackage(do *definitions.Do) error {
-
-	// clears job_outputs file
-	jobs.ClearJobResults()
-	// useful for debugging
-	printPathPackage(do)
-
 	// sets do.ChainIP and do.ChainPort
 	if err := setChainIPandPort(do); err != nil {
 		return err
 	}
 
+	printPathPackage(do)
+
 	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
-	if err := util.GetChainID(do); err != nil {
+
+	loadedJobs, err := loaders.LoadJobs(do)
+	if err != nil {
 		return err
 	}
 
-	var err error
-	// Load the package if it doesn't exist
-	if do.Package == nil {
-		do.Package, err = loaders.LoadPackage(do.YAMLPath)
-		if err != nil {
+	// go to the directory where the yaml file is, it makes it far easier to
+	// resolve pathways to contracts and whatnot
+	pwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if do.YAMLPath != "./epm.yaml" {
+		if err = os.Chdir(do.YAMLPath); err != nil {
+			return err
+		}
+		defer os.Chdir(pwd)
+	}
+
+	if _, err := os.Stat(do.ABIPath); os.IsNotExist(err) {
+		if err := os.Mkdir(do.ABIPath, 0775); err != nil {
+			return err
+		}
+	}
+	if _, err := os.Stat(do.BinPath); os.IsNotExist(err) {
+		if err := os.Mkdir(do.BinPath, 0775); err != nil {
 			return err
 		}
 	}
 
-	if !do.RemoteCompiler {
-		if err := bootCompiler(); err != nil {
-			return err
-		}
-		if err = getLocalCompilerData(do); err != nil {
-			return err
-		}
-	}
-
-	return jobs.RunJobs(do)
+	return loadedJobs.RunJobs()
 }
 
+// Sets the chain networking information for later interactions via the jobs
 func setChainIPandPort(do *definitions.Do) error {
 
 	if !util.IsChain(do.ChainName, true) {
@@ -76,47 +81,9 @@ func setChainIPandPort(do *definitions.Do) error {
 	return nil
 }
 
-func bootCompiler() error {
-
-	// add the compilers to the local services if the flag is pushed
-	// [csk] note - when we move to default local compilers we'll remove
-	// the compilers service completely and this will need to get
-	// reworked to utilize DockerRun with a populated service def.
-	doComp := definitions.NowDo()
-	doComp.Name = "compilers"
-	return services.EnsureRunning(doComp)
-}
-
-// getLocalCompilerData populates the IP:port combo for the compilers.
-func getLocalCompilerData(do *definitions.Do) error {
-	// [csk]: note this is brittle we should only expose one port in the
-	// docker file by default for the compilers service we can expose more
-	// forcibly
-	var IPAddress string
-	var err error
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-		IPAddress, err = util.DockerWindowsAndMacIP(do)
-		if err != nil {
-			return err
-		}
-	} else {
-		containerName := util.ServiceContainerName("compilers")
-
-		cont, err := util.DockerClient.InspectContainer(containerName)
-		if err != nil {
-			return util.DockerError(err)
-		}
-
-		IPAddress = cont.NetworkSettings.IPAddress
-	}
-
-	do.Compiler = fmt.Sprintf("http://%s:9099", IPAddress)
-	return nil
-}
-
+// Utility function for printing out nice information about what we're getting into
 func printPathPackage(do *definitions.Do) {
-	log.WithField("=>", do.Compiler).Info("Using Compiler at")
 	log.WithField("=>", do.ChainName).Info("Using Chain at")
-	log.WithField("=>", do.ChainID).Debug("With ChainID")
+	log.WithField("=>", do.ChainURL).Debug("Through Chain URL")
 	log.WithField("=>", do.Signer).Info("Using Signer at")
 }

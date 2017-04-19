@@ -39,11 +39,7 @@ var (
 	KeysContainerPath = path.Join(MonaxContainerRoot, "keys", "data")
 
 	// Scratch directories.
-	DataContainersPath   = filepath.Join(ScratchPath, "data")
-	LanguagesScratchPath = filepath.Join(ScratchPath, "languages")
-	LllcScratchPath      = filepath.Join(LanguagesScratchPath, "lllc")
-	SolcScratchPath      = filepath.Join(LanguagesScratchPath, "sol")
-	SerpScratchPath      = filepath.Join(LanguagesScratchPath, "ser")
+	DataContainersPath = filepath.Join(ScratchPath, "data")
 )
 
 // DirsToMigrate is used by the `monax init` command to check
@@ -90,7 +86,6 @@ func ChangeMonaxRoot(monaxDir string) {
 
 	// Scratch Directories (basically monax' cache) (globally coordinated)
 	DataContainersPath = filepath.Join(ScratchPath, "data")
-	LanguagesScratchPath = filepath.Join(ScratchPath, "languages") // previously "~/.monax/languages"
 }
 
 func AbsolutePath(Datadir string, filename string) string {
@@ -144,10 +139,6 @@ func InitMonaxDir() (err error) {
 		KeysNamesPath,
 		ScratchPath,
 		DataContainersPath,
-		LanguagesScratchPath,
-		LllcScratchPath,
-		SolcScratchPath,
-		SerpScratchPath,
 		ServicesPath,
 	} {
 		err := InitDataDir(d)

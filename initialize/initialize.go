@@ -129,24 +129,24 @@ func pullDefaultImages(images []string) error {
 			"data",
 			"keys",
 			"db",
-			"compilers",
+			"solc",
 		}
 	}
 
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data":      version.ImageData,
-		"keys":      version.ImageKeys,
-		"db":        version.ImageDB,
-		"compilers": version.ImageCompilers,
+		"data": version.ImageData,
+		"keys": version.ImageKeys,
+		"db":   version.ImageDB,
+		"solc": version.ImageSolc,
 	}
 
 	for i, image := range images {
 		images[i] = versionedImageNames[image]
-
 		// Attach default registry prefix.
-		if !strings.HasPrefix(images[i], version.DefaultRegistry) {
+		// [rj] - this is very hacky, need to fix this either in images.go via a map, struct or a function
+		if !strings.HasPrefix(images[i], version.DefaultRegistry) && image != "solc" {
 			images[i] = path.Join(version.DefaultRegistry, images[i])
 		}
 	}

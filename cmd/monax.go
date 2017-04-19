@@ -107,6 +107,8 @@ func AddCommands() {
 	MonaxCmd.AddCommand(Services)
 	buildChainsCommand()
 	MonaxCmd.AddCommand(Chains)
+	buildRunCommand()
+	MonaxCmd.AddCommand(Run)
 	buildPackagesCommand()
 	MonaxCmd.AddCommand(Packages)
 	buildKeysCommand()

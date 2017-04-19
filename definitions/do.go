@@ -54,6 +54,7 @@ type Do struct {
 	ChainPort      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	PackagePath    string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ABIPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
+	OutputPath     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	BinPath        string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultGas     string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Compiler       string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -69,7 +70,7 @@ type Do struct {
 	ConfigOpts     []string `mapstructure:"," json:"," yaml:"," toml:","`
 	AccountTypes   []string `mapstructure:"," json:"," yaml:"," toml:","`
 
-	// for [monax pkgs do]
+	// for [monax run]
 	YAMLPath      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	ContractsPath string   `mapstructure:"," json:"," yaml:"," toml:","`
 	Signer        string   `mapstructure:"," json:"," yaml:"," toml:","`
@@ -79,7 +80,6 @@ type Do struct {
 	ChainURL      string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultOutput string   `mapstructure:"," json:"," yaml:"," toml:","`
 	DefaultSets   []string `mapstructure:"," json:"," yaml:"," toml:","`
-	Package       *Package
 
 	//clean
 	Containers bool `mapstructure:"," json:"," yaml:"," toml:","`

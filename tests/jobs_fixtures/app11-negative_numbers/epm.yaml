@@ -1,87 +1,74 @@
 jobs:
 
 - name: setStorageBase
-  job:
-    set:
+  set:
       val: -5
 
 - name: deployStorageK
-  job:
-    deploy:
+  deploy:
       contract: storage.sol
       data:
         - $setStorageBase
 
 - name: queryStorage
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: x
 
 - name: assertStorage
-  job:
-    assert:
+  assert:
       key: $queryStorage
       relation: eq
       val: $setStorageBase
 
 # Second time!
 - name: setStorageBaseSecond
-  job:
-    set:
+  set:
       val: -867676543
 
 - name: setStorageSecond
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setX
       data:
         - $setStorageBaseSecond
 
 - name: queryStorageSecond
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: x
 
 - name: assertStorageSecond
-  job:
-    assert:
+  assert:
       key: $queryStorageSecond
       relation: eq
       val: $setStorageBaseSecond
 
 # Third time!
 - name: setStorageBaseThird
-  job:
-    set:
+  set:
       val: -457654789753436542135
 
 - name: setStorageThird
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setX
       data:
         - $setStorageBaseThird
 
 - name: queryStorageThird
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: x
 
 - name: assertStorageThird
-  job:
-    assert:
+  assert:
       key: $queryStorageThird
       relation: eq
       val: $setStorageBaseThird
 
 - name: setStorageNegativeArray
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setNegativeArray
       data:
@@ -89,14 +76,12 @@ jobs:
         - -2
 
 - name: queryNegativeArray
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getNegativeArray
 
 - name: assertNegativeArray
-  job:
-    assert:
+  assert:
       key: $queryNegativeArray
       relation: eq
       val: "[-18793874234,-2]"
