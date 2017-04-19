@@ -57,7 +57,6 @@ export AWS_S3_PKGS_BUCKET=code.monax.io/pkgs
 export AWS_S3_PKGS_URL=pkgs.monax.io
 export AWS_S3_RPM_URL=${AWS_S3_PKGS_URL}/yum
 export KEY_NAME="Monax (PACKAGES SIGNING KEY) <ops@monax.io>"
-
 export KEY_PASSWORD="one1two!three"
 
 pre_check() {
