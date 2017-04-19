@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/list"
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/util"
 
@@ -28,78 +26,14 @@ image.`,
 }
 
 func buildServicesCommand() {
-	//Services.AddCommand(servicesMake)
-	Services.AddCommand(servicesList)
-	Services.AddCommand(servicesEdit)
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
-	Services.AddCommand(servicesInspect)
 	Services.AddCommand(servicesIP)
 	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
-	Services.AddCommand(servicesUpdate)
 	Services.AddCommand(servicesRm)
-	Services.AddCommand(servicesCat)
 	addServicesFlags()
-}
-
-var servicesList = &cobra.Command{
-	Use:   "ls",
-	Short: "lists everything service related",
-	Long: `list services or known service definition files
-
-The -r flag limits the output to running services only.
-
-The --json flag dumps the container or known files information
-in the JSON format.
-
-The -q flag is equivalent to the '{{.ShortName}}' format.
-
-The -f flag specifies an alternate format for the list, using the syntax
-of Go text templates. See the more detailed description in the help
-output for the [monax ls] command. The struct passed to the Go template
-for the -k flag is this
-
-  type Definition struct {
-    Name       string       // service name
-    Definition string       // definition file name
-  }
-
-The -k flag displays the known definition files.`,
-	Run: ListServices,
-	Example: `$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Cmd}}\t{{.Info.Config.Entrypoint}}'
-$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Image}}\t{{ports .Info}}'
-$ monax services ls -f '{{.ShortName}}\t{{.Info.Config.Volumes}}\t{{.Info.Config.Mounts}}'
-$ monax services ls -f '{{.Info.ID}}\t{{.Info.HostConfig.VolumesFrom}}'`,
-}
-
-/*
-var servicesMake = &cobra.Command{
-	Use:   "make NAME IMAGE",
-	Short: "create a new service",
-	Long: `create a new service
-
-Command must be given a NAME and a container IMAGE using the standard
-docker format of [repository/organization/image].`,
-	Example: "$ monax services make eth monax/eth\n" +
-		"$ monax services make mint tutum.co/tendermint/tendermint",
-	Run: MakeService,
-}*/
-
-var servicesEdit = &cobra.Command{
-	Use:   "edit NAME",
-	Short: "edit a service",
-	Long: `edit a service definition file which is kept in ` + util.Tilde(config.ServicesPath) + `.
-Edit will utilize your default editor. (See also the MONAX environment variable.)
-
-NOTE: Do not use this command for configuring a *specific* service. This
-command will only operate on *service configuration file* which tell Monax
-how to start and stop a specific service.
-
-How that service is used for a specific project is handled from project
-definition files.`,
-	Run: EditService,
 }
 
 var servicesStart = &cobra.Command{
@@ -123,20 +57,6 @@ the --ports flag.
 	Example: `$ monax services start ipfs --ports 17000 -- map the first port from the definition file to the host port 17000
 $ monax services start ipfs --ports 17000,18000- -- redefine the first and the second port mappings and autoincrement the rest
 $ monax services start ipfs --ports 50000:5001 -- redefine the specific port mapping (published host port:exposed container port)`,
-}
-
-var servicesInspect = &cobra.Command{
-	Use:   "inspect NAME [KEY]",
-	Short: "machine readable service operation details",
-	Long: `display machine readable details about running containers
-
-Information available to the inspect command is provided by the Docker API.
-For more information about return values, see:
-https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `$ monax services inspect ipfs -- will display the entire information about ipfs containers
-$ monax services inspect ipfs name -- will display the name in machine readable format
-$ monax services inspect ipfs host_config.binds -- will display only that value`,
-	Run: InspectService,
 }
 
 var servicesIP = &cobra.Command{
@@ -179,22 +99,6 @@ var servicesStop = &cobra.Command{
 	Run:   KillService,
 }
 
-var servicesUpdate = &cobra.Command{
-	Use:     "update NAME",
-	Aliases: []string{"restart"},
-	Short:   "update an installed service",
-	Long: `update an installed service, or install it if it has not been installed
-
-Functionally this command will perform the following sequence of steps:
-
-1. Stop the service (if it is running).
-2. Remove the container which ran the service.
-3. Pull the image the container uses from a hub.
-4. Rebuild the container from the updated image.
-5. Restart the service (if it was previously running).`,
-	Run: UpdateService,
-}
-
 var servicesRm = &cobra.Command{
 	Use:   "rm NAME",
 	Short: "remove an installed service",
@@ -203,15 +107,6 @@ var servicesRm = &cobra.Command{
 Command will remove the service's container but will not remove
 the service definition file.`,
 	Run: RmService,
-}
-
-var servicesCat = &cobra.Command{
-	Use:   "cat NAME",
-	Short: "display the service definition file",
-	Long: `display the service definition file
-
-Command will cat local service definition file.`,
-	Run: CatService,
 }
 
 func addServicesFlags() {
@@ -224,11 +119,6 @@ func addServicesFlags() {
 	buildFlag(servicesExec, do, "publish", "service")
 	buildFlag(servicesExec, do, "ports", "service")
 	buildFlag(servicesExec, do, "interactive", "service")
-
-	buildFlag(servicesUpdate, do, "pull", "service")
-	buildFlag(servicesUpdate, do, "timeout", "service")
-	buildFlag(servicesUpdate, do, "env", "service")
-	buildFlag(servicesUpdate, do, "links", "service")
 
 	buildFlag(servicesRm, do, "force", "service")
 	buildFlag(servicesRm, do, "file", "service")
@@ -249,13 +139,6 @@ func addServicesFlags() {
 	buildFlag(servicesStop, do, "timeout", "service")
 	servicesStop.Flags().BoolVarP(&do.All, "all", "a", false, "stop the primary service and its dependent services")
 	servicesStop.Flags().StringVarP(&do.ChainName, "chain", "c", "", "specify a chain the service should also stop")
-
-	buildFlag(servicesList, do, "known", "service")
-	servicesList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
-	servicesList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
-	servicesList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers only")
-	servicesList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of service names")
-	servicesList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
 }
 
 func StartService(cmd *cobra.Command, args []string) {
@@ -297,33 +180,6 @@ func KillService(cmd *cobra.Command, args []string) {
 	util.IfExit(services.KillService(do))
 }
 
-/*
-func MakeService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Operations.Args = []string{args[1]}
-	util.IfExit(services.MakeService(do))
-}*/
-
-func EditService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	util.IfExit(services.EditService(do))
-}
-
-func InspectService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-
-	do.Name = args[0]
-	if len(args) == 1 {
-		do.Operations.Args = []string{"all"}
-	} else {
-		do.Operations.Args = []string{args[1]}
-	}
-
-	util.IfExit(services.InspectService(do))
-}
-
 func IPService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
@@ -338,39 +194,8 @@ func PortsService(cmd *cobra.Command, args []string) {
 	util.IfExit(services.PortsService(do))
 }
 
-func UpdateService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	util.IfExit(services.UpdateService(do))
-}
-
-func ListServices(cmd *cobra.Command, args []string) {
-	if do.All {
-		do.Format = "extended"
-	}
-	if do.Quiet {
-		do.Format = "{{.ShortName}}"
-	}
-	if do.JSON {
-		do.Format = "json"
-	}
-	if do.Known {
-		util.IfExit(list.Known("services", do.Format))
-	} else {
-		util.IfExit(list.Containers(definitions.TypeService, do.Format, do.Running))
-	}
-}
-
 func RmService(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Operations.Args = args
 	util.IfExit(services.RmService(do))
-}
-
-func CatService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	out, err := services.CatService(do)
-	util.IfExit(err)
-	fmt.Fprint(config.Global.Writer, out)
 }

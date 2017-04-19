@@ -3,14 +3,10 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/config"
 	"github.com/monax/cli/definitions"
-	//"github.com/monax/cli/initialize"
 	"github.com/monax/cli/loaders"
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/perform"
@@ -271,48 +267,11 @@ func EnsureRunning(do *definitions.Do) error {
 	return nil
 }
 
-func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bool {
-	return parseKnown(service.Name)
-}
-
 func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
 }
 
-/*
-func MakeService(do *definitions.Do) error {
-	srv := definitions.BlankServiceDefinition()
-	srv.Name = do.Name
-	srv.Service.Name = do.Name
-	srv.Service.Image = do.Operations.Args[0]
-	srv.Service.AutoData = true
-
-	var err error
-	//get maintainer info
-	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
-	if err != nil {
-		// don't return -> field not required
-		log.Debug(err.Error())
-	}
-
-	log.WithFields(log.Fields{
-		"service": srv.Service.Name,
-		"image":   srv.Service.Image,
-	}).Debug("Creating a new service definition file")
-
-	// TODO
-	//if err := initialize.WriteServiceDefinitionFile(do.Name, srv); err != nil {
-	//	return err
-	//}
-	return nil
-}*/
-
-func EditService(do *definitions.Do) error {
-	servDefFile := FindServiceDefinitionFile(do.Name)
-	log.WithField("=>", servDefFile).Info("Editing service")
-	return config.Editor(servDefFile)
-}
-
+// used by [services ip]
 func InspectService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
@@ -347,20 +306,6 @@ func LogsService(do *definitions.Do) error {
 	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
 }
 
-func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	service.Service.Environment = append(service.Service.Environment, do.Env...)
-	service.Service.Links = append(service.Service.Links, do.Links...)
-	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func RmService(do *definitions.Do) error {
 	for _, servName := range do.Operations.Args {
 		service, err := loaders.LoadServiceDefinition(servName)
@@ -393,33 +338,6 @@ func RmService(do *definitions.Do) error {
 	return nil
 }
 
-func CatService(do *definitions.Do) (string, error) {
-	configs := util.GetGlobalLevelConfigFilesByType("services", true)
-	for _, c := range configs {
-		cName := strings.Split(filepath.Base(c), ".")[0]
-		if cName == do.Name {
-			cat, err := ioutil.ReadFile(c)
-			if err != nil {
-				return "", err
-			}
-			return string(cat), nil
-		}
-	}
-	return "", fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
-}
-
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
 	return perform.DockerInspect(srv, ops, field)
-}
-
-func parseKnown(name string) bool {
-	known := util.GetGlobalLevelConfigFilesByType("services", false)
-	if len(known) != 0 {
-		for _, srv := range known {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
 }
