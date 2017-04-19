@@ -17,6 +17,7 @@
 package abi
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,9 +46,11 @@ func packElement(t Type, reflectValue reflect.Value) []byte {
 
 		return common.LeftPadBytes(reflectValue.Bytes(), 32)
 	case BoolTy:
-		if reflectValue.Bool() {
+		fmt.Printf("Bool val: %v\n", reflectValue.Bool())
+		if reflectValue.Bool() == true {
 			return math.PaddedBigBytes(common.Big1, 32)
 		} else {
+			fmt.Println("Padded value: ", math.PaddedBigBytes(common.Big0, 32))
 			return math.PaddedBigBytes(common.Big0, 32)
 		}
 	case BytesTy:

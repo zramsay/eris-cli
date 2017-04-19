@@ -47,6 +47,7 @@ func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs []interfa
 	}
 	for i, expectedInput := range func2Pack.Inputs {
 		var err error
+		fmt.Printf("TYPE: %T\n", inputs[i])
 		inputs[i], err = convertToPackingType(inputs[i], expectedInput.Type)
 		if err != nil {
 			return nil, err
@@ -57,7 +58,7 @@ func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs []interfa
 }
 
 func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
-	if !to.IsSlice {
+	if !to.IsSlice && !to.IsArray {
 		return nil, fmt.Errorf("Attempting to convert to non slice type")
 	} else if to.SliceSize != -1 && len(from) != to.SliceSize {
 		return nil, fmt.Errorf("Length of array does not match, expected %v got %v", to.SliceSize, len(from))
@@ -66,6 +67,7 @@ func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
 		var err error
 		from[i], err = convertToPackingType(typ, *to.Elem)
 		if err != nil {
+			fmt.Printf("Got here, current type is %T for value %v\n", typ, typ)
 			return nil, err
 		}
 	}
@@ -74,10 +76,22 @@ func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
 
 func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error) {
 	if to.IsSlice || to.IsArray && to.T != ethAbi.BytesTy && to.T != ethAbi.FixedBytesTy {
-		if typ, ok := from.([]interface{}); !ok {
+		switch from.(type) {
+		case []int, []bool, []string:
+			s := reflect.ValueOf(from)
+			if s.Kind() != reflect.Slice {
+				panic("Given a non slice type to work with")
+			}
+
+			ret := make([]interface{}, s.Len())
+
+			for i := 0; i < s.Len(); i++ {
+				ret[i] = s.Index(i)
+			}
+			fmt.Println("Got here!")
+			return convertSlice(ret, to)
+		default:
 			return nil, fmt.Errorf("Unexpected non slice type during type conversion, please reformat your run file to use an array/slice.")
-		} else {
-			return convertSlice(typ, to)
 		}
 	} else {
 		switch to.T {

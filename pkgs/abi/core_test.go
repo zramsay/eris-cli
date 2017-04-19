@@ -81,9 +81,9 @@ func TestPacker(t *testing.T) {
 		},
 		{
 			`[{"constant":false,"inputs":[{"name":"","type":"bool"},{"name":"","type":"bool"}],"name":"multiPackBools","outputs":[],"payable":false,"type":"function"}]`,
-			[]interface{}{bool(true), bool(false)},
+			[]interface{}{bool(false), bool(false)},
 			"multiPackBools",
-			append(pad([]byte{1}, 32, true), pad([]byte{0}, 32, true)...),
+			append(pad([]byte{0}, 32, true), pad([]byte{0}, 32, true)...),
 		},
 		{
 			`[{"constant":false,"inputs":[{"name":"","type":"int256"},{"name":"","type":"int256"}],"name":"multiPackInts","outputs":[],"payable":false,"type":"function"}]`,
