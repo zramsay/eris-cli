@@ -52,7 +52,9 @@ func FormatAndPackInputs(reference ethAbi.ABI, function string, inputs []interfa
 		if err != nil {
 			return nil, err
 		}
+		log.Debugf("Value being packed in: Type %T with value %v", inputs[i], inputs[i])
 	}
+
 	return reference.Pack(function, inputs...)
 
 }
@@ -67,7 +69,7 @@ func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
 		var err error
 		from[i], err = convertToPackingType(typ, *to.Elem)
 		if err != nil {
-			fmt.Printf("Got here, current type is %T for value %v\n", typ, typ)
+			fmt.Printf("Got here, current type is %T for value %v against %T\n", typ, typ, *to.Elem)
 			return nil, err
 		}
 	}
@@ -75,105 +77,227 @@ func convertSlice(from []interface{}, to ethAbi.Type) (interface{}, error) {
 }
 
 func convertToPackingType(from interface{}, to ethAbi.Type) (interface{}, error) {
-	if to.IsSlice || to.IsArray && to.T != ethAbi.BytesTy && to.T != ethAbi.FixedBytesTy {
-		switch from.(type) {
-		case []int, []bool, []string:
-			s := reflect.ValueOf(from)
-			if s.Kind() != reflect.Slice {
-				panic("Given a non slice type to work with")
+	if to.IsSlice || to.IsArray {
+		switch to.T {
+		case ethAbi.IntTy, ethAbi.UintTy:
+			if typ, ok := from.([]int); !ok {
+				return nil, fmt.Errorf("Unexpected non int slice type during type conversion, please reformat your run file to use an array/slice of ints.")
+			} else {
+				var signed bool = to.T == ethAbi.IntTy
+				switch to.Elem.Size {
+				case 8:
+					if signed {
+						var Int8s []int8
+						for i, typI := range typ {
+							output, err := convertToPackingType(typI, *to.Elem)
+							if err != nil {
+								return nil, err
+							}
+							Int8s[i] = output.(int8)
+						}
+						return Int8s, nil
+					}
+					var Uint8s []uint8
+					for i, typI := range typ {
+						output, err := convertToPackingType(typI, *to.Elem)
+						if err != nil {
+							return nil, err
+						}
+						Uint8s[i] = output.(uint8)
+					}
+					return Uint8s, nil
+				case 16:
+					if signed {
+						var Int16s []int16
+						for i, typI := range typ {
+							output, err := convertToPackingType(typI, *to.Elem)
+							if err != nil {
+								return nil, err
+							}
+							Int16s[i] = output.(int16)
+						}
+						return Int16s, nil
+					}
+					var Uint16s []uint16
+					for i, typI := range typ {
+						output, err := convertToPackingType(typI, *to.Elem)
+						if err != nil {
+							return nil, err
+						}
+						Uint16s[i] = output.(uint16)
+					}
+					return Uint16s, nil
+				case 32:
+					if signed {
+						var Int32s []int32
+						for i, typI := range typ {
+							output, err := convertToPackingType(typI, *to.Elem)
+							if err != nil {
+								return nil, err
+							}
+							Int32s[i] = output.(int32)
+						}
+						return Int32s, nil
+					}
+					var Uint32s []uint32
+					for i, typI := range typ {
+						output, err := convertToPackingType(typI, *to.Elem)
+						if err != nil {
+							return nil, err
+						}
+						Uint32s[i] = output.(uint32)
+					}
+					return Uint32s, nil
+				case 64:
+					if signed {
+						var Int64s []int64
+						for i, typI := range typ {
+							output, err := convertToPackingType(typI, *to.Elem)
+							if err != nil {
+								return nil, err
+							}
+							Int64s[i] = output.(int64)
+						}
+						return Int64s, nil
+					}
+					var Uint64s []uint64
+					for i, typI := range typ {
+						output, err := convertToPackingType(typI, *to.Elem)
+						if err != nil {
+							return nil, err
+						}
+						Uint64s[i] = output.(uint64)
+					}
+					return Uint64s, nil
+				default:
+					if signed {
+						var Ints []*big.Int
+						for i, typI := range typ {
+							output, err := convertToPackingType(typI, *to.Elem)
+							if err != nil {
+								return nil, err
+							}
+							Ints[i] = output.(*big.Int)
+						}
+						return Ints, nil
+					}
+					var Uints []*big.Int
+					for i, typI := range typ {
+						output, err := convertToPackingType(typI, *to.Elem)
+						if err != nil {
+							return nil, err
+						}
+						Uints[i] = output.(*big.Int)
+					}
+					return Uints, nil
+				}
 			}
 
-			ret := make([]interface{}, s.Len())
-
-			for i := 0; i < s.Len(); i++ {
-				ret[i] = s.Index(i)
+		case ethAbi.BoolTy:
+			return from.([]bool), nil
+		case ethAbi.StringTy:
+			return from.([]string), nil
+		case ethAbi.FixedBytesTy, ethAbi.BytesTy:
+			if to.Elem.T == ethAbi.UintTy {
+				break
+			} else {
+				var Bytez [][]byte
+				for i, typI := range from.([]string) {
+					switch to.T {
+					case ethAbi.BytesTy:
+						Bytez[i] = common.Hex2Bytes(typI)
+					case ethAbi.FixedBytesTy:
+						Bytez[i] = common.RightPadBytes([]byte(typI), to.SliceSize)
+					default:
+						return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+					}
+				}
+				return Bytez, nil
 			}
-			fmt.Println("Got here!")
-			return convertSlice(ret, to)
 		default:
 			return nil, fmt.Errorf("Unexpected non slice type during type conversion, please reformat your run file to use an array/slice.")
 		}
-	} else {
-		switch to.T {
-		case ethAbi.IntTy, ethAbi.UintTy:
-			var signed bool = to.T == ethAbi.IntTy
-			if typ, ok := from.(int); !ok {
-				return nil, fmt.Errorf("Unexpected non integer type during type conversion, please reformat your run file to use an integer.")
-			} else {
-				switch to.Size {
-				case 8:
-					if signed {
-						return int8(typ), nil
-					}
-					return uint8(typ), nil
-				case 16:
-					if signed {
-						return int16(typ), nil
-					}
-					return uint16(typ), nil
-				case 32:
-					if signed {
-						return int32(typ), nil
-					}
-					return uint32(typ), nil
-				case 64:
-					if signed {
-						return int64(typ), nil
-					}
-					return uint64(typ), nil
-				default:
-					big := common.Big0
-					if signed {
-						return big.SetInt64(int64(typ)), nil
-					}
-					return big.SetUint64(uint64(typ)), nil
+	}
+	switch to.T {
+	case ethAbi.IntTy, ethAbi.UintTy:
+		var signed bool = to.T == ethAbi.IntTy
+		if typ, ok := from.(int); !ok {
+			return nil, fmt.Errorf("Unexpected non integer type during type conversion, please reformat your run file to use an integer.")
+		} else {
+			switch to.Size {
+			case 8:
+				if signed {
+					return int8(typ), nil
 				}
-			}
-		case ethAbi.BoolTy:
-			if typ, ok := from.(bool); !ok {
-				return nil, fmt.Errorf("Unexpected non bool type during type conversion, please reformat your run file to use a bool.")
-			} else {
-				log.Debug("BOOL VALUE: ", from.(bool))
-				return typ, nil
-			}
-		case ethAbi.StringTy:
-			if typ, ok := from.(string); !ok {
-				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
-			} else {
-				return typ, nil
-			}
-		case ethAbi.AddressTy:
-			if typ, ok := from.(string); !ok {
-				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
-			} else {
-				return common.HexToAddress(typ), nil
-			}
-		case ethAbi.FunctionTy:
-			if typ, ok := from.(string); !ok {
-				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
-			} else {
-				if len(typ) != 24 {
-					return nil, fmt.Errorf("Expected function signature to be address + 4 byte function signature. Got %v bytes.", len(typ))
-				} else {
-					return common.Hex2Bytes(typ), nil
+				return uint8(typ), nil
+			case 16:
+				if signed {
+					return int16(typ), nil
 				}
+				return uint16(typ), nil
+			case 32:
+				if signed {
+					return int32(typ), nil
+				}
+				return uint32(typ), nil
+			case 64:
+				if signed {
+					return int64(typ), nil
+				}
+				return uint64(typ), nil
+			default:
+				big := common.Big0
+				if signed {
+					return big.SetInt64(int64(typ)), nil
+				}
+				return big.SetUint64(uint64(typ)), nil
 			}
-		case ethAbi.BytesTy:
-			if typ, ok := from.(string); !ok {
-				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		}
+	case ethAbi.BoolTy:
+		if typ, ok := from.(bool); !ok {
+			return nil, fmt.Errorf("Unexpected non bool type during type conversion, please reformat your run file to use a bool.")
+		} else {
+			log.Debug("BOOL VALUE: ", from.(bool))
+			return typ, nil
+		}
+	case ethAbi.StringTy:
+		if typ, ok := from.(string); !ok {
+			return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		} else {
+			return typ, nil
+		}
+	case ethAbi.AddressTy:
+		if typ, ok := from.(string); !ok {
+			return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		} else {
+			return common.HexToAddress(typ), nil
+		}
+	case ethAbi.FunctionTy:
+		if typ, ok := from.(string); !ok {
+			return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		} else {
+			if len(typ) != 24 {
+				return nil, fmt.Errorf("Expected function signature to be address + 4 byte function signature. Got %v bytes.", len(typ))
 			} else {
 				return common.Hex2Bytes(typ), nil
 			}
-		case ethAbi.FixedBytesTy:
-			if typ, ok := from.(string); !ok {
-				return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
-			} else {
-				return common.RightPadBytes([]byte(typ), to.SliceSize), nil
-			}
-		default:
-			return nil, fmt.Errorf("Invalid type during type conversion.")
 		}
+	case ethAbi.BytesTy:
+		if typ, ok := from.(string); !ok {
+			return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		} else {
+			return common.Hex2Bytes(typ), nil
+		}
+	case ethAbi.FixedBytesTy:
+		if typ, ok := from.(string); !ok {
+			return nil, fmt.Errorf("Unexpected non string type during type conversion, please reformat your run file to use a string.")
+		} else {
+			return common.RightPadBytes([]byte(typ), to.SliceSize), nil
+		}
+	default:
+		return nil, fmt.Errorf("Invalid type during type conversion.")
 	}
+
 }
 
 func CreateBlankSlate(reference ethAbi.ABI, function string) ([]interface{}, ethAbi.Method, error) {
