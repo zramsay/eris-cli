@@ -16,6 +16,7 @@ echo ">>> Importing GPG keys"
 echo
 gpg --import linux-public-key.asc
 gpg --import linux-private-key.asc
+echo "digest-algo sha256" >> $HOME/.gnupg/gpg.conf
 
 export GOREPO=${GOPATH}/src/github.com/monax/cli
 git clone https://github.com/monax/cli ${GOREPO}
@@ -56,7 +57,7 @@ EOF
 dpkg-deb --build deb
 PACKAGE=monax_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
-aws s3 cp ${PACKAGE} s3://${AWS_S3_PKGS_BUCKET}/dl/${PACKAGE}
+aws s3 cp ${PACKAGE} s3://${AWS_S3_PKGS_BUCKET}/dl/${PACKAGE} --acl public-read
 
 echo
 echo ">>> Creating an APT repository"
@@ -70,7 +71,7 @@ basedir /root/monax
 ask-passphrase
 EOF
 
-DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial"
+DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial yakkety"
 for distro in ${DISTROS}
 do
   cat >> apt/conf/distributions <<EOF
@@ -111,7 +112,7 @@ reprepro -b apt ls monax
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 sync apt s3://${AWS_S3_PKGS_BUCKET}/apt/
+aws s3 sync apt s3://${AWS_S3_PKGS_BUCKET}/apt/ --acl public-read
 
 echo
 echo ">>> Installation instructions"

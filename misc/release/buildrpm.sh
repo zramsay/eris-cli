@@ -88,7 +88,7 @@ EOF
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-aws s3 sync yum s3://${AWS_S3_PKGS_BUCKET}/yum/
+aws s3 sync yum s3://${AWS_S3_PKGS_BUCKET}/yum/ --acl public-read
 
 echo
 echo ">>> Installation instructions"
