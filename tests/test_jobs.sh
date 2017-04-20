@@ -51,7 +51,7 @@ repo=`pwd` #monax
 # Needed functionality
 
 ensure_running(){
-  if [[ "$($cli_exec services ls -qr | grep $1)" == "$1" ]]
+  if [[ "$($cli_exec ls --format {{.ShortName}} | grep $1)" == "$1" ]]
   then
     echo "$1 already started. Not starting."
     was_running=1
