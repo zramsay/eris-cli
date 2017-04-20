@@ -426,27 +426,6 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import data: %v", err)
 	}
 
-	// mintkey has been removed from the monaxdb image. this functionality
-	// needs to be wholesale refactored. For now we'll just run the keys
-	// service (where mintkey is....)
-
-	importKey := definitions.NowDo()
-	importKey.Name = "keys"
-	importKey.Destination = containerDst
-	importKey.Source = filepath.Join(hostSrc, "priv_validator.json")
-	if err = data.ImportData(importKey); err != nil {
-		do.RmD = true
-		RemoveChain(do)
-		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
-	}
-
-	if out, err := services.ExecHandler("keys", []string{"mintkey", "monax", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.MonaxContainerRoot, do.Name)}); err != nil {
-		log.Error(err)
-		do.RmD = true
-		RemoveChain(do)
-		return fmt.Errorf("Failed to transliterate [priv_validator.json] to monax-key: %v", out)
-	}
-
 	log.WithFields(log.Fields{
 		"=>":              chain.Service.Name,
 		"links":           chain.Service.Links,
