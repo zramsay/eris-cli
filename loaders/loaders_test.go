@@ -231,60 +231,6 @@ ports          = [ "4321" ]
 	}
 }
 
-func TestChainsAsAServiceSimple(t *testing.T) {
-	const (
-		name = "test"
-
-		definition = `
-name = "` + name + `"
-chain_id = "` + name + `"
-description = "test chain"
-
-[service]
-name           = "random name"
-data_container = true
-ports          = [ "1234" ]
-image          = "test image"
-`
-	)
-
-	if err := testutil.FakeDefinitionFile(config.ChainsPath, "default", ``); err != nil {
-		t.Fatalf("cannot place a default definition file")
-	}
-	if err := testutil.FakeDefinitionFile(filepath.Join(config.ChainsPath, name), name, definition); err != nil {
-		t.Fatalf("cannot place a definition file")
-	}
-
-	s, err := ChainsAsAService(name)
-	if err != nil {
-		t.Fatalf("expected to load chain definition, got %v", err)
-	}
-
-	chainID := fmt.Sprintf("CHAIN_ID=%s", name)
-	chainName := fmt.Sprintf("CHAIN_NAME=%s", name)
-
-	for _, entry := range []ab{
-		{`Name`, s.Name, name},
-		{`ContainerType`, s.Operations.ContainerType, definitions.TypeChain},
-		{`SrvContainerName`, s.Operations.SrvContainerName, util.ChainContainerName(name)},
-		{`DataContainerName`, s.Operations.DataContainerName, util.DataContainerName(name)},
-
-		{`Labels["MONAX"]`, s.Operations.Labels[definitions.LabelMonax], "true"},
-		{`Labels["NAME"]`, s.Operations.Labels[definitions.LabelShortName], name},
-		{`Labels["TYPE"]`, s.Operations.Labels[definitions.LabelType], definitions.TypeChain},
-
-		{`Service.Name`, s.Service.Name, name},
-		{`Service.AutoData`, s.Service.AutoData, true},
-		// [pv]: not "test image", but monaxdb image. A bug?
-		{`Service.Image`, s.Service.Image, path.Join(version.DefaultRegistry, version.ImageDB)},
-		{`Service.Environment`, s.Service.Environment, []string{chainID, chainName}},
-	} {
-		if !reflect.DeepEqual(entry.a, entry.b) {
-			t.Fatalf("marshalled definition expected %s = %#v, got %#v", entry.name, entry.b, entry.a)
-		}
-	}
-}
-
 func TestLoadDataDefinition(t *testing.T) {
 	const (
 		name = "test"

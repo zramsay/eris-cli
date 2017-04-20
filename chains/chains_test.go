@@ -1,10 +1,8 @@
 package chains
 
 import (
-	"bytes"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,7 +13,6 @@ import (
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
 )
 
 var chainName = "test-chain"
