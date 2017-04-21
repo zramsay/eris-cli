@@ -96,8 +96,8 @@ test_setup(){
   echo -e "Backup Key =>\t\t\t\t$key2_addr"
   $cli_exec chains start $chain_name --init-dir $chain_dir/$name_full 1>/dev/null
   sleep 5 # boot time
-  chain_ip=$($cli_exec chains inspect $chain_name NetworkSettings.IPAddress)
-  keys_ip=$($cli_exec services inspect keys NetworkSettings.IPAddress)
+  chain_ip=$($cli_exec chains ip $chain_name)
+  keys_ip=$($cli_exec services ip keys)
   echo -e "Chain at =>\t\t\t\t$chain_ip"
   echo -e "Keys at =>\t\t\t\t$keys_ip"
   echo "Setup complete"
