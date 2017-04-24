@@ -3,7 +3,6 @@ package chains
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -73,6 +72,7 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 //  do.Name            - name of the chain to inspect (required)
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
+// TODO [zr] deprecate (along with services.InspectServiceByService)
 func InspectChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -142,48 +142,6 @@ func CurrentChain(do *definitions.Do) (string, error) {
 	}
 
 	return head, nil
-}
-
-// CatChain displays chain information. It returns nil on success, or input/output
-// errors otherwise.
-//
-//  do.Name - chain name
-//  do.Type - "genesis", "config"
-//
-func CatChain(do *definitions.Do) error {
-	if do.Name == "" {
-		return fmt.Errorf("a chain name is required")
-	}
-	rootDir := path.Join(config.MonaxContainerRoot, "chains", do.Name)
-
-	doCat := definitions.NowDo()
-	doCat.Name = do.Name
-	doCat.Operations.SkipLink = true
-
-	switch do.Type {
-	case "genesis":
-		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
-	case "config":
-		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// TODO re-implement with monax-client ... mintinfo was remove from container (and write tests for these cmds)
-	// case "status":
-	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
-	// case "validators":
-	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
-	default:
-		return fmt.Errorf("unknown cat subcommand %q", do.Type)
-	}
-	// edb docker image is (now) properly formulated with entrypoint && cmd
-	// so the entrypoint must be overwritten.
-	log.WithField("args", do.Operations.Args).Debug("Executing command")
-
-	buf, err := ExecChain(doCat)
-
-	if buf != nil {
-		io.Copy(config.Global.Writer, buf)
-	}
-
-	return err
 }
 
 // PortsChain displays the port mapping for a particular chain.

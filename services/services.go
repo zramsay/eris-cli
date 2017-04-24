@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/loaders"
@@ -31,25 +30,7 @@ func StartService(do *definitions.Do) (err error) {
 		util.Merge(s.Operations, do.Operations)
 	}
 
-	log.Debug("Preparing to build chain")
-	for _, s := range services {
-		log.WithFields(log.Fields{
-			"name":         s.Name,
-			"dependencies": s.Dependencies,
-			"links":        s.Service.Links,
-			"volumes from": s.Service.VolumesFrom,
-		}).Debug()
-
-		// Spacer.
-		log.Debug()
-	}
-	if do.ChainName != "" {
-		services, err = BuildChainGroup(do.ChainName, services)
-		if err != nil {
-			return err
-		}
-	}
-	log.Debug("Checking services after build chain")
+	log.Debug("Checking services")
 	for _, s := range services {
 		log.WithFields(log.Fields{
 			"name":         s.Name,
@@ -185,7 +166,7 @@ func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefiniti
 	return services, nil
 }
 
-// start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
+// start a group of services. catch errors on a channel so we can stop as soon as something goes wrong
 func StartGroup(group []*definitions.ServiceDefinition) error {
 	log.WithField("services#", len(group)).Debug("Starting services group")
 	for _, srv := range group {
@@ -195,56 +176,6 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 		}
 	}
 	return nil
-}
-
-// BuildChainGroup adds the chain specified in each service definition to the service group.
-// If chainName is not empty, it will overwrite chains specified in the defs.
-// Service defs which don't specify a chain or $chain won't connect to a chain.
-// NOTE: chains have to be started before services that depend on them.
-func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) (servicesAndChains []*definitions.ServiceDefinition, err error) {
-	if !util.IsChain(chainName, true) {
-		return nil, fmt.Errorf("Dependent chain %v is not running", chainName)
-	}
-	var chains = make(map[string]*definitions.ServiceDefinition)
-	for _, srv := range services {
-		if srv.Chain != "" {
-			s, err := ConnectChainToService(chainName, srv.Chain, srv)
-			if err != nil {
-				return nil, err
-			}
-			if _, ok := chains[s.Name]; !ok {
-				chains[s.Name] = s
-			}
-		}
-	}
-	for _, sd := range chains {
-		servicesAndChains = append(servicesAndChains, sd)
-	}
-	return append(servicesAndChains, services...), nil
-}
-
-func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
-	chainName, internalName, link, mount := util.ParseDependency(chainNameAndOpts)
-	if chainFlag != "" {
-		// flag overwrites whatever is in the service definition
-		chainName = chainFlag
-	} else if strings.HasPrefix(srv.Chain, "$chain") {
-		// if there's a $chain and no flag or checked out chain, we err
-		var err error
-		chainName, err = util.GetHead()
-		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [monax chains checkout CHAINNAME] *or* with a --chain flag.\n")
-		}
-	}
-	s, err := loaders.ChainsAsAService(chainName)
-	if err != nil {
-		return nil, err
-	}
-	// link the service container linked to the chain
-	// XXX: we may have name collision here if we're not careful.
-	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
-
-	return s, nil
 }
 
 // Checks that a service is running and starts it if it isn't.

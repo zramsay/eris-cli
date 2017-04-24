@@ -8,8 +8,6 @@ import (
 
 	"github.com/monax/cli/chains"
 	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/list"
 	"github.com/monax/cli/util"
 
 	"github.com/spf13/cobra"
@@ -38,18 +36,14 @@ away!`,
 
 func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
-	Chains.AddCommand(chainsList)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsCurrent)
 	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
-	Chains.AddCommand(chainsInspect)
 	Chains.AddCommand(chainsIP)
 	Chains.AddCommand(chainsStop)
 	Chains.AddCommand(chainsExec)
-	Chains.AddCommand(chainsCat)
-	Chains.AddCommand(chainsRestart)
 	Chains.AddCommand(chainsRemove)
 	addChainsFlags()
 }
@@ -89,27 +83,6 @@ $ monax chains make myChain --account-types=Root:1,Developer:0,Validator:1,Parti
 $ monax chains make myChain --known --validators /path/to/validators.csv --accounts /path/to/accounts.csv -- will use the csv file to make your chain named myChain (non-interactive) (won't make keys)
 $ monax chains make myChain --tar -- will create the chain and save each of the "bundles" as tarballs which can be used by colleagues to start their chains`,
 	Run: MakeChain,
-}
-
-var chainsList = &cobra.Command{
-	Use:   "ls",
-	Short: "lists everything chain related",
-	Long: `list chains or known chain definition files
-
-The -r flag limits the output to running chains only.
-
-The --json flag dumps the container or known files information
-in the JSON format.
-
-The -q flag is equivalent to the '{{.ShortName}}' format.
-
-The -f flag specifies an alternate format for the list, using the syntax
-of Go text templates. See the more detailed description in the help
-output for the [monax ls] command.`,
-
-	Run: ListChains,
-	Example: `$ monax chains ls -f '{{.ShortName}} {{.Info.Config.Image}} {{ports .Info}}'
-$ monax chains ls -f '{{.ShortName}}\t{{.Info.State}}'`,
 }
 
 var chainsCheckout = &cobra.Command{
@@ -204,19 +177,6 @@ var chainsStop = &cobra.Command{
 	Run:   StopChain,
 }
 
-var chainsInspect = &cobra.Command{
-	Use:   "inspect NAME [KEY]",
-	Short: "machine readable chain operation details",
-	Long: `display machine readable details about running containers
-
-Information available to the inspect command is provided by the
-Docker API. For more information about return values,
-see: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L235`,
-	Example: `$ monax chains inspect simplechain -- will display the entire information about simplechain containers
-$ monax chains inspect 2gather Name -- will display the name in machine readable format
-$ monax chains inspect 2gather HostConfig.Binds -- will display only that value`,
-	Run: InspectChain,
-}
 var chainsIP = &cobra.Command{
 	Use:   "ip NAME",
 	Short: "display chain IP",
@@ -233,30 +193,6 @@ var chainsRemove = &cobra.Command{
 Command will remove the chain's container but not its
 local directory or data container unless specified.`,
 	Run: RmChain,
-}
-
-var chainsRestart = &cobra.Command{
-	Use:   "restart NAME",
-	Short: "restart a chain",
-	Long: `restart a chain
-
-Command will gracefully stop then start a chain.`,
-	Run: RestartChain,
-}
-
-var chainsCat = &cobra.Command{
-	Use: "cat NAME [config|genesis]",
-	//Use:     "cat NAME [config|genesis|status|validators]",
-	Short:   "display chain information",
-	Long:    `display chain information`,
-	Aliases: []string{"plop"},
-	Example: `$ monax chains cat simplechain config -- display the config.toml file from inside the container
-$ monax chains cat simplechain genesis -- display the genesis.json file from the container`,
-	// [zr] these don't work (mintinfo not found in container)
-	// TODO re-implement when monax-client is merged into edb
-	// $ monax chains cat simplechain status -- display chain status
-	// $ monax chains cat simplechain validators -- display chain validators`,
-	Run: CatChain,
 }
 
 func addChainsFlags() {
@@ -298,12 +234,6 @@ func addChainsFlags() {
 
 	buildFlag(chainsStop, do, "force", "chain")
 	buildFlag(chainsStop, do, "timeout", "chain")
-
-	chainsList.Flags().BoolVarP(&do.JSON, "json", "", false, "machine readable output")
-	chainsList.Flags().BoolVarP(&do.All, "all", "a", false, "show extended output")
-	chainsList.Flags().BoolVarP(&do.Quiet, "quiet", "q", false, "show a list of chain names")
-	chainsList.Flags().StringVarP(&do.Format, "format", "f", "", "alternate format for columnized output")
-	chainsList.Flags().BoolVarP(&do.Running, "running", "r", false, "show running containers")
 }
 
 func StartChain(cmd *cobra.Command, args []string) {
@@ -398,31 +328,11 @@ func CurrentChain(cmd *cobra.Command, args []string) {
 	fmt.Fprintln(config.Global.Writer, out)
 }
 
-func CatChain(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(2, "ge", cmd, args))
-	do.Name = args[0]
-	do.Type = args[1]
-	util.IfExit(chains.CatChain(do))
-}
-
 func PortsChain(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(1, "ge", cmd, args))
 	do.Name = args[0]
 	do.Operations.Args = args[1:]
 	util.IfExit(chains.PortsChain(do))
-}
-
-func InspectChain(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-
-	do.Name = args[0]
-	if len(args) == 1 {
-		do.Operations.Args = []string{"all"}
-	} else {
-		do.Operations.Args = []string{args[1]}
-	}
-
-	util.IfExit(chains.InspectChain(do))
 }
 
 func IPChain(cmd *cobra.Command, args []string) {
@@ -431,26 +341,6 @@ func IPChain(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
 	util.IfExit(chains.InspectChain(do))
-}
-
-func ListChains(cmd *cobra.Command, args []string) {
-	if do.All {
-		do.Format = "extended"
-	}
-	if do.Quiet {
-		do.Format = "{{.ShortName}}"
-	}
-	if do.JSON {
-		do.Format = "json"
-	}
-	util.IfExit(list.Containers(definitions.TypeChain, do.Format, do.Running))
-}
-
-func RestartChain(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	util.IfExit(chains.StopChain(do))
-	util.IfExit(chains.StartChain(do))
 }
 
 func RmChain(cmd *cobra.Command, args []string) {
