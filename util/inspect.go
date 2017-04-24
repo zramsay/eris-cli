@@ -49,58 +49,6 @@ func PrintLineByContainerID(containerID string, existing bool) ([]string, error)
 	return printLine(cont, existing)
 }
 
-func PrintPortMappings(id string, ports []string) error {
-	cont, err := DockerClient.InspectContainer(id)
-	if err != nil {
-		return DockerError(err)
-	}
-
-	log.Warn(ParsePortMappings(cont.NetworkSettings.Ports, ports))
-
-	return nil
-}
-
-func ParsePortMappings(bindings map[docker.Port][]docker.PortBinding, ports []string) string {
-	var minimalDisplay bool
-	if len(ports) == 1 {
-		minimalDisplay = true
-	}
-
-	// Display everything if no port's requested.
-	if len(ports) == 0 {
-		for exposed := range bindings {
-			ports = append(ports, string(exposed))
-		}
-	}
-
-	// Replace plain port numbers without suffixes with both "/tcp" and "/udp" suffixes.
-	// (For example, replace ["53"] in a slice with ["53/tcp", "53/udp"].)
-	normalizedPorts := []string{}
-	for _, port := range ports {
-		if !strings.HasSuffix(port, "/tcp") && !strings.HasSuffix(port, "/udp") {
-			normalizedPorts = append(normalizedPorts, port+"/tcp", port+"/udp")
-		} else {
-			normalizedPorts = append(normalizedPorts, port)
-		}
-	}
-
-	var elements []string
-	for _, port := range normalizedPorts {
-		for _, binding := range bindings[docker.Port(port)] {
-			hostAndPortBinding := fmt.Sprintf("%s:%s", binding.HostIP, binding.HostPort)
-
-			// If only one port request, display just the binding.
-			if minimalDisplay {
-				elements = append(elements, hostAndPortBinding)
-			} else {
-				elements = append(elements, fmt.Sprintf("%s->%s", port, hostAndPortBinding))
-			}
-		}
-	}
-
-	return strings.Join(elements, ", ")
-}
-
 // this function populates the listing functions only for flags/tests
 func printLine(container *docker.Container, existing bool) ([]string, error) {
 	tmp, err := reflections.GetField(container, "Name")
