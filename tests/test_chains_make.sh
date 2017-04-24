@@ -73,8 +73,8 @@ test_setup(){
 
 check_test(){
   # check chain is running
-  chain=( $($cli_exec chains ls --quiet --running | grep $uuid) )
-  if [ ${#chain[@]} -ne 1 ]
+  chain=( $($cli_exec ls --running --format {{.ShortName}} | grep $uuid) )
+  if [ "$chain" != "$uuid" ]
   then
     echo "chain does not appear to be running"
     echo
@@ -96,7 +96,7 @@ check_test(){
 
   # check genesis.json
   genOut=$(cat $dir_to_use/genesis.json | sed 's/[[:space:]]//g')
-  genIn=$($cli_exec chains plop $uuid genesis | sed 's/[[:space:]]//g')
+  genIn=$($cli_exec chains exec $uuid "cat /home/monax/.monax/chains/$uuid/genesis.json" | sed 's/[[:space:]]//g')
   if [[ "$genOut" != "$genIn" ]]
   then
     test_exit=1
@@ -172,7 +172,7 @@ perform_tests(){
   echo "single account-type test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  $cli_exec chains make $uuid --account-types=Full:1
+  $cli_exec chains make $uuid --account-types=Full:1 --unsafe
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -183,7 +183,7 @@ perform_tests(){
   echo "more complex flags test"
   uuid=$(get_uuid)
   direct="$uuid"_validator_000
-  $cli_exec chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1
+  $cli_exec chains make $uuid --account-types=Root:2,Developer:2,Participant:2,Validator:1 --unsafe
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -194,8 +194,7 @@ perform_tests(){
   echo "assume simplechain test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  # $cli_exec chains make $uuid --chain-type=simplechain (old, could also be tested)
-  $cli_exec chains make $uuid # (new)
+  $cli_exec chains make $uuid --unsafe
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -207,7 +206,7 @@ perform_tests(){
   uuid=$(get_uuid)
   direct="$uuid"_test_000
   cp $repo/tests/cm_test_fixtures/tester.toml $chains_dir/account-types/.
-  $cli_exec chains make $uuid --account-types=Test:1
+  $cli_exec chains make $uuid --account-types=Test:1 --unsafe
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -220,7 +219,7 @@ perform_tests(){
   uuid=$(get_uuid)
   direct="$uuid"_full_000
   cp $repo/tests/cm_test_fixtures/testchain.toml $chains_dir/chain-types/.
-  $cli_exec chains make $uuid --chain-type=testchain
+  $cli_exec chains make $uuid --chain-type=testchain --unsafe
   run_test
   if [ $test_exit -eq 1 ]
   then
@@ -232,7 +231,7 @@ perform_tests(){
   echo "export/inspect tars"
   uuid=$(get_uuid)
   direct=""
-  $cli_exec chains make $uuid --account-types=Full:2 --output tar
+  $cli_exec chains make $uuid --account-types=Full:2 --output tar --unsafe
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -252,7 +251,7 @@ perform_tests(){
   echo "make a known chain using csv test"
   uuid=$(get_uuid)
   direct="$uuid"_full_000
-  $cli_exec chains make $uuid --account-types=Full:1
+  $cli_exec chains make $uuid --account-types=Full:1 --unsafe
   if [ $? -ne 0 ]
   then
     test_exit=1
@@ -260,7 +259,7 @@ perform_tests(){
   fi
   rm $chains_dir/$uuid/$direct/genesis.json
   prev_dir=`pwd`
-  gen=$($cli_exec chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv)
+  gen=$($cli_exec chains make $uuid --known --accounts $chains_dir/$uuid/accounts.csv --validators $chains_dir/$uuid/validators.csv --unsafe)
   echo "$gen" > $chains_dir/$uuid/$direct/genesis.json
   run_test
   cd $prev_dir

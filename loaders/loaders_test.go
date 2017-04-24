@@ -1,9 +1,7 @@
 package loaders
 
 import (
-	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -13,7 +11,6 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
 )
 
 type ab struct {

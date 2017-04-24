@@ -13,7 +13,7 @@
 # ----------------------------------------------------------
 # USAGE
 
-# test.sh [setup]
+# test_jobs.sh [appXX]
 
 
 # Other variables
