@@ -29,7 +29,6 @@ func buildServicesCommand() {
 	Services.AddCommand(servicesStart)
 	Services.AddCommand(servicesLogs)
 	Services.AddCommand(servicesIP)
-	Services.AddCommand(servicesPorts)
 	Services.AddCommand(servicesExec)
 	Services.AddCommand(servicesStop)
 	Services.AddCommand(servicesRm)
@@ -65,17 +64,6 @@ var servicesIP = &cobra.Command{
 	Long:  `display service IP`,
 
 	Run: IPService,
-}
-
-var servicesPorts = &cobra.Command{
-	Use:   "ports NAME [PORT]...",
-	Short: "print port mappings",
-	Long: `print port mappings
-
-The [monax services ports] command displays published service ports.`,
-	Example: `$ monax services ports ipfs -- will display all IPFS ports
-$ monax services ports ipfs 4001 5001 -- will display specific IPFS ports`,
-	Run: PortsService,
 }
 
 var servicesLogs = &cobra.Command{
@@ -185,13 +173,6 @@ func IPService(cmd *cobra.Command, args []string) {
 	do.Name = args[0]
 	do.Operations.Args = []string{"NetworkSettings.IPAddress"}
 	util.IfExit(services.InspectService(do))
-}
-
-func PortsService(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	do.Operations.Args = args[1:]
-	util.IfExit(services.PortsService(do))
 }
 
 func RmService(cmd *cobra.Command, args []string) {

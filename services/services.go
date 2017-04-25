@@ -215,20 +215,6 @@ func InspectService(do *definitions.Do) error {
 	return nil
 }
 
-func PortsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	if util.IsService(service.Service.Name, false) {
-		log.Debug("Service exists, getting port mapping")
-		return util.PrintPortMappings(service.Operations.SrvContainerName, do.Operations.Args)
-	}
-
-	return nil
-}
-
 func LogsService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {

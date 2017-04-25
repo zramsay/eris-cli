@@ -144,25 +144,6 @@ func CurrentChain(do *definitions.Do) (string, error) {
 	return head, nil
 }
 
-// PortsChain displays the port mapping for a particular chain.
-// It returns an error.
-//
-//  do.Name - name of the chain to display port mappings for (required)
-//
-func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	if util.IsChain(chain.Name, false) {
-		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
-		return util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args)
-	}
-
-	return nil
-}
-
 func RemoveChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {

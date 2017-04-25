@@ -75,8 +75,7 @@ func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	// keys.json, keys.yaml, etc.
 
 	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
-		errKnown := fmt.Sprintf("List available definitions with the [monax %s ls --known] command", filepath.Base(definitionPath))
-		return nil, fmt.Errorf("Unable to find the %q definition: %v\n\n%s", definitionName, os.ErrNotExist, errKnown)
+		return nil, fmt.Errorf("Unable to find the %q definition: %v", definitionName, os.ErrNotExist)
 	}
 
 	conf := viper.New()

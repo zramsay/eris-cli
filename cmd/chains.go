@@ -38,7 +38,6 @@ func buildChainsCommand() {
 	Chains.AddCommand(chainsMake)
 	Chains.AddCommand(chainsCheckout)
 	Chains.AddCommand(chainsCurrent)
-	Chains.AddCommand(chainsPorts)
 	Chains.AddCommand(chainsStart)
 	Chains.AddCommand(chainsLogs)
 	Chains.AddCommand(chainsIP)
@@ -98,26 +97,6 @@ passing in a --chain flag. If a --chain is passed to any command accepting
 If command is given without arguments it will clear the head and there will
 be no chain checked out.`,
 	Run: CheckoutChain,
-}
-
-var chainsPorts = &cobra.Command{
-	Use:   "ports NAME [PORT]...",
-	Short: "print port mappings",
-	Long: `print port mappings
-
-The [monax chains ports] command is mostly a developer
-convenience function. It returns a machine readable
-port mapping of a port which is exposed inside the
-container to what that port is mapped to on the host.
-
-This is useful when stitching together chain networks which
-need to know how to connect into a specific chain (perhaps
-with or without a container number) container.`,
-	Example: `$ monax chains ports myChain 1337 -- will display what port on the host is mapped to the monax:db API port
-$ monax chains ports myChain 46656 -- will display what port on the host is mapped to the monax:db peer port
-$ monax chains ports myChain 46657 -- will display what port on the host is mapped to the monax:db rpc port
-$ monax chains ports myChain -- will display all mappings`,
-	Run: PortsChain,
 }
 
 var chainsCurrent = &cobra.Command{
@@ -326,13 +305,6 @@ func CurrentChain(cmd *cobra.Command, args []string) {
 	out, err := chains.CurrentChain(do)
 	util.IfExit(err)
 	fmt.Fprintln(config.Global.Writer, out)
-}
-
-func PortsChain(cmd *cobra.Command, args []string) {
-	util.IfExit(ArgCheck(1, "ge", cmd, args))
-	do.Name = args[0]
-	do.Operations.Args = args[1:]
-	util.IfExit(chains.PortsChain(do))
 }
 
 func IPChain(cmd *cobra.Command, args []string) {
