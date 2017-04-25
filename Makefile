@@ -45,11 +45,10 @@ fmt:
 erase_vendor:
 	rm -rf ${REPO}/vendor/
 
-# install vendor uses glide to install vendored dependencies
+# install vendor uses GoVend to install vendored dependencies
 .PHONY: install_vendor
 install_vendor:
-	go get github.com/Masterminds/glide
-	glide install
+	@./install_vendor.sh
 
 ### Building github.com/monax/cli
 
