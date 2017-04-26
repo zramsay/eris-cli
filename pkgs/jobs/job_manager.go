@@ -166,22 +166,27 @@ func defaultSetJobs(do *definitions.Do) {
 }
 
 func postProcess(do *definitions.Do) error {
-	switch do.DefaultOutput {
-	case "csv":
-		log.Info("Writing [epm.csv] to current directory")
-		for _, job := range do.Package.Jobs {
-			if err := WriteJobResultCSV(job.JobName, job.JobResult); err != nil {
-				return err
-			}
-		}
-	case "json":
-		log.Info("Writing [jobs_output.json] to current directory")
-		results := make(map[string]string)
-		for _, job := range do.Package.Jobs {
-			results[job.JobName] = job.JobResult
-		}
-		return WriteJobResultJSON(results)
+	// check do.YAMLPath and do.DefaultOutput
+	// get the epm.yaml
+	var yaml string
+	yamlName := strings.LastIndexByte(do.YAMLPath, '.')
+	if yamlName >= 0 {
+		yaml = do.YAMLPath[:yamlName]
+	} else {
+		return fmt.Errorf("invalid jobs file path (%s)", do.YAMLPath)
 	}
+
+	// if do.YAMLPath is not default and do.DefaultOutput is default, over-ride do.DefaultOutput
+	if yaml != "epm" && do.DefaultOutput == "epm.output.json" {
+		do.DefaultOutput = fmt.Sprintf("%s.output.json", yaml)
+	}
+
+	log.Warn(fmt.Sprintf("Writing [%s] to current directory", do.DefaultOutput))
+	results := make(map[string]string)
+	for _, job := range do.Package.Jobs {
+		results[job.JobName] = job.JobResult
+	}
+	return WriteJobResultJSON(results, do.DefaultOutput)
 
 	return nil
 }

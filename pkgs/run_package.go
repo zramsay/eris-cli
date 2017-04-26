@@ -14,8 +14,6 @@ import (
 
 func RunPackage(do *definitions.Do) error {
 
-	// clears job_outputs file
-	jobs.ClearJobResults()
 	// useful for debugging
 	printPathPackage(do)
 
