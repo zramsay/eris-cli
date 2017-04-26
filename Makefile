@@ -45,7 +45,7 @@ fmt:
 erase_vendor:
 	rm -rf ${REPO}/vendor/
 
-# install vendor uses GoVend to install vendored dependencies
+# install a pruned vendor tree of locked dependencies
 .PHONY: install_vendor
 install_vendor:
 	@./install_vendor.sh
