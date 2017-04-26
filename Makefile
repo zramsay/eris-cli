@@ -75,15 +75,21 @@ test_chains_make:
 	# run user stories for chains
 	@./tests/test_chains_make.sh
 
-# test user stories for pkgs do
+# test job fixtures for pkgs do
 .PHONY: test_jobs
 test_jobs:
-	# run user stories for pkgs do
+	# run job fixtures for pkgs do
 	@./tests/test_jobs.sh
+
+# test user stories for pkgs do
+.PHONY: test_runner
+test_runner:
+	# run user stories for pkgs do
+	@./tests/test_runner.sh
 
 # test monax cli
 .PHONY: test
-test: build test_unit test_chains_make test_jobs
+test: build test_unit test_chains_make test_jobs test_runner
 
 ### Clean up
 

@@ -22,14 +22,6 @@ import (
 	"github.com/hyperledger/burrow/txs"
 )
 
-func PackageDeployJob(pkgDeploy *definitions.PackageDeploy, do *definitions.Do) (string, error) {
-	// todo
-	// note: we should have this talking to a new client package...add that to the todo
-	var result string
-
-	return result, nil
-}
-
 func DeployJob(deploy *definitions.Deploy, do *definitions.Do) (result string, err error) {
 	// Preprocess variables
 	deploy.Source, _ = util.PreProcess(deploy.Source, do)
