@@ -9,6 +9,9 @@ github.com/stretchr/testify
 go get -u github.com/rancher/trash
 # start fresh
 rm -rf vendor
+# trash will use this directory for its cache (although this is its default
+# anyway), but we also need it for preserve action later so doing this makes
+# sure we're in sync
 export TRASH_CACHE="$HOME/.trash-cache"
 # get everything at locked versions
 trash
