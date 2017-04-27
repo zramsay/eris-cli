@@ -38,10 +38,9 @@ in a package definition file`,
 
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
-	// TODO links keys
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
 	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
-	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "epm.output.json", "jobs output filename. will be named given the input filename, unless over-ridden")
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "epm.output.json", "filename for jobs output file. by default, this name will reflect the name passed in on the optional [--file]")
 	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "epm.yaml", "path to package file which jobs should use")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
 	// the package manager does not use this flag!

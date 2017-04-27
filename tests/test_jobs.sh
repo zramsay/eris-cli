@@ -129,7 +129,7 @@ run_test(){
 
   rm -rf ./abi &>/dev/null
   rm -rf ./bin &>/dev/null
-  rm ./jobs_output.json &>/dev/null
+  rm ./epm.output.json &>/dev/null
   rm ./jobs_output.csv &>/dev/null
 
   # Reset for next run
