@@ -6,13 +6,11 @@ import (
 
 var Compilers = &cobra.Command{
 	Use:   "compilers",
-	Short: "manage smart contract languages and versions",
-	Long: `the compilers subcommand is a manager of different 
-	smart contract development languages and their different versions.
-	For now the marmots only provide support for solidity but it's very easy to 
-	contribute your own smart contracting language into here.
+	Short: "manage smart contract compiler versions",
+	Long: `manage smart contract compiler versions. 
 
-	Send the marmots a PR! (github.com/monax/cli/compilers)`,
+	The compilers subcommand is a manager of different smart contract development languages versions.
+	For now the marmots only provide support for solidity.`,
 	Run: func(cmd *cobra.Command, args []string) { cmd.Help() },
 }
 
@@ -24,31 +22,35 @@ func buildCompilersCommand() {
 }
 
 var compilersUse = &cobra.Command{
-	Use:   "use LANGUAGE VERSION",
-	Short: "use a specific version of a compiler",
-	Long: `assigns the default compiler to a specific language and version. 
-Must already have the language and version to use`,
+	Use:   "use VERSION",
+	Short: "use a specific version of a compiler.",
+	Long: `use a specific version of a compiler.
+	Assigns the default compiler to a specific version. 
+	Must already have the version installed to use.`,
 	Run: CheckoutCompiler,
 }
 
 var compilersInstall = &cobra.Command{
-	Use:   "install LANGUAGE:VERSION",
+	Use:   "install VERSION",
 	Short: "install a compiler with a specific version",
-	Long:  `pulls a docker image of a compiler with a specific tag for that version`,
-	Run:   InstallCompiler,
+	Long: `install a compiler with a specific version. 
+
+	Pulls a docker image of a compiler with a specific tag for that version`,
+	Run: InstallCompiler,
 }
 
 var compilersList = &cobra.Command{
-	Use:   "ls [LANG]",
-	Short: "list different languages and versions available",
-	Long:  `can also specify specific language`,
+	Use:   "ls",
+	Short: "list different versions available",
+	Long:  `list different versions available.`,
 	Run:   ListCompilers,
 }
 
 var compilersRun = &cobra.Command{
 	Use:   "compile",
 	Short: "compiles a string of files",
-	Long:  "Maps to an exec statement, all of these commands are hand coded.",
+	Long: `compiles a string of files. 
+	Maps to an exec statement, all of these commands are hand coded.`,
 	//Run:   CompileCompiler,
 }
 
