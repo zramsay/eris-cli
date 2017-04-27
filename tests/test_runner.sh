@@ -219,7 +219,7 @@ test_teardown(){
 # ---------------------------------------------------------------------------
 # Get the things build and dependencies turned on
 
-echo "Hello! I'm the marmot that tests the [monax chains make] command"
+echo "Hello! I'm the marmot that tests the [monax pkgs do] command"
 echo
 echo "testing with target $cli_exec"
 echo

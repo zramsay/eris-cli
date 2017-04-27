@@ -2,6 +2,7 @@ package pkgs
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -14,6 +15,15 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
+	var gotwd string
+	if do.Path == "" {
+		var err error
+		gotwd, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+		do.Path = gotwd
+	}
 
 	// useful for debugging
 	printPathPackage(do)
@@ -33,7 +43,7 @@ func RunPackage(do *definitions.Do) error {
 	// note: [zr] this could be problematic with a combo of
 	// other flags, however, at least the --dir flag isn't
 	// completely broken now
-	if do.Path != "" {
+	if do.Path != gotwd {
 		if do.YAMLPath == "epm.yaml" {
 			do.YAMLPath = filepath.Join(do.Path, do.YAMLPath)
 		}
@@ -57,7 +67,7 @@ func RunPackage(do *definitions.Do) error {
 		}
 	}
 
-	if do.Path != "" {
+	if do.Path != gotwd {
 		for _, job := range do.Package.Jobs {
 			if job.Job.Deploy != nil {
 				job.Job.Deploy.Contract = filepath.Join(do.Path, job.Job.Deploy.Contract)

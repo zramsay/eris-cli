@@ -1,10 +1,7 @@
-// +build !arm
-
 package commands
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -62,11 +59,6 @@ func addPackagesFlags() {
 
 func PackagesDo(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(0, "eq", cmd, args))
-	if do.Path == "" {
-		var err error
-		do.Path, err = os.Getwd()
-		util.IfExit(err)
-	}
 	if do.ChainName == "" {
 		util.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}
