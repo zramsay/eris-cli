@@ -8,7 +8,7 @@ title: "Tutorials | Solidity 4: Testing Solidity"
 ## Solidity Series
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 This sequence of tutorials assumes that you have an understanding of the `monax` tooling to the point we ended in our [101 tutorial sequence](/docs/getting-started/).
@@ -392,7 +392,7 @@ Coverage is a way of checking which of the methods in the "testee" contract are 
 
 I should add that solUnits coverage report is not 100% definite proof. The way it works is basically that the code (AST) is analyzed, and for each invocation of a target method it back-tracks to see if the call-chain originates from a test-function, but in combination with the actual tests it is extremely strong evidence that the function is indeed being called (provided there are no bugs in the library code...). This as opposed to using a VM hook to determine that function X in contract Y is indeed being executed, which will be added in later.
 
-The full, working version of this contract (including Asserter.sol and other things) can be found [here](https://github.com/androlo/sol-unit/blob/master/contracts/src/CoinTest.sol).
+The full, working version of this contract (including Asserter.sol and other things) can be found [here](https://github.com/smartcontractproduction/sol-unit/tree/master/contracts/src).
 
 ## Conclusion
 

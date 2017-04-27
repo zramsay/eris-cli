@@ -3,13 +3,15 @@
 type:   docs
 layout: single
 title: "Deprecated | Using Docker Machine With Eris"
+aliases:
+   - /docs/deprecated/using-docker-machine-with-eris
 
 ---
 
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 This tutorial will provide an overview of working with [docker-machine](https://docs.docker.com/machine/), a nifty tool for managing and deploying docker hosts.

@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -25,9 +24,6 @@ func TestMain(m *testing.M) {
 		Images:   []string{"data", "db", "keys"},
 		Services: []string{"keys"},
 	}))
-
-	// Prevent CLI from starting IPFS.
-	os.Setenv("MONAX_SKIP_ENSURE", "true")
 
 	exitCode := m.Run()
 	testutil.IfExit(testutil.TearDown())
@@ -53,34 +49,6 @@ func TestStartKillService(t *testing.T) {
 		t.Fatalf("expecting dependent data container doesn't exist")
 	}
 
-}
-
-func TestInspectService1(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	start(t, servName, false)
-
-	do := definitions.NowDo()
-	do.Name = servName
-	do.Operations.Args = []string{"name"}
-
-	if err := InspectService(do); err != nil {
-		t.Fatalf("expected service to be inspected, got %v", err)
-	}
-}
-
-func TestInspectService2(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	start(t, servName, false)
-
-	do := definitions.NowDo()
-	do.Name = servName
-	do.Operations.Args = []string{"config.user"}
-
-	if err := InspectService(do); err != nil {
-		t.Fatalf("expected service to be inspected, got %v", err)
-	}
 }
 
 func TestLogsService(t *testing.T) {
@@ -134,25 +102,6 @@ func TestExecServiceBadCommandLine(t *testing.T) {
 	if _, err := ExecService(do); err == nil {
 		t.Fatal("expected executing service to fail")
 	}
-}
-
-func TestUpdateService(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	start(t, servName, false)
-
-	do := definitions.NowDo()
-	do.Name = servName
-	do.Pull = false
-	do.Timeout = 1
-	if err := UpdateService(do); err != nil {
-		t.Fatalf("expected service to be updated, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, servName) {
-		t.Fatalf("expecting service running")
-	}
-
 }
 
 func TestKillService(t *testing.T) {
@@ -213,98 +162,6 @@ func TestRmService(t *testing.T) {
 		t.Fatalf("expecting dependent data container not existing")
 	}
 }
-
-/*
-func TestMakeService(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	do := definitions.NowDo()
-	servName := "keys"
-	do.Name = servName
-	do.Operations.Args = []string{path.Join(version.DefaultRegistry, version.ImageKeys)}
-	if err := MakeService(do); err != nil {
-		t.Fatalf("expected a new service to be created, got %v", err)
-	}
-
-	do = definitions.NowDo()
-	do.Operations.Args = []string{servName}
-	if err := StartService(do); err != nil {
-		t.Fatalf("expected service to be started, got %v", err)
-	}
-
-	if !util.Running(definitions.TypeService, servName) {
-		t.Fatalf("expecting service running")
-	}
-	if !util.Exists(definitions.TypeData, servName) {
-		t.Fatalf("expecting dependent data container exists")
-	}
-
-	kill(t, servName, true)
-	if util.Exists(definitions.TypeService, servName) {
-		t.Fatalf("expecting service not existing")
-	}
-	if util.Exists(definitions.TypeData, servName) {
-		t.Fatalf("expecting dependent data container not existing")
-	}
-
-}*/
-
-func TestCatService(t *testing.T) {
-	do := definitions.NowDo()
-	do.Name = servName
-	buf := new(bytes.Buffer)
-	config.Global.Writer = buf
-	out, err := CatService(do)
-	if err != nil {
-		t.Fatalf("expected cat to succeed, got %v", err)
-	}
-
-	if cmp := testutil.FileContents(filepath.Join(config.MonaxRoot, "services", "keys.toml")); out != cmp {
-		t.Fatalf("expected local config to be returned %v, got %v", cmp, out)
-	}
-}
-
-/* TODO use a fake definition file
-func TestStartKillServiceWithDependencies(t *testing.T) {
-	defer testutil.RemoveAllContainers()
-
-	do := definitions.NowDo()
-	do.Operations.Args = []string{"do_not_use"} // [csk] we should make a fake service def instead of using this file
-
-	if err := StartService(do); err != nil {
-		t.Fatalf("expected service to start, got %v", err)
-	}
-
-	if !util.IsService("do_not_use", true) {
-		t.Fatalf("expecting service container running, got false")
-	}
-
-	if !util.IsData("do_not_use") {
-		t.Fatalf("expecting data container existing got false")
-	}
-
-	if !util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service running")
-	}
-	if !util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container exists")
-	}
-
-	kill(t, "do_not_use", true)
-
-	if util.Running(definitions.TypeService, servName) {
-		t.Fatalf("expecting test service not running")
-	}
-	if util.Exists(definitions.TypeData, servName) {
-		t.Fatalf("expecting test data container doesn't exist")
-	}
-	if util.Running(definitions.TypeService, "keys") {
-		t.Fatalf("expecting keys service not running")
-	}
-	if util.Exists(definitions.TypeData, "keys") {
-		t.Fatalf("expecting keys data container doesn't exist")
-	}
-}*/
 
 func start(t *testing.T, serviceName string, publishAll bool) {
 	do := definitions.NowDo()

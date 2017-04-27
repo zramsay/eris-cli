@@ -81,7 +81,6 @@ Directory structure initialized:
 ¦       +-- sol/
 ¦   +-- services/
 ¦       +-- keys.toml
-¦       +-- ipfs.toml
 ¦       +-- compilers.toml
 ¦       +-- logrotate.toml
 
@@ -129,7 +128,6 @@ func pullDefaultImages(images []string) error {
 		images = []string{
 			"data",
 			"keys",
-			// "ipfs",
 			"db",
 			"compilers",
 		}
@@ -138,9 +136,8 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data": version.ImageData,
-		"keys": version.ImageKeys,
-		// "ipfs":      version.ImageIPFS, // [CSK no need to pull this by default]
+		"data":      version.ImageData,
+		"keys":      version.ImageKeys,
 		"db":        version.ImageDB,
 		"compilers": version.ImageCompilers,
 	}
@@ -204,7 +201,6 @@ func checkIfCanOverwrite(doYes bool) error {
 	log.WithField("path", config.MonaxRoot).Warn("Monax root directory")
 	log.WithFields(log.Fields{
 		"services path": config.ServicesPath,
-		"chains path":   config.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
 	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 		log.Debug("Confirmation verified. Proceeding")

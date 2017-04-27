@@ -128,6 +128,6 @@ func compileResponse(w http.ResponseWriter, r *http.Request) *Response {
 		resp = compile(req)
 		resp.CacheNewResponse(*req)
 	}
-	PrintResponse(*resp, false)
+
 	return resp
 }

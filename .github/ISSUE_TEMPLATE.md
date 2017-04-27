@@ -1,7 +1,7 @@
 Please include in your bug report:
 
 - [ ] `docker version`
-- [ ] `eris version`
+- [ ] `monax version`
 - [ ] `go version` (if applicable)
 - [ ] `docker-machine version` (if applicable / !linux)
 - [ ] operating system details (osx/windows/linux)

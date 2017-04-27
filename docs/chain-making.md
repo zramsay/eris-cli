@@ -11,7 +11,7 @@ menu:
 ---
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 ## Introduction
@@ -69,20 +69,20 @@ The third section of the toml file is the permissions table. This section looks 
 
 ```toml
 [perms]
-root = 1
-send = 1
-call = 1
-createContract = 1
-createAccount = 1
-bond = 1
-name = 1
-hasBase = 1
-setBase = 1
-unsetBase = 1
-setBlobal = 1
-hasRole = 1
-addRole = 1
-rmRole = 1
+root = true
+send = true
+call = true
+createContract = true
+createAccount = true
+bond = true
+name = true
+hasBase = true
+setBase = true
+unsetBase = true
+setBlobal = true
+hasRole = true
+addRole = true
+rmRole = true
 ```
 
 Where a field is `1`, the monax chain maker will turn that permission for the account type `on`; and where it is `0`, the monax chain maker will turn that permission for the account type `off`. To adjust the permissions for a default account type then edit any of the `~/.monax/chains/account-types/*.toml` files as you wish. After that, whenever you run the monax chain maker it will respect the changes to any of the fields.
@@ -100,8 +100,8 @@ name = "AdvDeveloper"
 
 ...
 
-bond = 1
-hasBase = 1
+bond = true
+hasBase = true
 ```
 
 What did those changes do? Well the first change should be obvious. For the second change we modified the permission to `bond` and to utilize the `hasBase` functionality from `0` (off) to `1` (on) for this account type. We are not going to use either of these permissions that we changed, this is only to demonstrate how we'd update the account types we're gonna use.
@@ -353,7 +353,7 @@ So, instead of talking about validators, let's get this chain "turned on"!
 But before we do that, let's actually remove the chain for now so it doesn't get in our way.
 
 ```bash
-eris chains rm -xfd advchain
+monax chains rm -xfd advchain
 ```
 
 

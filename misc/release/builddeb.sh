@@ -3,17 +3,12 @@
 echo
 echo ">>> Sanity checks"
 echo
-if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" ]
+if [ -z "${MONAX_VERSION}" -o -z "${MONAX_RELEASE}" -o -z "${MONAX_BRANCH}" ]
 then
-    echo "The MONAX_VERSION or MONAX_RELEASE environment variables are not set, aborting"
+    echo "The MONAX_VERSION, MONAX_RELEASE or MONAX_BRANCH environment variables are not set, aborting"
     echo
     echo "Please start this container from the 'release.sh' script"
     exit 1
-fi
-
-export MONAX_BRANCH=master
-if [ ! -z "$1" ]; then
-  MONAX_BRANCH="$1"
 fi
 
 echo
@@ -21,6 +16,7 @@ echo ">>> Importing GPG keys"
 echo
 gpg --import linux-public-key.asc
 gpg --import linux-private-key.asc
+echo "digest-algo sha256" >> $HOME/.gnupg/gpg.conf
 
 export GOREPO=${GOPATH}/src/github.com/monax/cli
 git clone https://github.com/monax/cli ${GOREPO}
@@ -37,66 +33,49 @@ popd
 echo
 echo ">>> Building the Debian package (#${MONAX_BRANCH})"
 echo
-mkdir -p deb/usr/bin deb/usr/share/doc/eris deb/usr/share/man/man1 deb/DEBIAN
-cp ${GOREPO}/cmd/monax/eris deb/usr/bin
-${GOREPO}/cmd/monax/eris man --dump > deb/usr/share/man/man1/eris.1
+mkdir -p deb/usr/bin deb/usr/share/doc/monax deb/usr/share/man/man1 deb/DEBIAN
+cp ${GOREPO}/cmd/monax/monax deb/usr/bin
+${GOREPO}/cmd/monax/monax man --dump > deb/usr/share/man/man1/monax.1
 cat > deb/DEBIAN/control <<EOF
-Package: eris
+Package: monax
 Version: ${MONAX_VERSION}-${MONAX_RELEASE}
 Section: devel
 Architecture: amd64
 Priority: standard
 Homepage: https://monax.io/docs
-Maintainer: Monax Industries <support@monax.io>
+Maintainer: Monax <support@monax.io>
 Build-Depends: debhelper (>= 9.1.0), golang-go (>= 1.6)
 Standards-Version: 3.9.4
 Description: ecosystem application platform for building, testing, maintaining, and operating distributed applications.
 EOF
-cp ${GOREPO}/README.md deb/usr/share/doc/eris/README
-cat > deb/usr/share/doc/eris/copyright <<EOF
+cp ${GOREPO}/README.md deb/usr/share/doc/monax/README
+cat > deb/usr/share/doc/monax/copyright <<EOF
 Files: *
-Copyright: $(date +%Y) Monax Industries  <support@monax.io>
+Copyright: $(date +%Y) Monax <support@monax.io>
 License: GPL-3
 EOF
 dpkg-deb --build deb
-PACKAGE=eris_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
+PACKAGE=monax_${MONAX_VERSION}-${MONAX_RELEASE}_amd64.deb
 mv deb.deb ${PACKAGE}
-
-echo
-echo ">>> Copying Debian packages to Amazon S3"
-echo
-cat > ${HOME}/.s3cfg <<EOF
-[default]
-access_key = ${AWS_ACCESS_KEY}
-secret_key = ${AWS_SECRET_ACCESS_KEY}
-EOF
-s3cmd put ${PACKAGE} s3://${AWS_S3_DEB_FILES}
-
-if [ "$MONAX_BRANCH" != "master" ]
-then
-   echo
-   echo ">>> Not recreating a repo for #${MONAX_BRANCH} branch"
-   echo
-   exit 0
-fi
+aws s3 cp ${PACKAGE} s3://${AWS_S3_PKGS_BUCKET}/dl/${PACKAGE} --acl public-read
 
 echo
 echo ">>> Creating an APT repository"
 echo
-mkdir -p eris/conf
-gpg --armor --export "${KEY_NAME}" > eris/APT-GPG-KEY
+mkdir -p apt/conf
+gpg --armor --export "${KEY_NAME}" > apt/APT-GPG-KEY
 
-cat > eris/conf/options <<EOF
+cat > apt/conf/options <<EOF
 verbose
-basedir /root/eris
+basedir /root/monax
 ask-passphrase
 EOF
 
-DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial"
+DISTROS="precise trusty utopic vivid wheezy jessie stretch wily xenial yakkety"
 for distro in ${DISTROS}
 do
-  cat >> eris/conf/distributions <<EOF
-Origin: Monax Industries <support@monax.io>
+  cat >> apt/conf/distributions <<EOF
+Origin: Monax <support@monax.io>
 Codename: ${distro}
 Components: main
 Architectures: i386 amd64
@@ -112,7 +91,7 @@ do
   echo
   expect <<-EOF
     set timeout 5
-    spawn reprepro -Vb eris includedeb ${distro} ${PACKAGE}
+    spawn reprepro -Vb apt includedeb ${distro} ${PACKAGE}
     expect {
             timeout                    { send_error "Failed to submit password"; exit 1 }
             "Please enter passphrase:" { send -- "${KEY_PASSWORD}\r";
@@ -128,22 +107,19 @@ done
 echo
 echo ">>> After adding we have the following"
 echo
-reprepro -b eris ls eris
+reprepro -b apt ls monax
 
 echo
 echo ">>> Syncing repos to Amazon S3"
 echo
-s3cmd sync eris/APT-GPG-KEY s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/db s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/dists s3://${AWS_S3_DEB_REPO}
-s3cmd sync eris/pool s3://${AWS_S3_DEB_REPO}
+aws s3 sync apt s3://${AWS_S3_PKGS_BUCKET}/apt/ --acl public-read
 
 echo
 echo ">>> Installation instructions"
 echo
-echo "  \$ sudo add-apt-repository http://${AWS_S3_DEB_REPO}"
-echo "  \$ curl -L http://${AWS_S3_DEB_REPO}/APT-GPG-KEY | sudo apt-key add -"
+echo "  \$ sudo add-apt-repository https://${AWS_S3_PKGS_URL}/apt"
+echo "  \$ curl -L https://${AWS_S3_PKGS_URL}/apt/APT-GPG-KEY | sudo apt-key add -"
 echo
 echo "  \$ sudo apt-get update"
-echo "  \$ sudo apt-get install eris"
+echo "  \$ sudo apt-get install monax"
 echo

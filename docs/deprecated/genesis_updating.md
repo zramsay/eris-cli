@@ -9,7 +9,7 @@ title: "Deprecated | Genesis Updating"
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 All eris:db use a genesis.json to get started. The genesis.json tells eris:db:

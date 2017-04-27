@@ -9,7 +9,7 @@ title: "Deprecated | How To Make A Service"
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 We are going to change the old idi contract so that it does a few things for us, which will be helpful for us to learn about Docker and Eris later.

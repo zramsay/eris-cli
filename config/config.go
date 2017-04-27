@@ -30,8 +30,6 @@ type Config struct {
 // Settings describes settings loadable from "monax.toml"
 // definition file.
 type Settings struct {
-	IpfsHost          string `json:"IpfsHost,omitempty" yaml:"IpfsHost,omitempty" toml:"IpfsHost,omitempty"`
-	IpfsPort          string `json:"IpfsPort,omitempty" yaml:"IpfsPort,omitempty" toml:"IpfsPort,omitempty"`
 	CompilersHost     string `json:"CompilersHost,omitempty" yaml:"CompilersHost,omitempty" toml:"CompilersHost,omitempty"` // currently unused
 	CompilersPort     string `json:"CompilersPort,omitempty" yaml:"CompilersPort,omitempty" toml:"CompilersPort,omitempty"` // currently unused
 	DockerHost        string `json:"DockerHost,omitempty" yaml:"DockerHost,omitempty" toml:"DockerHost,omitempty"`
@@ -77,8 +75,7 @@ func LoadViper(definitionPath, definitionName string) (*viper.Viper, error) {
 	// keys.json, keys.yaml, etc.
 
 	if matches, _ := filepath.Glob(filepath.Join(definitionPath, definitionName+".*")); len(matches) == 0 {
-		errKnown := fmt.Sprintf("List available definitions with the [monax %s ls --known] command", filepath.Base(definitionPath))
-		return nil, fmt.Errorf("Unable to find the %q definition: %v\n\n%s", definitionName, os.ErrNotExist, errKnown)
+		return nil, fmt.Errorf("Unable to find the %q definition: %v", definitionName, os.ErrNotExist)
 	}
 
 	conf := viper.New()
@@ -112,8 +109,6 @@ func Load() (*viper.Viper, error) {
 func SetDefaults() (*viper.Viper, error) {
 	var config = viper.New()
 
-	config.SetDefault("IpfsHost", "http://0.0.0.0") // [csk] TODO: be less opinionated here...
-	config.SetDefault("IpfsPort", "8080")           // [csk] TODO: be less opinionated here...
 	config.SetDefault("CrashReport", "bugsnag")
 	config.SetDefault("ImagesPullTimeout", "15m")
 

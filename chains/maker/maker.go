@@ -12,7 +12,7 @@ import (
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/util"
 
-	"github.com/monax/burrow/genesis"
+	"github.com/hyperledger/burrow/genesis"
 )
 
 var (
@@ -138,10 +138,8 @@ func maker(do *definitions.Do, consensusType string, accountTypes []*definitions
 	}
 
 	// write out the overview files on the host: accounts.csv, validators.csv (and *unsafe* accounts.json)
-	if do.Output {
-		if err = SaveAccountResults(do, accounts); err != nil {
-			return err
-		}
+	if err = SaveAccountResults(do, accounts); err != nil {
+		return err
 	}
 
 	return nil
@@ -163,7 +161,7 @@ func assembleTypesWizard(accountT *definitions.MonaxDBAccountType, tokenIze bool
 		}
 	}
 
-	if accountT.Perms["bond"] == 1 && accountT.DefaultNumber > 0 {
+	if accountT.Perms["bond"] == true && accountT.DefaultNumber > 0 {
 		accountT.DefaultBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.DefaultBond, reader)
 		log.WithField("=>", accountT.DefaultBond).Debug("What the marmots heard")
 		if err != nil {
@@ -199,9 +197,9 @@ func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator i
 		return nil, err
 	}
 
-	thisActT.Perms = make(map[string]int64)
+	thisActT.Perms = make(map[string]bool)
 	for _, perm := range AccountTypeManualPerms() {
-		thisActT.Perms[perm], err = util.GetIntResponse(AccountTypeManualPermsQuestion(perm), 0, reader)
+		thisActT.Perms[perm], err = util.GetBoolResponse(AccountTypeManualPermsQuestion(perm), false, reader)
 	}
 
 	name, err := util.GetStringResponse(AccountTypeManualSave(), "", reader)
@@ -271,9 +269,9 @@ func assembleTypesCSV(accountT []*definitions.MonaxDBAccountType, do *definition
 				if err != nil {
 					return err
 				}
-				permsPrime := make(map[string]int64)
+				permsPrime := make(map[string]bool)
 				for i := 0; i < len(perms); i++ {
-					p, err := strconv.ParseInt(perms[i+1], 10, 64)
+					p, err := strconv.ParseBool(perms[i+1])
 					if err != nil {
 						return err
 					}

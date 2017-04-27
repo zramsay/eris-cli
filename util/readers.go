@@ -8,7 +8,7 @@ import (
 
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/client/rpc"
+	"github.com/hyperledger/burrow/client/rpc"
 )
 
 // This is a closer function which is called by most of the tx_run functions
