@@ -44,5 +44,7 @@ func LoadPackage(fileName string) (*definitions.Package, error) {
 			Please check that your epm.yaml is properly formatted: %v`, err)
 	}
 
+	// TODO more file sanity check (fail before running)
+
 	return pkg, nil
 }

@@ -7,21 +7,13 @@ import (
 	"path/filepath"
 )
 
-const LogFileNameCSV = "jobs_output.csv"
-const LogFileNameJSON = "jobs_output.json"
-
-func ClearJobResults() error {
-	if err := os.Remove(setJsonPath()); err != nil {
-		return err
-	}
-
-	return os.Remove(setCsvPath())
-}
-
+// [zr] this should go (currently used by the nameReg writer)
 // WriteJobResultCSV takes two strings and writes those to the delineated log
 // file, which is currently epm.log in the same directory as the epm.yaml
 func WriteJobResultCSV(name, result string) error {
-	logFile := setCsvPath()
+
+	pwd, _ := os.Getwd()
+	logFile := filepath.Join(pwd, "jobs_output.csv")
 
 	var file *os.File
 	var err error
@@ -46,8 +38,7 @@ func WriteJobResultCSV(name, result string) error {
 	return nil
 }
 
-func WriteJobResultJSON(results map[string]string) error {
-	logFile := setJsonPath()
+func WriteJobResultJSON(results map[string]string, logFile string) error {
 
 	file, err := os.Create(logFile)
 	defer file.Close()
@@ -61,14 +52,4 @@ func WriteJobResultJSON(results map[string]string) error {
 	}
 
 	return nil
-}
-
-func setJsonPath() string {
-	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, LogFileNameJSON)
-}
-
-func setCsvPath() string {
-	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, LogFileNameCSV)
 }

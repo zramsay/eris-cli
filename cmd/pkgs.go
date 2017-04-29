@@ -1,10 +1,7 @@
-// +build !arm
-
 package commands
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,13 +38,13 @@ in a package definition file`,
 
 func addPackagesFlags() {
 	packagesDo.Flags().StringVarP(&do.ChainName, "chain", "c", "", "chain name to be used for deployment")
-	// TODO links keys
 	packagesDo.Flags().StringVarP(&do.Signer, "keys", "s", defaultSigner(), "IP:PORT of keys daemon which jobs should use")
-	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")              //what's this actually used for?
-	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "json", "output format which should be used [csv,json]") // [zr] this is not well tested!
-	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "./epm.yaml", "path to package file which jobs should use")
+	packagesDo.Flags().StringVarP(&do.Path, "dir", "i", "", "root directory of app (will use $pwd by default)")
+	packagesDo.Flags().StringVarP(&do.DefaultOutput, "output", "o", "epm.output.json", "filename for jobs output file. by default, this name will reflect the name passed in on the optional [--file]")
+	packagesDo.Flags().StringVarP(&do.YAMLPath, "file", "f", "epm.yaml", "path to package file which jobs should use")
 	packagesDo.Flags().StringSliceVarP(&do.DefaultSets, "set", "e", []string{}, "default sets to use; operates the same way as the [set] jobs, only before the jobs file is ran (and after default address")
-	packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
+	// the package manager does not use this flag!
+	// packagesDo.Flags().StringVarP(&do.ContractsPath, "contracts-path", "p", "./contracts", "path to the contracts jobs should use")
 	packagesDo.Flags().StringVarP(&do.BinPath, "bin-path", "", "./bin", "path to the bin directory jobs should use when saving binaries after the compile process")
 	packagesDo.Flags().StringVarP(&do.ABIPath, "abi-path", "", "./abi", "path to the abi directory jobs should use when saving ABIs after the compile process")
 	packagesDo.Flags().StringVarP(&do.DefaultGas, "gas", "g", "1111111111", "default gas to use; can be overridden for any single job")
@@ -61,11 +58,6 @@ func addPackagesFlags() {
 
 func PackagesDo(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(0, "eq", cmd, args))
-	if do.Path == "" {
-		var err error
-		do.Path, err = os.Getwd()
-		util.IfExit(err)
-	}
 	if do.ChainName == "" {
 		util.IfExit(fmt.Errorf("please provide the name of a running chain with --chain"))
 	}

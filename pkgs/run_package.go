@@ -2,6 +2,8 @@ package pkgs
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/monax/cli/definitions"
@@ -13,9 +15,16 @@ import (
 )
 
 func RunPackage(do *definitions.Do) error {
+	var gotwd string
+	if do.Path == "" {
+		var err error
+		gotwd, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+		do.Path = gotwd
+	}
 
-	// clears job_outputs file
-	jobs.ClearJobResults()
 	// useful for debugging
 	printPathPackage(do)
 
@@ -29,12 +38,40 @@ func RunPackage(do *definitions.Do) error {
 		return err
 	}
 
+	// if --dir is used and --file is left default, concat
+	// so that the job will run
+	// note: [zr] this could be problematic with a combo of
+	// other flags, however, at least the --dir flag isn't
+	// completely broken now
+	if do.Path != gotwd {
+		if do.YAMLPath == "epm.yaml" {
+			do.YAMLPath = filepath.Join(do.Path, do.YAMLPath)
+		}
+		if do.BinPath == "./bin" {
+			do.BinPath = filepath.Join(do.Path, "bin")
+		}
+		if do.ABIPath == "./abi" {
+			do.ABIPath = filepath.Join(do.Path, "abi")
+		}
+		// TODO enable this feature
+		// if do.ContractsPath == "./contracts" {
+		//do.ContractsPath = filepath.Join(do.Path, "contracts")
+		//}
+	}
 	var err error
 	// Load the package if it doesn't exist
 	if do.Package == nil {
 		do.Package, err = loaders.LoadPackage(do.YAMLPath)
 		if err != nil {
 			return err
+		}
+	}
+
+	if do.Path != gotwd {
+		for _, job := range do.Package.Jobs {
+			if job.Job.Deploy != nil {
+				job.Job.Deploy.Contract = filepath.Join(do.Path, job.Job.Deploy.Contract)
+			}
 		}
 	}
 
