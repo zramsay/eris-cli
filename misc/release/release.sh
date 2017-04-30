@@ -147,7 +147,7 @@ release_binaries() {
   do
     echo "Uploading: ${file}"
     aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file}
-    desc+=$(echo -e "\n* ${file}\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/dl/${file} >/usr/local/bin/monax\n\`\`\`")
+    desc+=$(echo -e "\n* ${file}\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/dl/${file} >/usr/local/bin/monax\nsudo chmod +x /usr/local/bin/monax\n\`\`\`")
   done
   popd
   DESCRIPTION+=${desc}
