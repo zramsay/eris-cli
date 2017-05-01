@@ -162,11 +162,6 @@ const sectionServers = `[servers]
 	rpc_local_address = "0.0.0.0:46657"
 	endpoint = "/websocket"
 
-  [servers.logging]
-  console_log_level = "info"
-  file_log_level = "warn"
-  log_file = ""
-
   `
 
 const separatorModules = `
@@ -234,14 +229,18 @@ private_validator_file = "priv_validator.json"
   # genesis_file = "./data/tendermint/genesis.json"
   # skip_upnp = false
   # addrbook_file = "./data/tendermint/addrbook.json"
+  # addrbook_strict = true
+  # pex_reactor = false
   # priv_validator_file = "./data/tendermint/priv_validator.json"
   # db_dir = "./data/tendermint/data"
   # prof_laddr = ""
   # revision_file = "./data/tendermint/revision"
-  # cswal = "./data/tendermint/data/cswal"
-  # cswal_light = false
+  # cs_wal_dir = "./data/tendermint/data/cswal"
+  # cs_wal_light = false
+  # filter_peers = false
 
   # block_size = 10000
+  # block_part_size = 65536
   # disable_data_hash = false
   # timeout_propose = 3000
   # timeout_propose_delta = 500
@@ -250,9 +249,11 @@ private_validator_file = "priv_validator.json"
   # timeout_precommit = 1000
   # timeout_precommit_delta = 500
   # timeout_commit = 1000
+  # skip_timeout_commit = false
   # mempool_recheck = true
   # mempool_recheck_empty = true
   # mempool_broadcast = true
+  # mempool_wal_dir = "./data/tendermint/data/mempool.wal"
 
 		[tendermint.configuration.p2p]
 		# Switch config keys
@@ -280,7 +281,7 @@ const sectionBurrowMint = `
 ################################################################################
 ##
 ## Burrow-Mint
-## version 0.16
+## version 0.17
 ##
 ## The original Ethereum virtual machine with IAVL merkle trees
 ## and tendermint/go-wire encoding
@@ -294,5 +295,19 @@ db_backend = "leveldb"
 # tendermint host address needs to correspond to tendermints configuration
 # of the rpc local address
 tendermint_host = "0.0.0.0:46657"
+
+`
+
+const sectionLoggingHeader = `
+################################################################################
+##
+## System-wide logging configuration
+##
+## Log messages are sent to one of two 'channels': info or trace
+##
+## They are delivered on two independent streams: 'info' or 'info and trace'.
+## Each of these streams has a root
+##
+################################################################################
 
 `
