@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DB_VERSION        = "0.16.3"
+	DB_VERSION        = "0.17.0"
 	KEYS_VERSION      = "0.17.0"
 	COMPILERS_VERSION = "0.17.0"
 )
