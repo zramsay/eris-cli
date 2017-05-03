@@ -67,13 +67,15 @@ func httpRequestMiddleware(event *Event, config *Configuration) error {
 
 			event.MetaData.Update(MetaData{
 				"request": {
-					"clientIp":   request.RemoteAddr,
-					"httpMethod": request.Method,
+					"remoteAddr": request.RemoteAddr,
+					"method":     request.Method,
 					"url":        proto + request.Host + request.RequestURI,
 					"params":     request.URL.Query(),
-					"headers":    request.Header,
 				},
 			})
+
+			// Add headers as a separate tab.
+			event.MetaData.AddStruct("Headers", request.Header)
 
 			// Default context to Path
 			if event.Context == "" {
