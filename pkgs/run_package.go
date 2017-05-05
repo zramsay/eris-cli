@@ -25,15 +25,14 @@ func RunPackage(do *definitions.Do) error {
 		do.Path = gotwd
 	}
 
-	// useful for debugging
-	printPathPackage(do)
-
-	// sets do.ChainIP and do.ChainPort
-	if err := setChainIPandPort(do); err != nil {
-		return err
+	if do.ChainURL == "" {
+		// sets do.ChainIP and do.ChainPort if do.ChainURL is not populated
+		if err := setChainIPandPort(do); err != nil {
+			return err
+		}
+		do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
 	}
 
-	do.ChainURL = fmt.Sprintf("tcp://%s:%s", do.ChainIP, do.ChainPort)
 	if err := util.GetChainID(do); err != nil {
 		return err
 	}
@@ -58,6 +57,10 @@ func RunPackage(do *definitions.Do) error {
 		//do.ContractsPath = filepath.Join(do.Path, "contracts")
 		//}
 	}
+
+	// useful for debugging
+	printPathPackage(do)
+
 	var err error
 	// Load the package if it doesn't exist
 	if do.Package == nil {
@@ -88,7 +91,6 @@ func RunPackage(do *definitions.Do) error {
 }
 
 func setChainIPandPort(do *definitions.Do) error {
-
 	if !util.IsChain(do.ChainName, true) {
 		return fmt.Errorf("chain (%s) is not running", do.ChainName)
 	}
@@ -153,7 +155,8 @@ func getLocalCompilerData(do *definitions.Do) error {
 
 func printPathPackage(do *definitions.Do) {
 	log.WithField("=>", do.Compiler).Info("Using Compiler at")
-	log.WithField("=>", do.ChainName).Info("Using Chain at")
-	log.WithField("=>", do.ChainID).Debug("With ChainID")
+	log.WithField("=>", do.ChainName).Info("Using ChainName")
+	log.WithField("=>", do.ChainID).Info("With ChainID")
+	log.WithField("=>", do.ChainURL).Info("With ChainURL")
 	log.WithField("=>", do.Signer).Info("Using Signer at")
 }
