@@ -241,8 +241,9 @@ func deployRaw(do *definitions.Do, deploy *definitions.Deploy, contractName, con
 	}).Warn("Deploying Contract")
 
 	log.WithFields(log.Fields{
-		"source": deploy.Source,
-		"code":   contractCode,
+		"source":    deploy.Source,
+		"code":      contractCode,
+		"chain-url": do.ChainURL,
 	}).Info()
 
 	monaxNodeClient := client.NewBurrowNodeClient(do.ChainURL, loggers.NewNoopInfoTraceLogger())

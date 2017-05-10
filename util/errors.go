@@ -10,10 +10,10 @@ import (
 
 func MintChainErrorHandler(do *definitions.Do, err error) (string, error) {
 	log.WithFields(log.Fields{
-		"defAddr":  do.Package.Account,
-		"chainID":  do.ChainID,
-		"chainURL": do.ChainName,
-		"rawErr":   err,
+		"defAddr":   do.Package.Account,
+		"chainID":   do.ChainID,
+		"chainNAME": do.ChainName,
+		"rawErr":    err,
 	}).Error("")
 
 	return "", fmt.Errorf(`
@@ -27,7 +27,7 @@ Debugging this error is tricky, but don't worry the marmot recovery checklist is
   * is the account you want to use in your genesis.json: monax chains cat %s genesis ?
   * is your chain making blocks: monax chains logs -f %s ?
   * do you have permissions to do what you're trying to do on the chain?
-`, err, do.Package.Account, do.ChainID, do.ChainID)
+`, err, do.Package.Account, do.ChainName, do.ChainName)
 }
 
 func KeysErrorHandler(do *definitions.Do, err error) (string, error) {
