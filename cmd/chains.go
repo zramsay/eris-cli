@@ -3,12 +3,14 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/monax/cli/chains"
 	"github.com/monax/cli/config"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 
 	"github.com/spf13/cobra"
 )
@@ -183,6 +185,7 @@ func addChainsFlags() {
 	chainsMake.PersistentFlags().StringVarP(&do.ChainMakeVals, "validators", "", "", "comma separated list of the validators.csv files you would like to utilize (requires --known flag)")
 	chainsMake.PersistentFlags().BoolVarP(&do.Wizard, "wizard", "w", false, "summon the interactive chain making wizard")
 	chainsMake.PersistentFlags().StringSliceVarP(&do.SeedsIP, "seeds-ip", "", []string{}, "set a list of seeds (e.g. IP:PORT,IP:PORT) for peers to join the chain")
+	chainsMake.PersistentFlags().StringVarP(&do.ChainImageName, "version", "", path.Join(version.DefaultRegistry, version.ImageDB), "set the version for a burrow chain (docker image) in the config.toml")
 	// NOTE: [ben] the unsafe flag is introduced to start pushing out bad
 	// practices from the tooling with regards to extracting private keys
 	// from monax-keys.  Extracting the private keys can be convenient for

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	//"path"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -13,12 +13,10 @@ import (
 	"github.com/monax/cli/config"
 	"github.com/monax/cli/data"
 	"github.com/monax/cli/definitions"
-	//"github.com/monax/cli/loaders"
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
-	//"github.com/monax/cli/util"
-	//"github.com/monax/cli/version"
+	"github.com/monax/cli/version"
 )
 
 // [zr] there's a ton of refactoring to do here!
@@ -1072,6 +1070,7 @@ func create(t *testing.T, chain string) {
 	doMake := definitions.NowDo()
 	doMake.Name = chain
 	doMake.ChainType = "simplechain"
+	doMake.ChainImageName = path.Join(version.DefaultRegistry, version.ImageDB)
 	if err := chains.MakeChain(doMake); err != nil {
 		t.Fatalf("expected a chain to be made, got %v", err)
 	}
