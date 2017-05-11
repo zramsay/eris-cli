@@ -96,7 +96,7 @@ contract ActionManager {
 
 **Important**
 
-Since we must allow generic arguments, we must pass something into the action that can stand for any number of arguments of any type - like an `Object` in java, an `interface{}` in Go, or a `*void` in C. This is not fully supported in Solidity, but the first thing that that will be useful in this case is probably going to be byte arrays - which is basically how this worked in LLL. Byte arrays are fully generic, so what we'd do here (for now) is to use a javascript library (such as `legacy-contracts`) which makes it very simple to convert arguments into properly formatted call-data.
+Since we must allow generic arguments, we must pass something into the action that can stand for any number of arguments of any type - like an `Object` in java, an `interface{}` in Go, or a `*void` in C. This is not fully supported in Solidity, but the first thing that that will be useful in this case is probably going to be byte arrays - which is basically how this worked in LLL. Byte arrays are fully generic, so what we'd do here (for now) is to use the [deprecated javascript library](https://github.com/monax/legacy-contracts.js) which makes it very simple to convert arguments into properly formatted call-data.
 
 **Controller and database**
 
