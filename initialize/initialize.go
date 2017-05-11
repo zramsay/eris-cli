@@ -76,9 +76,6 @@ Directory structure initialized:
 ¦   +-- scratch/
 ¦       +-- data/
 ¦       +-- languages/
-¦       +-- lllc/
-¦       +-- ser/
-¦       +-- sol/
 ¦   +-- services/
 ¦       +-- keys.toml
 ¦       +-- compilers.toml
