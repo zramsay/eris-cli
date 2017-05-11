@@ -139,7 +139,7 @@ That's it, we added all that functionality to our system with that little comman
 Check that it is running:
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 And see what its doing:
@@ -148,12 +148,7 @@ And see what its doing:
 monax chains logs advchain -f
 ```
 
-(`ctrl+c` to exit the logs following.) You can also pull the logs for one of the validators
-
-```bash
-monax chains logs advchain -f
-```
-
+(`ctrl+c` to exit the logs following.)
 
 Now you're all set up. Connected up to custom built, permissioned smart contract network with cloud based validators, given yourself admin permissions, and in what essentially has boiled down to move a few files around, edit a few lines in a few config files, and enter a few commands, we're ready to build out our applications.
 

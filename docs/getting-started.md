@@ -192,7 +192,7 @@ That `test_chain` can be whatever name you would like it to be. These two comman
 To check that your chain is running type (running chains have a `*` symbol next to them rather than a `-`):
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 You can peek at chain's logs with these commands (`-f` for "follow"):
@@ -311,7 +311,7 @@ monax chains start firstchain --init-dir $chain_dir_this
 Check that the chain is running with:
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 You'll see something like:
@@ -321,7 +321,7 @@ CHAIN        ON     VERSION
 firstchain   *      0.16.0
 ```
 
-As with the `monax services ls -a` command, you can also see more information about your chain with `monax chains ls -a`. Note: the same holds true with `monax ls` and `monax ls -a`.
+Note: You can see more information with `monax ls --all`.
 
 To see the logs of the chain:
 
@@ -429,7 +429,7 @@ See the Step 2 above if you need to review the chain making process. This series
 First, let's get our chain turned back on.
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 If it's on, you'll see:
@@ -447,7 +447,7 @@ If `firstchain` is not running, then turn it on with:
 monax chains start firstchain
 ```
 
-or create a new chain if firstchain no longer exists.
+or make a new chain if firstchain no longer exists.
 
 Now, we are ready to deploy this world changing contract. Make sure you are in the `~/.monax/apps/idi` folder, or wherever you saved your `epm.yaml`. Note that this is a very common pattern in simple contract testing and development; namely to (1) deploy a contract; (2) send it some transactions (or `call`s); (3) query some results from the contract (or `query-contract`s); and (4) assert a result. As you get moving with contract development you will likely find yourself doing this a lot.
 
@@ -590,7 +590,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     To "see" your `genesis.json` then do this:
 
     ```
-    monax chains cat firstchain genesis
+    monax chains exec -it firstchain "cat /home/monax/.monax/chains/firstchain/firstchain_full_000/genesis.json"
     ```
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip monax` if on OSX or Windows. See our [docker-machine tutorial](/docs/deprecated/using-docker-machine-with-eris) for more information.
