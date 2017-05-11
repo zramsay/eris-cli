@@ -2,7 +2,6 @@ package chains
 
 import (
 	"fmt"
-	"path"
 	"strconv"
 	"strings"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/monax/cli/definitions"
 	"github.com/monax/cli/keys"
 	"github.com/monax/cli/log"
-	"github.com/monax/cli/version"
 )
 
 // MakeChain runs the chain maker
@@ -42,7 +40,6 @@ func MakeChain(do *definitions.Do) error {
 	// set infos
 	// do.Name; already set
 	// do.Accounts ...?
-	do.ChainImageName = path.Join(version.DefaultRegistry, version.ImageDB)
 	do.ExportedPorts = []string{"1337", "46656", "46657"}
 	do.UseDataContainer = true
 	do.ContainerEntrypoint = ""
@@ -52,7 +49,6 @@ func MakeChain(do *definitions.Do) error {
 		return err
 	}
 
-	// cm currently is not opinionated about its writers.
 	switch do.Output {
 	case "tar":
 		if err := maker.Tarball(do); err != nil {

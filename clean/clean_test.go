@@ -216,6 +216,7 @@ func testStartChain(chainName string, t *testing.T) {
 	doMake := definitions.NowDo()
 	doMake.Name = chainName
 	doMake.ChainType = "simplechain"
+	doMake.ChainImageName = path.Join(version.DefaultRegistry, version.ImageDB)
 	if err := chains.MakeChain(doMake); err != nil {
 		t.Fatalf("expected a chain to be made, got %v", err)
 	}
