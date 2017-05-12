@@ -170,9 +170,6 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 	if custom, returned := "", cli.DockerCertPath; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
-	if custom, returned := "bugsnag", cli.CrashReport; custom != returned {
-		t.Fatalf("expected %q, got %q", custom, returned)
-	}
 	if custom, returned := false, cli.Verbose; custom != returned {
 		t.Fatalf("expected %v, got %v", custom, returned)
 	}
@@ -210,9 +207,6 @@ func TestNewCustomBadConfig(t *testing.T) {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
 	if custom, returned := "", cli.DockerCertPath; custom != returned {
-		t.Fatalf("expected %q, got %q", custom, returned)
-	}
-	if custom, returned := "bugsnag", cli.CrashReport; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
 	if custom, returned := false, cli.Verbose; custom != returned {

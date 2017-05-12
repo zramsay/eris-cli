@@ -72,20 +72,12 @@ Complete documentation is available at https://monax.io/docs
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			util.IfExit(fmt.Errorf("Monax requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
-		log.AddHook(util.CrashReportHook(dockerVersion))
 	},
 
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
-	// Handle panics within Execute().
-	defer func() {
-		if err := recover(); err != nil {
-			util.SendPanic(err)
-		}
-	}()
-
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
