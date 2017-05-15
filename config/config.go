@@ -109,7 +109,6 @@ func Load() (*viper.Viper, error) {
 func SetDefaults() (*viper.Viper, error) {
 	var config = viper.New()
 
-	config.SetDefault("CrashReport", "bugsnag")
 	config.SetDefault("ImagesPullTimeout", "15m")
 
 	// Compiler defaults.

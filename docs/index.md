@@ -31,7 +31,6 @@ Welcome to the Monax Documentation homepage. Here you'll find everything needed 
 ### Other repositories and documentation
 
 * For details on permissioning, secure natives, and the burrow API, see the [burrow repository](https://github.com/monax/burrow)
-* For information about the javascript libraries, see the [legacy-contracts.js](https://github.com/monax/legacy-contracts.js), [legacy-db.js](https://github.com/monax/legacy-db.js), and [keys.js](https://github.com/monax/monax-keys.js) repositories.
 
 ### Deprecated
 

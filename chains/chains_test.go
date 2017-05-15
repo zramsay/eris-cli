@@ -3,6 +3,7 @@ package chains
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/monax/cli/services"
 	"github.com/monax/cli/testutil"
 	"github.com/monax/cli/util"
+	"github.com/monax/cli/version"
 )
 
 var chainName = "test-chain"
@@ -266,6 +268,8 @@ func create(t *testing.T, chain string) {
 	doMake := definitions.NowDo()
 	doMake.Name = chain
 	doMake.ChainType = "simplechain"
+	// added because this is now set by the flag
+	doMake.ChainImageName = path.Join(version.DefaultRegistry, version.ImageDB)
 	if err := MakeChain(doMake); err != nil {
 		t.Fatalf("expected a chain to be made, got %v", err)
 	}

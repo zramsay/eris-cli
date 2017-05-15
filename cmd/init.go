@@ -36,4 +36,8 @@ func Router(cmd *cobra.Command, args []string) {
 		log.Error(err)
 		os.Exit(1)
 	}
+	log.Warn(`
+	WARNING: after version 0.17, [monax] will no longer support docker-machine
+	and will be providing official support for Linux only.`)
+
 }

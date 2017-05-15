@@ -24,10 +24,10 @@ There has been an error talking to your monax chain.
 Debugging this error is tricky, but don't worry the marmot recovery checklist is...
   * is the %s account right?
   * is the account you want to use in your keys service: monax keys ls ?
-  * is the account you want to use in your genesis.json: monax chains cat %s genesis ?
+  * is the account you want to use in your genesis.json: see http://localhost:46657/genesis
   * is your chain making blocks: monax chains logs -f %s ?
   * do you have permissions to do what you're trying to do on the chain?
-`, err, do.Package.Account, do.ChainName, do.ChainName)
+`, err, do.Package.Account, do.ChainName)
 }
 
 func KeysErrorHandler(do *definitions.Do, err error) (string, error) {
