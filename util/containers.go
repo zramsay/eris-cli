@@ -409,7 +409,7 @@ func PullImage(image string, writer io.Writer) error {
 
 		select {
 		case <-time.After(timeoutDuration):
-			SendReport(fmt.Errorf("image pull timed out (%v)", timeoutDuration))
+			log.Warn("image pull timed out (%v)", timeoutDuration)
 			timeout <- ErrImagePullTimeout
 		}
 	}()

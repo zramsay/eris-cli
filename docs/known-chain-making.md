@@ -55,7 +55,7 @@ monax services start keys
 Check that is it indeed running with:
 
 ```bash
-monax services ls
+monax ls
 ```
 
 You'll see something like:
@@ -65,7 +65,7 @@ SERVICE     ON     VERSION
 keys        *      0.16.0 
 ```
 
-which indicates (`*` rather than `-`) that the keys services is on (running). To see a more comprehensive output for your services, try `monax services ls -a`
+which indicates (`*` rather than `-`) that the keys services is on (running). To see a more comprehensive output for your services, try `monax ls --all`
 
 To see what we can do with monax keys we will run:
 

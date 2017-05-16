@@ -28,7 +28,7 @@ Let's make a chain with a few keys on it.
 
 {{< insert_contents 1 "/docs/contracts_deploying_adv/test.sh" 3 10 >}}
 
-Check that it is running of course with `monax chains ls`.
+Check that it is running with `monax ls`.
 
 ## Let's make a more advanced get-set contract sequence.
 

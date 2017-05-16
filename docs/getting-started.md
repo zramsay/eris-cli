@@ -192,7 +192,7 @@ That `test_chain` can be whatever name you would like it to be. These two comman
 To check that your chain is running type (running chains have a `*` symbol next to them rather than a `-`):
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 You can peek at chain's logs with these commands (`-f` for "follow"):
@@ -311,7 +311,7 @@ monax chains start firstchain --init-dir $chain_dir_this
 Check that the chain is running with:
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 You'll see something like:
@@ -321,7 +321,7 @@ CHAIN        ON     VERSION
 firstchain   *      0.16.0
 ```
 
-As with the `monax services ls -a` command, you can also see more information about your chain with `monax chains ls -a`. Note: the same holds true with `monax ls` and `monax ls -a`.
+Note: You can see more information with `monax ls --all`.
 
 To see the logs of the chain:
 
@@ -349,7 +349,7 @@ or *remove everything* with:
 monax clean -yx
 ```
 
-If anything went wrong, please see our trouble shooting guide -> [^1], [^2], [^3], [^4], [^5], [^6]
+If anything went wrong, please see our trouble shooting guide -> [^1], [^2], [^3], [^4]
 
 ## Step 3: Deploy your ecosystem application using smart contract templates
 
@@ -429,7 +429,7 @@ See the Step 2 above if you need to review the chain making process. This series
 First, let's get our chain turned back on.
 
 ```bash
-monax chains ls
+monax ls
 ```
 
 If it's on, you'll see:
@@ -447,7 +447,7 @@ If `firstchain` is not running, then turn it on with:
 monax chains start firstchain
 ```
 
-or create a new chain if firstchain no longer exists.
+or make a new chain if firstchain no longer exists.
 
 Now, we are ready to deploy this world changing contract. Make sure you are in the `~/.monax/apps/idi` folder, or wherever you saved your `epm.yaml`. Note that this is a very common pattern in simple contract testing and development; namely to (1) deploy a contract; (2) send it some transactions (or `call`s); (3) query some results from the contract (or `query-contract`s); and (4) assert a result. As you get moving with contract development you will likely find yourself doing this a lot.
 
@@ -473,83 +473,8 @@ Since we have a deployed contract on a running chain, please do take a look at t
 monax pkgs do --help
 ```
 
-That's it! Your contract is all ready to go. You should see the output in `jobs_output.json` which will have the transaction hash of the transactions as well as the address of the deployed `idi.sol` contract.
+That's it! Your contract is all ready to go. You should see the output in `jobs_output.json` which will have the transaction hash of the transactions as well as the address of the deployed `idi.sol` contract. The job runner (`monax pkgs do`) can be leveraged for building and interacting with your custom application.
 
-## Step 4: Integrate your ecosystem application
-
-Let us expand the very simple idiscontract out into a very simple smart contract backed application. To do this, we will be using node.js. To use this tutorial you will need a relatively recent version of [node](https://nodejs.org/en/download/package-manager/) installed on your box.
-
-What we are going to make is a very simple application which tells the user what the value held in idi's contract currently is, then it will ask the user what the value should be changed to, once the user enters the new value then the application will change the value in idi's contract and display the new value for the user. It couldn't get any more simple. To complete this we will conduct three steps:
-
-1. Set up our Application
-2. Build our Integration Script/Server
-3. Run our Application
-
-### Step 4.1: Set up the Application
-
-As with all node.js applications, we will start by making a package.json. This should be made in the same folder as your `epm.yaml`. We will keep the `package.json` very simple.
-
-{{< insert_contents 3 "/docs/contracts_simple_idi/package.json" >}}
-
-Once you have saved your `package.json` then you will run (from the same directory) this command:
-
-```bash
-npm install
-```
-
-That will install legacy-contracts.js and their dependencies (plus another simple node.js package we'll use in the application).
-
-For trouble shooting information regarding Step 4.1 please see our guide -> [^7], [^8], [^9]
-
-#### Step 4.2: Make the Main Application Script
-
-Once we have that set up, then we'll make an `app.js` file and we'll add the following contents into it:
-
-{{< insert_contents 4 "/docs/contracts_simple_idi/app.js" >}}
-
-**N.B.** -- for *not Linux users*, please see the comments on lines 6-9 about the `var erisdbURL = "http://localhost:1337/rpc";` line of the script. See our [docker-machine tutorial](../deprecated/using_docker_machine_with_eris/) for more information.
-
-**N.B. 2** -- be sure to edit this line: `var contractsManager = erisC.newContractManagerDev(erisdbURL, accountData.firstchain_full_000);` in the `app.js` to reflect the chain name (in lowercase) and account if you did not make a chain with the name `firstchain`. See `$chain_dir/accounts.json` for more info (see below for the step to retrieve this file.)
-
-The code should be self explanatory if you understand even a little bit of javascript. Once we properly instantiate all of the objects then there are three functions.
-
-The first function, the `getValue` function will call the `get` function of `idi.sol` and then it will display the result of that to the command line. This function takes a callback which fires after the result of the call to idi.sol's get function (which simply returns the `storedData`).
-
-The second function is a simple function which will prompt the user to change the value (there is no validation here to make sure it is a number, so when playing with this just sure make it is a number). Once the user has entered what the value should be then the `setValue` function will be called.
-
-The final function, the `setValue` function will call the `set` function of `idi.sol`. It will sign the transaction using the account data populated in the account.json file and then send it to the chain. It will block until the transaction has been added to a block after which the callback will fire. The callback here is very simple in that it calls the `getValue` function to display what the result is after the `setValue` transaction has happened.
-
-The beginning of the script, which gets everything sets up includes this line:
-
-```javascript
-var contractData = require('./jobs_output.json');
-```
-
-But we've only worked with an `epm.yaml`, not an `jobs_output.json`. So what is the `jobs_output.json`? That file is an artifact of the `monax pkgs do` process. If you look at the `jobs_output.json` file it should look something like this:
-
-{{< insert_contents 5 "/docs/contracts_simple_idi/sample_jobs_output.json" >}}
-
-The json file is the result of each of the jobs. What we really need from this file is the contracts address that was deployed (the key to the `deployStorageK` field) so that the app.js script knows what contract on the chain it should be "talking" to.
-
-We need to do one final thing before we finish this section. We need to copy over the `accounts.json` which was an artifact of the chain making process and is included in our chains directory into this directory so that it can be consumed by the legacy-contracts.js library.
-
-```bash
-cp $chain_dir/accounts.json .
-```
-
-For more about legacy-contracts please see [its repository](https://github.com/monax/legacy-contracts.js). If you have any trouble, please see our trouble shooting guide -> [^10]
-
-#### Step 4.3: Run The Application
-
-Now we are ready to go:
-
-```bash
-node app.js
-```
-
-The first time you run the script it should tell you that the value is `5` or whatever value you entered into the `setStorageBase` job of the `epm.yaml` from earlier in this tutorial. Then it will prompt you to change the value. The second time you run the script it should tell you that the value is whatever you entered the first time and so on.
-
-Congratulations, you've just made your very own smart contract backed application on a permissioned blockchain! If you had any trouble with this step please see our trouble shooting guide -> [^11]
 
 [^1]: If you get an error which looks something like this:
 
@@ -590,7 +515,7 @@ Congratulations, you've just made your very own smart contract backed applicatio
     To "see" your `genesis.json` then do this:
 
     ```
-    monax chains cat firstchain genesis
+    monax chains exec -it firstchain "cat /home/monax/.monax/chains/firstchain/firstchain_full_000/genesis.json"
     ```
 
     You can also see your `genesis.json` at `http://localhost:46657/genesis`. Note: replace `localhost` with the output of `docker-machine ip monax` if on OSX or Windows. See our [docker-machine tutorial](/docs/deprecated/using-docker-machine-with-eris) for more information.
@@ -609,124 +534,5 @@ Congratulations, you've just made your very own smart contract backed applicatio
     ```
 
     Where `ADDR` in the above command is the address you want to use.
-
-[^5]: If you have an error which complains about how a container cannot be removed which looks something like this:
-
-    ```irc
-    Error removing intermediate container 1f3a1d541241:
-    Driver btrfs failed to remove root filesystem
-    1f3a1d541241e757d48f34329508253e9ee139380b7b914a3b1104677eb0e8ee:
-    Failed to destroy btrfs snapshot: operation not permitted
-    ```
-
-    Then rerun the `pkgs do` command with the `--rm` flag at the end, which will stop the containers from trying to be removed as part of the tear down sequence.
-
-[^6]: If you have an error complaining about not being able to reach the compiler service, like this:
-
-    ```irc
-    failed to send HTTP request Post https://compilers.monax.io:10114/compile: dial tcp: i/o timeout
-    Error compiling contracts
-    Post https://compilers.monax.io:10114/compile: dial tcp: i/o timeout
-    ```
-
-    Then that means one of the following:
-
-    * You're working offline, e.g. on the train, or
-    * You're behind a corporate firewall/proxy and can't access the compiler URL.
-
-    To fix this, you can either go online, or download and run the _compilers_ service locally by doing the following - you need to be online for this, though:
-
-    ```bash
-    monax services start compilers
-    ```
-
-    When you run this for the first time, it will download the _compilers_ Docker image, and then start the service.
-
-    Once the service is running, you can deploy packages by adding the address of your compiler service to the command line parameters. Replace the IP address with your local IP address, depending on your OS. If you're on Windows or Mac OS X, you will have to use the Docker-Machine VM's IP address (`192.168.99.100` by default):
-
-    ```bash
-    monax pkgs do --chain firstchain --address $addr --compiler 192.168.99.100:9091
-    ```
-
-    When you're done with your work, you can stop the _compilers_ service like the other monax services:
-
-    ```bash
-    monax services stop compilers
-    ```
-
-[^7]: If you are on Ubuntu 14.04 LTS, the version of NPM which will likely be installed will create an error when installing legacy-contracts. Please see the [fix here](https://github.com/monax/legacy-contracts.js#installation).
-
-[^8]: If you are behind a firewall then you may need to let npm know about your proxy. To do that add a line to your ~/.npmrc:
-
-    ```
-    proxy=http://myproxy.com
-    ```
-
-[^9]: If you get an error which looks like this:
-
-    ```irc
-    > bufferutil@1.2.1 install /root/.monax/apps/idi/node_modules/bufferutil
-    > node-gyp rebuild
-
-    gyp ERR! build error
-    gyp ERR! stack Error: not found: make
-    gyp ERR! stack     at F (/usr/lib/node_modules/npm/node_modules/which/which.js:78:19)
-    ```
-
-    Then you will need to install `make` on your platform with `apt-get install make` (or the equivalent package manager for your operating system).
-
-[^10]: If you do not have an `jobs_output.json` file that means there was a problem with the contracts deploy unless you are working with 0.11.4 in which case look for `epm.json` and use as you would `jobs_output.json`. Otherwise, please resolve that problem by carefully following the [previous tutorial](/docs/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates) before continuing with this tutorial.
-
-[^11]: If you just started your chain you may not have any contracts on it. To solve this, run:
-
-    ```bash
-    monax pkgs do --chain $chainname --address $addr
-    ```
-
-    Where `$chainname` is the name of the chain you want to use and `$addr` is the address of the account you would like to use. [See the contracts deploying tutorial for more information](/docs/getting-started/#step-3-deploy-your-ecosystem-application-using-smart-contract-templates).
-
-    When you do the deploy command you may get an error which looks like this:
-
-    ```irc
-    Error creating data container: Invalid container name (monax_data_idis app_tmp_deploy_1), only [a-zA-Z0-9][a-zA-Z0-9_.-] are allowed.
-    ```
-
-    This is an "error" from Docker. What it means is that you have a space in the `"name"` field of your package.json which is used by `monax` to setup the container. We will control for this error in the future, but for now just replace the space in the name field with an underscore `_`.
-
-    When you run the app.js if you get an error which looks like this:
-
-    ```irc
-    Error callback from sendTransaction
-    /home/ubuntu/.monax/apps/idi/app.js:29
-        if (error) { throw error }
-                           ^
-    Error: Error: socket hang up
-        at createHangUpError (http.js:1472:15)
-        at Socket.socketOnEnd [as onend] (http.js:1568:23)
-        at Socket.g (events.js:180:16)
-        at Socket.EventEmitter.emit (events.js:117:20)
-        at _stream_readable.js:920:16
-        at process._tickCallback (node.js:415:13)
-        at httpRequest.onreadystatechange (/home/ubuntu/.monax/apps/idi/node_modules/burrow/lib/rpc/http.js:101:26)
-        at dispatchEvent (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:572:25)
-        at setState (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:591:14)
-        at handleError (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:516:5)
-        at ClientRequest.errorHandler (/home/ubuntu/.monax/apps/idi/node_modules/xmlhttprequest/lib/XMLHttpRequest.js:443:14)
-        at ClientRequest.EventEmitter.emit (events.js:95:17)
-        at Socket.socketOnEnd [as onend] (http.js:1568:9)
-        at Socket.g (events.js:180:16)
-        at Socket.EventEmitter.emit (events.js:117:20)
-        at _stream_readable.js:920:16
-    ```
-
-    What that means is that the api port for your chain is not running. There is a very easy fix for this:
-
-    ```bash
-    monax chains stop -rf $chainname
-    monax chains start $chainname
-    ```
-
-    Where `$chainname` in the above sequence is the name of the chain you are using. What those commands will do is to first stop and remove the service container for the chain (this will leave its data container) and then it will restart the chain's service container but when it does so, monax will make sure the api port for your chain is running.
-
 
 ## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)

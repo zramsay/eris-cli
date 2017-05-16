@@ -116,9 +116,6 @@ Created by `monax init` in $HOME directory:
 │   ├── scratch/
 │       ├── data/
 │       ├── languages/
-│       ├── lllc/
-│       ├── ser/
-│       ├── sol/
 │   ├── services/
 │       ├── keys.toml
 ```

@@ -18,7 +18,6 @@ import (
 
 const VERSION = version.VERSION
 const dVerMin = version.DOCKER_VER_MIN
-const dmVerMin = version.DM_VER_MIN
 
 // Defining the root command
 var MonaxCmd = &cobra.Command{
@@ -73,28 +72,12 @@ Complete documentation is available at https://monax.io/docs
 		if !util.CompareVersions(dockerVersion, dVerMin) {
 			util.IfExit(fmt.Errorf("Monax requires [docker] version >= %v\nThe marmots have detected [docker] version: %v\n%s", dVerMin, dockerVersion, marmot))
 		}
-		log.AddHook(util.CrashReportHook(dockerVersion))
-
-		// Compare `docker-machine` versions but don't fail if not installed.
-		dmVersion, err := util.DockerMachineVersion()
-		if err != nil {
-			log.Info("The marmots could not find [docker-machine] installed. While it is not required to be used with Monax, we strongly recommend it be installed for maximum blockchain awesomeness")
-		} else if !util.CompareVersions(dmVersion, dmVerMin) {
-			util.IfExit(fmt.Errorf("Monax requires [docker-machine] version >= %v\nThe marmots have detected version: %v\n%s", dmVerMin, dmVersion, marmot))
-		}
 	},
 
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func Execute() {
-	// Handle panics within Execute().
-	defer func() {
-		if err := recover(); err != nil {
-			util.SendPanic(err)
-		}
-	}()
-
 	InitializeConfig()
 	AddGlobalFlags()
 	AddCommands()
