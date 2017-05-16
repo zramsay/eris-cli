@@ -3,14 +3,9 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/monax/cli/config"
 	"github.com/monax/cli/definitions"
-	//"github.com/monax/cli/initialize"
 	"github.com/monax/cli/loaders"
 	"github.com/monax/cli/log"
 	"github.com/monax/cli/perform"
@@ -35,25 +30,7 @@ func StartService(do *definitions.Do) (err error) {
 		util.Merge(s.Operations, do.Operations)
 	}
 
-	log.Debug("Preparing to build chain")
-	for _, s := range services {
-		log.WithFields(log.Fields{
-			"name":         s.Name,
-			"dependencies": s.Dependencies,
-			"links":        s.Service.Links,
-			"volumes from": s.Service.VolumesFrom,
-		}).Debug()
-
-		// Spacer.
-		log.Debug()
-	}
-	if do.ChainName != "" {
-		services, err = BuildChainGroup(do.ChainName, services)
-		if err != nil {
-			return err
-		}
-	}
-	log.Debug("Checking services after build chain")
+	log.Debug("Checking services")
 	for _, s := range services {
 		log.WithFields(log.Fields{
 			"name":         s.Name,
@@ -189,7 +166,7 @@ func BuildServicesGroup(srvName string, services ...*definitions.ServiceDefiniti
 	return services, nil
 }
 
-// start a group of chains or services. catch errors on a channel so we can stop as soon as something goes wrong
+// start a group of services. catch errors on a channel so we can stop as soon as something goes wrong
 func StartGroup(group []*definitions.ServiceDefinition) error {
 	log.WithField("services#", len(group)).Debug("Starting services group")
 	for _, srv := range group {
@@ -199,56 +176,6 @@ func StartGroup(group []*definitions.ServiceDefinition) error {
 		}
 	}
 	return nil
-}
-
-// BuildChainGroup adds the chain specified in each service definition to the service group.
-// If chainName is not empty, it will overwrite chains specified in the defs.
-// Service defs which don't specify a chain or $chain won't connect to a chain.
-// NOTE: chains have to be started before services that depend on them.
-func BuildChainGroup(chainName string, services []*definitions.ServiceDefinition) (servicesAndChains []*definitions.ServiceDefinition, err error) {
-	if !util.IsChain(chainName, true) {
-		return nil, fmt.Errorf("Dependent chain %v is not running", chainName)
-	}
-	var chains = make(map[string]*definitions.ServiceDefinition)
-	for _, srv := range services {
-		if srv.Chain != "" {
-			s, err := ConnectChainToService(chainName, srv.Chain, srv)
-			if err != nil {
-				return nil, err
-			}
-			if _, ok := chains[s.Name]; !ok {
-				chains[s.Name] = s
-			}
-		}
-	}
-	for _, sd := range chains {
-		servicesAndChains = append(servicesAndChains, sd)
-	}
-	return append(servicesAndChains, services...), nil
-}
-
-func ConnectChainToService(chainFlag, chainNameAndOpts string, srv *definitions.ServiceDefinition) (*definitions.ServiceDefinition, error) {
-	chainName, internalName, link, mount := util.ParseDependency(chainNameAndOpts)
-	if chainFlag != "" {
-		// flag overwrites whatever is in the service definition
-		chainName = chainFlag
-	} else if strings.HasPrefix(srv.Chain, "$chain") {
-		// if there's a $chain and no flag or checked out chain, we err
-		var err error
-		chainName, err = util.GetHead()
-		if chainName == "" || err != nil {
-			return nil, fmt.Errorf("Oops. You tried to start a service which has a `$chain` variable but didn't give us a chain.\nPlease rerun the command either after [monax chains checkout CHAINNAME] *or* with a --chain flag.\n")
-		}
-	}
-	s, err := loaders.ChainsAsAService(chainName)
-	if err != nil {
-		return nil, err
-	}
-	// link the service container linked to the chain
-	// XXX: we may have name collision here if we're not careful.
-	loaders.ConnectToAChain(srv.Service, srv.Operations, chainName, internalName, link, mount)
-
-	return s, nil
 }
 
 // Checks that a service is running and starts it if it isn't.
@@ -271,48 +198,11 @@ func EnsureRunning(do *definitions.Do) error {
 	return nil
 }
 
-func IsServiceKnown(service *definitions.Service, ops *definitions.Operation) bool {
-	return parseKnown(service.Name)
-}
-
 func FindServiceDefinitionFile(name string) string {
 	return util.GetFileByNameAndType("services", name)
 }
 
-/*
-func MakeService(do *definitions.Do) error {
-	srv := definitions.BlankServiceDefinition()
-	srv.Name = do.Name
-	srv.Service.Name = do.Name
-	srv.Service.Image = do.Operations.Args[0]
-	srv.Service.AutoData = true
-
-	var err error
-	//get maintainer info
-	srv.Maintainer.Name, srv.Maintainer.Email, err = config.GitConfigUser()
-	if err != nil {
-		// don't return -> field not required
-		log.Debug(err.Error())
-	}
-
-	log.WithFields(log.Fields{
-		"service": srv.Service.Name,
-		"image":   srv.Service.Image,
-	}).Debug("Creating a new service definition file")
-
-	// TODO
-	//if err := initialize.WriteServiceDefinitionFile(do.Name, srv); err != nil {
-	//	return err
-	//}
-	return nil
-}*/
-
-func EditService(do *definitions.Do) error {
-	servDefFile := FindServiceDefinitionFile(do.Name)
-	log.WithField("=>", servDefFile).Info("Editing service")
-	return config.Editor(servDefFile)
-}
-
+// used by [services ip]
 func InspectService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
@@ -325,40 +215,12 @@ func InspectService(do *definitions.Do) error {
 	return nil
 }
 
-func PortsService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	if util.IsService(service.Service.Name, false) {
-		log.Debug("Service exists, getting port mapping")
-		return util.PrintPortMappings(service.Operations.SrvContainerName, do.Operations.Args)
-	}
-
-	return nil
-}
-
 func LogsService(do *definitions.Do) error {
 	service, err := loaders.LoadServiceDefinition(do.Name)
 	if err != nil {
 		return err
 	}
 	return perform.DockerLogs(service.Service, service.Operations, do.Follow, do.Tail)
-}
-
-func UpdateService(do *definitions.Do) error {
-	service, err := loaders.LoadServiceDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-	service.Service.Environment = append(service.Service.Environment, do.Env...)
-	service.Service.Links = append(service.Service.Links, do.Links...)
-	err = perform.DockerRebuild(service.Service, service.Operations, do.Pull, do.Timeout)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func RmService(do *definitions.Do) error {
@@ -393,33 +255,6 @@ func RmService(do *definitions.Do) error {
 	return nil
 }
 
-func CatService(do *definitions.Do) (string, error) {
-	configs := util.GetGlobalLevelConfigFilesByType("services", true)
-	for _, c := range configs {
-		cName := strings.Split(filepath.Base(c), ".")[0]
-		if cName == do.Name {
-			cat, err := ioutil.ReadFile(c)
-			if err != nil {
-				return "", err
-			}
-			return string(cat), nil
-		}
-	}
-	return "", fmt.Errorf("Unknown service %s or invalid file extension", do.Name)
-}
-
 func InspectServiceByService(srv *definitions.Service, ops *definitions.Operation, field string) error {
 	return perform.DockerInspect(srv, ops, field)
-}
-
-func parseKnown(name string) bool {
-	known := util.GetGlobalLevelConfigFilesByType("services", false)
-	if len(known) != 0 {
-		for _, srv := range known {
-			if srv == name {
-				return true
-			}
-		}
-	}
-	return false
 }

@@ -55,10 +55,10 @@ var (
 )
 
 // UniqueName() returns a unique container name, prefixed with the short
-// entity name, e.g. `ipfs-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
+// entity name, e.g. `keys-6ba7b811-9dad-11d1-80b4-00c04fd430c8`
 //
 // [pv]: might be a good idea to truncate this long name to ~20 characters
-// without much danger of bumping into collisions, e.g. `ipfs-6ba7b811-9dad-11d1`
+// without much danger of bumping into collisions, e.g. `keys-6ba7b811-9dad-11d1`
 // which arguably looks better in logs and `docker ps` output.
 func UniqueName(name string) string {
 	return name + "-" + uuid.NewRandom().String()
@@ -409,7 +409,7 @@ func PullImage(image string, writer io.Writer) error {
 
 		select {
 		case <-time.After(timeoutDuration):
-			SendReport(fmt.Errorf("image pull timed out (%v)", timeoutDuration))
+			log.Warn("image pull timed out (%v)", timeoutDuration)
 			timeout <- ErrImagePullTimeout
 		}
 	}()

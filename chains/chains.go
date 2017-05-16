@@ -3,7 +3,6 @@ package chains
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,12 +19,13 @@ import (
 
 func StartChain(do *definitions.Do) error {
 	// Start an already set up chain.
-	if util.IsChain(do.Name, false) && util.IsData(do.Name) && !do.Force {
+	if util.IsChain(do.Name, false) && util.IsData(do.Name) {
 		_, err := startChain(do, false)
 		return err
 	}
 
 	// Default [--init-dir] value is chain's root.
+	// [zr] this should not be needed?
 	if do.Path == "" {
 		do.Path = filepath.Join(config.ChainsPath, do.Name)
 	}
@@ -35,15 +35,6 @@ func StartChain(do *definitions.Do) error {
 	do.Path, err = resolveChainsPath(do.Name, do.Path)
 	if err != nil {
 		return err
-	}
-
-	if do.Force {
-		// Chain is reinitialized upon request.
-		log.WithField("=>", do.Name).Debug("Initializing the chain: [--force] flag given")
-	} else {
-		// Chain is broken (either chain or data chain container doesn't exist),
-		// initialize the chain.
-		log.WithField("=>", do.Name).Debug("Initializing the chain: chain or data container doesn't exist")
 	}
 
 	return setupChain(do)
@@ -81,6 +72,7 @@ func ExecChain(do *definitions.Do) (buf *bytes.Buffer, err error) {
 //  do.Name            - name of the chain to inspect (required)
 //  do.Operations.Args - fields to inspect in the form Major.Minor or "all" (required)
 //
+// TODO [zr] deprecate (along with services.InspectServiceByService)
 func InspectChain(do *definitions.Do) error {
 	chain, err := loaders.LoadChainDefinition(do.Name)
 	if err != nil {
@@ -150,67 +142,6 @@ func CurrentChain(do *definitions.Do) (string, error) {
 	}
 
 	return head, nil
-}
-
-// CatChain displays chain information. It returns nil on success, or input/output
-// errors otherwise.
-//
-//  do.Name - chain name
-//  do.Type - "genesis", "config"
-//
-func CatChain(do *definitions.Do) error {
-	if do.Name == "" {
-		return fmt.Errorf("a chain name is required")
-	}
-	rootDir := path.Join(config.MonaxContainerRoot, "chains", do.Name)
-
-	doCat := definitions.NowDo()
-	doCat.Name = do.Name
-	doCat.Operations.SkipLink = true
-
-	switch do.Type {
-	case "genesis":
-		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "genesis.json")}
-	case "config":
-		doCat.Operations.Args = []string{"cat", path.Join(rootDir, "config.toml")}
-	// TODO re-implement with monax-client ... mintinfo was remove from container (and write tests for these cmds)
-	// case "status":
-	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "status"}
-	// case "validators":
-	//	doCat.Operations.Args = []string{"mintinfo", "--node-addr", "http://chain:46657", "validators"}
-	default:
-		return fmt.Errorf("unknown cat subcommand %q", do.Type)
-	}
-	// edb docker image is (now) properly formulated with entrypoint && cmd
-	// so the entrypoint must be overwritten.
-	log.WithField("args", do.Operations.Args).Debug("Executing command")
-
-	buf, err := ExecChain(doCat)
-
-	if buf != nil {
-		io.Copy(config.Global.Writer, buf)
-	}
-
-	return err
-}
-
-// PortsChain displays the port mapping for a particular chain.
-// It returns an error.
-//
-//  do.Name - name of the chain to display port mappings for (required)
-//
-func PortsChain(do *definitions.Do) error {
-	chain, err := loaders.LoadChainDefinition(do.Name)
-	if err != nil {
-		return err
-	}
-
-	if util.IsChain(chain.Name, false) {
-		log.WithField("=>", chain.Name).Debug("Getting chain port mapping")
-		return util.PrintPortMappings(chain.Operations.SrvContainerName, do.Operations.Args)
-	}
-
-	return nil
 }
 
 func RemoveChain(do *definitions.Do) error {
@@ -434,27 +365,6 @@ func setupChain(do *definitions.Do) (err error) {
 		return fmt.Errorf("Could not import data: %v", err)
 	}
 
-	// mintkey has been removed from the monaxdb image. this functionality
-	// needs to be wholesale refactored. For now we'll just run the keys
-	// service (where mintkey is....)
-
-	importKey := definitions.NowDo()
-	importKey.Name = "keys"
-	importKey.Destination = containerDst
-	importKey.Source = filepath.Join(hostSrc, "priv_validator.json")
-	if err = data.ImportData(importKey); err != nil {
-		do.RmD = true
-		RemoveChain(do)
-		return fmt.Errorf("Could not import [priv_validator.json] to signer: %v", err)
-	}
-
-	if out, err := services.ExecHandler("keys", []string{"mintkey", "monax", fmt.Sprintf("%s/chains/%s/priv_validator.json", config.MonaxContainerRoot, do.Name)}); err != nil {
-		log.Error(err)
-		do.RmD = true
-		RemoveChain(do)
-		return fmt.Errorf("Failed to transliterate [priv_validator.json] to monax-key: %v", out)
-	}
-
 	log.WithFields(log.Fields{
 		"=>":              chain.Service.Name,
 		"links":           chain.Service.Links,
@@ -496,10 +406,4 @@ func resolveChainsPath(chainName, pathGiven string) (string, error) {
 
 	log.WithField("=>", pathGiven).Info("Failed to find [--init-dir]")
 	return "", fmt.Errorf("Directory given on [--init-dir] could not be determined")
-}
-
-func exportFile(chainName string) (string, error) {
-	fileName := util.GetFileByNameAndType("chains", chainName)
-
-	return util.SendToIPFS(fileName, "", "")
 }

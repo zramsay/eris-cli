@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/monax/cli/config"
@@ -76,22 +75,12 @@ Directory structure initialized:
 ¦   +-- scratch/
 ¦       +-- data/
 ¦       +-- languages/
-¦       +-- lllc/
-¦       +-- ser/
-¦       +-- sol/
 ¦   +-- services/
 ¦       +-- keys.toml
-¦       +-- ipfs.toml
 ¦       +-- compilers.toml
 ¦       +-- logrotate.toml
 
 Consider running [docker images] to see the images that were added.`)
-
-	log.Warnf(`
-Monax sends crash reports to a remote server in case something goes completely
-wrong. You may disable this feature by adding the CrashReport = %q
-line to the %s definition file.
-`, "don't send", filepath.Join(config.MonaxRoot, "monax.toml"))
 
 	log.Warn("The marmots have everything set up for you. Type [monax] to get started")
 	return nil
@@ -129,7 +118,6 @@ func pullDefaultImages(images []string) error {
 		images = []string{
 			"data",
 			"keys",
-			// "ipfs",
 			"db",
 			"compilers",
 		}
@@ -138,9 +126,8 @@ func pullDefaultImages(images []string) error {
 	// Rewrite with versioned image names (full names
 	// without a registry prefix).
 	versionedImageNames := map[string]string{
-		"data": version.ImageData,
-		"keys": version.ImageKeys,
-		// "ipfs":      version.ImageIPFS, // [CSK no need to pull this by default]
+		"data":      version.ImageData,
+		"keys":      version.ImageKeys,
 		"db":        version.ImageDB,
 		"compilers": version.ImageCompilers,
 	}
@@ -204,7 +191,6 @@ func checkIfCanOverwrite(doYes bool) error {
 	log.WithField("path", config.MonaxRoot).Warn("Monax root directory")
 	log.WithFields(log.Fields{
 		"services path": config.ServicesPath,
-		"chains path":   config.ChainsPath,
 	}).Warn("Continuing may overwrite files in")
 	if util.QueryYesOrNo("Do you wish to continue?") == util.Yes {
 		log.Debug("Confirmation verified. Proceeding")
@@ -224,7 +210,7 @@ func getTheImages(do *definitions.Do) error {
 		log.Warn("Successfully pulled default images")
 	} else {
 		log.Warn(`
-WARNING: Approximately 400 mb of Docker images are about to be pulled
+WARNING: Approximately 200 mb of Docker images are about to be pulled
 onto your host machine. Please ensure that you have sufficient bandwidth to
 handle the download. For a remote Docker server this should only take a few
 minutes but can sometimes take 10 or more. These times can double or triple

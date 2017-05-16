@@ -10,8 +10,8 @@ import (
 	"github.com/monax/cli/keys"
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/genesis"
-	ptypes "github.com/monax/burrow/permission/types"
+	"github.com/hyperledger/burrow/genesis"
+	ptypes "github.com/hyperledger/burrow/permission/types"
 )
 
 // MonaxDBAccountConstructor contains different views on a single account

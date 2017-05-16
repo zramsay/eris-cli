@@ -13,7 +13,7 @@ menu:
 ## Introduction
 
 <div class="note">
-{{ data_sites rename_docs }}
+{{% data_sites rename_docs %}}
 </div>
 
 For this tutorial, we are going to work with multiple contracts. All the base contract does is get and sets a value, but we'll add some layers to the contract which will satisfy common patterns smart contract writers adopt.
@@ -26,15 +26,15 @@ We are going to use a very simple `get` / `set` contract which sets a variable a
 
 Let's make a chain with a few keys on it.
 
-{{ insert_bash_lines "contracts_deploying_adv/test.sh" "3-10" }}
+{{< insert_contents 1 "/docs/contracts_deploying_adv/test.sh" 3 10 >}}
 
-Check that it is running of course with `monax chains ls`.
+Check that it is running with `monax ls`.
 
 ## Let's make a more advanced get-set contract sequence.
 
 The first thing we're going to do is to add a very simple contract.
 
-{{ insert_file "contracts_deploying_adv/GSFactory.sol" }}
+{{< insert_contents 2 "/docs/contracts_deploying_adv/GSFactory.sol" >}}
 
 Now you'll make a file in this directory. Let's assume that is called `GSFactory.sol` and has the following contents displayed above.
 
@@ -46,7 +46,7 @@ What do these contracts do? Well, they aren't terribly interesting we know. The 
 
 Next we need to make an epm.yaml. It should look like this:
 
-{{ insert_file "contracts_deploying_adv/epm.yaml" }}
+{{< insert_contents 3 "/docs/contracts_deploying_adv/epm.yaml" >}}
 
 Now. What does this file mean? Well, this file is the manager file for how to deploy and test your smart contracts. The package manager invoked by `monax pkgs do` will read this file and perform a sequence of `jobs` with the various parameters supplied for the job type. It will perform these in the order they are built into the yaml file.
 
@@ -92,13 +92,13 @@ This job checks that the get and set match.
 
 Now, we are ready to deploy this world changing contract.
 
-{{ insert_bash_lines "contracts_deploying_adv/test.sh" "12" }}
+{{< insert_contents 4 "/docs/contracts_deploying_adv/test.sh" 11 12 >}}
 
 Note that here we used both the `--address` flag to set the address which we would be using for the jobs and we also set the `setStorageBase` from a flag rather than from a job.
 
 That's it! Your contract is all ready to go. You should see the output in `jobs_output.json` which will have the transaction hash of the transactions as well as the address of the deployed `GSFactory.sol` contract. You can also see your ABI folder:
 
-{{ insert_bash_lines "contracts_deploying_adv/test.sh" "14" }}
+{{< insert_contents 5 "/docs/contracts_deploying_adv/test.sh" 13 14 >}}
 
 ## The compiler?
 
@@ -108,7 +108,7 @@ Where are the contracts compiling? By default they are compiled using a microser
 
 Let's clean up after ourselves
 
-{{ insert_bash_lines "contracts_deploying_adv/test.sh" "16" }}
+{{< insert_contents 6 "/docs/contracts_deploying_adv/test.sh" 15 16 >}}
 
 
 ## [<i class="fa fa-chevron-circle-left" aria-hidden="true"></i> All Tutorials](/docs/)

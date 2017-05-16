@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/docker/docker/pkg/archive"
@@ -58,9 +57,4 @@ func UnpackTarball(tarBallPath, installPath string) error {
 	}
 
 	return UntarForDocker(reader, "", installPath)
-}
-
-func GetFromGithub(org, repo, branch, p, directory, fileName string) error {
-	url := "https://" + path.Join("raw.githubusercontent.com", org, repo, branch, p)
-	return DownloadFromUrlToFile(url, fileName, directory)
 }

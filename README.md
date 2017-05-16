@@ -33,8 +33,6 @@ The `monax` tool is centered around a very few concepts:
 * `chains` — develop permissioned chains
 * `pkgs` — our smart contract tool chain
 * `keys` — wrapping of our key management tooling
-* `files` — working the IPFS "permanent web"
-* `data` — take the pain out of data persistence on docker
 
 These concepts provide the core functionality of what we think a true smart contract application platform requires.
 
@@ -100,28 +98,6 @@ To see the various ways in which `monax` can help you manage your various key pa
 monax keys
 ```
 
-## Files
-
-Monax has a pretty handy wrapper around IPFS which is useful for quick file sharing from the host.
-
-To see the various ways in which `monax` can help you with distributed file sharing, please type:
-
-```
-monax files
-```
-
-## Data
-
-Monax can automagically utilize data containers for you.
-
-If you turn the `data_container` variable to `true` in the service or chain definition file, then `monax` deposit the data utilized by that service or chain into a data container which can be managed separately from the "program" container. The advantage of working with data containers has been dealt with elsewhere (see, Google).
-
-To see the various ways in which `monax` can help you manage your data containers, please type:
-
-```
-monax data
-```
-
 ## Directory Structure
 
 Created by `monax init` in $HOME directory:
@@ -140,11 +116,7 @@ Created by `monax init` in $HOME directory:
 │   ├── scratch/
 │       ├── data/
 │       ├── languages/
-│       ├── lllc/
-│       ├── ser/
-│       ├── sol/
 │   ├── services/
-│       ├── ipfs.toml
 │       ├── keys.toml
 ```
 
@@ -158,31 +130,9 @@ Are Welcome! Before submitting a pull request please:
 * pull request
 * be awesome
 
-A note about glide specifically as it regards to CLI:
-
-To add a package as a dependency into CLI, make sure that you have [glide](http://glide.readthedocs.io/en/latest/#installing-glide) installed, and then follow these steps:
-
-```
-# add the package to the glide.yaml
-glide get your/package/here
-# make changes to the glide.yaml file for versioning purposes
-# update the glide.lock file
-glide up
-# install the dependencies in vendor
-glide install
-# Use glide vendor cleaner to keep the vendor small
-./cleanVendor.sh
-# commit the vendor and push
-git add vendor/*
-git commit -sm "some helpful message here about the dependency added"
-git push yourRepo yourBranch
-```
-
 See our [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for more details.
 
 Please note that this repository is GPLv3.0 per the LICENSE file. Any code which is contributed via pull request shall be deemed to have consented to GPLv3.0 via submission of the code (were such code accepted into the repository).
-
-
 
 # Bug Reporting
 

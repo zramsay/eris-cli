@@ -6,7 +6,7 @@ import (
 
 	"github.com/monax/cli/log"
 
-	"github.com/monax/burrow/genesis"
+	"github.com/hyperledger/burrow/genesis"
 )
 
 // MakeMonaxDBNode writes the chain name folder with a folder for every account.

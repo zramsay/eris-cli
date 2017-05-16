@@ -100,39 +100,6 @@ func LoadChainDefinition(chainName string, definition ...string) (*definitions.C
 	return chain, nil
 }
 
-// ChainsAsAService convert the chain definition to a service one
-// and set the CHAIN_ID environment variable. ChainsAsAService
-// can return config load errors.
-func ChainsAsAService(chainName string) (*definitions.ServiceDefinition, error) {
-	chain, err := LoadChainDefinition(chainName)
-	if err != nil {
-		return nil, err
-	}
-
-	chain.Service.Name = chain.Name
-	chain.Service.Image = path.Join(version.DefaultRegistry, version.ImageDB)
-	chain.Service.AutoData = true
-
-	s := &definitions.ServiceDefinition{
-		Name:         chain.Name,
-		ServiceID:    chain.Name, // [zr] this is probably ok for now...if ServiceID is even necessary
-		Dependencies: &definitions.Dependencies{Services: []string{"keys"}},
-		Service:      chain.Service,
-		Operations:   chain.Operations,
-		Maintainer:   chain.Maintainer,
-		Location:     chain.Location,
-		Machine:      chain.Machine,
-	}
-
-	// These are mostly operational considerations that we want to ensure are met.
-	ServiceFinalizeLoad(s)
-
-	s.Operations.SrvContainerName = util.ChainContainerName(chainName)
-	s.Service.Environment = append(s.Service.Environment, "CHAIN_ID="+chainName) // TODO remove when edb merges the following env var
-	s.Service.Environment = append(s.Service.Environment, "CHAIN_NAME="+chainName)
-	return s, nil
-}
-
 // ConnectToAChain operates in two ways
 //  - if link is true, sets srv.Links to point to a chain container specifiend by name:internalName
 //  - if mount is true, sets srv.VolumesFrom to point to a chain container specified by name

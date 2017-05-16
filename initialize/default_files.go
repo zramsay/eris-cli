@@ -2,7 +2,6 @@ package initialize
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/monax/cli/definitions"
@@ -17,7 +16,6 @@ const tomlHeader = `# This is a TOML config file.
 
 var ServiceDefinitions = []string{
 	"compilers",
-	"ipfs",
 	"keys",
 	// used by [monax chains start myChain --logrotate]
 	// but its docker image is not pulled on [monax init]
@@ -84,17 +82,17 @@ default_bond = {{ .DefaultBond}}
 root = {{index .Perms "root"}}
 send = {{index .Perms "send"}}
 call = {{index .Perms "call"}}
-create_contract = {{index .Perms "create_contract"}}
-create_account = {{index .Perms "create_account"}}
+createContract = {{index .Perms "createContract"}}
+createAccount = {{index .Perms "createAccount"}}
 bond = {{index .Perms "bond"}}
 name = {{index .Perms "name"}}
-has_base = {{index .Perms "has_base"}}
-set_base = {{index .Perms "set_base"}}
-unset_base = {{index .Perms "unset_base"}}
-set_global = {{index .Perms "set_global"}}
-has_role = {{index .Perms "has_role"}}
-add_role = {{index .Perms "add_role"}}
-rm_role = {{index .Perms "rm_role"}}`
+hasBase = {{index .Perms "hasBase"}}
+setBase = {{index .Perms "setBase"}}
+unsetBase = {{index .Perms "unsetBase"}}
+setGlobal = {{index .Perms "setGlobal"}}
+hasRole = {{index .Perms "hasRole"}}
+addRole = {{index .Perms "addRole"}}
+rmRole = {{index .Perms "rmRole"}}`
 
 // ------------------ chain types ------------------
 
@@ -155,24 +153,7 @@ This monax service compiles smart contract languages.`
 		serviceDefinition.Status = "beta"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
 		serviceDefinition.Service.AutoData = true
-		//serviceDefinition.Service.Ports = []string{`"9090:9090"`}
-
-	case "ipfs":
-
-		port_to_use := os.Getenv("MONAX_CLI_TESTS_PORT")
-		if port_to_use == "" {
-			port_to_use = "8080"
-		}
-		serviceDefinition.Name = "ipfs"
-		serviceDefinition.Description = `IPFS is The Permanent Web: A new peer-to-peer hypermedia protocol. IPFS uses content-based addressing versus http's location-based addressing.
-
-This monax service is all but essential as part of the monax tool. The [monax files] relies upon this running service.`
-		serviceDefinition.Status = "alpha"
-		serviceDefinition.Service.Image = path.Join(version.ImageIPFS) // we use the default docker hub registry
-		serviceDefinition.Service.AutoData = true
-		serviceDefinition.Service.Ports = []string{`"4001:4001", `, `"5001:5001", `, `"` + port_to_use + `:` + port_to_use + `"`}
-		serviceDefinition.Service.ExecHost = "MONAX_IPFS_HOST"
-		serviceDefinition.Service.User = `"root"`
+		serviceDefinition.Service.Ports = []string{`"9090:9090"`}
 
 	case "logrotate":
 
@@ -212,22 +193,22 @@ privileges should be given these keys.
 Usually this group will have the most number of keys of all of the groups.`
 		accountTypeDefinition.DefaultNumber = 25
 		accountTypeDefinition.DefaultTokens = 9999999999
-		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            1,
-			"call":            1,
-			"create_contract": 0,
-			"create_account":  0,
-			"bond":            0,
-			"name":            1,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        1,
-			"add_role":        0,
-			"rm_role":         0,
+		accountTypeDefinition.DefaultBond = 1
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":           false,
+			"send":           true,
+			"call":           true,
+			"createContract": false,
+			"createAccount":  false,
+			"bond":           false,
+			"name":           true,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        true,
+			"addRole":        false,
+			"rmRole":         false,
 		}
 
 	case "developer":
@@ -243,21 +224,21 @@ within this group, although that design is up to you.`
 		accountTypeDefinition.DefaultNumber = 6
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            0,
-			"name":            1,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":           false,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           false,
+			"name":           true,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	case "validator":
@@ -275,21 +256,21 @@ in the system.`
 		accountTypeDefinition.DefaultNumber = 7
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 9999999998
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            0,
-			"send":            0,
-			"call":            0,
-			"create_contract": 0,
-			"create_account":  0,
-			"bond":            1,
-			"name":            0,
-			"has_base":        0,
-			"set_base":        0,
-			"unset_base":      0,
-			"set_global":      0,
-			"has_role":        0,
-			"add_role":        0,
-			"rm_role":         0,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":           false,
+			"send":           false,
+			"call":           false,
+			"createContract": false,
+			"createAccount":  false,
+			"bond":           true,
+			"name":           false,
+			"hasBase":        false,
+			"setBase":        false,
+			"unsetBase":      false,
+			"setGlobal":      false,
+			"hasRole":        false,
+			"addRole":        false,
+			"rmRole":         false,
 		}
 
 	case "full":
@@ -306,21 +287,21 @@ If you are making a more complex chain, don't use this account type.`
 		accountTypeDefinition.DefaultNumber = 1
 		accountTypeDefinition.DefaultTokens = 99999999999999
 		accountTypeDefinition.DefaultBond = 9999999999
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            1,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            1,
-			"name":            1,
-			"has_base":        1,
-			"set_base":        1,
-			"unset_base":      1,
-			"set_global":      1,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":           true,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           true,
+			"name":           true,
+			"hasBase":        true,
+			"setBase":        true,
+			"unsetBase":      true,
+			"setGlobal":      true,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	case "root":
@@ -338,21 +319,21 @@ similar to a network administrator in other data management situations.`
 		accountTypeDefinition.DefaultNumber = 3
 		accountTypeDefinition.DefaultTokens = 9999999999
 		accountTypeDefinition.DefaultBond = 0
-		accountTypeDefinition.Perms = map[string]int64{
-			"root":            1,
-			"send":            1,
-			"call":            1,
-			"create_contract": 1,
-			"create_account":  1,
-			"bond":            1,
-			"name":            1,
-			"has_base":        1,
-			"set_base":        1,
-			"unset_base":      1,
-			"set_global":      1,
-			"has_role":        1,
-			"add_role":        1,
-			"rm_role":         1,
+		accountTypeDefinition.Perms = map[string]bool{
+			"root":           true,
+			"send":           true,
+			"call":           true,
+			"createContract": true,
+			"createAccount":  true,
+			"bond":           true,
+			"name":           true,
+			"hasBase":        true,
+			"setBase":        true,
+			"unsetBase":      true,
+			"setGlobal":      true,
+			"hasRole":        true,
+			"addRole":        true,
+			"rmRole":         true,
 		}
 
 	default:

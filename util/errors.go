@@ -24,10 +24,10 @@ There has been an error talking to your monax chain.
 Debugging this error is tricky, but don't worry the marmot recovery checklist is...
   * is the %s account right?
   * is the account you want to use in your keys service: monax keys ls ?
-  * is the account you want to use in your genesis.json: monax chains cat %s genesis ?
+  * is the account you want to use in your genesis.json: see http://localhost:46657/genesis
   * is your chain making blocks: monax chains logs -f %s ?
   * do you have permissions to do what you're trying to do on the chain?
-`, err, do.Package.Account, do.ChainID, do.ChainID)
+`, err, do.Package.Account, do.ChainID)
 }
 
 func KeysErrorHandler(do *definitions.Do, err error) (string, error) {
@@ -40,12 +40,8 @@ func KeysErrorHandler(do *definitions.Do, err error) (string, error) {
 		return "", fmt.Errorf(`
 Unfortunately the marmots could not find the key you are trying to use in the keys service.
 
-There are two ways to fix this.
-  1. Import your keys from your host: monax keys import %s
-  2. Import your keys from your chain:
-
-monax chains exec %s "mintkey monax chains/%s/priv_validator.json" && \
-monax services exec keys "chown monax:monax -R /home/monax"
+There is one way to fix this.
+  * Import your keys from your host: monax keys import %s
 
 Now, run  monax keys ls  to check that the keys are available. If they are not there
 then change the account. Once you have verified that the keys for account
@@ -53,7 +49,7 @@ then change the account. Once you have verified that the keys for account
 %s
 
 are in the keys service, then rerun me.
-`, do.Package.Account, do.ChainID, do.ChainID, do.Package.Account)
+`, do.Package.Account, do.Package.Account)
 	}
 
 	return "", fmt.Errorf(`

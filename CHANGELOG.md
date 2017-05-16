@@ -1,4 +1,26 @@
 # monax changelog
+
+## v0.17.0
+This release focused on deprecating a handful of largely unused commands, to reduce technical debt and maintenance overhead. Bullet points without PRs indicate the change was part of other work but worth mentioning seperately.
+
+#### Commands Removed:
+- `monax files` and the whole ipfs integration. [#1317](https://github.com/monax/cli/pull/1317)
+- `monax data` is removed but its internals are kept as required. [#1320](https://github.com/monax/cli/pull/1320)
+- for both `monax services` and `monax chains`, the following subcommands were removed: `cat, inspect, ls, ports, update/restart, edit`; the functionality they provided can be achieved through various other means.
+- the `--force` flag from `monax chains start` is removed as unnecessary.
+
+#### Miscellaneous
+- the `--output` flag for `monax chains make` was refactored to serve a useful purpose. [#1340](https://github.com/monax/cli/pull/1340)
+- installation via `choco` has been removed completely as an option.
+- management of the `vendor/` directory now works seamlessly using `make install_vendor`.[#1366](https://github.com/monax/cli/pull/1366)
+- the chain <=> service linking was severed.
+- `mintkey` and the reliance on the `mint-client` repository was fully deprecated. [#1359](https://github.com/monax/cli/pull/1359)
+- the javascript libraries were removed from the documentation in favour of using the job runner (`pkgs do`) for applications. [#1392](https://github.com/monax/cli/pull/1392)
+- the bugsnag integration was removed. [#1397](https://github.com/monax/cli/pull/1397)
+- improved release pathway.
+- fix a compilers bug that affected non-linux users
+- DEPRECATION NOTICE: this will be the last release where macOS and Windows are officially supported. We will be deprecating the `--machine` flag and dropping native support for !Linux platforms; see [#1399](https://github.com/monax/cli/pull/1399)
+
 ## v0.16.0
 This is a consolidation release that merges in two repositories (eris-cm & eris-pm), thereby eliminating their respective docker images and the many edge-case bugs that came with the spin-up-a-temporary-docker-container-to-execute-a-command approach previously taken. For both of these consolidations, the many additional small PRs required to sort everything out are not document here. In addition, both commands that used those repositories now run significantly faster.
 
@@ -30,3 +52,6 @@ This is a consolidation release that merges in two repositories (eris-cm & eris-
 - see [here](https://github.com/monax/burrow/blob/master/CHANGELOG.md) for the burrow changelog.
 - see [this PR](https://github.com/monax/compilers/pull/121) for the compilers changelog.
 - see [this PR](https://github.com/monax/keys/pull/102) for the keys changelog. 
+
+## Earlier releases
+- see the [releases page](https://github.com/monax/cli/release) for a detailed changelog on previous releases.

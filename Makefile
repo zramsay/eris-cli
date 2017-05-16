@@ -14,12 +14,12 @@ VERSION := $(shell cat ${REPO}/version/version.go | tail -n 1 | cut -d \  -f 4 |
 VERSION_MIN := $(shell echo ${VERSION} | cut -d . -f 1-2)
 COMMIT_SHA := $(shell echo `git rev-parse --short --verify HEAD`)
 
-DOCKER_NAMESPACE := quay.io/eris
+DOCKER_NAMESPACE := quay.io/monax
 
 
 .PHONY: greet
 greet:
-	@echo "Hi! I'm the marmot that will help you with eris v${VERSION}"
+	@echo "Hi! I'm the marmot that will help you with monax v${VERSION}"
 
 ### Formatting, linting and vetting
 
@@ -45,11 +45,10 @@ fmt:
 erase_vendor:
 	rm -rf ${REPO}/vendor/
 
-# install vendor uses glide to install vendored dependencies
+# install a pruned vendor tree of locked dependencies
 .PHONY: install_vendor
 install_vendor:
-	go get github.com/Masterminds/glide
-	glide install
+	@./install_vendor.sh
 
 ### Building github.com/monax/cli
 
@@ -57,7 +56,7 @@ install_vendor:
 .PHONY: build
 build:	check build_cli
 
-# build eris
+# build monax
 .PHONY: build_cli
 build_cli:
 	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/monax
@@ -68,7 +67,7 @@ build_cli:
 .PHONY: test_unit
 test_unit:
 	# run go tests sequentially for the different packages
-	@go test ${PACKAGES_NOVENDOR} -p 1
+	@go test ${PACKAGES_NOVENDOR} -p 1 -v
 
 # test user stories for chains
 .PHONY: test_chains_make
