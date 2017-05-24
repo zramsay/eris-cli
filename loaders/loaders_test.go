@@ -116,8 +116,6 @@ func TestLoadChainDefinitionWithoutPath(t *testing.T) {
 func TestLoadChainDefinitionEmptyDefinition(t *testing.T) {
 	const (
 		name = "test"
-
-		defaultDefinition = ``
 	)
 
 	if err := testutil.FakeDefinitionFile(filepath.Join(config.ChainsPath, name), name, ``); err != nil {
