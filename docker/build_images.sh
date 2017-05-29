@@ -21,7 +21,7 @@ if [ "$CIRCLE_BRANCH" ]
 then
   repo=`pwd`
 else
-  repo=$GOPATH/src/github.com/monax/cli
+  repo=$GOPATH/src/github.com/monax/monax
 fi
 
 release_min=$(cat $repo/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')

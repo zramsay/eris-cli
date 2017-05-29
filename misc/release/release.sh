@@ -9,7 +9,7 @@
 #
 #  2. `github-release` utility installed (go get github.com/aktau/github-release)
 #     and GITHUB_TOKEN environment variable set
-#    (with release permissions for github.com/monax/cli).
+#    (with release permissions for github.com/monax/monax).
 #
 #  2.a `xgo` installed for cross-compilation:
 #
@@ -39,7 +39,7 @@
 #
 #  8. Environment variables pointing to s3 buckets
 #
-REPO=${GOPATH}/src/github.com/monax/cli
+REPO=${GOPATH}/src/github.com/monax/monax
 BUILD_DIR=${REPO}/builds
 vers=$(grep -w VERSION ${REPO}/version/version.go | cut -d \  -f 4 | tr -d '"')
 MONAX_VERSION=${MONAX_VERSION:-$vers}
@@ -124,9 +124,9 @@ cross_compile() {
   pushd ${REPO}/cmd/monax
   echo "Starting cross compile"
 
-  LDFLAGS="-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+  LDFLAGS="-X github.com/monax/monax/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 
-  xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
+  xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/monax
   # todo add build number
   aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG
   echo "Cross compile completed"

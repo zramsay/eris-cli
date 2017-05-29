@@ -35,7 +35,7 @@ Jobs are defined in **job definition files**.
 
 Job definition files are formatted in `yaml` and default file is `epm.yaml`.
 
-Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/cli/tree/master/tests/jobs_fixtures) directory.
+Examples of monax job definition files are available in the [jobs_fixtures](https://github.com/monax/monax/tree/master/tests/jobs_fixtures) directory.
 
 [Read the Jobs Specification &nbsp;<i class="fa fa-chevron-circle-right" aria-hidden="true"></i>](/docs/specs/jobs_specification)
 

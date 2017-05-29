@@ -145,7 +145,7 @@ To confirm: `docker-machine active`, which should output "eris".
 
 If you're an OSX/Windows user wanting to quickly get started on the eris platform, here is where you would:
 
-* install eris via go (`go get github.com/monax/cli/cmd/monax`) or via [the latest binary](https://github.com/monax/cli/releases)
+* install eris via go (`go get github.com/monax/monax/cmd/monax`) or via [the latest binary](https://github.com/monax/monax/releases)
 * run `eris init`
 * note the ip of your machine with `docker-machine ip eris`, which should match the ip seen in `docker-machine ls`.
 

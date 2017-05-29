@@ -18,8 +18,8 @@ gpg --import linux-public-key.asc
 gpg --import linux-private-key.asc
 echo "digest-algo sha256" >> $HOME/.gnupg/gpg.conf
 
-export GOREPO=${GOPATH}/src/github.com/monax/cli
-git clone https://github.com/monax/cli ${GOREPO}
+export GOREPO=${GOPATH}/src/github.com/monax/monax
+git clone https://github.com/monax/monax ${GOREPO}
 pushd ${GOREPO}/cmd/monax
 git fetch origin ${MONAX_BRANCH}
 git checkout ${MONAX_BRANCH}
@@ -27,7 +27,7 @@ echo
 echo ">>> Building the Monax binary"
 echo
 go get
-go build -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
+go build -ldflags "-X github.com/monax/monax/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`"
 popd
 
 echo

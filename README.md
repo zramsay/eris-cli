@@ -15,7 +15,7 @@ operating applications built to run on an ecosystem level.
 * Install Go.
 
 ```
-go get github.com/monax/cli/cmd/monax
+go get github.com/monax/monax/cmd/monax
 monax init
 ```
 
