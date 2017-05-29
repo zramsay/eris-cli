@@ -159,7 +159,7 @@ release_binaries() {
   then
     github-release release \
       --user monax \
-      --repo cli \
+      --repo monax \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}" \
@@ -167,7 +167,7 @@ release_binaries() {
   else
     github-release release \
       --user monax \
-      --repo cli \
+      --repo monax \
       --tag v${LATEST_TAG} \
       --name "Release of Version: ${LATEST_TAG}" \
       --description "${DESCRIPTION}"
@@ -175,7 +175,7 @@ release_binaries() {
     then
       github-release edit \
         --user monax \
-        --repo cli \
+        --repo monax \
         --tag v${LATEST_TAG} \
         --name "Release of Version: ${LATEST_TAG}" \
         --description "${DESCRIPTION}"
