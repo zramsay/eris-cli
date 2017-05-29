@@ -129,7 +129,7 @@ cross_compile() {
 
   xgo -go 1.7 -branch ${MONAX_BRANCH} --targets=linux/amd64,linux/386,darwin/amd64,darwin/386 -dest ${BUILD_DIR}/ -out monax-${MONAX_VERSION} --pkg cmd/monax github.com/monax/cli
   # todo add build number
-  aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG
+  aws s3 cp ${REPO}/CHANGELOG.md s3://${AWS_S3_PKGS_BUCKET}/dl/CHANGELOG --acl public-read
   echo "Cross compile completed"
   echo ""
   echo ""
@@ -147,7 +147,7 @@ release_binaries() {
   for file in *
   do
     echo "Uploading: ${file}"
-    aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file}
+    aws s3 cp ${file} s3://${AWS_S3_PKGS_BUCKET}/dl/${file} --acl public-read
     desc+=$(echo -e "\n* ${file}\n\n\`\`\`bash\nsudo curl -L https://${AWS_S3_PKGS_URL}/dl/${file} >/usr/local/bin/monax\nsudo chmod +x /usr/local/bin/monax\n\`\`\`")
   done
   popd
