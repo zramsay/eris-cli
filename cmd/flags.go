@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/monax/cli/definitions"
+	"github.com/monax/monax/definitions"
 
 	"github.com/spf13/cobra"
 )

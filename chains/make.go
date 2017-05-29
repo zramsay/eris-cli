@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/chains/maker"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/keys"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/chains/maker"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/keys"
+	"github.com/monax/monax/log"
 )
 
 // MakeChain runs the chain maker

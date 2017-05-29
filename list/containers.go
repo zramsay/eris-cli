@@ -11,11 +11,11 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/util"
 
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/log"
 )
 
 const (

@@ -1,6 +1,6 @@
 package definitions
 
-import "github.com/monax/cli/config"
+import "github.com/monax/monax/config"
 
 // Compile request object
 type Request struct {

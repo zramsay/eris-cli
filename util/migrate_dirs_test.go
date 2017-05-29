@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/log"
 )
 
 var monaxDir string = filepath.Join(os.TempDir(), "monax")

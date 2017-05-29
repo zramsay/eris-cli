@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/version"
 
 	docker "github.com/fsouza/go-dockerclient"
 )

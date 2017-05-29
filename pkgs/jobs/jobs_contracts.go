@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/abi"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/pkgs/abi"
+	"github.com/monax/monax/util"
 
 	compilers "github.com/monax/compilers/perform"
 

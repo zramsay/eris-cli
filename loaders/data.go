@@ -1,9 +1,9 @@
 package loaders
 
 import (
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 )
 
 // LoadDataDefinition returns an Operation structure for a blank data container

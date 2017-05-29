@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/keys"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/keys"
+	"github.com/monax/monax/log"
 
 	"github.com/hyperledger/burrow/genesis"
 	ptypes "github.com/hyperledger/burrow/permission/types"

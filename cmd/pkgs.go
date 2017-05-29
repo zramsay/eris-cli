@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/pkgs"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/pkgs"
+	"github.com/monax/monax/util"
+	"github.com/monax/monax/version"
 
 	"github.com/spf13/cobra"
 )

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
 )
 
 const serviceToNeverUseToml = `# This is a TOML config file.

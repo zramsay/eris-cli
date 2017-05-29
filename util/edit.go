@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/monax/cli/config"
+	"github.com/monax/monax/config"
 
 	"github.com/spf13/viper"
 )

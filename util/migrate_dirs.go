@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/log"
 )
 
 //XXX this command absolutely needs a good test!!

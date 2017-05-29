@@ -11,7 +11,7 @@ import (
 	"text/tabwriter"
 	"text/template"
 
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/util"
 
 	"github.com/docker/docker/pkg/term"
 	"github.com/kr/text/colwriter"

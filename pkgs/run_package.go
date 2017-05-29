@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/pkgs/jobs"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/pkgs/jobs"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/util"
 )
 
 func RunPackage(do *definitions.Do) error {

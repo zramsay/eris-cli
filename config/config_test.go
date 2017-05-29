@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/log"
 )
 
 var (

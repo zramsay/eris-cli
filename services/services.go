@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/perform"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/perform"
+	"github.com/monax/monax/util"
 )
 
 func StartService(do *definitions.Do) (err error) {
