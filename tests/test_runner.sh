@@ -17,7 +17,7 @@ fi
 # Use the current built target, if it exists
 # Otherwise default to system wide executable
 COMMIT_SHA=$(git rev-parse --short --verify HEAD)
-cli_exec="$GOPATH/src/github.com/monax/cli/target/cli-${COMMIT_SHA}"
+cli_exec="$GOPATH/src/github.com/monax/monax/target/cli-${COMMIT_SHA}"
 if ! [ -e $cli_exec ]
 then
   cli_exec="monax"

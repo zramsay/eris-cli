@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/data"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/services"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/data"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/services"
 )
 
 type KeyClient struct{}

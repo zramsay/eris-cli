@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
 
 	"github.com/spf13/viper"
 )

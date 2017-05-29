@@ -3,10 +3,10 @@ package commands
 import (
 	"os"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/initialize"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/initialize"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	"github.com/spf13/cobra"
 )

@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/monax/cli/chains"
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/data"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/testutil"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/chains"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/data"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/testutil"
+	"github.com/monax/monax/version"
 )
 
 // [zr] there's a ton of refactoring to do here!

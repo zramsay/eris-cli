@@ -164,7 +164,7 @@ Sometimes when using extremely small cloud instances eris has trouble building. 
 
 ```irc
 Building eris.
-# github.com/monax/cli/cmd/monax
+# github.com/monax/monax/cmd/monax
 /usr/local/go/pkg/tool/linux_amd64/link: running gcc failed: fork/exec /usr/bin/gcc: cannot allocate memory
 ```
 

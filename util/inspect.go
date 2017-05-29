@@ -7,8 +7,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/log"
 
 	docker "github.com/fsouza/go-dockerclient"
 

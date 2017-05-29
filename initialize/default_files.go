@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/version"
 )
 
 const tomlHeader = `# This is a TOML config file.

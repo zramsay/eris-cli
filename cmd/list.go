@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/monax/cli/list"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/list"
+	"github.com/monax/monax/util"
 
 	"github.com/spf13/cobra"
 )

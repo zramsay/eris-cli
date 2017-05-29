@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/log"
 	"github.com/monax/compilers/definitions"
 )
 

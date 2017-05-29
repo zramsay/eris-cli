@@ -1,10 +1,10 @@
 package jobs
 
 import (
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/keys"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/keys"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 )
 
 func SetAccountJob(account *definitions.Account, do *definitions.Do) (string, error) {

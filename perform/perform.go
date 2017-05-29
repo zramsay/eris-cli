@@ -15,11 +15,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
+	"github.com/monax/monax/version"
 
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"

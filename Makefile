@@ -9,7 +9,7 @@
 SHELL := /bin/bash
 REPO := $(shell pwd)
 GOFILES_NOVENDOR := $(shell find ${REPO} -type f -name '*.go' -not -path "${REPO}/vendor/*")
-PACKAGES_NOVENDOR := $(shell go list github.com/monax/cli/... | grep -v /vendor/)
+PACKAGES_NOVENDOR := $(shell go list github.com/monax/monax/... | grep -v /vendor/)
 VERSION := $(shell cat ${REPO}/version/version.go | tail -n 1 | cut -d \  -f 4 | tr -d '"')
 VERSION_MIN := $(shell echo ${VERSION} | cut -d . -f 1-2)
 COMMIT_SHA := $(shell echo `git rev-parse --short --verify HEAD`)
@@ -38,7 +38,7 @@ fmt:
 	@echo "Correcting any formatting style corrections."
 	@gofmt -l -w ${GOFILES_NOVENDOR}
 
-### Dependency management for github.com/monax/cli
+### Dependency management for github.com/monax/monax
 
 # erase vendor wipes the full vendor directory
 .PHONY: erase_vendor
@@ -50,9 +50,9 @@ erase_vendor:
 install_vendor:
 	@./install_vendor.sh
 
-### Building github.com/monax/cli
+### Building github.com/monax/monax
 
-# build all targets in github.com/monax/cli
+# build all targets in github.com/monax/monax
 .PHONY: build
 build:	check build_cli
 
@@ -61,7 +61,7 @@ build:	check build_cli
 build_cli:
 	go build -o ${REPO}/target/cli-${COMMIT_SHA} ./cmd/monax
 
-### Testing github.com/monax/cli
+### Testing github.com/monax/monax
 
 # test go unit tests
 .PHONY: test_unit

@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"github.com/monax/cli/clean"
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/clean"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/util"
 
 	"github.com/spf13/cobra"
 )

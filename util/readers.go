@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/monax/cli/log"
+	"github.com/monax/monax/log"
 
 	"github.com/hyperledger/burrow/client/rpc"
 )

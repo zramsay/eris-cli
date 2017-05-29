@@ -3,7 +3,7 @@ package maker
 import (
 	"fmt"
 
-	"github.com/monax/cli/definitions"
+	"github.com/monax/monax/definitions"
 )
 
 func ChainsMakeWelcome() string {

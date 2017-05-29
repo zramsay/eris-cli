@@ -1,8 +1,8 @@
 package clean
 
 import (
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/util"
 )
 
 func Clean(do *definitions.Do) error {

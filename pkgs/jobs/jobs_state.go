@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"github.com/monax/cli/definitions"
+	"github.com/monax/monax/definitions"
 )
 
 func DumpStateJob(dump *definitions.DumpState, do *definitions.Do) (string, error) {

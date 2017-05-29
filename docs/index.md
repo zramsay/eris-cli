@@ -38,4 +38,4 @@ Looking for a tutorial that's missing? Dig into the [deprecated directory](/docs
 
 ### Contribute
 
-By making a pull request to the [docs](https://github.com/monax/cli/blob/master/docs)
+By making a pull request to the [docs](https://github.com/monax/monax/blob/master/docs)

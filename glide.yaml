@@ -1,4 +1,4 @@
-package: github.com/monax/cli
+package: github.com/monax/monax
 import:
 - package: github.com/BurntSushi/toml
   version: v0.2.0

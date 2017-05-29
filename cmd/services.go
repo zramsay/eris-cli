@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/util"
 
 	"github.com/spf13/cobra"
 )

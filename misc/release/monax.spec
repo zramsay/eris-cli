@@ -1,7 +1,7 @@
 %{define} home %{getenv:HOME}
 %{define} version %{getenv:MONAX_VERSION}
 %{define} release %{getenv:MONAX_RELEASE}
-%{define} gorepo %{_builddir}/src/github.com/monax/cli
+%{define} gorepo %{_builddir}/src/github.com/monax/monax
 
 Summary: Monax is an application platform for building, testing, maintaining, and operating applications built to run on an ecosystem level.
 
@@ -20,7 +20,7 @@ applications built to run on an ecosystem level. It makes it easy and simple to 
 %prep
 rm -fr %{_builddir}/*
 mkdir -p %{gorepo}
-git clone https://github.com/monax/cli %{gorepo}
+git clone https://github.com/monax/monax %{gorepo}
 
 pushd %{gorepo}
 git fetch origin ${MONAX_BRANCH}
@@ -29,7 +29,7 @@ popd
 
 %build
 pushd %{gorepo}
-GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/cli/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/cli/cmd/monax
+GOPATH=%{_builddir} GOBIN=%{_builddir} go get -ldflags "-X github.com/monax/monax/version.COMMIT=`git rev-parse --short HEAD 2>/dev/null`" github.com/monax/monax/cmd/monax
 popd
 
 %install

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
 )
 
 var serviceDefinitionTemplate *template.Template

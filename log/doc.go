@@ -4,7 +4,7 @@ Package logger is a logrus fork for Monax Industries, Ltd.
   package main
 
   import (
-    "github.com/monax/cli/log"
+    "github.com/monax/monax/log"
   )
 
   func main() {

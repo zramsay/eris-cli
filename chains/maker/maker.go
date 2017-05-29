@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/loaders"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/util"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/loaders"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/util"
 
 	"github.com/hyperledger/burrow/genesis"
 )

@@ -8,13 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/monax/cli/config"
-	"github.com/monax/cli/definitions"
-	"github.com/monax/cli/log"
-	"github.com/monax/cli/services"
-	"github.com/monax/cli/testutil"
-	"github.com/monax/cli/util"
-	"github.com/monax/cli/version"
+	"github.com/monax/monax/config"
+	"github.com/monax/monax/definitions"
+	"github.com/monax/monax/log"
+	"github.com/monax/monax/services"
+	"github.com/monax/monax/testutil"
+	"github.com/monax/monax/util"
+	"github.com/monax/monax/version"
 )
 
 var chainName = "test-chain"

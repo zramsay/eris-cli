@@ -23,13 +23,13 @@ Never fear, the marmots are here. See [Section 1 of our docker-machine tutorial]
 If you get a "monax: command not found" error then (if you built it from source) you need to make sure that your `$GOBIN` variable value is in your `$PATH` (see [Getting Started](/docs/getting-started/) and then do:
 
 ```irc
-cd $GOPATH/src/github.com/monax/cli/cmd/monax
+cd $GOPATH/src/github.com/monax/monax/cmd/monax
 go install
 cd ~1
 monax init
 ```
 
-If you received that error but you performed the binary installation, then you will need to make sure that the zip or tarball which was extracted from the [Github Releases](https://github.com/monax/cli/releases) page was installed into a place in your `$PATH` which the shell can use. Please see the documentation for your operating system, or ask the Google for help.
+If you received that error but you performed the binary installation, then you will need to make sure that the zip or tarball which was extracted from the [Github Releases](https://github.com/monax/monax/releases) page was installed into a place in your `$PATH` which the shell can use. Please see the documentation for your operating system, or ask the Google for help.
 
 ## No Output At All
 
@@ -57,7 +57,7 @@ Confirm that the line output includes `docker` and you will be good to go!
 
 By default, `monax` is a fairly quiet tool. If you would like to have more output you can add `-v` (for verbose) **or** `-d` (for debug) to any command in order to see more output. In general, there is no need to use *both* of these flags. The `--verbose` flag will give a bit more output than the command will by default and the `--debug` flag will give *much* more output than the either the `--verbose` flag or the command by default, but will be directed primarily at Monax developers.
 
-If you are reporting a bug, please rerun the command which caused the issue with the debug flag (`-d` or `--debug`) and send us the output to a [Github Issue](https://github.com/monax/cli/issues/new) or via Community Driven [Support Forums](https://support.monax.io).
+If you are reporting a bug, please rerun the command which caused the issue with the debug flag (`-d` or `--debug`) and send us the output to a [Github Issue](https://github.com/monax/monax/issues/new) or via Community Driven [Support Forums](https://support.monax.io).
 
 ## I'm Behind a Firewall
 
