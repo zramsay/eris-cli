@@ -334,15 +334,3 @@ func create(t, name string) error {
 func start(name string) error {
 	return DockerError(DockerClient.StartContainer(name, nil))
 }
-
-func stop(name string) error {
-	return DockerError(DockerClient.StopContainer(name, 10))
-}
-
-func remove(name string) error {
-	return DockerClient.RemoveContainer(docker.RemoveContainerOptions{
-		ID:            name,
-		RemoveVolumes: true,
-		Force:         true,
-	})
-}

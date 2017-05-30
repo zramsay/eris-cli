@@ -12,7 +12,6 @@ import (
 )
 
 var dataName string = "dataTest1"
-var newName string = "dataTest2"
 
 func TestMain(m *testing.M) {
 	log.SetLevel(log.WarnLevel)

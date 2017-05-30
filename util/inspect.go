@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 	"text/template"
-	"unicode"
 
 	"github.com/monax/monax/config"
 	"github.com/monax/monax/log"
@@ -118,16 +117,6 @@ func printReport(container interface{}, field string) error {
 	return writeTemplate(container, line)
 }
 
-func probablyHasDataContainer(container *docker.Container) bool {
-	eFolder := container.Volumes["/home/monax/.monax"]
-	if eFolder != "" {
-		if strings.Contains(eFolder, "_data") {
-			return true
-		}
-	}
-	return false
-}
-
 func FormulatePortsOutput(container *docker.Container) string {
 	var ports string
 	for k, v := range container.NetworkSettings.Ports {
@@ -160,8 +149,4 @@ func writeTemplate(container interface{}, toParse string) error {
 	}
 
 	return nil
-}
-
-func startsUp(field string) bool {
-	return unicode.IsUpper([]rune(field)[0])
 }
