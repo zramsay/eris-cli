@@ -51,10 +51,10 @@ func PackTarball(pathToTar, nameOfTar string) (string, error) {
 func UnpackTarball(tarBallPath, installPath string) error {
 	// open tarball for reading
 	reader, err := os.Open(tarBallPath)
-	defer reader.Close()
 	if err != nil {
 		return fmt.Errorf("error opening %s: %v\n", tarBallPath, err)
 	}
+	defer reader.Close()
 
 	return UntarForDocker(reader, "", installPath)
 }

@@ -94,10 +94,6 @@ func makeWizard(do *definitions.Do) error {
 		}
 	}
 
-	if prelims["dryrun"] {
-		// todo check if procede or return....
-	}
-
 	if prelims["manual"] {
 		var err error
 		accountTypes, err = addManualAccountType(accountTypes, 0)
@@ -200,9 +196,15 @@ func addManualAccountType(accountT []*definitions.MonaxDBAccountType, iterator i
 	thisActT.Perms = make(map[string]bool)
 	for _, perm := range AccountTypeManualPerms() {
 		thisActT.Perms[perm], err = util.GetBoolResponse(AccountTypeManualPermsQuestion(perm), false, reader)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	name, err := util.GetStringResponse(AccountTypeManualSave(), "", reader)
+	if err != nil {
+		return nil, err
+	}
 	if name != "" {
 		thisActT.Name = name
 		if err := SaveAccountType(thisActT); err != nil {

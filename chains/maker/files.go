@@ -157,10 +157,10 @@ func WriteConfigurationFile(chainName, accountName, seeds string, chainImageName
 
 func SaveAccountType(thisActT *definitions.MonaxDBAccountType) error {
 	writer, err := os.Create(filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", thisActT.Name)))
-	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""
@@ -190,10 +190,11 @@ func writeFile(data []byte, path string) error {
 		return err
 	}
 	writer, err := os.Create(filepath.Join(path))
-	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
+
 	writer.Write(data)
 	return nil
 }

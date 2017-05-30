@@ -259,6 +259,9 @@ func UnbondJob(unbond *definitions.Unbond, do *definitions.Do) (string, error) {
 	// Process Variables
 	var err error
 	unbond.Account, err = util.PreProcess(unbond.Account, do)
+	if err != nil {
+		return "", err
+	}
 	unbond.Height, err = util.PreProcess(unbond.Height, do)
 	if err != nil {
 		return "", err
@@ -298,6 +301,9 @@ func RebondJob(rebond *definitions.Rebond, do *definitions.Do) (string, error) {
 	// Process Variables
 	var err error
 	rebond.Account, err = util.PreProcess(rebond.Account, do)
+	if err != nil {
+		return "", err
+	}
 	rebond.Height, err = util.PreProcess(rebond.Height, do)
 	if err != nil {
 		return "", err

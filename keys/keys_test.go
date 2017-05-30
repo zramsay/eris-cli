@@ -217,6 +217,9 @@ func TestImportKeyAll(t *testing.T) {
 
 	// start keys
 	keyClient, err = InitKeyClient()
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
 	defer testKillService(t, "keys", true)
 
 	if err := keyClient.ImportKey("", true); err != nil {

@@ -202,6 +202,9 @@ func Copy(src, dst string) error {
 // assumes we've done our checking
 func copyDir(src, dst string) error {
 	fi, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
 	if err := os.MkdirAll(dst, fi.Mode()); err != nil {
 		return err
 	}
