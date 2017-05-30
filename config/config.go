@@ -98,9 +98,9 @@ func Load() (*viper.Viper, error) {
 
 	config.AddConfigPath(MonaxRoot)
 	config.SetConfigName("monax")
-	err = config.ReadInConfig()
+	_ = config.ReadInConfig()
 
-	return config, err
+	return config, nil
 }
 
 // SetDefaults initializes the Viper struct with default settings.
