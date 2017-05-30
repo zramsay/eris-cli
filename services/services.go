@@ -208,11 +208,7 @@ func InspectService(do *definitions.Do) error {
 	if err != nil {
 		return err
 	}
-	err = InspectServiceByService(service.Service, service.Operations, do.Operations.Args[0])
-	if err != nil {
-		return err
-	}
-	return nil
+	return InspectServiceByService(service.Service, service.Operations, do.Operations.Args[0])
 }
 
 func LogsService(do *definitions.Do) error {

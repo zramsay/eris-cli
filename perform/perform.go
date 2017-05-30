@@ -325,11 +325,10 @@ func DockerExecService(srv *definitions.Service, ops *definitions.Operation) (bu
 		"user":            optsServ.Config.User,
 		"vols":            optsServ.HostConfig.Binds,
 	}).Info("Executing interactive container")
-	if err := startInteractiveContainer(optsServ, ops.Terminal); err != nil {
-		return buf, err
-	}
 
-	return buf, nil
+	err = startInteractiveContainer(optsServ, ops.Terminal)
+
+	return buf, err
 }
 
 // DockerRebuild recreates the container based on the srv settings template.

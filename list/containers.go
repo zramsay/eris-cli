@@ -99,7 +99,7 @@ func Containers(t, format string, running bool) error {
 
 	// Collect container information.
 	util.MonaxContainers(func(name string, details *util.Details) bool {
-		if running == true && details.Info.State.Running == false && details.Type != definitions.TypeData {
+		if running && !details.Info.State.Running && details.Type != definitions.TypeData {
 			return false
 		}
 		monaxContainers = append(monaxContainers, details)

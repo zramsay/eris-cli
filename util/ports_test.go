@@ -227,7 +227,7 @@ var MapPortsTests = []struct {
 
 func TestMapPorts(t *testing.T) {
 	for _, test := range MapPortsTests {
-		if actual := MapPorts(test.ports, test.mappings); reflect.DeepEqual(actual, test.out) != true {
+		if actual := MapPorts(test.ports, test.mappings); !reflect.DeepEqual(actual, test.out) {
 			t.Fatalf("%s. expected %v, got %v, input ports:%v, mappings:%v", test.name, test.out, actual, test.ports, test.mappings)
 		}
 	}

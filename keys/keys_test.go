@@ -231,7 +231,7 @@ func TestImportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -269,7 +269,7 @@ func TestExportKeyAll(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -303,7 +303,7 @@ func TestListKeyContainer(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}
@@ -337,7 +337,7 @@ func TestListKeyHost(t *testing.T) {
 
 	i := 0
 	for _, out := range output {
-		if addrs[strings.TrimSpace(out)] == true {
+		if addrs[strings.TrimSpace(out)] {
 			i++
 		}
 	}

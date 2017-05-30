@@ -30,9 +30,9 @@ func RunJobs(do *definitions.Do) error {
 				break
 			}
 		}
-		if do.Overwrite == true && dup == true {
+		if do.Overwrite && dup {
 			log.WithField("Overwriting job name", job.JobName)
-		} else if do.Overwrite == false && dup == true {
+		} else if !do.Overwrite && dup {
 			overwriteWarning := "You are about to overwrite a previous job name, continue?"
 
 			if util.QueryYesOrNo(overwriteWarning, []int{}...) == util.No {

@@ -37,11 +37,9 @@ func WriteJobResultCSV(name, result string) error {
 	defer file.Close()
 
 	text := fmt.Sprintf("%s,%s\n", name, result)
-	if _, err = file.WriteString(text); err != nil {
-		return err
-	}
+	_, err = file.WriteString(text)
 
-	return nil
+	return err
 }
 
 func WriteJobResultJSON(results map[string]string, logFile string) error {

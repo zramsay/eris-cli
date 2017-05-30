@@ -286,19 +286,19 @@ func TestFindContainer(t *testing.T) {
 	create(definitions.TypeService, name)
 	start(ContainerName(definitions.TypeService, name))
 
-	if FindContainer(ContainerName(definitions.TypeData, name), false) == false {
+	if !FindContainer(ContainerName(definitions.TypeData, name), false) {
 		t.Fatalf("expecting to find data container existing")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeData, name), true) == true {
+	if FindContainer(ContainerName(definitions.TypeData, name), true) {
 		t.Fatalf("expecting to find data container not running")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeService, name), false) == false {
+	if !FindContainer(ContainerName(definitions.TypeService, name), false) {
 		t.Fatalf("expecting to find service container existing")
 	}
 
-	if FindContainer(ContainerName(definitions.TypeService, name), true) == false {
+	if !FindContainer(ContainerName(definitions.TypeService, name), true) {
 		t.Fatalf("expecting to find service container running")
 	}
 }

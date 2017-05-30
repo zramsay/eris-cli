@@ -102,12 +102,7 @@ func LogsChain(do *definitions.Do) error {
 		return err
 	}
 
-	err = perform.DockerLogs(chain.Service, chain.Operations, do.Follow, do.Tail)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return perform.DockerLogs(chain.Service, chain.Operations, do.Follow, do.Tail)
 }
 
 // CheckoutChain writes to the ChainPath/HEAD file the name

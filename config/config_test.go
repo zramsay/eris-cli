@@ -90,7 +90,7 @@ func TestNewDefaultConfig(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
@@ -161,7 +161,7 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 
 	// With an empty config, the values are used are defaults.
 
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
@@ -200,7 +200,7 @@ func TestNewCustomBadConfig(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 
@@ -241,19 +241,19 @@ Verbose = true
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if expected, returned := "bar", config.Get("CompilersHost"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "bar", config.Get("CompilersHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "baz", config.Get("DockerHost"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "baz", config.Get("DockerHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "qux", config.Get("DockerCertPath"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "qux", config.Get("DockerCertPath"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "quux", config.Get("CrashReport"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "quux", config.Get("CrashReport"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := true, config.Get("Verbose"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
@@ -272,7 +272,7 @@ func TestLoadEmpty(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 	if returned := config.Get("DockerHost"); returned != nil {
@@ -281,7 +281,7 @@ func TestLoadEmpty(t *testing.T) {
 	if returned := config.Get("DockerCertPath"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 	if returned := config.Get("Verbose"); returned != nil {
@@ -304,7 +304,7 @@ func TestLoadBad(t *testing.T) {
 		t.Fatalf("expected defaults loaded, got error %v", err)
 	}
 
-	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 	if returned := config.Get("DockerHost"); returned != nil {
@@ -313,7 +313,7 @@ func TestLoadBad(t *testing.T) {
 	if returned := config.Get("DockerCertPath"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
-	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); reflect.DeepEqual(returned, def) != true {
+	if def, returned := config.Get("CrashReport"), config.Get("CrashReport"); !reflect.DeepEqual(returned, def) {
 		t.Fatalf("expected default %q, got %q", returned, def)
 	}
 	if returned := config.Get("Verbose"); returned != nil {
@@ -336,19 +336,19 @@ Verbose = true
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if expected, returned := "bar", config.Get("CompilersHost"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "bar", config.Get("CompilersHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "baz", config.Get("DockerHost"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "baz", config.Get("DockerHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "qux", config.Get("DockerCertPath"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "qux", config.Get("DockerCertPath"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := "quux", config.Get("CrashReport"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := "quux", config.Get("CrashReport"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
-	if expected, returned := true, config.Get("Verbose"); reflect.DeepEqual(expected, returned) != true {
+	if expected, returned := true, config.Get("Verbose"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %v, got %v", expected, returned)
 	}
 }
@@ -481,10 +481,6 @@ func fakeDefinitionFile(tmpDir, name, definition string) error {
 	defer out.Close()
 
 	_, err = out.WriteString(definition)
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 

@@ -240,7 +240,6 @@ func PretendToBeAService(serviceYourPretendingToBe string) *definitions.ServiceD
 	return srv
 }
 
-//TODO test that this doesn't fmt things up, see note in #400
 func MoveOutOfDirAndRmDir(src, dest string) error {
 	log.WithFields(log.Fields{
 		"from": src,
@@ -263,12 +262,7 @@ func MoveOutOfDirAndRmDir(src, dest string) error {
 	}
 
 	log.WithField("=>", src).Info("Removing directory")
-	err = os.RemoveAll(src)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return os.RemoveAll(src)
 }
 
 func runData(name string, args []string) error {
@@ -287,9 +281,6 @@ func runData(name string, args []string) error {
 }
 
 // check path for config.MonaxContainerRoot
-// XXX this is opiniated & we may want to change in future
-// for more flexibility with filesystem of data conts
-// [zr] yes, it is opiniated; do.Operations.SkipCheck will silence it when needed
 func checkMonaxContainerRoot(do *definitions.Do, typ string) error {
 	r, err := regexp.Compile(config.MonaxContainerRoot)
 	if err != nil {
@@ -298,14 +289,14 @@ func checkMonaxContainerRoot(do *definitions.Do, typ string) error {
 
 	switch typ {
 	case "import":
-		if r.MatchString(do.Destination) != true { //if not there join it
+		if !r.MatchString(do.Destination) { //if not there join it
 			do.Destination = path.Join(config.MonaxContainerRoot, do.Destination)
 			return nil
 		} else { // matches: do nothing
 			return nil
 		}
 	case "export":
-		if r.MatchString(do.Source) != true {
+		if !r.MatchString(do.Source) {
 			do.Source = path.Join(config.MonaxContainerRoot, do.Source)
 			return nil
 		} else {

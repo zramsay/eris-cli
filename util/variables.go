@@ -14,7 +14,7 @@ import (
 func PreProcess(toProcess string, do *definitions.Do) (string, error) {
 	// $block.... $account.... etc. should be caught. hell$$o should not
 	// :$libAddr needs to be caught
-	catchEr := regexp.MustCompile("(^|\\s|:)\\$([a-zA-Z0-9_.]+)")
+	catchEr := regexp.MustCompile(`(^|\s|:)\$([a-zA-Z0-9_.]+)`)
 	// If there's a match then run through the replacement process
 	if catchEr.MatchString(toProcess) {
 		log.WithField("match", toProcess).Debug("Replacement Match Found")
@@ -27,12 +27,7 @@ func PreProcess(toProcess string, do *definitions.Do) (string, error) {
 			varName := "$" + jobName
 			var innerVarName string
 			var wantsInnerValues bool = false
-			/*
-				log.WithFields(log.Fields{
-				 	"var": varName,
-				 	"job": jobName,
-				}).Debugf("Correcting match %d", i+1)
-			*/
+
 			// first parse the reserved words.
 			if strings.Contains(jobName, "block") {
 				block, err := replaceBlockVariable(toProcess, do)
@@ -102,7 +97,7 @@ func replaceBlockVariable(toReplace string, do *definitions.Do) (string, error) 
 		return block, nil
 	}
 
-	catchEr := regexp.MustCompile("\\$block\\+(\\d*)")
+	catchEr := regexp.MustCompile(`\$block\+(\d*)`)
 	if catchEr.MatchString(toReplace) {
 		height := catchEr.FindStringSubmatch(toReplace)[1]
 		h1, err := strconv.Atoi(height)
@@ -118,7 +113,7 @@ func replaceBlockVariable(toReplace string, do *definitions.Do) (string, error) 
 		return height, nil
 	}
 
-	catchEr = regexp.MustCompile("\\$block\\-(\\d*)")
+	catchEr = regexp.MustCompile(`\$block\-(\d*)`)
 	if catchEr.MatchString(toReplace) {
 		height := catchEr.FindStringSubmatch(toReplace)[1]
 		h1, err := strconv.Atoi(height)

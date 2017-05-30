@@ -163,11 +163,7 @@ func testsRemoveDirs(depDirs, newDirs []string) {
 }
 
 func testsTearDown() error {
-	if e := os.RemoveAll(monaxDir); e != nil {
-		return e
-	}
-
-	return nil
+	return os.RemoveAll(monaxDir)
 }
 
 func ifExit(err error) {

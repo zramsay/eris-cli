@@ -95,7 +95,7 @@ func (f MonaxFormatter) Highlight(tag, comment string) (adjustedOffset int, text
 	}
 
 	if tag == arrowTag {
-		return offset + 2, fmt.Sprintf("%s", commentDecorated)
+		return offset + 2, commentDecorated
 	}
 	return offset - len(tag) + 1, fmt.Sprintf("%s=%s", tagDecorated, commentDecorated)
 }

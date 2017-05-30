@@ -243,7 +243,7 @@ func packInterfaceValue(typ ethAbi.Type, val string) (interface{}, error) {
 				return int64(val), nil
 			default:
 				val, set := big.NewInt(0).SetString(val, 10)
-				if set != true {
+				if !set {
 					return nil, fmt.Errorf("Could not set to big int")
 				}
 				return val, nil
@@ -276,7 +276,7 @@ func packInterfaceValue(typ ethAbi.Type, val string) (interface{}, error) {
 				return uint64(val), nil
 			default:
 				val, set := big.NewInt(0).SetString(val, 10)
-				if set != true {
+				if !set {
 					return nil, fmt.Errorf("Could not set to big int")
 				}
 				return val, nil
