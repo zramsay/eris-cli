@@ -26,10 +26,6 @@ const (
 	// `monax ls -a` format.
 	extendedTmplHeader = "{{toupper .}}\tON\tCONTAINER ID\tDATA CONTAINER\tIMAGE\tCOMMAND\tPORTS"
 	extendedTmpl       = "{{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t{{short .Info.ID}}\t{{short (dependent .ShortName)}}\t{{.Info.Config.Image}}\t{{.Info.Config.Cmd}}\t{{ports .Info}}"
-
-	// Data section.
-	dataTmplHeader = "{{toupper .}}\tON\tCONTAINER ID"
-	dataTmpl       = "{{.ShortName}}\t{{astmonaxk .Info.State.Running}}\t{{short .Info.ID}}"
 )
 
 var (
@@ -127,41 +123,32 @@ func Containers(t, format string, running bool) error {
 	// Use a table to select template rendering parameters to avoid multiple nested ifs.
 	buf := new(bytes.Buffer)
 	renderParams := map[string]map[int][]struct {
-		Type         string
-		DontShowData bool
-		Header       string
-		Template     string
+		Type     string
+		Header   string
+		Template string
 	}{
 		definitions.TypeService: {
-			Standard: {{t, false, standardTmplHeader, standardTmpl}},
-			Extended: {{t, false, extendedTmplHeader, extendedTmpl}},
-			Custom:   {{t, false, "", format}},
+			Standard: {{t, standardTmplHeader, standardTmpl}},
+			Extended: {{t, extendedTmplHeader, extendedTmpl}},
+			Custom:   {{t, "", format}},
 		},
 		definitions.TypeChain: {
-			Standard: {{t, false, standardTmplHeader, standardTmpl}},
-			Extended: {{t, false, extendedTmplHeader, extendedTmpl}},
-			Custom:   {{t, false, "", format}},
-		},
-		definitions.TypeData: {
-			Standard: {{t, false, dataTmplHeader, dataTmpl}},
-			Extended: {{t, false, dataTmplHeader, dataTmpl}},
-			Custom:   {{t, false, "", format}},
+			Standard: {{t, standardTmplHeader, standardTmpl}},
+			Extended: {{t, extendedTmplHeader, extendedTmpl}},
+			Custom:   {{t, "", format}},
 		},
 		"all": {
 			Standard: {
-				{definitions.TypeService, false, standardTmplHeader, standardTmpl},
-				{definitions.TypeChain, false, standardTmplHeader, standardTmpl},
-				{definitions.TypeData, true, dataTmplHeader, dataTmpl},
+				{definitions.TypeService, standardTmplHeader, standardTmpl},
+				{definitions.TypeChain, standardTmplHeader, standardTmpl},
 			},
 			Extended: {
-				{definitions.TypeService, false, extendedTmplHeader, extendedTmpl},
-				{definitions.TypeChain, false, extendedTmplHeader, extendedTmpl},
-				{definitions.TypeData, true, dataTmplHeader, dataTmpl},
+				{definitions.TypeService, extendedTmplHeader, extendedTmpl},
+				{definitions.TypeChain, extendedTmplHeader, extendedTmpl},
 			},
 			Custom: {
-				{definitions.TypeService, false, "", format},
-				{definitions.TypeChain, false, "", format},
-				{definitions.TypeData, false, "", format},
+				{definitions.TypeService, "", format},
+				{definitions.TypeChain, "", format},
 			},
 		},
 	}
@@ -171,11 +158,7 @@ func Containers(t, format string, running bool) error {
 	}
 
 	for _, p := range renderParams[t][key] {
-		// Skip the Data section altogether if there's nothing to show.
-		if p.DontShowData == true && isOrphanDataContainers() == false {
-			continue
-		}
-		if err := render(buf, p.Type, p.DontShowData, p.Header, p.Template); err != nil {
+		if err := render(buf, p.Type, p.Header, p.Template); err != nil {
 			return err
 		}
 	}
@@ -186,18 +169,6 @@ func Containers(t, format string, running bool) error {
 	tw.Flush()
 
 	return nil
-}
-
-func isOrphanDataContainers() bool {
-	for _, container := range monaxContainers {
-		if container.Type == definitions.TypeData {
-			if isMasterContainer(container.ShortName) {
-				continue
-			}
-			return true
-		}
-	}
-	return false
 }
 
 func isMasterContainer(name string) bool {
@@ -212,7 +183,7 @@ func isMasterContainer(name string) bool {
 	return false
 }
 
-func render(buf *bytes.Buffer, t string, truncate bool, header, format string) error {
+func render(buf *bytes.Buffer, t string, header, format string) error {
 	r := strings.NewReplacer(`\t`, "\t", `\n`, "\n")
 	if header != "" {
 		tmplHeader, err := template.New("header").Funcs(helpers).Parse(r.Replace(header))
@@ -234,13 +205,6 @@ func render(buf *bytes.Buffer, t string, truncate bool, header, format string) e
 		// Show containers for this section type.
 		if container.Type != t {
 			continue
-		}
-
-		// Display only orphaned data containers in `monax ls` or `monax ls -a` mode.
-		if truncate {
-			if isMasterContainer(container.ShortName) {
-				continue
-			}
 		}
 
 		if err := tmplTable.Execute(buf, container); err != nil {
