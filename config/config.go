@@ -98,9 +98,7 @@ func Load() (*viper.Viper, error) {
 
 	config.AddConfigPath(MonaxRoot)
 	config.SetConfigName("monax")
-	if err := config.ReadInConfig(); err != nil {
-		// Do nothing as this is not essential.
-	}
+	_ = config.ReadInConfig()
 
 	return config, nil
 }
@@ -126,10 +124,10 @@ func Save(settings *Settings) error {
 	}
 
 	writer, err := os.Create(filepath.Join(MonaxRoot, "monax.toml"))
-	defer writer.Close()
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""

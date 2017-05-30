@@ -20,8 +20,14 @@ func WriteJobResultCSV(name, result string) error {
 
 	if _, err := os.Stat(logFile); os.IsNotExist(err) {
 		file, err = os.Create(logFile)
+		if err != nil {
+			return err
+		}
 	} else {
 		file, err = os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err != nil {
@@ -41,6 +47,9 @@ func WriteJobResultCSV(name, result string) error {
 func WriteJobResultJSON(results map[string]string, logFile string) error {
 
 	file, err := os.Create(logFile)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	res, err := json.MarshalIndent(results, "", "  ")

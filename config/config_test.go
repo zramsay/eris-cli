@@ -28,7 +28,8 @@ func TestMain(m *testing.M) {
 
 	log.WithField("dir", configMonaxDir).Info("Using temporary directory for config files")
 
-	m.Run()
+	exitCode := m.Run()
+	os.Exit(exitCode)
 }
 
 func TestNew1(t *testing.T) {

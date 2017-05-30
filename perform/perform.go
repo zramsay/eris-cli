@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode"
 
 	"github.com/monax/monax/config"
@@ -680,7 +681,7 @@ func startContainer(opts docker.CreateContainerOptions) error {
 func startInteractiveContainer(opts docker.CreateContainerOptions, terminal bool) error {
 	// Trap signals so we can drop out of the container.
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
 		log.WithField("=>", opts.Name).Info("Caught signal. Stopping container")
