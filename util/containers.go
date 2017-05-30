@@ -407,11 +407,9 @@ func PullImage(image string, writer io.Writer) error {
 		defer w.Close()
 		defer close(timeout)
 
-		select {
-		case <-time.After(timeoutDuration):
-			log.Warn("image pull timed out (%v)", timeoutDuration)
-			timeout <- ErrImagePullTimeout
-		}
+		<-time.After(timeoutDuration)
+		log.Warn("image pull timed out (%v)", timeoutDuration)
+		timeout <- ErrImagePullTimeout
 	}()
 	go jsonmessage.DisplayJSONMessagesStream(r, os.Stdout, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	select {

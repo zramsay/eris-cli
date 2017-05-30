@@ -171,18 +171,6 @@ func Containers(t, format string, running bool) error {
 	return nil
 }
 
-func isMasterContainer(name string) bool {
-	// Found chain.
-	if _, err := util.Lookup(definitions.TypeChain, name); err == nil {
-		return true
-	}
-	// Found service.
-	if _, err := util.Lookup(definitions.TypeService, name); err == nil {
-		return true
-	}
-	return false
-}
-
 func render(buf *bytes.Buffer, t string, header, format string) error {
 	r := strings.NewReplacer(`\t`, "\t", `\n`, "\n")
 	if header != "" {
