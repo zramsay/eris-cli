@@ -103,7 +103,7 @@ func Containers(t, format string, running bool) error {
 
 	// Collect container information.
 	util.MonaxContainers(func(name string, details *util.Details) bool {
-		if running == true && details.Info.State.Running == false && details.Type != definitions.TypeData {
+		if running && !details.Info.State.Running && details.Type != definitions.TypeData {
 			return false
 		}
 		monaxContainers = append(monaxContainers, details)
@@ -172,7 +172,7 @@ func Containers(t, format string, running bool) error {
 
 	for _, p := range renderParams[t][key] {
 		// Skip the Data section altogether if there's nothing to show.
-		if p.DontShowData == true && isOrphanDataContainers() == false {
+		if p.DontShowData && !isOrphanDataContainers() {
 			continue
 		}
 		if err := render(buf, p.Type, p.DontShowData, p.Header, p.Template); err != nil {

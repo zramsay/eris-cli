@@ -33,10 +33,10 @@ func MakeChain(do *definitions.Do) error {
 		// do.Known
 		log.Info("Making chain using csv type paradigm.")
 		return makeRaw(do, "csv")
-	case do.Wizard == true:
+	case do.Wizard:
 		log.Info("Making chain using wizard paradigm.")
 		return makeWizard(do)
-	case do.Known == true:
+	case do.Known:
 		// TODO: [ben] do.Known needs to become the default way to generate the config
 		// and genesis files from a set of known public keys; so follow the same logic
 		// and go over makeRaw(do, "known"); and construct the account constructors
@@ -161,7 +161,7 @@ func assembleTypesWizard(accountT *definitions.MonaxDBAccountType, tokenIze bool
 		}
 	}
 
-	if accountT.Perms["bond"] == true && accountT.DefaultNumber > 0 {
+	if accountT.Perms["bond"] && accountT.DefaultNumber > 0 {
 		accountT.DefaultBond, err = util.GetIntResponse(AccountTypeToBond(accountT), accountT.DefaultBond, reader)
 		log.WithField("=>", accountT.DefaultBond).Debug("What the marmots heard")
 		if err != nil {

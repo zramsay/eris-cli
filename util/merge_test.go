@@ -151,7 +151,7 @@ func TestMergeBasic(t *testing.T) {
 		if err := Merge(test.base, test.over); err != nil {
 			t.Fatalf("%q: expected %v, got error %v", test.name, test.want, err)
 		}
-		if reflect.DeepEqual(test.base, test.want) != true {
+		if !reflect.DeepEqual(test.base, test.want) {
 			t.Errorf("%q: expected %v, got %v", test.name, test.want, test.base)
 		}
 	}

@@ -104,18 +104,18 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 		return fmt.Errorf("could not read files from new dir %s:\n%v\n", newDir, err)
 	}
 
-	fileNamesToCheck := make(map[string]bool) //map of filenames in new dir
+	fileNamesToCheck := make(map[string]bool) // map of filenames in new dir
 	if len(newDirFiles) != 0 {
 		for _, file := range newDirFiles {
 			fileNamesToCheck[file.Name()] = true
 		}
 	}
 
-	for _, file := range depDirFiles { //if any filenames match, must resolve
+	for _, file := range depDirFiles { // if any filenames match, must resolve
 		depFile := filepath.Join(depDir, file.Name())
-		newFile := filepath.Join(newDir, file.Name()) //file may not actually exist (yet)
+		newFile := filepath.Join(newDir, file.Name()) // file may not actually exist (yet)
 
-		if fileNamesToCheck[file.Name()] == true { //conflict!
+		if fileNamesToCheck[file.Name()] { // conflict!
 			oldFileContents, _ := ioutil.ReadFile(depFile)
 			newFileContents, _ := ioutil.ReadFile(newFile)
 			if string(newFileContents) != string(oldFileContents) {
@@ -123,7 +123,7 @@ func checkFileNamesAndMigrate(depDir, newDir string) error {
 			} else { // same file so no need to move
 				continue
 			}
-		} else { //filenames don't match, move file from depDir to newDir
+		} else { // filenames don't match, move file from depDir to newDir
 			if err := os.Rename(depFile, newFile); err != nil {
 				log.WithFields(log.Fields{
 					"from": depFile,

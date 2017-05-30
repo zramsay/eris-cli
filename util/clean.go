@@ -180,7 +180,7 @@ func canWeRemove(toClean map[string]bool) bool {
 		"images":     "all",
 	}
 
-	if toClean["all"] != true {
+	if !toClean["all"] {
 		log.Warn("The marmots are about to remove the following")
 		if toClean["containers"] {
 			log.WithField("containers", toWarn["containers"]).Warn()

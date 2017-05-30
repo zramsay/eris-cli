@@ -164,11 +164,7 @@ func SaveAccountType(thisActT *definitions.MonaxDBAccountType) error {
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""
-	err = enc.Encode(thisActT)
-	if err != nil {
-		return err
-	}
-	return nil
+	return enc.Encode(thisActT)
 }
 
 func convertExportPortsSliceToString(exportPorts []string) string {

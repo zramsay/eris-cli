@@ -241,10 +241,7 @@ func copyFile(src, dst string) error {
 	defer w.Close()
 
 	_, err = io.Copy(w, r)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func Editor(file string) error {

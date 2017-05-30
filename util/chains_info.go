@@ -74,10 +74,7 @@ func ChangeHead(name string) error {
 		bsp = string(b)
 	}
 
-	// add the new head
-	var s string
-	// handle empty head
-	s = name + "\n" + bsp
+	s := name + "\n" + bsp
 	if err := ioutil.WriteFile(config.HEAD, []byte(s), 0666); err != nil {
 		return err
 	}
@@ -196,8 +193,5 @@ func ValidatorsInfo(field string, do *definitions.Do) (string, error) {
 	default:
 		return "", fmt.Errorf("Field %s not recognized", field)
 	}
-	var s string
-	s = strings.Join(vals, ",")
-
-	return s, nil
+	return strings.Join(vals, ","), nil
 }

@@ -199,7 +199,7 @@ func MonaxContainers(filter func(name string, details *Details) bool, running bo
 
 	// Initialized cache means that it contains information
 	// about all containers, not just the running ones.
-	if running == false {
+	if !running {
 		containerCache.initialized = true
 	}
 	return monaxContainers

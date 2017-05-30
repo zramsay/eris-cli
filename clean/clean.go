@@ -16,8 +16,5 @@ func Clean(do *definitions.Do) error {
 		"root":       do.RmD,
 		"images":     do.Images,
 	}
-	if err := util.Clean(toClean); err != nil {
-		return err
-	}
-	return nil
+	return util.Clean(toClean)
 }

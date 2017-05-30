@@ -133,10 +133,7 @@ func Save(settings *Settings) error {
 
 	enc := toml.NewEncoder(writer)
 	enc.Indent = ""
-	if err := enc.Encode(settings); err != nil {
-		return err
-	}
-	return nil
+	return enc.Encode(settings)
 }
 
 // GitConfigUser returns Git global settings of the current user.

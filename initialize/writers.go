@@ -47,10 +47,7 @@ func WriteServiceDefinitionFile(name string, serviceDefinition *definitions.Serv
 	file := filepath.Join(config.ServicesPath, fmt.Sprintf("%s.toml", name))
 
 	// Write the file.
-	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(file, buffer.Bytes(), 0644)
 }
 
 func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.MonaxDBAccountType) error {
@@ -65,10 +62,7 @@ func writeAccountTypeDefinitionFile(name string, accountDefinition *definitions.
 
 	file := filepath.Join(config.AccountsTypePath, fmt.Sprintf("%s.toml", name))
 
-	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(file, buffer.Bytes(), 0644)
 }
 
 func writeChainTypeDefinitionFile(name string, chainDefinition *definitions.ChainType) error {
@@ -83,8 +77,5 @@ func writeChainTypeDefinitionFile(name string, chainDefinition *definitions.Chai
 
 	file := filepath.Join(config.ChainTypePath, fmt.Sprintf("%s.toml", name))
 
-	if err := ioutil.WriteFile(file, buffer.Bytes(), 0644); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(file, buffer.Bytes(), 0644)
 }

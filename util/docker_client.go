@@ -380,10 +380,8 @@ using the [sudo usermod -a -G docker $USER] command or rerun as [sudo monax]`
 func prepWin() error {
 	// note this is for running from cmd.exe ... watch out for powershell....
 	cmd := exec.Command("set", `PATH=%PATH%;"c:\Program Files (x86)\Git\bin"`)
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-	return nil
+	err := cmd.Run()
+	return err
 }
 
 func DockerError(err error) error {
