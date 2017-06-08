@@ -128,6 +128,8 @@ func ImportKey(cmd *cobra.Command, args []string) {
 func ListKeys(cmd *cobra.Command, args []string) {
 	util.IfExit(ArgCheck(0, "eq", cmd, args))
 	keyClient, err := keys.InitKeyClient()
+	util.IfExit(err)
+
 	if !do.Host && !do.Container {
 		// search on both
 		_, err = keyClient.ListKeys(true, true, do.Quiet)

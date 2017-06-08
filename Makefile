@@ -38,6 +38,12 @@ fmt:
 	@echo "Correcting any formatting style corrections."
 	@gofmt -l -w ${GOFILES_NOVENDOR}
 
+# run the megacheck tool for code compliance
+.PHONY: megacheck
+megacheck:
+	@go get honnef.co/go/tools/cmd/megacheck
+	@for pkg in ${PACKAGES_NOVENDOR}; do megacheck "$$pkg"; done
+
 ### Dependency management for github.com/monax/monax
 
 # erase vendor wipes the full vendor directory
