@@ -5,15 +5,10 @@ package definitions
 type Jobs struct {
 	// Name of the job
 	JobName string `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
-	// Type of the job. should be one of the strings outlined in the job struct (below)
-	Job *Job `mapstructure:"job" json:"job" yaml:"job" toml:"job"`
 	// Not marshalled
 	JobResult string
 	// For multiple values
 	JobVars []*Variable
-}
-
-type Job struct {
 	// Sets/Resets the primary account to use
 	Account *Account `mapstructure:"account" json:"account" yaml:"account" toml:"account"`
 	// Set an arbitrary value
@@ -49,4 +44,15 @@ type Job struct {
 	QueryVals *QueryVals `mapstructure:"query-vals" json:"query-vals" yaml:"query-vals" toml:"query-vals"`
 	// Makes and assertion (useful for testing purposes)
 	Assert *Assert `mapstructure:"assert" json:"assert" yaml:"assert" toml:"assert"`
+}
+
+type Package struct {
+	// from epm
+	Account   string
+	Jobs      []*Jobs
+	Libraries map[string]string
+}
+
+func BlankPackage() *Package {
+	return &Package{}
 }
