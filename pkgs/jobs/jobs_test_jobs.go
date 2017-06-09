@@ -224,6 +224,8 @@ func AssertJob(assertion *definitions.Assert, do *definitions.Do) (string, error
 		} else {
 			return assertFail("<=", assertion.Key, assertion.Value)
 		}
+	default:
+		return "", fmt.Errorf("Error: Bad assert relation: \"%s\" is not a valid relation. See documentation for more information.", assertion.Relation)
 	}
 
 	return result, nil

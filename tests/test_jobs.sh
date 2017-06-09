@@ -155,6 +155,25 @@ perform_tests(){
   done
 }
 
+perform_tests_that_should_fail(){
+  echo ""
+  goto_base
+  apps=(expected-failure*/)
+  for app in "${apps[@]}"
+  do
+    run_test $app
+
+    # Set exit code properly
+    test_exit=$?
+    if [ $test_exit -ne 0 ]
+    then
+      # actually, this test is meant to pass
+      test_exit=0
+      break
+    fi
+  done
+}
+
 test_teardown(){
   if [ -z "$ci" ]
   then
@@ -206,7 +225,10 @@ then
     echo "Running One Test..."
     run_test "$1*/"
   else
-    echo "Running All Tests..."
+    echo "Running tests that should fail"
+    perform_tests_that_should_fail
+
+    echo "Running tests that should pass"
     perform_tests
   fi
 fi
