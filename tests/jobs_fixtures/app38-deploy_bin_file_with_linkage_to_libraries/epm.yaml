@@ -3,11 +3,13 @@ jobs:
 #todo, change these to compile jobs
 - name: deployLibNormal
   deploy:
+      save: true
       contract: contract_and_lib.sol
       instance: Set
 
 - name: deployContractNormal
   deploy:
+      save: true
       contract: contract_and_lib.sol
       libraries: Set:$deployLibNormal
       instance: C
