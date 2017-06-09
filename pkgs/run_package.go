@@ -78,13 +78,12 @@ func RunPackage(do *definitions.Do) error {
 		}
 	}
 
-	if !do.RemoteCompiler {
-		if err := bootCompiler(); err != nil {
-			return err
-		}
-		if err = getLocalCompilerData(do); err != nil {
-			return err
-		}
+	// should be EnsureRunning
+	if err := bootCompiler(); err != nil {
+		return err
+	}
+	if err = getLocalCompilerData(do); err != nil {
+		return err
 	}
 
 	return jobs.RunJobs(do)

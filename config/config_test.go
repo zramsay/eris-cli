@@ -85,27 +85,16 @@ func TestNewDefaultConfig(t *testing.T) {
 		t.Fatalf("expected success, got error %v", err)
 	}
 
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected defaults loaded, got error %v", err)
-	}
-
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-
 	log.WithFields(log.Fields{
-		"compilers host": cli.CompilersHost,
-		"host":           cli.DockerHost,
-		"cert path":      cli.DockerCertPath,
-		"crash report":   cli.CrashReport,
-		"verbose":        cli.Verbose,
+		"host":         cli.DockerHost,
+		"cert path":    cli.DockerCertPath,
+		"crash report": cli.CrashReport,
+		"verbose":      cli.Verbose,
 	}).Info("Checking defaults")
 }
 
 func TestNewCustomConfig(t *testing.T) {
 	placeSettings(`
-CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
@@ -119,9 +108,6 @@ Verbose = true
 		t.Fatalf("expected success, got error %v", err)
 	}
 
-	if custom, returned := "bar", cli.CompilersHost; custom != returned {
-		t.Fatalf("expected %q, got %q", custom, returned)
-	}
 	if custom, returned := "baz", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
@@ -146,25 +132,14 @@ func TestNewCustomEmptyConfig(t *testing.T) {
 		t.Fatalf("expected success, got error %v", err)
 	}
 
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected defaults loaded, got error %v", err)
-	}
-
 	log.WithFields(log.Fields{
-		"compilers host": cli.CompilersHost,
-		"host":           cli.DockerHost,
-		"cert path":      cli.DockerCertPath,
-		"crash report":   cli.CrashReport,
-		"verbose":        cli.Verbose,
+		"host":         cli.DockerHost,
+		"cert path":    cli.DockerCertPath,
+		"crash report": cli.CrashReport,
+		"verbose":      cli.Verbose,
 	}).Info("Checking empty values")
 
 	// With an empty config, the values are used are defaults.
-
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
-
 	if custom, returned := "", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
 	}
@@ -187,22 +162,11 @@ func TestNewCustomBadConfig(t *testing.T) {
 	}
 
 	log.WithFields(log.Fields{
-		"compilers host": cli.CompilersHost,
-		"host":           cli.DockerHost,
-		"cert path":      cli.DockerCertPath,
-		"crash report":   cli.CrashReport,
-		"verbose":        cli.Verbose,
+		"host":         cli.DockerHost,
+		"cert path":    cli.DockerCertPath,
+		"crash report": cli.CrashReport,
+		"verbose":      cli.Verbose,
 	}).Info("Checking empty values")
-
-	// With an empty config, the values are used are defaults.
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected defaults loaded, got error %v", err)
-	}
-
-	if def, returned := defaults.Get("CompilersHost"), cli.CompilersHost; !reflect.DeepEqual(returned, def) {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 
 	if custom, returned := "", cli.DockerHost; custom != returned {
 		t.Fatalf("expected %q, got %q", custom, returned)
@@ -215,20 +179,8 @@ func TestNewCustomBadConfig(t *testing.T) {
 	}
 }
 
-func TestSetDefaults(t *testing.T) {
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected success, got error %v", err)
-	}
-
-	if _, ok := defaults.Get("CompilersHost").(string); !ok {
-		t.Fatalf("expected CompilersHost values set")
-	}
-}
-
 func TestLoad(t *testing.T) {
 	placeSettings(`
-CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
@@ -241,9 +193,6 @@ Verbose = true
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if expected, returned := "bar", config.Get("CompilersHost"); !reflect.DeepEqual(expected, returned) {
-		t.Fatalf("expected %q, got %q", expected, returned)
-	}
 	if expected, returned := "baz", config.Get("DockerHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
@@ -267,14 +216,6 @@ func TestLoadEmpty(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected defaults loaded, got error %v", err)
-	}
-
-	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); !reflect.DeepEqual(returned, def) {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 	if returned := config.Get("DockerHost"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
@@ -299,14 +240,6 @@ func TestLoadBad(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	defaults, err := SetDefaults()
-	if err != nil {
-		t.Fatalf("expected defaults loaded, got error %v", err)
-	}
-
-	if def, returned := defaults.Get("CompilersHost"), config.Get("CompilersHost"); !reflect.DeepEqual(returned, def) {
-		t.Fatalf("expected default %q, got %q", returned, def)
-	}
 	if returned := config.Get("DockerHost"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
@@ -323,7 +256,6 @@ func TestLoadBad(t *testing.T) {
 
 func TestLoadViper(t *testing.T) {
 	placeSettings(`
-CompilersHost = "bar"
 DockerHost = "baz"
 DockerCertPath = "qux"
 CrashReport = "quux"
@@ -336,9 +268,6 @@ Verbose = true
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if expected, returned := "bar", config.Get("CompilersHost"); !reflect.DeepEqual(expected, returned) {
-		t.Fatalf("expected %q, got %q", expected, returned)
-	}
 	if expected, returned := "baz", config.Get("DockerHost"); !reflect.DeepEqual(expected, returned) {
 		t.Fatalf("expected %q, got %q", expected, returned)
 	}
@@ -362,9 +291,6 @@ func TestLoadViperEmpty(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 
-	if returned := config.Get("CompilersHost"); returned != nil {
-		t.Fatalf("expected nil, got %q", returned)
-	}
 	if returned := config.Get("DockerHost"); returned != nil {
 		t.Fatalf("expected nil, got %q", returned)
 	}
@@ -408,7 +334,6 @@ func TestSave(t *testing.T) {
 	defer removeMonaxDir()
 
 	settings := &Settings{
-		CompilersHost:  "bar",
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
@@ -418,8 +343,7 @@ func TestSave(t *testing.T) {
 	}
 
 	filename := filepath.Join(configMonaxDir, "monax.toml")
-	expected := `CompilersHost = "bar"
-DockerHost = "baz"
+	expected := `DockerHost = "baz"
 DockerCertPath = "qux"
 Verbose = true
 `
@@ -441,7 +365,6 @@ func TestSaveNotExistentDir(t *testing.T) {
 	}
 
 	settings := &Settings{
-		CompilersHost:  "bar",
 		DockerHost:     "baz",
 		DockerCertPath: "qux",
 		Verbose:        true,
