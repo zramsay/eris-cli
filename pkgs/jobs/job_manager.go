@@ -131,25 +131,25 @@ func announce(job, typ string) {
 func defaultAddrJob(do *definitions.Do) {
 	oldJobs := do.Package.Jobs
 
-	newJob := &definitions.Jobs{
+	newJob := &definitions.Job{
 		JobName: "defaultAddr",
 		Account: &definitions.Account{
 			Address: do.DefaultAddr,
 		},
 	}
 
-	do.Package.Jobs = append([]*definitions.Jobs{newJob}, oldJobs...)
+	do.Package.Jobs = append([]*definitions.Job{newJob}, oldJobs...)
 }
 
 func defaultSetJobs(do *definitions.Do) {
 	oldJobs := do.Package.Jobs
 
-	newJobs := []*definitions.Jobs{}
+	newJobs := []*definitions.Job{}
 
 	for _, setr := range do.DefaultSets {
 		blowdUp := strings.Split(setr, "=")
 		if blowdUp[0] != "" {
-			newJobs = append(newJobs, &definitions.Jobs{
+			newJobs = append(newJobs, &definitions.Job{
 				JobName: blowdUp[0],
 				Set: &definitions.SetJob{
 					Value: blowdUp[1],

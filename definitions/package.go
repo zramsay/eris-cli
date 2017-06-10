@@ -2,7 +2,7 @@ package definitions
 
 //TODO: Interface all the jobs, determine if they should remain in definitions or get their own package
 
-type Jobs struct {
+type Job struct {
 	// Name of the job
 	JobName string `mapstructure:"name" json:"name" yaml:"name" toml:"name"`
 	// Not marshalled
@@ -49,7 +49,7 @@ type Jobs struct {
 type Package struct {
 	// from epm
 	Account   string
-	Jobs      []*Jobs
+	Jobs      []*Job
 	Libraries map[string]string
 }
 
