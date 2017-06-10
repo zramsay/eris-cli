@@ -1,48 +1,41 @@
 jobs:
 
 - name: setStorageBase
-  job:
-    set:
+  set:
       val: 5
 
 - name: deployGSFactory
-  job:
-    deploy:
+  deploy:
       contract: GSFactory.sol
       instance: GSFactory
 
 - name: deployGSABIFactory
-  job:
-    deploy:
+  deploy:
       contract: GSFactory.sol
       instance: GSContract
 
 - name: createGSContract
-  job:
-    call:
+  call:
       destination: $deployGSFactory
       function: create
       abi: $deployGSFactory
 
 #Double check created address
 - name:  getGSAddr
-  job:
-    query-contract:
+  query-contract:
       destination: $deployGSFactory
       function: getLast
       abi: $deployGSFactory
 
 - name: assertAddr
-  job:
-    assert:
+  assert:
       key: $getGSAddr
       relation: eq
       val: $createGSContract
 
 #Normal get set contract testing
 - name: setStorage
-  job:
-    call:
+  call:
       destination: $createGSContract
       function: set 
       data:
@@ -50,15 +43,13 @@ jobs:
       abi: $deployGSABIFactory
 
 - name: queryStorage
-  job:
-    query-contract:
+  query-contract:
       destination: $createGSContract
       function: get
       abi: $deployGSABIFactory
 
 - name: assertStorage
-  job:
-    assert:
+  assert:
       key: $queryStorage
       relation: eq
       val: $setStorageBase

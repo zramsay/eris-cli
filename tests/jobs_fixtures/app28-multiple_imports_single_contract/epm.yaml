@@ -1,23 +1,19 @@
 jobs:
 
 - name: deployStorageK
-  job:
-    deploy:
+  deploy:
       contract: storage.sol
 
 - name: setStorageBaseString1
-  job:
-    set:
+  set:
       val: hello world the marmots are here
 
 - name: setStorageBaseString2
-  job:
-    set:
+  set:
       val: good bye freaks
 
 - name: setStorageString1
-  job:
-    call:
+  call:
       destination: $deployStorageK
       function: setString
       data:
@@ -25,27 +21,23 @@ jobs:
         - $setStorageBaseString2
 
 - name: queryStorageString1
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getString1
 
 - name: assertStorageString1
-  job:
-    assert:
+  assert:
       key: $queryStorageString1
       relation: eq
       val: $setStorageBaseString1
 
 - name: queryStorageString2
-  job:
-    query-contract:
+  query-contract:
       destination: $deployStorageK
       function: getString2
 
 - name: assertStorageString2
-  job:
-    assert:
+  assert:
       key: $queryStorageString2
       relation: eq
       val: $setStorageBaseString2

@@ -1,29 +1,26 @@
 jobs:
 
+#todo, change these to compile jobs
 - name: deployLibNormal
-  job:
-    deploy:
+  deploy:
+      save: true
       contract: contract_and_lib.sol
       instance: Set
-      save: true
 
 - name: deployContractNormal
-  job:
-    deploy:
+  deploy:
+      save: true
       contract: contract_and_lib.sol
       libraries: Set:$deployLibNormal
       instance: C
-      save: true
 
   #now that we have bins, lets redo this with them
 
 - name: deployLibBin
-  job:
-    deploy:
+  deploy:
       contract: Set.bin
 
 - name: deployContractNormal
-  job:
-    deploy:
+  deploy:
       contract: C.bin
       libraries: Set:$deployLibBin

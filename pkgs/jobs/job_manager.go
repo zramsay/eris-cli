@@ -42,74 +42,74 @@ func RunJobs(do *definitions.Do) error {
 
 		switch {
 		// Util jobs
-		case job.Job.Account != nil:
+		case job.Account != nil:
 			announce(job.JobName, "Account")
-			job.JobResult, err = SetAccountJob(job.Job.Account, do)
-		case job.Job.Set != nil:
+			job.JobResult, err = SetAccountJob(job.Account, do)
+		case job.Set != nil:
 			announce(job.JobName, "Set")
-			job.JobResult, err = SetValJob(job.Job.Set, do)
+			job.JobResult, err = SetValJob(job.Set, do)
 
 		// Transaction jobs
-		case job.Job.Send != nil:
+		case job.Send != nil:
 			announce(job.JobName, "Sent")
-			job.JobResult, err = SendJob(job.Job.Send, do)
-		case job.Job.RegisterName != nil:
+			job.JobResult, err = SendJob(job.Send, do)
+		case job.RegisterName != nil:
 			announce(job.JobName, "RegisterName")
-			job.JobResult, err = RegisterNameJob(job.Job.RegisterName, do)
-		case job.Job.Permission != nil:
+			job.JobResult, err = RegisterNameJob(job.RegisterName, do)
+		case job.Permission != nil:
 			announce(job.JobName, "Permission")
-			job.JobResult, err = PermissionJob(job.Job.Permission, do)
-		case job.Job.Bond != nil:
+			job.JobResult, err = PermissionJob(job.Permission, do)
+		case job.Bond != nil:
 			announce(job.JobName, "Bond")
-			job.JobResult, err = BondJob(job.Job.Bond, do)
-		case job.Job.Unbond != nil:
+			job.JobResult, err = BondJob(job.Bond, do)
+		case job.Unbond != nil:
 			announce(job.JobName, "Unbond")
-			job.JobResult, err = UnbondJob(job.Job.Unbond, do)
-		case job.Job.Rebond != nil:
+			job.JobResult, err = UnbondJob(job.Unbond, do)
+		case job.Rebond != nil:
 			announce(job.JobName, "Rebond")
-			job.JobResult, err = RebondJob(job.Job.Rebond, do)
+			job.JobResult, err = RebondJob(job.Rebond, do)
 
 		// Contracts jobs
-		case job.Job.Deploy != nil:
+		case job.Deploy != nil:
 			announce(job.JobName, "Deploy")
-			job.JobResult, err = DeployJob(job.Job.Deploy, do)
-		case job.Job.Call != nil:
+			job.JobResult, err = DeployJob(job.Deploy, do)
+		case job.Call != nil:
 			announce(job.JobName, "Call")
-			job.JobResult, job.JobVars, err = CallJob(job.Job.Call, do)
+			job.JobResult, job.JobVars, err = CallJob(job.Call, do)
 			if len(job.JobVars) != 0 {
 				for _, theJob := range job.JobVars {
 					log.WithField("=>", fmt.Sprintf("%s,%s", theJob.Name, theJob.Value)).Info("Job Vars")
 				}
 			}
 		// State jobs
-		case job.Job.RestoreState != nil:
+		case job.RestoreState != nil:
 			announce(job.JobName, "RestoreState")
-			job.JobResult, err = RestoreStateJob(job.Job.RestoreState, do)
-		case job.Job.DumpState != nil:
+			job.JobResult, err = RestoreStateJob(job.RestoreState, do)
+		case job.DumpState != nil:
 			announce(job.JobName, "DumpState")
-			job.JobResult, err = DumpStateJob(job.Job.DumpState, do)
+			job.JobResult, err = DumpStateJob(job.DumpState, do)
 
 		// Test jobs
-		case job.Job.QueryAccount != nil:
+		case job.QueryAccount != nil:
 			announce(job.JobName, "QueryAccount")
-			job.JobResult, err = QueryAccountJob(job.Job.QueryAccount, do)
-		case job.Job.QueryContract != nil:
+			job.JobResult, err = QueryAccountJob(job.QueryAccount, do)
+		case job.QueryContract != nil:
 			announce(job.JobName, "QueryContract")
-			job.JobResult, job.JobVars, err = QueryContractJob(job.Job.QueryContract, do)
+			job.JobResult, job.JobVars, err = QueryContractJob(job.QueryContract, do)
 			if len(job.JobVars) != 0 {
 				for _, theJob := range job.JobVars {
 					log.WithField("=>", fmt.Sprintf("%s,%s", theJob.Name, theJob.Value)).Info("Job Vars")
 				}
 			}
-		case job.Job.QueryName != nil:
+		case job.QueryName != nil:
 			announce(job.JobName, "QueryName")
-			job.JobResult, err = QueryNameJob(job.Job.QueryName, do)
-		case job.Job.QueryVals != nil:
+			job.JobResult, err = QueryNameJob(job.QueryName, do)
+		case job.QueryVals != nil:
 			announce(job.JobName, "QueryVals")
-			job.JobResult, err = QueryValsJob(job.Job.QueryVals, do)
-		case job.Job.Assert != nil:
+			job.JobResult, err = QueryValsJob(job.QueryVals, do)
+		case job.Assert != nil:
 			announce(job.JobName, "Assert")
-			job.JobResult, err = AssertJob(job.Job.Assert, do)
+			job.JobResult, err = AssertJob(job.Assert, do)
 		}
 
 		if err != nil {
@@ -131,32 +131,28 @@ func announce(job, typ string) {
 func defaultAddrJob(do *definitions.Do) {
 	oldJobs := do.Package.Jobs
 
-	newJob := &definitions.Jobs{
+	newJob := &definitions.Job{
 		JobName: "defaultAddr",
-		Job: &definitions.Job{
-			Account: &definitions.Account{
-				Address: do.DefaultAddr,
-			},
+		Account: &definitions.Account{
+			Address: do.DefaultAddr,
 		},
 	}
 
-	do.Package.Jobs = append([]*definitions.Jobs{newJob}, oldJobs...)
+	do.Package.Jobs = append([]*definitions.Job{newJob}, oldJobs...)
 }
 
 func defaultSetJobs(do *definitions.Do) {
 	oldJobs := do.Package.Jobs
 
-	newJobs := []*definitions.Jobs{}
+	newJobs := []*definitions.Job{}
 
 	for _, setr := range do.DefaultSets {
 		blowdUp := strings.Split(setr, "=")
 		if blowdUp[0] != "" {
-			newJobs = append(newJobs, &definitions.Jobs{
+			newJobs = append(newJobs, &definitions.Job{
 				JobName: blowdUp[0],
-				Job: &definitions.Job{
-					Set: &definitions.SetJob{
-						Value: blowdUp[1],
-					},
+				Set: &definitions.SetJob{
+					Value: blowdUp[1],
 				},
 			})
 		}

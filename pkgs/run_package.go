@@ -72,8 +72,8 @@ func RunPackage(do *definitions.Do) error {
 
 	if do.Path != gotwd {
 		for _, job := range do.Package.Jobs {
-			if job.Job.Deploy != nil {
-				job.Job.Deploy.Contract = filepath.Join(do.Path, job.Job.Deploy.Contract)
+			if job.Deploy != nil {
+				job.Deploy.Contract = filepath.Join(do.Path, job.Deploy.Contract)
 			}
 		}
 	}
