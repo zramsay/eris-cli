@@ -17,7 +17,6 @@ type ServiceDefinition struct {
 	Dependencies *Dependencies `json:"dependencies,omitempty" yaml:"dependencies,omitempty" toml:"dependencies,omitempty"`
 	Maintainer   *Maintainer   `json:"maintainer,omitempty" yaml:"maintainer,omitempty" toml:"maintainer,omitempty"`
 	Location     *Location     `json:"location,omitempty" yaml:"location,omitempty" toml:"location,omitempty"`
-	Machine      *Machine      `json:"machine,omitempty" yaml:"machine,omitempty" toml:"machine,omitempty"`
 	Srvs         []*Service
 	Operations   *Operation
 }
@@ -32,7 +31,6 @@ func BlankServiceDefinition() *ServiceDefinition {
 		Service:    BlankService(),
 		Maintainer: BlankMaintainer(),
 		Location:   BlankLocation(),
-		Machine:    BlankMachine(),
 		Operations: BlankOperation(),
 	}
 }
