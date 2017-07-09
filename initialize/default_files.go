@@ -153,7 +153,7 @@ This monax service compiles smart contract languages.`
 		serviceDefinition.Status = "beta"
 		serviceDefinition.Service.Image = path.Join(version.DefaultRegistry, version.ImageCompilers)
 		serviceDefinition.Service.AutoData = true
-		serviceDefinition.Service.Ports = []string{`"9090:9090"`}
+		serviceDefinition.Service.Ports = []string{`"9090:9090",`, `"9099:9099"`}
 
 	case "logrotate":
 
