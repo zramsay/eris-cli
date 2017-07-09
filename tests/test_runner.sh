@@ -194,6 +194,21 @@ perform_tests(){
     return 1
   fi
   echo
+
+  echo "ensure blank .json file isn't consumed (#1220)"
+  $cli_exec pkgs do --chain $chain_name --address $key1_addr --file MyEPM.yaml
+  if [ ! -f $repo/tests/run_fixtures/simple/MyEPM.output.json ]
+  then
+    echo "MyEPM.output.json not found"
+    return 1
+  fi
+  rm $repo/tests/run_fixtures/simple/MyEPM.output.json
+  #check_test
+  if [ $test_exit -eq 1 ]
+  then
+    return 1
+  fi
+  echo
 }
 
 test_teardown(){
