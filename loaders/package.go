@@ -30,6 +30,7 @@ func LoadPackage(fileName string) (*definitions.Package, error) {
 		"name": bName,
 	}).Debug("Loading monax jobs file")
 
+	epmJobs.SetConfigType("yaml")
 	epmJobs.AddConfigPath(path)
 	epmJobs.SetConfigName(bName)
 
