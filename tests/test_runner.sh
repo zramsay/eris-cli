@@ -196,7 +196,7 @@ perform_tests(){
   echo
 
   echo "ensure blank .json file isn't consumed (#1220)"
-  $cli_exec pkgs do --chain $chain_name --address $key1_addr --file MyEPM.yaml
+  $cli_exec pkgs do --chain $chain_name --address $key1_addr --file $repo/tests/run_fixtures/simple/MyEPM.yaml
   if [ ! -f $repo/tests/run_fixtures/simple/MyEPM.output.json ]
   then
     echo "MyEPM.output.json not found"
