@@ -37,15 +37,25 @@ func RunPackage(do *definitions.Do) error {
 		return err
 	}
 
-	// if --dir is used and --file is left default, concat
-	// so that the job will run
 	// note: [zr] this could be problematic with a combo of
 	// other flags, however, at least the --dir flag isn't
 	// completely broken now
 	if do.Path != gotwd {
-		if do.YAMLPath == "epm.yaml" {
-			do.YAMLPath = filepath.Join(do.Path, do.YAMLPath)
+		originalYAMLPath := do.YAMLPath
+
+		// if --dir given, assume *.yaml is in there
+		do.YAMLPath = filepath.Join(do.Path, originalYAMLPath)
+
+		// if do.YAMLPath does not exist, try $pwd
+		if _, err := os.Stat(do.YAMLPath); os.IsNotExist(err) {
+			do.YAMLPath = filepath.Join(gotwd, originalYAMLPath)
 		}
+
+		// if it still cannot be found, abort
+		if _, err := os.Stat(do.YAMLPath); os.IsNotExist(err) {
+			return fmt.Errorf("could not find jobs file (%s), ensure correct used of the --file flag")
+		}
+
 		if do.BinPath == "./bin" {
 			do.BinPath = filepath.Join(do.Path, "bin")
 		}
